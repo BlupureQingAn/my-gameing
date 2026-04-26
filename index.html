@@ -567,18 +567,31 @@
         });
     }
 
-    /*================ API 流式生成系统 ================*/
+/*================ API 生成系统 (NVIDIA 适配版) ================*/
     async function nextTurn() {
         if(isGenerating) return;
 
-        const url = document.getElementById('api-url').value.trim();
+        let url = document.getElementById('api-url').value.trim();
         const key = document.getElementById('api-key').value.trim();
         const modelName = document.getElementById('api-model').value.trim();
 
         if (!url || !key) {
-            alert("请先展开上方【核心驱动设置】并配置完整的 API URL 和 API Key！");
+            alert("请配置完整的 API URL 和 API Key！");
             toggleConfig();
             return;
+        }
+
+        // --- 核心：URL 智能拼接逻辑 ---
+        // 去掉末尾斜杠
+        if (url.endsWith('/')) url = url.slice(0, -1);
+        
+        let fetchUrl;
+        if (url.endsWith('/chat/completions')) {
+            fetchUrl = url;
+        } else {
+            // 确保如果用户没写 /v1，而 Worker 需要的话，由 Worker 内部逻辑处理
+            // 前端只负责拼接出标准的 chat/completions 路径
+            fetchUrl = `${url}/chat/completions`;
         }
 
         // 时间推演逻辑
@@ -592,39 +605,28 @@
         const dateStr = `${gameState.currentYear}年${gameState.currentMonth}月`;
         const ageYears = Math.floor(gameState.age / 12);
         
-        renderUI(); // 更新顶部信息
-
-        // 切换回主视图
+        renderUI();
         switchTab('view-main', document.querySelectorAll('.nav-btn')[0]);
         
-        // 创建新的剧情气泡
         const board = document.getElementById('story-board');
         const logDiv = document.createElement('div');
         logDiv.className = 'story-log';
-        logDiv.innerHTML = `<div class="story-date">[ ${dateStr} ]</div><div class="story-text">正在生成命运的轨迹...<span class="streaming-cursor"></span></div>`;
+        logDiv.innerHTML = `<div class="story-date">[ ${dateStr} ]</div><div class="story-text">正在通过中转站链接命运...<span class="streaming-cursor"></span></div>`;
         board.appendChild(logDiv);
         scrollToBottom();
 
         const textContainer = logDiv.querySelector('.story-text');
 
-        // 构建Prompt上下文 (防重复：传入最近3条历史)
+        // 构建 Prompt
         const recentHistory = gameState.history.slice(-3).map(h => `${h.date}: ${h.text}`).join("\n\n");
-        const systemPrompt = `你是一个BitLife人生模拟器引擎。
-规则：
-1. 你的回答直接就是当前月的剧情发生内容，不包含任何JSON，只需正则文本！
-2. 主角是徐然(Blupure)，性别男，当前年龄${ageYears}岁${gameState.currentMonth}个月。
-3. 严格遵循现实世界逻辑，无科幻、玄幻、魔法。
-4. 内容生动，包含人物对话、心理描写和周围环境。
-5. 请使用第一人称或第二人称叙述。使用emoji表情增加趣味性。
-6. 事件不能与近期历史重复，要承上启下，要有合理的成长轨迹。`;
-
-        const userPrompt = `【最近历史发生事件】：\n${recentHistory}\n\n现在时间是${dateStr}。请生成本月发生的1-2个日常或突发事件。要求自然过渡。只需输出纯文本剧情。`;
+        const systemPrompt = `你是一个人生模拟器引擎。输出纯文本剧情，不含JSON。主角：${gameState.name}，年龄：${ageYears}岁${gameState.currentMonth}个月。风格生动，逻辑严密，包含emoji。`;
+        const userPrompt = `【最近历史】：\n${recentHistory}\n\n时间：${dateStr}。请生成本月发生的1-2件人生事件。`;
 
         isGenerating = true;
         document.getElementById('btn-next').disabled = true;
 
         try {
-            const response = await fetch(`${url}/chat/completions`, {
+            const response = await fetch(fetchUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -642,14 +644,18 @@
             });
 
             if (!response.ok) {
-                throw new Error(`API 错误: ${response.status} ${response.statusText}`);
+                const errText = await response.text();
+                // 针对 404/410/401 提供友好提示
+                if (response.status === 404) throw new Error("路径错误 (404)。请检查 API URL 是否多写或少写了 /v1");
+                if (response.status === 410) throw new Error("接口失效 (410)。通常是请求路径被 NVIDIA 服务器拒绝，请检查 Worker 转发逻辑");
+                if (response.status === 401) throw new Error("鉴权失败 (401)。请检查 API Key 是否正确");
+                throw new Error(`API 错误 (${response.status}): ${errText.substring(0, 50)}`);
             }
 
-            // 读取流
             const reader = response.body.getReader();
             const decoder = new TextDecoder('utf-8');
             let generatedText = "";
-            textContainer.innerHTML = '<span class="streaming-cursor"></span>'; // 清除提示语
+            textContainer.innerHTML = '<span class="streaming-cursor"></span>';
 
             while (true) {
                 const { done, value } = await reader.read();
@@ -659,14 +665,17 @@
                 const lines = chunk.split('\n');
                 
                 for (let line of lines) {
-                    if (line.trim() === '') continue;
-                    if (line.startsWith('data: ') && line.trim() !== 'data: [DONE]') {
+                    const trimmedLine = line.trim();
+                    if (!trimmedLine || trimmedLine === 'data: [DONE]') continue;
+                    
+                    if (trimmedLine.startsWith('data: ')) {
                         try {
-                            const data = JSON.parse(line.slice(6));
+                            const jsonStr = trimmedLine.slice(6);
+                            const data = JSON.parse(jsonStr);
                             if (data.choices && data.choices[0].delta && data.choices[0].delta.content) {
                                 const token = data.choices[0].delta.content;
                                 generatedText += token;
-                                // 简单的正则替换，处理多余的markdown标记
+                                // 实时渲染（支持简单的Markdown加粗和换行）
                                 let displayText = generatedText
                                     .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
                                     .replace(/\n/g, '<br>');
@@ -675,14 +684,17 @@
                                 scrollToBottom();
                             }
                         } catch (e) {
-                            console.error("解析流数据出错:", e, line);
+                            // 忽略部分非标准的数据块
+                            console.warn("解析数据块失败", e);
                         }
                     }
                 }
             }
 
-            // 生成结束，去掉光标，保存历史
+            // 最终修正渲染
             textContainer.innerHTML = generatedText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
+            
+            // 存入历史记录
             gameState.history.push({
                 date: dateStr,
                 text: textContainer.innerHTML
@@ -690,8 +702,10 @@
             saveGame();
 
         } catch (error) {
-            textContainer.innerHTML = `⚠️ 命运的齿轮卡住了：${error.message}。请检查API配置。`;
-            // 回退时间
+            console.error(error);
+            textContainer.innerHTML = `⚠️ <span style="color:red;">API请求失败：${error.message}</span><br>请确保：<br>1. 设置中 URL 为 <b>${window.location.origin.includes('github.io') ? 'Cloudflare Worker 地址' : 'API地址'}</b><br>2. 包含 <b>/v1</b><br>3. 模型名称填写正确。`;
+            
+            // 失败时回滚游戏内部时间
             gameState.age -= 1;
             gameState.currentMonth -= 1;
             if(gameState.currentMonth < 1) {
