@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BitLife - 徐然(Blupure)的人生</title>
+    <style>
+        :root {
+            --bg-color: #e0f7fa;
+            --card-bg: #ffffff;
+            --primary-color: #00796b;
+            --secondary-color: #4db6ac;
+            --text-main: #333333;
+            --text-sub: #666666;
+            --border-radius: 16px;
+            --shadow: 0 4px 12px rgba(0, 121, 107, 0.1);
+            --danger-color: #e57373;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+        body {
+            background-color: #cfd8dc;
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 810px; /* 适配iPad 9及手机宽度 */
+            height: 100%;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        /* 顶部状态栏 */
+        .header {
+            background-color: var(--card-bg);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--secondary-color);
+            z-index: 10;
+        }
+
+        .header-info h1 { font-size: 1.2rem; color: var(--primary-color); display: flex; align-items: center; gap: 8px;}
+        .header-info p { font-size: 0.9rem; color: var(--text-sub); margin-top: 5px; }
+
+        /* 内容区 */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            scroll-behavior: smooth;
+        }
+
+        /* 卡片通用样式 */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(77, 182, 172, 0.2);
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 属性栏 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            text-align: center;
+        }
+        .stat-item {
+            background: #f1f8e9;
+            padding: 10px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        .stat-item span { display: block; font-size: 1.2rem; margin-bottom: 4px;}
+
+        /* API配置区 */
+        .api-config {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #fff3e0;
+        }
+        .api-config input {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+
+        /* 剧情显示区 */
+        .story-container {
+            min-height: 200px;
+        }
+        .story-log {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            color: var(--text-main);
+            font-size: 1rem;
+            border-left: 4px solid var(--secondary-color);
+            padding-left: 12px;
+        }
+        .story-date {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        .story-text {
+            white-space: pre-wrap; /* 保持换行 */
+        }
+        .streaming-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 15px;
+            background-color: var(--primary-color);
+            animation: blink 1s infinite;
+            vertical-align: middle;
+            margin-left: 4px;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* 底部操作区与导航 */
+        .footer {
+            background-color: var(--card-bg);
+            padding: 10px 15px 20px 15px;
+            border-top: 1px solid #e0e0e0;
+            z-index: 10;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1.1rem;
+            font-weight: bold;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        .action-btn:active { transform: scale(0.98); background-color: #004d40; }
+        .action-btn:disabled { background-color: #9e9e9e; cursor: not-allowed; }
+
+        .nav-bar {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .nav-btn {
+            flex: 1;
+            padding: 12px 5px;
+            text-align: center;
+            background: #f5f5f5;
+            color: var(--text-sub);
+            border-radius: 12px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 1px solid transparent;
+        }
+        .nav-btn.active {
+            background: var(--primary-color);
+            color: white;
+            box-shadow: var(--shadow);
+        }
+
+        /* 隐藏区控制 */
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+
+        /* 列表通用样式 (背包/社交) */
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            background: #fafafa;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .list-item:hover { background: #e0f2f1; }
+        .list-item-left h4 { color: var(--primary-color); margin-bottom: 4px; }
+        .list-item-left p { font-size: 0.8rem; color: var(--text-sub); }
+        .list-item-right { font-weight: bold; color: var(--secondary-color); font-size: 0.9rem; }
+
+        /* 弹窗样式 */
+        .modal-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+        }
+        .modal-card {
+            background: white;
+            width: 100%;
+            max-width: 400px;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            animation: fadeIn 0.3s ease-out;
+        }
+        .modal-title { font-size: 1.3rem; color: var(--primary-color); margin-bottom: 10px; }
+        .modal-desc { font-size: 0.95rem; color: var(--text-main); margin-bottom: 20px; line-height: 1.5; }
+        .modal-actions { display: flex; gap: 10px; }
+        .modal-btn {
+            flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;
+        }
+        .modal-btn-primary { background: var(--primary-color); color: white; }
+        .modal-btn-cancel { background: #eeeeee; color: var(--text-main); }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div class="header">
+        <div class="header-info">
+            <h1 id="ui-name">🧑‍🦱 徐然 (Blupure)</h1>
+            <p id="ui-basic-info">📍 洛杉矶, 美国 | 🎂 0岁 | 📅 1995年1月</p>
+        </div>
+        <div style="text-align: right;">
+            <span style="font-size: 1.2rem; color: #ff9800; font-weight: bold;" id="ui-wealth">💰 $500,000</span>
+        </div>
+    </div>
+
+    <div class="content" id="main-content">
+        
+        <div id="view-main" class="view-section active">
+            
+            <div class="card stats-grid">
+                <div class="stat-item"><span>❤️ <span id="ui-health">85</span></span>健康</div>
+                <div class="stat-item"><span>🧠 <span id="ui-intellect">90</span></span>智力</div>
+                <div class="stat-item"><span>✨ <span id="ui-charisma">88</span></span>魅力</div>
+                <div class="stat-item"><span>🍀 <span id="ui-luck">75</span></span>运气</div>
+            </div>
+
+            <div class="card api-config">
+                <h4 style="color: var(--primary-color); display: flex; justify-content: space-between; align-items: center;" onclick="toggleConfig()">
+                    <span>⚙️ 核心驱动设置 (点击展开/折叠)</span>
+                    <span id="config-arrow">▼</span>
+                </h4>
+                <div id="config-body" style="display: none; margin-top: 10px;">
+                    <input type="text" id="api-url" placeholder="API URL (例如: https://api.openai.com/v1)" value="https://api.openai.com/v1">
+                    <input type="password" id="api-key" placeholder="API Key (sk-...)">
+                    <input type="text" id="api-model" placeholder="模型名称 (例如: gpt-4o-mini)" value="gpt-3.5-turbo">
+                    <div style="display:flex; gap:10px; margin-top:10px;">
+                        <button class="modal-btn modal-btn-primary" onclick="saveSettings()">保存配置</button>
+                        <button class="modal-btn modal-btn-cancel" onclick="resetGame()">重新开局</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card story-container" id="story-board">
+                </div>
+        </div>
+
+        <div id="view-social" class="view-section">
+            <div class="card">
+                <h3 style="color: var(--primary-color); margin-bottom: 10px;">👥 人际关系网</h3>
+                <div id="social-list">
+                    </div>
+            </div>
+        </div>
+
+        <div id="view-inventory" class="view-section">
+            <div class="card">
+                <h3 style="color: var(--primary-color); margin-bottom: 10px;">🎒 个人物品与资产</h3>
+                <div id="inventory-list">
+                    </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="footer">
+        <button id="btn-next" class="action-btn" onclick="nextTurn()">
+            <span>⏳ 进入下一月</span>
+        </button>
+        <div class="nav-bar">
+            <div class="nav-btn active" onclick="switchTab('view-main', this)">📖 生涯</div>
+            <div class="nav-btn" onclick="switchTab('view-social', this)">💬 社交</div>
+            <div class="nav-btn" onclick="switchTab('view-inventory', this)">🎒 背包</div>
+        </div>
+    </div>
+
+    <div id="action-modal" class="modal-overlay">
+        <div class="modal-card">
+            <h3 class="modal-title" id="modal-title">标题</h3>
+            <p class="modal-desc" id="modal-desc">详细描述信息</p>
+            <div class="modal-actions" id="modal-actions">
+                <button class="modal-btn modal-btn-cancel" onclick="closeModal()">关闭</button>
+                <button class="modal-btn modal-btn-primary" id="modal-confirm-btn" style="display:none;">确认</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    /*================ 游戏核心数据状态 ================*/
+    const defaultGameState = {
+        name: "徐然",
+        englishName: "Blupure",
+        gender: "男",
+        nationality: "美国",
+        location: "洛杉矶",
+        birthYear: 1995,
+        currentYear: 1995,
+        currentMonth: 1,
+        age: 0,
+        wealth: 500000,
+        stats: {
+            health: 85,
+            intellect: 90,
+            charisma: 88,
+            luck: 75
+        },
+        inventory: [
+            { id: 1, name: "高级奶嘴", desc: "婴儿专属安抚神器，进口硅胶材质。", effectDesc: "使用后可能提升一点心情。", value: "$50", type: "item" },
+            { id: 2, name: "全家福照片", desc: "一张温馨的家庭合影。", effectDesc: "满满的回忆。", value: "无价", type: "view" }
+        ],
+        npcs: [
+            { id: 1, name: "John Xu", relation: "父亲", intimacy: 80, desc: "忙碌的企业高管，为人严厉但注重家庭传承。" },
+            { id: 2, name: "Mary Smith", relation: "母亲", intimacy: 90, desc: "出身优渥的家庭主妇，温柔且对你充满溺爱。" }
+        ],
+        history: [
+            {
+                date: "1995年1月",
+                text: "伴随着清晨的第一缕阳光，你出生在美国洛杉矶的一家私立贵族医院。\n你的父亲是跨国企业的高管，母亲是全职富太太。你被取名为徐然，英文名 Blupure。父母对你寄予厚望。\n你的出生是一个备孕已久的结晶，家人们都为你感到高兴。护士夸你长得非常漂亮，有一双明亮的眼睛。"
+            }
+        ]
+    };
+
+    let gameState = {};
+    let isGenerating = false;
+
+    /*================ 初始化与存储系统 ================*/
+    function initGame() {
+        const saved = localStorage.getItem('bitlife_save');
+        if (saved) {
+            try {
+                gameState = JSON.parse(saved);
+            } catch (e) {
+                gameState = JSON.parse(JSON.stringify(defaultGameState));
+            }
+        } else {
+            gameState = JSON.parse(JSON.stringify(defaultGameState));
+        }
+
+        // 加载API设置
+        document.getElementById('api-url').value = localStorage.getItem('bitlife_api_url') || 'https://api.openai.com/v1';
+        document.getElementById('api-key').value = localStorage.getItem('bitlife_api_key') || '';
+        document.getElementById('api-model').value = localStorage.getItem('bitlife_api_model') || 'gpt-3.5-turbo';
+
+        renderUI();
+        renderHistory();
+    }
+
+    function saveGame() {
+        localStorage.setItem('bitlife_save', JSON.stringify(gameState));
+    }
+
+    function saveSettings() {
+        localStorage.setItem('bitlife_api_url', document.getElementById('api-url').value.trim());
+        localStorage.setItem('bitlife_api_key', document.getElementById('api-key').value.trim());
+        localStorage.setItem('bitlife_api_model', document.getElementById('api-model').value.trim());
+        alert("核心驱动配置已保存！");
+    }
+
+    function resetGame() {
+        if(confirm("确定要重新投胎吗？所有进度将丢失。")) {
+            localStorage.removeItem('bitlife_save');
+            initGame();
+        }
+    }
+
+    /*================ UI 渲染系统 ================*/
+    function renderUI() {
+        // 更新顶部栏
+        document.getElementById('ui-name').innerText = `🧑‍🦱 ${gameState.name} (${gameState.englishName})`;
+        document.getElementById('ui-basic-info').innerText = `📍 ${gameState.location}, ${gameState.nationality} | 🎂 ${Math.floor(gameState.age/12)}岁 | 📅 ${gameState.currentYear}年${gameState.currentMonth}月`;
+        document.getElementById('ui-wealth').innerText = `💰 $${gameState.wealth.toLocaleString()}`;
+
+        // 更新属性
+        document.getElementById('ui-health').innerText = gameState.stats.health;
+        document.getElementById('ui-intellect').innerText = gameState.stats.intellect;
+        document.getElementById('ui-charisma').innerText = gameState.stats.charisma;
+        document.getElementById('ui-luck').innerText = gameState.stats.luck;
+
+        // 渲染列表
+        renderSocial();
+        renderInventory();
+    }
+
+    function renderHistory() {
+        const board = document.getElementById('story-board');
+        board.innerHTML = '';
+        gameState.history.forEach(item => {
+            appendStoryCard(item.date, item.text);
+        });
+        scrollToBottom();
+    }
+
+    function appendStoryCard(dateStr, text) {
+        const board = document.getElementById('story-board');
+        const logDiv = document.createElement('div');
+        logDiv.className = 'story-log';
+        
+        const dateDiv = document.createElement('div');
+        dateDiv.className = 'story-date';
+        dateDiv.innerText = `[ ${dateStr} ]`;
+        
+        const textDiv = document.createElement('div');
+        textDiv.className = 'story-text';
+        textDiv.innerHTML = text; // 此时已经是处理好的文本
+
+        logDiv.appendChild(dateDiv);
+        logDiv.appendChild(textDiv);
+        board.appendChild(logDiv);
+    }
+
+    function renderSocial() {
+        const list = document.getElementById('social-list');
+        list.innerHTML = '';
+        gameState.npcs.forEach(npc => {
+            const item = document.createElement('div');
+            item.className = 'list-item';
+            item.onclick = () => showNPCModal(npc);
+            item.innerHTML = `
+                <div class="list-item-left">
+                    <h4>${npc.name} (${npc.relation})</h4>
+                    <p>好感度：${npc.intimacy}</p>
+                </div>
+                <div class="list-item-right">👉 详情</div>
+            `;
+            list.appendChild(item);
+        });
+    }
+
+    function renderInventory() {
+        const list = document.getElementById('inventory-list');
+        list.innerHTML = '';
+        gameState.inventory.forEach(inv => {
+            const item = document.createElement('div');
+            item.className = 'list-item';
+            item.onclick = () => showItemModal(inv);
+            item.innerHTML = `
+                <div class="list-item-left">
+                    <h4>${inv.name}</h4>
+                    <p>价值: ${inv.value}</p>
+                </div>
+                <div class="list-item-right">📦 使用/查看</div>
+            `;
+            list.appendChild(item);
+        });
+    }
+
+    /*================ 交互与弹窗系统 ================*/
+    function switchTab(viewId, btnEl) {
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(viewId).classList.add('active');
+        btnEl.classList.add('active');
+    }
+
+    function toggleConfig() {
+        const body = document.getElementById('config-body');
+        const arrow = document.getElementById('config-arrow');
+        if (body.style.display === 'none') {
+            body.style.display = 'block';
+            arrow.innerText = '▲';
+        } else {
+            body.style.display = 'none';
+            arrow.innerText = '▼';
+        }
+    }
+
+    function scrollToBottom() {
+        const content = document.getElementById('main-content');
+        content.scrollTop = content.scrollHeight;
+    }
+
+    function showModal(title, desc, confirmText = null, onConfirm = null) {
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-desc').innerHTML = desc;
+        
+        const confirmBtn = document.getElementById('modal-confirm-btn');
+        if (confirmText && onConfirm) {
+            confirmBtn.style.display = 'block';
+            confirmBtn.innerText = confirmText;
+            confirmBtn.onclick = () => {
+                onConfirm();
+                closeModal();
+            };
+        } else {
+            confirmBtn.style.display = 'none';
+        }
+        
+        document.getElementById('action-modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('action-modal').style.display = 'none';
+    }
+
+    function showNPCModal(npc) {
+        const desc = `
+            <strong>身份：</strong>${npc.relation}<br>
+            <strong>好感度：</strong>${npc.intimacy}/100<br>
+            <strong>描述：</strong>${npc.desc}
+        `;
+        showModal(`👤 ${npc.name}`, desc, "闲聊", () => {
+            // 触发简单互动
+            alert(`你咿咿呀呀地试图和 ${npc.name} 交流，对方笑了。`);
+            switchTab('view-main', document.querySelectorAll('.nav-btn')[0]);
+        });
+    }
+
+    function showItemModal(item) {
+        const desc = `
+            <strong>物品描述：</strong>${item.desc}<br>
+            <strong>属性影响：</strong>${item.effectDesc}<br>
+            <strong>市场价值：</strong>${item.value}
+        `;
+        showModal(`🎒 ${item.name}`, desc, item.type === 'item' ? "使用" : null, () => {
+            if(item.type === 'item') {
+                alert(`你使用了 ${item.name}！感觉不错。`);
+                switchTab('view-main', document.querySelectorAll('.nav-btn')[0]);
+                // 此处可扩展删除物品逻辑
+            }
+        });
+    }
+
+    /*================ API 流式生成系统 ================*/
+    async function nextTurn() {
+        if(isGenerating) return;
+
+        const url = document.getElementById('api-url').value.trim();
+        const key = document.getElementById('api-key').value.trim();
+        const modelName = document.getElementById('api-model').value.trim();
+
+        if (!url || !key) {
+            alert("请先展开上方【核心驱动设置】并配置完整的 API URL 和 API Key！");
+            toggleConfig();
+            return;
+        }
+
+        // 时间推演逻辑
+        gameState.age += 1;
+        gameState.currentMonth += 1;
+        if(gameState.currentMonth > 12) {
+            gameState.currentMonth = 1;
+            gameState.currentYear += 1;
+        }
+
+        const dateStr = `${gameState.currentYear}年${gameState.currentMonth}月`;
+        const ageYears = Math.floor(gameState.age / 12);
+        
+        renderUI(); // 更新顶部信息
+
+        // 切换回主视图
+        switchTab('view-main', document.querySelectorAll('.nav-btn')[0]);
+        
+        // 创建新的剧情气泡
+        const board = document.getElementById('story-board');
+        const logDiv = document.createElement('div');
+        logDiv.className = 'story-log';
+        logDiv.innerHTML = `<div class="story-date">[ ${dateStr} ]</div><div class="story-text">正在生成命运的轨迹...<span class="streaming-cursor"></span></div>`;
+        board.appendChild(logDiv);
+        scrollToBottom();
+
+        const textContainer = logDiv.querySelector('.story-text');
+
+        // 构建Prompt上下文 (防重复：传入最近3条历史)
+        const recentHistory = gameState.history.slice(-3).map(h => `${h.date}: ${h.text}`).join("\n\n");
+        const systemPrompt = `你是一个BitLife人生模拟器引擎。
+规则：
+1. 你的回答直接就是当前月的剧情发生内容，不包含任何JSON，只需正则文本！
+2. 主角是徐然(Blupure)，性别男，当前年龄${ageYears}岁${gameState.currentMonth}个月。
+3. 严格遵循现实世界逻辑，无科幻、玄幻、魔法。
+4. 内容生动，包含人物对话、心理描写和周围环境。
+5. 请使用第一人称或第二人称叙述。使用emoji表情增加趣味性。
+6. 事件不能与近期历史重复，要承上启下，要有合理的成长轨迹。`;
+
+        const userPrompt = `【最近历史发生事件】：\n${recentHistory}\n\n现在时间是${dateStr}。请生成本月发生的1-2个日常或突发事件。要求自然过渡。只需输出纯文本剧情。`;
+
+        isGenerating = true;
+        document.getElementById('btn-next').disabled = true;
+
+        try {
+            const response = await fetch(`${url}/chat/completions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${key}`
+                },
+                body: JSON.stringify({
+                    model: modelName,
+                    messages: [
+                        { role: 'system', content: systemPrompt },
+                        { role: 'user', content: userPrompt }
+                    ],
+                    stream: true,
+                    temperature: 0.7
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`API 错误: ${response.status} ${response.statusText}`);
+            }
+
+            // 读取流
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder('utf-8');
+            let generatedText = "";
+            textContainer.innerHTML = '<span class="streaming-cursor"></span>'; // 清除提示语
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                const chunk = decoder.decode(value, { stream: true });
+                const lines = chunk.split('\n');
+                
+                for (let line of lines) {
+                    if (line.trim() === '') continue;
+                    if (line.startsWith('data: ') && line.trim() !== 'data: [DONE]') {
+                        try {
+                            const data = JSON.parse(line.slice(6));
+                            if (data.choices && data.choices[0].delta && data.choices[0].delta.content) {
+                                const token = data.choices[0].delta.content;
+                                generatedText += token;
+                                // 简单的正则替换，处理多余的markdown标记
+                                let displayText = generatedText
+                                    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+                                    .replace(/\n/g, '<br>');
+                                
+                                textContainer.innerHTML = displayText + '<span class="streaming-cursor"></span>';
+                                scrollToBottom();
+                            }
+                        } catch (e) {
+                            console.error("解析流数据出错:", e, line);
+                        }
+                    }
+                }
+            }
+
+            // 生成结束，去掉光标，保存历史
+            textContainer.innerHTML = generatedText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
+            gameState.history.push({
+                date: dateStr,
+                text: textContainer.innerHTML
+            });
+            saveGame();
+
+        } catch (error) {
+            textContainer.innerHTML = `⚠️ 命运的齿轮卡住了：${error.message}。请检查API配置。`;
+            // 回退时间
+            gameState.age -= 1;
+            gameState.currentMonth -= 1;
+            if(gameState.currentMonth < 1) {
+                gameState.currentMonth = 12;
+                gameState.currentYear -= 1;
+            }
+        } finally {
+            isGenerating = false;
+            document.getElementById('btn-next').disabled = false;
+            renderUI();
+        }
+    }
+
+    // 启动游戏
+    window.onload = initGame;
+
+</script>
+</body>
+</html>
