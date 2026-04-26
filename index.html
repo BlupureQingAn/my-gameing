@@ -502,7 +502,7 @@
                 <span id="config-arrow">▼</span>
             </h4>
             <div id="config-body" style="display:none;">
-                <input type="text" id="api-url" placeholder="API URL (例如: https://api.openai.com/v1)">
+                <input type="text" id="api-url" placeholder="上游API URL（例如: https://integrate.api.nvidia.com/v1）">
                 <input type="password" id="api-key" placeholder="API Key">
                 <input type="text" id="api-model" placeholder="模型名 (例如: gpt-4o-mini)">
                 <textarea id="scenario-editor" class="scenario-editor" placeholder="在这里粘贴文游设定剧本（建议放 bitlife-docx-text 的纯文本版）"></textarea>
@@ -568,8 +568,11 @@
             ]
         },
         defaultApi: {
-            url: "https://api.openai.com/v1",
+            url: "https://integrate.api.nvidia.com/v1",
             model: "gpt-4o-mini"
+        },
+        proxy: {
+            baseUrl: "https://my-openai-proxy.x18325986.workers.dev/v1"
         },
         defaultScenario: [
             "你是人生模拟器文游引擎。",
@@ -889,7 +892,7 @@
         }
         function getApiConfig() {
             return {
-                url: document.getElementById("api-url").value.trim(),
+                upstreamUrl: document.getElementById("api-url").value.trim(),
                 key: document.getElementById("api-key").value.trim(),
                 model: document.getElementById("api-model").value.trim()
             };
@@ -929,14 +932,16 @@
         async function requestAI(userText) {
             const state = StateService.get();
             const config = SettingsService.getApiConfig();
-            if (!config.url || !config.key || !config.model) {
-                alert("请先配置 API URL、API Key 和模型名。");
+            if (!config.upstreamUrl || !config.key || !config.model) {
+                alert("请先配置上游 API URL、API Key 和模型名。");
                 return;
             }
 
-            let url = config.url;
-            if (url.endsWith("/")) url = url.slice(0, -1);
-            const fetchUrl = url.endsWith("/chat/completions") ? url : `${url}/chat/completions`;
+            let upstreamUrl = config.upstreamUrl;
+            if (upstreamUrl.endsWith("/")) upstreamUrl = upstreamUrl.slice(0, -1);
+            let proxyBase = AppConfig.proxy.baseUrl;
+            if (proxyBase.endsWith("/")) proxyBase = proxyBase.slice(0, -1);
+            const fetchUrl = `${proxyBase}/chat/completions`;
 
             isGenerating = true;
             UIRenderer.setSendingDisabled(true);
@@ -958,7 +963,13 @@
             try {
                 const response = await fetch(fetchUrl, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${config.key}` },
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${config.key}`,
+                        "X-Upstream-Base-URL": upstreamUrl,
+                        "X-Target-Base-URL": upstreamUrl,
+                        "X-OpenAI-Base-URL": upstreamUrl
+                    },
                     body: JSON.stringify({
                         model: config.model,
                         messages: [
