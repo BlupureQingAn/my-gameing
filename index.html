@@ -251,6 +251,11 @@
             padding: 10px;
         }
 
+        .story-log.conflict {
+            border-color: #d9534f;
+            background: #fff1f0;
+        }
+
         .msg-row {
             display: flex;
             gap: 8px;
@@ -343,6 +348,34 @@
             padding: 8px;
             overflow-x: auto;
             margin: 6px 0;
+        }
+
+        .ai-beauty-card {
+            border: 1px solid #e6c9a8;
+            border-radius: 12px;
+            background: linear-gradient(180deg, #fff8f0, #fffefb);
+            padding: 10px;
+            box-shadow: 0 4px 12px rgba(80, 40, 0, 0.08);
+        }
+
+        .ai-beauty-card-title {
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: #6a3f1b;
+        }
+
+        .ai-beauty-card-body {
+            color: #3f2a1a;
+        }
+
+        .ai-card-warning {
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+            color: #b94a48;
+            background: #fff1f0;
+            border: 1px solid #f1c4c2;
+            border-radius: 8px;
+            padding: 6px 8px;
         }
 
         /* 交互态 */
@@ -450,6 +483,27 @@
             display: grid;
             grid-template-columns: 1fr;
             gap: 8px;
+        }
+
+        .scenario-card {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #fffdf8;
+        }
+
+        .scenario-card.active {
+            border-color: var(--accent);
+            background: #fff4e5;
+        }
+
+        .api-card {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #fffdf8;
         }
 
         .composer textarea {
@@ -600,31 +654,60 @@
     </header>
 
     <main class="content" id="main-content">
-        <section class="card stats-grid">
+        <section id="view-home" class="view-section active">
+            <section class="card">
+                <div class="list-title">🧩 文游设定卡片列表</div>
+                <div id="scenario-card-list" style="margin-top:8px;"></div>
+                <div class="list-title" style="margin-top:8px;">📚 官方预设模板（可一键套用）</div>
+                <div class="list-sub">模板资源来自网络，如有侵权请联系删除</div>
+                <div id="preset-template-list" style="margin-top:8px;"></div>
+                <div class="list-title" style="margin-top:8px;">当前卡片设定编辑</div>
+                <input id="scenario-title-input" type="text" placeholder="卡片标题（可自定义）">
+                <input id="scenario-theme-input" type="text" placeholder="美化主题（例如：奶油暖色/赛博紫）">
+                <textarea id="scenario-editor" class="scenario-editor" placeholder="在这里编辑当前卡片的文游设定"></textarea>
+                <div class="setting-actions">
+                    <button class="mini-btn primary" onclick="saveScenarioCard()">保存当前卡片</button>
+                    <button class="mini-btn ghost" onclick="importScenarioTxt()">导入设定TXT</button>
+                    <button class="mini-btn ghost" onclick="startFromHome()">进入剧情</button>
+                </div>
+                <div class="setting-actions">
+                    <button class="mini-btn ghost" onclick="switchView('view-settings')">进入设置页</button>
+                </div>
+                <input id="scenario-file-input" type="file" accept=".txt,.md,.text" style="display:none;">
+            </section>
+        </section>
+
+        <section id="view-settings" class="view-section">
+            <section class="card">
+                <div class="list-title">⚙️ 设置页面</div>
+                <div class="list-sub">这里只保留设置入口按钮</div>
+                <div class="setting-actions">
+                    <button class="mini-btn primary" onclick="switchView('view-api-cards')">AI-API 卡片配置</button>
+                    <button class="mini-btn ghost" onclick="openRebornModal()">重新投胎</button>
+                </div>
+            </section>
+        </section>
+
+        <section id="view-api-cards" class="view-section">
+            <section class="card">
+                <div class="list-title">🧠 AI-API 卡片列表</div>
+                <div id="api-card-list" style="margin-top:8px;"></div>
+                <div class="list-title" style="margin-top:8px;">自定义 API 卡片配置（仅此卡可调用）</div>
+                <input type="text" id="api-url" placeholder="上游API URL（例如: https://integrate.api.nvidia.com/v1）">
+                <input type="password" id="api-key" placeholder="API Key">
+                <input type="text" id="api-model" placeholder="模型名 (例如: deepseek-chat)">
+                <div class="setting-actions">
+                    <button class="mini-btn primary" onclick="saveSettings()">保存自定义API卡片</button>
+                    <button class="mini-btn ghost" onclick="switchView('view-settings')">返回设置页</button>
+                </div>
+            </section>
+        </section>
+
+        <section class="card stats-grid" id="game-stats-card">
             <div class="stat-item"><span id="ui-health">85</span>健康 ❤️</div>
             <div class="stat-item"><span id="ui-intellect">90</span>智力 🧠</div>
             <div class="stat-item"><span id="ui-charisma">88</span>魅力 ✨</div>
             <div class="stat-item"><span id="ui-luck">75</span>运气 🍀</div>
-        </section>
-
-        <section class="card api-config">
-            <h4 onclick="toggleConfig()">
-                <span>⚙️ 核心驱动设置（点击展开）</span>
-                <span id="config-arrow">▼</span>
-            </h4>
-            <div id="config-body" style="display:none;">
-                <input type="text" id="api-url" placeholder="上游API URL（例如: https://integrate.api.nvidia.com/v1）">
-                <input type="password" id="api-key" placeholder="API Key">
-                <input type="text" id="api-model" placeholder="模型名 (例如: gpt-4o-mini)">
-                <textarea id="scenario-editor" class="scenario-editor" placeholder="在这里粘贴文游设定剧本（建议放 bitlife-docx-text 的纯文本版）"></textarea>
-                <div class="scenario-hint">设定解耦：聊天引擎只读取这里的设定文本，其它模块不再混入剧情规则。</div>
-                <div class="setting-actions">
-                    <button class="mini-btn primary" onclick="saveSettings()">保存配置</button>
-                    <button class="mini-btn ghost" onclick="importScenarioTxt()">导入设定TXT</button>
-                    <button class="mini-btn ghost" onclick="openRebornModal()">重新投胎</button>
-                </div>
-                <input id="scenario-file-input" type="file" accept=".txt,.md,.text" style="display:none;">
-            </div>
         </section>
 
         <section id="view-main" class="view-section active">
@@ -669,10 +752,12 @@
 
     <footer class="chat-footer">
         <div class="nav-actions">
-            <button class="nav-btn active" data-view="view-main" onclick="switchView('view-main')">📖 生涯</button>
+            <button class="nav-btn active" data-view="view-home" onclick="switchView('view-home')">🏠 首页</button>
+            <button class="nav-btn" data-view="view-main" onclick="switchView('view-main')">📖 生涯</button>
             <button class="nav-btn" data-view="view-inventory" onclick="switchView('view-inventory')">🎒 背包</button>
             <button class="nav-btn" data-view="view-social" onclick="switchView('view-social')">💬 社交</button>
             <button class="nav-btn" data-view="view-saves" onclick="switchView('view-saves')">💾 存档</button>
+            <button class="nav-btn" data-view="view-settings" onclick="switchView('view-settings')">⚙️ 设置</button>
         </div>
         <div class="quick-actions">
             <button class="quick-btn" id="btn-next-month" onclick="sendUserText('下一月')">⏭ 下一月</button>
@@ -683,7 +768,7 @@
             <button class="quick-btn" onclick="jumpWeek(1)">⏩ 下一周</button>
         </div>
         <div class="composer">
-            <textarea id="chat-input" placeholder="和黑猫猫/粉猫猫说点什么吧～"></textarea>
+            <textarea id="chat-input" placeholder="输入你的行动或对白…"></textarea>
             <button class="send-btn" id="send-btn" onclick="onSendClick()">发送</button>
         </div>
     </footer>
@@ -721,7 +806,11 @@
             apiModel: "bitlife_api_model",
             nameRegistry: "bitlife_used_name_registry_v1",
             scenarioText: "bitlife_scenario_text_v1",
-            saveSlotPrefix: "bitlife_save_slot_"
+            saveSlotPrefix: "bitlife_save_slot_",
+            scenarioCards: "bitlife_scenario_cards_v1",
+            selectedScenarioCardId: "bitlife_selected_scenario_card_v1",
+            apiCards: "bitlife_api_cards_v1",
+            selectedApiCardId: "bitlife_selected_api_card_v1"
         },
         identityPools: {
             cnNames: ["林澈", "沈知夏", "顾言川", "苏见微", "江望舒", "程以宁", "许星野", "周晚棠", "梁初言", "宋栖月", "叶云舟", "季明川", "陆听岚", "秦若禾"],
@@ -745,13 +834,22 @@
             baseUrl: "https://my-openai-proxy.x18325986.workers.dev"
         },
         defaultScenario: [
-            "你是人生模拟器文游引擎。",
-            "必须严格根据玩家最新输入回复，不可脱离输入自说自话。",
-            "保持现代现实世界，不要超自然、科幻、血腥。",
-            "输出中要包含：当前时间、状态变化、剧情对话。",
-            "可以加入适量emoji、颜文字，以及（AI想法：...）。",
-            "事件偏日常、成长缓慢、年龄逻辑严格、叙事连贯。"
-        ].join("\n")
+            "请在这里粘贴你的文游设定文本。",
+            "该设定是剧情主规则来源，若为空则使用默认写实规则。"
+        ].join("\n"),
+        defaultScenarioCards: [
+            {
+                id: "scenario_default",
+                title: "默认文游设定",
+                theme: "奶油暖色",
+                text: "请在这里粘贴你的文游设定文本。\n该设定是剧情主规则来源，若为空则使用默认写实规则。"
+            }
+        ],
+        defaultApiCards: [
+            { id: "api_custom", title: "自定义API", editable: true, upstreamUrl: "https://integrate.api.nvidia.com/v1", model: "gpt-4o-mini", key: "" },
+            { id: "api_deepseek", title: "DeepSeek（预设）", editable: false, upstreamUrl: "https://api.deepseek.com/v1", model: "deepseek-chat", key: "" },
+            { id: "api_kimi", title: "Kimi（预设）", editable: false, upstreamUrl: "https://api.moonshot.cn/v1", model: "moonshot-v1-8k", key: "" }
+        ]
     };
 
     const Utils = {
@@ -856,11 +954,11 @@
 
     const StateService = (() => {
         const baseState = {
-            name: "徐然",
-            englishName: "Blupure",
+            name: "待生成",
+            englishName: "Pending",
             gender: "男",
-            nationality: "美国",
-            location: "洛杉矶",
+            nationality: "待生成",
+            location: "待生成",
             birthYear: 1995,
             currentYear: 1995,
             currentMonth: 1,
@@ -885,7 +983,7 @@
         let gameState = null;
 
         function introText(state) {
-            return `## 🌸 欢迎来到人生模拟器\n你出生在${state.location}的一家医院，国籍为**${state.nationality}**。\n你的名字是**${state.name}（${state.englishName}）**，黑猫猫和粉猫猫会陪你一起成长喵~\n\n（AI想法：先从你的童年第一幕慢慢展开）\n\n**可选行动**\n1. 观察父母\n2. 安静睡觉\n3. 哇哇大哭`;
+            return `## 人生模拟器初始化\n你出生在${state.location}，国籍为**${state.nationality}**。\n当前角色：**${state.name}（${state.englishName}）**。\n\n（AI想法：先从当前家庭与环境细节展开）\n\n**可选行动**\n1. 观察父母\n2. 安静休息\n3. 查看当前状态`;
         }
 
         function buildInitialState(gender) {
@@ -918,7 +1016,7 @@
             gameState.history = [{
                 role: "ai",
                 date: Utils.nowDateStr(gameState),
-                text: `## 🍼 新人生开启\n你已选择性别：**${gender}**。\n本次随机身份：**${gameState.name}（${gameState.englishName}）**，国籍**${gameState.nationality}**，出生地**${gameState.location}**。\n\n黑猫猫和粉猫猫正在同步你的新档案～`
+                text: `## 新人生开启\n你已选择性别：**${gender}**。\n本次随机身份：**${gameState.name}（${gameState.englishName}）**，国籍**${gameState.nationality}**，出生地**${gameState.location}**。\n\n（AI想法：后续剧情会严格沿用这组身份信息）`
             }];
             save();
         }
@@ -977,22 +1075,111 @@
             html = html.replace(/\n/g, "<br>");
             return html;
         }
-        return { render };
+        return { render, escapeHtml };
+    })();
+
+    const HtmlCardService = (() => {
+        function isBeautyModeEnabled(setting) {
+            const value = String(setting || "").trim();
+            if (!value) return false;
+            if (value === "默认主题" || value === "网络模板") return false;
+            return true;
+        }
+        function containsHtmlCard(text) {
+            if (!text) return false;
+            return /<(article|section|div)\b[^>]*class=["'][^"']*ai-beauty-card[^"']*["'][^>]*>/i.test(text);
+        }
+        function extractHtmlFromCodeFence(text) {
+            if (!text) return "";
+            const match = String(text).match(/```html\s*([\s\S]*?)```/i);
+            if (match && match[1]) return match[1].trim();
+            return "";
+        }
+        function normalizeHtmlCard(text) {
+            const raw = String(text || "").trim();
+            const fenced = extractHtmlFromCodeFence(raw);
+            if (fenced && containsHtmlCard(fenced)) return fenced;
+            return raw;
+        }
+        function isRenderableHtmlCard(text) {
+            const normalized = normalizeHtmlCard(text);
+            if (!containsHtmlCard(normalized)) return false;
+            try {
+                const tpl = document.createElement("template");
+                tpl.innerHTML = normalized;
+                return !!tpl.content.querySelector(".ai-beauty-card");
+            } catch (e) {
+                return false;
+            }
+        }
+        function wrapAsHtmlCard(theme, bodyText) {
+            const safeTheme = MarkdownService.escapeHtml(theme || "美化卡片");
+            const bodyHtml = MarkdownService.render(bodyText || "");
+            return [
+                `<article class="ai-beauty-card" data-theme="${safeTheme}">`,
+                `<header class="ai-beauty-card-title">${safeTheme}</header>`,
+                `<section class="ai-beauty-card-body">${bodyHtml}</section>`,
+                `</article>`
+            ].join("");
+        }
+        return { isBeautyModeEnabled, containsHtmlCard, isRenderableHtmlCard, wrapAsHtmlCard, normalizeHtmlCard };
     })();
 
     const BuiltinPromptService = (() => {
         function getResponseRules() {
             return [
                 "【内置返回规则】",
-                "1) 必须只基于玩家最新输入和上下文推进剧情，不可脱离输入自说自话。",
-                "2) 输出使用 Markdown，内容贴近手机阅读。",
-                "3) 每次回复都应包含：时间信息、状态变化、剧情对话、（AI想法：...）。",
-                "4) 回复末尾必须提供 1-3 条可执行选项，使用编号格式：1. xxx",
-                "5) 若剧情不适合选项，也要提供“继续观察/继续推进”等中性选项。",
-                "6) 事件保持现实、日常、年龄逻辑正确。"
+                "1) 必须优先遵循“角色事实锁定块”，不得篡改姓名、年龄、性别、国籍、身份、NPC关系与已发生事件。",
+                "2) 必须只基于玩家最新输入和上下文推进剧情，不可脱离输入自说自话，不可重置世界观。",
+                "3) 输出使用 Markdown，内容贴近手机阅读。",
+                "4) 每次回复都应包含：时间信息、状态变化、剧情对话、（AI想法：...）。",
+                "5) 回复末尾必须提供 1-3 条可执行选项，使用编号格式：1. xxx",
+                "6) 若剧情不适合选项，也要提供“继续观察/继续推进”等中性选项。",
+                "7) 事件保持现实、日常、年龄逻辑正确。"
             ].join("\n");
         }
-        return { getResponseRules };
+        function buildStateFactLock(state) {
+            const fact = {
+                protagonist: {
+                    name: state.name,
+                    englishName: state.englishName,
+                    gender: state.gender,
+                    nationality: state.nationality,
+                    location: state.location,
+                    ageMonths: state.age,
+                    ageYears: Math.floor((state.age || 0) / 12)
+                },
+                time: {
+                    year: state.currentYear,
+                    month: state.currentMonth,
+                    day: state.currentDay,
+                    weekdayIndex: state.weekdayIndex
+                },
+                stats: state.stats,
+                npcs: (state.npcs || []).map((n) => ({
+                    id: n.id,
+                    name: n.name,
+                    relation: n.relation,
+                    favor: n.favor,
+                    status: n.status,
+                    mood: n.mood
+                })),
+                inventory: (state.inventory || []).map((i) => ({
+                    id: i.id,
+                    name: i.name,
+                    count: i.count,
+                    effect: i.effect
+                }))
+            };
+            return [
+                "【角色事实锁定块（高优先级，不可改写）】",
+                "以下JSON中的字段是当前已确认事实，严禁无依据修改：",
+                "```json",
+                JSON.stringify(fact, null, 2),
+                "```"
+            ].join("\n");
+        }
+        return { getResponseRules, buildStateFactLock };
     })();
 
     const ChoiceService = (() => {
@@ -1030,8 +1217,131 @@
         return { extractChoices, ensureOptionsBlock };
     })();
 
+    const ConflictService = (() => {
+        function toDateNumber(y, m, d) {
+            return y * 10000 + m * 100 + d;
+        }
+
+        function extractDateCandidates(content) {
+            const list = [];
+            const full = /(\d{4})年\s*(\d{1,2})月\s*(\d{1,2})日/g;
+            let m;
+            while ((m = full.exec(content)) !== null) {
+                list.push({ y: Number(m[1]), mo: Number(m[2]), d: Number(m[3]), raw: m[0] });
+            }
+            return list;
+        }
+
+        function addIssue(issues, severity, message) {
+            issues.push({ severity, message });
+        }
+
+        function detectGenderConflict(content, state, issues) {
+            const maleHint = /(你是男生|你是男性|你的性别是男|作为男性)/;
+            const femaleHint = /(你是女生|你是女性|你的性别是女|作为女性)/;
+            const currentGender = String(state.gender || "");
+            if (maleHint.test(content) && !/男/.test(currentGender)) {
+                addIssue(issues, "error", `性别冲突：回复暗示“男性”，应为“${currentGender}”`);
+            }
+            if (femaleHint.test(content) && !/女/.test(currentGender)) {
+                addIssue(issues, "error", `性别冲突：回复暗示“女性”，应为“${currentGender}”`);
+            }
+        }
+
+        function detectNpcConflict(content, state, issues) {
+            const npcList = Array.isArray(state.npcs) ? state.npcs : [];
+            const npcNameSet = new Set(npcList.map((n) => n.name));
+            const relationByName = new Map(npcList.map((n) => [n.name, n.relation]));
+
+            // 匹配形如：张三（母亲）
+            const npcPairRegex = /([^\s，。,.!！?？（）()]{2,12})（([^\s，。,.!！?？（）()]{1,8})）/g;
+            let m;
+            while ((m = npcPairRegex.exec(content)) !== null) {
+                const name = m[1];
+                const rel = m[2];
+                if (!npcNameSet.has(name)) {
+                    addIssue(issues, "warning", `NPC名称冲突：出现未注册NPC“${name}（${rel}）”`);
+                    continue;
+                }
+                const expectedRel = relationByName.get(name);
+                if (expectedRel && expectedRel !== rel) {
+                    addIssue(issues, "error", `NPC关系冲突：“${name}”关系写为“${rel}”，应为“${expectedRel}”`);
+                }
+            }
+        }
+
+        function detectTimeRollbackConflict(content, state, issues) {
+            const candidates = extractDateCandidates(content);
+            if (!candidates.length) return;
+            const current = toDateNumber(
+                Number(state.currentYear || 0),
+                Number(state.currentMonth || 1),
+                Number(state.currentDay || 1)
+            );
+            const rollback = candidates.find((it) => toDateNumber(it.y, it.mo, it.d) < current);
+            if (rollback) {
+                addIssue(issues, "error", `时间回退冲突：回复出现“${rollback.raw}”，早于当前“${state.currentYear}年${state.currentMonth}月${state.currentDay}日”`);
+            }
+        }
+
+        function detectInventoryPhantomAdd(content, state, issues) {
+            const inventoryNames = new Set((state.inventory || []).map((i) => i.name));
+            // 匹配“获得了XXX / 得到XXX / 拿到了XXX”
+            const gainRegex = /(获得了|得到了|拿到了|拾取了|收入背包)\s*([^\s，。,.!！?？]{1,16})/g;
+            let m;
+            while ((m = gainRegex.exec(content)) !== null) {
+                const itemName = m[2];
+                if (!inventoryNames.has(itemName)) {
+                    addIssue(issues, "warning", `背包冲突：回复声明新增物品“${itemName}”，但当前背包未登记该物品`);
+                }
+            }
+        }
+
+        function detectConflicts(text, state) {
+            const content = String(text || "");
+            const issues = [];
+
+            const nameMatch = content.match(/你(?:的)?名字(?:是|叫)\s*[:：]?\s*([^\s，。,.!！?？]+)/);
+            if (nameMatch && nameMatch[1] && nameMatch[1] !== state.name) {
+                addIssue(issues, "error", `姓名冲突：回复为“${nameMatch[1]}”，应为“${state.name}”`);
+            }
+
+            const ageYears = Math.floor((state.age || 0) / 12);
+            const ageMatch = content.match(/你(?:现在|目前)?(?:的)?年龄(?:是|为)?\s*[:：]?\s*(\d{1,3})\s*岁/);
+            if (ageMatch) {
+                const repliedAge = Number(ageMatch[1]);
+                if (Number.isFinite(repliedAge) && Math.abs(repliedAge - ageYears) >= 2) {
+                    addIssue(issues, "error", `年龄冲突：回复为${repliedAge}岁，应接近${ageYears}岁`);
+                }
+            }
+
+            const nationMatch = content.match(/你(?:的)?国籍(?:是|为)\s*[:：]?\s*([^\s，。,.!！?？]+)/);
+            if (nationMatch && nationMatch[1] && nationMatch[1] !== state.nationality) {
+                addIssue(issues, "error", `国籍冲突：回复为“${nationMatch[1]}”，应为“${state.nationality}”`);
+            }
+
+            detectGenderConflict(content, state, issues);
+            detectNpcConflict(content, state, issues);
+            detectTimeRollbackConflict(content, state, issues);
+            detectInventoryPhantomAdd(content, state, issues);
+
+            const errors = issues.filter((i) => i.severity === "error");
+            const warnings = issues.filter((i) => i.severity === "warning");
+            return {
+                hasConflict: issues.length > 0,
+                hasError: errors.length > 0,
+                hasWarning: warnings.length > 0,
+                issues,
+                errors,
+                warnings
+            };
+        }
+        return { detectConflicts };
+    })();
+
     const UIRenderer = (() => {
         let currentStreamingTarget = null;
+        let currentStreamingLogDiv = null;
         let currentSocialNpcId = null;
         function renderTop(state) {
             const years = Math.floor(state.age / 12);
@@ -1062,7 +1372,11 @@
 
             const bubble = document.createElement("div");
             bubble.className = `bubble ${role === "user" ? "user" : "ai"}`;
-            bubble.innerHTML = MarkdownService.render(text) + (streaming ? '<span class="streaming-cursor"></span>' : "");
+            const normalizedText = role === "ai" ? HtmlCardService.normalizeHtmlCard(text) : text;
+            const canUseHtmlCard = role === "ai" && !streaming && HtmlCardService.isRenderableHtmlCard(normalizedText);
+            bubble.innerHTML = canUseHtmlCard
+                ? normalizedText
+                : MarkdownService.render(text) + (streaming ? '<span class="streaming-cursor"></span>' : "");
 
             if (role === "user") { row.appendChild(bubble); row.appendChild(avatar); }
             else { row.appendChild(avatar); row.appendChild(bubble); }
@@ -1085,7 +1399,10 @@
             }
 
             board.appendChild(logDiv);
-            if (streaming) currentStreamingTarget = bubble;
+            if (streaming) {
+                currentStreamingTarget = bubble;
+                currentStreamingLogDiv = logDiv;
+            }
             scrollToBottom();
         }
         function updateStreaming(text) {
@@ -1093,10 +1410,43 @@
             currentStreamingTarget.innerHTML = MarkdownService.render(text) + '<span class="streaming-cursor"></span>';
             scrollToBottom();
         }
-        function finishStreaming(text) {
+        function finishStreaming(text, options = {}) {
             if (!currentStreamingTarget) return;
-            currentStreamingTarget.innerHTML = MarkdownService.render(text);
+            const prefix = options.conflictDetected
+                ? "**⚠️ 检测到设定冲突，已自动纠偏重试一次。**\n\n"
+                : "";
+            const normalizedText = HtmlCardService.normalizeHtmlCard(text);
+            const hasHtmlCard = HtmlCardService.isRenderableHtmlCard(normalizedText);
+            if (hasHtmlCard) {
+                const warningHtml = options.conflictDetected
+                    ? '<div class="ai-card-warning">⚠️ 检测到设定冲突，已自动纠偏重试一次。</div>'
+                    : "";
+                currentStreamingTarget.innerHTML = `${warningHtml}${normalizedText}`;
+            } else {
+                currentStreamingTarget.innerHTML = MarkdownService.render(`${prefix}${text}`);
+            }
+            // 流式结束后补渲染选项按钮
+            if (currentStreamingLogDiv) {
+                if (options.conflictDetected) currentStreamingLogDiv.classList.add("conflict");
+                const oldWrap = currentStreamingLogDiv.querySelector(".choice-wrap");
+                if (oldWrap) oldWrap.remove();
+                const choices = ChoiceService.extractChoices(hasHtmlCard ? normalizedText : `${prefix}${text}`);
+                if (choices.length > 0) {
+                    const wrap = document.createElement("div");
+                    wrap.className = "choice-wrap";
+                    choices.forEach((c) => {
+                        const btn = document.createElement("button");
+                        btn.className = "choice-btn";
+                        btn.innerText = c;
+                        btn.onclick = () => Controller.sendUserText(`我选择：${c}`);
+                        wrap.appendChild(btn);
+                    });
+                    currentStreamingLogDiv.appendChild(wrap);
+                }
+            }
             currentStreamingTarget = null;
+            currentStreamingLogDiv = null;
+            scrollToBottom();
         }
         function renderHistory(history) {
             const board = document.getElementById("story-board");
@@ -1187,7 +1537,61 @@
                 box.appendChild(row);
             });
         }
-        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots };
+        function renderScenarioCards() {
+            const box = document.getElementById("scenario-card-list");
+            if (!box) return;
+            const cards = ScenarioCardService.loadCards();
+            const selectedId = ScenarioCardService.getSelectedId();
+            box.innerHTML = "";
+            cards.forEach((card) => {
+                const row = document.createElement("div");
+                row.className = `scenario-card ${card.id === selectedId ? "active" : ""}`;
+                row.innerHTML = `
+                    <div class="list-title">${card.title}</div>
+                    <div class="list-sub">主题：${card.theme || "默认"}｜设定长度：${(card.text || "").length}</div>
+                    <div style="margin-top:6px;"><button class="tiny-btn">选择</button></div>
+                `;
+                row.querySelector("button").onclick = () => Controller.selectScenarioCard(card.id);
+                box.appendChild(row);
+            });
+        }
+        function renderApiCards() {
+            const box = document.getElementById("api-card-list");
+            if (!box) return;
+            const cards = ApiCardService.loadCards();
+            const selectedId = ApiCardService.getSelectedId();
+            box.innerHTML = "";
+            cards.forEach((card) => {
+                const row = document.createElement("div");
+                row.className = "api-card";
+                row.innerHTML = `
+                    <div class="list-title">${card.title}${card.id === selectedId ? "（当前）" : ""}</div>
+                    <div class="list-sub">${card.upstreamUrl}｜模型 ${card.model}</div>
+                    <div style="margin-top:6px;"><button class="tiny-btn">设为当前</button></div>
+                `;
+                row.querySelector("button").onclick = () => Controller.selectApiCard(card.id);
+                box.appendChild(row);
+            });
+        }
+        function renderPresetTemplates(presets = []) {
+            const box = document.getElementById("preset-template-list");
+            if (!box) return;
+            box.innerHTML = "";
+            presets.forEach((p) => {
+                const row = document.createElement("div");
+                row.className = "list-row";
+                row.innerHTML = `
+                    <div>
+                        <div class="list-title">${p.title}</div>
+                        <div class="list-sub">主题：${p.theme}</div>
+                    </div>
+                    <button class="tiny-btn">套用到当前卡片</button>
+                `;
+                row.querySelector("button").onclick = () => Controller.applyPresetTemplate(p);
+                box.appendChild(row);
+            });
+        }
+        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, renderApiCards, renderPresetTemplates };
     })();
 
     const VisualEffects = (() => {
@@ -1211,29 +1615,37 @@
 
     const SettingsService = (() => {
         function loadToUI() {
-            document.getElementById("api-url").value = StorageService.readText(AppConfig.storageKeys.apiUrl, AppConfig.defaultApi.url);
-            document.getElementById("api-key").value = StorageService.readText(AppConfig.storageKeys.apiKey, "");
-            document.getElementById("api-model").value = StorageService.readText(AppConfig.storageKeys.apiModel, AppConfig.defaultApi.model);
-            document.getElementById("scenario-editor").value = StorageService.readText(AppConfig.storageKeys.scenarioText, AppConfig.defaultScenario);
+            const selectedScenario = ScenarioCardService.getSelectedCard();
+            document.getElementById("scenario-title-input").value = selectedScenario?.title || "";
+            document.getElementById("scenario-theme-input").value = selectedScenario?.theme || "";
+            document.getElementById("scenario-editor").value = selectedScenario?.text || AppConfig.defaultScenario;
+
+            const customCard = ApiCardService.loadCards().find((c) => c.id === "api_custom") || AppConfig.defaultApiCards[0];
+            document.getElementById("api-url").value = customCard.upstreamUrl || AppConfig.defaultApi.url;
+            document.getElementById("api-key").value = customCard.key || "";
+            document.getElementById("api-model").value = customCard.model || AppConfig.defaultApi.model;
         }
         function saveFromUI() {
-            StorageService.writeText(AppConfig.storageKeys.apiUrl, document.getElementById("api-url").value.trim());
-            StorageService.writeText(AppConfig.storageKeys.apiKey, document.getElementById("api-key").value.trim());
-            StorageService.writeText(AppConfig.storageKeys.apiModel, document.getElementById("api-model").value.trim());
-            const scenario = document.getElementById("scenario-editor").value.trim();
-            StorageService.writeText(AppConfig.storageKeys.scenarioText, scenario || AppConfig.defaultScenario);
-        }
-        function getApiConfig() {
-            return {
+            ApiCardService.updateCustomCard({
                 upstreamUrl: document.getElementById("api-url").value.trim(),
                 key: document.getElementById("api-key").value.trim(),
                 model: document.getElementById("api-model").value.trim()
-            };
+            });
+        }
+        function getApiConfig() {
+            const selected = ApiCardService.getSelectedCard();
+            if (!selected || selected.id !== "api_custom") {
+                return { blocked: true, reason: "当前仅支持调用“自定义API”卡片，请先在 API 卡片页面选择“自定义API”。" };
+            }
+            return { upstreamUrl: selected.upstreamUrl || "", key: selected.key || "", model: selected.model || "" };
         }
         function getScenarioText() {
-            const editorText = document.getElementById("scenario-editor").value.trim();
-            if (editorText) return editorText;
-            return StorageService.readText(AppConfig.storageKeys.scenarioText, AppConfig.defaultScenario);
+            const selected = ScenarioCardService.getSelectedCard();
+            return selected?.text || AppConfig.defaultScenario;
+        }
+        function getBeautyCardSetting() {
+            const selected = ScenarioCardService.getSelectedCard();
+            return (selected?.theme || "").trim();
         }
         function importScenarioFromFile() {
             const input = document.getElementById("scenario-file-input");
@@ -1248,7 +1660,7 @@
                         return;
                     }
                     document.getElementById("scenario-editor").value = content;
-                    StorageService.writeText(AppConfig.storageKeys.scenarioText, content);
+                    ScenarioCardService.updateSelectedCard({ text: content });
                     alert("设定导入成功");
                 };
                 reader.onerror = () => alert("导入失败：无法读取文件");
@@ -1257,7 +1669,7 @@
             };
             input.click();
         }
-        return { loadToUI, saveFromUI, getApiConfig, getScenarioText, importScenarioFromFile };
+        return { loadToUI, saveFromUI, getApiConfig, getScenarioText, getBeautyCardSetting, importScenarioFromFile };
     })();
 
     const SaveSlotService = (() => {
@@ -1346,11 +1758,116 @@
         return { applyUserMessage };
     })();
 
+    const ScenarioCardService = (() => {
+        function loadCards() {
+            const cards = StorageService.readJson(AppConfig.storageKeys.scenarioCards, null);
+            if (!Array.isArray(cards) || !cards.length) {
+                const initial = [...Utils.deepClone(AppConfig.defaultScenarioCards)];
+                StorageService.writeJson(AppConfig.storageKeys.scenarioCards, initial);
+                return initial;
+            }
+            return cards;
+        }
+        function saveCards(cards) {
+            StorageService.writeJson(AppConfig.storageKeys.scenarioCards, cards);
+        }
+        function getSelectedId() {
+            return StorageService.readText(AppConfig.storageKeys.selectedScenarioCardId, AppConfig.defaultScenarioCards[0].id);
+        }
+        function setSelectedId(id) {
+            StorageService.writeText(AppConfig.storageKeys.selectedScenarioCardId, id);
+        }
+        function getSelectedCard() {
+            const cards = loadCards();
+            const id = getSelectedId();
+            return cards.find((c) => c.id === id) || cards[0];
+        }
+        function updateSelectedCard(payload) {
+            const cards = loadCards();
+            const id = getSelectedId();
+            const idx = cards.findIndex((c) => c.id === id);
+            if (idx < 0) return;
+            cards[idx] = { ...cards[idx], ...payload };
+            saveCards(cards);
+        }
+        return { loadCards, saveCards, getSelectedId, setSelectedId, getSelectedCard, updateSelectedCard };
+    })();
+
+    const ApiCardService = (() => {
+        function loadCards() {
+            const cards = StorageService.readJson(AppConfig.storageKeys.apiCards, null);
+            if (!Array.isArray(cards) || !cards.length) {
+                StorageService.writeJson(AppConfig.storageKeys.apiCards, AppConfig.defaultApiCards);
+                return Utils.deepClone(AppConfig.defaultApiCards);
+            }
+            return cards;
+        }
+        function saveCards(cards) {
+            StorageService.writeJson(AppConfig.storageKeys.apiCards, cards);
+        }
+        function getSelectedId() {
+            return StorageService.readText(AppConfig.storageKeys.selectedApiCardId, "api_custom");
+        }
+        function setSelectedId(id) {
+            StorageService.writeText(AppConfig.storageKeys.selectedApiCardId, id);
+        }
+        function getSelectedCard() {
+            const cards = loadCards();
+            return cards.find((c) => c.id === getSelectedId()) || cards[0];
+        }
+        function updateCustomCard(payload) {
+            const cards = loadCards();
+            const idx = cards.findIndex((c) => c.id === "api_custom");
+            if (idx < 0) return;
+            cards[idx] = { ...cards[idx], ...payload };
+            saveCards(cards);
+        }
+        return { loadCards, saveCards, getSelectedId, setSelectedId, getSelectedCard, updateCustomCard };
+    })();
+
+    const PresetResourceService = (() => {
+        let cachedManifest = null;
+        function titleToFilename(title) {
+            return `${String(title || "").trim()}.txt`;
+        }
+        async function loadManifest() {
+            if (cachedManifest) return cachedManifest;
+            try {
+                const resp = await fetch("./presets/manifest.json");
+                if (resp.ok) {
+                    const raw = await resp.json();
+                    cachedManifest = (Array.isArray(raw) ? raw : []).map((item, idx) => ({
+                        id: item.id || `preset_${idx + 1}`,
+                        title: item.title || `模板${idx + 1}`,
+                        theme: item.theme || "网络模板",
+                        source: item.source || "资源来自网络如有侵权请联系删除",
+                        file: titleToFilename(item.title)
+                    }));
+                    return cachedManifest;
+                }
+            } catch (e) {
+            }
+            cachedManifest = [];
+            return cachedManifest;
+        }
+        async function loadPresetText(fileName) {
+            const safeFile = encodeURIComponent(fileName).replace(/%2F/g, "/");
+            const resp = await fetch(`./presets/${safeFile}`);
+            if (!resp.ok) throw new Error(`模板文件不存在: ${fileName}`);
+            return await resp.text();
+        }
+        return { loadManifest, loadPresetText, titleToFilename };
+    })();
+
     const ChatService = (() => {
         let isGenerating = false;
         async function requestAI(userText) {
             const state = StateService.get();
             const config = SettingsService.getApiConfig();
+            if (config.blocked) {
+                alert(config.reason);
+                return;
+            }
             if (!config.upstreamUrl || !config.key || !config.model) {
                 alert("请先配置上游 API URL、API Key 和模型名。");
                 return;
@@ -1364,21 +1881,34 @@
 
             isGenerating = true;
             UIRenderer.setSendingDisabled(true);
-            UIRenderer.appendMessage("ai", "黑猫猫正在思考中...", Utils.nowDateStr(state), true);
+            UIRenderer.appendMessage("ai", "正在生成剧情中...", Utils.nowDateStr(state), true);
             let fullText = "";
 
             const recentHistory = state.history
-                .slice(-14)
+                .slice(-18)
                 .map((item) => `${item.role === "user" ? "玩家" : "系统"}(${item.date})：${item.text}`)
                 .join("\n");
             const scenarioSpec = SettingsService.getScenarioText();
+            const beautyCardSetting = SettingsService.getBeautyCardSetting();
+            const beautyModeEnabled = HtmlCardService.isBeautyModeEnabled(beautyCardSetting);
             const builtinRules = BuiltinPromptService.getResponseRules();
+            const stateFactLock = BuiltinPromptService.buildStateFactLock(state);
             const runtimeContext = [
                 "【运行时上下文】",
                 `主角基础：姓名${state.name}，性别${state.gender}，年龄${Math.floor(state.age / 12)}岁，时间${Utils.nowDateStr(state)}。`,
-                "请使用Markdown输出并兼容手机屏。"
+                "请使用Markdown输出并兼容手机屏。",
+                "若用户输入与已确认事实冲突，先以礼貌方式说明冲突，再基于事实继续剧情。"
             ].join("\n");
-            const systemPrompt = `${scenarioSpec}\n\n${builtinRules}\n\n${runtimeContext}`;
+            const beautyRules = beautyModeEnabled
+                ? [
+                    "【美化卡片强制规则】",
+                    `当前美化卡片设定：${beautyCardSetting}`,
+                    "你必须输出可直接渲染的 HTML 卡片，且最外层必须是 class=\"ai-beauty-card\" 的 article/section/div。",
+                    "卡片内部需包含：时间、状态变化、剧情正文、（AI想法）以及 1-3 条编号选项。",
+                    "禁止输出纯 Markdown 或纯文本；必须输出 HTML。"
+                ].join("\n")
+                : "";
+            const systemPrompt = `${scenarioSpec}\n\n${builtinRules}\n\n${stateFactLock}\n\n${runtimeContext}${beautyRules ? `\n\n${beautyRules}` : ""}`;
             const requestHeaders = {
                 "Content-Type": "application/json",
                 "Authorization": `Bearer ${config.key}`,
@@ -1469,7 +1999,100 @@
 
                 // 若重试后仍无编号选项，继续用兜底自动补齐
                 finalText = ChoiceService.ensureOptionsBlock(finalText, userText, state);
-                UIRenderer.finishStreaming(finalText);
+
+                // 事实冲突检测：发现冲突时自动纠偏重试一次
+                let conflictDetected = false;
+                let conflictReport = ConflictService.detectConflicts(finalText, state);
+                if (conflictReport.hasError) {
+                    conflictDetected = true;
+                    try {
+                        const conflictRetry = await fetch(fetchUrl, {
+                            method: "POST",
+                            headers: requestHeaders,
+                            body: JSON.stringify({
+                                model: config.model,
+                                messages: [
+                                    { role: "system", content: systemPrompt },
+                                    {
+                                        role: "user",
+                                        content: [
+                                            `玩家最新输入：${userText}`,
+                                            `最近记录：\n${recentHistory}`,
+                                            "请只做设定一致性纠偏重写，不要重开剧情。",
+                                            "必须严格遵守角色事实锁定块，不得修改姓名、年龄、国籍、NPC关系等已确认事实。",
+                                            `错误级冲突清单：\n- ${conflictReport.errors.map((x) => x.message).join("\n- ")}`,
+                                            `待纠偏文本：\n${finalText}`
+                                        ].join("\n\n")
+                                    }
+                                ],
+                                stream: false,
+                                temperature: 0.4
+                            })
+                        });
+                        if (conflictRetry.ok) {
+                            const retryJson = await conflictRetry.json();
+                            const fixed = retryJson?.choices?.[0]?.message?.content?.trim();
+                            if (fixed) finalText = ChoiceService.ensureOptionsBlock(fixed, userText, state);
+                        }
+                    } catch (fixErr) {
+                    }
+
+                    // 二次检测仍冲突时，补充说明
+                    const secondCheck = ConflictService.detectConflicts(finalText, state);
+                    if (secondCheck.hasError) {
+                        finalText = `${finalText}\n\n> ⚠️ 仍检测到设定错误冲突：${secondCheck.errors.map((x) => x.message).join("；")}`;
+                    }
+                }
+
+                // warning 不重试，只提示
+                const warningReport = ConflictService.detectConflicts(finalText, state);
+                if (warningReport.hasWarning) {
+                    finalText = `${finalText}\n\n> ℹ️ 提示（warning）：${warningReport.warnings.map((x) => x.message).join("；")}`;
+                }
+
+                finalText = HtmlCardService.normalizeHtmlCard(finalText);
+
+                // 美化卡片强制模式：必须能渲染 HTML 卡片，否则自动重试一次
+                if (beautyModeEnabled && !HtmlCardService.isRenderableHtmlCard(finalText)) {
+                    try {
+                        const htmlRetry = await fetch(fetchUrl, {
+                            method: "POST",
+                            headers: requestHeaders,
+                            body: JSON.stringify({
+                                model: config.model,
+                                messages: [
+                                    { role: "system", content: systemPrompt },
+                                    {
+                                        role: "user",
+                                        content: [
+                                            `玩家最新输入：${userText}`,
+                                            `最近记录：\n${recentHistory}`,
+                                            "上一版回复未能正确渲染为 HTML 卡片。",
+                                            "请严格重写为可直接渲染的 HTML，最外层 class 必须是 ai-beauty-card。",
+                                            "同时保留剧情连续性，并包含 1-3 条编号选项。",
+                                            `上一版文本：\n${finalText}`
+                                        ].join("\n\n")
+                                    }
+                                ],
+                                stream: false,
+                                temperature: 0.6
+                            })
+                        });
+                        if (htmlRetry.ok) {
+                            const retryJson = await htmlRetry.json();
+                            const htmlText = retryJson?.choices?.[0]?.message?.content?.trim();
+                            if (htmlText) finalText = htmlText;
+                        }
+                    } catch (htmlRetryErr) {
+                    }
+                }
+
+                // 重试后仍失败时，兜底转换为本地 HTML 卡片，保证页面必定按卡片展示
+                if (beautyModeEnabled && !HtmlCardService.isRenderableHtmlCard(finalText)) {
+                    finalText = HtmlCardService.wrapAsHtmlCard(beautyCardSetting, finalText);
+                }
+
+                UIRenderer.finishStreaming(finalText, { conflictDetected });
                 EventService.maybeTriggerAnimation(finalText);
                 StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(StateService.get()), text: finalText });
                 StateService.pushChat("assistant", finalText);
@@ -1488,7 +2111,8 @@
     })();
 
     const Controller = (() => {
-        let activeView = "view-main";
+        let activeView = "view-home";
+        let presetManifest = [];
         function renderAll() {
             const state = StateService.get();
             UIRenderer.renderTop(state);
@@ -1496,11 +2120,15 @@
             UIRenderer.renderInventory(state);
             UIRenderer.renderSocialList(state);
             UIRenderer.renderSaveSlots(state);
+            UIRenderer.renderScenarioCards();
+            UIRenderer.renderApiCards();
+            UIRenderer.renderPresetTemplates(presetManifest);
             switchView(activeView, true);
         }
-        function init() {
+        async function init() {
             StateService.init();
             SettingsService.loadToUI();
+            presetManifest = await PresetResourceService.loadManifest();
             renderAll();
             VisualEffects.createBears();
             bindEvents();
@@ -1547,6 +2175,11 @@
                 if (btn.dataset.view === viewId) btn.classList.add("active");
                 else btn.classList.remove("active");
             });
+            const isGameViews = ["view-main", "view-inventory", "view-social", "view-saves"].includes(viewId);
+            document.getElementById("game-stats-card").style.display = isGameViews ? "grid" : "none";
+            document.querySelector(".quick-actions").style.display = isGameViews ? "flex" : "none";
+            document.querySelector(".timeline-actions").style.display = isGameViews ? "flex" : "none";
+            document.querySelector(".chat-footer .composer").style.display = isGameViews ? "flex" : "none";
             if (!silent && viewId === "view-main") {
                 const content = document.getElementById("main-content");
                 content.scrollTop = content.scrollHeight;
@@ -1637,7 +2270,54 @@
         }
         function saveSettings() {
             SettingsService.saveFromUI();
-            alert("配置已保存");
+            renderAll();
+            alert("自定义API卡片已保存");
+        }
+        function saveScenarioCard() {
+            ScenarioCardService.updateSelectedCard({
+                title: document.getElementById("scenario-title-input").value.trim() || "未命名设定",
+                theme: document.getElementById("scenario-theme-input").value.trim(),
+                text: document.getElementById("scenario-editor").value.trim() || AppConfig.defaultScenario
+            });
+            renderAll();
+            alert("设定卡片已保存");
+        }
+        function selectScenarioCard(id) {
+            ScenarioCardService.setSelectedId(id);
+            SettingsService.loadToUI();
+            renderAll();
+        }
+        async function applyPresetTemplate(preset) {
+            if (!preset) return;
+            let text = preset.text || "";
+            if (preset.file) {
+                try {
+                    text = await PresetResourceService.loadPresetText(preset.file);
+                } catch (e) {
+                    alert(`加载模板失败：${e.message}`);
+                    return;
+                }
+            }
+            ScenarioCardService.updateSelectedCard({
+                title: preset.title,
+                theme: preset.theme,
+                text: String(text || "").trim()
+            });
+            SettingsService.loadToUI();
+            renderAll();
+            alert("已套用预设模板到当前卡片");
+        }
+        function selectApiCard(id) {
+            ApiCardService.setSelectedId(id);
+            renderAll();
+            const card = ApiCardService.getSelectedCard();
+            if (card.id !== "api_custom") {
+                alert("已切换到预设卡片。当前版本仅支持调用“自定义API”卡片。");
+            }
+        }
+        function startFromHome() {
+            saveScenarioCard();
+            switchView("view-main");
         }
         function importScenarioTxt() {
             SettingsService.importScenarioFromFile();
@@ -1653,14 +2333,7 @@
             closeRebornModal();
             renderAll();
         }
-        function toggleConfig() {
-            const body = document.getElementById("config-body");
-            const arrow = document.getElementById("config-arrow");
-            const open = body.style.display === "block";
-            body.style.display = open ? "none" : "block";
-            arrow.innerText = open ? "▼" : "▲";
-        }
-        return { init, onSendClick, sendUserText, jumpWeek, switchView, saveSettings, importScenarioTxt, openRebornModal, closeRebornModal, resetGameWithGender, openItemModal, useItem, openNpcProfile, sendNpcMessage, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal, toggleConfig };
+        return { init, onSendClick, sendUserText, jumpWeek, switchView, saveSettings, saveScenarioCard, selectScenarioCard, applyPresetTemplate, selectApiCard, startFromHome, importScenarioTxt, openRebornModal, closeRebornModal, resetGameWithGender, openItemModal, useItem, openNpcProfile, sendNpcMessage, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
@@ -1668,13 +2341,17 @@
     function jumpWeek(delta) { Controller.jumpWeek(delta); }
     function switchView(viewId) { Controller.switchView(viewId); }
     function saveSettings() { Controller.saveSettings(); }
+    function saveScenarioCard() { Controller.saveScenarioCard(); }
+    function selectScenarioCard(id) { Controller.selectScenarioCard(id); }
+    function applyPresetTemplate(id) { Controller.applyPresetTemplate(id); }
+    function selectApiCard(id) { Controller.selectApiCard(id); }
+    function startFromHome() { Controller.startFromHome(); }
     function importScenarioTxt() { Controller.importScenarioTxt(); }
     function openRebornModal() { Controller.openRebornModal(); }
     function closeRebornModal() { Controller.closeRebornModal(); }
     function resetGameWithGender(gender) { Controller.resetGameWithGender(gender); }
     function sendNpcMessage() { Controller.sendNpcMessage(); }
     function closeInfoModal() { Controller.closeInfoModal(); }
-    function toggleConfig() { Controller.toggleConfig(); }
 
     window.onload = () => Controller.init();
 </script>
