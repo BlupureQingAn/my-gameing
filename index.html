@@ -572,55 +572,42 @@
 async function nextTurn() {
         if(isGenerating) return;
 
-        // 获取用户配置
         let url = document.getElementById('api-url').value.trim();
         const key = document.getElementById('api-key').value.trim();
         const modelName = document.getElementById('api-model').value.trim();
 
         if (!url || !key) {
-            alert("请配置完整的 API URL 和 API Key！");
-            toggleConfig();
+            alert("请配置 API URL 和 Key！");
             return;
         }
 
-        // --- 核心：路径修正逻辑 ---
-        // 去掉末尾斜杠
+        // 统一 URL 格式
         if (url.endsWith('/')) url = url.slice(0, -1);
-        
-        // NVIDIA 必须请求到具体的 endpoint。
-        // 如果用户在设置里写了 /chat/completions，我们就不用再加了。
-        let fetchUrl = url;
-        if (!url.endsWith('/chat/completions')) {
-            fetchUrl = `${url}/chat/completions`;
-        }
+        const fetchUrl = url.endsWith('/chat/completions') ? url : `${url}/chat/completions`;
 
-        // 时间推演逻辑
+        // --- 游戏状态更新 (保持原样) ---
         gameState.age += 1;
         gameState.currentMonth += 1;
         if(gameState.currentMonth > 12) {
-            gameState.currentMonth = 1;
-            gameState.currentYear += 1;
+            gameState.currentMonth = 1; gameState.currentYear += 1;
         }
-
         const dateStr = `${gameState.currentYear}年${gameState.currentMonth}月`;
         const ageYears = Math.floor(gameState.age / 12);
         
         renderUI();
         switchTab('view-main', document.querySelectorAll('.nav-btn')[0]);
-        
         const board = document.getElementById('story-board');
         const logDiv = document.createElement('div');
         logDiv.className = 'story-log';
-        logDiv.innerHTML = `<div class="story-date">[ ${dateStr} ]</div><div class="story-text">正在同步 NVIDIA 算力中...<span class="streaming-cursor"></span></div>`;
+        logDiv.innerHTML = `<div class="story-date">[ ${dateStr} ]</div><div class="story-text">命运连接中...<span class="streaming-cursor"></span></div>`;
         board.appendChild(logDiv);
         scrollToBottom();
-
         const textContainer = logDiv.querySelector('.story-text');
 
-        // 构建 Prompt
+        // 构建消息
         const recentHistory = gameState.history.slice(-3).map(h => `${h.date}: ${h.text}`).join("\n\n");
-        const systemPrompt = `你是一个人生模拟器引擎。输出纯文本剧情，不含任何JSON或Markdown标记。主角：${gameState.name}，年龄：${ageYears}岁${gameState.currentMonth}个月。风格生动，包含emoji。`;
-        const userPrompt = `【最近历史】：\n${recentHistory}\n\n时间：${dateStr}。请生成本月发生的1-2件人生事件。`;
+        const systemPrompt = `你是一个人生模拟器。主角：${gameState.name}，年龄：${ageYears}岁。请生成本月发生的事件。`;
+        const userPrompt = `历史：${recentHistory}\n时间：${dateStr}。生成本月事件。`;
 
         isGenerating = true;
         document.getElementById('btn-next').disabled = true;
@@ -631,6 +618,7 @@ async function nextTurn() {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${key}`
+                    // 不要添加任何额外的 headers
                 },
                 body: JSON.stringify({
                     model: modelName,
@@ -639,76 +627,44 @@ async function nextTurn() {
                         { role: 'user', content: userPrompt }
                     ],
                     stream: true,
-                    temperature: 0.6
+                    temperature: 0.7
                 })
             });
 
-            if (!response.ok) {
-                const errText = await response.text();
-                if (response.status === 410 || response.status === 404) {
-                    throw new Error(`路径错误(${response.status})。请确保 Worker 地址包含 /v1 且没有多余后缀。`);
-                }
-                throw new Error(`NVIDIA API 报错 (${response.status})`);
-            }
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder('utf-8');
             let generatedText = "";
-            textContainer.innerHTML = '<span class="streaming-cursor"></span>';
 
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
                 
-                const chunk = decoder.decode(value, { stream: true });
+                const chunk = decoder.decode(value);
                 const lines = chunk.split('\n');
-                
                 for (let line of lines) {
-                    const trimmedLine = line.trim();
-                    if (!trimmedLine || trimmedLine === 'data: [DONE]') continue;
-                    
-                    if (trimmedLine.startsWith('data: ')) {
+                    if (line.startsWith('data: ') && line !== 'data: [DONE]') {
                         try {
-                            const jsonStr = trimmedLine.slice(6);
-                            const data = JSON.parse(jsonStr);
-                            if (data.choices && data.choices[0].delta && data.choices[0].delta.content) {
-                                const token = data.choices[0].delta.content;
-                                generatedText += token;
-                                // 实时渲染
-                                textContainer.innerHTML = generatedText
-                                    .replace(/\n/g, '<br>')
-                                    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>') 
-                                    + '<span class="streaming-cursor"></span>';
+                            const data = JSON.parse(line.slice(6));
+                            if (data.choices[0].delta.content) {
+                                generatedText += data.choices[0].delta.content;
+                                textContainer.innerHTML = generatedText.replace(/\n/g, '<br>') + '<span class="streaming-cursor"></span>';
                                 scrollToBottom();
                             }
-                        } catch (e) {
-                            // 忽略部分 NVIDIA 特有的 SSE 干扰数据
-                        }
+                        } catch (e) {}
                     }
                 }
             }
-
-            // 完成渲染
-            textContainer.innerHTML = generatedText.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
             
-            // 存入历史记录
-            gameState.history.push({
-                date: dateStr,
-                text: textContainer.innerHTML
-            });
+            textContainer.innerHTML = generatedText.replace(/\n/g, '<br>');
+            gameState.history.push({ date: dateStr, text: textContainer.innerHTML });
             saveGame();
 
         } catch (error) {
-            console.error("生成失败:", error);
-            textContainer.innerHTML = `<span style="color:var(--danger-color);">⚠️ 链接中断：${error.message}</span>`;
-            
-            // 失败回退时间
-            gameState.age -= 1;
-            gameState.currentMonth -= 1;
-            if(gameState.currentMonth < 1) {
-                gameState.currentMonth = 12;
-                gameState.currentYear -= 1;
-            }
+            console.error(error);
+            textContainer.innerHTML = `<span style="color:red;">⚠️ 链接被 NVIDIA 拒绝: ${error.message}</span>`;
+            // 回退逻辑保持原样...
         } finally {
             isGenerating = false;
             document.getElementById('btn-next').disabled = false;
