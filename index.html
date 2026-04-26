@@ -3,678 +3,1090 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BitLife - 徐然(Blupure)的人生</title>
+    <title>人生模拟器 · 文游版</title>
     <style>
+        /* ==================== 变量层（Design Tokens） ==================== */
         :root {
-            --bg-color: #e0f7fa;
-            --card-bg: #ffffff;
-            --primary-color: #00796b;
-            --secondary-color: #4db6ac;
-            --text-main: #333333;
-            --text-sub: #666666;
-            --border-radius: 16px;
-            --shadow: 0 4px 12px rgba(0, 121, 107, 0.1);
-            --danger-color: #e57373;
+            --bg-main: #efe3cf;
+            --bg-soft: #f7eedf;
+            --card: #fff7ea;
+            --line: #e2ccb0;
+            --text: #4b3a2a;
+            --sub: #806a55;
+            --accent: #b08652;
+            --accent-dark: #845f35;
+            --shadow: 0 6px 18px rgba(128, 106, 85, 0.15);
+            --radius: 16px;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        /* ==================== 布局层（Base / Layout） ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
 
         body {
-            background-color: #cfd8dc;
+            background: linear-gradient(180deg, #f2e6d5 0%, #e6d7c1 100%);
             display: flex;
             justify-content: center;
             height: 100vh;
             height: 100dvh;
             overflow: hidden;
+            color: var(--text);
         }
 
         #app {
             width: 100%;
-            max-width: 810px; /* 适配iPad 9及手机宽度 */
+            max-width: 820px;
             height: 100%;
-            background-color: var(--bg-color);
+            background: var(--bg-main);
+            position: relative;
             display: flex;
             flex-direction: column;
+            box-shadow: 0 0 26px rgba(0, 0, 0, 0.12);
+            overflow: hidden;
+        }
+
+        .bear-layer {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .header,
+        .content,
+        .chat-footer {
             position: relative;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            z-index: 2;
         }
 
-        /* 顶部状态栏 */
-        .header {
-            background-color: var(--card-bg);
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid var(--secondary-color);
-            z-index: 10;
-        }
-
-        .header-info h1 { font-size: 1.2rem; color: var(--primary-color); display: flex; align-items: center; gap: 8px;}
-        .header-info p { font-size: 0.9rem; color: var(--text-sub); margin-top: 5px; }
-
-        /* 内容区 */
         .content {
             flex: 1;
             overflow-y: auto;
-            padding: 15px;
+            padding: 12px;
+            padding-bottom: 6px;
             scroll-behavior: smooth;
         }
 
-        /* 卡片通用样式 */
+        .composer {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+        }
+
+        .setting-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .gender-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* ==================== 组件层（UI Components） ==================== */
+        /* ---- 状态组件（Status Components） ---- */
+        /* 容器 */
+        .header {
+            background: var(--card);
+            border-bottom: 1px solid var(--line);
+            padding: 12px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
         .card {
-            background-color: var(--card-bg);
-            border-radius: var(--border-radius);
-            padding: 15px;
-            margin-bottom: 15px;
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
             box-shadow: var(--shadow);
-            border: 1px solid rgba(77, 182, 172, 0.2);
-            animation: fadeIn 0.4s ease-out;
+            padding: 12px;
+            margin-bottom: 10px;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* 属性栏 */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 10px;
-            text-align: center;
+            gap: 8px;
+            grid-template-columns: repeat(4, minmax(70px, 1fr));
         }
+
         .stat-item {
-            background: #f1f8e9;
-            padding: 10px;
-            border-radius: 12px;
-            font-size: 0.9rem;
-            color: var(--primary-color);
-            font-weight: bold;
-        }
-        .stat-item span { display: block; font-size: 1.2rem; margin-bottom: 4px;}
-
-        /* API配置区 */
-        .api-config {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            background: #fff3e0;
-        }
-        .api-config input {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            width: 100%;
-        }
-
-        /* 剧情显示区 */
-        .story-container {
-            min-height: 200px;
-        }
-        .story-log {
-            margin-bottom: 15px;
-            line-height: 1.6;
-            color: var(--text-main);
-            font-size: 1rem;
-            border-left: 4px solid var(--secondary-color);
-            padding-left: 12px;
-        }
-        .story-date {
-            font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 5px;
-            font-size: 0.9rem;
-        }
-        .story-text {
-            white-space: pre-wrap; /* 保持换行 */
-        }
-        .streaming-cursor {
-            display: inline-block;
-            width: 8px;
-            height: 15px;
-            background-color: var(--primary-color);
-            animation: blink 1s infinite;
-            vertical-align: middle;
-            margin-left: 4px;
-        }
-        @keyframes blink { 50% { opacity: 0; } }
-
-        /* 底部操作区与导航 */
-        .footer {
-            background-color: var(--card-bg);
-            padding: 10px 15px 20px 15px;
-            border-top: 1px solid #e0e0e0;
-            z-index: 10;
-        }
-
-        .action-btn {
-            width: 100%;
-            padding: 15px;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: var(--border-radius);
-            font-size: 1.1rem;
-            font-weight: bold;
-            box-shadow: var(--shadow);
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-        }
-        .action-btn:active { transform: scale(0.98); background-color: #004d40; }
-        .action-btn:disabled { background-color: #9e9e9e; cursor: not-allowed; }
-
-        .nav-bar {
-            display: flex;
-            justify-content: space-between;
-            gap: 10px;
-        }
-        .nav-btn {
-            flex: 1;
-            padding: 12px 5px;
+            background: var(--bg-soft);
+            border-radius: 10px;
             text-align: center;
-            background: #f5f5f5;
-            color: var(--text-sub);
-            border-radius: 12px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: 0.3s;
-            border: 1px solid transparent;
-        }
-        .nav-btn.active {
-            background: var(--primary-color);
-            color: white;
-            box-shadow: var(--shadow);
+            padding: 8px 4px;
+            font-size: 0.8rem;
+            color: var(--sub);
         }
 
-        /* 隐藏区控制 */
-        .view-section { display: none; }
-        .view-section.active { display: block; }
+        /* 文本 */
+        .header h1 {
+            font-size: 1.05rem;
+            color: var(--accent-dark);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
 
-        /* 列表通用样式 (背包/社交) */
-        .list-item {
+        .header p {
+            margin-top: 4px;
+            color: var(--sub);
+            font-size: 0.83rem;
+        }
+
+        .wealth {
+            color: #a46f35;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .stat-item span {
+            display: block;
+            font-size: 1.05rem;
+            color: var(--accent-dark);
+            font-weight: 700;
+        }
+
+        /* ---- 设置组件（Settings Components） ---- */
+        /* 容器 */
+        .api-config h4 {
+            color: var(--accent-dark);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px;
-            border-bottom: 1px solid #f0f0f0;
-            background: #fafafa;
-            margin-bottom: 8px;
-            border-radius: 8px;
             cursor: pointer;
-            transition: 0.2s;
+            font-size: 0.92rem;
         }
-        .list-item:hover { background: #e0f2f1; }
-        .list-item-left h4 { color: var(--primary-color); margin-bottom: 4px; }
-        .list-item-left p { font-size: 0.8rem; color: var(--text-sub); }
-        .list-item-right { font-weight: bold; color: var(--secondary-color); font-size: 0.9rem; }
 
-        /* 弹窗样式 */
+        .api-config input {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: #fffdfa;
+            padding: 10px;
+            font-size: 0.86rem;
+            margin-top: 8px;
+        }
+
+        .scenario-editor {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: #fffdfa;
+            padding: 10px;
+            font-size: 0.84rem;
+            line-height: 1.45;
+            margin-top: 8px;
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .scenario-hint {
+            margin-top: 6px;
+            color: var(--sub);
+            font-size: 0.75rem;
+        }
+
+        /* 交互态 */
+        .mini-btn {
+            border: 0;
+            border-radius: 10px;
+            padding: 9px 10px;
+            cursor: pointer;
+            flex: 1;
+            font-weight: 600;
+            font-size: 0.82rem;
+        }
+
+        .mini-btn.primary {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .mini-btn.ghost {
+            background: #f3e5d2;
+            color: var(--text);
+        }
+
+        /* ---- 聊天组件（Chat Components） ---- */
+        /* 容器 */
+        .story-log {
+            margin-bottom: 8px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: #fffdf8;
+            padding: 10px;
+        }
+
+        .msg-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            animation: petBlink 2.8s ease-in-out infinite;
+        }
+
+        .bubble {
+            max-width: calc(100% - 50px);
+            padding: 9px 10px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            line-height: 1.55;
+            overflow-wrap: anywhere;
+            white-space: normal;
+        }
+
+        .choice-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .chat-footer {
+            background: #fff7ea;
+            border-top: 1px solid var(--line);
+            padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+        }
+
+        /* 文本 */
+        .story-date {
+            color: var(--sub);
+            font-size: 0.75rem;
+            margin-bottom: 6px;
+        }
+
+        .avatar.ai {
+            background: #231f20;
+            color: #ffd7eb;
+            border: 2px solid #ffc4e2;
+        }
+
+        .avatar.user {
+            background: #ffd5ea;
+            color: #2d2126;
+            border: 2px solid #ffb3d8;
+        }
+
+        .bubble.ai {
+            background: #fff7ef;
+            border: 1px solid var(--line);
+        }
+
+        .bubble.user {
+            background: #ffe0ef;
+            border: 1px solid #efb5d1;
+        }
+
+        .bubble h1, .bubble h2, .bubble h3 {
+            font-size: 0.95rem;
+            margin: 4px 0 6px;
+        }
+
+        .bubble ul, .bubble ol {
+            padding-left: 18px;
+            margin: 4px 0;
+        }
+
+        .bubble code {
+            background: #f5ead9;
+            border-radius: 6px;
+            padding: 1px 4px;
+            font-size: 0.82rem;
+        }
+
+        .bubble pre {
+            background: #f5ead9;
+            border-radius: 8px;
+            padding: 8px;
+            overflow-x: auto;
+            margin: 6px 0;
+        }
+
+        /* 交互态 */
+        .msg-row.user {
+            justify-content: flex-end;
+        }
+
+        .choice-btn {
+            border: 1px solid var(--line);
+            background: #fff6eb;
+            border-radius: 999px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .quick-btn {
+            flex: 1;
+            border: 0;
+            border-radius: 999px;
+            padding: 8px 8px;
+            background: #efd5b6;
+            color: #5d4328;
+            font-weight: 700;
+            font-size: 0.82rem;
+            cursor: pointer;
+        }
+
+        .composer textarea {
+            flex: 1;
+            min-height: 42px;
+            max-height: 120px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 8px 10px;
+            background: #fffdf8;
+            resize: none;
+            font-size: 0.9rem;
+            line-height: 1.35;
+        }
+
+        .send-btn {
+            border: 0;
+            background: var(--accent);
+            color: #fff;
+            border-radius: 12px;
+            width: 86px;
+            height: 42px;
+            font-weight: 700;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .send-btn:disabled,
+        .quick-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* ---- 弹窗组件（Modal Components） ---- */
+        /* 容器 */
         .modal-overlay {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.35);
+            z-index: 10;
             display: none;
             justify-content: center;
             align-items: center;
-            z-index: 100;
-            padding: 20px;
+            padding: 14px;
         }
+
         .modal-card {
-            background: white;
             width: 100%;
-            max-width: 400px;
-            border-radius: var(--border-radius);
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            animation: fadeIn 0.3s ease-out;
+            max-width: 420px;
+            background: #fff8ed;
+            border-radius: 16px;
+            border: 1px solid var(--line);
+            padding: 14px;
         }
-        .modal-title { font-size: 1.3rem; color: var(--primary-color); margin-bottom: 10px; }
-        .modal-desc { font-size: 0.95rem; color: var(--text-main); margin-bottom: 20px; line-height: 1.5; }
-        .modal-actions { display: flex; gap: 10px; }
-        .modal-btn {
-            flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;
+
+        /* 文本 */
+        .modal-title {
+            color: var(--accent-dark);
+            margin-bottom: 6px;
+            font-size: 1rem;
+            font-weight: 700;
         }
-        .modal-btn-primary { background: var(--primary-color); color: white; }
-        .modal-btn-cancel { background: #eeeeee; color: var(--text-main); }
+
+        .modal-desc {
+            color: var(--sub);
+            font-size: 0.88rem;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        /* ==================== 动效层（Animations / Motion） ==================== */
+        .bear {
+            position: absolute;
+            top: -50px;
+            font-size: 18px;
+            opacity: 0.55;
+            animation: fall linear infinite;
+            user-select: none;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-5vh) rotate(0deg);
+            }
+            100% {
+                transform: translateY(110vh) rotate(240deg);
+            }
+        }
+
+        @keyframes petBlink {
+            0%, 88%, 100% { transform: translateY(0); }
+            92% { transform: translateY(-2px) scale(1.03); }
+            96% { transform: translateY(0) scale(1); }
+        }
+
+        .streaming-cursor {
+            display: inline-block;
+            width: 6px;
+            height: 14px;
+            background: var(--accent-dark);
+            margin-left: 3px;
+            animation: blink 1s infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        /* ==================== 响应式层（Responsive） ==================== */
+        @media (max-width: 560px) {
+            .header h1 {
+                font-size: 0.96rem;
+            }
+            .header p,
+            .wealth {
+                font-size: 0.76rem;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(100px, 1fr));
+            }
+            .send-btn {
+                width: 72px;
+            }
+        }
     </style>
 </head>
 <body>
-
 <div id="app">
-    <div class="header">
-        <div class="header-info">
-            <h1 id="ui-name">🧑‍🦱 徐然 (Blupure)</h1>
+    <div class="bear-layer" id="bear-layer"></div>
+
+    <header class="header">
+        <div>
+            <h1 id="ui-name">🐾 徐然（Blupure）</h1>
             <p id="ui-basic-info">📍 洛杉矶, 美国 | 🎂 0岁 | 📅 1995年1月</p>
         </div>
-        <div style="text-align: right;">
-            <span style="font-size: 1.2rem; color: #ff9800; font-weight: bold;" id="ui-wealth">💰 $500,000</span>
-        </div>
-    </div>
+        <div class="wealth" id="ui-wealth">💰 $500,000</div>
+    </header>
 
-    <div class="content" id="main-content">
-        
-        <div id="view-main" class="view-section active">
-            
-            <div class="card stats-grid">
-                <div class="stat-item"><span>❤️ <span id="ui-health">85</span></span>健康</div>
-                <div class="stat-item"><span>🧠 <span id="ui-intellect">90</span></span>智力</div>
-                <div class="stat-item"><span>✨ <span id="ui-charisma">88</span></span>魅力</div>
-                <div class="stat-item"><span>🍀 <span id="ui-luck">75</span></span>运气</div>
-            </div>
+    <main class="content" id="main-content">
+        <section class="card stats-grid">
+            <div class="stat-item"><span id="ui-health">85</span>健康 ❤️</div>
+            <div class="stat-item"><span id="ui-intellect">90</span>智力 🧠</div>
+            <div class="stat-item"><span id="ui-charisma">88</span>魅力 ✨</div>
+            <div class="stat-item"><span id="ui-luck">75</span>运气 🍀</div>
+        </section>
 
-            <div class="card api-config">
-                <h4 style="color: var(--primary-color); display: flex; justify-content: space-between; align-items: center;" onclick="toggleConfig()">
-                    <span>⚙️ 核心驱动设置 (点击展开/折叠)</span>
-                    <span id="config-arrow">▼</span>
-                </h4>
-                <div id="config-body" style="display: none; margin-top: 10px;">
-                    <input type="text" id="api-url" placeholder="API URL (例如: https://api.openai.com/v1)" value="https://api.openai.com/v1">
-                    <input type="password" id="api-key" placeholder="API Key (sk-...)">
-                    <input type="text" id="api-model" placeholder="模型名称 (例如: gpt-4o-mini)" value="gpt-3.5-turbo">
-                    <div style="display:flex; gap:10px; margin-top:10px;">
-                        <button class="modal-btn modal-btn-primary" onclick="saveSettings()">保存配置</button>
-                        <button class="modal-btn modal-btn-cancel" onclick="resetGame()">重新开局</button>
-                    </div>
+        <section class="card api-config">
+            <h4 onclick="toggleConfig()">
+                <span>⚙️ 核心驱动设置（点击展开）</span>
+                <span id="config-arrow">▼</span>
+            </h4>
+            <div id="config-body" style="display:none;">
+                <input type="text" id="api-url" placeholder="API URL (例如: https://api.openai.com/v1)">
+                <input type="password" id="api-key" placeholder="API Key">
+                <input type="text" id="api-model" placeholder="模型名 (例如: gpt-4o-mini)">
+                <textarea id="scenario-editor" class="scenario-editor" placeholder="在这里粘贴文游设定剧本（建议放 bitlife-docx-text 的纯文本版）"></textarea>
+                <div class="scenario-hint">设定解耦：聊天引擎只读取这里的设定文本，其它模块不再混入剧情规则。</div>
+                <div class="setting-actions">
+                    <button class="mini-btn primary" onclick="saveSettings()">保存配置</button>
+                    <button class="mini-btn ghost" onclick="importScenarioTxt()">导入设定TXT</button>
+                    <button class="mini-btn ghost" onclick="openRebornModal()">重新投胎</button>
                 </div>
+                <input id="scenario-file-input" type="file" accept=".txt,.md,.text" style="display:none;">
             </div>
+        </section>
 
-            <div class="card story-container" id="story-board">
-                </div>
+        <section class="card" id="story-board"></section>
+    </main>
+
+    <footer class="chat-footer">
+        <div class="quick-actions">
+            <button class="quick-btn" id="btn-next-month" onclick="sendUserText('下一月')">⏭ 下一月</button>
+            <button class="quick-btn" onclick="sendUserText('继续')">▶ 继续</button>
         </div>
-
-        <div id="view-social" class="view-section">
-            <div class="card">
-                <h3 style="color: var(--primary-color); margin-bottom: 10px;">👥 人际关系网</h3>
-                <div id="social-list">
-                    </div>
-            </div>
+        <div class="composer">
+            <textarea id="chat-input" placeholder="和黑猫猫/粉猫猫说点什么吧～"></textarea>
+            <button class="send-btn" id="send-btn" onclick="onSendClick()">发送</button>
         </div>
+    </footer>
 
-        <div id="view-inventory" class="view-section">
-            <div class="card">
-                <h3 style="color: var(--primary-color); margin-bottom: 10px;">🎒 个人物品与资产</h3>
-                <div id="inventory-list">
-                    </div>
-            </div>
-        </div>
-
-    </div>
-
-    <div class="footer">
-        <button id="btn-next" class="action-btn" onclick="nextTurn()">
-            <span>⏳ 进入下一月</span>
-        </button>
-        <div class="nav-bar">
-            <div class="nav-btn active" onclick="switchTab('view-main', this)">📖 生涯</div>
-            <div class="nav-btn" onclick="switchTab('view-social', this)">💬 社交</div>
-            <div class="nav-btn" onclick="switchTab('view-inventory', this)">🎒 背包</div>
-        </div>
-    </div>
-
-    <div id="action-modal" class="modal-overlay">
+    <div class="modal-overlay" id="reborn-modal">
         <div class="modal-card">
-            <h3 class="modal-title" id="modal-title">标题</h3>
-            <p class="modal-desc" id="modal-desc">详细描述信息</p>
-            <div class="modal-actions" id="modal-actions">
-                <button class="modal-btn modal-btn-cancel" onclick="closeModal()">关闭</button>
-                <button class="modal-btn modal-btn-primary" id="modal-confirm-btn" style="display:none;">确认</button>
+            <div class="modal-title">重新投胎</div>
+            <div class="modal-desc">请选择新人生性别（会清空当前存档）</div>
+            <div class="gender-actions">
+                <button class="mini-btn primary" onclick="resetGameWithGender('男')">男</button>
+                <button class="mini-btn primary" onclick="resetGameWithGender('女')">女</button>
+                <button class="mini-btn ghost" onclick="resetGameWithGender('非二元')">非二元</button>
             </div>
         </div>
     </div>
-
 </div>
 
 <script>
-    /*================ 游戏核心数据状态 ================*/
-    const defaultGameState = {
-        name: "徐然",
-        englishName: "Blupure",
-        gender: "男",
-        nationality: "美国",
-        location: "洛杉矶",
-        birthYear: 1995,
-        currentYear: 1995,
-        currentMonth: 1,
-        age: 0,
-        wealth: 500000,
-        stats: {
-            health: 85,
-            intellect: 90,
-            charisma: 88,
-            luck: 75
+    const AppConfig = {
+        storageKeys: {
+            save: "bitlife_save",
+            apiUrl: "bitlife_api_url",
+            apiKey: "bitlife_api_key",
+            apiModel: "bitlife_api_model",
+            nameRegistry: "bitlife_used_name_registry_v1",
+            scenarioText: "bitlife_scenario_text_v1"
         },
-        inventory: [
-            { id: 1, name: "高级奶嘴", desc: "婴儿专属安抚神器，进口硅胶材质。", effectDesc: "使用后可能提升一点心情。", value: "$50", type: "item" },
-            { id: 2, name: "全家福照片", desc: "一张温馨的家庭合影。", effectDesc: "满满的回忆。", value: "无价", type: "view" }
-        ],
-        npcs: [
-            { id: 1, name: "John Xu", relation: "父亲", intimacy: 80, desc: "忙碌的企业高管，为人严厉但注重家庭传承。" },
-            { id: 2, name: "Mary Smith", relation: "母亲", intimacy: 90, desc: "出身优渥的家庭主妇，温柔且对你充满溺爱。" }
-        ],
-        history: [
-            {
-                date: "1995年1月",
-                text: "伴随着清晨的第一缕阳光，你出生在美国洛杉矶的一家私立贵族医院。\n你的父亲是跨国企业的高管，母亲是全职富太太。你被取名为徐然，英文名 Blupure。父母对你寄予厚望。\n你的出生是一个备孕已久的结晶，家人们都为你感到高兴。护士夸你长得非常漂亮，有一双明亮的眼睛。"
-            }
-        ]
+        identityPools: {
+            cnNames: ["林澈", "沈知夏", "顾言川", "苏见微", "江望舒", "程以宁", "许星野", "周晚棠", "梁初言", "宋栖月", "叶云舟", "季明川", "陆听岚", "秦若禾"],
+            enNames: ["Aster", "Lumi", "Noah", "Iris", "Theo", "Mira", "Elio", "Nora", "Ciel", "Arden", "Lena", "Riven", "Milo", "Sylvia"],
+            birthPlaces: [
+                { nationality: "美国", locations: ["洛杉矶", "纽约", "西雅图", "波士顿"] },
+                { nationality: "英国", locations: ["伦敦", "曼彻斯特", "利物浦"] },
+                { nationality: "加拿大", locations: ["多伦多", "温哥华", "蒙特利尔"] },
+                { nationality: "法国", locations: ["巴黎", "里昂", "马赛"] },
+                { nationality: "日本", locations: ["东京", "大阪", "横滨"] },
+                { nationality: "澳大利亚", locations: ["悉尼", "墨尔本", "布里斯班"] },
+                { nationality: "新加坡", locations: ["新加坡市"] },
+                { nationality: "中国", locations: ["上海", "广州", "杭州", "成都"] }
+            ]
+        },
+        defaultApi: {
+            url: "https://api.openai.com/v1",
+            model: "gpt-4o-mini"
+        },
+        defaultScenario: [
+            "你是人生模拟器文游引擎。",
+            "必须严格根据玩家最新输入回复，不可脱离输入自说自话。",
+            "保持现代现实世界，不要超自然、科幻、血腥。",
+            "输出中要包含：当前时间、状态变化、剧情对话。",
+            "可以加入适量emoji、颜文字，以及（AI想法：...）。",
+            "在合适时机给1-3个可选项，格式如：1. ... 2. ... 3. ...",
+            "事件偏日常、成长缓慢、年龄逻辑严格、叙事连贯。"
+        ].join("\n")
     };
 
-    let gameState = {};
-    let isGenerating = false;
+    const Utils = {
+        deepClone(obj) {
+            return JSON.parse(JSON.stringify(obj));
+        },
+        pickRandom(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        },
+        nowDateStr(state) {
+            return `${state.currentYear}年${state.currentMonth}月`;
+        }
+    };
 
-    /*================ 初始化与存储系统 ================*/
-    function initGame() {
-        const saved = localStorage.getItem('bitlife_save');
-        if (saved) {
+    const StorageService = (() => {
+        function readJson(key, fallback) {
             try {
-                gameState = JSON.parse(saved);
+                const raw = localStorage.getItem(key);
+                return raw ? JSON.parse(raw) : fallback;
             } catch (e) {
-                gameState = JSON.parse(JSON.stringify(defaultGameState));
+                return fallback;
             }
-        } else {
-            gameState = JSON.parse(JSON.stringify(defaultGameState));
         }
-
-        // 加载API设置
-        document.getElementById('api-url').value = localStorage.getItem('bitlife_api_url') || 'https://api.openai.com/v1';
-        document.getElementById('api-key').value = localStorage.getItem('bitlife_api_key') || '';
-        document.getElementById('api-model').value = localStorage.getItem('bitlife_api_model') || 'gpt-3.5-turbo';
-
-        renderUI();
-        renderHistory();
-    }
-
-    function saveGame() {
-        localStorage.setItem('bitlife_save', JSON.stringify(gameState));
-    }
-
-    function saveSettings() {
-        localStorage.setItem('bitlife_api_url', document.getElementById('api-url').value.trim());
-        localStorage.setItem('bitlife_api_key', document.getElementById('api-key').value.trim());
-        localStorage.setItem('bitlife_api_model', document.getElementById('api-model').value.trim());
-        alert("核心驱动配置已保存！");
-    }
-
-    function resetGame() {
-        if(confirm("确定要重新投胎吗？所有进度将丢失。")) {
-            localStorage.removeItem('bitlife_save');
-            initGame();
+        function writeJson(key, value) {
+            localStorage.setItem(key, JSON.stringify(value));
         }
-    }
-
-    /*================ UI 渲染系统 ================*/
-    function renderUI() {
-        // 更新顶部栏
-        document.getElementById('ui-name').innerText = `🧑‍🦱 ${gameState.name} (${gameState.englishName})`;
-        document.getElementById('ui-basic-info').innerText = `📍 ${gameState.location}, ${gameState.nationality} | 🎂 ${Math.floor(gameState.age/12)}岁 | 📅 ${gameState.currentYear}年${gameState.currentMonth}月`;
-        document.getElementById('ui-wealth').innerText = `💰 $${gameState.wealth.toLocaleString()}`;
-
-        // 更新属性
-        document.getElementById('ui-health').innerText = gameState.stats.health;
-        document.getElementById('ui-intellect').innerText = gameState.stats.intellect;
-        document.getElementById('ui-charisma').innerText = gameState.stats.charisma;
-        document.getElementById('ui-luck').innerText = gameState.stats.luck;
-
-        // 渲染列表
-        renderSocial();
-        renderInventory();
-    }
-
-    function renderHistory() {
-        const board = document.getElementById('story-board');
-        board.innerHTML = '';
-        gameState.history.forEach(item => {
-            appendStoryCard(item.date, item.text);
-        });
-        scrollToBottom();
-    }
-
-    function appendStoryCard(dateStr, text) {
-        const board = document.getElementById('story-board');
-        const logDiv = document.createElement('div');
-        logDiv.className = 'story-log';
-        
-        const dateDiv = document.createElement('div');
-        dateDiv.className = 'story-date';
-        dateDiv.innerText = `[ ${dateStr} ]`;
-        
-        const textDiv = document.createElement('div');
-        textDiv.className = 'story-text';
-        textDiv.innerHTML = text; // 此时已经是处理好的文本
-
-        logDiv.appendChild(dateDiv);
-        logDiv.appendChild(textDiv);
-        board.appendChild(logDiv);
-    }
-
-    function renderSocial() {
-        const list = document.getElementById('social-list');
-        list.innerHTML = '';
-        gameState.npcs.forEach(npc => {
-            const item = document.createElement('div');
-            item.className = 'list-item';
-            item.onclick = () => showNPCModal(npc);
-            item.innerHTML = `
-                <div class="list-item-left">
-                    <h4>${npc.name} (${npc.relation})</h4>
-                    <p>好感度：${npc.intimacy}</p>
-                </div>
-                <div class="list-item-right">👉 详情</div>
-            `;
-            list.appendChild(item);
-        });
-    }
-
-    function renderInventory() {
-        const list = document.getElementById('inventory-list');
-        list.innerHTML = '';
-        gameState.inventory.forEach(inv => {
-            const item = document.createElement('div');
-            item.className = 'list-item';
-            item.onclick = () => showItemModal(inv);
-            item.innerHTML = `
-                <div class="list-item-left">
-                    <h4>${inv.name}</h4>
-                    <p>价值: ${inv.value}</p>
-                </div>
-                <div class="list-item-right">📦 使用/查看</div>
-            `;
-            list.appendChild(item);
-        });
-    }
-
-    /*================ 交互与弹窗系统 ================*/
-    function switchTab(viewId, btnEl) {
-        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-        
-        document.getElementById(viewId).classList.add('active');
-        btnEl.classList.add('active');
-    }
-
-    function toggleConfig() {
-        const body = document.getElementById('config-body');
-        const arrow = document.getElementById('config-arrow');
-        if (body.style.display === 'none') {
-            body.style.display = 'block';
-            arrow.innerText = '▲';
-        } else {
-            body.style.display = 'none';
-            arrow.innerText = '▼';
+        function readText(key, fallback = "") {
+            return localStorage.getItem(key) || fallback;
         }
-    }
+        function writeText(key, value) {
+            localStorage.setItem(key, value);
+        }
+        return { readJson, writeJson, readText, writeText };
+    })();
 
-    function scrollToBottom() {
-        const content = document.getElementById('main-content');
-        content.scrollTop = content.scrollHeight;
-    }
-
-    function showModal(title, desc, confirmText = null, onConfirm = null) {
-        document.getElementById('modal-title').innerText = title;
-        document.getElementById('modal-desc').innerHTML = desc;
-        
-        const confirmBtn = document.getElementById('modal-confirm-btn');
-        if (confirmText && onConfirm) {
-            confirmBtn.style.display = 'block';
-            confirmBtn.innerText = confirmText;
-            confirmBtn.onclick = () => {
-                onConfirm();
-                closeModal();
+    const IdentityService = (() => {
+        function loadRegistry() {
+            return StorageService.readJson(AppConfig.storageKeys.nameRegistry, { cnNames: [], enNames: [], fullNames: [] });
+        }
+        function saveRegistry(registry) {
+            StorageService.writeJson(AppConfig.storageKeys.nameRegistry, registry);
+        }
+        function pickUniqueName(pool, used) {
+            const usedSet = new Set(used);
+            const candidates = pool.filter((n) => !usedSet.has(n));
+            return candidates.length ? Utils.pickRandom(candidates) : null;
+        }
+        function uniqueIdentityNames() {
+            const registry = loadRegistry();
+            let cn = pickUniqueName(AppConfig.identityPools.cnNames, registry.cnNames);
+            let en = pickUniqueName(AppConfig.identityPools.enNames, registry.enNames);
+            if (!cn) cn = `${Utils.pickRandom(AppConfig.identityPools.cnNames)}${registry.cnNames.length + 1}`;
+            if (!en) en = `${Utils.pickRandom(AppConfig.identityPools.enNames)}-${registry.enNames.length + 1}`;
+            if (registry.fullNames.includes(`${cn}|${en}`)) cn = `${cn}${Math.floor(Math.random() * 999)}`;
+            registry.cnNames.push(cn);
+            registry.enNames.push(en);
+            registry.fullNames.push(`${cn}|${en}`);
+            saveRegistry(registry);
+            return { cn, en };
+        }
+        function generateIdentity() {
+            const region = Utils.pickRandom(AppConfig.identityPools.birthPlaces);
+            const names = uniqueIdentityNames();
+            return {
+                name: names.cn,
+                englishName: names.en,
+                nationality: region.nationality,
+                location: Utils.pickRandom(region.locations)
             };
-        } else {
-            confirmBtn.style.display = 'none';
         }
-        
-        document.getElementById('action-modal').style.display = 'flex';
-    }
+        return { generateIdentity };
+    })();
 
-    function closeModal() {
-        document.getElementById('action-modal').style.display = 'none';
-    }
+    const StateService = (() => {
+        const baseState = {
+            name: "徐然",
+            englishName: "Blupure",
+            gender: "男",
+            nationality: "美国",
+            location: "洛杉矶",
+            birthYear: 1995,
+            currentYear: 1995,
+            currentMonth: 1,
+            age: 0,
+            wealth: 500000,
+            stats: { health: 85, intellect: 90, charisma: 88, luck: 75 },
+            history: [],
+            chatMemory: []
+        };
+        let gameState = null;
 
-    function showNPCModal(npc) {
-        const desc = `
-            <strong>身份：</strong>${npc.relation}<br>
-            <strong>好感度：</strong>${npc.intimacy}/100<br>
-            <strong>描述：</strong>${npc.desc}
-        `;
-        showModal(`👤 ${npc.name}`, desc, "闲聊", () => {
-            // 触发简单互动
-            alert(`你咿咿呀呀地试图和 ${npc.name} 交流，对方笑了。`);
-            switchTab('view-main', document.querySelectorAll('.nav-btn')[0]);
-        });
-    }
+        function introText(state) {
+            return `## 🌸 欢迎来到人生模拟器\n你出生在${state.location}的一家医院，国籍为**${state.nationality}**。\n你的名字是**${state.name}（${state.englishName}）**，黑猫猫和粉猫猫会陪你一起成长喵~\n\n（AI想法：先从你的童年第一幕慢慢展开）\n\n**可选行动**\n1. 观察父母\n2. 安静睡觉\n3. 哇哇大哭`;
+        }
 
-    function showItemModal(item) {
-        const desc = `
-            <strong>物品描述：</strong>${item.desc}<br>
-            <strong>属性影响：</strong>${item.effectDesc}<br>
-            <strong>市场价值：</strong>${item.value}
-        `;
-        showModal(`🎒 ${item.name}`, desc, item.type === 'item' ? "使用" : null, () => {
-            if(item.type === 'item') {
-                alert(`你使用了 ${item.name}！感觉不错。`);
-                switchTab('view-main', document.querySelectorAll('.nav-btn')[0]);
-                // 此处可扩展删除物品逻辑
+        function buildInitialState(gender) {
+            const next = Utils.deepClone(baseState);
+            const identity = IdentityService.generateIdentity();
+            next.gender = gender || next.gender;
+            next.name = identity.name;
+            next.englishName = identity.englishName;
+            next.nationality = identity.nationality;
+            next.location = identity.location;
+            next.history = [{ role: "ai", date: Utils.nowDateStr(next), text: introText(next) }];
+            return next;
+        }
+
+        function init() {
+            const saved = StorageService.readJson(AppConfig.storageKeys.save, null);
+            gameState = saved || buildInitialState(baseState.gender);
+            if (!gameState.history || !gameState.history.length) {
+                gameState.history = [{ role: "ai", date: Utils.nowDateStr(gameState), text: introText(gameState) }];
             }
-        });
-    }
-
-
-    
-async function nextTurn() {
-        if(isGenerating) return;
-
-        let url = document.getElementById('api-url').value.trim();
-        const key = document.getElementById('api-key').value.trim();
-        const modelName = document.getElementById('api-model').value.trim();
-
-        if (!url || !key) {
-            alert("请配置 API URL 和 Key！");
-            return;
         }
 
-        // 统一 URL 格式
-        if (url.endsWith('/')) url = url.slice(0, -1);
-        const fetchUrl = url.endsWith('/chat/completions') ? url : `${url}/chat/completions`;
-
-        // --- 游戏状态更新 (保持原样) ---
-        gameState.age += 1;
-        gameState.currentMonth += 1;
-        if(gameState.currentMonth > 12) {
-            gameState.currentMonth = 1; gameState.currentYear += 1;
+        function resetWithGender(gender) {
+            gameState = buildInitialState(gender);
+            gameState.history = [{
+                role: "ai",
+                date: Utils.nowDateStr(gameState),
+                text: `## 🍼 新人生开启\n你已选择性别：**${gender}**。\n本次随机身份：**${gameState.name}（${gameState.englishName}）**，国籍**${gameState.nationality}**，出生地**${gameState.location}**。\n\n黑猫猫和粉猫猫正在同步你的新档案～`
+            }];
+            save();
         }
-        const dateStr = `${gameState.currentYear}年${gameState.currentMonth}月`;
-        const ageYears = Math.floor(gameState.age / 12);
-        
-        renderUI();
-        switchTab('view-main', document.querySelectorAll('.nav-btn')[0]);
-        const board = document.getElementById('story-board');
-        const logDiv = document.createElement('div');
-        logDiv.className = 'story-log';
-        logDiv.innerHTML = `<div class="story-date">[ ${dateStr} ]</div><div class="story-text">命运连接中...<span class="streaming-cursor"></span></div>`;
-        board.appendChild(logDiv);
-        scrollToBottom();
-        const textContainer = logDiv.querySelector('.story-text');
 
-        // 构建消息
-        const recentHistory = gameState.history.slice(-3).map(h => `${h.date}: ${h.text}`).join("\n\n");
-        const systemPrompt = `你是一个人生模拟器。主角：${gameState.name}，年龄：${ageYears}岁。请生成本月发生的事件。`;
-        const userPrompt = `历史：${recentHistory}\n时间：${dateStr}。生成本月事件。`;
+        function save() {
+            StorageService.writeJson(AppConfig.storageKeys.save, gameState);
+        }
 
-        isGenerating = true;
-        document.getElementById('btn-next').disabled = true;
+        function get() {
+            return gameState;
+        }
 
-        try {
-            const response = await fetch(fetchUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${key}`
-                    // 不要添加任何额外的 headers
-                },
-                body: JSON.stringify({
-                    model: modelName,
-                    messages: [
-                        { role: 'system', content: systemPrompt },
-                        { role: 'user', content: userPrompt }
-                    ],
-                    stream: true,
-                    temperature: 0.7
-                })
-            });
+        function advanceMonthIfNeeded(input) {
+            if (!input.includes("下一月") && !input.includes("继续")) return;
+            gameState.age += 1;
+            gameState.currentMonth += 1;
+            if (gameState.currentMonth > 12) {
+                gameState.currentMonth = 1;
+                gameState.currentYear += 1;
+            }
+        }
 
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        function pushHistory(msg) {
+            gameState.history.push(msg);
+        }
 
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder('utf-8');
-            let generatedText = "";
+        function pushChat(role, content) {
+            gameState.chatMemory.push({ role, content });
+        }
 
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                
-                const chunk = decoder.decode(value);
-                const lines = chunk.split('\n');
-                for (let line of lines) {
-                    if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-                        try {
-                            const data = JSON.parse(line.slice(6));
-                            if (data.choices[0].delta.content) {
-                                generatedText += data.choices[0].delta.content;
-                                textContainer.innerHTML = generatedText.replace(/\n/g, '<br>') + '<span class="streaming-cursor"></span>';
-                                scrollToBottom();
-                            }
-                        } catch (e) {}
-                    }
+        return { init, get, save, resetWithGender, advanceMonthIfNeeded, pushHistory, pushChat };
+    })();
+
+    const MarkdownService = (() => {
+        function escapeHtml(str) {
+            return (str || "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+        function render(md) {
+            let html = escapeHtml(md);
+            html = html.replace(/```([\s\S]*?)```/g, "<pre><code>$1</code></pre>");
+            html = html.replace(/`([^`\n]+)`/g, "<code>$1</code>");
+            html = html.replace(/^### (.*)$/gm, "<h3>$1</h3>");
+            html = html.replace(/^## (.*)$/gm, "<h2>$1</h2>");
+            html = html.replace(/^# (.*)$/gm, "<h1>$1</h1>");
+            html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+            html = html.replace(/\*(.*?)\*/g, "<em>$1</em>");
+            html = html.replace(/^\> (.*)$/gm, "<blockquote>$1</blockquote>");
+            html = html.replace(/(?:^|\n)- (.*)(?=\n|$)/g, "\n<li>$1</li>");
+            html = html.replace(/(?:^|\n)\d+[.)] (.*)(?=\n|$)/g, "\n<li>$1</li>");
+            html = html.replace(/(<li>[\s\S]*?<\/li>)/g, "<ul>$1</ul>");
+            html = html.replace(/<\/ul>\s*<ul>/g, "");
+            html = html.replace(/\n/g, "<br>");
+            return html;
+        }
+        return { render };
+    })();
+
+    const UIRenderer = (() => {
+        let currentStreamingTarget = null;
+        function renderTop(state) {
+            const years = Math.floor(state.age / 12);
+            document.getElementById("ui-name").innerText = `🐾 ${state.name}（${state.englishName}）· ${state.gender}`;
+            document.getElementById("ui-basic-info").innerText = `📍 ${state.location}, ${state.nationality} | 🎂 ${years}岁 | 📅 ${state.currentYear}年${state.currentMonth}月`;
+            document.getElementById("ui-wealth").innerText = `💰 $${Number(state.wealth || 0).toLocaleString()}`;
+            document.getElementById("ui-health").innerText = state.stats.health;
+            document.getElementById("ui-intellect").innerText = state.stats.intellect;
+            document.getElementById("ui-charisma").innerText = state.stats.charisma;
+            document.getElementById("ui-luck").innerText = state.stats.luck;
+        }
+        function scrollToBottom() {
+            const content = document.getElementById("main-content");
+            content.scrollTop = content.scrollHeight;
+        }
+        function parseChoices(text) {
+            const lines = text.split("\n").map((s) => s.trim()).filter(Boolean);
+            const choices = [];
+            for (const line of lines) {
+                const m = line.match(/^(?:\d+[.)、]|[-*])\s*(.+)$/);
+                if (m && m[1].length <= 28) choices.push(m[1]);
+            }
+            return choices.slice(0, 4);
+        }
+        function appendMessage(role, text, dateStr, streaming) {
+            const state = StateService.get();
+            const board = document.getElementById("story-board");
+            const logDiv = document.createElement("div");
+            logDiv.className = "story-log";
+            logDiv.innerHTML = `<div class="story-date">[ ${dateStr || Utils.nowDateStr(state)} ]</div>`;
+
+            const row = document.createElement("div");
+            row.className = `msg-row ${role === "user" ? "user" : "ai"}`;
+            const avatar = document.createElement("div");
+            avatar.className = `avatar ${role === "user" ? "user" : "ai"}`;
+            avatar.innerText = role === "user" ? "🐱🌸" : "🐈‍⬛";
+
+            const bubble = document.createElement("div");
+            bubble.className = `bubble ${role === "user" ? "user" : "ai"}`;
+            bubble.innerHTML = MarkdownService.render(text) + (streaming ? '<span class="streaming-cursor"></span>' : "");
+
+            if (role === "user") { row.appendChild(bubble); row.appendChild(avatar); }
+            else { row.appendChild(avatar); row.appendChild(bubble); }
+            logDiv.appendChild(row);
+
+            if (!streaming && role === "ai") {
+                const choices = parseChoices(text);
+                if (choices.length > 0) {
+                    const wrap = document.createElement("div");
+                    wrap.className = "choice-wrap";
+                    choices.forEach((c) => {
+                        const btn = document.createElement("button");
+                        btn.className = "choice-btn";
+                        btn.innerText = c;
+                        btn.onclick = () => Controller.sendUserText(`我选择：${c}`);
+                        wrap.appendChild(btn);
+                    });
+                    logDiv.appendChild(wrap);
                 }
             }
-            
-            textContainer.innerHTML = generatedText.replace(/\n/g, '<br>');
-            gameState.history.push({ date: dateStr, text: textContainer.innerHTML });
-            saveGame();
 
-        } catch (error) {
-            console.error(error);
-            textContainer.innerHTML = `<span style="color:red;">⚠️ 链接被 NVIDIA 拒绝: ${error.message}</span>`;
-            // 回退逻辑保持原样...
-        } finally {
-            isGenerating = false;
-            document.getElementById('btn-next').disabled = false;
-            renderUI();
+            board.appendChild(logDiv);
+            if (streaming) currentStreamingTarget = bubble;
+            scrollToBottom();
         }
-    }
+        function updateStreaming(text) {
+            if (!currentStreamingTarget) return;
+            currentStreamingTarget.innerHTML = MarkdownService.render(text) + '<span class="streaming-cursor"></span>';
+            scrollToBottom();
+        }
+        function finishStreaming(text) {
+            if (!currentStreamingTarget) return;
+            currentStreamingTarget.innerHTML = MarkdownService.render(text);
+            currentStreamingTarget = null;
+        }
+        function renderHistory(history) {
+            const board = document.getElementById("story-board");
+            board.innerHTML = "";
+            history.forEach((msg) => appendMessage(msg.role || "ai", msg.text, msg.date, false));
+            scrollToBottom();
+        }
+        function setSendingDisabled(disabled) {
+            document.getElementById("send-btn").disabled = disabled;
+            document.getElementById("btn-next-month").disabled = disabled;
+        }
+        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, setSendingDisabled };
+    })();
 
-    // 启动游戏
-    window.onload = initGame;
+    const VisualEffects = (() => {
+        function createBears() {
+            const layer = document.getElementById("bear-layer");
+            if (layer.children.length > 0) return;
+            const bears = ["🧸", "ʕ•ᴥ•ʔ", "🧸", "ʕ·ᴥ·ʔ"];
+            for (let i = 0; i < 11; i++) {
+                const b = document.createElement("span");
+                b.className = "bear";
+                b.innerText = bears[i % bears.length];
+                b.style.left = `${Math.random() * 100}%`;
+                b.style.animationDuration = `${10 + Math.random() * 12}s`;
+                b.style.animationDelay = `${Math.random() * 8}s`;
+                b.style.fontSize = `${15 + Math.random() * 9}px`;
+                layer.appendChild(b);
+            }
+        }
+        return { createBears };
+    })();
 
+    const SettingsService = (() => {
+        function loadToUI() {
+            document.getElementById("api-url").value = StorageService.readText(AppConfig.storageKeys.apiUrl, AppConfig.defaultApi.url);
+            document.getElementById("api-key").value = StorageService.readText(AppConfig.storageKeys.apiKey, "");
+            document.getElementById("api-model").value = StorageService.readText(AppConfig.storageKeys.apiModel, AppConfig.defaultApi.model);
+            document.getElementById("scenario-editor").value = StorageService.readText(AppConfig.storageKeys.scenarioText, AppConfig.defaultScenario);
+        }
+        function saveFromUI() {
+            StorageService.writeText(AppConfig.storageKeys.apiUrl, document.getElementById("api-url").value.trim());
+            StorageService.writeText(AppConfig.storageKeys.apiKey, document.getElementById("api-key").value.trim());
+            StorageService.writeText(AppConfig.storageKeys.apiModel, document.getElementById("api-model").value.trim());
+            const scenario = document.getElementById("scenario-editor").value.trim();
+            StorageService.writeText(AppConfig.storageKeys.scenarioText, scenario || AppConfig.defaultScenario);
+        }
+        function getApiConfig() {
+            return {
+                url: document.getElementById("api-url").value.trim(),
+                key: document.getElementById("api-key").value.trim(),
+                model: document.getElementById("api-model").value.trim()
+            };
+        }
+        function getScenarioText() {
+            const editorText = document.getElementById("scenario-editor").value.trim();
+            if (editorText) return editorText;
+            return StorageService.readText(AppConfig.storageKeys.scenarioText, AppConfig.defaultScenario);
+        }
+        function importScenarioFromFile() {
+            const input = document.getElementById("scenario-file-input");
+            input.onchange = () => {
+                const file = input.files && input.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const content = String(reader.result || "").trim();
+                    if (!content) {
+                        alert("导入失败：文件内容为空");
+                        return;
+                    }
+                    document.getElementById("scenario-editor").value = content;
+                    StorageService.writeText(AppConfig.storageKeys.scenarioText, content);
+                    alert("设定导入成功");
+                };
+                reader.onerror = () => alert("导入失败：无法读取文件");
+                reader.readAsText(file, "utf-8");
+                input.value = "";
+            };
+            input.click();
+        }
+        return { loadToUI, saveFromUI, getApiConfig, getScenarioText, importScenarioFromFile };
+    })();
+
+    const ChatService = (() => {
+        let isGenerating = false;
+        async function requestAI(userText) {
+            const state = StateService.get();
+            const config = SettingsService.getApiConfig();
+            if (!config.url || !config.key || !config.model) {
+                alert("请先配置 API URL、API Key 和模型名。");
+                return;
+            }
+
+            let url = config.url;
+            if (url.endsWith("/")) url = url.slice(0, -1);
+            const fetchUrl = url.endsWith("/chat/completions") ? url : `${url}/chat/completions`;
+
+            isGenerating = true;
+            UIRenderer.setSendingDisabled(true);
+            UIRenderer.appendMessage("ai", "黑猫猫正在思考中...", Utils.nowDateStr(state), true);
+            let fullText = "";
+
+            const recentHistory = state.history
+                .slice(-14)
+                .map((item) => `${item.role === "user" ? "玩家" : "系统"}(${item.date})：${item.text}`)
+                .join("\n");
+            const scenarioSpec = SettingsService.getScenarioText();
+            const runtimeContext = [
+                "【运行时上下文】",
+                `主角基础：姓名${state.name}，性别${state.gender}，年龄${Math.floor(state.age / 12)}岁，时间${Utils.nowDateStr(state)}。`,
+                "请使用Markdown输出并兼容手机屏。"
+            ].join("\n");
+            const systemPrompt = `${scenarioSpec}\n\n${runtimeContext}`;
+
+            try {
+                const response = await fetch(fetchUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${config.key}` },
+                    body: JSON.stringify({
+                        model: config.model,
+                        messages: [
+                            { role: "system", content: systemPrompt },
+                            { role: "user", content: `玩家最新输入：${userText}\n\n最近记录：\n${recentHistory}` }
+                        ],
+                        stream: true,
+                        temperature: 0.7
+                    })
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder("utf-8");
+                let tail = "";
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    tail += decoder.decode(value, { stream: true });
+                    const lines = tail.split("\n");
+                    tail = lines.pop() || "";
+                    for (const line of lines) {
+                        if (!line.startsWith("data: ") || line === "data: [DONE]") continue;
+                        try {
+                            const payload = JSON.parse(line.slice(6));
+                            const token = payload.choices?.[0]?.delta?.content || "";
+                            if (!token) continue;
+                            fullText += token;
+                            UIRenderer.updateStreaming(fullText);
+                        } catch (e) {
+                        }
+                    }
+                }
+
+                const finalText = fullText.trim() || "（AI想法：刚刚有点卡住了，再和我说一次吧喵）";
+                UIRenderer.finishStreaming(finalText);
+                StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(StateService.get()), text: finalText });
+                StateService.pushChat("assistant", finalText);
+                StateService.save();
+            } catch (error) {
+                UIRenderer.finishStreaming(`⚠️ 连接失败：${error.message}\n\n请检查 API 配置后重试。`);
+            } finally {
+                isGenerating = false;
+                UIRenderer.setSendingDisabled(false);
+            }
+        }
+        function getIsGenerating() {
+            return isGenerating;
+        }
+        return { requestAI, getIsGenerating };
+    })();
+
+    const Controller = (() => {
+        function renderAll() {
+            const state = StateService.get();
+            UIRenderer.renderTop(state);
+            UIRenderer.renderHistory(state.history);
+        }
+        function init() {
+            StateService.init();
+            SettingsService.loadToUI();
+            renderAll();
+            VisualEffects.createBears();
+            bindEvents();
+        }
+        function bindEvents() {
+            const input = document.getElementById("chat-input");
+            input.addEventListener("keydown", (e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    onSendClick();
+                }
+            });
+        }
+        function onSendClick() {
+            const input = document.getElementById("chat-input");
+            const text = input.value.trim();
+            if (!text) return;
+            input.value = "";
+            sendUserText(text);
+        }
+        function sendUserText(text) {
+            if (ChatService.getIsGenerating()) return;
+            const state = StateService.get();
+            UIRenderer.appendMessage("user", text, Utils.nowDateStr(state), false);
+            StateService.pushHistory({ role: "user", date: Utils.nowDateStr(state), text });
+            StateService.pushChat("user", text);
+            StateService.advanceMonthIfNeeded(text);
+            StateService.save();
+            UIRenderer.renderTop(StateService.get());
+            ChatService.requestAI(text);
+        }
+        function saveSettings() {
+            SettingsService.saveFromUI();
+            alert("配置已保存");
+        }
+        function importScenarioTxt() {
+            SettingsService.importScenarioFromFile();
+        }
+        function openRebornModal() {
+            document.getElementById("reborn-modal").style.display = "flex";
+        }
+        function closeRebornModal() {
+            document.getElementById("reborn-modal").style.display = "none";
+        }
+        function resetGameWithGender(gender) {
+            StateService.resetWithGender(gender);
+            closeRebornModal();
+            renderAll();
+        }
+        function toggleConfig() {
+            const body = document.getElementById("config-body");
+            const arrow = document.getElementById("config-arrow");
+            const open = body.style.display === "block";
+            body.style.display = open ? "none" : "block";
+            arrow.innerText = open ? "▼" : "▲";
+        }
+        return { init, onSendClick, sendUserText, saveSettings, importScenarioTxt, openRebornModal, closeRebornModal, resetGameWithGender, toggleConfig };
+    })();
+
+    function onSendClick() { Controller.onSendClick(); }
+    function sendUserText(text) { Controller.sendUserText(text); }
+    function saveSettings() { Controller.saveSettings(); }
+    function importScenarioTxt() { Controller.importScenarioTxt(); }
+    function openRebornModal() { Controller.openRebornModal(); }
+    function closeRebornModal() { Controller.closeRebornModal(); }
+    function resetGameWithGender(gender) { Controller.resetGameWithGender(gender); }
+    function toggleConfig() { Controller.toggleConfig(); }
+
+    window.onload = () => Controller.init();
 </script>
 </body>
 </html>
