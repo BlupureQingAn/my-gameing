@@ -90,9 +90,29 @@
             margin-bottom: 8px;
         }
 
+        .nav-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .timeline-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
         .gender-actions {
             display: flex;
             gap: 8px;
+        }
+
+        .view-section {
+            display: none;
+        }
+
+        .view-section.active {
+            display: block;
         }
 
         /* ==================== 组件层（UI Components） ==================== */
@@ -351,6 +371,87 @@
             cursor: pointer;
         }
 
+        .nav-btn {
+            flex: 1;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 8px 8px;
+            background: #f8ecdc;
+            color: #6a4f31;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .nav-btn.active {
+            background: #e7c49a;
+            color: #4f371f;
+        }
+
+        .list-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 10px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            background: #fffdf8;
+        }
+
+        .list-title {
+            font-size: 0.88rem;
+            color: var(--accent-dark);
+            font-weight: 700;
+        }
+
+        .list-sub {
+            font-size: 0.76rem;
+            color: var(--sub);
+            margin-top: 3px;
+        }
+
+        .tiny-btn {
+            border: 1px solid var(--line);
+            background: #fff2df;
+            color: #644a2f;
+            border-radius: 8px;
+            padding: 6px 8px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        .social-chat-box {
+            margin-top: 8px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: #fffdf9;
+            padding: 8px;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+
+        .npc-msg {
+            font-size: 0.82rem;
+            line-height: 1.45;
+            margin-bottom: 8px;
+        }
+
+        .npc-msg.me {
+            color: #7a4d6a;
+        }
+
+        .npc-msg.npc {
+            color: #5d4a3b;
+        }
+
+        .slot-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
         .composer textarea {
             flex: 1;
             min-height: 42px;
@@ -444,6 +545,16 @@
             96% { transform: translateY(0) scale(1); }
         }
 
+        .event-flash {
+            animation: eventFlash 0.9s ease;
+        }
+
+        @keyframes eventFlash {
+            0% { box-shadow: 0 0 0 rgba(255, 173, 66, 0); }
+            30% { box-shadow: 0 0 0 4px rgba(255, 173, 66, 0.35); }
+            100% { box-shadow: 0 0 0 rgba(255, 173, 66, 0); }
+        }
+
         .streaming-cursor {
             display: inline-block;
             width: 6px;
@@ -516,13 +627,60 @@
             </div>
         </section>
 
-        <section class="card" id="story-board"></section>
+        <section id="view-main" class="view-section active">
+            <section class="card" id="story-board"></section>
+        </section>
+
+        <section id="view-inventory" class="view-section">
+            <section class="card">
+                <div class="list-title">🎒 背包物品</div>
+                <div id="inventory-list" style="margin-top:8px;"></div>
+            </section>
+        </section>
+
+        <section id="view-social" class="view-section">
+            <section class="card">
+                <div class="list-title">💬 社交（类似微信单聊）</div>
+                <div id="social-list" style="margin-top:8px;"></div>
+                <div id="social-chat-panel" style="display:none; margin-top:10px;">
+                    <div class="list-row">
+                        <div>
+                            <div class="list-title" id="social-chat-title">与NPC聊天</div>
+                            <div class="list-sub" id="social-chat-sub"></div>
+                        </div>
+                        <button class="tiny-btn" id="social-avatar-btn">查看状态</button>
+                    </div>
+                    <div class="social-chat-box" id="social-chat-box"></div>
+                    <div class="composer" style="margin-top:8px;">
+                        <textarea id="social-input" placeholder="给这个NPC发消息"></textarea>
+                        <button class="send-btn" onclick="sendNpcMessage()">发送</button>
+                    </div>
+                </div>
+            </section>
+        </section>
+
+        <section id="view-saves" class="view-section">
+            <section class="card">
+                <div class="list-title">💾 存档槽位（5个）</div>
+                <div class="slot-grid" id="save-slots" style="margin-top:8px;"></div>
+            </section>
+        </section>
     </main>
 
     <footer class="chat-footer">
+        <div class="nav-actions">
+            <button class="nav-btn active" data-view="view-main" onclick="switchView('view-main')">📖 生涯</button>
+            <button class="nav-btn" data-view="view-inventory" onclick="switchView('view-inventory')">🎒 背包</button>
+            <button class="nav-btn" data-view="view-social" onclick="switchView('view-social')">💬 社交</button>
+            <button class="nav-btn" data-view="view-saves" onclick="switchView('view-saves')">💾 存档</button>
+        </div>
         <div class="quick-actions">
             <button class="quick-btn" id="btn-next-month" onclick="sendUserText('下一月')">⏭ 下一月</button>
             <button class="quick-btn" onclick="sendUserText('继续')">▶ 继续</button>
+        </div>
+        <div class="timeline-actions">
+            <button class="quick-btn" onclick="jumpWeek(-1)">⏪ 上一周</button>
+            <button class="quick-btn" onclick="jumpWeek(1)">⏩ 下一周</button>
         </div>
         <div class="composer">
             <textarea id="chat-input" placeholder="和黑猫猫/粉猫猫说点什么吧～"></textarea>
@@ -541,6 +699,17 @@
             </div>
         </div>
     </div>
+
+    <div class="modal-overlay" id="info-modal">
+        <div class="modal-card">
+            <div class="modal-title" id="info-modal-title">详情</div>
+            <div class="modal-desc" id="info-modal-desc"></div>
+            <div class="gender-actions">
+                <button class="mini-btn ghost" onclick="closeInfoModal()">关闭</button>
+                <button class="mini-btn primary" id="info-modal-action" style="display:none;">确认</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -551,7 +720,8 @@
             apiKey: "bitlife_api_key",
             apiModel: "bitlife_api_model",
             nameRegistry: "bitlife_used_name_registry_v1",
-            scenarioText: "bitlife_scenario_text_v1"
+            scenarioText: "bitlife_scenario_text_v1",
+            saveSlotPrefix: "bitlife_save_slot_"
         },
         identityPools: {
             cnNames: ["林澈", "沈知夏", "顾言川", "苏见微", "江望舒", "程以宁", "许星野", "周晚棠", "梁初言", "宋栖月", "叶云舟", "季明川", "陆听岚", "秦若禾"],
@@ -580,12 +750,12 @@
             "保持现代现实世界，不要超自然、科幻、血腥。",
             "输出中要包含：当前时间、状态变化、剧情对话。",
             "可以加入适量emoji、颜文字，以及（AI想法：...）。",
-            "在合适时机给1-3个可选项，格式如：1. ... 2. ... 3. ...",
             "事件偏日常、成长缓慢、年龄逻辑严格、叙事连贯。"
         ].join("\n")
     };
 
     const Utils = {
+        weekdays: ["周一", "周二", "周三", "周四", "周五", "周六", "周日"],
         deepClone(obj) {
             return JSON.parse(JSON.stringify(obj));
         },
@@ -593,7 +763,35 @@
             return arr[Math.floor(Math.random() * arr.length)];
         },
         nowDateStr(state) {
-            return `${state.currentYear}年${state.currentMonth}月`;
+            const weekName = this.weekdays[state.weekdayIndex || 0];
+            return `${state.currentYear}年${state.currentMonth}月${state.currentDay || 1}日 ${weekName}`;
+        },
+        shiftDays(state, deltaDays) {
+            if (!Number.isFinite(deltaDays) || !state) return;
+            state.currentDay = state.currentDay || 1;
+            state.weekdayIndex = state.weekdayIndex || 0;
+            let remain = deltaDays;
+            const step = remain > 0 ? 1 : -1;
+            while (remain !== 0) {
+                state.currentDay += step;
+                state.weekdayIndex = (state.weekdayIndex + step + 7) % 7;
+                if (state.currentDay > 30) {
+                    state.currentDay = 1;
+                    state.currentMonth += 1;
+                    if (state.currentMonth > 12) {
+                        state.currentMonth = 1;
+                        state.currentYear += 1;
+                    }
+                } else if (state.currentDay < 1) {
+                    state.currentDay = 30;
+                    state.currentMonth -= 1;
+                    if (state.currentMonth < 1) {
+                        state.currentMonth = 12;
+                        state.currentYear -= 1;
+                    }
+                }
+                remain -= step;
+            }
         }
     };
 
@@ -666,9 +864,21 @@
             birthYear: 1995,
             currentYear: 1995,
             currentMonth: 1,
+            currentDay: 1,
+            weekdayIndex: 0,
             age: 0,
             wealth: 500000,
             stats: { health: 85, intellect: 90, charisma: 88, luck: 75 },
+            inventory: [
+                { id: "milk", name: "温热牛奶", type: "消耗品", desc: "补充精力的小饮品。", effect: "health+2", count: 2 },
+                { id: "diary", name: "成长日记", type: "道具", desc: "记录每周心情变化。", effect: "charisma+1", count: 1 }
+            ],
+            npcs: [
+                { id: "npc_mom", name: "林知晴", relation: "母亲", favor: 82, status: "在家", mood: "温和" },
+                { id: "npc_dad", name: "顾承远", relation: "父亲", favor: 75, status: "工作中", mood: "认真" },
+                { id: "npc_friend", name: "许安禾", relation: "青梅竹马", favor: 68, status: "上学", mood: "活泼" }
+            ],
+            npcChats: {},
             history: [],
             chatMemory: []
         };
@@ -696,6 +906,11 @@
             if (!gameState.history || !gameState.history.length) {
                 gameState.history = [{ role: "ai", date: Utils.nowDateStr(gameState), text: introText(gameState) }];
             }
+            if (!Array.isArray(gameState.inventory)) gameState.inventory = Utils.deepClone(baseState.inventory);
+            if (!Array.isArray(gameState.npcs)) gameState.npcs = Utils.deepClone(baseState.npcs);
+            if (!gameState.npcChats || typeof gameState.npcChats !== "object") gameState.npcChats = {};
+            if (!gameState.currentDay) gameState.currentDay = 1;
+            if (typeof gameState.weekdayIndex !== "number") gameState.weekdayIndex = 0;
         }
 
         function resetWithGender(gender) {
@@ -718,12 +933,11 @@
 
         function advanceMonthIfNeeded(input) {
             if (!input.includes("下一月") && !input.includes("继续")) return;
+            Utils.shiftDays(gameState, 30);
             gameState.age += 1;
-            gameState.currentMonth += 1;
-            if (gameState.currentMonth > 12) {
-                gameState.currentMonth = 1;
-                gameState.currentYear += 1;
-            }
+        }
+        function jumpWeek(deltaWeek) {
+            Utils.shiftDays(gameState, deltaWeek * 7);
         }
 
         function pushHistory(msg) {
@@ -734,7 +948,7 @@
             gameState.chatMemory.push({ role, content });
         }
 
-        return { init, get, save, resetWithGender, advanceMonthIfNeeded, pushHistory, pushChat };
+        return { init, get, save, resetWithGender, advanceMonthIfNeeded, jumpWeek, pushHistory, pushChat };
     })();
 
     const MarkdownService = (() => {
@@ -766,12 +980,63 @@
         return { render };
     })();
 
+    const BuiltinPromptService = (() => {
+        function getResponseRules() {
+            return [
+                "【内置返回规则】",
+                "1) 必须只基于玩家最新输入和上下文推进剧情，不可脱离输入自说自话。",
+                "2) 输出使用 Markdown，内容贴近手机阅读。",
+                "3) 每次回复都应包含：时间信息、状态变化、剧情对话、（AI想法：...）。",
+                "4) 回复末尾必须提供 1-3 条可执行选项，使用编号格式：1. xxx",
+                "5) 若剧情不适合选项，也要提供“继续观察/继续推进”等中性选项。",
+                "6) 事件保持现实、日常、年龄逻辑正确。"
+            ].join("\n");
+        }
+        return { getResponseRules };
+    })();
+
+    const ChoiceService = (() => {
+        function extractChoices(text) {
+            const lines = String(text || "").split("\n").map((s) => s.trim()).filter(Boolean);
+            const choices = [];
+            for (const line of lines) {
+                const m = line.match(/^\d+[.)、]\s+(.+)$/);
+                if (!m) continue;
+                const choiceText = m[1].trim();
+                if (choiceText.length <= 28) choices.push(choiceText);
+            }
+            return choices.slice(0, 4);
+        }
+
+        function buildFallbackChoices(userText, state) {
+            const age = Math.floor((state?.age || 0) / 12);
+            const month = state?.currentMonth || 1;
+            const generic = ["继续观察局势", "和家人聊聊", "查看当前状态"];
+            if (String(userText).includes("学习")) return ["继续学习30分钟", "向老师提问", "休息后继续"];
+            if (String(userText).includes("工作")) return ["先处理手头任务", "和同事沟通进度", "复盘今天安排"];
+            if (month % 3 === 0) return ["推进到下一月", "整理本季目标", "和重要NPC互动"];
+            if (age < 12) return ["继续观察父母", "在家里活动", "安静休息"];
+            return generic;
+        }
+
+        function ensureOptionsBlock(text, userText, state) {
+            const currentChoices = extractChoices(text);
+            if (currentChoices.length > 0) return text;
+            const fallback = buildFallbackChoices(userText, state);
+            const optionBlock = ["", "**可选行动**", ...fallback.map((item, idx) => `${idx + 1}. ${item}`)].join("\n");
+            return `${String(text || "").trim()}\n${optionBlock}`;
+        }
+
+        return { extractChoices, ensureOptionsBlock };
+    })();
+
     const UIRenderer = (() => {
         let currentStreamingTarget = null;
+        let currentSocialNpcId = null;
         function renderTop(state) {
             const years = Math.floor(state.age / 12);
             document.getElementById("ui-name").innerText = `🐾 ${state.name}（${state.englishName}）· ${state.gender}`;
-            document.getElementById("ui-basic-info").innerText = `📍 ${state.location}, ${state.nationality} | 🎂 ${years}岁 | 📅 ${state.currentYear}年${state.currentMonth}月`;
+            document.getElementById("ui-basic-info").innerText = `📍 ${state.location}, ${state.nationality} | 🎂 ${years}岁 | 📅 ${Utils.nowDateStr(state)}`;
             document.getElementById("ui-wealth").innerText = `💰 $${Number(state.wealth || 0).toLocaleString()}`;
             document.getElementById("ui-health").innerText = state.stats.health;
             document.getElementById("ui-intellect").innerText = state.stats.intellect;
@@ -781,17 +1046,6 @@
         function scrollToBottom() {
             const content = document.getElementById("main-content");
             content.scrollTop = content.scrollHeight;
-        }
-        function parseChoices(text) {
-            const lines = text.split("\n").map((s) => s.trim()).filter(Boolean);
-            const choices = [];
-            for (const line of lines) {
-                const m = line.match(/^\d+[.)、]\s+(.+)$/);
-                if (!m) continue;
-                const choiceText = m[1].trim();
-                if (choiceText.length <= 28) choices.push(choiceText);
-            }
-            return choices.slice(0, 4);
         }
         function appendMessage(role, text, dateStr, streaming) {
             const state = StateService.get();
@@ -815,7 +1069,7 @@
             logDiv.appendChild(row);
 
             if (!streaming && role === "ai") {
-                const choices = parseChoices(text);
+                const choices = ChoiceService.extractChoices(text);
                 if (choices.length > 0) {
                     const wrap = document.createElement("div");
                     wrap.className = "choice-wrap";
@@ -854,7 +1108,86 @@
             document.getElementById("send-btn").disabled = disabled;
             document.getElementById("btn-next-month").disabled = disabled;
         }
-        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, setSendingDisabled };
+        function renderInventory(state) {
+            const list = document.getElementById("inventory-list");
+            if (!list) return;
+            list.innerHTML = "";
+            (state.inventory || []).forEach((item) => {
+                const row = document.createElement("div");
+                row.className = "list-row";
+                row.innerHTML = `
+                    <div>
+                        <div class="list-title">${item.name} ×${item.count}</div>
+                        <div class="list-sub">${item.type}｜${item.effect}</div>
+                    </div>
+                    <button class="tiny-btn">查看/使用</button>
+                `;
+                row.querySelector("button").onclick = () => Controller.openItemModal(item.id);
+                list.appendChild(row);
+            });
+        }
+        function renderSocialList(state) {
+            const list = document.getElementById("social-list");
+            if (!list) return;
+            list.innerHTML = "";
+            (state.npcs || []).forEach((npc) => {
+                const row = document.createElement("div");
+                row.className = "list-row";
+                row.innerHTML = `
+                    <div>
+                        <div class="list-title">${npc.name}（${npc.relation}）</div>
+                        <div class="list-sub">好感 ${npc.favor}｜状态 ${npc.status}</div>
+                    </div>
+                    <button class="tiny-btn">聊天</button>
+                `;
+                row.querySelector("button").onclick = () => {
+                    currentSocialNpcId = npc.id;
+                    renderSocialChat(state, npc.id);
+                };
+                row.querySelector(".list-title").onclick = () => Controller.openNpcProfile(npc.id);
+                list.appendChild(row);
+            });
+            if (currentSocialNpcId) renderSocialChat(state, currentSocialNpcId);
+        }
+        function renderSocialChat(state, npcId) {
+            const panel = document.getElementById("social-chat-panel");
+            const box = document.getElementById("social-chat-box");
+            const npc = (state.npcs || []).find((n) => n.id === npcId);
+            if (!panel || !box || !npc) return;
+            panel.style.display = "block";
+            document.getElementById("social-chat-title").innerText = `和 ${npc.name} 聊天`;
+            document.getElementById("social-chat-sub").innerText = `好感 ${npc.favor}｜心情 ${npc.mood}｜状态 ${npc.status}`;
+            document.getElementById("social-avatar-btn").onclick = () => Controller.openNpcProfile(npc.id);
+            const chats = state.npcChats[npcId] || [];
+            box.innerHTML = chats.map((m) => `<div class="npc-msg ${m.from}">${m.from === "me" ? "我" : npc.name}：${MarkdownService.render(m.text)}</div>`).join("");
+            box.scrollTop = box.scrollHeight;
+        }
+        function renderSaveSlots(state) {
+            const box = document.getElementById("save-slots");
+            if (!box) return;
+            box.innerHTML = "";
+            SaveSlotService.listSlots().forEach((slot) => {
+                const row = document.createElement("div");
+                row.className = "list-row";
+                const meta = slot.data?.meta;
+                row.innerHTML = `
+                    <div>
+                        <div class="list-title">槽位 ${slot.index} ${meta ? "✅" : "（空）"}</div>
+                        <div class="list-sub">${meta ? `${meta.name}｜${meta.time}｜${meta.savedAt}` : "暂无存档"}</div>
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                        <button class="tiny-btn" data-op="save">覆盖</button>
+                        <button class="tiny-btn" data-op="load">读取</button>
+                        <button class="tiny-btn" data-op="del">删除</button>
+                    </div>
+                `;
+                row.querySelector('[data-op="save"]').onclick = () => Controller.saveToSlot(slot.index);
+                row.querySelector('[data-op="load"]').onclick = () => Controller.loadFromSlot(slot.index);
+                row.querySelector('[data-op="del"]').onclick = () => Controller.deleteSlot(slot.index);
+                box.appendChild(row);
+            });
+        }
+        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots };
     })();
 
     const VisualEffects = (() => {
@@ -927,6 +1260,92 @@
         return { loadToUI, saveFromUI, getApiConfig, getScenarioText, importScenarioFromFile };
     })();
 
+    const SaveSlotService = (() => {
+        const SLOT_COUNT = 5;
+        function slotKey(index) {
+            return `${AppConfig.storageKeys.saveSlotPrefix}${index}`;
+        }
+        function listSlots() {
+            const slots = [];
+            for (let i = 1; i <= SLOT_COUNT; i++) {
+                const data = StorageService.readJson(slotKey(i), null);
+                slots.push({ index: i, data });
+            }
+            return slots;
+        }
+        function saveToSlot(index, state) {
+            const payload = {
+                meta: {
+                    name: state.name,
+                    age: Math.floor((state.age || 0) / 12),
+                    time: Utils.nowDateStr(state),
+                    savedAt: new Date().toLocaleString()
+                },
+                state
+            };
+            StorageService.writeJson(slotKey(index), payload);
+        }
+        function loadFromSlot(index) {
+            return StorageService.readJson(slotKey(index), null);
+        }
+        function deleteSlot(index) {
+            localStorage.removeItem(slotKey(index));
+        }
+        return { SLOT_COUNT, listSlots, saveToSlot, loadFromSlot, deleteSlot };
+    })();
+
+    const EventService = (() => {
+        function maybeTriggerAnimation(text) {
+            if (!text) return;
+            if (!/(事件|触发|突发|获得|损失|变化)/.test(text)) return;
+            const board = document.getElementById("story-board");
+            board.classList.remove("event-flash");
+            void board.offsetWidth;
+            board.classList.add("event-flash");
+        }
+        return { maybeTriggerAnimation };
+    })();
+
+    const NpcChatService = (() => {
+        function ensureNpcChatStore(state, npcId) {
+            if (!state.npcChats || typeof state.npcChats !== "object") state.npcChats = {};
+            if (!Array.isArray(state.npcChats[npcId])) state.npcChats[npcId] = [];
+            return state.npcChats[npcId];
+        }
+
+        function generateNpcReply(npc, text) {
+            if (/谢谢|感谢/.test(text)) return `不客气呀，我会继续关注你～ (${npc.mood})`;
+            if (/帮|可以吗|能否/.test(text)) return `我可以试试看，先把细节告诉我吧。`;
+            if (/再见|晚安/.test(text)) return `好的，晚点再聊，注意休息。`;
+            if (/学习|作业|考试/.test(text)) return `先稳住节奏，今天把关键点过一遍会更好。`;
+            return `我收到了：${text.slice(0, 24)}，我们慢慢聊。`;
+        }
+
+        function calcFavorDelta(userText) {
+            if (/谢谢|关心|辛苦|抱歉/.test(userText)) return 2;
+            if (/滚|烦|闭嘴/.test(userText)) return -2;
+            return 1;
+        }
+
+        function applyUserMessage(state, npcId, userText) {
+            const npc = (state.npcs || []).find((n) => n.id === npcId);
+            if (!npc) return null;
+            const chatList = ensureNpcChatStore(state, npcId);
+            chatList.push({ from: "me", text: userText, ts: Date.now() });
+
+            const reply = generateNpcReply(npc, userText);
+            chatList.push({ from: "npc", text: reply, ts: Date.now() });
+
+            const delta = calcFavorDelta(userText);
+            npc.favor = Math.max(0, Math.min(100, npc.favor + delta));
+            npc.status = "在线";
+
+            return { npc, reply, delta };
+        }
+
+        return { applyUserMessage };
+    })();
+
     const ChatService = (() => {
         let isGenerating = false;
         async function requestAI(userText) {
@@ -953,23 +1372,25 @@
                 .map((item) => `${item.role === "user" ? "玩家" : "系统"}(${item.date})：${item.text}`)
                 .join("\n");
             const scenarioSpec = SettingsService.getScenarioText();
+            const builtinRules = BuiltinPromptService.getResponseRules();
             const runtimeContext = [
                 "【运行时上下文】",
                 `主角基础：姓名${state.name}，性别${state.gender}，年龄${Math.floor(state.age / 12)}岁，时间${Utils.nowDateStr(state)}。`,
                 "请使用Markdown输出并兼容手机屏。"
             ].join("\n");
-            const systemPrompt = `${scenarioSpec}\n\n${runtimeContext}`;
+            const systemPrompt = `${scenarioSpec}\n\n${builtinRules}\n\n${runtimeContext}`;
+            const requestHeaders = {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${config.key}`,
+                "X-Upstream-Base-URL": upstreamUrl,
+                "X-Target-Base-URL": upstreamUrl,
+                "X-OpenAI-Base-URL": upstreamUrl
+            };
 
             try {
                 const response = await fetch(fetchUrl, {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${config.key}`,
-                        "X-Upstream-Base-URL": upstreamUrl,
-                        "X-Target-Base-URL": upstreamUrl,
-                        "X-OpenAI-Base-URL": upstreamUrl
-                    },
+                    headers: requestHeaders,
                     body: JSON.stringify({
                         model: config.model,
                         messages: [
@@ -1004,8 +1425,52 @@
                     }
                 }
 
-                const finalText = fullText.trim() || "（AI想法：刚刚有点卡住了，再和我说一次吧喵）";
+                const rawText = fullText.trim() || "（AI想法：刚刚有点卡住了，再和我说一次吧喵）";
+                let finalText = rawText;
+                const hasNumberedChoices = ChoiceService.extractChoices(rawText).length > 0;
+
+                // 严格模式：如果首轮没有编号选项，自动重试一次（非流式）
+                if (!hasNumberedChoices) {
+                    try {
+                        const retryResponse = await fetch(fetchUrl, {
+                            method: "POST",
+                            headers: requestHeaders,
+                            body: JSON.stringify({
+                                model: config.model,
+                                messages: [
+                                    { role: "system", content: systemPrompt },
+                                    {
+                                        role: "user",
+                                        content: [
+                                            `玩家最新输入：${userText}`,
+                                            `最近记录：\n${recentHistory}`,
+                                            "请严格重写上一条回复，必须在结尾提供1-3条编号选项。",
+                                            "格式强制为：1. ... 2. ... 3. ...",
+                                            "不要解释规则，直接输出剧情正文和编号选项。",
+                                            `上一版草稿（缺少编号选项）：\n${rawText}`
+                                        ].join("\n\n")
+                                    }
+                                ],
+                                stream: false,
+                                temperature: 0.7
+                            })
+                        });
+
+                        if (retryResponse.ok) {
+                            const retryJson = await retryResponse.json();
+                            const retriedText = retryJson?.choices?.[0]?.message?.content?.trim();
+                            if (retriedText) {
+                                finalText = retriedText;
+                            }
+                        }
+                    } catch (retryError) {
+                    }
+                }
+
+                // 若重试后仍无编号选项，继续用兜底自动补齐
+                finalText = ChoiceService.ensureOptionsBlock(finalText, userText, state);
                 UIRenderer.finishStreaming(finalText);
+                EventService.maybeTriggerAnimation(finalText);
                 StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(StateService.get()), text: finalText });
                 StateService.pushChat("assistant", finalText);
                 StateService.save();
@@ -1023,10 +1488,15 @@
     })();
 
     const Controller = (() => {
+        let activeView = "view-main";
         function renderAll() {
             const state = StateService.get();
             UIRenderer.renderTop(state);
             UIRenderer.renderHistory(state.history);
+            UIRenderer.renderInventory(state);
+            UIRenderer.renderSocialList(state);
+            UIRenderer.renderSaveSlots(state);
+            switchView(activeView, true);
         }
         function init() {
             StateService.init();
@@ -1059,8 +1529,111 @@
             StateService.pushChat("user", text);
             StateService.advanceMonthIfNeeded(text);
             StateService.save();
-            UIRenderer.renderTop(StateService.get());
+            renderAll();
             ChatService.requestAI(text);
+        }
+        function jumpWeek(delta) {
+            StateService.jumpWeek(delta);
+            renderAll();
+            StateService.save();
+            sendUserText(delta > 0 ? "下一周" : "上一周");
+        }
+        function switchView(viewId, silent = false) {
+            activeView = viewId;
+            document.querySelectorAll(".view-section").forEach((el) => el.classList.remove("active"));
+            const target = document.getElementById(viewId);
+            if (target) target.classList.add("active");
+            document.querySelectorAll(".nav-btn").forEach((btn) => {
+                if (btn.dataset.view === viewId) btn.classList.add("active");
+                else btn.classList.remove("active");
+            });
+            if (!silent && viewId === "view-main") {
+                const content = document.getElementById("main-content");
+                content.scrollTop = content.scrollHeight;
+            }
+        }
+        function openInfoModal(title, desc, actionText, onAction) {
+            document.getElementById("info-modal-title").innerText = title;
+            document.getElementById("info-modal-desc").innerHTML = desc;
+            const actionBtn = document.getElementById("info-modal-action");
+            if (actionText && onAction) {
+                actionBtn.style.display = "block";
+                actionBtn.innerText = actionText;
+                actionBtn.onclick = () => {
+                    onAction();
+                    closeInfoModal();
+                };
+            } else {
+                actionBtn.style.display = "none";
+            }
+            document.getElementById("info-modal").style.display = "flex";
+        }
+        function closeInfoModal() {
+            document.getElementById("info-modal").style.display = "none";
+        }
+        function openItemModal(itemId) {
+            const state = StateService.get();
+            const item = (state.inventory || []).find((it) => it.id === itemId);
+            if (!item) return;
+            const desc = `类型：${item.type}<br>数量：${item.count}<br>效果：${item.effect}<br>描述：${item.desc}`;
+            openInfoModal(`物品：${item.name}`, desc, "使用", () => useItem(itemId));
+        }
+        function useItem(itemId) {
+            const state = StateService.get();
+            const item = (state.inventory || []).find((it) => it.id === itemId);
+            if (!item || item.count <= 0) return;
+            item.count -= 1;
+            if (item.effect.includes("health")) state.stats.health = Math.min(100, state.stats.health + 2);
+            if (item.effect.includes("charisma")) state.stats.charisma = Math.min(100, state.stats.charisma + 1);
+            if (item.count <= 0) {
+                state.inventory = state.inventory.filter((it) => it.id !== itemId);
+            }
+            StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(state), text: `你使用了 **${item.name}**，状态发生了细微变化。` });
+            StateService.save();
+            renderAll();
+            switchView("view-inventory");
+        }
+        function openNpcProfile(npcId) {
+            const state = StateService.get();
+            const npc = (state.npcs || []).find((n) => n.id === npcId);
+            if (!npc) return;
+            openInfoModal(`NPC：${npc.name}`, `关系：${npc.relation}<br>好感度：${npc.favor}<br>状态：${npc.status}<br>心情：${npc.mood}`);
+        }
+        function sendNpcMessage() {
+            const state = StateService.get();
+            const panelTitle = document.getElementById("social-chat-title");
+            if (!panelTitle || panelTitle.innerText.indexOf("和 ") !== 0) return;
+            const npcName = panelTitle.innerText.replace("和 ", "").replace(" 聊天", "");
+            const npc = (state.npcs || []).find((n) => n.name === npcName);
+            if (!npc) return;
+            const input = document.getElementById("social-input");
+            const txt = input.value.trim();
+            if (!txt) return;
+            NpcChatService.applyUserMessage(state, npc.id, txt);
+            input.value = "";
+            StateService.save();
+            renderAll();
+            switchView("view-social");
+            UIRenderer.renderSocialChat(state, npc.id);
+        }
+        function saveToSlot(index) {
+            const state = StateService.get();
+            SaveSlotService.saveToSlot(index, state);
+            renderAll();
+            switchView("view-saves");
+        }
+        function loadFromSlot(index) {
+            const saved = SaveSlotService.loadFromSlot(index);
+            if (!saved?.state) return;
+            StorageService.writeJson(AppConfig.storageKeys.save, saved.state);
+            StateService.init();
+            renderAll();
+            switchView("view-main");
+        }
+        function deleteSlot(index) {
+            SaveSlotService.deleteSlot(index);
+            renderAll();
+            switchView("view-saves");
         }
         function saveSettings() {
             SettingsService.saveFromUI();
@@ -1087,16 +1660,20 @@
             body.style.display = open ? "none" : "block";
             arrow.innerText = open ? "▼" : "▲";
         }
-        return { init, onSendClick, sendUserText, saveSettings, importScenarioTxt, openRebornModal, closeRebornModal, resetGameWithGender, toggleConfig };
+        return { init, onSendClick, sendUserText, jumpWeek, switchView, saveSettings, importScenarioTxt, openRebornModal, closeRebornModal, resetGameWithGender, openItemModal, useItem, openNpcProfile, sendNpcMessage, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal, toggleConfig };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
     function sendUserText(text) { Controller.sendUserText(text); }
+    function jumpWeek(delta) { Controller.jumpWeek(delta); }
+    function switchView(viewId) { Controller.switchView(viewId); }
     function saveSettings() { Controller.saveSettings(); }
     function importScenarioTxt() { Controller.importScenarioTxt(); }
     function openRebornModal() { Controller.openRebornModal(); }
     function closeRebornModal() { Controller.closeRebornModal(); }
     function resetGameWithGender(gender) { Controller.resetGameWithGender(gender); }
+    function sendNpcMessage() { Controller.sendNpcMessage(); }
+    function closeInfoModal() { Controller.closeInfoModal(); }
     function toggleConfig() { Controller.toggleConfig(); }
 
     window.onload = () => Controller.init();
