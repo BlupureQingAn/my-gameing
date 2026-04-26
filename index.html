@@ -783,8 +783,10 @@
             const lines = text.split("\n").map((s) => s.trim()).filter(Boolean);
             const choices = [];
             for (const line of lines) {
-                const m = line.match(/^(?:\d+[.)、]|[-*])\s*(.+)$/);
-                if (m && m[1].length <= 28) choices.push(m[1]);
+                const m = line.match(/^\d+[.)、]\s+(.+)$/);
+                if (!m) continue;
+                const choiceText = m[1].trim();
+                if (choiceText.length <= 28) choices.push(choiceText);
             }
             return choices.slice(0, 4);
         }
