@@ -567,10 +567,12 @@
         });
     }
 
-/*================ API 生成系统 (NVIDIA 适配版) ================*/
-    async function nextTurn() {
+
+    
+async function nextTurn() {
         if(isGenerating) return;
 
+        // 获取用户配置
         let url = document.getElementById('api-url').value.trim();
         const key = document.getElementById('api-key').value.trim();
         const modelName = document.getElementById('api-model').value.trim();
@@ -581,16 +583,14 @@
             return;
         }
 
-        // --- 核心：URL 智能拼接逻辑 ---
+        // --- 核心：路径修正逻辑 ---
         // 去掉末尾斜杠
         if (url.endsWith('/')) url = url.slice(0, -1);
         
-        let fetchUrl;
-        if (url.endsWith('/chat/completions')) {
-            fetchUrl = url;
-        } else {
-            // 确保如果用户没写 /v1，而 Worker 需要的话，由 Worker 内部逻辑处理
-            // 前端只负责拼接出标准的 chat/completions 路径
+        // NVIDIA 必须请求到具体的 endpoint。
+        // 如果用户在设置里写了 /chat/completions，我们就不用再加了。
+        let fetchUrl = url;
+        if (!url.endsWith('/chat/completions')) {
             fetchUrl = `${url}/chat/completions`;
         }
 
@@ -611,7 +611,7 @@
         const board = document.getElementById('story-board');
         const logDiv = document.createElement('div');
         logDiv.className = 'story-log';
-        logDiv.innerHTML = `<div class="story-date">[ ${dateStr} ]</div><div class="story-text">正在通过中转站链接命运...<span class="streaming-cursor"></span></div>`;
+        logDiv.innerHTML = `<div class="story-date">[ ${dateStr} ]</div><div class="story-text">正在同步 NVIDIA 算力中...<span class="streaming-cursor"></span></div>`;
         board.appendChild(logDiv);
         scrollToBottom();
 
@@ -619,7 +619,7 @@
 
         // 构建 Prompt
         const recentHistory = gameState.history.slice(-3).map(h => `${h.date}: ${h.text}`).join("\n\n");
-        const systemPrompt = `你是一个人生模拟器引擎。输出纯文本剧情，不含JSON。主角：${gameState.name}，年龄：${ageYears}岁${gameState.currentMonth}个月。风格生动，逻辑严密，包含emoji。`;
+        const systemPrompt = `你是一个人生模拟器引擎。输出纯文本剧情，不含任何JSON或Markdown标记。主角：${gameState.name}，年龄：${ageYears}岁${gameState.currentMonth}个月。风格生动，包含emoji。`;
         const userPrompt = `【最近历史】：\n${recentHistory}\n\n时间：${dateStr}。请生成本月发生的1-2件人生事件。`;
 
         isGenerating = true;
@@ -639,17 +639,16 @@
                         { role: 'user', content: userPrompt }
                     ],
                     stream: true,
-                    temperature: 0.7
+                    temperature: 0.6
                 })
             });
 
             if (!response.ok) {
                 const errText = await response.text();
-                // 针对 404/410/401 提供友好提示
-                if (response.status === 404) throw new Error("路径错误 (404)。请检查 API URL 是否多写或少写了 /v1");
-                if (response.status === 410) throw new Error("接口失效 (410)。通常是请求路径被 NVIDIA 服务器拒绝，请检查 Worker 转发逻辑");
-                if (response.status === 401) throw new Error("鉴权失败 (401)。请检查 API Key 是否正确");
-                throw new Error(`API 错误 (${response.status}): ${errText.substring(0, 50)}`);
+                if (response.status === 410 || response.status === 404) {
+                    throw new Error(`路径错误(${response.status})。请确保 Worker 地址包含 /v1 且没有多余后缀。`);
+                }
+                throw new Error(`NVIDIA API 报错 (${response.status})`);
             }
 
             const reader = response.body.getReader();
@@ -675,24 +674,22 @@
                             if (data.choices && data.choices[0].delta && data.choices[0].delta.content) {
                                 const token = data.choices[0].delta.content;
                                 generatedText += token;
-                                // 实时渲染（支持简单的Markdown加粗和换行）
-                                let displayText = generatedText
-                                    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-                                    .replace(/\n/g, '<br>');
-                                
-                                textContainer.innerHTML = displayText + '<span class="streaming-cursor"></span>';
+                                // 实时渲染
+                                textContainer.innerHTML = generatedText
+                                    .replace(/\n/g, '<br>')
+                                    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>') 
+                                    + '<span class="streaming-cursor"></span>';
                                 scrollToBottom();
                             }
                         } catch (e) {
-                            // 忽略部分非标准的数据块
-                            console.warn("解析数据块失败", e);
+                            // 忽略部分 NVIDIA 特有的 SSE 干扰数据
                         }
                     }
                 }
             }
 
-            // 最终修正渲染
-            textContainer.innerHTML = generatedText.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
+            // 完成渲染
+            textContainer.innerHTML = generatedText.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
             
             // 存入历史记录
             gameState.history.push({
@@ -702,10 +699,10 @@
             saveGame();
 
         } catch (error) {
-            console.error(error);
-            textContainer.innerHTML = `⚠️ <span style="color:red;">API请求失败：${error.message}</span><br>请确保：<br>1. 设置中 URL 为 <b>${window.location.origin.includes('github.io') ? 'Cloudflare Worker 地址' : 'API地址'}</b><br>2. 包含 <b>/v1</b><br>3. 模型名称填写正确。`;
+            console.error("生成失败:", error);
+            textContainer.innerHTML = `<span style="color:var(--danger-color);">⚠️ 链接中断：${error.message}</span>`;
             
-            // 失败时回滚游戏内部时间
+            // 失败回退时间
             gameState.age -= 1;
             gameState.currentMonth -= 1;
             if(gameState.currentMonth < 1) {
