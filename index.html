@@ -436,6 +436,7 @@
             background: #fff6ec;
             cursor: pointer;
             transition: background 0.15s ease;
+            user-select: none;
         }
 
         .ai-choice-item:hover {
@@ -743,6 +744,40 @@
             margin-bottom: 10px;
         }
 
+        .loading-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .loading-spinner {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 3px solid rgba(176, 134, 82, 0.35);
+            border-top-color: var(--accent);
+            animation: spin 0.9s linear infinite;
+            flex-shrink: 0;
+        }
+
+        .loading-progress {
+            width: 100%;
+            height: 10px;
+            background: rgba(176, 134, 82, 0.18);
+            border: 1px solid rgba(176, 134, 82, 0.25);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .loading-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent), #d3a26a);
+            border-radius: 999px;
+            transition: width 0.25s ease;
+        }
+
         /* ==================== 动效层（Animations / Motion） ==================== */
         .bear {
             position: absolute;
@@ -760,6 +795,10 @@
             100% {
                 transform: translateY(110vh) rotate(240deg);
             }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         @keyframes petBlink {
@@ -981,7 +1020,15 @@
     <div class="modal-overlay" id="init-loading-modal">
         <div class="modal-card">
             <div class="modal-title">正在生成角色初始化信息</div>
-            <div class="modal-desc" id="init-loading-desc">AI 正在根据设定生成角色信息、背包与社交关系，请稍候...</div>
+            <div class="loading-row">
+                <div class="loading-spinner" aria-hidden="true"></div>
+                <div style="flex:1;">
+                    <div class="modal-desc" id="init-loading-desc" style="margin-bottom:8px;">AI 正在根据设定生成角色信息、背包与社交关系，请稍候...</div>
+                    <div class="loading-progress" aria-hidden="true">
+                        <div class="loading-progress-bar" id="init-loading-progress"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1018,7 +1065,8 @@
             activeUserId: "bitlife_active_user_id_v1",
             userApiSelectedCardMap: "bitlife_user_api_selected_card_map_v1",
             userApiCustomConfigMap: "bitlife_user_api_custom_config_map_v1",
-            scenarioPlayMetaMap: "bitlife_scenario_play_meta_map_v1"
+            scenarioPlayMetaMap: "bitlife_scenario_play_meta_map_v1",
+            scenarioDismissedWarningsMap: "bitlife_scenario_dismissed_warnings_map_v1"
         },
         identityPools: {
             cnNames: ["林澈", "沈知夏", "顾言川", "苏见微", "江望舒", "程以宁", "许星野", "周晚棠", "梁初言", "宋栖月", "叶云舟", "季明川", "陆听岚", "秦若禾"],
@@ -1356,6 +1404,7 @@
                 { id: "npc_friend", name: "许安禾", gender: "女", relation: "青梅竹马", favor: 68, status: "上学", mood: "活泼" }
             ],
             npcChats: {},
+            npcMemoryMap: {},
             history: [],
             chatMemory: []
         };
@@ -1387,6 +1436,7 @@
                 ? Utils.deepClone(preset.npcs)
                 : createDefaultNpcs();
             next.stats = Array.isArray(preset.stats) ? Utils.deepClone(preset.stats) : [];
+            next.npcMemoryMap = {};
             next.protagonistProfile = {
                 name: next.name,
                 englishName: next.englishName,
@@ -1410,6 +1460,7 @@
             if (!Array.isArray(gameState.inventory)) gameState.inventory = createDefaultInventory();
             if (!Array.isArray(gameState.npcs)) gameState.npcs = createDefaultNpcs();
             if (!gameState.npcChats || typeof gameState.npcChats !== "object") gameState.npcChats = {};
+            if (!gameState.npcMemoryMap || typeof gameState.npcMemoryMap !== "object") gameState.npcMemoryMap = {};
             if (!gameState.currentDay) gameState.currentDay = 1;
             if (typeof gameState.weekdayIndex !== "number") gameState.weekdayIndex = 0;
         }
@@ -1550,15 +1601,54 @@
         }
         function bindHtmlChoiceEvents(container) {
             if (!container) return;
-            container.querySelectorAll(".ai-beauty-card li, .ai-beauty-card [data-choice], .ai-beauty-card button").forEach((node) => {
+            const card = container.querySelector(".ai-beauty-card");
+            if (!(card instanceof HTMLElement)) return;
+            const isTrueChoiceNode = (el) => {
+                if (!(el instanceof HTMLElement)) return false;
+                if (el.hasAttribute("data-choice")) return true;
+                const tag = el.tagName.toLowerCase();
+                if (tag === "button") return true;
+                if (tag === "a" && (el.getAttribute("href") || "").trim()) return true;
+                const ownText = Array.from(el.childNodes)
+                    .filter((n) => n.nodeType === Node.TEXT_NODE)
+                    .map((n) => String(n.textContent || ""))
+                    .join(" ")
+                    .replace(/\s+/g, " ")
+                    .trim();
+                const text = ownText || String(el.textContent || "").replace(/\s+/g, " ").trim();
+                if (!text) return false;
+                if (text.length > 60) return false;
+                return /^\s*(\d+[.)、]|[①②③④⑤⑥⑦⑧⑨⑩]|【?选项[:：]?\s*\d*】)/.test(text);
+            };
+            const getChoiceText = (el) => {
+                if (!(el instanceof HTMLElement)) return "";
+                const direct = String(el.getAttribute("data-choice") || "").trim();
+                if (direct) return direct;
+                const txt = String(el.textContent || "").replace(/\s+/g, " ").trim();
+                if (!txt) return "";
+                // 兼容常见选项格式：1. xxx / 1) xxx / ①xxx / 【选项】xxx
+                const m = txt.match(/^(\d+[.)、]\s*|[①②③④⑤⑥⑦⑧⑨⑩]\s*|【?选项[:：]?\s*\d*】?\s*)?(.+)$/);
+                return (m?.[2] || txt).trim();
+            };
+            card.querySelectorAll("li, [data-choice], button, a, p, div, span").forEach((node) => {
                 const el = node;
                 if (!(el instanceof HTMLElement)) return;
-                el.classList.add("ai-choice-item");
-                el.onclick = () => {
-                    const txt = (el.getAttribute("data-choice") || el.textContent || "").trim();
-                    const normalized = txt.replace(/^\d+[.)、]\s*/, "");
-                    if (normalized) Controller.sendUserText(`我选择：${normalized}`);
-                };
+                if (isTrueChoiceNode(el)) el.classList.add("ai-choice-item");
+                else el.classList.remove("ai-choice-item");
+            });
+            if (card.dataset.choiceBound === "1") return;
+            card.dataset.choiceBound = "1";
+            card.addEventListener("click", (evt) => {
+                const target = evt.target;
+                if (!(target instanceof HTMLElement)) return;
+                const clickable = target.closest(".ai-choice-item, [data-choice], button, a, li");
+                if (!(clickable instanceof HTMLElement)) return;
+                if (!isTrueChoiceNode(clickable) && !clickable.classList.contains("ai-choice-item")) return;
+                const choice = getChoiceText(clickable);
+                if (!choice) return;
+                evt.preventDefault();
+                evt.stopPropagation();
+                Controller.sendUserText(`我选择：${choice}`);
             });
         }
         return { renderAiMessage, bindHtmlChoiceEvents };
@@ -1585,7 +1675,7 @@
             const endMarker = EndMarkerService.getMarker();
             return [
                 "【内置返回规则】",
-                "1) 必须优先遵循“角色事实锁定块”，不得篡改姓名、年龄、性别、国籍、身份、NPC关系与已发生事件。",
+                "1) 必须优先遵循“角色事实锁定块”；若剧情中发生状态变更，必须通过 state-patch 结构化块同步改动。",
                 "2) 必须只基于玩家最新输入和上下文推进剧情，不可脱离输入自说自话，不可重置世界观。",
                 "3) 输出使用 Markdown，内容贴近手机阅读。",
                 "4) 每次回复都应包含：时间信息、状态变化、剧情对话、（AI想法：...）。",
@@ -1593,7 +1683,8 @@
                 "6) 若剧情不适合选项，也要提供“继续观察/继续推进”等中性选项。",
                 "7) 事件保持现实、日常、年龄逻辑正确。",
                 "8) 不得强制使用“你出生了/婴儿开局”叙事，除非角色年龄明确 <= 1 岁。",
-                `9) 回复末尾必须追加且只追加一次结束符：${endMarker}（仅放在整条回复最末尾）。`
+                "9) 若本轮涉及可变数据（主角属性/NPC属性/背包/时间/状态值），必须追加如下代码块：```state-patch {json} ```。",
+                `10) 回复末尾必须追加且只追加一次结束符：${endMarker}（仅放在整条回复最末尾）。`
             ].join("\n");
         }
         function buildStateFactLock(state) {
@@ -1630,8 +1721,8 @@
                 }))
             };
             return [
-                "【角色事实锁定块（高优先级，不可改写）】",
-                "以下JSON中的字段是当前已确认事实，严禁无依据修改：",
+                "【角色事实锁定块（高优先级）】",
+                "以下JSON中的字段是当前已确认事实；如要修改，必须在回复中附带 state-patch 结构化变更块：",
                 "```json",
                 JSON.stringify(fact, null, 2),
                 "```"
@@ -1690,23 +1781,24 @@
             return list;
         }
 
-        function addIssue(issues, severity, message) {
-            issues.push({ severity, message });
+        function addIssue(issues, severity, message, confidence = 1) {
+            issues.push({ severity, message, confidence: Number(confidence) || 0 });
         }
 
         function detectGenderConflict(content, state, issues) {
-            const maleHint = /(你是男生|你是男性|你的性别是男|作为男性)/;
-            const femaleHint = /(你是女生|你是女性|你的性别是女|作为女性)/;
+            const maleHint = /(你是男生|你是男性|你的性别是男)/;
+            const femaleHint = /(你是女生|你是女性|你的性别是女)/;
             const currentGender = String(state.gender || "");
             if (maleHint.test(content) && !/男/.test(currentGender)) {
-                addIssue(issues, "error", `性别冲突：回复暗示“男性”，应为“${currentGender}”`);
+                addIssue(issues, "warning", `性别提示不一致：回复暗示“男性”，当前为“${currentGender}”`, 0.7);
             }
             if (femaleHint.test(content) && !/女/.test(currentGender)) {
-                addIssue(issues, "error", `性别冲突：回复暗示“女性”，应为“${currentGender}”`);
+                addIssue(issues, "warning", `性别提示不一致：回复暗示“女性”，当前为“${currentGender}”`, 0.7);
             }
         }
 
         function detectNpcConflict(content, state, issues) {
+            if (!/(关系|你的|你和|NPC|社交|联系人)/.test(content)) return;
             const npcList = Array.isArray(state.npcs) ? state.npcs : [];
             const npcNameSet = new Set(npcList.map((n) => n.name));
             const relationByName = new Map(npcList.map((n) => [n.name, n.relation]));
@@ -1718,12 +1810,12 @@
                 const name = m[1];
                 const rel = m[2];
                 if (!npcNameSet.has(name)) {
-                    addIssue(issues, "warning", `NPC名称冲突：出现未注册NPC“${name}（${rel}）”`);
+                    addIssue(issues, "warning", `NPC名称冲突：出现未注册NPC“${name}（${rel}）”`, 0.55);
                     continue;
                 }
                 const expectedRel = relationByName.get(name);
                 if (expectedRel && expectedRel !== rel) {
-                    addIssue(issues, "error", `NPC关系冲突：“${name}”关系写为“${rel}”，应为“${expectedRel}”`);
+                    addIssue(issues, "warning", `NPC关系变化提示：“${name}”关系写为“${rel}”，当前为“${expectedRel}”`, 0.75);
                 }
             }
         }
@@ -1750,18 +1842,22 @@
             while ((m = gainRegex.exec(content)) !== null) {
                 const itemName = m[2];
                 if (!inventoryNames.has(itemName)) {
-                    addIssue(issues, "warning", `背包冲突：回复声明新增物品“${itemName}”，但当前背包未登记该物品`);
+                    // 该类文本常见为“本轮新增”，误报率高，降级为低置信提示
+                    addIssue(issues, "warning", `背包提示：回复提到新增物品“${itemName}”，如需持久化请返回 state-patch`, 0.35);
                 }
             }
         }
 
         function detectConflicts(text, state) {
-            const content = String(text || "");
+            const content = String(text || "")
+                .replace(/```state-patch[\s\S]*?```/ig, "")
+                .replace(/<state_patch>[\s\S]*?<\/state_patch>/ig, "")
+                .trim();
             const issues = [];
 
             const nameMatch = content.match(/你(?:的)?名字(?:是|叫)\s*[:：]?\s*([^\s，。,.!！?？]+)/);
             if (nameMatch && nameMatch[1] && nameMatch[1] !== state.name) {
-                addIssue(issues, "error", `姓名冲突：回复为“${nameMatch[1]}”，应为“${state.name}”`);
+                addIssue(issues, "warning", `姓名变化提示：回复为“${nameMatch[1]}”，当前为“${state.name}”`, 0.8);
             }
 
             const ageYears = Math.floor((state.age || 0) / 12);
@@ -1769,13 +1865,13 @@
             if (ageMatch) {
                 const repliedAge = Number(ageMatch[1]);
                 if (Number.isFinite(repliedAge) && Math.abs(repliedAge - ageYears) >= 2) {
-                    addIssue(issues, "error", `年龄冲突：回复为${repliedAge}岁，应接近${ageYears}岁`);
+                    addIssue(issues, "warning", `年龄变化提示：回复为${repliedAge}岁，当前约${ageYears}岁`, 0.75);
                 }
             }
 
             const nationMatch = content.match(/你(?:的)?国籍(?:是|为)\s*[:：]?\s*([^\s，。,.!！?？]+)/);
             if (nationMatch && nationMatch[1] && nationMatch[1] !== state.nationality) {
-                addIssue(issues, "error", `国籍冲突：回复为“${nationMatch[1]}”，应为“${state.nationality}”`);
+                addIssue(issues, "warning", `国籍变化提示：回复为“${nationMatch[1]}”，当前为“${state.nationality}”`, 0.8);
             }
 
             detectGenderConflict(content, state, issues);
@@ -1784,7 +1880,7 @@
             detectInventoryPhantomAdd(content, state, issues);
 
             const errors = issues.filter((i) => i.severity === "error");
-            const warnings = issues.filter((i) => i.severity === "warning");
+            const warnings = issues.filter((i) => i.severity === "warning" && Number(i.confidence || 0) >= 0.65);
             return {
                 hasConflict: issues.length > 0,
                 hasError: errors.length > 0,
@@ -1795,6 +1891,111 @@
             };
         }
         return { detectConflicts };
+    })();
+
+    const StatePatchService = (() => {
+        function extractPatch(text) {
+            const raw = String(text || "");
+            const codeMatch = raw.match(/```state-patch\s*([\s\S]*?)```/i);
+            if (codeMatch && codeMatch[1]) {
+                try {
+                    return { patch: JSON.parse(codeMatch[1]), cleaned: raw.replace(codeMatch[0], "").trim() };
+                } catch (e) {
+                }
+            }
+            const tagMatch = raw.match(/<state_patch>([\s\S]*?)<\/state_patch>/i);
+            if (tagMatch && tagMatch[1]) {
+                try {
+                    return { patch: JSON.parse(tagMatch[1]), cleaned: raw.replace(tagMatch[0], "").trim() };
+                } catch (e) {
+                }
+            }
+            return { patch: null, cleaned: raw };
+        }
+        function normalizeNpcIdByName(state, name) {
+            const n = (state.npcs || []).find((x) => String(x.name || "") === String(name || ""));
+            if (n) return n.id;
+            return "";
+        }
+        function upsertNpc(state, item = {}) {
+            if (!Array.isArray(state.npcs)) state.npcs = [];
+            const id = String(item.id || normalizeNpcIdByName(state, item.name) || (`npc_${Date.now()}_${Math.floor(Math.random() * 999)}`)).replace(/[^\w-]/g, "_");
+            let npc = state.npcs.find((n) => n.id === id);
+            if (!npc) {
+                npc = { id, name: "未命名NPC", gender: "未知", relation: "熟人", favor: 60, status: "在线", mood: "平静" };
+                state.npcs.push(npc);
+            }
+            const fields = ["name", "gender", "relation", "status", "mood"];
+            fields.forEach((k) => { if (item[k] !== undefined) npc[k] = String(item[k]).slice(0, 24); });
+            if (item.favor !== undefined) npc.favor = Math.max(0, Math.min(100, Number(item.favor) || npc.favor || 60));
+            return npc;
+        }
+        function upsertInventory(state, item = {}) {
+            if (!Array.isArray(state.inventory)) state.inventory = [];
+            const id = String(item.id || item.name || "").replace(/[^\w-]/g, "_") || (`item_${Date.now()}_${Math.floor(Math.random() * 999)}`);
+            const op = String(item.op || "upsert").toLowerCase();
+            const idx = state.inventory.findIndex((x) => x.id === id || String(x.name || "") === String(item.name || ""));
+            if (op === "remove") {
+                if (idx >= 0) state.inventory.splice(idx, 1);
+                return;
+            }
+            const base = idx >= 0 ? state.inventory[idx] : { id, name: "未命名物品", type: "道具", desc: "", effect: "none", count: 1, status: "" };
+            const next = { ...base };
+            ["name", "type", "desc", "effect", "status"].forEach((k) => { if (item[k] !== undefined) next[k] = String(item[k]).slice(0, 80); });
+            if (item.count !== undefined) next.count = Math.max(0, Math.min(999, Number(item.count) || next.count || 1));
+            if (idx >= 0) state.inventory[idx] = next;
+            else state.inventory.push(next);
+        }
+        function applyPatch(state, patch) {
+            if (!patch || typeof patch !== "object" || !state) return false;
+            let changed = false;
+            const p = patch.protagonist || {};
+            const map = [
+                ["name", "name"], ["englishName", "englishName"], ["gender", "gender"], ["nationality", "nationality"], ["location", "location"]
+            ];
+            map.forEach(([src, dst]) => {
+                if (p[src] !== undefined) {
+                    state[dst] = String(p[src]);
+                    changed = true;
+                }
+            });
+            if (p.ageYears !== undefined) {
+                const y = Math.max(0, Math.min(120, Number(p.ageYears) || 0));
+                state.age = y * 12;
+                changed = true;
+            }
+            if (!state.protagonistProfile || typeof state.protagonistProfile !== "object") state.protagonistProfile = {};
+            Object.assign(state.protagonistProfile, {
+                name: state.name,
+                englishName: state.englishName,
+                gender: state.gender,
+                nationality: state.nationality,
+                location: state.location,
+                ageYears: Math.floor((state.age || 0) / 12)
+            });
+            if (patch.time && typeof patch.time === "object") {
+                const t = patch.time;
+                if (t.year !== undefined) state.currentYear = Number(t.year) || state.currentYear;
+                if (t.month !== undefined) state.currentMonth = Number(t.month) || state.currentMonth;
+                if (t.day !== undefined) state.currentDay = Number(t.day) || state.currentDay;
+                changed = true;
+            }
+            if (Array.isArray(patch.stats)) {
+                state.stats = StatsService.normalizeStats(patch.stats);
+                changed = true;
+            }
+            if (Array.isArray(patch.npcs)) {
+                patch.npcs.forEach((it) => upsertNpc(state, it || {}));
+                state.npcProfiles = Utils.deepClone(state.npcs || []);
+                changed = true;
+            }
+            if (Array.isArray(patch.inventory)) {
+                patch.inventory.forEach((it) => upsertInventory(state, it || {}));
+                changed = true;
+            }
+            return changed;
+        }
+        return { extractPatch, applyPatch };
     })();
 
     const TimeSyncService = (() => {
@@ -2343,19 +2544,137 @@
         return { maybeTriggerAnimation };
     })();
 
+    const NpcMemoryService = (() => {
+        function ensureStore(state, npcId) {
+            if (!state.npcMemoryMap || typeof state.npcMemoryMap !== "object") state.npcMemoryMap = {};
+            if (!state.npcMemoryMap[npcId]) {
+                state.npcMemoryMap[npcId] = {
+                    summary: "",
+                    tags: { promises: [], conflicts: [], secrets: [], notes: [] },
+                    updatedAt: 0
+                };
+            }
+            const mem = state.npcMemoryMap[npcId];
+            if (!mem.tags || typeof mem.tags !== "object") mem.tags = { promises: [], conflicts: [], secrets: [], notes: [] };
+            mem.tags.promises = Array.isArray(mem.tags.promises) ? mem.tags.promises : [];
+            mem.tags.conflicts = Array.isArray(mem.tags.conflicts) ? mem.tags.conflicts : [];
+            mem.tags.secrets = Array.isArray(mem.tags.secrets) ? mem.tags.secrets : [];
+            mem.tags.notes = Array.isArray(mem.tags.notes) ? mem.tags.notes : [];
+            return mem;
+        }
+
+        function formatForPrompt(mem) {
+            if (!mem) return "（暂无）";
+            const t = mem.tags || {};
+            const lines = [];
+            if (mem.summary) lines.push(`摘要：${mem.summary}`);
+            const add = (label, arr) => {
+                const list = Array.isArray(arr) ? arr.filter(Boolean).slice(0, 6) : [];
+                if (list.length) lines.push(`${label}：${list.join("；")}`);
+            };
+            add("承诺", t.promises);
+            add("冲突点", t.conflicts);
+            add("秘密", t.secrets);
+            add("备注", t.notes);
+            return lines.length ? lines.join("\n") : "（暂无）";
+        }
+
+        function sanitizeTagList(list, maxItems = 6, maxLen = 28) {
+            const arr = Array.isArray(list) ? list : [];
+            const out = [];
+            for (const it of arr) {
+                const s = String(it || "").trim();
+                if (!s) continue;
+                const v = s.replace(/\s+/g, " ").slice(0, maxLen);
+                if (!out.includes(v)) out.push(v);
+                if (out.length >= maxItems) break;
+            }
+            return out;
+        }
+
+        async function updateAfterExchange({ state, npc, scenarioText, mainProgress, npcHistory, userText, npcReply, apiConfig }) {
+            try {
+                const mem = ensureStore(state, npc.id);
+                const fetchUrl = AIRequestService.buildFetchUrl();
+                const headers = AIRequestService.buildHeaders(apiConfig);
+                const systemPrompt = [
+                    "你是NPC长期记忆标签提取器。",
+                    "根据输入内容，更新该NPC与玩家关系的长期记忆。",
+                    "仅输出 JSON，不要解释。",
+                    "字段：summary, promises, conflicts, secrets, notes。",
+                    "summary 为 1-2 句摘要（<=60字）。",
+                    "每个数组最多 6 条，每条 <= 28 字。",
+                    "promises: 双方明确承诺/约定；conflicts: 矛盾/雷点/争执焦点；secrets: 需要保密或隐情；notes: 其他重要长期信息。"
+                ].join("\n");
+                const userPrompt = [
+                    `【当前卡片设定】\n${scenarioText}`,
+                    `【主角档案】\n${JSON.stringify(state.protagonistProfile || {}, null, 2)}`,
+                    `【NPC档案】\n${JSON.stringify(npc || {}, null, 2)}`,
+                    `【旧记忆】\n${formatForPrompt(mem)}`,
+                    `【主线最近进度】\n${mainProgress || "（暂无）"}`,
+                    `【NPC最近对话】\n${npcHistory || "（暂无）"}`,
+                    `【本轮玩家发言】\n${userText}`,
+                    `【本轮NPC回复】\n${npcReply}`
+                ].join("\n\n");
+                const content = await AIRequestService.requestCompletionWithFallback({
+                    config: apiConfig,
+                    fetchUrl,
+                    headers,
+                    model: apiConfig.model,
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: userPrompt }
+                    ],
+                    temperature: 0.2
+                });
+                const jsonMatch = String(content || "").match(/\{[\s\S]*\}/);
+                if (!jsonMatch) return;
+                const parsed = JSON.parse(jsonMatch[0]);
+                mem.summary = String(parsed.summary || mem.summary || "").trim().slice(0, 80);
+                mem.tags.promises = sanitizeTagList(parsed.promises ?? mem.tags.promises);
+                mem.tags.conflicts = sanitizeTagList(parsed.conflicts ?? mem.tags.conflicts);
+                mem.tags.secrets = sanitizeTagList(parsed.secrets ?? mem.tags.secrets);
+                mem.tags.notes = sanitizeTagList(parsed.notes ?? mem.tags.notes);
+                mem.updatedAt = Date.now();
+            } catch (e) {
+            }
+        }
+
+        return { ensureStore, formatForPrompt, updateAfterExchange };
+    })();
+
     const NpcChatService = (() => {
         function ensureNpcChatStore(state, npcId) {
             if (!state.npcChats || typeof state.npcChats !== "object") state.npcChats = {};
             if (!Array.isArray(state.npcChats[npcId])) state.npcChats[npcId] = [];
             return state.npcChats[npcId];
         }
-
-        function generateNpcReply(npc, text) {
-            if (/谢谢|感谢/.test(text)) return `不客气呀，我会继续关注你～ (${npc.mood})`;
-            if (/帮|可以吗|能否/.test(text)) return `我可以试试看，先把细节告诉我吧。`;
-            if (/再见|晚安/.test(text)) return `好的，晚点再聊，注意休息。`;
-            if (/学习|作业|考试/.test(text)) return `先稳住节奏，今天把关键点过一遍会更好。`;
-            return `我收到了：${text.slice(0, 24)}，我们慢慢聊。`;
+        function buildMainProgressSummary(state, limit = 8) {
+            const history = Array.isArray(state?.history) ? state.history : [];
+            return history
+                .filter((x) => x && x.role)
+                .slice(-limit)
+                .map((x) => `${x.role === "user" ? "玩家" : "主线"}：${String(x.text || "").replace(/\s+/g, " ").slice(0, 120)}`)
+                .join("\n");
+        }
+        function buildNpcChatSummary(state, npcId, limit = 10) {
+            const list = ensureNpcChatStore(state, npcId);
+            return list
+                .slice(-limit)
+                .map((x) => `${x.from === "me" ? "玩家" : "NPC"}：${String(x.text || "").replace(/\s+/g, " ").slice(0, 120)}`)
+                .join("\n");
+        }
+        function buildNpcDigestForMain(state, npcLimit = 5, msgLimit = 2) {
+            const npcs = Array.isArray(state?.npcs) ? state.npcs : [];
+            const lines = [];
+            npcs.slice(0, npcLimit).forEach((npc) => {
+                const mem = NpcMemoryService.ensureStore(state, npc.id);
+                const list = ensureNpcChatStore(state, npc.id);
+                const recent = list.slice(-msgLimit).map((m) => `${m.from === "me" ? "玩家" : npc.name}：${String(m.text || "").replace(/\s+/g, " ").slice(0, 80)}`).join(" | ");
+                const memSummary = mem?.summary ? `记忆：${mem.summary}` : "";
+                if (recent || memSummary) lines.push(`${npc.name}（${npc.relation}，好感${npc.favor}）：${[recent, memSummary].filter(Boolean).join(" | ")}`);
+            });
+            return lines.join("\n");
         }
 
         function calcFavorDelta(userText) {
@@ -2364,23 +2683,79 @@
             return 1;
         }
 
-        function applyUserMessage(state, npcId, userText) {
+        async function applyUserMessage(state, npcId, userText) {
             const npc = (state.npcs || []).find((n) => n.id === npcId);
             if (!npc) return null;
             const chatList = ensureNpcChatStore(state, npcId);
             chatList.push({ from: "me", text: userText, ts: Date.now() });
-
-            const reply = generateNpcReply(npc, userText);
-            chatList.push({ from: "npc", text: reply, ts: Date.now() });
+            const apiConfig = SettingsService.getApiConfig();
+            if (apiConfig.blocked || !apiConfig.upstreamUrl || !apiConfig.key || !apiConfig.model) {
+                throw new Error("未配置可用 AI-API，无法进行 NPC 对话。");
+            }
+            const scenarioText = SettingsService.getScenarioText();
+            const fetchUrl = AIRequestService.buildFetchUrl();
+            const headers = AIRequestService.buildHeaders(apiConfig);
+            const mainProgress = buildMainProgressSummary(state);
+            const npcHistory = buildNpcChatSummary(state, npcId);
+            const mem = NpcMemoryService.ensureStore(state, npcId);
+            const systemPrompt = [
+                "你是角色扮演对话模型，当前只扮演指定 NPC，与玩家单独聊天。",
+                "【最高优先级】必须严格遵守当前卡片设定，不可脱离世界观与年代。",
+                "【一致性】必须与主线剧情进度一致，不得与已发生事件冲突。",
+                "【角色约束】只能使用该 NPC 的身份、关系、性格视角说话，不可越权代替旁白推进整章剧情。",
+                "【状态同步】若本轮导致可变状态变更（NPC属性/主角属性/背包/时间/状态值），必须在末尾追加```state-patch```JSON块。",
+                "回复控制在 1-3 段，口语自然，可包含简短动作描写。"
+            ].join("\n");
+            const userPrompt = [
+                `【当前卡片设定】\n${scenarioText}`,
+                `【主角档案】\n${JSON.stringify(state.protagonistProfile || {}, null, 2)}`,
+                `【NPC档案】\n${JSON.stringify(npc, null, 2)}`,
+                `【NPC长期记忆标签】\n${NpcMemoryService.formatForPrompt(mem)}`,
+                `【主线最近进度】\n${mainProgress || "（暂无）"}`,
+                `【与该NPC最近对话】\n${npcHistory || "（暂无）"}`,
+                `【玩家本轮发言】\n${userText}`,
+                "请仅输出 NPC 回复正文，不要解释规则。"
+            ].join("\n\n");
+            const reply = await AIRequestService.requestCompletionWithFallback({
+                config: apiConfig,
+                fetchUrl,
+                headers,
+                model: apiConfig.model,
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userPrompt }
+                ],
+                temperature: 0.7
+            });
+            const patchResult = StatePatchService.extractPatch(reply);
+            const visibleReply = String(patchResult.cleaned || "").trim();
+            StatePatchService.applyPatch(state, patchResult.patch);
+            if (!visibleReply) throw new Error("NPC 回复为空。");
+            chatList.push({ from: "npc", text: visibleReply, ts: Date.now() });
 
             const delta = calcFavorDelta(userText);
             npc.favor = Math.max(0, Math.min(100, npc.favor + delta));
             npc.status = "在线";
 
-            return { npc, reply, delta };
+            // 后台更新NPC长期记忆（不阻塞聊天体验）
+            (async () => {
+                await NpcMemoryService.updateAfterExchange({
+                    state,
+                    npc,
+                    scenarioText,
+                    mainProgress,
+                    npcHistory,
+                    userText,
+                    npcReply: visibleReply,
+                    apiConfig
+                });
+                StateService.save();
+            })();
+
+            return { npc, reply: visibleReply, delta };
         }
 
-        return { applyUserMessage };
+        return { applyUserMessage, buildNpcDigestForMain };
     })();
 
     const ScenarioCardService = (() => {
@@ -2881,6 +3256,43 @@
         return { getMeta, setInitialized };
     })();
 
+    const WarningDecisionService = (() => {
+        function loadMap() {
+            return StorageService.readJson(AppConfig.storageKeys.scenarioDismissedWarningsMap, {});
+        }
+        function saveMap(map) {
+            StorageService.writeJson(AppConfig.storageKeys.scenarioDismissedWarningsMap, map);
+        }
+        function getScenarioId() {
+            return String(ScenarioCardService.getSelectedId() || "global");
+        }
+        function fingerprint(message) {
+            return String(message || "").trim().replace(/\s+/g, " ").slice(0, 160);
+        }
+        function getDismissedSet() {
+            const map = loadMap();
+            const id = getScenarioId();
+            const arr = Array.isArray(map[id]) ? map[id] : [];
+            return new Set(arr.map((x) => String(x || "")));
+        }
+        function isDismissed(message) {
+            const fp = fingerprint(message);
+            if (!fp) return false;
+            return getDismissedSet().has(fp);
+        }
+        function dismiss(message) {
+            const fp = fingerprint(message);
+            if (!fp) return;
+            const map = loadMap();
+            const id = getScenarioId();
+            const arr = Array.isArray(map[id]) ? map[id].map((x) => String(x || "")) : [];
+            if (!arr.includes(fp)) arr.push(fp);
+            map[id] = arr.slice(-200);
+            saveMap(map);
+        }
+        return { isDismissed, dismiss };
+    })();
+
     const ScenarioIntroService = (() => {
         async function generateIntroHtmlCard({ apiConfig, scenarioText, state, beautySetting }) {
             const fetchUrl = AIRequestService.buildFetchUrl();
@@ -2922,10 +3334,13 @@
 
     const PromptPolicyService = (() => {
         function buildRecentHistory(state) {
-            return (state.history || [])
+            const main = (state.history || [])
                 .slice(-18)
                 .map((item) => `${item.role === "user" ? "玩家" : "系统"}(${item.date})：${item.text}`)
                 .join("\n");
+            const npcDigest = NpcChatService.buildNpcDigestForMain(state);
+            if (!npcDigest) return main;
+            return `${main}\n\n【NPC对话摘要（用于保持主线一致性）】\n${npcDigest}`;
         }
         function buildRuntimeContext(state) {
             return [
@@ -2980,7 +3395,7 @@
                 `玩家最新输入：${userText}`,
                 `最近记录：\n${recentHistory}`,
                 "请只做设定一致性纠偏重写，不要重开剧情。",
-                "必须严格遵守角色事实锁定块，不得修改姓名、年龄、国籍、NPC关系等已确认事实。",
+                "必须严格遵守角色事实锁定块；若确需改动姓名、年龄、国籍、NPC关系等，请用 state-patch 结构化块同步。",
                 `错误级冲突清单：\n- ${conflictReport.errors.map((x) => x.message).join("\n- ")}`,
                 `待纠偏文本：\n${finalText}`
             ].join("\n\n");
@@ -2997,13 +3412,27 @@
                 `上一版文本：\n${finalText}`
             ].join("\n\n");
         }
+        function buildWarningRetryPrompt(userText, recentHistory, warnings, finalText, scenarioSpec) {
+            const warningLines = (Array.isArray(warnings) ? warnings : []).map((x) => x?.message || String(x || "")).filter(Boolean);
+            return [
+                "【最高优先级：先遵守当前卡设定】",
+                `当前卡设定：\n${scenarioSpec || ""}`,
+                `玩家最新输入：${userText}`,
+                `最近记录：\n${recentHistory}`,
+                "请在不改变剧情主走向的前提下，修正以下 warning 提示项。",
+                `warning清单：\n- ${warningLines.join("\n- ")}`,
+                "如果某条 warning 属于合理状态变化，请通过 state-patch 结构化块显式声明该变化。",
+                `待修正文本：\n${finalText}`
+            ].join("\n\n");
+        }
         return {
             buildRecentHistory,
             buildSystemPrompt,
             buildMainUserPrompt,
             buildChoiceRetryPrompt,
             buildConflictRetryPrompt,
-            buildHtmlRetryPrompt
+            buildHtmlRetryPrompt,
+            buildWarningRetryPrompt
         };
     })();
 
@@ -3213,10 +3642,15 @@
             return { finalText, conflictDetected };
         }
         function appendWarning(text, state, enabled) {
-            if (!enabled) return text;
+            if (!enabled) return { finalText: text, warnings: [] };
             const warningReport = ConflictService.detectConflicts(text, state);
-            if (!warningReport.hasWarning) return text;
-            return `${text}\n\n> ℹ️ 提示（warning）：${warningReport.warnings.map((x) => x.message).join("；")}`;
+            if (!warningReport.hasWarning) return { finalText: text, warnings: [] };
+            const activeWarnings = warningReport.warnings.filter((x) => !WarningDecisionService.isDismissed(x.message));
+            if (!activeWarnings.length) return { finalText: text, warnings: [] };
+            return {
+                finalText: `${text}\n\n> ℹ️ 提示（warning）：${activeWarnings.map((x) => x.message).join("；")}`,
+                warnings: activeWarnings
+            };
         }
         async function enforceBeautyCard({ text, beautyModeEnabled, htmlForceEnabled, retryCount, beautyCardSetting, requestRewrite }) {
             let finalText = HtmlCardService.normalizeHtmlCard(text);
@@ -3369,6 +3803,29 @@
 
     const ChatService = (() => {
         let isGenerating = false;
+        function decideWarningAction(warnings = []) {
+            const list = (warnings || []).map((x) => x?.message || String(x || "")).filter(Boolean);
+            if (!list.length) return "skip";
+            const msg = [
+                "检测到以下 warning：",
+                ...list.map((x, i) => `${i + 1}. ${x}`),
+                "",
+                "点击“确定”：执行一次纠错重写",
+                "点击“取消”：忽略并不再提示相同 warning"
+            ].join("\n");
+            return window.confirm(msg) ? "fix" : "dismiss";
+        }
+        function replaceLastAssistantChat(rawText, nextText) {
+            const state = StateService.get();
+            if (!state || !Array.isArray(state.chatMemory)) return;
+            for (let i = state.chatMemory.length - 1; i >= 0; i--) {
+                const item = state.chatMemory[i];
+                if (item && item.role === "assistant" && String(item.content || "") === String(rawText || "")) {
+                    item.content = nextText;
+                    return;
+                }
+            }
+        }
         async function requestAI(userText) {
             const state = StateService.get();
             const config = SettingsService.getApiConfig();
@@ -3394,6 +3851,7 @@
             const policyConfig = SettingsService.getChatPolicyConfig();
             const systemPrompt = PromptPolicyService.buildSystemPrompt({ state, scenarioSpec, beautyCardSetting, beautyModeEnabled });
             const mainUserPrompt = PromptPolicyService.buildMainUserPrompt(userText, recentHistory);
+            let uiUnlocked = false;
 
             try {
                 const rawText = (await AIRequestService.streamCompletionWithFallback({
@@ -3407,14 +3865,31 @@
                     ],
                     temperature: policyConfig.temperature,
                     onToken: (text) => {
-                        const visibleText = EndMarkerService.trimToMarker(text);
+                        const trimmed = EndMarkerService.trimToMarker(text);
+                        const visibleText = StatePatchService.extractPatch(trimmed).cleaned;
                         UIRenderer.updateStreaming(visibleText);
                         return !EndMarkerService.hasMarker(text);
                     }
                 })).trim() || "（AI想法：刚刚有点卡住了，再和我说一次吧喵）";
+                const rawPatchResult = StatePatchService.extractPatch(rawText);
+                const rawVisibleText = rawPatchResult.cleaned || rawText;
+                const rawPatchChanged = StatePatchService.applyPatch(StateService.get(), rawPatchResult.patch);
 
+                // 第一阶段：流式结束后立即完成渲染并解锁交互，避免用户体感“卡住”。
+                TimeSyncService.syncFromAiText(StateService.get(), rawVisibleText);
+                UIRenderer.finishStreaming(rawVisibleText, { conflictDetected: false });
+                EventService.maybeTriggerAnimation(rawVisibleText);
+                const aiEntry = { role: "ai", date: Utils.nowDateStr(StateService.get()), text: rawVisibleText };
+                StateService.pushHistory(aiEntry);
+                StateService.pushChat("assistant", rawVisibleText);
+                StateService.save();
+                isGenerating = false;
+                UIRenderer.setSendingDisabled(false);
+                uiUnlocked = true;
+
+                // 第二阶段：后台纠偏与美化强化，不再阻塞用户操作。
                 let finalText = await ChatPostProcessService.enforceChoices({
-                    text: rawText,
+                    text: rawVisibleText,
                     userText,
                     state,
                     retryCount: policyConfig.choiceRetryCount,
@@ -3431,6 +3906,7 @@
                     })
                 });
 
+                const beforeConflictText = finalText;
                 const conflictResult = await ChatPostProcessService.enforceConflict({
                     text: finalText,
                     userText,
@@ -3450,11 +3926,41 @@
                     })
                 });
 
-                finalText = ChatPostProcessService.appendWarning(
+                const warningResult = ChatPostProcessService.appendWarning(
                     conflictResult.finalText,
                     state,
                     policyConfig.enableConflictDetection
                 );
+                finalText = warningResult.finalText;
+                if (warningResult.warnings.length) {
+                    const action = decideWarningAction(warningResult.warnings);
+                    if (action === "dismiss") {
+                        warningResult.warnings.forEach((w) => WarningDecisionService.dismiss(w.message));
+                        finalText = conflictResult.finalText;
+                    } else if (action === "fix") {
+                        const fixedByWarning = await AIRequestService.requestCompletionWithFallback({
+                            config,
+                            fetchUrl,
+                            headers: requestHeaders,
+                            model: config.model,
+                            messages: [
+                                { role: "system", content: systemPrompt },
+                                {
+                                    role: "user",
+                                    content: PromptPolicyService.buildWarningRetryPrompt(
+                                        userText,
+                                        recentHistory,
+                                        warningResult.warnings,
+                                        finalText,
+                                        scenarioSpec
+                                    )
+                                }
+                            ],
+                            temperature: 0.35
+                        });
+                        if (fixedByWarning) finalText = fixedByWarning;
+                    }
+                }
                 finalText = await ChatPostProcessService.enforceBeautyCard({
                     text: finalText,
                     beautyModeEnabled,
@@ -3474,17 +3980,36 @@
                     })
                 });
 
-                TimeSyncService.syncFromAiText(StateService.get(), finalText);
-                UIRenderer.finishStreaming(finalText, { conflictDetected: conflictResult.conflictDetected });
-                EventService.maybeTriggerAnimation(finalText);
-                StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(StateService.get()), text: finalText });
-                StateService.pushChat("assistant", finalText);
-                StateService.save();
+                const shouldPatchRendered = finalText !== rawVisibleText || conflictResult.conflictDetected || beforeConflictText !== finalText;
+                const finalPatchResult = StatePatchService.extractPatch(finalText);
+                const finalVisibleText = finalPatchResult.cleaned || finalText;
+                const finalPatchChanged = StatePatchService.applyPatch(StateService.get(), finalPatchResult.patch);
+                const shouldRefreshByPatch = rawPatchChanged || finalPatchChanged;
+                if (shouldPatchRendered) {
+                    aiEntry.text = finalVisibleText;
+                    replaceLastAssistantChat(rawVisibleText, finalVisibleText);
+                    TimeSyncService.syncFromAiText(StateService.get(), finalVisibleText);
+                    StateService.save();
+                    UIRenderer.renderHistory(StateService.get().history);
+                } else if (shouldRefreshByPatch) {
+                    TimeSyncService.syncFromAiText(StateService.get(), finalVisibleText);
+                    StateService.save();
+                    UIRenderer.renderHistory(StateService.get().history);
+                }
             } catch (error) {
-                UIRenderer.finishStreaming(`⚠️ 连接失败：${error.message}\n\n请检查 API 配置后重试。`);
+                if (!uiUnlocked) {
+                    UIRenderer.finishStreaming(`⚠️ 连接失败：${error.message}\n\n请检查 API 配置后重试。`);
+                } else {
+                    const s = StateService.get();
+                    StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(s), text: `> ⚠️ 后台纠偏失败：${error.message}` });
+                    StateService.save();
+                    UIRenderer.renderHistory(StateService.get().history);
+                }
             } finally {
-                isGenerating = false;
-                UIRenderer.setSendingDisabled(false);
+                if (!uiUnlocked) {
+                    isGenerating = false;
+                    UIRenderer.setSendingDisabled(false);
+                }
             }
         }
         function getIsGenerating() {
@@ -3616,9 +4141,24 @@
             const state = StateService.get();
             const npc = (state.npcs || []).find((n) => n.id === npcId);
             if (!npc) return;
-            openInfoModal(`NPC：${npc.name}`, `关系：${npc.relation}<br>好感度：${npc.favor}<br>状态：${npc.status}<br>心情：${npc.mood}`);
+            const mem = NpcMemoryService.ensureStore(state, npc.id);
+            const tags = mem?.tags || { promises: [], conflicts: [], secrets: [], notes: [] };
+            const listHtml = (arr) => {
+                const a = Array.isArray(arr) ? arr.filter(Boolean) : [];
+                if (!a.length) return "<div class=\"list-sub\">（暂无）</div>";
+                return `<ul style="padding-left:18px; margin:6px 0;">${a.map((x) => `<li>${MarkdownService.escapeHtml(String(x))}</li>`).join("")}</ul>`;
+            };
+            const desc = [
+                `关系：${npc.relation}<br>好感度：${npc.favor}<br>状态：${npc.status}<br>心情：${npc.mood}`,
+                `<div style="margin-top:10px;"><strong>长期记忆摘要</strong><div class="list-sub" style="margin-top:4px;">${MarkdownService.escapeHtml(mem.summary || "（暂无）")}</div></div>`,
+                `<div style="margin-top:8px;"><strong>承诺</strong>${listHtml(tags.promises)}</div>`,
+                `<div style="margin-top:8px;"><strong>冲突点</strong>${listHtml(tags.conflicts)}</div>`,
+                `<div style="margin-top:8px;"><strong>秘密</strong>${listHtml(tags.secrets)}</div>`,
+                `<div style="margin-top:8px;"><strong>备注</strong>${listHtml(tags.notes)}</div>`
+            ].join("");
+            openInfoModal(`NPC：${npc.name}`, desc);
         }
-        function sendNpcMessage() {
+        async function sendNpcMessage() {
             const state = StateService.get();
             const panelTitle = document.getElementById("social-chat-title");
             if (!panelTitle || panelTitle.innerText.indexOf("和 ") !== 0) return;
@@ -3628,12 +4168,34 @@
             const input = document.getElementById("social-input");
             const txt = input.value.trim();
             if (!txt) return;
-            NpcChatService.applyUserMessage(state, npc.id, txt);
+            const sendBtn = document.querySelector("#social-chat-panel .send-btn");
+            input.disabled = true;
+            if (sendBtn) sendBtn.disabled = true;
             input.value = "";
-            StateService.save();
-            renderAll();
-            switchView("view-social");
-            UIRenderer.renderSocialChat(state, npc.id);
+            try {
+                await NpcChatService.applyUserMessage(state, npc.id, txt);
+                // 关键：NPC线写入主线历史摘要锚点，保证后续生涯推进可感知社交线变化
+                StateService.pushHistory({
+                    role: "ai",
+                    date: Utils.nowDateStr(state),
+                    text: `【社交线更新】你与 ${npc.name} 完成了一轮对话。关系：${npc.relation}｜好感：${npc.favor}。`
+                });
+                StateService.save();
+                renderAll();
+                switchView("view-social");
+                UIRenderer.renderSocialChat(state, npc.id);
+            } catch (e) {
+                const list = (state.npcChats && state.npcChats[npc.id]) || [];
+                list.push({ from: "npc", text: `⚠️ 对话失败：${e.message}`, ts: Date.now() });
+                StateService.save();
+                renderAll();
+                switchView("view-social");
+                UIRenderer.renderSocialChat(state, npc.id);
+            } finally {
+                input.disabled = false;
+                if (sendBtn) sendBtn.disabled = false;
+                input.focus();
+            }
         }
         function saveToSlot(index) {
             const state = StateService.get();
@@ -3785,6 +4347,8 @@
         }
         function openInitLoadingModal(text) {
             document.getElementById("init-loading-desc").innerText = text || "AI 正在根据设定生成角色信息、背包与社交关系，请稍候...";
+            const bar = document.getElementById("init-loading-progress");
+            if (bar) bar.style.width = "8%";
             document.getElementById("init-loading-modal").style.display = "flex";
         }
         function updateInitLoadingStage(stage) {
@@ -3797,9 +4361,15 @@
                 "完成": "完成：初始化数据已生成。"
             };
             document.getElementById("init-loading-desc").innerText = map[stage] || String(stage || "");
+            const percentMap = { "连接中": 18, "解析角色": 42, "生成背包": 60, "生成NPC": 78, "生成开局介绍": 92, "完成": 100 };
+            const bar = document.getElementById("init-loading-progress");
+            const p = percentMap[stage] ?? 25;
+            if (bar) bar.style.width = `${p}%`;
         }
         function closeInitLoadingModal() {
             document.getElementById("init-loading-modal").style.display = "none";
+            const bar = document.getElementById("init-loading-progress");
+            if (bar) bar.style.width = "0%";
         }
         function bindInitPreviewForm(plan) {
             document.getElementById("init-preview-name").value = plan.name || "";
