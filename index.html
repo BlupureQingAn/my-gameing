@@ -916,29 +916,29 @@
         </div>
     </footer>
 
-    <div class="modal-overlay" id="reborn-modal">
+    <div class="modal-overlay" id="init-preview-modal">
         <div class="modal-card">
-            <div class="modal-title">投胎预览确认</div>
-            <div class="modal-desc" id="reborn-preview-desc">正在准备投胎解析结果...</div>
+            <div class="modal-title">角色初始化预览确认</div>
+            <div class="modal-desc" id="init-preview-desc">正在准备角色初始化解析结果...</div>
             <div style="margin-top:8px; display:grid; gap:6px;">
-                <input id="reborn-name" type="text" placeholder="主角姓名">
-                <input id="reborn-english-name" type="text" placeholder="英文名">
-                <input id="reborn-gender" type="text" placeholder="性别">
-                <input id="reborn-age-years" type="number" min="0" max="120" placeholder="年龄（岁）">
-                <input id="reborn-nationality" type="text" placeholder="国籍">
-                <input id="reborn-location" type="text" placeholder="地点">
+                <input id="init-preview-name" type="text" placeholder="主角姓名">
+                <input id="init-preview-english-name" type="text" placeholder="英文名">
+                <input id="init-preview-gender" type="text" placeholder="性别">
+                <input id="init-preview-age-years" type="number" min="0" max="120" placeholder="年龄（岁）">
+                <input id="init-preview-nationality" type="text" placeholder="国籍">
+                <input id="init-preview-location" type="text" placeholder="地点">
             </div>
             <div class="gender-actions">
-                <button class="mini-btn ghost" onclick="closeRebornModal()">取消</button>
-                <button class="mini-btn primary" id="reborn-confirm-btn">确认投胎并开始游玩</button>
+                <button class="mini-btn ghost" onclick="closeInitPreviewModal()">取消</button>
+                <button class="mini-btn primary" id="init-preview-confirm-btn">确认角色信息并开始游玩</button>
             </div>
         </div>
     </div>
 
-    <div class="modal-overlay" id="reborn-loading-modal">
+    <div class="modal-overlay" id="init-loading-modal">
         <div class="modal-card">
-            <div class="modal-title">正在生成人物形魄</div>
-            <div class="modal-desc" id="reborn-loading-desc">AI 正在根据设定生成角色信息、背包与社交关系，请稍候...</div>
+            <div class="modal-title">正在生成角色初始化信息</div>
+            <div class="modal-desc" id="init-loading-desc">AI 正在根据设定生成角色信息、背包与社交关系，请稍候...</div>
         </div>
     </div>
 
@@ -1034,7 +1034,7 @@
             return arr[Math.floor(Math.random() * arr.length)];
         },
         nowDateStr(state) {
-            if (!state || !state.currentYear || !state.currentMonth || !state.currentDay) return "";
+            if (!state || !state.currentYear || !state.currentMonth) return "";
             const weekName = this.weekdays[state.weekdayIndex || 0];
             return `${state.currentYear}年${state.currentMonth}月${state.currentDay || 1}日 ${weekName}`;
         },
@@ -3157,7 +3157,7 @@
         return { enforceChoices, enforceConflict, appendWarning, enforceBeautyCard };
     })();
 
-    const ScenarioRebirthService = (() => {
+    const ScenarioInitPlanService = (() => {
         function sanitizeAgeYears(v) {
             const n = Number(v);
             if (!Number.isFinite(n)) return NaN;
@@ -3208,14 +3208,15 @@
                 "必须输出字段：name, englishName, ageYears, forcedGender, nationality, location, currentYear, currentMonth, currentDay, rebornReason, stats, inventory, npcs。",
                 "forcedGender 仅可为 男/女/非二元/空字符串。",
                 "ageYears 为合理年龄，不要默认婴儿，除非设定明确要求幼年开局。",
-                "currentYear/currentMonth/currentDay 必须符合设定年代（例如民国/古代），严禁使用现实年份(如2026)污染设定。",
+                "currentYear/currentMonth 必须返回且符合设定年代（例如民国/古代），严禁使用现实年份(如2026)污染设定。",
+                "currentDay 可留空；若无法确定具体日，返回空字符串即可。",
                 "stats 是数组，每项含 key,label,icon,value（icon 用恰当表情符号）。状态数量与名称由设定决定。",
                 "如果设定指向古代中国皇宫，location 优先填 北京。",
                 "inventory 是数组，每项含 name,type,desc,effect,count。",
                 "npcs 是数组，每项含 name,gender,relation,favor,status,mood。"
             ].join("\n");
             const userPrompt = [
-                `用户选择投胎性别：${selectedGender}`,
+                `用户选择角色性别：${selectedGender}`,
                 "你必须先从设定文本中提取主角身份约束，再生成姓名、年龄、国籍和地点；禁止使用与设定无关的默认人设。",
                 "请结合设定判断是否强制覆盖该性别，并生成初始化背包和NPC。",
                 "仅返回 JSON 对象。",
@@ -3258,20 +3259,21 @@
                 rebornReason: String(parsed.rebornReason || "使用AI解析设定生成").slice(0, 120)
             };
         }
-        async function buildRebirthPlan(selectedGender, onProgress) {
+        async function buildInitPlan(selectedGender, onProgress) {
             const scenarioText = SettingsService.getScenarioText();
             const apiConfig = SettingsService.getApiConfig();
-            if (!scenarioText.trim()) throw new Error("当前卡片设定为空，无法进行 AI 投胎解析。");
+            if (!scenarioText.trim()) throw new Error("当前卡片设定为空，无法进行 AI 开局初始化解析。");
             if (apiConfig.blocked || !apiConfig.upstreamUrl || !apiConfig.key || !apiConfig.model) {
-                throw new Error("未配置可用 AI-API，无法进行投胎解析。");
+                throw new Error("未配置可用 AI-API，无法进行开局初始化解析。");
             }
             const aiPlan = await analyzeWithAI({ scenarioText, selectedGender, apiConfig, onProgress });
-            if (!aiPlan) throw new Error("AI 返回为空，无法生成投胎方案。");
+            if (!aiPlan) throw new Error("AI 返回为空，无法生成开局初始化方案。");
             if (!aiPlan.name || !aiPlan.englishName) throw new Error("AI 未返回有效主角姓名。");
             if (!Number.isFinite(aiPlan.ageYears)) throw new Error("AI 未返回有效年龄。");
-            if (!Number.isFinite(aiPlan.currentYear) || !Number.isFinite(aiPlan.currentMonth) || !Number.isFinite(aiPlan.currentDay)) {
-                throw new Error("AI 未返回有效初始时间（年/月/日）。");
+            if (!Number.isFinite(aiPlan.currentYear) || !Number.isFinite(aiPlan.currentMonth)) {
+                throw new Error("AI 未返回有效初始时间（年/月必填，日可为空）。");
             }
+            if (!Number.isFinite(aiPlan.currentDay)) aiPlan.currentDay = 1;
             if (!Array.isArray(aiPlan.stats) || !aiPlan.stats.length) {
                 throw new Error("AI 未返回有效状态栏 stats。");
             }
@@ -3284,7 +3286,7 @@
             if (typeof onProgress === "function") onProgress("完成");
             return aiPlan;
         }
-        return { buildRebirthPlan };
+        return { buildInitPlan };
     })();
 
     const ChatService = (() => {
@@ -3412,7 +3414,7 @@
     const Controller = (() => {
         let activeView = "view-home";
         let presetManifest = [];
-        let pendingRebirthPlan = null;
+        let pendingInitPlan = null;
         function renderAll() {
             const state = StateService.get();
             UIRenderer.renderTop(state);
@@ -3668,13 +3670,13 @@
             switchView("view-scenario-editor");
         }
         async function playPresetTemplate(preset) {
-            openRebornLoadingModal("正在加载预设模板并初始化独立卡片...");
+            openInitLoadingModal("正在加载预设模板并初始化独立卡片...");
             const ok = await applyPresetTemplate(preset, { silent: true });
             if (ok === false) {
-                closeRebornLoadingModal();
+                closeInitLoadingModal();
                 return;
             }
-            updateRebornLoadingStage("连接中");
+            updateInitLoadingStage("连接中");
             await playScenarioCard(ScenarioCardService.getSelectedId());
         }
         function selectApiCard(id) {
@@ -3692,18 +3694,18 @@
         function importScenarioTxt() {
             SettingsService.importScenarioFromFile();
         }
-        function openRebornModal() {
-            document.getElementById("reborn-modal").style.display = "flex";
+        function openInitPreviewModal() {
+            document.getElementById("init-preview-modal").style.display = "flex";
         }
-        function closeRebornModal() {
-            document.getElementById("reborn-modal").style.display = "none";
-            pendingRebirthPlan = null;
+        function closeInitPreviewModal() {
+            document.getElementById("init-preview-modal").style.display = "none";
+            pendingInitPlan = null;
         }
-        function openRebornLoadingModal(text) {
-            document.getElementById("reborn-loading-desc").innerText = text || "AI 正在根据设定生成角色信息、背包与社交关系，请稍候...";
-            document.getElementById("reborn-loading-modal").style.display = "flex";
+        function openInitLoadingModal(text) {
+            document.getElementById("init-loading-desc").innerText = text || "AI 正在根据设定生成角色信息、背包与社交关系，请稍候...";
+            document.getElementById("init-loading-modal").style.display = "flex";
         }
-        function updateRebornLoadingStage(stage) {
+        function updateInitLoadingStage(stage) {
             const map = {
                 "连接中": "连接中：正在请求 AI 解析设定...",
                 "解析角色": "解析角色：正在生成角色信息...",
@@ -3712,52 +3714,52 @@
                 "生成开局介绍": "生成开局介绍：正在生成首条剧情卡片...",
                 "完成": "完成：初始化数据已生成。"
             };
-            document.getElementById("reborn-loading-desc").innerText = map[stage] || String(stage || "");
+            document.getElementById("init-loading-desc").innerText = map[stage] || String(stage || "");
         }
-        function closeRebornLoadingModal() {
-            document.getElementById("reborn-loading-modal").style.display = "none";
+        function closeInitLoadingModal() {
+            document.getElementById("init-loading-modal").style.display = "none";
         }
-        function bindRebornPreviewForm(plan) {
-            document.getElementById("reborn-name").value = plan.name || "";
-            document.getElementById("reborn-english-name").value = plan.englishName || "";
-            document.getElementById("reborn-gender").value = plan.forcedGender || plan.selectedGender || "";
-            document.getElementById("reborn-age-years").value = String(plan.ageYears ?? 18);
-            document.getElementById("reborn-nationality").value = plan.nationality || "";
-            document.getElementById("reborn-location").value = plan.location || "";
+        function bindInitPreviewForm(plan) {
+            document.getElementById("init-preview-name").value = plan.name || "";
+            document.getElementById("init-preview-english-name").value = plan.englishName || "";
+            document.getElementById("init-preview-gender").value = plan.forcedGender || plan.selectedGender || "";
+            document.getElementById("init-preview-age-years").value = String(plan.ageYears ?? 18);
+            document.getElementById("init-preview-nationality").value = plan.nationality || "";
+            document.getElementById("init-preview-location").value = plan.location || "";
         }
-        function collectRebornPreviewForm() {
+        function collectInitPreviewForm() {
             return {
-                name: document.getElementById("reborn-name").value.trim(),
-                englishName: document.getElementById("reborn-english-name").value.trim(),
-                forcedGender: document.getElementById("reborn-gender").value.trim(),
-                ageYears: Number(document.getElementById("reborn-age-years").value || 0),
-                nationality: document.getElementById("reborn-nationality").value.trim(),
-                location: document.getElementById("reborn-location").value.trim()
+                name: document.getElementById("init-preview-name").value.trim(),
+                englishName: document.getElementById("init-preview-english-name").value.trim(),
+                forcedGender: document.getElementById("init-preview-gender").value.trim(),
+                ageYears: Number(document.getElementById("init-preview-age-years").value || 0),
+                nationality: document.getElementById("init-preview-nationality").value.trim(),
+                location: document.getElementById("init-preview-location").value.trim()
             };
         }
         async function playScenarioCard(cardId) {
             selectScenarioCard(cardId);
             const meta = ScenarioPlayMetaService.getMeta(cardId);
             if (meta.hasInitialized) {
-                closeRebornLoadingModal();
+                closeInitLoadingModal();
                 PlayViewStateService.enterPlay(cardId);
                 switchView("view-main");
                 renderAll();
                 return;
             }
-            openRebornLoadingModal("连接中：正在请求 AI 解析设定...");
+            openInitLoadingModal("连接中：正在请求 AI 解析设定...");
             PlayViewStateService.enterPlay(cardId);
             switchView("view-main");
             renderAll();
-            await prepareRebirthPreview(StateService.get()?.gender || "", true);
+            await prepareInitPreview(StateService.get()?.gender || "", true);
         }
-        async function prepareRebirthPreview(defaultGender, loadingAlreadyOpen = false) {
+        async function prepareInitPreview(defaultGender, loadingAlreadyOpen = false) {
             if (ChatService.getIsGenerating()) return;
-            if (!loadingAlreadyOpen) openRebornLoadingModal("正在生成人物形魄并初始化角色信息、背包与社交...");
+            if (!loadingAlreadyOpen) openInitLoadingModal("正在生成角色初始化信息（角色、背包与社交）...");
             try {
-                const plan = await ScenarioRebirthService.buildRebirthPlan(defaultGender || "女", updateRebornLoadingStage);
-                closeRebornLoadingModal();
-                pendingRebirthPlan = plan;
+                const plan = await ScenarioInitPlanService.buildInitPlan(defaultGender || "女", updateInitLoadingStage);
+                closeInitLoadingModal();
+                pendingInitPlan = plan;
                 const desc = [
                     `角色：${plan.name}（${plan.englishName}）`,
                     `年龄：${plan.ageYears} 岁`,
@@ -3768,20 +3770,20 @@
                     `背包物品数量：${(plan.inventory || []).length}`,
                     `说明：${plan.rebornReason || "无"}`
                 ].join("<br>");
-                document.getElementById("reborn-preview-desc").innerHTML = desc;
-                bindRebornPreviewForm(plan);
-                const confirmBtn = document.getElementById("reborn-confirm-btn");
-                confirmBtn.onclick = () => resetGameWithGender();
-                openRebornModal();
+                document.getElementById("init-preview-desc").innerHTML = desc;
+                bindInitPreviewForm(plan);
+                const confirmBtn = document.getElementById("init-preview-confirm-btn");
+                confirmBtn.onclick = () => applyInitPreviewAndStart();
+                openInitPreviewModal();
             } catch (e) {
-                closeRebornLoadingModal();
-                alert(`AI 投胎解析失败：${e.message}`);
+                closeInitLoadingModal();
+                alert(`AI 开局初始化解析失败：${e.message}`);
             }
         }
-        function resetGameWithGender() {
-            if (!pendingRebirthPlan) return;
-            const edited = collectRebornPreviewForm();
-            const merged = { ...pendingRebirthPlan, ...edited };
+        function applyInitPreviewAndStart() {
+            if (!pendingInitPlan) return;
+            const edited = collectInitPreviewForm();
+            const merged = { ...pendingInitPlan, ...edited };
             if (!merged.name || !merged.englishName) {
                 alert("请填写主角姓名与英文名。");
                 return;
@@ -3793,7 +3795,7 @@
             StateService.resetWithPreset(merged);
             ScenarioPlayMetaService.setInitialized(ScenarioCardService.getSelectedId(), true);
             PlayViewStateService.enterPlay(ScenarioCardService.getSelectedId());
-            closeRebornModal();
+            closeInitPreviewModal();
             switchView("view-main");
             renderAll();
             // 初始化完成后：让 AI 输出开局介绍 HTML 卡片作为第一条剧情
@@ -3802,8 +3804,8 @@
                     const apiConfig = SettingsService.getApiConfig();
                     if (apiConfig.blocked) return;
                     if (!apiConfig.upstreamUrl || !apiConfig.key || !apiConfig.model) return;
-                    openRebornLoadingModal("生成开局介绍：正在生成首条剧情卡片...");
-                    updateRebornLoadingStage("生成开局介绍");
+                    openInitLoadingModal("生成开局介绍：正在生成首条剧情卡片...");
+                    updateInitLoadingStage("生成开局介绍");
                     const scenarioText = SettingsService.getScenarioText();
                     const beautySetting = SettingsService.getBeautyCardSetting();
                     const state = StateService.get();
@@ -3815,11 +3817,11 @@
                     }
                 } catch (e) {
                 } finally {
-                    closeRebornLoadingModal();
+                    closeInitLoadingModal();
                 }
             })();
         }
-        return { init, onSendClick, sendUserText, jumpWeek, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, openCurrentCardEditor, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, applyPresetTemplate, editPresetTemplate, playPresetTemplate, selectApiCard, startFromHome, importScenarioTxt, openRebornModal, closeRebornModal, resetGameWithGender, openItemModal, useItem, openNpcProfile, sendNpcMessage, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
+        return { init, onSendClick, sendUserText, jumpWeek, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, openCurrentCardEditor, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, applyPresetTemplate, editPresetTemplate, playPresetTemplate, selectApiCard, startFromHome, importScenarioTxt, openInitPreviewModal, closeInitPreviewModal, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, sendNpcMessage, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
@@ -3838,9 +3840,9 @@
     function selectApiCard(id) { Controller.selectApiCard(id); }
     function startFromHome() { Controller.startFromHome(); }
     function importScenarioTxt() { Controller.importScenarioTxt(); }
-    function openRebornModal() { Controller.openRebornModal(); }
-    function closeRebornModal() { Controller.closeRebornModal(); }
-    function resetGameWithGender() { Controller.resetGameWithGender(); }
+    function openInitPreviewModal() { Controller.openInitPreviewModal(); }
+    function closeInitPreviewModal() { Controller.closeInitPreviewModal(); }
+    function applyInitPreviewAndStart() { Controller.applyInitPreviewAndStart(); }
     function sendNpcMessage() { Controller.sendNpcMessage(); }
     function closeInfoModal() { Controller.closeInfoModal(); }
 
