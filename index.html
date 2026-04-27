@@ -3783,17 +3783,19 @@
         }
         async function enforceBeautyCard({ text, beautyModeEnabled, htmlForceEnabled, retryCount, beautyCardSetting, requestRewrite }) {
             let finalText = HtmlCardService.normalizeHtmlCard(text);
-            if (!beautyModeEnabled || !htmlForceEnabled) return finalText;
+            if (!beautyModeEnabled || !htmlForceEnabled) return { finalText, usedFallback: false };
             let remain = Math.max(0, Number(retryCount) || 0);
             while (!HtmlCardService.isRenderableHtmlCard(finalText) && remain > 0) {
                 const htmlText = await requestRewrite(finalText);
                 if (htmlText) finalText = HtmlCardService.normalizeHtmlCard(htmlText);
                 remain--;
             }
+            let usedFallback = false;
             if (!HtmlCardService.isRenderableHtmlCard(finalText)) {
                 finalText = HtmlCardService.wrapAsHtmlCard(beautyCardSetting, finalText);
+                usedFallback = true;
             }
-            return finalText;
+            return { finalText, usedFallback };
         }
         return { enforceChoices, enforceConflict, appendWarning, enforceBeautyCard };
     })();
@@ -4114,7 +4116,7 @@
                     const action = decideWarningAction(warningResult.warnings);
                     if (action === "dismiss") {
                         warningResult.warnings.forEach((w) => WarningDecisionService.dismiss(w.message));
-                        finalText = conflictResult.finalText;
+                        finalText = String(finalText || "").replace(/\n\n> ℹ️ 提示（warning）：[\s\S]*$/, "");
                     } else if (action === "fix") {
                         const fixedByWarning = await AIRequestService.requestCompletionWithFallback({
                             config,
@@ -4156,7 +4158,40 @@
                         ],
                         temperature: policyConfig.temperature
                     })
+                }).then((res) => {
+                    if (res && typeof res === "object") return res;
+                    return { finalText: String(res || ""), usedFallback: false };
                 });
+                let usedHtmlFallback = false;
+                if (finalText && typeof finalText === "object") {
+                    usedHtmlFallback = !!finalText.usedFallback;
+                    finalText = finalText.finalText || "";
+                }
+                if (usedHtmlFallback && beautyModeEnabled) {
+                    const retryHtml = await DecisionModalService.show({
+                        title: "HTML卡片格式异常",
+                        descHtml: "<div class='list-sub'>AI 返回的内容不是可渲染 HTML 卡片，已先使用本地兜底卡片显示。</div><div class='list-sub' style='margin-top:6px;'>是否重试一次，尝试获取真实 HTML 卡片？</div>",
+                        okText: "重试获取HTML",
+                        cancelText: "保持当前"
+                    });
+                    if (retryHtml) {
+                        const retriedHtml = await AIRequestService.requestCompletionWithFallback({
+                            config,
+                            fetchUrl,
+                            headers: requestHeaders,
+                            model: config.model,
+                            messages: [
+                                { role: "system", content: systemPrompt },
+                                { role: "user", content: PromptPolicyService.buildHtmlRetryPrompt(userText, recentHistory, finalText, scenarioSpec) }
+                            ],
+                            temperature: policyConfig.temperature
+                        });
+                        const normalizedRetried = HtmlCardService.normalizeHtmlCard(retriedHtml);
+                        finalText = HtmlCardService.isRenderableHtmlCard(normalizedRetried)
+                            ? normalizedRetried
+                            : HtmlCardService.wrapAsHtmlCard(beautyCardSetting, normalizedRetried || finalText);
+                    }
+                }
 
                 const shouldPatchRendered = finalText !== rawVisibleText || conflictDetected || beforeConflictText !== finalText;
                 const finalPatchResult = StatePatchService.extractPatch(finalText);
@@ -4714,9 +4749,30 @@
                     const scenarioText = SettingsService.getScenarioText();
                     const beautySetting = SettingsService.getBeautyCardSetting();
                     const state = StateService.get();
-                    const html = await ScenarioIntroService.generateIntroHtmlCard({ apiConfig, scenarioText, state, beautySetting });
-                    if (html) {
-                        StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(state), text: html });
+                    let html = await ScenarioIntroService.generateIntroHtmlCard({ apiConfig, scenarioText, state, beautySetting });
+                    let normalized = HtmlCardService.normalizeHtmlCard(html);
+                    let usedFallback = false;
+                    if (!HtmlCardService.isRenderableHtmlCard(normalized)) {
+                        normalized = HtmlCardService.wrapAsHtmlCard(beautySetting, normalized);
+                        usedFallback = true;
+                    }
+                    if (usedFallback) {
+                        const retryHtml = await DecisionModalService.show({
+                            title: "开局卡片格式异常",
+                            descHtml: "<div class='list-sub'>AI 返回的开局内容不是可渲染 HTML 卡片，已先用兜底卡片显示。</div><div class='list-sub' style='margin-top:6px;'>是否重试一次获取真实 HTML？</div>",
+                            okText: "重试获取HTML",
+                            cancelText: "保持当前"
+                        });
+                        if (retryHtml) {
+                            const retried = await ScenarioIntroService.generateIntroHtmlCard({ apiConfig, scenarioText, state, beautySetting });
+                            const retriedNorm = HtmlCardService.normalizeHtmlCard(retried);
+                            normalized = HtmlCardService.isRenderableHtmlCard(retriedNorm)
+                                ? retriedNorm
+                                : HtmlCardService.wrapAsHtmlCard(beautySetting, retriedNorm || normalized);
+                        }
+                    }
+                    if (normalized) {
+                        StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(state), text: normalized });
                         StateService.save();
                         UIRenderer.renderHistory(StateService.get().history);
                     }
