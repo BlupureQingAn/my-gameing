@@ -2407,6 +2407,7 @@
         }
         function deleteCard(cardId) {
             const id = String(cardId || "");
+            purgeCardRuntimeData(id);
             const cards = loadCards().filter((c) => c.id !== id);
             saveCards(cards);
             // 若删除的是自定义卡片，则立刻补回一张新的自定义卡片并置顶，保证系统可用
@@ -2420,6 +2421,43 @@
             }
             if (getSelectedId() === id) setSelectedId(CUSTOM_CARD_ID);
             return true;
+        }
+        function purgeCardRuntimeData(cardId) {
+            const id = String(cardId || "");
+            if (!id) return;
+            try {
+                // 1) 删除该卡独立主存档
+                const saveKey = GameSessionService.keyFor(id, AppConfig.storageKeys.save);
+                localStorage.removeItem(saveKey);
+
+                // 2) 删除该卡独立存档槽位
+                for (let i = 1; i <= 5; i++) {
+                    const slotKey = `${GameSessionService.keyFor(id, AppConfig.storageKeys.saveSlotPrefix)}${i}`;
+                    localStorage.removeItem(slotKey);
+                }
+
+                // 3) 删除首玩/初始化元信息
+                const playMetaMap = StorageService.readJson(AppConfig.storageKeys.scenarioPlayMetaMap, {});
+                if (playMetaMap && typeof playMetaMap === "object" && playMetaMap[id]) {
+                    delete playMetaMap[id];
+                    StorageService.writeJson(AppConfig.storageKeys.scenarioPlayMetaMap, playMetaMap);
+                }
+
+                // 4) 删除卡片级 API 选择映射
+                const apiMap = StorageService.readJson(AppConfig.storageKeys.scenarioApiCardSelectionMap, {});
+                if (apiMap && typeof apiMap === "object" && apiMap[id]) {
+                    delete apiMap[id];
+                    StorageService.writeJson(AppConfig.storageKeys.scenarioApiCardSelectionMap, apiMap);
+                }
+
+                // 5) 删除卡片级 ChatPolicy 映射
+                const policyMap = StorageService.readJson(AppConfig.storageKeys.scenarioChatPolicyMap, {});
+                if (policyMap && typeof policyMap === "object" && policyMap[id]) {
+                    delete policyMap[id];
+                    StorageService.writeJson(AppConfig.storageKeys.scenarioChatPolicyMap, policyMap);
+                }
+            } catch (e) {
+            }
         }
         function createCard() {
             const cards = loadCards();
