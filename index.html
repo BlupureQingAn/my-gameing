@@ -384,6 +384,28 @@
             padding: 6px 8px;
         }
 
+        .ai-plain-status, .ai-plain-event {
+            border: 1px solid #ecd3b4;
+            background: #fffaf2;
+            border-radius: 8px;
+            padding: 8px;
+            margin-bottom: 6px;
+        }
+
+        .ai-card-status, .ai-card-event {
+            margin-top: 8px;
+            border: 1px solid #ead3b6;
+            border-radius: 8px;
+            padding: 8px;
+            background: #fffdf9;
+        }
+
+        .ai-card-status h4, .ai-card-event h4 {
+            margin: 0 0 4px 0;
+            font-size: 0.82rem;
+            color: #6a3f1b;
+        }
+
         /* 交互态 */
         .msg-row.user {
             justify-content: flex-end;
@@ -786,7 +808,7 @@
                 <div class="list-sub">模板资源来自网络，如有侵权请联系删除</div>
                 <div id="preset-template-list" style="margin-top:8px;"></div>
                 <div class="setting-actions">
-                    <button class="mini-btn ghost" onclick="switchView('view-settings')">进入设置页</button>
+                    
                 </div>
                 <input id="scenario-file-input" type="file" accept=".txt,.md,.text" style="display:none;">
             </section>
@@ -799,6 +821,11 @@
                 <input id="scenario-title-input" type="text" placeholder="卡片标题（可自定义，含置顶卡片）">
                 <input id="scenario-theme-input" type="text" placeholder="美化设定（例如：奶油暖色玻璃、古风卷轴）">
                 <textarea id="scenario-editor" class="scenario-editor" placeholder="在这里编辑当前卡片的文游设定"></textarea>
+                <div class="list-title" style="margin-top:8px;">🔌 当前卡片独立 API（可选）</div>
+                <div class="list-sub">留空则自动使用“设置页”的用户 API</div>
+                <input type="text" id="card-api-url" placeholder="卡片上游API URL（可选）">
+                <input type="password" id="card-api-key" placeholder="卡片 API Key（可选）">
+                <input type="text" id="card-api-model" placeholder="卡片模型名（可选）">
                 <div class="setting-actions">
                     <button class="mini-btn primary" onclick="saveScenarioCard()">保存当前卡片</button>
                     <button class="mini-btn ghost" onclick="importScenarioTxt()">导入设定TXT</button>
@@ -810,61 +837,28 @@
         <section id="view-settings" class="view-section">
             <section class="card">
                 <div class="list-title">⚙️ 设置页面</div>
-                <div class="list-sub">集中管理 API 与对话策略开关</div>
+                <div class="list-sub">主页设置仅保留用户 API（所有卡可复用）</div>
+                <input type="text" id="active-user-id" placeholder="当前用户ID（例如 user_001）">
+                <input type="text" id="user-api-url" placeholder="用户上游API URL（例如: https://integrate.api.nvidia.com/v1）">
+                <input type="password" id="user-api-key" placeholder="用户 API Key">
+                <input type="text" id="user-api-model" placeholder="用户模型名 (例如: gpt-4o-mini)">
                 <div class="setting-actions">
-                    <button class="mini-btn primary" onclick="switchView('view-api-cards')">AI-API 卡片配置</button>
-                    <button class="mini-btn ghost" onclick="switchView('view-user-api')">用户 API 配置页</button>
-                </div>
-                <div class="list-title" style="margin-top:8px;">🧩 API 隔离模式</div>
-                <div class="list-sub">选择 API 配置是按当前卡片隔离，还是按当前用户统一隔离</div>
-                <select id="api-isolation-mode">
-                    <option value="card">按卡片隔离（每张卡独立）</option>
-                    <option value="user">按用户隔离（同一用户所有卡共用）</option>
-                </select>
-                <input type="text" id="active-user-id" placeholder="当前用户ID（按用户隔离时生效，例如 user_001）">
-                <div class="list-title" style="margin-top:8px;">🧭 ChatPolicyConfig（对话策略）</div>
-                <div class="list-sub">按当前设定卡片独立保存：温度、重试次数、冲突检测与 HTML 卡片强制</div>
-                <input type="number" id="policy-temperature" min="0" max="2" step="0.1" placeholder="主请求温度（0-2）">
-                <input type="number" id="policy-choice-retry" min="0" max="5" step="1" placeholder="缺少编号选项重试次数">
-                <input type="number" id="policy-conflict-retry" min="0" max="5" step="1" placeholder="冲突纠偏重试次数">
-                <input type="number" id="policy-html-retry" min="0" max="5" step="1" placeholder="HTML 卡片重试次数">
-                <div class="setting-actions">
-                    <label><input type="checkbox" id="policy-enable-conflict"> 启用冲突检测</label>
-                    <label><input type="checkbox" id="policy-enable-html-force"> 启用 HTML 卡片强制</label>
-                </div>
-                <div class="setting-actions">
-                    <button class="mini-btn primary" onclick="saveSettings()">保存全部设置</button>
+                    <button class="mini-btn primary" onclick="saveUserApiSettings()">保存用户 API 配置</button>
                 </div>
             </section>
         </section>
 
         <section id="view-user-api" class="view-section">
             <section class="card">
-                <div class="list-title">👤 用户 API 配置页</div>
-                <div class="list-sub">按用户隔离模式下，同一用户所有卡片共用本页 API 配置</div>
-                <input type="text" id="user-api-user-id" placeholder="用户ID（例如 user_001）">
-                <input type="text" id="user-api-url" placeholder="用户上游API URL（例如: https://integrate.api.nvidia.com/v1）">
-                <input type="password" id="user-api-key" placeholder="用户 API Key">
-                <input type="text" id="user-api-model" placeholder="用户模型名 (例如: gpt-4o-mini)">
-                <div class="setting-actions">
-                    <button class="mini-btn primary" onclick="saveUserApiSettings()">保存用户 API 配置</button>
-                    <button class="mini-btn ghost" onclick="switchView('view-settings')">返回设置页</button>
-                </div>
+                <div class="list-title">👤 用户 API 配置已合并</div>
+                <div class="list-sub">请到“设置页面”配置用户 API。</div>
             </section>
         </section>
 
         <section id="view-api-cards" class="view-section">
             <section class="card">
-                <div class="list-title">🧠 AI-API 卡片列表</div>
-                <div id="api-card-list" style="margin-top:8px;"></div>
-                <div class="list-title" style="margin-top:8px;">自定义 API 卡片配置（仅此卡可调用）</div>
-                <input type="text" id="api-url" placeholder="上游API URL（例如: https://integrate.api.nvidia.com/v1）">
-                <input type="password" id="api-key" placeholder="API Key">
-                <input type="text" id="api-model" placeholder="模型名 (例如: deepseek-chat)">
-                <div class="setting-actions">
-                    <button class="mini-btn primary" onclick="saveSettings()">保存自定义API卡片</button>
-                    <button class="mini-btn ghost" onclick="switchView('view-settings')">返回设置页</button>
-                </div>
+                <div class="list-title">🧠 API 卡片页已弃用</div>
+                <div class="list-sub">卡片独立 API 请在“设定卡片编辑页”配置。</div>
             </section>
         </section>
 
@@ -947,6 +941,13 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="reborn-loading-modal">
+        <div class="modal-card">
+            <div class="modal-title">正在生成人物形魄</div>
+            <div class="modal-desc" id="reborn-loading-desc">AI 正在根据设定生成角色信息、背包与社交关系，请稍候...</div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="info-modal">
         <div class="modal-card">
             <div class="modal-title" id="info-modal-title">详情</div>
@@ -979,7 +980,8 @@
             apiIsolationMode: "bitlife_api_isolation_mode_v1",
             activeUserId: "bitlife_active_user_id_v1",
             userApiSelectedCardMap: "bitlife_user_api_selected_card_map_v1",
-            userApiCustomConfigMap: "bitlife_user_api_custom_config_map_v1"
+            userApiCustomConfigMap: "bitlife_user_api_custom_config_map_v1",
+            scenarioPlayMetaMap: "bitlife_scenario_play_meta_map_v1"
         },
         identityPools: {
             cnNames: ["林澈", "沈知夏", "顾言川", "苏见微", "江望舒", "程以宁", "许星野", "周晚棠", "梁初言", "宋栖月", "叶云舟", "季明川", "陆听岚", "秦若禾"],
@@ -1479,6 +1481,51 @@
         return { isBeautyModeEnabled, containsHtmlCard, isRenderableHtmlCard, wrapAsHtmlCard, normalizeHtmlCard };
     })();
 
+    const AiResponseLayoutService = (() => {
+        function splitStatusAndEvent(text) {
+            const raw = String(text || "").trim();
+            const statusMatch = raw.match(/(?:^|\n)(?:\*\*)?NPC状态(?:栏)?(?:\*\*)?\s*[:：]\s*([\s\S]*?)(?=(?:\n(?:\*\*)?事件(?:回复)?(?:\*\*)?\s*[:：])|$)/i);
+            const eventMatch = raw.match(/(?:^|\n)(?:\*\*)?事件(?:回复)?(?:\*\*)?\s*[:：]\s*([\s\S]*)$/i);
+            return {
+                status: statusMatch ? String(statusMatch[1] || "").trim() : "",
+                event: eventMatch ? String(eventMatch[1] || "").trim() : raw
+            };
+        }
+        function renderPlainSections(text) {
+            const parts = splitStatusAndEvent(text);
+            const statusHtml = parts.status
+                ? `<div class="ai-plain-status"><div class="list-sub">NPC状态</div>${MarkdownService.render(parts.status)}</div>`
+                : "";
+            const eventHtml = `<div class="ai-plain-event"><div class="list-sub">事件回复</div>${MarkdownService.render(parts.event || text)}</div>`;
+            return `${statusHtml}${eventHtml}`;
+        }
+        function ensureHtmlSections(html) {
+            const raw = String(html || "").trim();
+            if (/<[^>]*class=["'][^"']*ai-card-status[^"']*["']/i.test(raw) && /<[^>]*class=["'][^"']*ai-card-event[^"']*["']/i.test(raw)) {
+                return raw;
+            }
+            const text = raw.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+            const parts = splitStatusAndEvent(text);
+            const card = raw.match(/<article[\s\S]*<\/article>/i)?.[0] || `<article class="ai-beauty-card">${raw}</article>`;
+            return card.replace(
+                /<\/article>\s*$/i,
+                `<section class="ai-card-status"><h4>NPC状态</h4><p>${MarkdownService.escapeHtml(parts.status || "暂无状态变更")}</p></section><section class="ai-card-event"><h4>事件回复</h4><p>${MarkdownService.escapeHtml(parts.event || text)}</p></section></article>`
+            );
+        }
+        function bindHtmlChoiceEvents(container) {
+            if (!container) return;
+            container.querySelectorAll(".ai-beauty-card li").forEach((li) => {
+                li.style.cursor = "pointer";
+                li.onclick = () => {
+                    const txt = (li.textContent || "").trim();
+                    const normalized = txt.replace(/^\d+[.)、]\s*/, "");
+                    if (normalized) Controller.sendUserText(`我选择：${normalized}`);
+                };
+            });
+        }
+        return { renderPlainSections, ensureHtmlSections, bindHtmlChoiceEvents };
+    })();
+
     const BuiltinPromptService = (() => {
         function getResponseRules() {
             return [
@@ -1734,8 +1781,11 @@
             const normalizedText = role === "ai" ? HtmlCardService.normalizeHtmlCard(text) : text;
             const canUseHtmlCard = role === "ai" && !streaming && HtmlCardService.isRenderableHtmlCard(normalizedText);
             bubble.innerHTML = canUseHtmlCard
-                ? normalizedText
-                : MarkdownService.render(text) + (streaming ? '<span class="streaming-cursor"></span>' : "");
+                ? AiResponseLayoutService.ensureHtmlSections(normalizedText)
+                : (role === "ai" && !streaming
+                    ? AiResponseLayoutService.renderPlainSections(text)
+                    : MarkdownService.render(text) + (streaming ? '<span class="streaming-cursor"></span>' : ""));
+            if (canUseHtmlCard) AiResponseLayoutService.bindHtmlChoiceEvents(bubble);
 
             if (role === "user") { row.appendChild(bubble); row.appendChild(avatar); }
             else { row.appendChild(avatar); row.appendChild(bubble); }
@@ -1780,9 +1830,10 @@
                 const warningHtml = options.conflictDetected
                     ? '<div class="ai-card-warning">⚠️ 检测到设定冲突，已自动纠偏重试一次。</div>'
                     : "";
-                currentStreamingTarget.innerHTML = `${warningHtml}${normalizedText}`;
+                currentStreamingTarget.innerHTML = `${warningHtml}${AiResponseLayoutService.ensureHtmlSections(normalizedText)}`;
+                AiResponseLayoutService.bindHtmlChoiceEvents(currentStreamingTarget);
             } else {
-                currentStreamingTarget.innerHTML = MarkdownService.render(`${prefix}${text}`);
+                currentStreamingTarget.innerHTML = AiResponseLayoutService.renderPlainSections(`${prefix}${text}`);
             }
             // 流式结束后补渲染选项按钮
             if (currentStreamingLogDiv) {
@@ -2026,54 +2077,33 @@
             document.getElementById("scenario-theme-input").value = selectedScenario?.theme || "";
             document.getElementById("scenario-editor").value = selectedScenario?.text || AppConfig.defaultScenario;
 
-            const customCard = ApiCardService.loadCards().find((c) => c.id === "api_custom") || AppConfig.defaultApiCards[0];
+            const selectedScenario = ScenarioCardService.getSelectedCard();
+            const cardApi = selectedScenario?.apiConfig || {};
+            document.getElementById("card-api-url").value = cardApi.upstreamUrl || "";
+            document.getElementById("card-api-key").value = cardApi.key || "";
+            document.getElementById("card-api-model").value = cardApi.model || "";
+
             const userCustom = UserApiProfileService.getCustomConfig();
-            const mode = IsolationScopeService.getMode();
             const activeUserId = IsolationScopeService.getActiveUserId();
-            document.getElementById("api-url").value = mode === "user"
-                ? (userCustom?.upstreamUrl || customCard.upstreamUrl || AppConfig.defaultApi.url)
-                : (customCard.upstreamUrl || AppConfig.defaultApi.url);
-            document.getElementById("api-key").value = mode === "user"
-                ? (userCustom?.key || customCard.key || "")
-                : (customCard.key || "");
-            document.getElementById("api-model").value = mode === "user"
-                ? (userCustom?.model || customCard.model || AppConfig.defaultApi.model)
-                : (customCard.model || AppConfig.defaultApi.model);
-            document.getElementById("api-isolation-mode").value = mode;
             document.getElementById("active-user-id").value = activeUserId;
-            document.getElementById("user-api-user-id").value = activeUserId;
             document.getElementById("user-api-url").value = userCustom?.upstreamUrl || "";
             document.getElementById("user-api-key").value = userCustom?.key || "";
             document.getElementById("user-api-model").value = userCustom?.model || "";
-
-            const policy = CardScopedConfigService.getChatPolicyConfig();
-            document.getElementById("policy-temperature").value = String(policy.temperature);
-            document.getElementById("policy-choice-retry").value = String(policy.choiceRetryCount);
-            document.getElementById("policy-conflict-retry").value = String(policy.conflictRetryCount);
-            document.getElementById("policy-html-retry").value = String(policy.htmlRetryCount);
-            document.getElementById("policy-enable-conflict").checked = !!policy.enableConflictDetection;
-            document.getElementById("policy-enable-html-force").checked = !!policy.enableHtmlCardForce;
         }
         function saveFromUI() {
-            const mode = document.getElementById("api-isolation-mode").value;
-            IsolationScopeService.setMode(mode);
-            IsolationScopeService.setActiveUserId(document.getElementById("active-user-id").value.trim());
-            ApiCardService.updateCustomCard({
-                upstreamUrl: document.getElementById("api-url").value.trim(),
-                key: document.getElementById("api-key").value.trim(),
-                model: document.getElementById("api-model").value.trim()
-            });
-            CardScopedConfigService.setChatPolicyConfig({
-                temperature: document.getElementById("policy-temperature").value,
-                choiceRetryCount: document.getElementById("policy-choice-retry").value,
-                conflictRetryCount: document.getElementById("policy-conflict-retry").value,
-                htmlRetryCount: document.getElementById("policy-html-retry").value,
-                enableConflictDetection: document.getElementById("policy-enable-conflict").checked,
-                enableHtmlCardForce: document.getElementById("policy-enable-html-force").checked
-            });
+            const selectedScenario = ScenarioCardService.getSelectedCard();
+            if (!selectedScenario) return;
+            const payload = {
+                apiConfig: {
+                    upstreamUrl: document.getElementById("card-api-url").value.trim(),
+                    key: document.getElementById("card-api-key").value.trim(),
+                    model: document.getElementById("card-api-model").value.trim()
+                }
+            };
+            ScenarioCardService.updateSelectedCard(payload);
         }
         function saveUserApiFromUI() {
-            const userId = document.getElementById("user-api-user-id").value.trim();
+            const userId = document.getElementById("active-user-id").value.trim();
             IsolationScopeService.setActiveUserId(userId);
             UserApiProfileService.setCustomConfig({
                 upstreamUrl: document.getElementById("user-api-url").value.trim(),
@@ -2083,11 +2113,16 @@
             loadToUI();
         }
         function getApiConfig() {
-            const selected = ApiCardService.getSelectedCard();
-            if (!selected || selected.id !== "api_custom") {
-                return { blocked: true, reason: "当前仅支持调用“自定义API”卡片，请先在 API 卡片页面选择“自定义API”。" };
+            const card = ScenarioCardService.getSelectedCard();
+            const cardApi = card?.apiConfig || {};
+            if (cardApi.upstreamUrl && cardApi.key && cardApi.model) {
+                return { upstreamUrl: cardApi.upstreamUrl, key: cardApi.key, model: cardApi.model };
             }
-            return { upstreamUrl: selected.upstreamUrl || "", key: selected.key || "", model: selected.model || "" };
+            const user = UserApiProfileService.getCustomConfig();
+            if (user?.upstreamUrl && user?.key && user?.model) {
+                return { upstreamUrl: user.upstreamUrl, key: user.key, model: user.model };
+            }
+            return { blocked: true, reason: "请先在“设置页面”配置用户 API，或在“设定卡片编辑页”配置当前卡片独立 API。" };
         }
         function getScenarioText() {
             const selected = ScenarioCardService.getSelectedCard();
@@ -2098,7 +2133,7 @@
             return (selected?.theme || "").trim();
         }
         function getChatPolicyConfig() {
-            return CardScopedConfigService.getChatPolicyConfig();
+            return AppConfig.defaultChatPolicyConfig;
         }
         function importScenarioFromFile() {
             const input = document.getElementById("scenario-file-input");
@@ -2516,17 +2551,10 @@
             const raw = String(preset?.id || preset?.title || `preset_${Date.now()}`);
             return `scenario_preset_${raw}`.replace(/[^\w-]/g, "_");
         }
-        function buildFallbackTheme(text, title) {
-            const source = `${title || ""}\n${text || ""}`;
-            if (/古代|后宫|皇宫|宫斗|王朝/.test(source)) return "古风卷轴卡（米色纸张+金边纹理）";
-            if (/现代|都市|豪门|职场|娱乐圈/.test(source)) return "现代杂志卡（留白+浅金边）";
-            if (/修仙|玄幻|魔|神|异界/.test(source)) return "玄幻灵气卡（深色底+流光边）";
-            return "奶油玻璃卡（圆角、柔和阴影、暖色渐变）";
-        }
         async function generateThemeWithAI({ title, text }) {
             const config = SettingsService.getApiConfig();
             if (config.blocked || !config.upstreamUrl || !config.key || !config.model) {
-                return buildFallbackTheme(text, title);
+                throw new Error("未配置可用 AI-API，无法生成美化卡片模板。");
             }
             try {
                 const fetchUrl = AIRequestService.buildFetchUrl();
@@ -2547,9 +2575,11 @@
                     ],
                     temperature: 0.4
                 });
-                return String(content || "").trim() || buildFallbackTheme(text, title);
+                const result = String(content || "").trim();
+                if (!result) throw new Error("AI 返回为空");
+                return result;
             } catch (e) {
-                return buildFallbackTheme(text, title);
+                throw new Error(`AI 生成美化设定失败：${e.message || e}`);
             }
         }
         async function buildTemplateCardPayload(preset) {
@@ -2662,6 +2692,29 @@
             });
         }
         return { bindSwipeAndSort };
+    })();
+
+    const ScenarioPlayMetaService = (() => {
+        function loadMap() {
+            return StorageService.readJson(AppConfig.storageKeys.scenarioPlayMetaMap, {});
+        }
+        function saveMap(map) {
+            StorageService.writeJson(AppConfig.storageKeys.scenarioPlayMetaMap, map);
+        }
+        function getMeta(cardId) {
+            const id = String(cardId || "");
+            const map = loadMap();
+            return map[id] || { hasInitialized: false };
+        }
+        function setInitialized(cardId, value = true) {
+            const id = String(cardId || "");
+            if (!id) return;
+            const map = loadMap();
+            const prev = map[id] || {};
+            map[id] = { ...prev, hasInitialized: !!value, updatedAt: Date.now() };
+            saveMap(map);
+        }
+        return { getMeta, setInitialized };
     })();
 
     const PromptPolicyService = (() => {
@@ -2858,34 +2911,6 @@
     })();
 
     const ScenarioRebirthService = (() => {
-        function fallbackPlan(scenarioText, selectedGender) {
-            const text = String(scenarioText || "");
-            let forcedGender = "";
-            if (/女性|女生|女主|娘娘|皇后|妃|公主/.test(text)) forcedGender = "女";
-            else if (/男性|男生|男主|皇帝|王爷|太子/.test(text)) forcedGender = "男";
-            const nationality = /古代|大清|大明|大唐|中原|皇宫|后宫|王朝|京城|汴京/.test(text) ? "中国" : "";
-            let location = "";
-            if (/皇宫|后宫|京城|紫禁城/.test(text)) location = "北京";
-            else if (/江南/.test(text)) location = "苏州";
-            else if (/长安/.test(text)) location = "西安";
-            else if (/古代/.test(text)) location = "北京";
-            const inventory = [
-                { id: "preset_token", name: "设定信物", type: "道具", desc: "根据剧本初始化的基础道具。", effect: "charisma+1", count: 1 }
-            ];
-            const npcs = [
-                { id: "npc_guardian", name: "设定监护人", relation: "监护", favor: 75, status: "在身边", mood: "谨慎" },
-                { id: "npc_friend_seed", name: "设定同伴", relation: "同伴", favor: 70, status: "活跃", mood: "友好" }
-            ];
-            return {
-                forcedGender,
-                selectedGender,
-                nationality,
-                location,
-                inventory,
-                npcs,
-                rebornReason: "使用本地规则解析设定生成"
-            };
-        }
         function sanitizeItems(items = []) {
             return items
                 .filter((it) => it && it.name)
@@ -2956,19 +2981,19 @@
         async function buildRebirthPlan(selectedGender) {
             const scenarioText = SettingsService.getScenarioText();
             const apiConfig = SettingsService.getApiConfig();
-            if (!scenarioText.trim()) return fallbackPlan(scenarioText, selectedGender);
+            if (!scenarioText.trim()) throw new Error("当前卡片设定为空，无法进行 AI 投胎解析。");
             if (apiConfig.blocked || !apiConfig.upstreamUrl || !apiConfig.key || !apiConfig.model) {
-                return fallbackPlan(scenarioText, selectedGender);
+                throw new Error("未配置可用 AI-API，无法进行投胎解析。");
             }
-            try {
-                const aiPlan = await analyzeWithAI({ scenarioText, selectedGender, apiConfig });
-                if (!aiPlan) return fallbackPlan(scenarioText, selectedGender);
-                if (!Array.isArray(aiPlan.inventory) || !aiPlan.inventory.length) aiPlan.inventory = fallbackPlan(scenarioText, selectedGender).inventory;
-                if (!Array.isArray(aiPlan.npcs) || !aiPlan.npcs.length) aiPlan.npcs = fallbackPlan(scenarioText, selectedGender).npcs;
-                return aiPlan;
-            } catch (e) {
-                return fallbackPlan(scenarioText, selectedGender);
+            const aiPlan = await analyzeWithAI({ scenarioText, selectedGender, apiConfig });
+            if (!aiPlan) throw new Error("AI 返回为空，无法生成投胎方案。");
+            if (!Array.isArray(aiPlan.inventory) || !aiPlan.inventory.length) {
+                throw new Error("AI 未返回有效背包数据。");
             }
+            if (!Array.isArray(aiPlan.npcs) || !aiPlan.npcs.length) {
+                throw new Error("AI 未返回有效 NPC 数据。");
+            }
+            return aiPlan;
         }
         return { buildRebirthPlan };
     })();
@@ -3267,7 +3292,12 @@
             ScenarioCardService.updateSelectedCard({
                 title: form.title || "未命名设定",
                 theme: form.theme,
-                text: form.text || AppConfig.defaultScenario
+                text: form.text || AppConfig.defaultScenario,
+                apiConfig: {
+                    upstreamUrl: document.getElementById("card-api-url").value.trim(),
+                    key: document.getElementById("card-api-key").value.trim(),
+                    model: document.getElementById("card-api-model").value.trim()
+                }
             });
             renderAll();
             alert("设定卡片已保存");
@@ -3372,33 +3402,52 @@
             document.getElementById("reborn-modal").style.display = "none";
             pendingRebirthPlan = null;
         }
+        function openRebornLoadingModal(text) {
+            document.getElementById("reborn-loading-desc").innerText = text || "AI 正在根据设定生成角色信息、背包与社交关系，请稍候...";
+            document.getElementById("reborn-loading-modal").style.display = "flex";
+        }
+        function closeRebornLoadingModal() {
+            document.getElementById("reborn-loading-modal").style.display = "none";
+        }
         async function playScenarioCard(cardId) {
             selectScenarioCard(cardId);
+            PlayViewStateService.enterPlay(cardId);
+            switchView("view-main");
+            renderAll();
+            const meta = ScenarioPlayMetaService.getMeta(cardId);
+            if (meta.hasInitialized) {
+                return;
+            }
             await prepareRebirthPreview(StateService.get()?.gender || "");
         }
         async function prepareRebirthPreview(defaultGender) {
             if (ChatService.getIsGenerating()) return;
-            const state = StateService.get();
-            UIRenderer.appendMessage("ai", "正在解析设定并重建投胎信息...", Utils.nowDateStr(state), true);
-            const plan = await ScenarioRebirthService.buildRebirthPlan(defaultGender || "女");
-            UIRenderer.finishStreaming("设定解析完成，已按当前卡片重建投胎身份、背包与NPC。");
-            pendingRebirthPlan = plan;
-            const desc = [
-                `性别：${plan.forcedGender || plan.selectedGender || "未指定"}`,
-                `国籍：${plan.nationality || "按随机"}`,
-                `出生地：${plan.location || "按随机"}`,
-                `NPC数量：${(plan.npcs || []).length}`,
-                `背包物品数量：${(plan.inventory || []).length}`,
-                `说明：${plan.rebornReason || "无"}`
-            ].join("<br>");
-            document.getElementById("reborn-preview-desc").innerHTML = desc;
-            const confirmBtn = document.getElementById("reborn-confirm-btn");
-            confirmBtn.onclick = () => resetGameWithGender();
-            openRebornModal();
+            openRebornLoadingModal("正在生成人物形魄并初始化角色信息、背包与社交...");
+            try {
+                const plan = await ScenarioRebirthService.buildRebirthPlan(defaultGender || "女");
+                closeRebornLoadingModal();
+                pendingRebirthPlan = plan;
+                const desc = [
+                    `角色性别：${plan.forcedGender || plan.selectedGender || "未指定"}`,
+                    `角色国籍：${plan.nationality || "按随机"}`,
+                    `角色地点：${plan.location || "按随机"}`,
+                    `NPC数量：${(plan.npcs || []).length}`,
+                    `背包物品数量：${(plan.inventory || []).length}`,
+                    `说明：${plan.rebornReason || "无"}`
+                ].join("<br>");
+                document.getElementById("reborn-preview-desc").innerHTML = desc;
+                const confirmBtn = document.getElementById("reborn-confirm-btn");
+                confirmBtn.onclick = () => resetGameWithGender();
+                openRebornModal();
+            } catch (e) {
+                closeRebornLoadingModal();
+                alert(`AI 投胎解析失败：${e.message}`);
+            }
         }
         function resetGameWithGender() {
             if (!pendingRebirthPlan) return;
             StateService.resetWithPreset(pendingRebirthPlan);
+            ScenarioPlayMetaService.setInitialized(ScenarioCardService.getSelectedId(), true);
             PlayViewStateService.enterPlay(ScenarioCardService.getSelectedId());
             closeRebornModal();
             switchView("view-main");
