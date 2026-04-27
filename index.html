@@ -1671,7 +1671,7 @@
             return [
                 `<article class="ai-beauty-card" data-theme="${safeTheme}">`,
                 `<header class="ai-beauty-card-title">${safeTheme}</header>`,
-                `<section class="ai-beauty-card-body">${bodyHtml}</section>`,
+                `<section class="ai-beauty-card-body">${bodyHtml}<div data-block="hint" style="margin-top:8px; font-size:0.82rem; opacity:.85;">提示：可直接点击上方按钮继续剧情</div></section>`,
                 `</article>`
             ].join("");
         }
@@ -3436,6 +3436,8 @@
                 "请基于设定与角色档案，输出一张可直接渲染的 HTML 卡片。",
                 "强制要求：最外层必须是 <article class=\"ai-beauty-card\">。",
                 "卡片内必须包含：世界背景简述、主角当前身份与处境、当前时间、关键NPC概览、1-3条编号选项。",
+                "参考通用结构（色调与元素由你按设定和美化提示词自行设计）：",
+                "<article class=\"ai-beauty-card\"><header class=\"ai-beauty-card-title\">...</header><section class=\"ai-beauty-card-body\"><div data-block=\"time\">...</div><div data-block=\"status\">...</div><div data-block=\"event\">...</div><ol data-block=\"choices\"><li data-choice=\"...\">1. ...</li></ol><div data-block=\"hint\">提示：可直接点击上方按钮继续剧情</div></section></article>",
                 `美化设定提示词：${beautySetting || "按设定风格输出"}`
             ].join("\n");
             const userPrompt = [
@@ -3486,7 +3488,25 @@
                 `当前美化卡片设定：${beautyCardSetting}`,
                 "你必须输出可直接渲染的 HTML 卡片，且最外层必须是 class=\"ai-beauty-card\" 的 article/section/div。",
                 "卡片内部需包含：时间、状态变化、剧情正文、（AI想法）以及 1-3 条编号选项。",
-                "禁止输出纯 Markdown 或纯文本；必须输出 HTML。"
+                "禁止输出纯 Markdown 或纯文本；必须输出 HTML。",
+                "以下是通用模板骨架（请按当前设定自由设计色调/元素/排版，可增删内部节点，但保留 ai-beauty-card 根节点与可点击选项区）：",
+                "```html",
+                "<article class=\"ai-beauty-card\" data-theme=\"自动生成\">",
+                "  <header class=\"ai-beauty-card-title\">[卡片标题：由设定与当前剧情生成]</header>",
+                "  <section class=\"ai-beauty-card-body\">",
+                "    <div data-block=\"time\">[时间信息]</div>",
+                "    <div data-block=\"status\">[状态变化]</div>",
+                "    <div data-block=\"event\">[剧情正文与对话]</div>",
+                "    <div data-block=\"thought\">（AI想法：...）</div>",
+                "    <ol data-block=\"choices\">",
+                "      <li data-choice=\"选项一\">1. 选项一</li>",
+                "      <li data-choice=\"选项二\">2. 选项二</li>",
+                "      <li data-choice=\"选项三\">3. 选项三</li>",
+                "    </ol>",
+                "    <div data-block=\"hint\">提示：可直接点击上方按钮继续剧情</div>",
+                "  </section>",
+                "</article>",
+                "```"
             ].join("\n");
         }
         function buildSystemPrompt({ state, scenarioSpec, beautyCardSetting, beautyModeEnabled }) {
@@ -4059,118 +4079,22 @@
                 UIRenderer.setSendingDisabled(false);
                 uiUnlocked = true;
 
-                // 第二阶段：后台纠偏与美化强化，不再阻塞用户操作。
+                // 第二阶段：仅做 HTML 统一兜底（不做任何重试检测/纠错）。
                 let finalText = rawVisibleText;
-                const needChoiceRetry = ChoiceService.extractChoices(finalText).length === 0 && (Number(policyConfig.choiceRetryCount) || 0) > 0;
-                if (needChoiceRetry) {
-                    const ok = await decideRetry("回复末尾缺少编号选项", ["需要 1-3 条编号选项供点击。"]);
-                    if (ok) {
-                        const retried = await AIRequestService.requestCompletionWithFallback({
-                            config,
-                            fetchUrl,
-                            headers: requestHeaders,
-                            model: config.model,
-                            messages: [
-                                { role: "system", content: systemPrompt },
-                                { role: "user", content: PromptPolicyService.buildChoiceRetryPrompt(userText, recentHistory, rawText, scenarioSpec) }
-                            ],
-                            temperature: policyConfig.temperature
-                        });
-                        if (retried) finalText = retried;
-                    }
-                }
-
-                const beforeConflictText = finalText;
-                const conflictReport0 = policyConfig.enableConflictDetection ? ConflictService.detectConflicts(finalText, state) : { hasError: false, errors: [] };
-                let conflictDetected = false;
-                if (conflictReport0.hasError && (Number(policyConfig.conflictRetryCount) || 0) > 0) {
-                    conflictDetected = true;
-                    const ok = await decideRetry("检测到错误级冲突", (conflictReport0.errors || []).map((x) => x.message).slice(0, 6));
-                    if (ok) {
-                        const fixed = await AIRequestService.requestCompletionWithFallback({
-                            config,
-                            fetchUrl,
-                            headers: requestHeaders,
-                            model: config.model,
-                            messages: [
-                                { role: "system", content: systemPrompt },
-                                { role: "user", content: PromptPolicyService.buildConflictRetryPrompt(userText, recentHistory, conflictReport0, finalText, scenarioSpec) }
-                            ],
-                            temperature: 0.35
-                        });
-                        if (fixed) finalText = fixed;
-                    } else {
-                        // 跳过纠错时也提示一下原因
-                        StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(StateService.get()), text: `> ℹ️ 已跳过纠错（error）：${(conflictReport0.errors || []).map((x) => x.message).join("；")}` });
-                        StateService.save();
-                    }
-                }
-
-                const warningResult = ChatPostProcessService.appendWarning(
-                    finalText,
-                    state,
-                    policyConfig.enableConflictDetection
-                );
-                finalText = warningResult.finalText;
-                if (warningResult.warnings.length) {
-                    const action = decideWarningAction(warningResult.warnings);
-                    if (action === "dismiss") {
-                        warningResult.warnings.forEach((w) => WarningDecisionService.dismiss(w.message));
-                        finalText = String(finalText || "").replace(/\n\n> ℹ️ 提示（warning）：[\s\S]*$/, "");
-                    } else if (action === "fix") {
-                        const fixedByWarning = await AIRequestService.requestCompletionWithFallback({
-                            config,
-                            fetchUrl,
-                            headers: requestHeaders,
-                            model: config.model,
-                            messages: [
-                                { role: "system", content: systemPrompt },
-                                {
-                                    role: "user",
-                                    content: PromptPolicyService.buildWarningRetryPrompt(
-                                        userText,
-                                        recentHistory,
-                                        warningResult.warnings,
-                                        finalText,
-                                        scenarioSpec
-                                    )
-                                }
-                            ],
-                            temperature: 0.35
-                        });
-                        if (fixedByWarning) finalText = fixedByWarning;
-                    }
-                }
-                finalText = await ChatPostProcessService.enforceBeautyCard({
-                    text: finalText,
-                    beautyModeEnabled,
-                    htmlForceEnabled: policyConfig.enableHtmlCardForce,
-                    retryCount: policyConfig.htmlRetryCount,
-                    beautyCardSetting,
-                    requestRewrite: async (lastText) => AIRequestService.requestCompletionWithFallback({
-                        config,
-                        fetchUrl,
-                        headers: requestHeaders,
-                        model: config.model,
-                        messages: [
-                            { role: "system", content: systemPrompt },
-                            { role: "user", content: PromptPolicyService.buildHtmlRetryPrompt(userText, recentHistory, lastText, scenarioSpec) }
-                        ],
-                        temperature: policyConfig.temperature
-                    })
-                }).then((res) => {
-                    if (res && typeof res === "object") return res;
-                    return { finalText: String(res || ""), usedFallback: false };
-                });
                 let usedHtmlFallback = false;
-                if (finalText && typeof finalText === "object") {
-                    usedHtmlFallback = !!finalText.usedFallback;
-                    finalText = finalText.finalText || "";
+                if (beautyModeEnabled && policyConfig.enableHtmlCardForce) {
+                    const normalized = HtmlCardService.normalizeHtmlCard(finalText);
+                    if (HtmlCardService.isRenderableHtmlCard(normalized)) {
+                        finalText = normalized;
+                    } else {
+                        finalText = HtmlCardService.wrapAsHtmlCard(beautyCardSetting, normalized || finalText);
+                        usedHtmlFallback = true;
+                    }
                 }
                 if (usedHtmlFallback && beautyModeEnabled) {
                     const retryHtml = await DecisionModalService.show({
                         title: "HTML卡片格式异常",
-                        descHtml: "<div class='list-sub'>AI 返回的内容不是可渲染 HTML 卡片，已先使用本地兜底卡片显示。</div><div class='list-sub' style='margin-top:6px;'>是否重试一次，尝试获取真实 HTML 卡片？</div>",
+                        descHtml: "<div class='list-sub'>AI 返回的是非 HTML 卡片内容，已自动兜底为可渲染卡片。</div><div class='list-sub' style='margin-top:6px;'>是否重试一次以获取真实 HTML 卡片？</div>",
                         okText: "重试获取HTML",
                         cancelText: "保持当前"
                     });
@@ -4182,7 +4106,7 @@
                             model: config.model,
                             messages: [
                                 { role: "system", content: systemPrompt },
-                                { role: "user", content: PromptPolicyService.buildHtmlRetryPrompt(userText, recentHistory, finalText, scenarioSpec) }
+                                { role: "user", content: `${mainUserPrompt}\n\n请严格输出可渲染HTML卡片，最外层必须为.ai-beauty-card。` }
                             ],
                             temperature: policyConfig.temperature
                         });
@@ -4193,7 +4117,7 @@
                     }
                 }
 
-                const shouldPatchRendered = finalText !== rawVisibleText || conflictDetected || beforeConflictText !== finalText;
+                const shouldPatchRendered = finalText !== rawVisibleText;
                 const finalPatchResult = StatePatchService.extractPatch(finalText);
                 const finalVisibleText = finalPatchResult.cleaned || finalText;
                 const finalPatchChanged = StatePatchService.applyPatch(StateService.get(), finalPatchResult.patch);
