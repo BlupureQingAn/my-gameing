@@ -2822,6 +2822,9 @@
             const fetchUrl = AIRequestService.buildFetchUrl();
             const headers = AIRequestService.buildHeaders(apiConfig);
             const systemPrompt = [
+                "【最高优先级：设定文本约束】",
+                "你必须严格以设定文本为唯一世界规则源，不得引入与设定冲突的时代/地域/身份元素。",
+                "【设定文本】",
                 scenarioText,
                 "",
                 "【任务】你是开局介绍生成器。",
@@ -2883,13 +2886,21 @@
             const stateFactLock = BuiltinPromptService.buildStateFactLock(state);
             const runtimeContext = buildRuntimeContext(state);
             const beautyRules = buildBeautyRules(beautyCardSetting, beautyModeEnabled);
-            return `${scenarioSpec}\n\n${builtinRules}\n\n${stateFactLock}\n\n${runtimeContext}${beautyRules ? `\n\n${beautyRules}` : ""}`;
+            const highestPriorityScenarioRules = [
+                "【最高优先级：设定文本约束】",
+                "你必须严格以设定文本为唯一世界规则源进行回复与推进。",
+                "设定文本优先级高于任何默认现代背景、常见校园模板或现实年份。",
+                "当设定与常识冲突时，以设定为准。不得引入不符合设定年代/地域/身份的元素。"
+            ].join("\n");
+            return `${highestPriorityScenarioRules}\n\n【设定文本】\n${scenarioSpec}\n\n${builtinRules}\n\n${stateFactLock}\n\n${runtimeContext}${beautyRules ? `\n\n${beautyRules}` : ""}`;
         }
         function buildMainUserPrompt(userText, recentHistory) {
             return `玩家最新输入：${userText}\n\n最近记录：\n${recentHistory}`;
         }
-        function buildChoiceRetryPrompt(userText, recentHistory, rawText) {
+        function buildChoiceRetryPrompt(userText, recentHistory, rawText, scenarioSpec) {
             return [
+                "【最高优先级：先遵守当前卡设定】",
+                `当前卡设定：\n${scenarioSpec || ""}`,
                 `玩家最新输入：${userText}`,
                 `最近记录：\n${recentHistory}`,
                 "请严格重写上一条回复，必须在结尾提供1-3条编号选项。",
@@ -2898,8 +2909,10 @@
                 `上一版草稿（缺少编号选项）：\n${rawText}`
             ].join("\n\n");
         }
-        function buildConflictRetryPrompt(userText, recentHistory, conflictReport, finalText) {
+        function buildConflictRetryPrompt(userText, recentHistory, conflictReport, finalText, scenarioSpec) {
             return [
+                "【最高优先级：先遵守当前卡设定】",
+                `当前卡设定：\n${scenarioSpec || ""}`,
                 `玩家最新输入：${userText}`,
                 `最近记录：\n${recentHistory}`,
                 "请只做设定一致性纠偏重写，不要重开剧情。",
@@ -2908,8 +2921,10 @@
                 `待纠偏文本：\n${finalText}`
             ].join("\n\n");
         }
-        function buildHtmlRetryPrompt(userText, recentHistory, finalText) {
+        function buildHtmlRetryPrompt(userText, recentHistory, finalText, scenarioSpec) {
             return [
+                "【最高优先级：先遵守当前卡设定】",
+                `当前卡设定：\n${scenarioSpec || ""}`,
                 `玩家最新输入：${userText}`,
                 `最近记录：\n${recentHistory}`,
                 "上一版回复未能正确渲染为 HTML 卡片。",
@@ -3188,6 +3203,8 @@
             if (typeof onProgress === "function") onProgress("连接中");
             const systemPrompt = [
                 "你是文游设定解析器。根据用户设定文本输出 JSON，不要输出解释。",
+                "【最高优先级规则】用户提供的“设定文本”是唯一世界规则源，优先级高于任何通用常识或默认模板。",
+                "严禁忽略、改写或弱化设定文本中的年代、地域、身份、职业、关系与叙事风格。",
                 "必须输出字段：name, englishName, ageYears, forcedGender, nationality, location, currentYear, currentMonth, currentDay, rebornReason, stats, inventory, npcs。",
                 "forcedGender 仅可为 男/女/非二元/空字符串。",
                 "ageYears 为合理年龄，不要默认婴儿，除非设定明确要求幼年开局。",
@@ -3199,6 +3216,7 @@
             ].join("\n");
             const userPrompt = [
                 `用户选择投胎性别：${selectedGender}`,
+                "你必须先从设定文本中提取主角身份约束，再生成姓名、年龄、国籍和地点；禁止使用与设定无关的默认人设。",
                 "请结合设定判断是否强制覆盖该性别，并生成初始化背包和NPC。",
                 "仅返回 JSON 对象。",
                 `设定文本：\n${scenarioText}`
@@ -3323,7 +3341,7 @@
                         model: config.model,
                         messages: [
                             { role: "system", content: systemPrompt },
-                            { role: "user", content: PromptPolicyService.buildChoiceRetryPrompt(userText, recentHistory, rawText) }
+                            { role: "user", content: PromptPolicyService.buildChoiceRetryPrompt(userText, recentHistory, rawText, scenarioSpec) }
                         ],
                         temperature: policyConfig.temperature
                     })
@@ -3342,7 +3360,7 @@
                         model: config.model,
                         messages: [
                             { role: "system", content: systemPrompt },
-                            { role: "user", content: PromptPolicyService.buildConflictRetryPrompt(userText, recentHistory, conflictReport, textForFix) }
+                            { role: "user", content: PromptPolicyService.buildConflictRetryPrompt(userText, recentHistory, conflictReport, textForFix, scenarioSpec) }
                         ],
                         temperature: 0.4
                     })
@@ -3366,7 +3384,7 @@
                         model: config.model,
                         messages: [
                             { role: "system", content: systemPrompt },
-                            { role: "user", content: PromptPolicyService.buildHtmlRetryPrompt(userText, recentHistory, lastText) }
+                            { role: "user", content: PromptPolicyService.buildHtmlRetryPrompt(userText, recentHistory, lastText, scenarioSpec) }
                         ],
                         temperature: policyConfig.temperature
                     })
@@ -3691,6 +3709,7 @@
                 "解析角色": "解析角色：正在生成角色信息...",
                 "生成背包": "生成背包：正在构建初始物品...",
                 "生成NPC": "生成NPC：正在构建社交关系...",
+                "生成开局介绍": "生成开局介绍：正在生成首条剧情卡片...",
                 "完成": "完成：初始化数据已生成。"
             };
             document.getElementById("reborn-loading-desc").innerText = map[stage] || String(stage || "");
@@ -3782,6 +3801,9 @@
                 try {
                     const apiConfig = SettingsService.getApiConfig();
                     if (apiConfig.blocked) return;
+                    if (!apiConfig.upstreamUrl || !apiConfig.key || !apiConfig.model) return;
+                    openRebornLoadingModal("生成开局介绍：正在生成首条剧情卡片...");
+                    updateRebornLoadingStage("生成开局介绍");
                     const scenarioText = SettingsService.getScenarioText();
                     const beautySetting = SettingsService.getBeautyCardSetting();
                     const state = StateService.get();
@@ -3792,6 +3814,8 @@
                         UIRenderer.renderHistory(StateService.get().history);
                     }
                 } catch (e) {
+                } finally {
+                    closeRebornLoadingModal();
                 }
             })();
         }
