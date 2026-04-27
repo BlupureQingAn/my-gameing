@@ -1144,9 +1144,21 @@
             return arr[Math.floor(Math.random() * arr.length)];
         },
         nowDateStr(state) {
-            if (!state || !state.currentYear || !state.currentMonth) return "";
-            const weekName = this.weekdays[state.weekdayIndex || 0];
-            return `${state.currentYear}年${state.currentMonth}月${state.currentDay || 1}日 ${weekName}`;
+            if (!state) return "";
+            const weekName = typeof state.weekdayIndex === "number" ? this.weekdays[(state.weekdayIndex + 7) % 7] : "";
+            const weekPart = Number.isFinite(Number(state.weekIndex)) ? `第${Number(state.weekIndex)}周` : "";
+            // 年代/时期容错：允许只显示 XX时期/年代 + 第X周 + 可选星期
+            if (state.timeEra) {
+                const base = `${state.timeEra}：${weekPart || "第1周"}`;
+                return weekName ? `${base} ${weekName}` : base;
+            }
+            // 允许仅有年份（不苛求月日）
+            if (state.currentYear && !state.currentMonth) {
+                const base = `${state.currentYear}年${weekPart ? `：${weekPart}` : ""}`;
+                return weekName ? `${base} ${weekName}` : base;
+            }
+            if (!state.currentYear || !state.currentMonth) return "";
+            return `${state.currentYear}年${state.currentMonth}月${state.currentDay || 1}日${weekName ? ` ${weekName}` : ""}`;
         },
         shiftDays(state, deltaDays) {
             if (!Number.isFinite(deltaDays) || !state) return;
@@ -1442,6 +1454,8 @@
             currentYear: null,
             currentMonth: null,
             currentDay: null,
+            timeEra: "",
+            weekIndex: 1,
             weekdayIndex: 0,
             age: 0,
             wealth: 500000,
@@ -1481,6 +1495,8 @@
             if (Number.isFinite(Number(preset.currentYear))) next.currentYear = Number(preset.currentYear);
             if (Number.isFinite(Number(preset.currentMonth))) next.currentMonth = Number(preset.currentMonth);
             if (Number.isFinite(Number(preset.currentDay))) next.currentDay = Number(preset.currentDay);
+            if (preset.timeEra) next.timeEra = String(preset.timeEra || "").trim().slice(0, 40);
+            if (Number.isFinite(Number(preset.weekIndex))) next.weekIndex = Math.max(1, Math.floor(Number(preset.weekIndex)));
             next.inventory = Array.isArray(preset.inventory) && preset.inventory.length
                 ? Utils.deepClone(preset.inventory)
                 : createDefaultInventory();
@@ -1513,11 +1529,13 @@
             if (!Array.isArray(gameState.npcs)) gameState.npcs = createDefaultNpcs();
             if (!gameState.npcChats || typeof gameState.npcChats !== "object") gameState.npcChats = {};
             if (!gameState.npcMemoryMap || typeof gameState.npcMemoryMap !== "object") gameState.npcMemoryMap = {};
+            if (typeof gameState.timeEra !== "string") gameState.timeEra = "";
+            if (!Number.isFinite(Number(gameState.weekIndex))) gameState.weekIndex = 1;
             if (!gameState.currentDay) gameState.currentDay = 1;
             if (typeof gameState.weekdayIndex !== "number") gameState.weekdayIndex = 0;
         }
 
-        function resetWithPreset({ selectedGender, forcedGender, name, englishName, ageYears, nationality, location, currentYear, currentMonth, currentDay, inventory, npcs, rebornReason }) {
+        function resetWithPreset({ selectedGender, forcedGender, name, englishName, ageYears, nationality, location, currentYear, currentMonth, currentDay, timeEra, weekIndex, weekdayIndex, inventory, npcs, rebornReason }) {
             const finalGender = forcedGender || selectedGender || baseState.gender;
             gameState = buildInitialState(finalGender, {
                 gender: forcedGender,
@@ -1529,6 +1547,9 @@
                 currentYear,
                 currentMonth,
                 currentDay,
+                timeEra,
+                weekIndex,
+                weekdayIndex,
                 inventory,
                 npcs
             });
@@ -1550,7 +1571,16 @@
             gameState.age += 1;
         }
         function jumpWeek(deltaWeek) {
-            Utils.shiftDays(gameState, deltaWeek * 7);
+            const step = Number(deltaWeek) || 0;
+            if (Number.isFinite(Number(gameState.weekIndex))) {
+                gameState.weekIndex = Math.max(1, Math.floor(Number(gameState.weekIndex)) + step);
+            } else {
+                gameState.weekIndex = Math.max(1, 1 + step);
+            }
+            // 若有明确年月日，则同步推进日期；否则仅推进周序号（年代/时期模式）
+            if (gameState.currentYear && gameState.currentMonth) {
+                Utils.shiftDays(gameState, step * 7);
+            }
         }
 
         function pushHistory(msg) {
@@ -2066,6 +2096,23 @@
     })();
 
     const TimeSyncService = (() => {
+        function extractEraText(content) {
+            const text = String(content || "");
+            const m1 = text.match(/([0-9]{2,4}年代)/);
+            if (m1 && m1[1]) return m1[1];
+            const m2 = text.match(/([^\s，。,.!！?？]{2,14}时期)/);
+            if (m2 && m2[1]) return m2[1];
+            const m3 = text.match(/(民国|清末|晚清|北宋|南宋|明朝|清朝|唐朝|汉朝|三国)/);
+            if (m3 && m3[1]) return `${m3[1]}时期`;
+            return "";
+        }
+        function extractWeekIndex(content) {
+            const m = String(content || "").match(/第\s*(\d{1,3})\s*周/);
+            if (!m) return null;
+            const n = Number(m[1]);
+            if (!Number.isFinite(n)) return null;
+            return Math.max(1, Math.min(999, Math.floor(n)));
+        }
         function weekdayIndexFromDate(y, m, d) {
             try {
                 const dt = new Date(Number(y), Number(m) - 1, Number(d));
@@ -2104,17 +2151,22 @@
         function syncFromAiText(state, text) {
             if (!state) return;
             const content = String(text || "");
+            const era = extractEraText(content);
+            if (era) state.timeEra = era;
+            const w = extractWeekIndex(content);
+            if (typeof w === "number") state.weekIndex = w;
+            const fromText = extractWeekdayIndex(content);
+            if (typeof fromText === "number") {
+                state.weekdayIndex = fromText;
+            }
             const ymd = extractLatestYmd(content);
             if (!ymd) return;
             state.currentYear = ymd.y;
             state.currentMonth = ymd.mo;
             state.currentDay = ymd.d;
 
-            // weekdayIndex: 优先使用文本中给出的周几，其次用日期推导
-            const fromText = extractWeekdayIndex(content);
-            if (typeof fromText === "number") {
-                state.weekdayIndex = fromText;
-            } else {
+            // weekdayIndex: 若文本未给出周几，则用日期推导
+            if (typeof fromText !== "number") {
                 const derived = weekdayIndexFromDate(ymd.y, ymd.mo, ymd.d);
                 if (typeof derived === "number") state.weekdayIndex = derived;
             }
@@ -3786,7 +3838,7 @@
                     mood: String(n.mood || "平静").slice(0, 12)
                 }));
         }
-        async function analyzeWithAI({ scenarioText, selectedGender, apiConfig, onProgress }) {
+        async function analyzeWithAI({ scenarioText, selectedGender, apiConfig, onProgress, extraHint = "", previousPlan = null }) {
             const fetchUrl = AIRequestService.buildFetchUrl();
             const headers = AIRequestService.buildHeaders(apiConfig);
             if (typeof onProgress === "function") onProgress("连接中");
@@ -3794,11 +3846,12 @@
                 "你是文游设定解析器。根据用户设定文本输出 JSON，不要输出解释。",
                 "【最高优先级规则】用户提供的“设定文本”是唯一世界规则源，优先级高于任何通用常识或默认模板。",
                 "严禁忽略、改写或弱化设定文本中的年代、地域、身份、职业、关系与叙事风格。",
-                "必须输出字段：name, englishName, ageYears, forcedGender, nationality, location, currentYear, currentMonth, currentDay, rebornReason, stats, inventory, npcs。",
+                "必须输出字段：name, englishName, ageYears, forcedGender, nationality, location, timeEra, weekIndex, weekdayIndex, currentYear, currentMonth, currentDay, rebornReason, stats, inventory, npcs。",
                 "forcedGender 仅可为 男/女/非二元/空字符串。",
                 "ageYears 为合理年龄，不要默认婴儿，除非设定明确要求幼年开局。",
-                "currentYear/currentMonth 必须返回且符合设定年代（例如民国/古代），严禁使用现实年份(如2026)污染设定。",
-                "currentDay 可留空；若无法确定具体日，返回空字符串即可。",
+                "时间容错：允许只返回 timeEra（如“民国时期/80年代/清末时期”等），此时不强制给出具体年月日。",
+                "若能给出具体时间，则返回 currentYear（必填）与 currentMonth（可选），currentDay 可留空。",
+                "weekIndex 建议返回（第几周），weekdayIndex 可选（0=周一..6=周日）。",
                 "stats 是数组，每项含 key,label,icon,value（icon 用恰当表情符号）。状态数量与名称由设定决定。",
                 "如果设定指向古代中国皇宫，location 优先填 北京。",
                 "inventory 是数组，每项含 name,type,desc,effect,count。",
@@ -3808,6 +3861,8 @@
                 `用户选择角色性别：${selectedGender}`,
                 "你必须先从设定文本中提取主角身份约束，再生成姓名、年龄、国籍和地点；禁止使用与设定无关的默认人设。",
                 "请结合设定判断是否强制覆盖该性别，并生成初始化背包和NPC。",
+                previousPlan ? `【已有解析结果（仅供复用，尽量不要改已有字段，只补缺失）】\n${JSON.stringify(previousPlan, null, 2)}` : "",
+                extraHint ? `【上次失败原因与补全要求】\n${extraHint}` : "",
                 "仅返回 JSON 对象。",
                 `设定文本：\n${scenarioText}`
             ].join("\n\n");
@@ -3839,6 +3894,9 @@
                 selectedGender,
                 nationality: String(parsed.nationality || "").trim(),
                 location: String(parsed.location || "").trim(),
+                timeEra: String(parsed.timeEra || "").trim(),
+                weekIndex: sanitizeTime(parsed.weekIndex, 1, 999),
+                weekdayIndex: sanitizeTime(parsed.weekdayIndex, 0, 6),
                 currentYear: sanitizeTime(parsed.currentYear, 1, 9999),
                 currentMonth: sanitizeTime(parsed.currentMonth, 1, 12),
                 currentDay: sanitizeTime(parsed.currentDay, 1, 31),
@@ -3848,29 +3906,48 @@
                 rebornReason: String(parsed.rebornReason || "使用AI解析设定生成").slice(0, 120)
             };
         }
-        async function buildInitPlan(selectedGender, onProgress) {
+        async function buildInitPlan(selectedGender, onProgress, options = {}) {
             const scenarioText = SettingsService.getScenarioText();
             const apiConfig = SettingsService.getApiConfig();
             if (!scenarioText.trim()) throw new Error("当前卡片设定为空，无法进行 AI 开局初始化解析。");
             if (apiConfig.blocked || !apiConfig.upstreamUrl || !apiConfig.key || !apiConfig.model) {
                 throw new Error("未配置可用 AI-API，无法进行开局初始化解析。");
             }
-            const aiPlan = await analyzeWithAI({ scenarioText, selectedGender, apiConfig, onProgress });
+            const aiPlan = await analyzeWithAI({
+                scenarioText,
+                selectedGender,
+                apiConfig,
+                onProgress,
+                extraHint: options.extraHint || "",
+                previousPlan: options.previousPlan || null
+            });
             if (!aiPlan) throw new Error("AI 返回为空，无法生成开局初始化方案。");
             if (!aiPlan.name || !aiPlan.englishName) throw new Error("AI 未返回有效主角姓名。");
             if (!Number.isFinite(aiPlan.ageYears)) throw new Error("AI 未返回有效年龄。");
-            if (!Number.isFinite(aiPlan.currentYear) || !Number.isFinite(aiPlan.currentMonth)) {
-                throw new Error("AI 未返回有效初始时间（年/月必填，日可为空）。");
+            const hasEra = !!String(aiPlan.timeEra || "").trim();
+            const hasYear = Number.isFinite(aiPlan.currentYear);
+            if (!hasEra && !hasYear) {
+                const err = new Error("AI 未返回有效初始时间（允许 timeEra 或 currentYear）。");
+                err.partialPlan = aiPlan;
+                throw err;
             }
+            if (!Number.isFinite(aiPlan.weekIndex)) aiPlan.weekIndex = 1;
+            if (hasYear && !Number.isFinite(aiPlan.currentMonth)) aiPlan.currentMonth = null;
             if (!Number.isFinite(aiPlan.currentDay)) aiPlan.currentDay = 1;
             if (!Array.isArray(aiPlan.stats) || !aiPlan.stats.length) {
-                throw new Error("AI 未返回有效状态栏 stats。");
+                const err = new Error("AI 未返回有效状态栏 stats。");
+                err.partialPlan = aiPlan;
+                throw err;
             }
             if (!Array.isArray(aiPlan.inventory) || !aiPlan.inventory.length) {
-                throw new Error("AI 未返回有效背包数据。");
+                const err = new Error("AI 未返回有效背包数据。");
+                err.partialPlan = aiPlan;
+                throw err;
             }
             if (!Array.isArray(aiPlan.npcs) || !aiPlan.npcs.length) {
-                throw new Error("AI 未返回有效 NPC 数据。");
+                const err = new Error("AI 未返回有效 NPC 数据。");
+                err.partialPlan = aiPlan;
+                throw err;
             }
             if (typeof onProgress === "function") onProgress("完成");
             return aiPlan;
@@ -4123,6 +4200,7 @@
         let activeView = "view-home";
         let presetManifest = [];
         let pendingInitPlan = null;
+        let lastAutoCreatedCardId = null;
         function renderAll() {
             const state = StateService.get();
             UIRenderer.renderTop(state);
@@ -4404,6 +4482,7 @@
             renderAll();
         }
         function ensurePresetAsIndependentCard(payload) {
+            const existed = ScenarioCardService.loadCards().some((c) => c.id === payload.id);
             const card = ScenarioCardService.upsertCard({
                 id: payload.id,
                 title: payload.title || "模板卡片",
@@ -4411,6 +4490,7 @@
                 text: String(payload.text || "").trim() || AppConfig.defaultScenario
             });
             if (!card) throw new Error("模板卡片写入失败");
+            lastAutoCreatedCardId = existed ? null : card.id;
             ScenarioCardService.setSelectedId(card.id);
             StateService.init();
             SettingsService.loadToUI();
@@ -4538,6 +4618,8 @@
                     `角色性别：${plan.forcedGender || plan.selectedGender || "未指定"}`,
                     `角色国籍：${plan.nationality || "按随机"}`,
                     `角色地点：${plan.location || "按随机"}`,
+                    `时间：${plan.timeEra || (plan.currentYear ? `${plan.currentYear}年${plan.currentMonth ? `${plan.currentMonth}月` : ""}` : "未设定")}`,
+                    `周序号：第${plan.weekIndex || 1}周`,
                     `NPC数量：${(plan.npcs || []).length}`,
                     `背包物品数量：${(plan.inventory || []).length}`,
                     `说明：${plan.rebornReason || "无"}`
@@ -4549,7 +4631,58 @@
                 openInitPreviewModal();
             } catch (e) {
                 closeInitLoadingModal();
-                alert(`AI 开局初始化解析失败：${e.message}`);
+                const title = "初始化解析失败";
+                const desc = [
+                    `<div style="font-weight:700; margin-bottom:6px;">AI 开局初始化解析失败</div>`,
+                    `<div class="list-sub">原因：${MarkdownService.escapeHtml(String(e?.message || e || ""))}</div>`,
+                    `<div class="list-sub" style="margin-top:6px;">你可以选择重试（带着缺失项提示），或返回主页并删除本次自动新建的卡片。</div>`
+                ].join("");
+                const doRetry = await DecisionModalService.show({ title, descHtml: desc, okText: "重试", cancelText: "返回" });
+                if (doRetry) {
+                    const hint = String(e?.message || "");
+                    const prev = e?.partialPlan || null;
+                    openInitLoadingModal("连接中：正在请求 AI 重新补全缺失信息...");
+                    updateInitLoadingStage("连接中");
+                    try {
+                        const plan2 = await ScenarioInitPlanService.buildInitPlan(defaultGender || "女", updateInitLoadingStage, {
+                            extraHint: `请根据失败原因补全缺失字段：${hint}`,
+                            previousPlan: prev
+                        });
+                        closeInitLoadingModal();
+                        pendingInitPlan = plan2;
+                        const desc2 = [
+                            `角色：${plan2.name}（${plan2.englishName}）`,
+                            `年龄：${plan2.ageYears} 岁`,
+                            `角色性别：${plan2.forcedGender || plan2.selectedGender || "未指定"}`,
+                            `角色国籍：${plan2.nationality || "按随机"}`,
+                            `角色地点：${plan2.location || "按随机"}`,
+                            `时间：${plan2.timeEra || (plan2.currentYear ? `${plan2.currentYear}年${plan2.currentMonth ? `${plan2.currentMonth}月` : ""}` : "未设定")}`,
+                            `周序号：第${plan2.weekIndex || 1}周`,
+                            `NPC数量：${(plan2.npcs || []).length}`,
+                            `背包物品数量：${(plan2.inventory || []).length}`,
+                            `说明：${plan2.rebornReason || "无"}`
+                        ].join("<br>");
+                        document.getElementById("init-preview-desc").innerHTML = desc2;
+                        bindInitPreviewForm(plan2);
+                        const confirmBtn2 = document.getElementById("init-preview-confirm-btn");
+                        confirmBtn2.onclick = () => applyInitPreviewAndStart();
+                        openInitPreviewModal();
+                    } catch (e2) {
+                        closeInitLoadingModal();
+                        StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(StateService.get()), text: `> ⚠️ 重试仍失败：${e2.message}` });
+                        StateService.save();
+                        renderAll();
+                    }
+                } else {
+                    // 返回：退回主页并删除刚刚自动新建的卡片（若有）
+                    if (lastAutoCreatedCardId && String(lastAutoCreatedCardId) === String(ScenarioCardService.getSelectedId())) {
+                        ScenarioCardService.deleteCard(lastAutoCreatedCardId);
+                        lastAutoCreatedCardId = null;
+                    }
+                    PlayViewStateService.leavePlay();
+                    switchView("view-home");
+                    renderAll();
+                }
             }
         }
         function applyInitPreviewAndStart() {
