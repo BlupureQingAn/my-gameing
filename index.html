@@ -923,7 +923,7 @@
                 </label>
                 <div class="setting-actions">
                     <button class="mini-btn primary" onclick="saveUserApiSettings()">保存设置</button>
-                </div>
+            </div>
             </section>
         </section>
 
@@ -944,7 +944,7 @@
         <section class="card stats-grid" id="game-stats-card"></section>
 
         <section id="view-main" class="view-section active">
-            <section class="card" id="story-board"></section>
+        <section class="card" id="story-board"></section>
         </section>
 
         <section id="view-inventory" class="view-section">
@@ -1393,7 +1393,7 @@
                 conflictRetryCount: normalizeNumber(source.conflictRetryCount, defaults.conflictRetryCount, 0, 5, true),
                 htmlRetryCount: normalizeNumber(source.htmlRetryCount, defaults.htmlRetryCount, 0, 5, true),
                 enableConflictDetection: source.enableConflictDetection !== false,
-                enableHtmlCardForce: source.enableHtmlCardForce !== false,
+                enableHtmlCardForce: true, // 全局强制 HTML 卡片输出
                 lockFirstCardSkeleton: source.lockFirstCardSkeleton !== false
             };
         }
@@ -1633,9 +1633,7 @@
         const REQUIRED_BLOCKS = ["time", "status", "event", "choices"];
         const VOID_TAGS = new Set(["img", "video", "audio", "canvas", "iframe", "svg", "path", "input", "textarea", "br", "hr"]);
         function isBeautyModeEnabled(setting) {
-            const value = String(setting || "").trim();
-            if (!value) return false;
-            return true;
+            return true; // 无论主题是否为空，始终启用 HTML 美化模式
         }
         function containsHtmlCard(text) {
             if (!text) return false;
@@ -3695,7 +3693,7 @@
                 "若设定存在待玩家选择的开局模式/路线/阵营，请只在选项中列出，不得替玩家代选。",
                 "参考通用结构（色调与元素由你按设定和美化提示词自行设计）：",
                 "<article class=\"ai-beauty-card\"><header class=\"ai-beauty-card-title\">...</header><section class=\"ai-beauty-card-body\"><div data-block=\"time\">...</div><div data-block=\"status\">...</div><div data-block=\"event\">...</div><ol data-block=\"choices\"><li data-choice=\"...\">1. ...</li></ol><div data-block=\"hint\">提示：可直接点击上方按钮继续剧情</div></section></article>",
-                `美化设定提示词：${beautySetting || "按设定风格输出"}`
+                `美化设定提示词：${beautySetting || "按设定自动生成高质量页游风卡片：色调统一、装饰丰富、排版分区清晰"}`
             ].join("\n");
             const userPrompt = [
                 "以下是当前角色档案（必须一致）：",
@@ -3775,7 +3773,7 @@
         function buildBeautyRules(beautyCardSetting, beautyModeEnabled) {
             if (!beautyModeEnabled) return "";
             const normalizedTheme = (!beautyCardSetting || beautyCardSetting === "网络模板" || beautyCardSetting === "默认主题" || beautyCardSetting === "默认")
-                ? "云吞页游沉浸风（稳定主题）"
+                ? "云吞页游沉浸风（高信息密度、丰富装饰元素）"
                 : beautyCardSetting;
             return [
                 "【美化卡片强制规则】",
@@ -3784,6 +3782,7 @@
                 "卡片内部需包含：时间、状态变化、剧情正文、（AI想法）以及 1-3 条编号选项。",
                 "若设定存在待玩家选择的开局模式/路线，只能在 choices 中列出，不得替玩家做最终选择。",
                 "状态区必须包含主角状态；若本轮涉及关键NPC变化，状态区需附带NPC状态摘要。",
+                "视觉要求：卡片必须具备丰富且清晰的页游式视觉结构（标题条、信息区、标签/徽章、分隔线、强调块、层次化排版），并与当前设定的时代与题材一致。",
                 "同一张卡后续回合必须延续同一视觉骨架（标题区/信息区/选项区布局稳定），不要每回合随机换主题。",
                 "禁止输出纯 Markdown 或纯文本；必须输出 HTML。",
                 "以下是通用模板骨架（请按当前设定自由设计色调/元素/排版，可增删内部节点，但保留 ai-beauty-card 根节点与可点击选项区）：",
@@ -3926,8 +3925,8 @@
             };
         }
         async function streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken }) {
-            const response = await fetch(fetchUrl, {
-                method: "POST",
+                const response = await fetch(fetchUrl, {
+                    method: "POST",
                 headers,
                 body: JSON.stringify({ model, messages, stream: true, temperature })
             });
@@ -3938,24 +3937,24 @@
                     endpoint: fetchUrl
                 });
             }
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder("utf-8");
-            let tail = "";
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder("utf-8");
+                let tail = "";
             let fullText = "";
             let stopRequested = false;
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                tail += decoder.decode(value, { stream: true });
-                const lines = tail.split("\n");
-                tail = lines.pop() || "";
-                for (const line of lines) {
-                    if (!line.startsWith("data: ") || line === "data: [DONE]") continue;
-                    try {
-                        const payload = JSON.parse(line.slice(6));
-                        const token = payload.choices?.[0]?.delta?.content || "";
-                        if (!token) continue;
-                        fullText += token;
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    tail += decoder.decode(value, { stream: true });
+                    const lines = tail.split("\n");
+                    tail = lines.pop() || "";
+                    for (const line of lines) {
+                        if (!line.startsWith("data: ") || line === "data: [DONE]") continue;
+                        try {
+                            const payload = JSON.parse(line.slice(6));
+                            const token = payload.choices?.[0]?.delta?.content || "";
+                            if (!token) continue;
+                            fullText += token;
                         if (typeof onToken === "function") {
                             const shouldContinue = onToken(fullText);
                             if (shouldContinue === false) {
@@ -3963,9 +3962,9 @@
                                 break;
                             }
                         }
-                    } catch (e) {
+                        } catch (e) {
+                        }
                     }
-                }
                 if (stopRequested) {
                     try {
                         await reader.cancel("end marker reached");
@@ -4412,12 +4411,12 @@
                 }
             } catch (error) {
                 if (!uiUnlocked) {
-                    UIRenderer.finishStreaming(`⚠️ 连接失败：${error.message}\n\n请检查 API 配置后重试。`);
+                UIRenderer.finishStreaming(`⚠️ 连接失败：${error.message}\n\n请检查 API 配置后重试。`);
                 }
             } finally {
                 if (!uiUnlocked) {
-                    isGenerating = false;
-                    UIRenderer.setSendingDisabled(false);
+                isGenerating = false;
+                UIRenderer.setSendingDisabled(false);
                 }
             }
         }
@@ -4844,7 +4843,7 @@
                 closeInitLoadingModal();
                 PlayViewStateService.enterPlay(cardId);
                 switchView("view-main");
-                renderAll();
+            renderAll();
                 return;
             }
             openInitLoadingModal("连接中：正在请求 AI 解析设定...");
