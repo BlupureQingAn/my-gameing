@@ -488,14 +488,66 @@
         .scenario-card {
             border: 1px solid var(--line);
             border-radius: 12px;
-            padding: 10px;
+            padding: 0;
             margin-bottom: 8px;
             background: #fffdf8;
+            overflow: hidden;
+            position: relative;
         }
 
         .scenario-card.active {
             border-color: var(--accent);
             background: #fff4e5;
+        }
+
+        .scenario-card-main {
+            padding: 10px;
+            background: #fffdf8;
+            transition: transform 0.2s ease;
+        }
+
+        .scenario-card.swiped .scenario-card-main {
+            transform: translateX(-110px);
+        }
+
+        .scenario-card-actions {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 110px;
+            display: flex;
+            align-items: stretch;
+            justify-content: stretch;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .scenario-card.swiped .scenario-card-actions {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .scenario-action-btn {
+            flex: 1;
+            border: 0;
+            color: #fff;
+            font-size: 0.74rem;
+            cursor: pointer;
+        }
+
+        .scenario-action-btn.edit {
+            background: #7f6bf3;
+        }
+
+        .scenario-action-btn.delete {
+            background: #dc5b56;
+        }
+
+        .scenario-action-btn[disabled] {
+            opacity: 0.45;
+            cursor: not-allowed;
         }
 
         .api-card {
@@ -657,6 +709,9 @@
         <section id="view-home" class="view-section active">
             <section class="card">
                 <div class="list-title">🧩 文游设定卡片列表</div>
+                <div class="setting-actions" style="margin:6px 0 2px;">
+                    <button class="mini-btn primary" onclick="createScenarioCard()">＋ 新建卡片</button>
+                </div>
                 <div id="scenario-card-list" style="margin-top:8px;"></div>
                 <div class="list-title" style="margin-top:8px;">📚 官方预设模板（可一键套用）</div>
                 <div class="list-sub">模板资源来自网络，如有侵权请联系删除</div>
@@ -680,10 +735,45 @@
         <section id="view-settings" class="view-section">
             <section class="card">
                 <div class="list-title">⚙️ 设置页面</div>
-                <div class="list-sub">这里只保留设置入口按钮</div>
+                <div class="list-sub">集中管理 API 与对话策略开关</div>
                 <div class="setting-actions">
                     <button class="mini-btn primary" onclick="switchView('view-api-cards')">AI-API 卡片配置</button>
-                    <button class="mini-btn ghost" onclick="openRebornModal()">重新投胎</button>
+                    <button class="mini-btn ghost" onclick="switchView('view-user-api')">用户 API 配置页</button>
+                </div>
+                <div class="list-title" style="margin-top:8px;">🧩 API 隔离模式</div>
+                <div class="list-sub">选择 API 配置是按当前卡片隔离，还是按当前用户统一隔离</div>
+                <select id="api-isolation-mode">
+                    <option value="card">按卡片隔离（每张卡独立）</option>
+                    <option value="user">按用户隔离（同一用户所有卡共用）</option>
+                </select>
+                <input type="text" id="active-user-id" placeholder="当前用户ID（按用户隔离时生效，例如 user_001）">
+                <div class="list-title" style="margin-top:8px;">🧭 ChatPolicyConfig（对话策略）</div>
+                <div class="list-sub">按当前设定卡片独立保存：温度、重试次数、冲突检测与 HTML 卡片强制</div>
+                <input type="number" id="policy-temperature" min="0" max="2" step="0.1" placeholder="主请求温度（0-2）">
+                <input type="number" id="policy-choice-retry" min="0" max="5" step="1" placeholder="缺少编号选项重试次数">
+                <input type="number" id="policy-conflict-retry" min="0" max="5" step="1" placeholder="冲突纠偏重试次数">
+                <input type="number" id="policy-html-retry" min="0" max="5" step="1" placeholder="HTML 卡片重试次数">
+                <div class="setting-actions">
+                    <label><input type="checkbox" id="policy-enable-conflict"> 启用冲突检测</label>
+                    <label><input type="checkbox" id="policy-enable-html-force"> 启用 HTML 卡片强制</label>
+                </div>
+                <div class="setting-actions">
+                    <button class="mini-btn primary" onclick="saveSettings()">保存全部设置</button>
+                </div>
+            </section>
+        </section>
+
+        <section id="view-user-api" class="view-section">
+            <section class="card">
+                <div class="list-title">👤 用户 API 配置页</div>
+                <div class="list-sub">按用户隔离模式下，同一用户所有卡片共用本页 API 配置</div>
+                <input type="text" id="user-api-user-id" placeholder="用户ID（例如 user_001）">
+                <input type="text" id="user-api-url" placeholder="用户上游API URL（例如: https://integrate.api.nvidia.com/v1）">
+                <input type="password" id="user-api-key" placeholder="用户 API Key">
+                <input type="text" id="user-api-model" placeholder="用户模型名 (例如: gpt-4o-mini)">
+                <div class="setting-actions">
+                    <button class="mini-btn primary" onclick="saveUserApiSettings()">保存用户 API 配置</button>
+                    <button class="mini-btn ghost" onclick="switchView('view-settings')">返回设置页</button>
                 </div>
             </section>
         </section>
@@ -775,12 +865,11 @@
 
     <div class="modal-overlay" id="reborn-modal">
         <div class="modal-card">
-            <div class="modal-title">重新投胎</div>
-            <div class="modal-desc">请选择新人生性别（会清空当前存档）</div>
+            <div class="modal-title">投胎预览确认</div>
+            <div class="modal-desc" id="reborn-preview-desc">正在准备投胎解析结果...</div>
             <div class="gender-actions">
-                <button class="mini-btn primary" onclick="resetGameWithGender('男')">男</button>
-                <button class="mini-btn primary" onclick="resetGameWithGender('女')">女</button>
-                <button class="mini-btn ghost" onclick="resetGameWithGender('非二元')">非二元</button>
+                <button class="mini-btn ghost" onclick="closeRebornModal()">取消</button>
+                <button class="mini-btn primary" id="reborn-confirm-btn">确认投胎并开始游玩</button>
             </div>
         </div>
     </div>
@@ -810,7 +899,14 @@
             scenarioCards: "bitlife_scenario_cards_v1",
             selectedScenarioCardId: "bitlife_selected_scenario_card_v1",
             apiCards: "bitlife_api_cards_v1",
-            selectedApiCardId: "bitlife_selected_api_card_v1"
+            selectedApiCardId: "bitlife_selected_api_card_v1",
+            chatPolicyConfig: "bitlife_chat_policy_config_v1",
+            scenarioApiCardSelectionMap: "bitlife_scenario_api_card_selection_map_v1",
+            scenarioChatPolicyMap: "bitlife_scenario_chat_policy_map_v1",
+            apiIsolationMode: "bitlife_api_isolation_mode_v1",
+            activeUserId: "bitlife_active_user_id_v1",
+            userApiSelectedCardMap: "bitlife_user_api_selected_card_map_v1",
+            userApiCustomConfigMap: "bitlife_user_api_custom_config_map_v1"
         },
         identityPools: {
             cnNames: ["林澈", "沈知夏", "顾言川", "苏见微", "江望舒", "程以宁", "许星野", "周晚棠", "梁初言", "宋栖月", "叶云舟", "季明川", "陆听岚", "秦若禾"],
@@ -839,9 +935,9 @@
         ].join("\n"),
         defaultScenarioCards: [
             {
-                id: "scenario_default",
-                title: "默认文游设定",
-                theme: "奶油暖色",
+                id: "scenario_custom",
+                title: "自定义设定卡片",
+                theme: "",
                 text: "请在这里粘贴你的文游设定文本。\n该设定是剧情主规则来源，若为空则使用默认写实规则。"
             }
         ],
@@ -849,7 +945,15 @@
             { id: "api_custom", title: "自定义API", editable: true, upstreamUrl: "https://integrate.api.nvidia.com/v1", model: "gpt-4o-mini", key: "" },
             { id: "api_deepseek", title: "DeepSeek（预设）", editable: false, upstreamUrl: "https://api.deepseek.com/v1", model: "deepseek-chat", key: "" },
             { id: "api_kimi", title: "Kimi（预设）", editable: false, upstreamUrl: "https://api.moonshot.cn/v1", model: "moonshot-v1-8k", key: "" }
-        ]
+        ],
+        defaultChatPolicyConfig: {
+            temperature: 0.7,
+            choiceRetryCount: 1,
+            conflictRetryCount: 1,
+            htmlRetryCount: 1,
+            enableConflictDetection: true,
+            enableHtmlCardForce: true
+        }
     };
 
     const Utils = {
@@ -912,6 +1016,122 @@
             localStorage.setItem(key, value);
         }
         return { readJson, writeJson, readText, writeText };
+    })();
+
+    const GameSessionService = (() => {
+        function normalizeCardId(cardId) {
+            return String(cardId || ScenarioCardService.CUSTOM_CARD_ID || "scenario_custom").replace(/[^\w-]/g, "_");
+        }
+        function getActiveCardId() {
+            return normalizeCardId(ScenarioCardService.getSelectedId());
+        }
+        function keyFor(cardId, base) {
+            return `${base}${normalizeCardId(cardId)}`;
+        }
+        function activeKey(base) {
+            return keyFor(getActiveCardId(), base);
+        }
+        return { getActiveCardId, keyFor, activeKey };
+    })();
+
+    const IsolationScopeService = (() => {
+        function getMode() {
+            const mode = StorageService.readText(AppConfig.storageKeys.apiIsolationMode, "card");
+            return mode === "user" ? "user" : "card";
+        }
+        function setMode(mode) {
+            const safe = mode === "user" ? "user" : "card";
+            StorageService.writeText(AppConfig.storageKeys.apiIsolationMode, safe);
+            return safe;
+        }
+        function getActiveUserId() {
+            return StorageService.readText(AppConfig.storageKeys.activeUserId, "user_default");
+        }
+        function setActiveUserId(userId) {
+            const next = String(userId || "").trim() || "user_default";
+            StorageService.writeText(AppConfig.storageKeys.activeUserId, next);
+            return next;
+        }
+        return { getMode, setMode, getActiveUserId, setActiveUserId };
+    })();
+
+    const UserApiProfileService = (() => {
+        function getActiveUserId() {
+            return IsolationScopeService.getActiveUserId();
+        }
+        function loadSelectedMap() {
+            return StorageService.readJson(AppConfig.storageKeys.userApiSelectedCardMap, {});
+        }
+        function saveSelectedMap(map) {
+            StorageService.writeJson(AppConfig.storageKeys.userApiSelectedCardMap, map);
+        }
+        function getSelectedApiCardId() {
+            const userId = getActiveUserId();
+            const map = loadSelectedMap();
+            return map[userId] || "api_custom";
+        }
+        function setSelectedApiCardId(apiCardId) {
+            const userId = getActiveUserId();
+            const map = loadSelectedMap();
+            map[userId] = apiCardId;
+            saveSelectedMap(map);
+        }
+        function loadCustomMap() {
+            return StorageService.readJson(AppConfig.storageKeys.userApiCustomConfigMap, {});
+        }
+        function saveCustomMap(map) {
+            StorageService.writeJson(AppConfig.storageKeys.userApiCustomConfigMap, map);
+        }
+        function getCustomConfig() {
+            const userId = getActiveUserId();
+            const map = loadCustomMap();
+            return map[userId] || null;
+        }
+        function setCustomConfig(config) {
+            const userId = getActiveUserId();
+            const map = loadCustomMap();
+            map[userId] = {
+                upstreamUrl: String(config?.upstreamUrl || "").trim(),
+                key: String(config?.key || "").trim(),
+                model: String(config?.model || "").trim()
+            };
+            saveCustomMap(map);
+            return map[userId];
+        }
+        return { getSelectedApiCardId, setSelectedApiCardId, getCustomConfig, setCustomConfig, getActiveUserId };
+    })();
+
+    const ChatPolicyConfigService = (() => {
+        function normalizeNumber(value, fallback, min, max, asInt = false) {
+            const num = Number(value);
+            if (!Number.isFinite(num)) return fallback;
+            const clamped = Math.max(min, Math.min(max, num));
+            return asInt ? Math.floor(clamped) : clamped;
+        }
+        function normalize(raw) {
+            const defaults = AppConfig.defaultChatPolicyConfig;
+            const source = raw && typeof raw === "object" ? raw : {};
+            return {
+                temperature: normalizeNumber(source.temperature, defaults.temperature, 0, 2, false),
+                choiceRetryCount: normalizeNumber(source.choiceRetryCount, defaults.choiceRetryCount, 0, 5, true),
+                conflictRetryCount: normalizeNumber(source.conflictRetryCount, defaults.conflictRetryCount, 0, 5, true),
+                htmlRetryCount: normalizeNumber(source.htmlRetryCount, defaults.htmlRetryCount, 0, 5, true),
+                enableConflictDetection: source.enableConflictDetection !== false,
+                enableHtmlCardForce: source.enableHtmlCardForce !== false
+            };
+        }
+        function load() {
+            const raw = StorageService.readJson(AppConfig.storageKeys.chatPolicyConfig, null);
+            const next = normalize(raw);
+            StorageService.writeJson(AppConfig.storageKeys.chatPolicyConfig, next);
+            return next;
+        }
+        function save(payload) {
+            const next = normalize(payload);
+            StorageService.writeJson(AppConfig.storageKeys.chatPolicyConfig, next);
+            return next;
+        }
+        return { load, save, normalize };
     })();
 
     const IdentityService = (() => {
@@ -986,43 +1206,59 @@
             return `## 人生模拟器初始化\n你出生在${state.location}，国籍为**${state.nationality}**。\n当前角色：**${state.name}（${state.englishName}）**。\n\n（AI想法：先从当前家庭与环境细节展开）\n\n**可选行动**\n1. 观察父母\n2. 安静休息\n3. 查看当前状态`;
         }
 
-        function buildInitialState(gender) {
+        function createDefaultInventory() {
+            return Utils.deepClone(baseState.inventory);
+        }
+        function createDefaultNpcs() {
+            return Utils.deepClone(baseState.npcs);
+        }
+        function buildInitialState(gender, preset = {}) {
             const next = Utils.deepClone(baseState);
             const identity = IdentityService.generateIdentity();
-            next.gender = gender || next.gender;
+            next.gender = gender || preset.gender || next.gender;
             next.name = identity.name;
             next.englishName = identity.englishName;
-            next.nationality = identity.nationality;
-            next.location = identity.location;
+            next.nationality = preset.nationality || identity.nationality;
+            next.location = preset.location || identity.location;
+            next.inventory = Array.isArray(preset.inventory) && preset.inventory.length
+                ? Utils.deepClone(preset.inventory)
+                : createDefaultInventory();
+            next.npcs = Array.isArray(preset.npcs) && preset.npcs.length
+                ? Utils.deepClone(preset.npcs)
+                : createDefaultNpcs();
+            next.npcChats = {};
+            next.chatMemory = [];
             next.history = [{ role: "ai", date: Utils.nowDateStr(next), text: introText(next) }];
             return next;
         }
 
         function init() {
-            const saved = StorageService.readJson(AppConfig.storageKeys.save, null);
+            const saved = StorageService.readJson(GameSessionService.activeKey(AppConfig.storageKeys.save), null);
             gameState = saved || buildInitialState(baseState.gender);
             if (!gameState.history || !gameState.history.length) {
                 gameState.history = [{ role: "ai", date: Utils.nowDateStr(gameState), text: introText(gameState) }];
             }
-            if (!Array.isArray(gameState.inventory)) gameState.inventory = Utils.deepClone(baseState.inventory);
-            if (!Array.isArray(gameState.npcs)) gameState.npcs = Utils.deepClone(baseState.npcs);
+            if (!Array.isArray(gameState.inventory)) gameState.inventory = createDefaultInventory();
+            if (!Array.isArray(gameState.npcs)) gameState.npcs = createDefaultNpcs();
             if (!gameState.npcChats || typeof gameState.npcChats !== "object") gameState.npcChats = {};
             if (!gameState.currentDay) gameState.currentDay = 1;
             if (typeof gameState.weekdayIndex !== "number") gameState.weekdayIndex = 0;
         }
 
-        function resetWithGender(gender) {
-            gameState = buildInitialState(gender);
+        function resetWithPreset({ selectedGender, forcedGender, nationality, location, inventory, npcs, rebornReason }) {
+            const finalGender = forcedGender || selectedGender || baseState.gender;
+            gameState = buildInitialState(finalGender, { gender: forcedGender, nationality, location, inventory, npcs });
+            const reasonText = rebornReason ? `\n设定解析：${rebornReason}` : "";
             gameState.history = [{
                 role: "ai",
                 date: Utils.nowDateStr(gameState),
-                text: `## 新人生开启\n你已选择性别：**${gender}**。\n本次随机身份：**${gameState.name}（${gameState.englishName}）**，国籍**${gameState.nationality}**，出生地**${gameState.location}**。\n\n（AI想法：后续剧情会严格沿用这组身份信息）`
+                text: `## 新人生开启\n投胎性别：**${finalGender}**。\n本次身份：**${gameState.name}（${gameState.englishName}）**，国籍**${gameState.nationality}**，出生地**${gameState.location}**。\n背包已按设定重建，社交NPC已重置并重建。${reasonText}\n\n（AI想法：后续剧情会严格沿用这组身份信息）`
             }];
             save();
         }
 
         function save() {
-            StorageService.writeJson(AppConfig.storageKeys.save, gameState);
+            StorageService.writeJson(GameSessionService.activeKey(AppConfig.storageKeys.save), gameState);
         }
 
         function get() {
@@ -1046,7 +1282,7 @@
             gameState.chatMemory.push({ role, content });
         }
 
-        return { init, get, save, resetWithGender, advanceMonthIfNeeded, jumpWeek, pushHistory, pushChat };
+        return { init, get, save, resetWithPreset, advanceMonthIfNeeded, jumpWeek, pushHistory, pushChat };
     })();
 
     const MarkdownService = (() => {
@@ -1546,13 +1782,62 @@
             cards.forEach((card) => {
                 const row = document.createElement("div");
                 row.className = `scenario-card ${card.id === selectedId ? "active" : ""}`;
+                row.dataset.cardId = card.id;
+                const customPinned = card.id === ScenarioCardService.CUSTOM_CARD_ID;
                 row.innerHTML = `
-                    <div class="list-title">${card.title}</div>
-                    <div class="list-sub">主题：${card.theme || "默认"}｜设定长度：${(card.text || "").length}</div>
-                    <div style="margin-top:6px;"><button class="tiny-btn">选择</button></div>
+                    <div class="scenario-card-main">
+                        <div class="list-title">${card.title}${customPinned ? "（置顶）" : ""}</div>
+                        <div class="list-sub">主题：${card.theme || "未设置"}｜设定长度：${(card.text || "").length}</div>
+                        <div style="margin-top:6px;">
+                            <button class="tiny-btn" data-op="play">游玩</button>
+                            <button class="tiny-btn" data-op="select">选择</button>
+                            <button class="tiny-btn" data-op="edit">设置</button>
+                        </div>
+                    </div>
+                    <div class="scenario-card-actions">
+                        <button class="scenario-action-btn edit" data-op="swipe-edit">设置</button>
+                        <button class="scenario-action-btn delete" data-op="swipe-del" ${customPinned ? "disabled" : ""}>删除</button>
+                    </div>
                 `;
-                row.querySelector("button").onclick = () => Controller.selectScenarioCard(card.id);
+                row.querySelector('[data-op="play"]').onclick = () => Controller.playScenarioCard(card.id);
+                row.querySelector('[data-op="select"]').onclick = () => Controller.selectScenarioCard(card.id);
+                row.querySelector('[data-op="edit"]').onclick = () => Controller.openScenarioCardSettings(card.id);
+                row.querySelector('[data-op="swipe-edit"]').onclick = () => Controller.openScenarioCardSettings(card.id);
+                const delBtn = row.querySelector('[data-op="swipe-del"]');
+                if (delBtn) delBtn.onclick = () => Controller.deleteScenarioCard(card.id);
+                bindScenarioCardSwipe(row);
                 box.appendChild(row);
+            });
+        }
+        function bindScenarioCardSwipe(row) {
+            let startX = 0;
+            let moved = false;
+            let dragging = false;
+            const begin = (x) => { startX = x; moved = false; dragging = true; };
+            const move = (x) => {
+                if (!dragging) return;
+                const dx = x - startX;
+                if (Math.abs(dx) > 24) moved = true;
+                if (dx < -24) row.classList.add("swiped");
+                if (dx > 24) row.classList.remove("swiped");
+            };
+            const end = () => { dragging = false; };
+            row.addEventListener("touchstart", (e) => {
+                begin(e.touches?.[0]?.clientX || 0);
+            }, { passive: true });
+            row.addEventListener("touchmove", (e) => {
+                move(e.touches?.[0]?.clientX || 0);
+            }, { passive: true });
+            row.addEventListener("touchend", end, { passive: true });
+            row.addEventListener("mousedown", (e) => begin(e.clientX));
+            row.addEventListener("mousemove", (e) => move(e.clientX));
+            row.addEventListener("mouseup", end);
+            row.addEventListener("mouseleave", end);
+            row.addEventListener("click", (e) => {
+                if (moved) return;
+                const target = e.target;
+                if (!(target instanceof HTMLElement)) return;
+                if (!target.closest("button")) row.classList.toggle("swiped");
             });
         }
         function renderApiCards() {
@@ -1616,21 +1901,67 @@
     const SettingsService = (() => {
         function loadToUI() {
             const selectedScenario = ScenarioCardService.getSelectedCard();
-            document.getElementById("scenario-title-input").value = selectedScenario?.title || "";
+            const titleInput = document.getElementById("scenario-title-input");
+            titleInput.value = selectedScenario?.title || "";
+            titleInput.readOnly = selectedScenario?.id === ScenarioCardService.CUSTOM_CARD_ID;
             document.getElementById("scenario-theme-input").value = selectedScenario?.theme || "";
             document.getElementById("scenario-editor").value = selectedScenario?.text || AppConfig.defaultScenario;
 
             const customCard = ApiCardService.loadCards().find((c) => c.id === "api_custom") || AppConfig.defaultApiCards[0];
-            document.getElementById("api-url").value = customCard.upstreamUrl || AppConfig.defaultApi.url;
-            document.getElementById("api-key").value = customCard.key || "";
-            document.getElementById("api-model").value = customCard.model || AppConfig.defaultApi.model;
+            const userCustom = UserApiProfileService.getCustomConfig();
+            const mode = IsolationScopeService.getMode();
+            const activeUserId = IsolationScopeService.getActiveUserId();
+            document.getElementById("api-url").value = mode === "user"
+                ? (userCustom?.upstreamUrl || customCard.upstreamUrl || AppConfig.defaultApi.url)
+                : (customCard.upstreamUrl || AppConfig.defaultApi.url);
+            document.getElementById("api-key").value = mode === "user"
+                ? (userCustom?.key || customCard.key || "")
+                : (customCard.key || "");
+            document.getElementById("api-model").value = mode === "user"
+                ? (userCustom?.model || customCard.model || AppConfig.defaultApi.model)
+                : (customCard.model || AppConfig.defaultApi.model);
+            document.getElementById("api-isolation-mode").value = mode;
+            document.getElementById("active-user-id").value = activeUserId;
+            document.getElementById("user-api-user-id").value = activeUserId;
+            document.getElementById("user-api-url").value = userCustom?.upstreamUrl || "";
+            document.getElementById("user-api-key").value = userCustom?.key || "";
+            document.getElementById("user-api-model").value = userCustom?.model || "";
+
+            const policy = CardScopedConfigService.getChatPolicyConfig();
+            document.getElementById("policy-temperature").value = String(policy.temperature);
+            document.getElementById("policy-choice-retry").value = String(policy.choiceRetryCount);
+            document.getElementById("policy-conflict-retry").value = String(policy.conflictRetryCount);
+            document.getElementById("policy-html-retry").value = String(policy.htmlRetryCount);
+            document.getElementById("policy-enable-conflict").checked = !!policy.enableConflictDetection;
+            document.getElementById("policy-enable-html-force").checked = !!policy.enableHtmlCardForce;
         }
         function saveFromUI() {
+            const mode = document.getElementById("api-isolation-mode").value;
+            IsolationScopeService.setMode(mode);
+            IsolationScopeService.setActiveUserId(document.getElementById("active-user-id").value.trim());
             ApiCardService.updateCustomCard({
                 upstreamUrl: document.getElementById("api-url").value.trim(),
                 key: document.getElementById("api-key").value.trim(),
                 model: document.getElementById("api-model").value.trim()
             });
+            CardScopedConfigService.setChatPolicyConfig({
+                temperature: document.getElementById("policy-temperature").value,
+                choiceRetryCount: document.getElementById("policy-choice-retry").value,
+                conflictRetryCount: document.getElementById("policy-conflict-retry").value,
+                htmlRetryCount: document.getElementById("policy-html-retry").value,
+                enableConflictDetection: document.getElementById("policy-enable-conflict").checked,
+                enableHtmlCardForce: document.getElementById("policy-enable-html-force").checked
+            });
+        }
+        function saveUserApiFromUI() {
+            const userId = document.getElementById("user-api-user-id").value.trim();
+            IsolationScopeService.setActiveUserId(userId);
+            UserApiProfileService.setCustomConfig({
+                upstreamUrl: document.getElementById("user-api-url").value.trim(),
+                key: document.getElementById("user-api-key").value.trim(),
+                model: document.getElementById("user-api-model").value.trim()
+            });
+            loadToUI();
         }
         function getApiConfig() {
             const selected = ApiCardService.getSelectedCard();
@@ -1646,6 +1977,9 @@
         function getBeautyCardSetting() {
             const selected = ScenarioCardService.getSelectedCard();
             return (selected?.theme || "").trim();
+        }
+        function getChatPolicyConfig() {
+            return CardScopedConfigService.getChatPolicyConfig();
         }
         function importScenarioFromFile() {
             const input = document.getElementById("scenario-file-input");
@@ -1669,13 +2003,13 @@
             };
             input.click();
         }
-        return { loadToUI, saveFromUI, getApiConfig, getScenarioText, getBeautyCardSetting, importScenarioFromFile };
+        return { loadToUI, saveFromUI, saveUserApiFromUI, getApiConfig, getScenarioText, getBeautyCardSetting, getChatPolicyConfig, importScenarioFromFile };
     })();
 
     const SaveSlotService = (() => {
         const SLOT_COUNT = 5;
         function slotKey(index) {
-            return `${AppConfig.storageKeys.saveSlotPrefix}${index}`;
+            return `${GameSessionService.activeKey(AppConfig.storageKeys.saveSlotPrefix)}${index}`;
         }
         function listSlots() {
             const slots = [];
@@ -1759,6 +2093,24 @@
     })();
 
     const ScenarioCardService = (() => {
+        const CUSTOM_CARD_ID = "scenario_custom";
+        const LEGACY_CUSTOM_IDS = new Set(["scenario_default", "scenario_custom"]);
+        function buildCustomCard(base = {}) {
+            return {
+                id: CUSTOM_CARD_ID,
+                title: "自定义设定卡片",
+                theme: String(base.theme || ""),
+                text: String(base.text || AppConfig.defaultScenario)
+            };
+        }
+        function normalizeCards(rawCards) {
+            const cards = Array.isArray(rawCards) ? rawCards.map((c) => ({ ...c })) : [];
+            let custom = cards.find((c) => LEGACY_CUSTOM_IDS.has(String(c.id || "")));
+            const others = cards.filter((c) => !LEGACY_CUSTOM_IDS.has(String(c.id || "")));
+            if (!custom) custom = buildCustomCard();
+            custom = buildCustomCard(custom);
+            return [custom, ...others];
+        }
         function loadCards() {
             const cards = StorageService.readJson(AppConfig.storageKeys.scenarioCards, null);
             if (!Array.isArray(cards) || !cards.length) {
@@ -1766,16 +2118,20 @@
                 StorageService.writeJson(AppConfig.storageKeys.scenarioCards, initial);
                 return initial;
             }
-            return cards;
+            const normalized = normalizeCards(cards);
+            StorageService.writeJson(AppConfig.storageKeys.scenarioCards, normalized);
+            return normalized;
         }
         function saveCards(cards) {
-            StorageService.writeJson(AppConfig.storageKeys.scenarioCards, cards);
+            StorageService.writeJson(AppConfig.storageKeys.scenarioCards, normalizeCards(cards));
         }
         function getSelectedId() {
-            return StorageService.readText(AppConfig.storageKeys.selectedScenarioCardId, AppConfig.defaultScenarioCards[0].id);
+            const raw = StorageService.readText(AppConfig.storageKeys.selectedScenarioCardId, AppConfig.defaultScenarioCards[0].id);
+            return LEGACY_CUSTOM_IDS.has(raw) ? CUSTOM_CARD_ID : raw;
         }
         function setSelectedId(id) {
-            StorageService.writeText(AppConfig.storageKeys.selectedScenarioCardId, id);
+            const normalizedId = LEGACY_CUSTOM_IDS.has(String(id || "")) ? CUSTOM_CARD_ID : id;
+            StorageService.writeText(AppConfig.storageKeys.selectedScenarioCardId, normalizedId);
         }
         function getSelectedCard() {
             const cards = loadCards();
@@ -1790,7 +2146,83 @@
             cards[idx] = { ...cards[idx], ...payload };
             saveCards(cards);
         }
-        return { loadCards, saveCards, getSelectedId, setSelectedId, getSelectedCard, updateSelectedCard };
+        function deleteCard(cardId) {
+            const id = String(cardId || "");
+            if (id === CUSTOM_CARD_ID) return false;
+            const cards = loadCards().filter((c) => c.id !== id);
+            saveCards(cards);
+            if (getSelectedId() === id) setSelectedId(CUSTOM_CARD_ID);
+            return true;
+        }
+        function createCard() {
+            const cards = loadCards();
+            const id = `scenario_${Date.now().toString(36)}_${Math.floor(Math.random() * 999).toString(36)}`;
+            const card = {
+                id,
+                title: "新建设定卡片",
+                theme: "",
+                text: AppConfig.defaultScenario
+            };
+            cards.push(card);
+            saveCards(cards);
+            setSelectedId(id);
+            return card;
+        }
+        return { CUSTOM_CARD_ID, loadCards, saveCards, getSelectedId, setSelectedId, getSelectedCard, updateSelectedCard, deleteCard, createCard };
+    })();
+
+    const CardScopedConfigService = (() => {
+        function getActiveScenarioId() {
+            return ScenarioCardService.getSelectedId();
+        }
+        function loadApiSelectionMap() {
+            return StorageService.readJson(AppConfig.storageKeys.scenarioApiCardSelectionMap, {});
+        }
+        function saveApiSelectionMap(map) {
+            StorageService.writeJson(AppConfig.storageKeys.scenarioApiCardSelectionMap, map);
+        }
+        function getSelectedApiCardId() {
+            if (IsolationScopeService.getMode() === "user") {
+                return UserApiProfileService.getSelectedApiCardId();
+            }
+            const scenarioId = getActiveScenarioId();
+            const map = loadApiSelectionMap();
+            const scoped = map[scenarioId];
+            if (scoped) return scoped;
+            return StorageService.readText(AppConfig.storageKeys.selectedApiCardId, "api_custom");
+        }
+        function setSelectedApiCardId(apiCardId) {
+            if (IsolationScopeService.getMode() === "user") {
+                UserApiProfileService.setSelectedApiCardId(apiCardId);
+                return;
+            }
+            const scenarioId = getActiveScenarioId();
+            const map = loadApiSelectionMap();
+            map[scenarioId] = apiCardId;
+            saveApiSelectionMap(map);
+        }
+        function loadChatPolicyMap() {
+            return StorageService.readJson(AppConfig.storageKeys.scenarioChatPolicyMap, {});
+        }
+        function saveChatPolicyMap(map) {
+            StorageService.writeJson(AppConfig.storageKeys.scenarioChatPolicyMap, map);
+        }
+        function getChatPolicyConfig() {
+            const scenarioId = getActiveScenarioId();
+            const map = loadChatPolicyMap();
+            if (map && map[scenarioId]) return ChatPolicyConfigService.normalize(map[scenarioId]);
+            const legacy = StorageService.readJson(AppConfig.storageKeys.chatPolicyConfig, null);
+            if (legacy) return ChatPolicyConfigService.normalize(legacy);
+            return ChatPolicyConfigService.normalize(null);
+        }
+        function setChatPolicyConfig(config) {
+            const scenarioId = getActiveScenarioId();
+            const map = loadChatPolicyMap();
+            map[scenarioId] = ChatPolicyConfigService.normalize(config);
+            saveChatPolicyMap(map);
+            return map[scenarioId];
+        }
+        return { getSelectedApiCardId, setSelectedApiCardId, getChatPolicyConfig, setChatPolicyConfig };
     })();
 
     const ApiCardService = (() => {
@@ -1806,16 +2238,25 @@
             StorageService.writeJson(AppConfig.storageKeys.apiCards, cards);
         }
         function getSelectedId() {
-            return StorageService.readText(AppConfig.storageKeys.selectedApiCardId, "api_custom");
+            return CardScopedConfigService.getSelectedApiCardId();
         }
         function setSelectedId(id) {
-            StorageService.writeText(AppConfig.storageKeys.selectedApiCardId, id);
+            CardScopedConfigService.setSelectedApiCardId(id);
         }
         function getSelectedCard() {
             const cards = loadCards();
-            return cards.find((c) => c.id === getSelectedId()) || cards[0];
+            const selected = cards.find((c) => c.id === getSelectedId()) || cards[0];
+            if (selected?.id === "api_custom" && IsolationScopeService.getMode() === "user") {
+                const profile = UserApiProfileService.getCustomConfig();
+                if (profile) return { ...selected, ...profile };
+            }
+            return selected;
         }
         function updateCustomCard(payload) {
+            if (IsolationScopeService.getMode() === "user") {
+                UserApiProfileService.setCustomConfig(payload || {});
+                return;
+            }
             const cards = loadCards();
             const idx = cards.findIndex((c) => c.id === "api_custom");
             if (idx < 0) return;
@@ -1859,6 +2300,315 @@
         return { loadManifest, loadPresetText, titleToFilename };
     })();
 
+    const PromptPolicyService = (() => {
+        function buildRecentHistory(state) {
+            return (state.history || [])
+                .slice(-18)
+                .map((item) => `${item.role === "user" ? "玩家" : "系统"}(${item.date})：${item.text}`)
+                .join("\n");
+        }
+        function buildRuntimeContext(state) {
+            return [
+                "【运行时上下文】",
+                `主角基础：姓名${state.name}，性别${state.gender}，年龄${Math.floor((state.age || 0) / 12)}岁，时间${Utils.nowDateStr(state)}。`,
+                "请使用Markdown输出并兼容手机屏。",
+                "若用户输入与已确认事实冲突，先以礼貌方式说明冲突，再基于事实继续剧情。"
+            ].join("\n");
+        }
+        function buildBeautyRules(beautyCardSetting, beautyModeEnabled) {
+            if (!beautyModeEnabled) return "";
+            return [
+                "【美化卡片强制规则】",
+                `当前美化卡片设定：${beautyCardSetting}`,
+                "你必须输出可直接渲染的 HTML 卡片，且最外层必须是 class=\"ai-beauty-card\" 的 article/section/div。",
+                "卡片内部需包含：时间、状态变化、剧情正文、（AI想法）以及 1-3 条编号选项。",
+                "禁止输出纯 Markdown 或纯文本；必须输出 HTML。"
+            ].join("\n");
+        }
+        function buildSystemPrompt({ state, scenarioSpec, beautyCardSetting, beautyModeEnabled }) {
+            const builtinRules = BuiltinPromptService.getResponseRules();
+            const stateFactLock = BuiltinPromptService.buildStateFactLock(state);
+            const runtimeContext = buildRuntimeContext(state);
+            const beautyRules = buildBeautyRules(beautyCardSetting, beautyModeEnabled);
+            return `${scenarioSpec}\n\n${builtinRules}\n\n${stateFactLock}\n\n${runtimeContext}${beautyRules ? `\n\n${beautyRules}` : ""}`;
+        }
+        function buildMainUserPrompt(userText, recentHistory) {
+            return `玩家最新输入：${userText}\n\n最近记录：\n${recentHistory}`;
+        }
+        function buildChoiceRetryPrompt(userText, recentHistory, rawText) {
+            return [
+                `玩家最新输入：${userText}`,
+                `最近记录：\n${recentHistory}`,
+                "请严格重写上一条回复，必须在结尾提供1-3条编号选项。",
+                "格式强制为：1. ... 2. ... 3. ...",
+                "不要解释规则，直接输出剧情正文和编号选项。",
+                `上一版草稿（缺少编号选项）：\n${rawText}`
+            ].join("\n\n");
+        }
+        function buildConflictRetryPrompt(userText, recentHistory, conflictReport, finalText) {
+            return [
+                `玩家最新输入：${userText}`,
+                `最近记录：\n${recentHistory}`,
+                "请只做设定一致性纠偏重写，不要重开剧情。",
+                "必须严格遵守角色事实锁定块，不得修改姓名、年龄、国籍、NPC关系等已确认事实。",
+                `错误级冲突清单：\n- ${conflictReport.errors.map((x) => x.message).join("\n- ")}`,
+                `待纠偏文本：\n${finalText}`
+            ].join("\n\n");
+        }
+        function buildHtmlRetryPrompt(userText, recentHistory, finalText) {
+            return [
+                `玩家最新输入：${userText}`,
+                `最近记录：\n${recentHistory}`,
+                "上一版回复未能正确渲染为 HTML 卡片。",
+                "请严格重写为可直接渲染的 HTML，最外层 class 必须是 ai-beauty-card。",
+                "同时保留剧情连续性，并包含 1-3 条编号选项。",
+                `上一版文本：\n${finalText}`
+            ].join("\n\n");
+        }
+        return {
+            buildRecentHistory,
+            buildSystemPrompt,
+            buildMainUserPrompt,
+            buildChoiceRetryPrompt,
+            buildConflictRetryPrompt,
+            buildHtmlRetryPrompt
+        };
+    })();
+
+    const AIRequestService = (() => {
+        function normalizeUrl(url) {
+            const value = String(url || "").trim();
+            return value.endsWith("/") ? value.slice(0, -1) : value;
+        }
+        function buildFetchUrl() {
+            const proxyBase = normalizeUrl(AppConfig.proxy.baseUrl);
+            return `${proxyBase}/chat/completions`;
+        }
+        function buildHeaders(config) {
+            const upstreamUrl = normalizeUrl(config.upstreamUrl);
+            return {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${config.key}`,
+                "X-Upstream-Base-URL": upstreamUrl,
+                "X-Target-Base-URL": upstreamUrl,
+                "X-OpenAI-Base-URL": upstreamUrl
+            };
+        }
+        async function streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken }) {
+            const response = await fetch(fetchUrl, {
+                method: "POST",
+                headers,
+                body: JSON.stringify({ model, messages, stream: true, temperature })
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            let tail = "";
+            let fullText = "";
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                tail += decoder.decode(value, { stream: true });
+                const lines = tail.split("\n");
+                tail = lines.pop() || "";
+                for (const line of lines) {
+                    if (!line.startsWith("data: ") || line === "data: [DONE]") continue;
+                    try {
+                        const payload = JSON.parse(line.slice(6));
+                        const token = payload.choices?.[0]?.delta?.content || "";
+                        if (!token) continue;
+                        fullText += token;
+                        if (typeof onToken === "function") onToken(fullText);
+                    } catch (e) {
+                    }
+                }
+            }
+            return fullText;
+        }
+        async function requestCompletion({ fetchUrl, headers, model, messages, temperature }) {
+            const response = await fetch(fetchUrl, {
+                method: "POST",
+                headers,
+                body: JSON.stringify({ model, messages, stream: false, temperature })
+            });
+            if (!response.ok) return "";
+            const data = await response.json();
+            return data?.choices?.[0]?.message?.content?.trim() || "";
+        }
+        return { buildFetchUrl, buildHeaders, streamCompletion, requestCompletion };
+    })();
+
+    const ChatPostProcessService = (() => {
+        async function enforceChoices({ text, userText, state, retryCount, requestRewrite }) {
+            let finalText = text;
+            let remain = Math.max(0, Number(retryCount) || 0);
+            while (ChoiceService.extractChoices(finalText).length === 0 && remain > 0) {
+                const retried = await requestRewrite(finalText);
+                if (retried) finalText = retried;
+                remain--;
+            }
+            return ChoiceService.ensureOptionsBlock(finalText, userText, state);
+        }
+        async function enforceConflict({ text, userText, state, enabled, retryCount, requestRewrite }) {
+            let finalText = text;
+            let conflictDetected = false;
+            if (!enabled) return { finalText, conflictDetected };
+            const conflictReport = ConflictService.detectConflicts(finalText, state);
+            if (conflictReport.hasError) {
+                conflictDetected = true;
+                let remain = Math.max(0, Number(retryCount) || 0);
+                let latestReport = conflictReport;
+                while (latestReport.hasError && remain > 0) {
+                    const fixed = await requestRewrite(latestReport, finalText);
+                    if (fixed) finalText = ChoiceService.ensureOptionsBlock(fixed, userText, state);
+                    latestReport = ConflictService.detectConflicts(finalText, state);
+                    remain--;
+                }
+                if (latestReport.hasError) {
+                    finalText = `${finalText}\n\n> ⚠️ 仍检测到设定错误冲突：${latestReport.errors.map((x) => x.message).join("；")}`;
+                }
+            }
+            return { finalText, conflictDetected };
+        }
+        function appendWarning(text, state, enabled) {
+            if (!enabled) return text;
+            const warningReport = ConflictService.detectConflicts(text, state);
+            if (!warningReport.hasWarning) return text;
+            return `${text}\n\n> ℹ️ 提示（warning）：${warningReport.warnings.map((x) => x.message).join("；")}`;
+        }
+        async function enforceBeautyCard({ text, beautyModeEnabled, htmlForceEnabled, retryCount, beautyCardSetting, requestRewrite }) {
+            let finalText = HtmlCardService.normalizeHtmlCard(text);
+            if (!beautyModeEnabled || !htmlForceEnabled) return finalText;
+            let remain = Math.max(0, Number(retryCount) || 0);
+            while (!HtmlCardService.isRenderableHtmlCard(finalText) && remain > 0) {
+                const htmlText = await requestRewrite(finalText);
+                if (htmlText) finalText = HtmlCardService.normalizeHtmlCard(htmlText);
+                remain--;
+            }
+            if (!HtmlCardService.isRenderableHtmlCard(finalText)) {
+                finalText = HtmlCardService.wrapAsHtmlCard(beautyCardSetting, finalText);
+            }
+            return finalText;
+        }
+        return { enforceChoices, enforceConflict, appendWarning, enforceBeautyCard };
+    })();
+
+    const ScenarioRebirthService = (() => {
+        function fallbackPlan(scenarioText, selectedGender) {
+            const text = String(scenarioText || "");
+            let forcedGender = "";
+            if (/女性|女生|女主|娘娘|皇后|妃|公主/.test(text)) forcedGender = "女";
+            else if (/男性|男生|男主|皇帝|王爷|太子/.test(text)) forcedGender = "男";
+            const nationality = /古代|大清|大明|大唐|中原|皇宫|后宫|王朝|京城|汴京/.test(text) ? "中国" : "";
+            let location = "";
+            if (/皇宫|后宫|京城|紫禁城/.test(text)) location = "北京";
+            else if (/江南/.test(text)) location = "苏州";
+            else if (/长安/.test(text)) location = "西安";
+            else if (/古代/.test(text)) location = "北京";
+            const inventory = [
+                { id: "preset_token", name: "设定信物", type: "道具", desc: "根据剧本初始化的基础道具。", effect: "charisma+1", count: 1 }
+            ];
+            const npcs = [
+                { id: "npc_guardian", name: "设定监护人", relation: "监护", favor: 75, status: "在身边", mood: "谨慎" },
+                { id: "npc_friend_seed", name: "设定同伴", relation: "同伴", favor: 70, status: "活跃", mood: "友好" }
+            ];
+            return {
+                forcedGender,
+                selectedGender,
+                nationality,
+                location,
+                inventory,
+                npcs,
+                rebornReason: "使用本地规则解析设定生成"
+            };
+        }
+        function sanitizeItems(items = []) {
+            return items
+                .filter((it) => it && it.name)
+                .slice(0, 10)
+                .map((it, idx) => ({
+                    id: String(it.id || `item_${idx + 1}`).replace(/[^\w-]/g, "_"),
+                    name: String(it.name).slice(0, 20),
+                    type: String(it.type || "道具").slice(0, 12),
+                    desc: String(it.desc || "根据设定生成").slice(0, 80),
+                    effect: String(it.effect || "none").slice(0, 30),
+                    count: Math.max(1, Math.min(99, Number(it.count) || 1))
+                }));
+        }
+        function sanitizeNpcs(npcs = []) {
+            return npcs
+                .filter((n) => n && n.name)
+                .slice(0, 8)
+                .map((n, idx) => ({
+                    id: String(n.id || `npc_${idx + 1}`).replace(/[^\w-]/g, "_"),
+                    name: String(n.name).slice(0, 20),
+                    relation: String(n.relation || "熟人").slice(0, 12),
+                    favor: Math.max(0, Math.min(100, Number(n.favor) || 65)),
+                    status: String(n.status || "在线").slice(0, 12),
+                    mood: String(n.mood || "平静").slice(0, 12)
+                }));
+        }
+        async function analyzeWithAI({ scenarioText, selectedGender, apiConfig }) {
+            const fetchUrl = AIRequestService.buildFetchUrl();
+            const headers = AIRequestService.buildHeaders(apiConfig);
+            const systemPrompt = [
+                "你是文游设定解析器。根据用户设定文本输出 JSON，不要输出解释。",
+                "必须输出字段：forcedGender, nationality, location, rebornReason, inventory, npcs。",
+                "forcedGender 仅可为 男/女/非二元/空字符串。",
+                "如果设定指向古代中国皇宫，location 优先填 北京。",
+                "inventory 是数组，每项含 name,type,desc,effect,count。",
+                "npcs 是数组，每项含 name,relation,favor,status,mood。"
+            ].join("\n");
+            const userPrompt = [
+                `用户选择投胎性别：${selectedGender}`,
+                "请结合设定判断是否强制覆盖该性别，并生成初始化背包和NPC。",
+                "仅返回 JSON 对象。",
+                `设定文本：\n${scenarioText}`
+            ].join("\n\n");
+            const content = await AIRequestService.requestCompletion({
+                fetchUrl,
+                headers,
+                model: apiConfig.model,
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userPrompt }
+                ],
+                temperature: 0.2
+            });
+            if (!content) return null;
+            const jsonMatch = content.match(/\{[\s\S]*\}/);
+            if (!jsonMatch) return null;
+            const parsed = JSON.parse(jsonMatch[0]);
+            return {
+                forcedGender: String(parsed.forcedGender || "").trim(),
+                selectedGender,
+                nationality: String(parsed.nationality || "").trim(),
+                location: String(parsed.location || "").trim(),
+                inventory: sanitizeItems(parsed.inventory),
+                npcs: sanitizeNpcs(parsed.npcs),
+                rebornReason: String(parsed.rebornReason || "使用AI解析设定生成").slice(0, 120)
+            };
+        }
+        async function buildRebirthPlan(selectedGender) {
+            const scenarioText = SettingsService.getScenarioText();
+            const apiConfig = SettingsService.getApiConfig();
+            if (!scenarioText.trim()) return fallbackPlan(scenarioText, selectedGender);
+            if (apiConfig.blocked || !apiConfig.upstreamUrl || !apiConfig.key || !apiConfig.model) {
+                return fallbackPlan(scenarioText, selectedGender);
+            }
+            try {
+                const aiPlan = await analyzeWithAI({ scenarioText, selectedGender, apiConfig });
+                if (!aiPlan) return fallbackPlan(scenarioText, selectedGender);
+                if (!Array.isArray(aiPlan.inventory) || !aiPlan.inventory.length) aiPlan.inventory = fallbackPlan(scenarioText, selectedGender).inventory;
+                if (!Array.isArray(aiPlan.npcs) || !aiPlan.npcs.length) aiPlan.npcs = fallbackPlan(scenarioText, selectedGender).npcs;
+                return aiPlan;
+            } catch (e) {
+                return fallbackPlan(scenarioText, selectedGender);
+            }
+        }
+        return { buildRebirthPlan };
+    })();
+
     const ChatService = (() => {
         let isGenerating = false;
         async function requestAI(userText) {
@@ -1873,226 +2623,92 @@
                 return;
             }
 
-            let upstreamUrl = config.upstreamUrl;
-            if (upstreamUrl.endsWith("/")) upstreamUrl = upstreamUrl.slice(0, -1);
-            let proxyBase = AppConfig.proxy.baseUrl;
-            if (proxyBase.endsWith("/")) proxyBase = proxyBase.slice(0, -1);
-            const fetchUrl = `${proxyBase}/chat/completions`;
+            const fetchUrl = AIRequestService.buildFetchUrl();
+            const requestHeaders = AIRequestService.buildHeaders(config);
 
             isGenerating = true;
             UIRenderer.setSendingDisabled(true);
             UIRenderer.appendMessage("ai", "正在生成剧情中...", Utils.nowDateStr(state), true);
-            let fullText = "";
-
-            const recentHistory = state.history
-                .slice(-18)
-                .map((item) => `${item.role === "user" ? "玩家" : "系统"}(${item.date})：${item.text}`)
-                .join("\n");
+            const recentHistory = PromptPolicyService.buildRecentHistory(state);
             const scenarioSpec = SettingsService.getScenarioText();
             const beautyCardSetting = SettingsService.getBeautyCardSetting();
             const beautyModeEnabled = HtmlCardService.isBeautyModeEnabled(beautyCardSetting);
-            const builtinRules = BuiltinPromptService.getResponseRules();
-            const stateFactLock = BuiltinPromptService.buildStateFactLock(state);
-            const runtimeContext = [
-                "【运行时上下文】",
-                `主角基础：姓名${state.name}，性别${state.gender}，年龄${Math.floor(state.age / 12)}岁，时间${Utils.nowDateStr(state)}。`,
-                "请使用Markdown输出并兼容手机屏。",
-                "若用户输入与已确认事实冲突，先以礼貌方式说明冲突，再基于事实继续剧情。"
-            ].join("\n");
-            const beautyRules = beautyModeEnabled
-                ? [
-                    "【美化卡片强制规则】",
-                    `当前美化卡片设定：${beautyCardSetting}`,
-                    "你必须输出可直接渲染的 HTML 卡片，且最外层必须是 class=\"ai-beauty-card\" 的 article/section/div。",
-                    "卡片内部需包含：时间、状态变化、剧情正文、（AI想法）以及 1-3 条编号选项。",
-                    "禁止输出纯 Markdown 或纯文本；必须输出 HTML。"
-                ].join("\n")
-                : "";
-            const systemPrompt = `${scenarioSpec}\n\n${builtinRules}\n\n${stateFactLock}\n\n${runtimeContext}${beautyRules ? `\n\n${beautyRules}` : ""}`;
-            const requestHeaders = {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${config.key}`,
-                "X-Upstream-Base-URL": upstreamUrl,
-                "X-Target-Base-URL": upstreamUrl,
-                "X-OpenAI-Base-URL": upstreamUrl
-            };
+            const policyConfig = SettingsService.getChatPolicyConfig();
+            const systemPrompt = PromptPolicyService.buildSystemPrompt({ state, scenarioSpec, beautyCardSetting, beautyModeEnabled });
+            const mainUserPrompt = PromptPolicyService.buildMainUserPrompt(userText, recentHistory);
 
             try {
-                const response = await fetch(fetchUrl, {
-                    method: "POST",
+                const rawText = (await AIRequestService.streamCompletion({
+                    fetchUrl,
                     headers: requestHeaders,
-                    body: JSON.stringify({
+                    model: config.model,
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: mainUserPrompt }
+                    ],
+                    temperature: policyConfig.temperature,
+                    onToken: (text) => UIRenderer.updateStreaming(text)
+                })).trim() || "（AI想法：刚刚有点卡住了，再和我说一次吧喵）";
+
+                let finalText = await ChatPostProcessService.enforceChoices({
+                    text: rawText,
+                    userText,
+                    state,
+                    retryCount: policyConfig.choiceRetryCount,
+                    requestRewrite: async () => AIRequestService.requestCompletion({
+                        fetchUrl,
+                        headers: requestHeaders,
                         model: config.model,
                         messages: [
                             { role: "system", content: systemPrompt },
-                            { role: "user", content: `玩家最新输入：${userText}\n\n最近记录：\n${recentHistory}` }
+                            { role: "user", content: PromptPolicyService.buildChoiceRetryPrompt(userText, recentHistory, rawText) }
                         ],
-                        stream: true,
-                        temperature: 0.7
+                        temperature: policyConfig.temperature
                     })
                 });
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder("utf-8");
-                let tail = "";
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    tail += decoder.decode(value, { stream: true });
-                    const lines = tail.split("\n");
-                    tail = lines.pop() || "";
-                    for (const line of lines) {
-                        if (!line.startsWith("data: ") || line === "data: [DONE]") continue;
-                        try {
-                            const payload = JSON.parse(line.slice(6));
-                            const token = payload.choices?.[0]?.delta?.content || "";
-                            if (!token) continue;
-                            fullText += token;
-                            UIRenderer.updateStreaming(fullText);
-                        } catch (e) {
-                        }
-                    }
-                }
+                const conflictResult = await ChatPostProcessService.enforceConflict({
+                    text: finalText,
+                    userText,
+                    state,
+                    enabled: policyConfig.enableConflictDetection,
+                    retryCount: policyConfig.conflictRetryCount,
+                    requestRewrite: async (conflictReport, textForFix) => AIRequestService.requestCompletion({
+                        fetchUrl,
+                        headers: requestHeaders,
+                        model: config.model,
+                        messages: [
+                            { role: "system", content: systemPrompt },
+                            { role: "user", content: PromptPolicyService.buildConflictRetryPrompt(userText, recentHistory, conflictReport, textForFix) }
+                        ],
+                        temperature: 0.4
+                    })
+                });
 
-                const rawText = fullText.trim() || "（AI想法：刚刚有点卡住了，再和我说一次吧喵）";
-                let finalText = rawText;
-                const hasNumberedChoices = ChoiceService.extractChoices(rawText).length > 0;
+                finalText = ChatPostProcessService.appendWarning(
+                    conflictResult.finalText,
+                    state,
+                    policyConfig.enableConflictDetection
+                );
+                finalText = await ChatPostProcessService.enforceBeautyCard({
+                    text: finalText,
+                    beautyModeEnabled,
+                    htmlForceEnabled: policyConfig.enableHtmlCardForce,
+                    retryCount: policyConfig.htmlRetryCount,
+                    beautyCardSetting,
+                    requestRewrite: async (lastText) => AIRequestService.requestCompletion({
+                        fetchUrl,
+                        headers: requestHeaders,
+                        model: config.model,
+                        messages: [
+                            { role: "system", content: systemPrompt },
+                            { role: "user", content: PromptPolicyService.buildHtmlRetryPrompt(userText, recentHistory, lastText) }
+                        ],
+                        temperature: policyConfig.temperature
+                    })
+                });
 
-                // 严格模式：如果首轮没有编号选项，自动重试一次（非流式）
-                if (!hasNumberedChoices) {
-                    try {
-                        const retryResponse = await fetch(fetchUrl, {
-                            method: "POST",
-                            headers: requestHeaders,
-                            body: JSON.stringify({
-                                model: config.model,
-                                messages: [
-                                    { role: "system", content: systemPrompt },
-                                    {
-                                        role: "user",
-                                        content: [
-                                            `玩家最新输入：${userText}`,
-                                            `最近记录：\n${recentHistory}`,
-                                            "请严格重写上一条回复，必须在结尾提供1-3条编号选项。",
-                                            "格式强制为：1. ... 2. ... 3. ...",
-                                            "不要解释规则，直接输出剧情正文和编号选项。",
-                                            `上一版草稿（缺少编号选项）：\n${rawText}`
-                                        ].join("\n\n")
-                                    }
-                                ],
-                                stream: false,
-                                temperature: 0.7
-                            })
-                        });
-
-                        if (retryResponse.ok) {
-                            const retryJson = await retryResponse.json();
-                            const retriedText = retryJson?.choices?.[0]?.message?.content?.trim();
-                            if (retriedText) {
-                                finalText = retriedText;
-                            }
-                        }
-                    } catch (retryError) {
-                    }
-                }
-
-                // 若重试后仍无编号选项，继续用兜底自动补齐
-                finalText = ChoiceService.ensureOptionsBlock(finalText, userText, state);
-
-                // 事实冲突检测：发现冲突时自动纠偏重试一次
-                let conflictDetected = false;
-                let conflictReport = ConflictService.detectConflicts(finalText, state);
-                if (conflictReport.hasError) {
-                    conflictDetected = true;
-                    try {
-                        const conflictRetry = await fetch(fetchUrl, {
-                            method: "POST",
-                            headers: requestHeaders,
-                            body: JSON.stringify({
-                                model: config.model,
-                                messages: [
-                                    { role: "system", content: systemPrompt },
-                                    {
-                                        role: "user",
-                                        content: [
-                                            `玩家最新输入：${userText}`,
-                                            `最近记录：\n${recentHistory}`,
-                                            "请只做设定一致性纠偏重写，不要重开剧情。",
-                                            "必须严格遵守角色事实锁定块，不得修改姓名、年龄、国籍、NPC关系等已确认事实。",
-                                            `错误级冲突清单：\n- ${conflictReport.errors.map((x) => x.message).join("\n- ")}`,
-                                            `待纠偏文本：\n${finalText}`
-                                        ].join("\n\n")
-                                    }
-                                ],
-                                stream: false,
-                                temperature: 0.4
-                            })
-                        });
-                        if (conflictRetry.ok) {
-                            const retryJson = await conflictRetry.json();
-                            const fixed = retryJson?.choices?.[0]?.message?.content?.trim();
-                            if (fixed) finalText = ChoiceService.ensureOptionsBlock(fixed, userText, state);
-                        }
-                    } catch (fixErr) {
-                    }
-
-                    // 二次检测仍冲突时，补充说明
-                    const secondCheck = ConflictService.detectConflicts(finalText, state);
-                    if (secondCheck.hasError) {
-                        finalText = `${finalText}\n\n> ⚠️ 仍检测到设定错误冲突：${secondCheck.errors.map((x) => x.message).join("；")}`;
-                    }
-                }
-
-                // warning 不重试，只提示
-                const warningReport = ConflictService.detectConflicts(finalText, state);
-                if (warningReport.hasWarning) {
-                    finalText = `${finalText}\n\n> ℹ️ 提示（warning）：${warningReport.warnings.map((x) => x.message).join("；")}`;
-                }
-
-                finalText = HtmlCardService.normalizeHtmlCard(finalText);
-
-                // 美化卡片强制模式：必须能渲染 HTML 卡片，否则自动重试一次
-                if (beautyModeEnabled && !HtmlCardService.isRenderableHtmlCard(finalText)) {
-                    try {
-                        const htmlRetry = await fetch(fetchUrl, {
-                            method: "POST",
-                            headers: requestHeaders,
-                            body: JSON.stringify({
-                                model: config.model,
-                                messages: [
-                                    { role: "system", content: systemPrompt },
-                                    {
-                                        role: "user",
-                                        content: [
-                                            `玩家最新输入：${userText}`,
-                                            `最近记录：\n${recentHistory}`,
-                                            "上一版回复未能正确渲染为 HTML 卡片。",
-                                            "请严格重写为可直接渲染的 HTML，最外层 class 必须是 ai-beauty-card。",
-                                            "同时保留剧情连续性，并包含 1-3 条编号选项。",
-                                            `上一版文本：\n${finalText}`
-                                        ].join("\n\n")
-                                    }
-                                ],
-                                stream: false,
-                                temperature: 0.6
-                            })
-                        });
-                        if (htmlRetry.ok) {
-                            const retryJson = await htmlRetry.json();
-                            const htmlText = retryJson?.choices?.[0]?.message?.content?.trim();
-                            if (htmlText) finalText = htmlText;
-                        }
-                    } catch (htmlRetryErr) {
-                    }
-                }
-
-                // 重试后仍失败时，兜底转换为本地 HTML 卡片，保证页面必定按卡片展示
-                if (beautyModeEnabled && !HtmlCardService.isRenderableHtmlCard(finalText)) {
-                    finalText = HtmlCardService.wrapAsHtmlCard(beautyCardSetting, finalText);
-                }
-
-                UIRenderer.finishStreaming(finalText, { conflictDetected });
+                UIRenderer.finishStreaming(finalText, { conflictDetected: conflictResult.conflictDetected });
                 EventService.maybeTriggerAnimation(finalText);
                 StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(StateService.get()), text: finalText });
                 StateService.pushChat("assistant", finalText);
@@ -2113,6 +2729,7 @@
     const Controller = (() => {
         let activeView = "view-home";
         let presetManifest = [];
+        let pendingRebirthPlan = null;
         function renderAll() {
             const state = StateService.get();
             UIRenderer.renderTop(state);
@@ -2258,7 +2875,7 @@
         function loadFromSlot(index) {
             const saved = SaveSlotService.loadFromSlot(index);
             if (!saved?.state) return;
-            StorageService.writeJson(AppConfig.storageKeys.save, saved.state);
+            StorageService.writeJson(GameSessionService.activeKey(AppConfig.storageKeys.save), saved.state);
             StateService.init();
             renderAll();
             switchView("view-main");
@@ -2271,11 +2888,20 @@
         function saveSettings() {
             SettingsService.saveFromUI();
             renderAll();
-            alert("自定义API卡片已保存");
+            alert("设置已保存（含 API 与 ChatPolicyConfig）");
+        }
+        function saveUserApiSettings() {
+            SettingsService.saveUserApiFromUI();
+            renderAll();
+            alert("用户 API 配置已保存");
         }
         function saveScenarioCard() {
+            const selectedId = ScenarioCardService.getSelectedId();
+            const customPinned = selectedId === ScenarioCardService.CUSTOM_CARD_ID;
             ScenarioCardService.updateSelectedCard({
-                title: document.getElementById("scenario-title-input").value.trim() || "未命名设定",
+                title: customPinned
+                    ? "自定义设定卡片"
+                    : (document.getElementById("scenario-title-input").value.trim() || "未命名设定"),
                 theme: document.getElementById("scenario-theme-input").value.trim(),
                 text: document.getElementById("scenario-editor").value.trim() || AppConfig.defaultScenario
             });
@@ -2284,6 +2910,32 @@
         }
         function selectScenarioCard(id) {
             ScenarioCardService.setSelectedId(id);
+            StateService.init();
+            SettingsService.loadToUI();
+            renderAll();
+        }
+        function createScenarioCard() {
+            ScenarioCardService.createCard();
+            StateService.init();
+            SettingsService.loadToUI();
+            renderAll();
+        }
+        function openScenarioCardSettings(cardId) {
+            selectScenarioCard(cardId);
+            switchView("view-home");
+            const editor = document.getElementById("scenario-editor");
+            if (editor) editor.focus();
+        }
+        function deleteScenarioCard(cardId) {
+            const card = ScenarioCardService.loadCards().find((c) => c.id === cardId);
+            if (!card) return;
+            if (card.id === ScenarioCardService.CUSTOM_CARD_ID) {
+                alert("自定义设定卡片为置顶卡片，不可删除。");
+                return;
+            }
+            if (!confirm(`确定删除卡片「${card.title}」吗？`)) return;
+            const ok = ScenarioCardService.deleteCard(cardId);
+            if (!ok) return;
             SettingsService.loadToUI();
             renderAll();
         }
@@ -2327,13 +2979,40 @@
         }
         function closeRebornModal() {
             document.getElementById("reborn-modal").style.display = "none";
+            pendingRebirthPlan = null;
         }
-        function resetGameWithGender(gender) {
-            StateService.resetWithGender(gender);
+        async function playScenarioCard(cardId) {
+            selectScenarioCard(cardId);
+            await prepareRebirthPreview(StateService.get()?.gender || "");
+        }
+        async function prepareRebirthPreview(defaultGender) {
+            if (ChatService.getIsGenerating()) return;
+            const state = StateService.get();
+            UIRenderer.appendMessage("ai", "正在解析设定并重建投胎信息...", Utils.nowDateStr(state), true);
+            const plan = await ScenarioRebirthService.buildRebirthPlan(defaultGender || "女");
+            UIRenderer.finishStreaming("设定解析完成，已按当前卡片重建投胎身份、背包与NPC。");
+            pendingRebirthPlan = plan;
+            const desc = [
+                `性别：${plan.forcedGender || plan.selectedGender || "未指定"}`,
+                `国籍：${plan.nationality || "按随机"}`,
+                `出生地：${plan.location || "按随机"}`,
+                `NPC数量：${(plan.npcs || []).length}`,
+                `背包物品数量：${(plan.inventory || []).length}`,
+                `说明：${plan.rebornReason || "无"}`
+            ].join("<br>");
+            document.getElementById("reborn-preview-desc").innerHTML = desc;
+            const confirmBtn = document.getElementById("reborn-confirm-btn");
+            confirmBtn.onclick = () => resetGameWithGender();
+            openRebornModal();
+        }
+        function resetGameWithGender() {
+            if (!pendingRebirthPlan) return;
+            StateService.resetWithPreset(pendingRebirthPlan);
             closeRebornModal();
+            switchView("view-main");
             renderAll();
         }
-        return { init, onSendClick, sendUserText, jumpWeek, switchView, saveSettings, saveScenarioCard, selectScenarioCard, applyPresetTemplate, selectApiCard, startFromHome, importScenarioTxt, openRebornModal, closeRebornModal, resetGameWithGender, openItemModal, useItem, openNpcProfile, sendNpcMessage, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
+        return { init, onSendClick, sendUserText, jumpWeek, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, applyPresetTemplate, selectApiCard, startFromHome, importScenarioTxt, openRebornModal, closeRebornModal, resetGameWithGender, openItemModal, useItem, openNpcProfile, sendNpcMessage, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
@@ -2341,7 +3020,9 @@
     function jumpWeek(delta) { Controller.jumpWeek(delta); }
     function switchView(viewId) { Controller.switchView(viewId); }
     function saveSettings() { Controller.saveSettings(); }
+    function saveUserApiSettings() { Controller.saveUserApiSettings(); }
     function saveScenarioCard() { Controller.saveScenarioCard(); }
+    function createScenarioCard() { Controller.createScenarioCard(); }
     function selectScenarioCard(id) { Controller.selectScenarioCard(id); }
     function applyPresetTemplate(id) { Controller.applyPresetTemplate(id); }
     function selectApiCard(id) { Controller.selectApiCard(id); }
@@ -2349,7 +3030,7 @@
     function importScenarioTxt() { Controller.importScenarioTxt(); }
     function openRebornModal() { Controller.openRebornModal(); }
     function closeRebornModal() { Controller.closeRebornModal(); }
-    function resetGameWithGender(gender) { Controller.resetGameWithGender(gender); }
+    function resetGameWithGender() { Controller.resetGameWithGender(); }
     function sendNpcMessage() { Controller.sendNpcMessage(); }
     function closeInfoModal() { Controller.closeInfoModal(); }
 
