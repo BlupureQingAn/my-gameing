@@ -384,26 +384,19 @@
             padding: 6px 8px;
         }
 
-        .ai-plain-status, .ai-plain-event {
-            border: 1px solid #ecd3b4;
-            background: #fffaf2;
-            border-radius: 8px;
-            padding: 8px;
-            margin-bottom: 6px;
+        .ai-choice-item {
+            display: block;
+            margin: 6px 0;
+            padding: 8px 10px;
+            border: 1px solid #e4c5a1;
+            border-radius: 10px;
+            background: #fff6ec;
+            cursor: pointer;
+            transition: background 0.15s ease;
         }
 
-        .ai-card-status, .ai-card-event {
-            margin-top: 8px;
-            border: 1px solid #ead3b6;
-            border-radius: 8px;
-            padding: 8px;
-            background: #fffdf9;
-        }
-
-        .ai-card-status h4, .ai-card-event h4 {
-            margin: 0 0 4px 0;
-            font-size: 0.82rem;
-            color: #6a3f1b;
+        .ai-choice-item:hover {
+            background: #ffefd8;
         }
 
         /* 交互态 */
@@ -1482,48 +1475,30 @@
     })();
 
     const AiResponseLayoutService = (() => {
-        function splitStatusAndEvent(text) {
-            const raw = String(text || "").trim();
-            const statusMatch = raw.match(/(?:^|\n)(?:\*\*)?NPC状态(?:栏)?(?:\*\*)?\s*[:：]\s*([\s\S]*?)(?=(?:\n(?:\*\*)?事件(?:回复)?(?:\*\*)?\s*[:：])|$)/i);
-            const eventMatch = raw.match(/(?:^|\n)(?:\*\*)?事件(?:回复)?(?:\*\*)?\s*[:：]\s*([\s\S]*)$/i);
-            return {
-                status: statusMatch ? String(statusMatch[1] || "").trim() : "",
-                event: eventMatch ? String(eventMatch[1] || "").trim() : raw
-            };
+        function isHtmlLike(text) {
+            return /<[a-z][\s\S]*>/i.test(String(text || ""));
         }
-        function renderPlainSections(text) {
-            const parts = splitStatusAndEvent(text);
-            const statusHtml = parts.status
-                ? `<div class="ai-plain-status"><div class="list-sub">NPC状态</div>${MarkdownService.render(parts.status)}</div>`
-                : "";
-            const eventHtml = `<div class="ai-plain-event"><div class="list-sub">事件回复</div>${MarkdownService.render(parts.event || text)}</div>`;
-            return `${statusHtml}${eventHtml}`;
-        }
-        function ensureHtmlSections(html) {
-            const raw = String(html || "").trim();
-            if (/<[^>]*class=["'][^"']*ai-card-status[^"']*["']/i.test(raw) && /<[^>]*class=["'][^"']*ai-card-event[^"']*["']/i.test(raw)) {
-                return raw;
+        function renderAiMessage(text, streaming = false) {
+            const normalized = HtmlCardService.normalizeHtmlCard(text);
+            if (isHtmlLike(normalized)) {
+                return `${normalized}${streaming ? '<span class="streaming-cursor"></span>' : ""}`;
             }
-            const text = raw.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-            const parts = splitStatusAndEvent(text);
-            const card = raw.match(/<article[\s\S]*<\/article>/i)?.[0] || `<article class="ai-beauty-card">${raw}</article>`;
-            return card.replace(
-                /<\/article>\s*$/i,
-                `<section class="ai-card-status"><h4>NPC状态</h4><p>${MarkdownService.escapeHtml(parts.status || "暂无状态变更")}</p></section><section class="ai-card-event"><h4>事件回复</h4><p>${MarkdownService.escapeHtml(parts.event || text)}</p></section></article>`
-            );
+            return MarkdownService.render(text) + (streaming ? '<span class="streaming-cursor"></span>' : "");
         }
         function bindHtmlChoiceEvents(container) {
             if (!container) return;
-            container.querySelectorAll(".ai-beauty-card li").forEach((li) => {
-                li.style.cursor = "pointer";
-                li.onclick = () => {
-                    const txt = (li.textContent || "").trim();
+            container.querySelectorAll(".ai-beauty-card li, .ai-beauty-card [data-choice], .ai-beauty-card button").forEach((node) => {
+                const el = node;
+                if (!(el instanceof HTMLElement)) return;
+                el.classList.add("ai-choice-item");
+                el.onclick = () => {
+                    const txt = (el.getAttribute("data-choice") || el.textContent || "").trim();
                     const normalized = txt.replace(/^\d+[.)、]\s*/, "");
                     if (normalized) Controller.sendUserText(`我选择：${normalized}`);
                 };
             });
         }
-        return { renderPlainSections, ensureHtmlSections, bindHtmlChoiceEvents };
+        return { renderAiMessage, bindHtmlChoiceEvents };
     })();
 
     const BuiltinPromptService = (() => {
@@ -1781,31 +1756,13 @@
             const normalizedText = role === "ai" ? HtmlCardService.normalizeHtmlCard(text) : text;
             const canUseHtmlCard = role === "ai" && !streaming && HtmlCardService.isRenderableHtmlCard(normalizedText);
             bubble.innerHTML = canUseHtmlCard
-                ? AiResponseLayoutService.ensureHtmlSections(normalizedText)
-                : (role === "ai" && !streaming
-                    ? AiResponseLayoutService.renderPlainSections(text)
-                    : MarkdownService.render(text) + (streaming ? '<span class="streaming-cursor"></span>' : ""));
+                ? AiResponseLayoutService.renderAiMessage(normalizedText, false)
+                : MarkdownService.render(text) + (streaming ? '<span class="streaming-cursor"></span>' : "");
             if (canUseHtmlCard) AiResponseLayoutService.bindHtmlChoiceEvents(bubble);
 
             if (role === "user") { row.appendChild(bubble); row.appendChild(avatar); }
             else { row.appendChild(avatar); row.appendChild(bubble); }
             logDiv.appendChild(row);
-
-            if (!streaming && role === "ai") {
-                const choices = ChoiceService.extractChoices(text);
-                if (choices.length > 0) {
-                    const wrap = document.createElement("div");
-                    wrap.className = "choice-wrap";
-                    choices.forEach((c) => {
-                        const btn = document.createElement("button");
-                        btn.className = "choice-btn";
-                        btn.innerText = c;
-                        btn.onclick = () => Controller.sendUserText(`我选择：${c}`);
-                        wrap.appendChild(btn);
-                    });
-                    logDiv.appendChild(wrap);
-                }
-            }
 
             board.appendChild(logDiv);
             if (streaming) {
@@ -1816,7 +1773,8 @@
         }
         function updateStreaming(text) {
             if (!currentStreamingTarget) return;
-            currentStreamingTarget.innerHTML = MarkdownService.render(text) + '<span class="streaming-cursor"></span>';
+            currentStreamingTarget.innerHTML = AiResponseLayoutService.renderAiMessage(text, true);
+            AiResponseLayoutService.bindHtmlChoiceEvents(currentStreamingTarget);
             scrollToBottom();
         }
         function finishStreaming(text, options = {}) {
@@ -1830,30 +1788,12 @@
                 const warningHtml = options.conflictDetected
                     ? '<div class="ai-card-warning">⚠️ 检测到设定冲突，已自动纠偏重试一次。</div>'
                     : "";
-                currentStreamingTarget.innerHTML = `${warningHtml}${AiResponseLayoutService.ensureHtmlSections(normalizedText)}`;
+                currentStreamingTarget.innerHTML = `${warningHtml}${AiResponseLayoutService.renderAiMessage(normalizedText, false)}`;
                 AiResponseLayoutService.bindHtmlChoiceEvents(currentStreamingTarget);
             } else {
-                currentStreamingTarget.innerHTML = AiResponseLayoutService.renderPlainSections(`${prefix}${text}`);
+                currentStreamingTarget.innerHTML = MarkdownService.render(`${prefix}${text}`);
             }
-            // 流式结束后补渲染选项按钮
-            if (currentStreamingLogDiv) {
-                if (options.conflictDetected) currentStreamingLogDiv.classList.add("conflict");
-                const oldWrap = currentStreamingLogDiv.querySelector(".choice-wrap");
-                if (oldWrap) oldWrap.remove();
-                const choices = ChoiceService.extractChoices(hasHtmlCard ? normalizedText : `${prefix}${text}`);
-                if (choices.length > 0) {
-                    const wrap = document.createElement("div");
-                    wrap.className = "choice-wrap";
-                    choices.forEach((c) => {
-                        const btn = document.createElement("button");
-                        btn.className = "choice-btn";
-                        btn.innerText = c;
-                        btn.onclick = () => Controller.sendUserText(`我选择：${c}`);
-                        wrap.appendChild(btn);
-                    });
-                    currentStreamingLogDiv.appendChild(wrap);
-                }
-            }
+            if (currentStreamingLogDiv && options.conflictDetected) currentStreamingLogDiv.classList.add("conflict");
             currentStreamingTarget = null;
             currentStreamingLogDiv = null;
             scrollToBottom();
@@ -2960,7 +2900,7 @@
                 if (retried) finalText = retried;
                 remain--;
             }
-            return ChoiceService.ensureOptionsBlock(finalText, userText, state);
+            return finalText;
         }
         async function enforceConflict({ text, userText, state, enabled, retryCount, requestRewrite }) {
             let finalText = text;
@@ -2973,7 +2913,7 @@
                 let latestReport = conflictReport;
                 while (latestReport.hasError && remain > 0) {
                     const fixed = await requestRewrite(latestReport, finalText);
-                    if (fixed) finalText = ChoiceService.ensureOptionsBlock(fixed, userText, state);
+                    if (fixed) finalText = fixed;
                     latestReport = ConflictService.detectConflicts(finalText, state);
                     remain--;
                 }
@@ -3470,22 +3410,30 @@
             renderAll();
             return card;
         }
-        async function applyPresetTemplate(preset) {
+        async function applyPresetTemplate(preset, options = {}) {
+            const { silent = false } = options;
             try {
                 const payload = await ScenarioTemplateService.buildTemplateCardPayload(preset);
                 ensurePresetAsIndependentCard(payload);
             } catch (e) {
                 alert(`加载模板失败：${e.message}`);
-                return;
+                return false;
             }
-            alert("已就地更新该预设的独立卡片");
+            if (!silent) alert("已就地更新该预设的独立卡片");
+            return true;
         }
         async function editPresetTemplate(preset) {
             await applyPresetTemplate(preset);
             switchView("view-scenario-editor");
         }
         async function playPresetTemplate(preset) {
-            await applyPresetTemplate(preset);
+            openRebornLoadingModal("正在加载预设模板并初始化独立卡片...");
+            const ok = await applyPresetTemplate(preset, { silent: true });
+            if (ok === false) {
+                closeRebornLoadingModal();
+                return;
+            }
+            updateRebornLoadingStage("连接中");
             await playScenarioCard(ScenarioCardService.getSelectedId());
         }
         function selectApiCard(id) {
@@ -3531,6 +3479,7 @@
             selectScenarioCard(cardId);
             const meta = ScenarioPlayMetaService.getMeta(cardId);
             if (meta.hasInitialized) {
+                closeRebornLoadingModal();
                 PlayViewStateService.enterPlay(cardId);
                 switchView("view-main");
                 renderAll();
