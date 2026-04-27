@@ -2178,7 +2178,7 @@
         function normalizeStatItem(it, idx) {
             const key = String(it?.key || it?.name || `stat_${idx}`).replace(/[^\w-]/g, "_");
             const label = String(it?.label || it?.name || key).slice(0, 12);
-            const icon = String(it?.icon || "✨").slice(0, 3);
+            const icon = String(it?.icon || "✨").trim() || "✨";
             const value = Math.max(0, Math.min(999, Number(it?.value) || 0));
             return { key, label, icon, value };
         }
@@ -2206,6 +2206,7 @@
         let currentStreamingLogDiv = null;
         let currentSocialNpcId = null;
         let autoFollowBottom = true;
+        let lastScrollTop = 0;
         function renderTop(state) {
             const inPlay = PlayViewStateService.isInPlayMode();
             const card = ScenarioCardService.getSelectedCard();
@@ -2243,6 +2244,11 @@
             if (!content) return true;
             const gap = content.scrollHeight - content.scrollTop - content.clientHeight;
             return gap <= 120;
+        }
+        function markUserScrolledUp(currentTop) {
+            const top = Number(currentTop) || 0;
+            if (top < lastScrollTop - 2) autoFollowBottom = false;
+            lastScrollTop = top;
         }
         function appendMessage(role, text, dateStr, streaming) {
             const state = StateService.get();
@@ -2312,6 +2318,28 @@
             board.innerHTML = "";
             history.forEach((msg) => appendMessage(msg.role || "ai", msg.text, msg.date, false));
             scrollToBottom();
+        }
+        function patchLastAiMessage(text, options = {}) {
+            const board = document.getElementById("story-board");
+            if (!board) return false;
+            const aiRows = board.querySelectorAll(".msg-row.ai .bubble.ai");
+            const bubble = aiRows.length ? aiRows[aiRows.length - 1] : null;
+            if (!(bubble instanceof HTMLElement)) return false;
+            const normalizedText = HtmlCardService.normalizeHtmlCard(text);
+            const hasHtmlCard = HtmlCardService.isRenderableHtmlCard(normalizedText);
+            if (hasHtmlCard) {
+                bubble.classList.add("html-host");
+                const warningHtml = options.conflictDetected
+                    ? '<div class="ai-card-warning">⚠️ 检测到设定冲突，已自动纠偏重试一次。</div>'
+                    : "";
+                bubble.innerHTML = `${warningHtml}${AiResponseLayoutService.renderAiMessage(normalizedText, false)}`;
+                AiResponseLayoutService.bindHtmlChoiceEvents(bubble);
+            } else {
+                bubble.classList.remove("html-host");
+                bubble.innerHTML = MarkdownService.render(String(text || ""));
+            }
+            scrollToBottom();
+            return true;
         }
         function setSendingDisabled(disabled) {
             document.getElementById("send-btn").disabled = disabled;
@@ -2494,7 +2522,7 @@
                 box.appendChild(row);
             });
         }
-        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, renderApiCards, renderPresetTemplates, setAutoFollowBottom, isNearBottom };
+        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, renderApiCards, renderPresetTemplates, setAutoFollowBottom, isNearBottom, markUserScrolledUp };
     })();
 
     const VisualEffects = (() => {
@@ -3423,9 +3451,8 @@
     })();
 
     const ScenarioIntroService = (() => {
-        async function generateIntroHtmlCard({ apiConfig, scenarioText, state, beautySetting }) {
+        function buildIntroRequestPayload({ scenarioText, state, beautySetting }) {
             const fetchUrl = AIRequestService.buildFetchUrl();
-            const headers = AIRequestService.buildHeaders(apiConfig);
             const systemPrompt = [
                 "【最高优先级：设定文本约束】",
                 "你必须严格以设定文本为唯一世界规则源，不得引入与设定冲突的时代/地域/身份元素。",
@@ -3447,20 +3474,46 @@
                 JSON.stringify(state.npcs || [], null, 2),
                 "请直接输出HTML，不要Markdown，不要解释。"
             ].join("\n\n");
+            return {
+                fetchUrl,
+                systemPrompt,
+                userPrompt
+            };
+        }
+        async function generateIntroHtmlCard({ apiConfig, scenarioText, state, beautySetting }) {
+            const headers = AIRequestService.buildHeaders(apiConfig);
+            const payload = buildIntroRequestPayload({ scenarioText, state, beautySetting });
             const html = await AIRequestService.requestCompletionWithFallback({
                 config: apiConfig,
-                fetchUrl,
+                fetchUrl: payload.fetchUrl,
                 headers,
                 model: apiConfig.model,
                 messages: [
-                    { role: "system", content: systemPrompt },
-                    { role: "user", content: userPrompt }
+                    { role: "system", content: payload.systemPrompt },
+                    { role: "user", content: payload.userPrompt }
                 ],
                 temperature: 0.6
             });
             return String(html || "").trim();
         }
-        return { generateIntroHtmlCard };
+        async function streamIntroHtmlCard({ apiConfig, scenarioText, state, beautySetting, onToken }) {
+            const headers = AIRequestService.buildHeaders(apiConfig);
+            const payload = buildIntroRequestPayload({ scenarioText, state, beautySetting });
+            const text = await AIRequestService.streamCompletionWithFallback({
+                config: apiConfig,
+                fetchUrl: payload.fetchUrl,
+                headers,
+                model: apiConfig.model,
+                messages: [
+                    { role: "system", content: payload.systemPrompt },
+                    { role: "user", content: payload.userPrompt }
+                ],
+                temperature: 0.6,
+                onToken
+            });
+            return String(text || "").trim();
+        }
+        return { generateIntroHtmlCard, streamIntroHtmlCard };
     })();
 
     const PromptPolicyService = (() => {
@@ -4120,18 +4173,27 @@
                 const shouldPatchRendered = finalText !== rawVisibleText;
                 const finalPatchResult = StatePatchService.extractPatch(finalText);
                 const finalVisibleText = finalPatchResult.cleaned || finalText;
-                const finalPatchChanged = StatePatchService.applyPatch(StateService.get(), finalPatchResult.patch);
+                const currentState = StateService.get();
+                const finalPatchChanged = StatePatchService.applyPatch(currentState, finalPatchResult.patch);
                 const shouldRefreshByPatch = rawPatchChanged || finalPatchChanged;
                 if (shouldPatchRendered) {
                     aiEntry.text = finalVisibleText;
                     replaceLastAssistantChat(rawVisibleText, finalVisibleText);
-                    TimeSyncService.syncFromAiText(StateService.get(), finalVisibleText);
+                    TimeSyncService.syncFromAiText(currentState, finalVisibleText);
                     StateService.save();
-                    UIRenderer.renderHistory(StateService.get().history);
+                    // 局部更新最后一条AI消息，避免整页重绘导致抖动
+                    if (!UIRenderer.patchLastAiMessage(finalVisibleText, { conflictDetected })) {
+                        UIRenderer.renderHistory(StateService.get().history);
+                    }
+                    UIRenderer.renderTop(currentState);
+                    UIRenderer.renderInventory(currentState);
+                    UIRenderer.renderSocialList(currentState);
                 } else if (shouldRefreshByPatch) {
-                    TimeSyncService.syncFromAiText(StateService.get(), finalVisibleText);
+                    TimeSyncService.syncFromAiText(currentState, finalVisibleText);
                     StateService.save();
-                    UIRenderer.renderHistory(StateService.get().history);
+                    UIRenderer.renderTop(currentState);
+                    UIRenderer.renderInventory(currentState);
+                    UIRenderer.renderSocialList(currentState);
                 }
             } catch (error) {
                 if (!uiUnlocked) {
@@ -4191,8 +4253,16 @@
             const content = document.getElementById("main-content");
             if (content) {
                 content.addEventListener("scroll", () => {
+                    UIRenderer.markUserScrolledUp(content.scrollTop);
                     UIRenderer.setAutoFollowBottom(UIRenderer.isNearBottom());
                 });
+                content.addEventListener("wheel", (e) => {
+                    if (e.deltaY < 0) UIRenderer.setAutoFollowBottom(false);
+                }, { passive: true });
+                content.addEventListener("touchmove", () => {
+                    UIRenderer.markUserScrolledUp(content.scrollTop);
+                    if (!UIRenderer.isNearBottom()) UIRenderer.setAutoFollowBottom(false);
+                }, { passive: true });
             }
             const searchInput = document.getElementById("scenario-search-input");
             if (searchInput) {
@@ -4673,8 +4743,23 @@
                     const scenarioText = SettingsService.getScenarioText();
                     const beautySetting = SettingsService.getBeautyCardSetting();
                     const state = StateService.get();
-                    let html = await ScenarioIntroService.generateIntroHtmlCard({ apiConfig, scenarioText, state, beautySetting });
-                    let normalized = HtmlCardService.normalizeHtmlCard(html);
+                    UIRenderer.setAutoFollowBottom(true);
+                    UIRenderer.appendMessage("ai", "正在生成开局剧情卡片...", Utils.nowDateStr(state), true);
+                    let closedLoading = false;
+                    const streamText = await ScenarioIntroService.streamIntroHtmlCard({
+                        apiConfig,
+                        scenarioText,
+                        state,
+                        beautySetting,
+                        onToken: (txt) => {
+                            if (!closedLoading) {
+                                closeInitLoadingModal(); // 收到首 token 立即关闭加载弹窗
+                                closedLoading = true;
+                            }
+                            UIRenderer.updateStreaming(txt);
+                        }
+                    });
+                    let normalized = HtmlCardService.normalizeHtmlCard(streamText);
                     let usedFallback = false;
                     if (!HtmlCardService.isRenderableHtmlCard(normalized)) {
                         normalized = HtmlCardService.wrapAsHtmlCard(beautySetting, normalized);
@@ -4696,11 +4781,13 @@
                         }
                     }
                     if (normalized) {
+                        UIRenderer.finishStreaming(normalized, { conflictDetected: false });
                         StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(state), text: normalized });
                         StateService.save();
-                        UIRenderer.renderHistory(StateService.get().history);
                     }
                 } catch (e) {
+                    closeInitLoadingModal();
+                    UIRenderer.finishStreaming(`⚠️ 开局卡片生成失败：${e.message}`, { conflictDetected: false });
                 } finally {
                     closeInitLoadingModal();
                 }
