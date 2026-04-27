@@ -263,8 +263,7 @@
         }
 
         .msg-row {
-            display: flex;
-            gap: 8px;
+            display: block;
             margin-bottom: 8px;
         }
 
@@ -277,10 +276,11 @@
             font-size: 20px;
             flex-shrink: 0;
             animation: petBlink 2.8s ease-in-out infinite;
+            display: none;
         }
 
         .bubble {
-            max-width: calc(100% - 50px);
+            max-width: 100%;
             padding: 9px 10px;
             border-radius: 12px;
             font-size: 0.9rem;
@@ -327,8 +327,8 @@
         }
 
         .bubble.user {
-            background: #ffe0ef;
-            border: 1px solid #efb5d1;
+            background: #f9f0e4;
+            border: 1px solid #e5ccb0;
         }
 
         .bubble h1, .bubble h2, .bubble h3 {
@@ -400,9 +400,7 @@
         }
 
         /* 交互态 */
-        .msg-row.user {
-            justify-content: flex-end;
-        }
+        .msg-row.user { }
 
         .choice-btn {
             border: 1px solid var(--line);
@@ -927,6 +925,14 @@
         <div class="modal-card">
             <div class="modal-title">投胎预览确认</div>
             <div class="modal-desc" id="reborn-preview-desc">正在准备投胎解析结果...</div>
+            <div style="margin-top:8px; display:grid; gap:6px;">
+                <input id="reborn-name" type="text" placeholder="主角姓名">
+                <input id="reborn-english-name" type="text" placeholder="英文名">
+                <input id="reborn-gender" type="text" placeholder="性别">
+                <input id="reborn-age-years" type="number" min="0" max="120" placeholder="年龄（岁）">
+                <input id="reborn-nationality" type="text" placeholder="国籍">
+                <input id="reborn-location" type="text" placeholder="地点">
+            </div>
             <div class="gender-actions">
                 <button class="mini-btn ghost" onclick="closeRebornModal()">取消</button>
                 <button class="mini-btn primary" id="reborn-confirm-btn">确认投胎并开始游玩</button>
@@ -1329,16 +1335,27 @@
             const next = Utils.deepClone(baseState);
             const identity = IdentityService.generateIdentity();
             next.gender = gender || preset.gender || next.gender;
-            next.name = identity.name;
-            next.englishName = identity.englishName;
+            next.name = preset.name || identity.name;
+            next.englishName = preset.englishName || identity.englishName;
             next.nationality = preset.nationality || identity.nationality;
             next.location = preset.location || identity.location;
+            const ageYears = Math.max(0, Number(preset.ageYears || 0));
+            next.age = ageYears * 12;
             next.inventory = Array.isArray(preset.inventory) && preset.inventory.length
                 ? Utils.deepClone(preset.inventory)
                 : createDefaultInventory();
             next.npcs = Array.isArray(preset.npcs) && preset.npcs.length
                 ? Utils.deepClone(preset.npcs)
                 : createDefaultNpcs();
+            next.protagonistProfile = {
+                name: next.name,
+                englishName: next.englishName,
+                gender: next.gender,
+                nationality: next.nationality,
+                location: next.location,
+                ageYears
+            };
+            next.npcProfiles = Utils.deepClone(next.npcs);
             next.npcChats = {};
             next.chatMemory = [];
             next.history = [{ role: "ai", date: Utils.nowDateStr(next), text: introText(next) }];
@@ -1358,14 +1375,23 @@
             if (typeof gameState.weekdayIndex !== "number") gameState.weekdayIndex = 0;
         }
 
-        function resetWithPreset({ selectedGender, forcedGender, nationality, location, inventory, npcs, rebornReason }) {
+        function resetWithPreset({ selectedGender, forcedGender, name, englishName, ageYears, nationality, location, inventory, npcs, rebornReason }) {
             const finalGender = forcedGender || selectedGender || baseState.gender;
-            gameState = buildInitialState(finalGender, { gender: forcedGender, nationality, location, inventory, npcs });
+            gameState = buildInitialState(finalGender, {
+                gender: forcedGender,
+                name,
+                englishName,
+                ageYears,
+                nationality,
+                location,
+                inventory,
+                npcs
+            });
             const reasonText = rebornReason ? `\n设定解析：${rebornReason}` : "";
             gameState.history = [{
                 role: "ai",
                 date: Utils.nowDateStr(gameState),
-                text: `## 新人生开启\n投胎性别：**${finalGender}**。\n本次身份：**${gameState.name}（${gameState.englishName}）**，国籍**${gameState.nationality}**，出生地**${gameState.location}**。\n背包已按设定重建，社交NPC已重置并重建。${reasonText}\n\n（AI想法：后续剧情会严格沿用这组身份信息）`
+                text: `## 新人生开启\n身份：**${gameState.name}（${gameState.englishName}）**，${Math.floor((gameState.age || 0) / 12)}岁，性别**${finalGender}**。\n国籍**${gameState.nationality}**，地点**${gameState.location}**。\n背包已按设定重建，社交NPC已重置并重建。${reasonText}\n\n（AI想法：后续剧情会严格沿用这组身份信息）`
             }];
             save();
         }
@@ -1736,6 +1762,9 @@
         }
         function scrollToBottom() {
             const content = document.getElementById("main-content");
+            const active = document.querySelector(".view-section.active");
+            const activeId = active?.id || "";
+            if (!["view-main", "view-social"].includes(activeId)) return;
             content.scrollTop = content.scrollHeight;
         }
         function appendMessage(role, text, dateStr, streaming) {
@@ -2947,6 +2976,11 @@
     })();
 
     const ScenarioRebirthService = (() => {
+        function sanitizeAgeYears(v) {
+            const n = Number(v);
+            if (!Number.isFinite(n)) return NaN;
+            return Math.max(0, Math.min(120, Math.floor(n)));
+        }
         function sanitizeItems(items = []) {
             return items
                 .filter((it) => it && it.name)
@@ -2979,8 +3013,9 @@
             if (typeof onProgress === "function") onProgress("连接中");
             const systemPrompt = [
                 "你是文游设定解析器。根据用户设定文本输出 JSON，不要输出解释。",
-                "必须输出字段：forcedGender, nationality, location, rebornReason, inventory, npcs。",
+                "必须输出字段：name, englishName, ageYears, forcedGender, nationality, location, rebornReason, inventory, npcs。",
                 "forcedGender 仅可为 男/女/非二元/空字符串。",
+                "ageYears 为合理年龄，不要默认婴儿，除非设定明确要求幼年开局。",
                 "如果设定指向古代中国皇宫，location 优先填 北京。",
                 "inventory 是数组，每项含 name,type,desc,effect,count。",
                 "npcs 是数组，每项含 name,relation,favor,status,mood。"
@@ -3012,6 +3047,9 @@
             if (typeof onProgress === "function") onProgress("生成NPC");
             const npcs = sanitizeNpcs(parsed.npcs);
             return {
+                name: String(parsed.name || "").trim(),
+                englishName: String(parsed.englishName || "").trim(),
+                ageYears: sanitizeAgeYears(parsed.ageYears),
                 forcedGender: String(parsed.forcedGender || "").trim(),
                 selectedGender,
                 nationality: String(parsed.nationality || "").trim(),
@@ -3030,6 +3068,8 @@
             }
             const aiPlan = await analyzeWithAI({ scenarioText, selectedGender, apiConfig, onProgress });
             if (!aiPlan) throw new Error("AI 返回为空，无法生成投胎方案。");
+            if (!aiPlan.name || !aiPlan.englishName) throw new Error("AI 未返回有效主角姓名。");
+            if (!Number.isFinite(aiPlan.ageYears)) throw new Error("AI 未返回有效年龄。");
             if (!Array.isArray(aiPlan.inventory) || !aiPlan.inventory.length) {
                 throw new Error("AI 未返回有效背包数据。");
             }
@@ -3475,6 +3515,24 @@
         function closeRebornLoadingModal() {
             document.getElementById("reborn-loading-modal").style.display = "none";
         }
+        function bindRebornPreviewForm(plan) {
+            document.getElementById("reborn-name").value = plan.name || "";
+            document.getElementById("reborn-english-name").value = plan.englishName || "";
+            document.getElementById("reborn-gender").value = plan.forcedGender || plan.selectedGender || "";
+            document.getElementById("reborn-age-years").value = String(plan.ageYears ?? 18);
+            document.getElementById("reborn-nationality").value = plan.nationality || "";
+            document.getElementById("reborn-location").value = plan.location || "";
+        }
+        function collectRebornPreviewForm() {
+            return {
+                name: document.getElementById("reborn-name").value.trim(),
+                englishName: document.getElementById("reborn-english-name").value.trim(),
+                forcedGender: document.getElementById("reborn-gender").value.trim(),
+                ageYears: Number(document.getElementById("reborn-age-years").value || 0),
+                nationality: document.getElementById("reborn-nationality").value.trim(),
+                location: document.getElementById("reborn-location").value.trim()
+            };
+        }
         async function playScenarioCard(cardId) {
             selectScenarioCard(cardId);
             const meta = ScenarioPlayMetaService.getMeta(cardId);
@@ -3499,6 +3557,8 @@
                 closeRebornLoadingModal();
                 pendingRebirthPlan = plan;
                 const desc = [
+                    `角色：${plan.name}（${plan.englishName}）`,
+                    `年龄：${plan.ageYears} 岁`,
                     `角色性别：${plan.forcedGender || plan.selectedGender || "未指定"}`,
                     `角色国籍：${plan.nationality || "按随机"}`,
                     `角色地点：${plan.location || "按随机"}`,
@@ -3507,6 +3567,7 @@
                     `说明：${plan.rebornReason || "无"}`
                 ].join("<br>");
                 document.getElementById("reborn-preview-desc").innerHTML = desc;
+                bindRebornPreviewForm(plan);
                 const confirmBtn = document.getElementById("reborn-confirm-btn");
                 confirmBtn.onclick = () => resetGameWithGender();
                 openRebornModal();
@@ -3517,7 +3578,17 @@
         }
         function resetGameWithGender() {
             if (!pendingRebirthPlan) return;
-            StateService.resetWithPreset(pendingRebirthPlan);
+            const edited = collectRebornPreviewForm();
+            const merged = { ...pendingRebirthPlan, ...edited };
+            if (!merged.name || !merged.englishName) {
+                alert("请填写主角姓名与英文名。");
+                return;
+            }
+            if (!Number.isFinite(Number(merged.ageYears)) || Number(merged.ageYears) < 0) {
+                alert("请填写有效年龄。");
+                return;
+            }
+            StateService.resetWithPreset(merged);
             ScenarioPlayMetaService.setInitialized(ScenarioCardService.getSelectedId(), true);
             PlayViewStateService.enterPlay(ScenarioCardService.getSelectedId());
             closeRebornModal();
