@@ -439,13 +439,15 @@
             user-select: none;
         }
 
+        .ai-choice-item br {
+            display: none;
+        }
+
         .ai-choice-item:hover {
             background: #ffefd8;
         }
 
         /* 交互态 */
-        .msg-row.user { }
-
         .choice-btn {
             border: 1px solid var(--line);
             background: #fff6eb;
@@ -952,19 +954,25 @@
             <section class="card">
                 <div class="list-title">💬 社交（类似微信单聊）</div>
                 <div id="social-list" style="margin-top:8px;"></div>
-                <div id="social-chat-panel" style="display:none; margin-top:10px;">
-                    <div class="list-row">
-                        <div>
-                            <div class="list-title" id="social-chat-title">与NPC聊天</div>
-                            <div class="list-sub" id="social-chat-sub"></div>
-                        </div>
-                        <button class="tiny-btn" id="social-avatar-btn">查看状态</button>
+            </section>
+        </section>
+
+        <section id="view-npc-chat" class="view-section">
+            <section class="card">
+                <div class="list-row">
+                    <div>
+                        <div class="list-title" id="npc-chat-title">与NPC聊天</div>
+                        <div class="list-sub" id="npc-chat-sub"></div>
                     </div>
-                    <div class="social-chat-box" id="social-chat-box"></div>
-                    <div class="composer" style="margin-top:8px;">
-                        <textarea id="social-input" placeholder="给这个NPC发消息"></textarea>
-                        <button class="send-btn" onclick="sendNpcMessage()">发送</button>
+                    <div style="display:flex; gap:6px;">
+                        <button class="tiny-btn" onclick="backToSocialList()">返回</button>
+                        <button class="tiny-btn" id="npc-chat-avatar-btn">查看状态</button>
                     </div>
+                </div>
+                <div class="social-chat-box" id="npc-chat-box"></div>
+                <div class="composer" style="margin-top:8px;">
+                    <textarea id="npc-chat-input" placeholder="给这个NPC发消息"></textarea>
+                    <button class="send-btn" onclick="sendNpcMessage()">发送</button>
                 </div>
             </section>
         </section>
@@ -1039,6 +1047,17 @@
             <div class="gender-actions">
                 <button class="mini-btn ghost" onclick="closeInfoModal()">关闭</button>
                 <button class="mini-btn primary" id="info-modal-action" style="display:none;">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="decision-modal">
+        <div class="modal-card">
+            <div class="modal-title" id="decision-modal-title">需要重试</div>
+            <div class="modal-desc" id="decision-modal-desc"></div>
+            <div class="gender-actions">
+                <button class="mini-btn ghost" id="decision-modal-cancel-btn">跳过</button>
+                <button class="mini-btn primary" id="decision-modal-ok-btn">重试</button>
             </div>
         </div>
     </div>
@@ -1180,6 +1199,39 @@
         return { readJson, writeJson, readText, writeText };
     })();
 
+    const DecisionModalService = (() => {
+        let pendingResolve = null;
+        function close() {
+            const modal = document.getElementById("decision-modal");
+            if (modal) modal.style.display = "none";
+        }
+        function show({ title, descHtml, okText = "重试", cancelText = "跳过" }) {
+            return new Promise((resolve) => {
+                pendingResolve = resolve;
+                document.getElementById("decision-modal-title").innerText = String(title || "需要确认");
+                document.getElementById("decision-modal-desc").innerHTML = String(descHtml || "");
+                const okBtn = document.getElementById("decision-modal-ok-btn");
+                const cancelBtn = document.getElementById("decision-modal-cancel-btn");
+                okBtn.innerText = okText;
+                cancelBtn.innerText = cancelText;
+                okBtn.onclick = () => {
+                    close();
+                    const r = pendingResolve;
+                    pendingResolve = null;
+                    if (typeof r === "function") r(true);
+                };
+                cancelBtn.onclick = () => {
+                    close();
+                    const r = pendingResolve;
+                    pendingResolve = null;
+                    if (typeof r === "function") r(false);
+                };
+                document.getElementById("decision-modal").style.display = "flex";
+            });
+        }
+        return { show, close };
+    })();
+
     const GameSessionService = (() => {
         function normalizeCardId(cardId) {
             return String(cardId || ScenarioCardService.CUSTOM_CARD_ID || "scenario_custom").replace(/[^\w-]/g, "_");
@@ -1235,7 +1287,7 @@
     })();
 
     const NavigationVisibilityService = (() => {
-        const PLAY_VIEWS = new Set(["view-main", "view-inventory", "view-social", "view-saves"]);
+        const PLAY_VIEWS = new Set(["view-main", "view-inventory", "view-social", "view-npc-chat", "view-saves"]);
         function apply(viewId) {
             const inPlay = PlayViewStateService.isInPlayMode();
             document.querySelectorAll(".nav-btn").forEach((btn) => {
@@ -1561,8 +1613,16 @@
         function normalizeHtmlCard(text) {
             const raw = String(text || "").trim();
             const fenced = extractHtmlFromCodeFence(raw);
-            if (fenced && containsHtmlCard(fenced)) return fenced;
-            return raw;
+            const candidate = (fenced && containsHtmlCard(fenced)) ? fenced : raw;
+            if (!containsHtmlCard(candidate)) return candidate;
+            try {
+                const tpl = document.createElement("template");
+                tpl.innerHTML = candidate;
+                const card = tpl.content.querySelector(".ai-beauty-card");
+                if (card && card instanceof HTMLElement) return card.outerHTML;
+            } catch (e) {
+            }
+            return candidate;
         }
         function isRenderableHtmlCard(text) {
             const normalized = normalizeHtmlCard(text);
@@ -1628,7 +1688,14 @@
                 if (!txt) return "";
                 // 兼容常见选项格式：1. xxx / 1) xxx / ①xxx / 【选项】xxx
                 const m = txt.match(/^(\d+[.)、]\s*|[①②③④⑤⑥⑦⑧⑨⑩]\s*|【?选项[:：]?\s*\d*】?\s*)?(.+)$/);
-                return (m?.[2] || txt).trim();
+                let choice = (m?.[2] || txt).trim();
+                if (/^\d+[.)、]?$/.test(choice) || /^[①②③④⑤⑥⑦⑧⑨⑩]$/.test(choice)) {
+                    const parent = el.closest(".ai-choice-item, li, button, a, p, div, span");
+                    const parentText = String(parent?.textContent || "").replace(/\s+/g, " ").trim();
+                    const pm = parentText.match(/^(\d+[.)、]\s*|[①②③④⑤⑥⑦⑧⑨⑩]\s*|【?选项[:：]?\s*\d*】?\s*)?(.+)$/);
+                    choice = (pm?.[2] || parentText || choice).trim();
+                }
+                return choice;
             };
             card.querySelectorAll("li, [data-choice], button, a, p, div, span").forEach((node) => {
                 const el = node;
@@ -2086,6 +2153,7 @@
         let currentStreamingTarget = null;
         let currentStreamingLogDiv = null;
         let currentSocialNpcId = null;
+        let autoFollowBottom = true;
         function renderTop(state) {
             const inPlay = PlayViewStateService.isInPlayMode();
             const card = ScenarioCardService.getSelectedCard();
@@ -2112,7 +2180,17 @@
             const active = document.querySelector(".view-section.active");
             const activeId = active?.id || "";
             if (!["view-main", "view-social"].includes(activeId)) return;
+            if (!autoFollowBottom) return;
             content.scrollTop = content.scrollHeight;
+        }
+        function setAutoFollowBottom(next) {
+            autoFollowBottom = !!next;
+        }
+        function isNearBottom() {
+            const content = document.getElementById("main-content");
+            if (!content) return true;
+            const gap = content.scrollHeight - content.scrollTop - content.clientHeight;
+            return gap <= 120;
         }
         function appendMessage(role, text, dateStr, streaming) {
             const state = StateService.get();
@@ -2221,7 +2299,7 @@
                 `;
                 row.querySelector("button").onclick = () => {
                     currentSocialNpcId = npc.id;
-                    renderSocialChat(state, npc.id);
+                    Controller.openNpcChat(npc.id);
                 };
                 row.querySelector(".list-title").onclick = () => Controller.openNpcProfile(npc.id);
                 list.appendChild(row);
@@ -2229,14 +2307,13 @@
             if (currentSocialNpcId) renderSocialChat(state, currentSocialNpcId);
         }
         function renderSocialChat(state, npcId) {
-            const panel = document.getElementById("social-chat-panel");
-            const box = document.getElementById("social-chat-box");
+            const panel = document.getElementById("view-npc-chat");
+            const box = document.getElementById("npc-chat-box");
             const npc = (state.npcs || []).find((n) => n.id === npcId);
             if (!panel || !box || !npc) return;
-            panel.style.display = "block";
-            document.getElementById("social-chat-title").innerText = `和 ${npc.name} 聊天`;
-            document.getElementById("social-chat-sub").innerText = `性别 ${npc.gender || "未知"}｜好感 ${npc.favor}｜心情 ${npc.mood}｜状态 ${npc.status}`;
-            document.getElementById("social-avatar-btn").onclick = () => Controller.openNpcProfile(npc.id);
+            document.getElementById("npc-chat-title").innerText = `和 ${npc.name} 聊天`;
+            document.getElementById("npc-chat-sub").innerText = `性别 ${npc.gender || "未知"}｜好感 ${npc.favor}｜心情 ${npc.mood}｜状态 ${npc.status}`;
+            document.getElementById("npc-chat-avatar-btn").onclick = () => Controller.openNpcProfile(npc.id);
             const chats = state.npcChats[npcId] || [];
             box.innerHTML = chats.map((m) => `<div class="npc-msg ${m.from}">${m.from === "me" ? "我" : npc.name}：${MarkdownService.render(m.text)}</div>`).join("");
             box.scrollTop = box.scrollHeight;
@@ -2365,7 +2442,7 @@
                 box.appendChild(row);
             });
         }
-        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, renderApiCards, renderPresetTemplates };
+        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, renderApiCards, renderPresetTemplates, setAutoFollowBottom, isNearBottom };
     })();
 
     const VisualEffects = (() => {
@@ -3803,6 +3880,22 @@
 
     const ChatService = (() => {
         let isGenerating = false;
+        async function decideRetry(reasonTitle, reasonLines = []) {
+            const lines = (reasonLines || []).filter(Boolean);
+            const html = [
+                `<div style="font-weight:700; margin-bottom:6px;">检测到需要重试：${MarkdownService.escapeHtml(String(reasonTitle || ""))}</div>`,
+                ...(lines.length
+                    ? [`<ul style="padding-left:18px; margin:6px 0;">${lines.map((x) => `<li>${MarkdownService.escapeHtml(String(x))}</li>`).join("")}</ul>`]
+                    : []),
+                `<div class="list-sub" style="margin-top:6px;">你可以选择重试一次，或跳过并继续（不会再自动重试）。</div>`
+            ].join("");
+            return await DecisionModalService.show({
+                title: "是否重试？",
+                descHtml: html,
+                okText: "重试一次",
+                cancelText: "跳过"
+            });
+        }
         function decideWarningAction(warnings = []) {
             const list = (warnings || []).map((x) => x?.message || String(x || "")).filter(Boolean);
             if (!list.length) return "skip";
@@ -3888,46 +3981,54 @@
                 uiUnlocked = true;
 
                 // 第二阶段：后台纠偏与美化强化，不再阻塞用户操作。
-                let finalText = await ChatPostProcessService.enforceChoices({
-                    text: rawVisibleText,
-                    userText,
-                    state,
-                    retryCount: policyConfig.choiceRetryCount,
-                    requestRewrite: async () => AIRequestService.requestCompletionWithFallback({
-                        config,
-                        fetchUrl,
-                        headers: requestHeaders,
-                        model: config.model,
-                        messages: [
-                            { role: "system", content: systemPrompt },
-                            { role: "user", content: PromptPolicyService.buildChoiceRetryPrompt(userText, recentHistory, rawText, scenarioSpec) }
-                        ],
-                        temperature: policyConfig.temperature
-                    })
-                });
+                let finalText = rawVisibleText;
+                const needChoiceRetry = ChoiceService.extractChoices(finalText).length === 0 && (Number(policyConfig.choiceRetryCount) || 0) > 0;
+                if (needChoiceRetry) {
+                    const ok = await decideRetry("回复末尾缺少编号选项", ["需要 1-3 条编号选项供点击。"]);
+                    if (ok) {
+                        const retried = await AIRequestService.requestCompletionWithFallback({
+                            config,
+                            fetchUrl,
+                            headers: requestHeaders,
+                            model: config.model,
+                            messages: [
+                                { role: "system", content: systemPrompt },
+                                { role: "user", content: PromptPolicyService.buildChoiceRetryPrompt(userText, recentHistory, rawText, scenarioSpec) }
+                            ],
+                            temperature: policyConfig.temperature
+                        });
+                        if (retried) finalText = retried;
+                    }
+                }
 
                 const beforeConflictText = finalText;
-                const conflictResult = await ChatPostProcessService.enforceConflict({
-                    text: finalText,
-                    userText,
-                    state,
-                    enabled: policyConfig.enableConflictDetection,
-                    retryCount: policyConfig.conflictRetryCount,
-                    requestRewrite: async (conflictReport, textForFix) => AIRequestService.requestCompletionWithFallback({
-                        config,
-                        fetchUrl,
-                        headers: requestHeaders,
-                        model: config.model,
-                        messages: [
-                            { role: "system", content: systemPrompt },
-                            { role: "user", content: PromptPolicyService.buildConflictRetryPrompt(userText, recentHistory, conflictReport, textForFix, scenarioSpec) }
-                        ],
-                        temperature: 0.4
-                    })
-                });
+                const conflictReport0 = policyConfig.enableConflictDetection ? ConflictService.detectConflicts(finalText, state) : { hasError: false, errors: [] };
+                let conflictDetected = false;
+                if (conflictReport0.hasError && (Number(policyConfig.conflictRetryCount) || 0) > 0) {
+                    conflictDetected = true;
+                    const ok = await decideRetry("检测到错误级冲突", (conflictReport0.errors || []).map((x) => x.message).slice(0, 6));
+                    if (ok) {
+                        const fixed = await AIRequestService.requestCompletionWithFallback({
+                            config,
+                            fetchUrl,
+                            headers: requestHeaders,
+                            model: config.model,
+                            messages: [
+                                { role: "system", content: systemPrompt },
+                                { role: "user", content: PromptPolicyService.buildConflictRetryPrompt(userText, recentHistory, conflictReport0, finalText, scenarioSpec) }
+                            ],
+                            temperature: 0.35
+                        });
+                        if (fixed) finalText = fixed;
+                    } else {
+                        // 跳过纠错时也提示一下原因
+                        StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(StateService.get()), text: `> ℹ️ 已跳过纠错（error）：${(conflictReport0.errors || []).map((x) => x.message).join("；")}` });
+                        StateService.save();
+                    }
+                }
 
                 const warningResult = ChatPostProcessService.appendWarning(
-                    conflictResult.finalText,
+                    finalText,
                     state,
                     policyConfig.enableConflictDetection
                 );
@@ -3980,7 +4081,7 @@
                     })
                 });
 
-                const shouldPatchRendered = finalText !== rawVisibleText || conflictResult.conflictDetected || beforeConflictText !== finalText;
+                const shouldPatchRendered = finalText !== rawVisibleText || conflictDetected || beforeConflictText !== finalText;
                 const finalPatchResult = StatePatchService.extractPatch(finalText);
                 const finalVisibleText = finalPatchResult.cleaned || finalText;
                 const finalPatchChanged = StatePatchService.applyPatch(StateService.get(), finalPatchResult.patch);
@@ -4050,6 +4151,12 @@
                     onSendClick();
                 }
             });
+            const content = document.getElementById("main-content");
+            if (content) {
+                content.addEventListener("scroll", () => {
+                    UIRenderer.setAutoFollowBottom(UIRenderer.isNearBottom());
+                });
+            }
             const searchInput = document.getElementById("scenario-search-input");
             if (searchInput) {
                 searchInput.addEventListener("input", () => {
@@ -4068,6 +4175,7 @@
         function sendUserText(text) {
             if (ChatService.getIsGenerating()) return;
             const state = StateService.get();
+            UIRenderer.setAutoFollowBottom(true);
             UIRenderer.appendMessage("user", text, Utils.nowDateStr(state), false);
             StateService.pushHistory({ role: "user", date: Utils.nowDateStr(state), text });
             StateService.pushChat("user", text);
@@ -4080,7 +4188,9 @@
             StateService.jumpWeek(delta);
             renderAll();
             StateService.save();
-            sendUserText(delta > 0 ? "下一周" : "上一周");
+            const state = StateService.get();
+            const dateStr = Utils.nowDateStr(state) || `${state.currentYear || ""}年${state.currentMonth || ""}月`;
+            sendUserText(`时间跳转：${delta > 0 ? "下一周" : "上一周"}。当前时间已变更为：${dateStr}。请严格以该时间继续叙事。`);
         }
         function switchView(viewId, silent = false) {
             activeView = viewId;
@@ -4158,17 +4268,27 @@
             ].join("");
             openInfoModal(`NPC：${npc.name}`, desc);
         }
+        function openNpcChat(npcId) {
+            currentSocialNpcId = String(npcId || "");
+            switchView("view-npc-chat");
+            renderAll();
+            UIRenderer.renderSocialChat(StateService.get(), currentSocialNpcId);
+            const input = document.getElementById("npc-chat-input");
+            if (input) input.focus();
+        }
+        function backToSocialList() {
+            switchView("view-social");
+            renderAll();
+        }
         async function sendNpcMessage() {
             const state = StateService.get();
-            const panelTitle = document.getElementById("social-chat-title");
-            if (!panelTitle || panelTitle.innerText.indexOf("和 ") !== 0) return;
-            const npcName = panelTitle.innerText.replace("和 ", "").replace(" 聊天", "");
-            const npc = (state.npcs || []).find((n) => n.name === npcName);
+            const npcId = String(currentSocialNpcId || "");
+            const npc = (state.npcs || []).find((n) => n.id === npcId);
             if (!npc) return;
-            const input = document.getElementById("social-input");
+            const input = document.getElementById("npc-chat-input");
             const txt = input.value.trim();
             if (!txt) return;
-            const sendBtn = document.querySelector("#social-chat-panel .send-btn");
+            const sendBtn = document.querySelector("#view-npc-chat .send-btn");
             input.disabled = true;
             if (sendBtn) sendBtn.disabled = true;
             input.value = "";
@@ -4182,14 +4302,14 @@
                 });
                 StateService.save();
                 renderAll();
-                switchView("view-social");
+                switchView("view-npc-chat");
                 UIRenderer.renderSocialChat(state, npc.id);
             } catch (e) {
                 const list = (state.npcChats && state.npcChats[npc.id]) || [];
                 list.push({ from: "npc", text: `⚠️ 对话失败：${e.message}`, ts: Date.now() });
                 StateService.save();
                 renderAll();
-                switchView("view-social");
+                switchView("view-npc-chat");
                 UIRenderer.renderSocialChat(state, npc.id);
             } finally {
                 input.disabled = false;
@@ -4473,7 +4593,7 @@
                 }
             })();
         }
-        return { init, onSendClick, sendUserText, jumpWeek, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, openCurrentCardEditor, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, applyPresetTemplate, editPresetTemplate, playPresetTemplate, selectApiCard, startFromHome, importScenarioTxt, openInitPreviewModal, closeInitPreviewModal, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, sendNpcMessage, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
+        return { init, onSendClick, sendUserText, jumpWeek, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, openCurrentCardEditor, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, applyPresetTemplate, editPresetTemplate, playPresetTemplate, selectApiCard, startFromHome, importScenarioTxt, openInitPreviewModal, closeInitPreviewModal, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
@@ -4496,6 +4616,7 @@
     function closeInitPreviewModal() { Controller.closeInitPreviewModal(); }
     function applyInitPreviewAndStart() { Controller.applyInitPreviewAndStart(); }
     function sendNpcMessage() { Controller.sendNpcMessage(); }
+    function backToSocialList() { Controller.backToSocialList(); }
     function closeInfoModal() { Controller.closeInfoModal(); }
 
     window.onload = () => Controller.init();
