@@ -2558,7 +2558,8 @@
             try {
                 const fetchUrl = AIRequestService.buildFetchUrl();
                 const headers = AIRequestService.buildHeaders(config);
-                const content = await AIRequestService.requestCompletion({
+                const content = await AIRequestService.requestCompletionWithFallback({
+                    config,
                     fetchUrl,
                     headers,
                     model: config.model,
@@ -2792,6 +2793,27 @@
     })();
 
     const AIRequestService = (() => {
+        function createHttpError(status, message, extra = {}) {
+            const err = new Error(message || `HTTP ${status}`);
+            err.status = status;
+            Object.assign(err, extra);
+            return err;
+        }
+        async function readResponseSnippet(response) {
+            try {
+                const text = await response.text();
+                return String(text || "").slice(0, 300);
+            } catch (e) {
+                return "";
+            }
+        }
+        function formatRequestError(err, phaseLabel, endpointLabel) {
+            const statusText = err?.status ? `HTTP ${err.status}` : "网络错误";
+            const base = `[${phaseLabel}] ${endpointLabel} 失败：${statusText}`;
+            const hint = err?.message ? `\n原因：${err.message}` : "";
+            const detail = err?.responseSnippet ? `\n响应片段：${err.responseSnippet}` : "";
+            return `${base}${hint}${detail}`.trim();
+        }
         function normalizeUrl(url) {
             const value = String(url || "").trim();
             return value.endsWith("/") ? value.slice(0, -1) : value;
@@ -2799,6 +2821,9 @@
         function buildFetchUrl() {
             const proxyBase = normalizeUrl(AppConfig.proxy.baseUrl);
             return `${proxyBase}/chat/completions`;
+        }
+        function buildDirectFetchUrl(config) {
+            return `${normalizeUrl(config.upstreamUrl)}/chat/completions`;
         }
         function buildHeaders(config) {
             const upstreamUrl = normalizeUrl(config.upstreamUrl);
@@ -2816,7 +2841,13 @@
                 headers,
                 body: JSON.stringify({ model, messages, stream: true, temperature })
             });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            if (!response.ok) {
+                const snippet = await readResponseSnippet(response);
+                throw createHttpError(response.status, `HTTP ${response.status}`, {
+                    responseSnippet: snippet,
+                    endpoint: fetchUrl
+                });
+            }
             const reader = response.body.getReader();
             const decoder = new TextDecoder("utf-8");
             let tail = "";
@@ -2841,17 +2872,83 @@
             }
             return fullText;
         }
+        function isProxyNetworkError(err) {
+            const msg = String(err?.message || err || "");
+            return /Failed to fetch|ERR_CONNECTION_CLOSED|NetworkError|fetch/i.test(msg);
+        }
+        function isRetryableProxyError(err) {
+            if (isProxyNetworkError(err)) return true;
+            const status = Number(err?.status || 0);
+            return status >= 500;
+        }
+        function stripProxyHeaders(headers = {}) {
+            const copied = { ...headers };
+            delete copied["X-Upstream-Base-URL"];
+            delete copied["X-Target-Base-URL"];
+            delete copied["X-OpenAI-Base-URL"];
+            return copied;
+        }
+        async function streamCompletionWithFallback({ config, fetchUrl, headers, model, messages, temperature, onToken }) {
+            try {
+                return await streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken });
+            } catch (proxyErr) {
+                if (!isRetryableProxyError(proxyErr)) throw proxyErr;
+                const directFetchUrl = buildDirectFetchUrl(config);
+                const directHeaders = stripProxyHeaders(headers);
+                try {
+                    return await streamCompletion({ fetchUrl: directFetchUrl, headers: directHeaders, model, messages, temperature, onToken });
+                } catch (directErr) {
+                    const msg = [
+                        "代理连接失败，且直连上游也失败。",
+                        formatRequestError(proxyErr, "Proxy", fetchUrl),
+                        formatRequestError(directErr, "Direct", directFetchUrl)
+                    ].join("\n\n");
+                    throw createHttpError(directErr?.status || proxyErr?.status || 0, msg, {
+                        proxyError: proxyErr,
+                        directError: directErr
+                    });
+                }
+            }
+        }
         async function requestCompletion({ fetchUrl, headers, model, messages, temperature }) {
             const response = await fetch(fetchUrl, {
                 method: "POST",
                 headers,
                 body: JSON.stringify({ model, messages, stream: false, temperature })
             });
-            if (!response.ok) return "";
+            if (!response.ok) {
+                const snippet = await readResponseSnippet(response);
+                throw createHttpError(response.status, `HTTP ${response.status}`, {
+                    responseSnippet: snippet,
+                    endpoint: fetchUrl
+                });
+            }
             const data = await response.json();
             return data?.choices?.[0]?.message?.content?.trim() || "";
         }
-        return { buildFetchUrl, buildHeaders, streamCompletion, requestCompletion };
+        async function requestCompletionWithFallback({ config, fetchUrl, headers, model, messages, temperature }) {
+            try {
+                return await requestCompletion({ fetchUrl, headers, model, messages, temperature });
+            } catch (proxyErr) {
+                if (!isRetryableProxyError(proxyErr)) throw proxyErr;
+                const directFetchUrl = buildDirectFetchUrl(config);
+                const directHeaders = stripProxyHeaders(headers);
+                try {
+                    return await requestCompletion({ fetchUrl: directFetchUrl, headers: directHeaders, model, messages, temperature });
+                } catch (directErr) {
+                    const msg = [
+                        "代理连接失败，且直连上游也失败。",
+                        formatRequestError(proxyErr, "Proxy", fetchUrl),
+                        formatRequestError(directErr, "Direct", directFetchUrl)
+                    ].join("\n\n");
+                    throw createHttpError(directErr?.status || proxyErr?.status || 0, msg, {
+                        proxyError: proxyErr,
+                        directError: directErr
+                    });
+                }
+            }
+        }
+        return { buildFetchUrl, buildHeaders, streamCompletion, requestCompletion, streamCompletionWithFallback, requestCompletionWithFallback };
     })();
 
     const ChatPostProcessService = (() => {
@@ -2936,9 +3033,10 @@
                     mood: String(n.mood || "平静").slice(0, 12)
                 }));
         }
-        async function analyzeWithAI({ scenarioText, selectedGender, apiConfig }) {
+        async function analyzeWithAI({ scenarioText, selectedGender, apiConfig, onProgress }) {
             const fetchUrl = AIRequestService.buildFetchUrl();
             const headers = AIRequestService.buildHeaders(apiConfig);
+            if (typeof onProgress === "function") onProgress("连接中");
             const systemPrompt = [
                 "你是文游设定解析器。根据用户设定文本输出 JSON，不要输出解释。",
                 "必须输出字段：forcedGender, nationality, location, rebornReason, inventory, npcs。",
@@ -2953,7 +3051,8 @@
                 "仅返回 JSON 对象。",
                 `设定文本：\n${scenarioText}`
             ].join("\n\n");
-            const content = await AIRequestService.requestCompletion({
+            const content = await AIRequestService.requestCompletionWithFallback({
+                config: apiConfig,
                 fetchUrl,
                 headers,
                 model: apiConfig.model,
@@ -2963,28 +3062,33 @@
                 ],
                 temperature: 0.2
             });
+            if (typeof onProgress === "function") onProgress("解析角色");
             if (!content) return null;
             const jsonMatch = content.match(/\{[\s\S]*\}/);
             if (!jsonMatch) return null;
             const parsed = JSON.parse(jsonMatch[0]);
+            if (typeof onProgress === "function") onProgress("生成背包");
+            const inventory = sanitizeItems(parsed.inventory);
+            if (typeof onProgress === "function") onProgress("生成NPC");
+            const npcs = sanitizeNpcs(parsed.npcs);
             return {
                 forcedGender: String(parsed.forcedGender || "").trim(),
                 selectedGender,
                 nationality: String(parsed.nationality || "").trim(),
                 location: String(parsed.location || "").trim(),
-                inventory: sanitizeItems(parsed.inventory),
-                npcs: sanitizeNpcs(parsed.npcs),
+                inventory,
+                npcs,
                 rebornReason: String(parsed.rebornReason || "使用AI解析设定生成").slice(0, 120)
             };
         }
-        async function buildRebirthPlan(selectedGender) {
+        async function buildRebirthPlan(selectedGender, onProgress) {
             const scenarioText = SettingsService.getScenarioText();
             const apiConfig = SettingsService.getApiConfig();
             if (!scenarioText.trim()) throw new Error("当前卡片设定为空，无法进行 AI 投胎解析。");
             if (apiConfig.blocked || !apiConfig.upstreamUrl || !apiConfig.key || !apiConfig.model) {
                 throw new Error("未配置可用 AI-API，无法进行投胎解析。");
             }
-            const aiPlan = await analyzeWithAI({ scenarioText, selectedGender, apiConfig });
+            const aiPlan = await analyzeWithAI({ scenarioText, selectedGender, apiConfig, onProgress });
             if (!aiPlan) throw new Error("AI 返回为空，无法生成投胎方案。");
             if (!Array.isArray(aiPlan.inventory) || !aiPlan.inventory.length) {
                 throw new Error("AI 未返回有效背包数据。");
@@ -2992,6 +3096,7 @@
             if (!Array.isArray(aiPlan.npcs) || !aiPlan.npcs.length) {
                 throw new Error("AI 未返回有效 NPC 数据。");
             }
+            if (typeof onProgress === "function") onProgress("完成");
             return aiPlan;
         }
         return { buildRebirthPlan };
@@ -3026,7 +3131,8 @@
             const mainUserPrompt = PromptPolicyService.buildMainUserPrompt(userText, recentHistory);
 
             try {
-                const rawText = (await AIRequestService.streamCompletion({
+                const rawText = (await AIRequestService.streamCompletionWithFallback({
+                    config,
                     fetchUrl,
                     headers: requestHeaders,
                     model: config.model,
@@ -3043,7 +3149,8 @@
                     userText,
                     state,
                     retryCount: policyConfig.choiceRetryCount,
-                    requestRewrite: async () => AIRequestService.requestCompletion({
+                    requestRewrite: async () => AIRequestService.requestCompletionWithFallback({
+                        config,
                         fetchUrl,
                         headers: requestHeaders,
                         model: config.model,
@@ -3061,7 +3168,8 @@
                     state,
                     enabled: policyConfig.enableConflictDetection,
                     retryCount: policyConfig.conflictRetryCount,
-                    requestRewrite: async (conflictReport, textForFix) => AIRequestService.requestCompletion({
+                    requestRewrite: async (conflictReport, textForFix) => AIRequestService.requestCompletionWithFallback({
+                        config,
                         fetchUrl,
                         headers: requestHeaders,
                         model: config.model,
@@ -3084,7 +3192,8 @@
                     htmlForceEnabled: policyConfig.enableHtmlCardForce,
                     retryCount: policyConfig.htmlRetryCount,
                     beautyCardSetting,
-                    requestRewrite: async (lastText) => AIRequestService.requestCompletion({
+                    requestRewrite: async (lastText) => AIRequestService.requestCompletionWithFallback({
+                        config,
                         fetchUrl,
                         headers: requestHeaders,
                         model: config.model,
@@ -3405,25 +3514,39 @@
             document.getElementById("reborn-loading-desc").innerText = text || "AI 正在根据设定生成角色信息、背包与社交关系，请稍候...";
             document.getElementById("reborn-loading-modal").style.display = "flex";
         }
+        function updateRebornLoadingStage(stage) {
+            const map = {
+                "连接中": "连接中：正在请求 AI 解析设定...",
+                "解析角色": "解析角色：正在生成角色信息...",
+                "生成背包": "生成背包：正在构建初始物品...",
+                "生成NPC": "生成NPC：正在构建社交关系...",
+                "完成": "完成：初始化数据已生成。"
+            };
+            document.getElementById("reborn-loading-desc").innerText = map[stage] || String(stage || "");
+        }
         function closeRebornLoadingModal() {
             document.getElementById("reborn-loading-modal").style.display = "none";
         }
         async function playScenarioCard(cardId) {
             selectScenarioCard(cardId);
+            const meta = ScenarioPlayMetaService.getMeta(cardId);
+            if (meta.hasInitialized) {
+                PlayViewStateService.enterPlay(cardId);
+                switchView("view-main");
+                renderAll();
+                return;
+            }
+            openRebornLoadingModal("连接中：正在请求 AI 解析设定...");
             PlayViewStateService.enterPlay(cardId);
             switchView("view-main");
             renderAll();
-            const meta = ScenarioPlayMetaService.getMeta(cardId);
-            if (meta.hasInitialized) {
-                return;
-            }
-            await prepareRebirthPreview(StateService.get()?.gender || "");
+            await prepareRebirthPreview(StateService.get()?.gender || "", true);
         }
-        async function prepareRebirthPreview(defaultGender) {
+        async function prepareRebirthPreview(defaultGender, loadingAlreadyOpen = false) {
             if (ChatService.getIsGenerating()) return;
-            openRebornLoadingModal("正在生成人物形魄并初始化角色信息、背包与社交...");
+            if (!loadingAlreadyOpen) openRebornLoadingModal("正在生成人物形魄并初始化角色信息、背包与社交...");
             try {
-                const plan = await ScenarioRebirthService.buildRebirthPlan(defaultGender || "女");
+                const plan = await ScenarioRebirthService.buildRebirthPlan(defaultGender || "女", updateRebornLoadingStage);
                 closeRebornLoadingModal();
                 pendingRebirthPlan = plan;
                 const desc = [
