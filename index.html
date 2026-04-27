@@ -281,12 +281,15 @@
 
         .bubble {
             max-width: 100%;
+            width: 100%;
             padding: 9px 10px;
             border-radius: 12px;
             font-size: 0.9rem;
             line-height: 1.55;
             overflow-wrap: anywhere;
+            word-break: break-word;
             white-space: normal;
+            overflow-x: hidden;
         }
 
         .choice-wrap {
@@ -326,6 +329,13 @@
             border: 1px solid var(--line);
         }
 
+        .bubble.ai.html-host {
+            padding: 0;
+            border: 0;
+            background: transparent;
+            border-radius: 0;
+        }
+
         .bubble.user {
             background: #f9f0e4;
             border: 1px solid #e5ccb0;
@@ -362,6 +372,39 @@
             background: linear-gradient(180deg, #fff8f0, #fffefb);
             padding: 10px;
             box-shadow: 0 4px 12px rgba(80, 40, 0, 0.08);
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .bubble.ai .ai-beauty-card,
+        .bubble.ai .ai-beauty-card * {
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        .bubble.ai .ai-beauty-card img,
+        .bubble.ai .ai-beauty-card video,
+        .bubble.ai .ai-beauty-card canvas,
+        .bubble.ai .ai-beauty-card iframe {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .bubble.ai .ai-beauty-card table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+            display: block;
+            overflow-x: auto;
+        }
+
+        .bubble.ai .ai-beauty-card pre,
+        .bubble.ai .ai-beauty-card code {
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow-wrap: anywhere;
         }
 
         .ai-beauty-card-title {
@@ -1521,8 +1564,25 @@
         return { renderAiMessage, bindHtmlChoiceEvents };
     })();
 
+    const EndMarkerService = (() => {
+        const END_MARKER = "<<<END_REPLY_7F9K>>>";
+        function getMarker() {
+            return END_MARKER;
+        }
+        function hasMarker(text) {
+            return String(text || "").includes(END_MARKER);
+        }
+        function trimToMarker(text) {
+            const raw = String(text || "");
+            const idx = raw.indexOf(END_MARKER);
+            return idx >= 0 ? raw.slice(0, idx).trimEnd() : raw;
+        }
+        return { getMarker, hasMarker, trimToMarker };
+    })();
+
     const BuiltinPromptService = (() => {
         function getResponseRules() {
+            const endMarker = EndMarkerService.getMarker();
             return [
                 "【内置返回规则】",
                 "1) 必须优先遵循“角色事实锁定块”，不得篡改姓名、年龄、性别、国籍、身份、NPC关系与已发生事件。",
@@ -1532,7 +1592,8 @@
                 "5) 回复末尾必须提供 1-3 条可执行选项，使用编号格式：1. xxx",
                 "6) 若剧情不适合选项，也要提供“继续观察/继续推进”等中性选项。",
                 "7) 事件保持现实、日常、年龄逻辑正确。",
-                "8) 不得强制使用“你出生了/婴儿开局”叙事，除非角色年龄明确 <= 1 岁。"
+                "8) 不得强制使用“你出生了/婴儿开局”叙事，除非角色年龄明确 <= 1 岁。",
+                `9) 回复末尾必须追加且只追加一次结束符：${endMarker}（仅放在整条回复最末尾）。`
             ].join("\n");
         }
         function buildStateFactLock(state) {
@@ -1869,6 +1930,7 @@
             bubble.className = `bubble ${role === "user" ? "user" : "ai"}`;
             const normalizedText = role === "ai" ? HtmlCardService.normalizeHtmlCard(text) : text;
             const canUseHtmlCard = role === "ai" && !streaming && HtmlCardService.isRenderableHtmlCard(normalizedText);
+            if (canUseHtmlCard) bubble.classList.add("html-host");
             bubble.innerHTML = canUseHtmlCard
                 ? AiResponseLayoutService.renderAiMessage(normalizedText, false)
                 : MarkdownService.render(text) + (streaming ? '<span class="streaming-cursor"></span>' : "");
@@ -1899,12 +1961,14 @@
             const normalizedText = HtmlCardService.normalizeHtmlCard(text);
             const hasHtmlCard = HtmlCardService.isRenderableHtmlCard(normalizedText);
             if (hasHtmlCard) {
+                currentStreamingTarget.classList.add("html-host");
                 const warningHtml = options.conflictDetected
                     ? '<div class="ai-card-warning">⚠️ 检测到设定冲突，已自动纠偏重试一次。</div>'
                     : "";
                 currentStreamingTarget.innerHTML = `${warningHtml}${AiResponseLayoutService.renderAiMessage(normalizedText, false)}`;
                 AiResponseLayoutService.bindHtmlChoiceEvents(currentStreamingTarget);
             } else {
+                currentStreamingTarget.classList.remove("html-host");
                 currentStreamingTarget.innerHTML = MarkdownService.render(`${prefix}${text}`);
             }
             if (currentStreamingLogDiv && options.conflictDetected) currentStreamingLogDiv.classList.add("conflict");
@@ -3003,6 +3067,7 @@
             const decoder = new TextDecoder("utf-8");
             let tail = "";
             let fullText = "";
+            let stopRequested = false;
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
@@ -3016,12 +3081,25 @@
                         const token = payload.choices?.[0]?.delta?.content || "";
                         if (!token) continue;
                         fullText += token;
-                        if (typeof onToken === "function") onToken(fullText);
+                        if (typeof onToken === "function") {
+                            const shouldContinue = onToken(fullText);
+                            if (shouldContinue === false) {
+                                stopRequested = true;
+                                break;
+                            }
+                        }
                     } catch (e) {
                     }
                 }
+                if (stopRequested) {
+                    try {
+                        await reader.cancel("end marker reached");
+                    } catch (e) {
+                    }
+                    break;
+                }
             }
-            return fullText;
+            return EndMarkerService.trimToMarker(fullText);
         }
         function isProxyNetworkError(err) {
             const msg = String(err?.message || err || "");
@@ -3075,7 +3153,7 @@
                 });
             }
             const data = await response.json();
-            return data?.choices?.[0]?.message?.content?.trim() || "";
+            return EndMarkerService.trimToMarker(data?.choices?.[0]?.message?.content?.trim() || "");
         }
         async function requestCompletionWithFallback({ config, fetchUrl, headers, model, messages, temperature }) {
             try {
@@ -3328,7 +3406,11 @@
                         { role: "user", content: mainUserPrompt }
                     ],
                     temperature: policyConfig.temperature,
-                    onToken: (text) => UIRenderer.updateStreaming(text)
+                    onToken: (text) => {
+                        const visibleText = EndMarkerService.trimToMarker(text);
+                        UIRenderer.updateStreaming(visibleText);
+                        return !EndMarkerService.hasMarker(text);
+                    }
                 })).trim() || "（AI想法：刚刚有点卡住了，再和我说一次吧喵）";
 
                 let finalText = await ChatPostProcessService.enforceChoices({
