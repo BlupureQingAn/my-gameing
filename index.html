@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>人生模拟器 · 文游版</title>
+    <title>云吞吞文游模拟器</title>
     <style>
         /* ==================== 变量层（Design Tokens） ==================== */
         :root {
@@ -94,6 +94,12 @@
             display: flex;
             gap: 8px;
             margin-bottom: 8px;
+        }
+
+        .top-mini-nav {
+            display: flex;
+            gap: 6px;
+            align-items: center;
         }
 
         .timeline-actions {
@@ -421,6 +427,22 @@
             color: #4f371f;
         }
 
+        .top-nav-btn {
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 6px 10px;
+            background: #f8ecdc;
+            color: #6a4f31;
+            font-weight: 700;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        .top-nav-btn.active {
+            background: #e7c49a;
+            color: #4f371f;
+        }
+
         .list-row {
             display: flex;
             align-items: center;
@@ -515,7 +537,7 @@
             top: 0;
             right: 0;
             bottom: 0;
-            width: 110px;
+            width: 170px;
             display: flex;
             align-items: stretch;
             justify-content: stretch;
@@ -545,9 +567,48 @@
             background: #dc5b56;
         }
 
+        .scenario-action-btn.pin {
+            background: #3a8f6d;
+        }
+
         .scenario-action-btn[disabled] {
             opacity: 0.45;
             cursor: not-allowed;
+        }
+
+        .scenario-badges {
+            display: flex;
+            gap: 6px;
+            margin-top: 4px;
+        }
+
+        .scenario-badge {
+            font-size: 0.68rem;
+            border-radius: 999px;
+            padding: 2px 7px;
+            border: 1px solid #e2c9aa;
+            color: #7a5a39;
+            background: #fff5e9;
+        }
+
+        .scenario-badge.official {
+            border-color: #8db7ff;
+            color: #2b5ca8;
+            background: #ecf4ff;
+        }
+
+        .scenario-badge.custom {
+            border-color: #d6b17a;
+            color: #7b4e17;
+            background: #fff3df;
+        }
+
+        .scenario-card.drag-ready .scenario-card-main {
+            outline: 2px dashed #c8a47a;
+        }
+
+        .scenario-card.dragging {
+            opacity: 0.55;
         }
 
         .api-card {
@@ -699,16 +760,24 @@
 
     <header class="header">
         <div>
-            <h1 id="ui-name">🐾 徐然（Blupure）</h1>
-            <p id="ui-basic-info">📍 洛杉矶, 美国 | 🎂 0岁 | 📅 1995年1月</p>
+            <h1 id="site-title">云吞吞文游模拟器</h1>
+            <p id="ui-basic-info">选择卡片后进入独立游玩界面</p>
         </div>
-        <div class="wealth" id="ui-wealth">💰 $500,000</div>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+            <div class="wealth" id="ui-wealth">🌥️ 独立世界线</div>
+            <div class="top-mini-nav">
+                <button class="top-nav-btn active" data-view="view-home" onclick="switchView('view-home')">首页</button>
+                <button class="top-nav-btn" data-view="view-settings" onclick="switchView('view-settings')">设置</button>
+                <button class="top-nav-btn" id="top-edit-card-btn" style="display:none;" onclick="openCurrentCardEditor()">编辑当前卡</button>
+            </div>
+        </div>
     </header>
 
     <main class="content" id="main-content">
         <section id="view-home" class="view-section active">
             <section class="card">
                 <div class="list-title">🧩 文游设定卡片列表</div>
+                <input id="scenario-search-input" type="text" placeholder="搜索卡片（标题/分组/主题/设定内容）">
                 <div class="setting-actions" style="margin:6px 0 2px;">
                     <button class="mini-btn primary" onclick="createScenarioCard()">＋ 新建卡片</button>
                 </div>
@@ -716,19 +785,25 @@
                 <div class="list-title" style="margin-top:8px;">📚 官方预设模板（可一键套用）</div>
                 <div class="list-sub">模板资源来自网络，如有侵权请联系删除</div>
                 <div id="preset-template-list" style="margin-top:8px;"></div>
-                <div class="list-title" style="margin-top:8px;">当前卡片设定编辑</div>
-                <input id="scenario-title-input" type="text" placeholder="卡片标题（可自定义）">
-                <input id="scenario-theme-input" type="text" placeholder="美化主题（例如：奶油暖色/赛博紫）">
-                <textarea id="scenario-editor" class="scenario-editor" placeholder="在这里编辑当前卡片的文游设定"></textarea>
-                <div class="setting-actions">
-                    <button class="mini-btn primary" onclick="saveScenarioCard()">保存当前卡片</button>
-                    <button class="mini-btn ghost" onclick="importScenarioTxt()">导入设定TXT</button>
-                    <button class="mini-btn ghost" onclick="startFromHome()">进入剧情</button>
-                </div>
                 <div class="setting-actions">
                     <button class="mini-btn ghost" onclick="switchView('view-settings')">进入设置页</button>
                 </div>
                 <input id="scenario-file-input" type="file" accept=".txt,.md,.text" style="display:none;">
+            </section>
+        </section>
+
+        <section id="view-scenario-editor" class="view-section">
+            <section class="card">
+                <div class="list-title">🛠️ 设定卡片编辑页</div>
+                <div class="list-sub">可编辑当前卡片名称、文游设定、美化设定（用于 HTML 卡片风格）</div>
+                <input id="scenario-title-input" type="text" placeholder="卡片标题（可自定义，含置顶卡片）">
+                <input id="scenario-theme-input" type="text" placeholder="美化设定（例如：奶油暖色玻璃、古风卷轴）">
+                <textarea id="scenario-editor" class="scenario-editor" placeholder="在这里编辑当前卡片的文游设定"></textarea>
+                <div class="setting-actions">
+                    <button class="mini-btn primary" onclick="saveScenarioCard()">保存当前卡片</button>
+                    <button class="mini-btn ghost" onclick="importScenarioTxt()">导入设定TXT</button>
+                    <button class="mini-btn ghost" onclick="startFromHome()">保存并返回首页</button>
+                </div>
             </section>
         </section>
 
@@ -842,12 +917,10 @@
 
     <footer class="chat-footer">
         <div class="nav-actions">
-            <button class="nav-btn active" data-view="view-home" onclick="switchView('view-home')">🏠 首页</button>
-            <button class="nav-btn" data-view="view-main" onclick="switchView('view-main')">📖 生涯</button>
-            <button class="nav-btn" data-view="view-inventory" onclick="switchView('view-inventory')">🎒 背包</button>
-            <button class="nav-btn" data-view="view-social" onclick="switchView('view-social')">💬 社交</button>
-            <button class="nav-btn" data-view="view-saves" onclick="switchView('view-saves')">💾 存档</button>
-            <button class="nav-btn" data-view="view-settings" onclick="switchView('view-settings')">⚙️ 设置</button>
+            <button class="nav-btn" data-view="view-main" data-nav-scope="play" onclick="switchView('view-main')">📖 生涯</button>
+            <button class="nav-btn" data-view="view-inventory" data-nav-scope="play" onclick="switchView('view-inventory')">🎒 背包</button>
+            <button class="nav-btn" data-view="view-social" data-nav-scope="play" onclick="switchView('view-social')">💬 社交</button>
+            <button class="nav-btn" data-view="view-saves" data-nav-scope="play" onclick="switchView('view-saves')">💾 存档</button>
         </div>
         <div class="quick-actions">
             <button class="quick-btn" id="btn-next-month" onclick="sendUserText('下一月')">⏭ 下一月</button>
@@ -1053,6 +1126,51 @@
             return next;
         }
         return { getMode, setMode, getActiveUserId, setActiveUserId };
+    })();
+
+    const PlayViewStateService = (() => {
+        let activePlayCardId = null;
+        function enterPlay(cardId) {
+            activePlayCardId = String(cardId || ScenarioCardService.getSelectedId() || "");
+        }
+        function leavePlay() {
+            activePlayCardId = null;
+        }
+        function isInPlayMode() {
+            return !!activePlayCardId;
+        }
+        function getActivePlayCardId() {
+            return activePlayCardId;
+        }
+        return { enterPlay, leavePlay, isInPlayMode, getActivePlayCardId };
+    })();
+
+    const NavigationVisibilityService = (() => {
+        const PLAY_VIEWS = new Set(["view-main", "view-inventory", "view-social", "view-saves"]);
+        function apply(viewId) {
+            const inPlay = PlayViewStateService.isInPlayMode();
+            document.querySelectorAll(".nav-btn").forEach((btn) => {
+                const scope = btn.dataset.navScope || "global";
+                if (scope === "play") {
+                    btn.style.display = inPlay ? "" : "none";
+                } else {
+                    btn.style.display = "";
+                }
+            });
+            const isPlayView = PLAY_VIEWS.has(viewId);
+            const enableGamePanels = inPlay && isPlayView;
+            const footer = document.querySelector(".chat-footer");
+            if (footer) footer.style.display = enableGamePanels ? "block" : "none";
+            document.getElementById("game-stats-card").style.display = enableGamePanels ? "grid" : "none";
+            document.querySelector(".quick-actions").style.display = enableGamePanels ? "flex" : "none";
+            document.querySelector(".timeline-actions").style.display = enableGamePanels ? "flex" : "none";
+            document.querySelector(".chat-footer .composer").style.display = enableGamePanels ? "flex" : "none";
+
+            const editBtn = document.getElementById("top-edit-card-btn");
+            const hasSelectedCard = !!ScenarioCardService.getSelectedCard();
+            if (editBtn) editBtn.style.display = hasSelectedCard ? "" : "none";
+        }
+        return { apply };
     })();
 
     const UserApiProfileService = (() => {
@@ -1580,10 +1698,15 @@
         let currentStreamingLogDiv = null;
         let currentSocialNpcId = null;
         function renderTop(state) {
-            const years = Math.floor(state.age / 12);
-            document.getElementById("ui-name").innerText = `🐾 ${state.name}（${state.englishName}）· ${state.gender}`;
-            document.getElementById("ui-basic-info").innerText = `📍 ${state.location}, ${state.nationality} | 🎂 ${years}岁 | 📅 ${Utils.nowDateStr(state)}`;
-            document.getElementById("ui-wealth").innerText = `💰 $${Number(state.wealth || 0).toLocaleString()}`;
+            const inPlay = PlayViewStateService.isInPlayMode();
+            const card = ScenarioCardService.getSelectedCard();
+            document.getElementById("site-title").innerText = "云吞吞文游模拟器";
+            document.getElementById("ui-basic-info").innerText = inPlay
+                ? `当前卡片：${card?.title || "未命名卡片"}`
+                : "选择卡片后进入独立游玩界面";
+            document.getElementById("ui-wealth").innerText = inPlay
+                ? `🧭 时间：${Utils.nowDateStr(state)}`
+                : "🌥️ 独立世界线";
             document.getElementById("ui-health").innerText = state.stats.health;
             document.getElementById("ui-intellect").innerText = state.stats.intellect;
             document.getElementById("ui-charisma").innerText = state.stats.charisma;
@@ -1778,8 +1901,14 @@
             if (!box) return;
             const cards = ScenarioCardService.loadCards();
             const selectedId = ScenarioCardService.getSelectedId();
+            const keyword = ScenarioCardViewService.getSearchKeyword();
             box.innerHTML = "";
-            cards.forEach((card) => {
+            const filteredCards = cards.filter((card) => ScenarioCardViewService.matchesSearch(card, keyword));
+            if (!filteredCards.length) {
+                box.innerHTML = `<div class="list-sub">未找到匹配卡片：${keyword}</div>`;
+                return;
+            }
+            filteredCards.forEach((card) => {
                 const row = document.createElement("div");
                 row.className = `scenario-card ${card.id === selectedId ? "active" : ""}`;
                 row.dataset.cardId = card.id;
@@ -1787,57 +1916,32 @@
                 row.innerHTML = `
                     <div class="scenario-card-main">
                         <div class="list-title">${card.title}${customPinned ? "（置顶）" : ""}</div>
+                        <div class="scenario-badges">
+                            <span class="scenario-badge ${ScenarioCardViewService.groupClass(card)}">${ScenarioCardViewService.groupLabel(card)}</span>
+                            ${card.pinned ? '<span class="scenario-badge">置顶</span>' : ""}
+                        </div>
                         <div class="list-sub">主题：${card.theme || "未设置"}｜设定长度：${(card.text || "").length}</div>
                         <div style="margin-top:6px;">
                             <button class="tiny-btn" data-op="play">游玩</button>
-                            <button class="tiny-btn" data-op="select">选择</button>
                             <button class="tiny-btn" data-op="edit">设置</button>
                         </div>
                     </div>
                     <div class="scenario-card-actions">
                         <button class="scenario-action-btn edit" data-op="swipe-edit">设置</button>
+                        <button class="scenario-action-btn pin" data-op="swipe-pin">${ScenarioCardViewService.pinLabel(card)}</button>
                         <button class="scenario-action-btn delete" data-op="swipe-del" ${customPinned ? "disabled" : ""}>删除</button>
                     </div>
                 `;
                 row.querySelector('[data-op="play"]').onclick = () => Controller.playScenarioCard(card.id);
-                row.querySelector('[data-op="select"]').onclick = () => Controller.selectScenarioCard(card.id);
                 row.querySelector('[data-op="edit"]').onclick = () => Controller.openScenarioCardSettings(card.id);
                 row.querySelector('[data-op="swipe-edit"]').onclick = () => Controller.openScenarioCardSettings(card.id);
+                row.querySelector('[data-op="swipe-pin"]').onclick = () => Controller.toggleScenarioCardPin(card.id);
                 const delBtn = row.querySelector('[data-op="swipe-del"]');
                 if (delBtn) delBtn.onclick = () => Controller.deleteScenarioCard(card.id);
-                bindScenarioCardSwipe(row);
+                ScenarioCardInteractionService.bindSwipeAndSort(row, {
+                    onReorder: (fromId, toId) => Controller.reorderScenarioCards(fromId, toId)
+                });
                 box.appendChild(row);
-            });
-        }
-        function bindScenarioCardSwipe(row) {
-            let startX = 0;
-            let moved = false;
-            let dragging = false;
-            const begin = (x) => { startX = x; moved = false; dragging = true; };
-            const move = (x) => {
-                if (!dragging) return;
-                const dx = x - startX;
-                if (Math.abs(dx) > 24) moved = true;
-                if (dx < -24) row.classList.add("swiped");
-                if (dx > 24) row.classList.remove("swiped");
-            };
-            const end = () => { dragging = false; };
-            row.addEventListener("touchstart", (e) => {
-                begin(e.touches?.[0]?.clientX || 0);
-            }, { passive: true });
-            row.addEventListener("touchmove", (e) => {
-                move(e.touches?.[0]?.clientX || 0);
-            }, { passive: true });
-            row.addEventListener("touchend", end, { passive: true });
-            row.addEventListener("mousedown", (e) => begin(e.clientX));
-            row.addEventListener("mousemove", (e) => move(e.clientX));
-            row.addEventListener("mouseup", end);
-            row.addEventListener("mouseleave", end);
-            row.addEventListener("click", (e) => {
-                if (moved) return;
-                const target = e.target;
-                if (!(target instanceof HTMLElement)) return;
-                if (!target.closest("button")) row.classList.toggle("swiped");
             });
         }
         function renderApiCards() {
@@ -1861,8 +1965,19 @@
         function renderPresetTemplates(presets = []) {
             const box = document.getElementById("preset-template-list");
             if (!box) return;
+            const keyword = ScenarioCardViewService.getSearchKeyword();
             box.innerHTML = "";
-            presets.forEach((p) => {
+            const filtered = (presets || []).filter((p) => ScenarioCardViewService.matchesSearch({
+                title: p.title,
+                theme: p.theme,
+                text: p.text || "",
+                sourceType: "official"
+            }, keyword));
+            if (!filtered.length) {
+                box.innerHTML = `<div class="list-sub">未找到匹配模板：${keyword}</div>`;
+                return;
+            }
+            filtered.forEach((p) => {
                 const row = document.createElement("div");
                 row.className = "list-row";
                 row.innerHTML = `
@@ -1870,9 +1985,13 @@
                         <div class="list-title">${p.title}</div>
                         <div class="list-sub">主题：${p.theme}</div>
                     </div>
-                    <button class="tiny-btn">套用到当前卡片</button>
+                    <div style="display:flex; gap:6px;">
+                        <button class="tiny-btn" data-op="play">游玩</button>
+                        <button class="tiny-btn" data-op="edit">设置</button>
+                    </div>
                 `;
-                row.querySelector("button").onclick = () => Controller.applyPresetTemplate(p);
+                row.querySelector('[data-op="play"]').onclick = () => Controller.playPresetTemplate(p);
+                row.querySelector('[data-op="edit"]').onclick = () => Controller.editPresetTemplate(p);
                 box.appendChild(row);
             });
         }
@@ -1903,7 +2022,7 @@
             const selectedScenario = ScenarioCardService.getSelectedCard();
             const titleInput = document.getElementById("scenario-title-input");
             titleInput.value = selectedScenario?.title || "";
-            titleInput.readOnly = selectedScenario?.id === ScenarioCardService.CUSTOM_CARD_ID;
+            titleInput.readOnly = false;
             document.getElementById("scenario-theme-input").value = selectedScenario?.theme || "";
             document.getElementById("scenario-editor").value = selectedScenario?.text || AppConfig.defaultScenario;
 
@@ -2006,6 +2125,26 @@
         return { loadToUI, saveFromUI, saveUserApiFromUI, getApiConfig, getScenarioText, getBeautyCardSetting, getChatPolicyConfig, importScenarioFromFile };
     })();
 
+    const ScenarioEditorService = (() => {
+        function readForm() {
+            return {
+                title: document.getElementById("scenario-title-input").value.trim(),
+                theme: document.getElementById("scenario-theme-input").value.trim(),
+                text: document.getElementById("scenario-editor").value.trim()
+            };
+        }
+        function writeForm(payload = {}) {
+            document.getElementById("scenario-title-input").value = payload.title || "";
+            document.getElementById("scenario-theme-input").value = payload.theme || "";
+            document.getElementById("scenario-editor").value = payload.text || AppConfig.defaultScenario;
+        }
+        function focusEditor() {
+            const editor = document.getElementById("scenario-editor");
+            if (editor) editor.focus();
+        }
+        return { readForm, writeForm, focusEditor };
+    })();
+
     const SaveSlotService = (() => {
         const SLOT_COUNT = 5;
         function slotKey(index) {
@@ -2095,21 +2234,53 @@
     const ScenarioCardService = (() => {
         const CUSTOM_CARD_ID = "scenario_custom";
         const LEGACY_CUSTOM_IDS = new Set(["scenario_default", "scenario_custom"]);
+        function nextOrder(cards = []) {
+            const max = cards.reduce((acc, it) => Math.max(acc, Number(it.order) || 0), 0);
+            return max + 1;
+        }
         function buildCustomCard(base = {}) {
             return {
                 id: CUSTOM_CARD_ID,
-                title: "自定义设定卡片",
+                title: String(base.title || "自定义设定卡片"),
                 theme: String(base.theme || ""),
-                text: String(base.text || AppConfig.defaultScenario)
+                text: String(base.text || AppConfig.defaultScenario),
+                sourceType: "custom",
+                pinned: base.pinned !== false,
+                order: Number(base.order) || 1
             };
         }
+        function normalizeCard(card = {}, index = 0) {
+            const id = String(card.id || "");
+            const sourceType = card.sourceType || (String(id).startsWith("scenario_preset_") ? "official" : "custom");
+            return {
+                ...card,
+                id,
+                title: String(card.title || "未命名设定"),
+                theme: String(card.theme || ""),
+                text: String(card.text || AppConfig.defaultScenario),
+                sourceType,
+                pinned: !!card.pinned,
+                order: Number(card.order) || (index + 1)
+            };
+        }
+        function sortCards(cards = []) {
+            return [...cards].sort((a, b) => {
+                if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+                const oa = Number(a.order) || 0;
+                const ob = Number(b.order) || 0;
+                if (oa !== ob) return oa - ob;
+                return String(a.title || "").localeCompare(String(b.title || ""), "zh-Hans-CN");
+            });
+        }
         function normalizeCards(rawCards) {
-            const cards = Array.isArray(rawCards) ? rawCards.map((c) => ({ ...c })) : [];
+            const cards = Array.isArray(rawCards) ? rawCards.map((c, idx) => normalizeCard(c, idx)) : [];
             let custom = cards.find((c) => LEGACY_CUSTOM_IDS.has(String(c.id || "")));
             const others = cards.filter((c) => !LEGACY_CUSTOM_IDS.has(String(c.id || "")));
             if (!custom) custom = buildCustomCard();
             custom = buildCustomCard(custom);
-            return [custom, ...others];
+            const merged = [custom, ...others].map((c, idx) => normalizeCard(c, idx));
+            const sorted = sortCards(merged);
+            return sorted.map((c, idx) => ({ ...c, order: idx + 1 }));
         }
         function loadCards() {
             const cards = StorageService.readJson(AppConfig.storageKeys.scenarioCards, null);
@@ -2161,14 +2332,54 @@
                 id,
                 title: "新建设定卡片",
                 theme: "",
-                text: AppConfig.defaultScenario
+                text: AppConfig.defaultScenario,
+                sourceType: "custom",
+                pinned: false,
+                order: nextOrder(cards)
             };
             cards.push(card);
             saveCards(cards);
             setSelectedId(id);
             return card;
         }
-        return { CUSTOM_CARD_ID, loadCards, saveCards, getSelectedId, setSelectedId, getSelectedCard, updateSelectedCard, deleteCard, createCard };
+        function upsertCard(card) {
+            const cards = loadCards();
+            const id = String(card?.id || "");
+            if (!id) return null;
+            const idx = cards.findIndex((c) => c.id === id);
+            const next = {
+                id,
+                title: String(card.title || "未命名设定"),
+                theme: String(card.theme || ""),
+                text: String(card.text || AppConfig.defaultScenario),
+                sourceType: String(card.sourceType || (String(id).startsWith("scenario_preset_") ? "official" : "custom")),
+                pinned: !!card.pinned,
+                order: Number(card.order) || nextOrder(cards)
+            };
+            if (idx >= 0) cards[idx] = { ...cards[idx], ...next };
+            else cards.push(next);
+            saveCards(cards);
+            return next;
+        }
+        function togglePin(cardId) {
+            const cards = loadCards();
+            const idx = cards.findIndex((c) => c.id === cardId);
+            if (idx < 0) return;
+            cards[idx].pinned = !cards[idx].pinned;
+            saveCards(cards);
+        }
+        function reorderCards(fromId, toId) {
+            if (!fromId || !toId || fromId === toId) return;
+            const cards = loadCards();
+            const fromIdx = cards.findIndex((c) => c.id === fromId);
+            const toIdx = cards.findIndex((c) => c.id === toId);
+            if (fromIdx < 0 || toIdx < 0) return;
+            const [item] = cards.splice(fromIdx, 1);
+            cards.splice(toIdx, 0, item);
+            cards.forEach((c, idx) => { c.order = idx + 1; });
+            saveCards(cards);
+        }
+        return { CUSTOM_CARD_ID, loadCards, saveCards, getSelectedId, setSelectedId, getSelectedCard, updateSelectedCard, deleteCard, createCard, upsertCard, togglePin, reorderCards };
     })();
 
     const CardScopedConfigService = (() => {
@@ -2298,6 +2509,159 @@
             return await resp.text();
         }
         return { loadManifest, loadPresetText, titleToFilename };
+    })();
+
+    const ScenarioTemplateService = (() => {
+        function buildPresetCardId(preset) {
+            const raw = String(preset?.id || preset?.title || `preset_${Date.now()}`);
+            return `scenario_preset_${raw}`.replace(/[^\w-]/g, "_");
+        }
+        function buildFallbackTheme(text, title) {
+            const source = `${title || ""}\n${text || ""}`;
+            if (/古代|后宫|皇宫|宫斗|王朝/.test(source)) return "古风卷轴卡（米色纸张+金边纹理）";
+            if (/现代|都市|豪门|职场|娱乐圈/.test(source)) return "现代杂志卡（留白+浅金边）";
+            if (/修仙|玄幻|魔|神|异界/.test(source)) return "玄幻灵气卡（深色底+流光边）";
+            return "奶油玻璃卡（圆角、柔和阴影、暖色渐变）";
+        }
+        async function generateThemeWithAI({ title, text }) {
+            const config = SettingsService.getApiConfig();
+            if (config.blocked || !config.upstreamUrl || !config.key || !config.model) {
+                return buildFallbackTheme(text, title);
+            }
+            try {
+                const fetchUrl = AIRequestService.buildFetchUrl();
+                const headers = AIRequestService.buildHeaders(config);
+                const content = await AIRequestService.requestCompletion({
+                    fetchUrl,
+                    headers,
+                    model: config.model,
+                    messages: [
+                        {
+                            role: "system",
+                            content: "你是文游美化设定生成器。请根据设定文本输出一行中文“HTML卡片美化设定提示词”，长度20-60字，不要解释。"
+                        },
+                        {
+                            role: "user",
+                            content: `标题：${title || "未命名模板"}\n请生成适配该设定风格的 HTML 卡片美化提示词。\n设定文本：\n${String(text || "").slice(0, 2500)}`
+                        }
+                    ],
+                    temperature: 0.4
+                });
+                return String(content || "").trim() || buildFallbackTheme(text, title);
+            } catch (e) {
+                return buildFallbackTheme(text, title);
+            }
+        }
+        async function buildTemplateCardPayload(preset) {
+            if (!preset) throw new Error("模板不存在");
+            let text = String(preset.text || "").trim();
+            if (!text && preset.file) {
+                text = String(await PresetResourceService.loadPresetText(preset.file)).trim();
+            }
+            if (!text) throw new Error("模板文本为空");
+            let theme = String(preset.theme || "").trim();
+            if (!theme || theme === "网络模板" || theme === "默认") {
+                theme = await generateThemeWithAI({ title: preset.title, text });
+            }
+            return {
+                id: buildPresetCardId(preset),
+                title: preset.title || "模板卡片",
+                text,
+                theme
+            };
+        }
+        return { buildTemplateCardPayload, buildPresetCardId };
+    })();
+
+    const ScenarioCardViewService = (() => {
+        function groupLabel(card) {
+            return card?.sourceType === "official" ? "官方" : "自定义";
+        }
+        function groupClass(card) {
+            return card?.sourceType === "official" ? "official" : "custom";
+        }
+        function pinLabel(card) {
+            return card?.pinned ? "取消置顶" : "置顶";
+        }
+        function matchesSearch(card, keyword) {
+            const q = String(keyword || "").trim().toLowerCase();
+            if (!q) return true;
+            const haystack = [
+                card?.title || "",
+                card?.theme || "",
+                card?.text || "",
+                groupLabel(card)
+            ].join("\n").toLowerCase();
+            return haystack.includes(q);
+        }
+        function getSearchKeyword() {
+            const input = document.getElementById("scenario-search-input");
+            return input ? String(input.value || "").trim() : "";
+        }
+        return { groupLabel, groupClass, pinLabel, matchesSearch, getSearchKeyword };
+    })();
+
+    const ScenarioCardInteractionService = (() => {
+        function bindSwipeAndSort(row, callbacks) {
+            let startX = 0;
+            let moved = false;
+            let dragging = false;
+            let holdTimer = null;
+            const begin = (x) => {
+                startX = x;
+                moved = false;
+                dragging = true;
+                clearTimeout(holdTimer);
+                holdTimer = setTimeout(() => {
+                    row.classList.add("drag-ready");
+                    row.draggable = true;
+                }, 380);
+            };
+            const move = (x) => {
+                if (!dragging) return;
+                const dx = x - startX;
+                if (Math.abs(dx) > 24) moved = true;
+                if (dx < -24) row.classList.add("swiped");
+                if (dx > 24) row.classList.remove("swiped");
+            };
+            const end = () => {
+                dragging = false;
+                clearTimeout(holdTimer);
+            };
+            row.addEventListener("touchstart", (e) => begin(e.touches?.[0]?.clientX || 0), { passive: true });
+            row.addEventListener("touchmove", (e) => move(e.touches?.[0]?.clientX || 0), { passive: true });
+            row.addEventListener("touchend", end, { passive: true });
+            row.addEventListener("mousedown", (e) => begin(e.clientX));
+            row.addEventListener("mousemove", (e) => move(e.clientX));
+            row.addEventListener("mouseup", end);
+            row.addEventListener("mouseleave", end);
+            row.addEventListener("click", (e) => {
+                if (moved) return;
+                const target = e.target;
+                if (!(target instanceof HTMLElement)) return;
+                if (!target.closest("button")) row.classList.toggle("swiped");
+            });
+
+            row.addEventListener("dragstart", (e) => {
+                row.classList.add("dragging");
+                const id = row.dataset.cardId || "";
+                e.dataTransfer?.setData("text/plain", id);
+            });
+            row.addEventListener("dragend", () => {
+                row.classList.remove("dragging", "drag-ready");
+                row.draggable = false;
+            });
+            row.addEventListener("dragover", (e) => e.preventDefault());
+            row.addEventListener("drop", (e) => {
+                e.preventDefault();
+                const fromId = e.dataTransfer?.getData("text/plain") || "";
+                const toId = row.dataset.cardId || "";
+                if (fromId && toId && fromId !== toId && typeof callbacks?.onReorder === "function") {
+                    callbacks.onReorder(fromId, toId);
+                }
+            });
+        }
+        return { bindSwipeAndSort };
     })();
 
     const PromptPolicyService = (() => {
@@ -2758,6 +3122,13 @@
                     onSendClick();
                 }
             });
+            const searchInput = document.getElementById("scenario-search-input");
+            if (searchInput) {
+                searchInput.addEventListener("input", () => {
+                    UIRenderer.renderScenarioCards();
+                    UIRenderer.renderPresetTemplates(presetManifest);
+                });
+            }
         }
         function onSendClick() {
             const input = document.getElementById("chat-input");
@@ -2788,15 +3159,11 @@
             document.querySelectorAll(".view-section").forEach((el) => el.classList.remove("active"));
             const target = document.getElementById(viewId);
             if (target) target.classList.add("active");
-            document.querySelectorAll(".nav-btn").forEach((btn) => {
+            document.querySelectorAll(".nav-btn, .top-nav-btn").forEach((btn) => {
                 if (btn.dataset.view === viewId) btn.classList.add("active");
                 else btn.classList.remove("active");
             });
-            const isGameViews = ["view-main", "view-inventory", "view-social", "view-saves"].includes(viewId);
-            document.getElementById("game-stats-card").style.display = isGameViews ? "grid" : "none";
-            document.querySelector(".quick-actions").style.display = isGameViews ? "flex" : "none";
-            document.querySelector(".timeline-actions").style.display = isGameViews ? "flex" : "none";
-            document.querySelector(".chat-footer .composer").style.display = isGameViews ? "flex" : "none";
+            NavigationVisibilityService.apply(viewId);
             if (!silent && viewId === "view-main") {
                 const content = document.getElementById("main-content");
                 content.scrollTop = content.scrollHeight;
@@ -2896,35 +3263,39 @@
             alert("用户 API 配置已保存");
         }
         function saveScenarioCard() {
-            const selectedId = ScenarioCardService.getSelectedId();
-            const customPinned = selectedId === ScenarioCardService.CUSTOM_CARD_ID;
+            const form = ScenarioEditorService.readForm();
             ScenarioCardService.updateSelectedCard({
-                title: customPinned
-                    ? "自定义设定卡片"
-                    : (document.getElementById("scenario-title-input").value.trim() || "未命名设定"),
-                theme: document.getElementById("scenario-theme-input").value.trim(),
-                text: document.getElementById("scenario-editor").value.trim() || AppConfig.defaultScenario
+                title: form.title || "未命名设定",
+                theme: form.theme,
+                text: form.text || AppConfig.defaultScenario
             });
             renderAll();
             alert("设定卡片已保存");
         }
         function selectScenarioCard(id) {
             ScenarioCardService.setSelectedId(id);
+            PlayViewStateService.leavePlay();
             StateService.init();
             SettingsService.loadToUI();
             renderAll();
         }
         function createScenarioCard() {
             ScenarioCardService.createCard();
+            PlayViewStateService.leavePlay();
             StateService.init();
             SettingsService.loadToUI();
             renderAll();
+            switchView("view-scenario-editor");
         }
         function openScenarioCardSettings(cardId) {
             selectScenarioCard(cardId);
-            switchView("view-home");
-            const editor = document.getElementById("scenario-editor");
-            if (editor) editor.focus();
+            switchView("view-scenario-editor");
+            ScenarioEditorService.focusEditor();
+        }
+        function openCurrentCardEditor() {
+            const card = ScenarioCardService.getSelectedCard();
+            if (!card) return;
+            openScenarioCardSettings(card.id);
         }
         function deleteScenarioCard(cardId) {
             const card = ScenarioCardService.loadCards().find((c) => c.id === cardId);
@@ -2939,25 +3310,45 @@
             SettingsService.loadToUI();
             renderAll();
         }
-        async function applyPresetTemplate(preset) {
-            if (!preset) return;
-            let text = preset.text || "";
-            if (preset.file) {
-                try {
-                    text = await PresetResourceService.loadPresetText(preset.file);
-                } catch (e) {
-                    alert(`加载模板失败：${e.message}`);
-                    return;
-                }
-            }
-            ScenarioCardService.updateSelectedCard({
-                title: preset.title,
-                theme: preset.theme,
-                text: String(text || "").trim()
+        function toggleScenarioCardPin(cardId) {
+            ScenarioCardService.togglePin(cardId);
+            renderAll();
+        }
+        function reorderScenarioCards(fromId, toId) {
+            ScenarioCardService.reorderCards(fromId, toId);
+            renderAll();
+        }
+        function ensurePresetAsIndependentCard(payload) {
+            const card = ScenarioCardService.upsertCard({
+                id: payload.id,
+                title: payload.title || "模板卡片",
+                theme: payload.theme || "",
+                text: String(payload.text || "").trim() || AppConfig.defaultScenario
             });
+            if (!card) throw new Error("模板卡片写入失败");
+            ScenarioCardService.setSelectedId(card.id);
+            StateService.init();
             SettingsService.loadToUI();
             renderAll();
-            alert("已套用预设模板到当前卡片");
+            return card;
+        }
+        async function applyPresetTemplate(preset) {
+            try {
+                const payload = await ScenarioTemplateService.buildTemplateCardPayload(preset);
+                ensurePresetAsIndependentCard(payload);
+            } catch (e) {
+                alert(`加载模板失败：${e.message}`);
+                return;
+            }
+            alert("已就地更新该预设的独立卡片");
+        }
+        async function editPresetTemplate(preset) {
+            await applyPresetTemplate(preset);
+            switchView("view-scenario-editor");
+        }
+        async function playPresetTemplate(preset) {
+            await applyPresetTemplate(preset);
+            await playScenarioCard(ScenarioCardService.getSelectedId());
         }
         function selectApiCard(id) {
             ApiCardService.setSelectedId(id);
@@ -2969,7 +3360,7 @@
         }
         function startFromHome() {
             saveScenarioCard();
-            switchView("view-main");
+            switchView("view-home");
         }
         function importScenarioTxt() {
             SettingsService.importScenarioFromFile();
@@ -3008,11 +3399,12 @@
         function resetGameWithGender() {
             if (!pendingRebirthPlan) return;
             StateService.resetWithPreset(pendingRebirthPlan);
+            PlayViewStateService.enterPlay(ScenarioCardService.getSelectedId());
             closeRebornModal();
             switchView("view-main");
             renderAll();
         }
-        return { init, onSendClick, sendUserText, jumpWeek, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, applyPresetTemplate, selectApiCard, startFromHome, importScenarioTxt, openRebornModal, closeRebornModal, resetGameWithGender, openItemModal, useItem, openNpcProfile, sendNpcMessage, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
+        return { init, onSendClick, sendUserText, jumpWeek, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, openCurrentCardEditor, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, applyPresetTemplate, editPresetTemplate, playPresetTemplate, selectApiCard, startFromHome, importScenarioTxt, openRebornModal, closeRebornModal, resetGameWithGender, openItemModal, useItem, openNpcProfile, sendNpcMessage, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
@@ -3024,7 +3416,10 @@
     function saveScenarioCard() { Controller.saveScenarioCard(); }
     function createScenarioCard() { Controller.createScenarioCard(); }
     function selectScenarioCard(id) { Controller.selectScenarioCard(id); }
+    function openCurrentCardEditor() { Controller.openCurrentCardEditor(); }
     function applyPresetTemplate(id) { Controller.applyPresetTemplate(id); }
+    function editPresetTemplate(id) { Controller.editPresetTemplate(id); }
+    function playPresetTemplate(id) { Controller.playPresetTemplate(id); }
     function selectApiCard(id) { Controller.selectApiCard(id); }
     function startFromHome() { Controller.startFromHome(); }
     function importScenarioTxt() { Controller.importScenarioTxt(); }
