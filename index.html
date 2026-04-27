@@ -853,12 +853,7 @@
             </section>
         </section>
 
-        <section class="card stats-grid" id="game-stats-card">
-            <div class="stat-item"><span id="ui-health">85</span>健康 ❤️</div>
-            <div class="stat-item"><span id="ui-intellect">90</span>智力 🧠</div>
-            <div class="stat-item"><span id="ui-charisma">88</span>魅力 ✨</div>
-            <div class="stat-item"><span id="ui-luck">75</span>运气 🍀</div>
-        </section>
+        <section class="card stats-grid" id="game-stats-card"></section>
 
         <section id="view-main" class="view-section active">
             <section class="card" id="story-board"></section>
@@ -1045,13 +1040,7 @@
         },
         shiftDays(state, deltaDays) {
             if (!Number.isFinite(deltaDays) || !state) return;
-            if (!state.currentYear || !state.currentMonth || !state.currentDay) {
-                const now = new Date();
-                state.currentYear = now.getFullYear();
-                state.currentMonth = now.getMonth() + 1;
-                state.currentDay = now.getDate();
-                state.weekdayIndex = (now.getDay() + 6) % 7;
-            }
+            if (!state.currentYear || !state.currentMonth || !state.currentDay) return;
             state.currentDay = state.currentDay || 1;
             state.weekdayIndex = state.weekdayIndex || 0;
             let remain = deltaDays;
@@ -1177,7 +1166,7 @@
 
             const editBtn = document.getElementById("top-edit-card-btn");
             const hasSelectedCard = !!ScenarioCardService.getSelectedCard();
-            if (editBtn) editBtn.style.display = hasSelectedCard ? "" : "none";
+            if (editBtn) editBtn.style.display = inPlay && hasSelectedCard ? "" : "none";
         }
         return { apply };
     })();
@@ -1313,7 +1302,7 @@
             weekdayIndex: 0,
             age: 0,
             wealth: 500000,
-            stats: { health: 85, intellect: 90, charisma: 88, luck: 75 },
+            stats: [],
             inventory: [
                 { id: "milk", name: "温热牛奶", type: "消耗品", desc: "补充精力的小饮品。", effect: "health+2", count: 2 },
                 { id: "diary", name: "成长日记", type: "道具", desc: "记录每周心情变化。", effect: "charisma+1", count: 1 }
@@ -1354,6 +1343,7 @@
             next.npcs = Array.isArray(preset.npcs) && preset.npcs.length
                 ? Utils.deepClone(preset.npcs)
                 : createDefaultNpcs();
+            next.stats = Array.isArray(preset.stats) ? Utils.deepClone(preset.stats) : [];
             next.protagonistProfile = {
                 name: next.name,
                 englishName: next.englishName,
@@ -1803,6 +1793,33 @@
         return { syncFromAiText };
     })();
 
+    const StatsService = (() => {
+        function normalizeStatItem(it, idx) {
+            const key = String(it?.key || it?.name || `stat_${idx}`).replace(/[^\w-]/g, "_");
+            const label = String(it?.label || it?.name || key).slice(0, 12);
+            const icon = String(it?.icon || "✨").slice(0, 3);
+            const value = Math.max(0, Math.min(999, Number(it?.value) || 0));
+            return { key, label, icon, value };
+        }
+        function normalizeStats(list) {
+            const arr = Array.isArray(list) ? list : [];
+            return arr.slice(0, 8).map(normalizeStatItem);
+        }
+        function applyEffect(state, effectStr) {
+            const effect = String(effectStr || "");
+            const m = effect.match(/([a-zA-Z_][\\w-]*)\\s*([+-])\\s*(\\d{1,3})/);
+            if (!m) return;
+            const key = m[1];
+            const sign = m[2];
+            const delta = Number(m[3]) * (sign === "-" ? -1 : 1);
+            if (!Array.isArray(state.stats)) return;
+            const idx = state.stats.findIndex((s) => s.key === key);
+            if (idx < 0) return;
+            state.stats[idx].value = Math.max(0, Math.min(999, Number(state.stats[idx].value || 0) + delta));
+        }
+        return { normalizeStats, applyEffect };
+    })();
+
     const UIRenderer = (() => {
         let currentStreamingTarget = null;
         let currentStreamingLogDiv = null;
@@ -1818,10 +1835,15 @@
             document.getElementById("ui-wealth").innerText = inPlay
                 ? (playMeta.hasInitialized ? `🧭 时间：${Utils.nowDateStr(state)}` : "🧭 时间：")
                 : "🌥️ 独立世界线";
-            document.getElementById("ui-health").innerText = state.stats.health;
-            document.getElementById("ui-intellect").innerText = state.stats.intellect;
-            document.getElementById("ui-charisma").innerText = state.stats.charisma;
-            document.getElementById("ui-luck").innerText = state.stats.luck;
+            renderStats(state);
+        }
+        function renderStats(state) {
+            const box = document.getElementById("game-stats-card");
+            if (!box) return;
+            const stats = Array.isArray(state.stats) ? state.stats : [];
+            box.innerHTML = stats.map((s) => `
+                <div class="stat-item"><span>${Number(s.value || 0)}</span>${s.label} ${s.icon}</div>
+            `).join("");
         }
         function scrollToBottom() {
             const content = document.getElementById("main-content");
@@ -2012,7 +2034,7 @@
                     <div class="scenario-card-actions">
                         <button class="scenario-action-btn edit" data-op="swipe-edit">设置</button>
                         <button class="scenario-action-btn pin" data-op="swipe-pin">${ScenarioCardViewService.pinLabel(card)}</button>
-                        <button class="scenario-action-btn delete" data-op="swipe-del" ${customPinned ? "disabled" : ""}>删除</button>
+                        <button class="scenario-action-btn delete" data-op="swipe-del">删除</button>
                     </div>
                 `;
                 row.querySelector('[data-op="play"]').onclick = () => Controller.playScenarioCard(card.id);
@@ -2385,9 +2407,17 @@
         }
         function deleteCard(cardId) {
             const id = String(cardId || "");
-            if (id === CUSTOM_CARD_ID) return false;
             const cards = loadCards().filter((c) => c.id !== id);
             saveCards(cards);
+            // 若删除的是自定义卡片，则立刻补回一张新的自定义卡片并置顶，保证系统可用
+            if (id === CUSTOM_CARD_ID) {
+                const nextCards = loadCards();
+                const custom = buildCustomCard({ title: "自定义设定卡片", pinned: true, order: 1 });
+                const merged = normalizeCards([custom, ...nextCards.filter((c) => c.id !== CUSTOM_CARD_ID)]);
+                saveCards(merged);
+                setSelectedId(CUSTOM_CARD_ID);
+                return true;
+            }
             if (getSelectedId() === id) setSelectedId(CUSTOM_CARD_ID);
             return true;
         }
@@ -2749,6 +2779,42 @@
         return { getMeta, setInitialized };
     })();
 
+    const ScenarioIntroService = (() => {
+        async function generateIntroHtmlCard({ apiConfig, scenarioText, state, beautySetting }) {
+            const fetchUrl = AIRequestService.buildFetchUrl();
+            const headers = AIRequestService.buildHeaders(apiConfig);
+            const systemPrompt = [
+                scenarioText,
+                "",
+                "【任务】你是开局介绍生成器。",
+                "请基于设定与角色档案，输出一张可直接渲染的 HTML 卡片。",
+                "强制要求：最外层必须是 <article class=\"ai-beauty-card\">。",
+                "卡片内必须包含：世界背景简述、主角当前身份与处境、当前时间、关键NPC概览、1-3条编号选项。",
+                `美化设定提示词：${beautySetting || "按设定风格输出"}`
+            ].join(\"\\n\");
+            const userPrompt = [
+                \"以下是当前角色档案（必须一致）：\",
+                JSON.stringify(state.protagonistProfile || {}, null, 2),
+                \"以下是NPC列表（必须一致）：\",
+                JSON.stringify(state.npcs || [], null, 2),
+                \"请直接输出HTML，不要Markdown，不要解释。\"
+            ].join(\"\\n\\n\");
+            const html = await AIRequestService.requestCompletionWithFallback({
+                config: apiConfig,
+                fetchUrl,
+                headers,
+                model: apiConfig.model,
+                messages: [
+                    { role: \"system\", content: systemPrompt },
+                    { role: \"user\", content: userPrompt }
+                ],
+                temperature: 0.6
+            });
+            return String(html || \"\").trim();
+        }
+        return { generateIntroHtmlCard };
+    })();
+
     const PromptPolicyService = (() => {
         function buildRecentHistory(state) {
             return (state.history || [])
@@ -3044,6 +3110,13 @@
             if (!Number.isFinite(n)) return NaN;
             return Math.max(0, Math.min(120, Math.floor(n)));
         }
+        function sanitizeTime(v, min, max) {
+            const n = Number(v);
+            if (!Number.isFinite(n)) return NaN;
+            const i = Math.floor(n);
+            if (i < min || i > max) return NaN;
+            return i;
+        }
         function sanitizeItems(items = []) {
             return items
                 .filter((it) => it && it.name)
@@ -3077,9 +3150,11 @@
             if (typeof onProgress === "function") onProgress("连接中");
             const systemPrompt = [
                 "你是文游设定解析器。根据用户设定文本输出 JSON，不要输出解释。",
-                "必须输出字段：name, englishName, ageYears, forcedGender, nationality, location, rebornReason, inventory, npcs。",
+                "必须输出字段：name, englishName, ageYears, forcedGender, nationality, location, currentYear, currentMonth, currentDay, rebornReason, stats, inventory, npcs。",
                 "forcedGender 仅可为 男/女/非二元/空字符串。",
                 "ageYears 为合理年龄，不要默认婴儿，除非设定明确要求幼年开局。",
+                "currentYear/currentMonth/currentDay 必须符合设定年代（例如民国/古代），严禁使用现实年份(如2026)污染设定。",
+                "stats 是数组，每项含 key,label,icon,value（icon 用恰当表情符号）。状态数量与名称由设定决定。",
                 "如果设定指向古代中国皇宫，location 优先填 北京。",
                 "inventory 是数组，每项含 name,type,desc,effect,count。",
                 "npcs 是数组，每项含 name,gender,relation,favor,status,mood。"
@@ -3118,6 +3193,10 @@
                 selectedGender,
                 nationality: String(parsed.nationality || "").trim(),
                 location: String(parsed.location || "").trim(),
+                currentYear: sanitizeTime(parsed.currentYear, 1, 9999),
+                currentMonth: sanitizeTime(parsed.currentMonth, 1, 12),
+                currentDay: sanitizeTime(parsed.currentDay, 1, 31),
+                stats: StatsService.normalizeStats(parsed.stats),
                 inventory,
                 npcs,
                 rebornReason: String(parsed.rebornReason || "使用AI解析设定生成").slice(0, 120)
@@ -3134,6 +3213,12 @@
             if (!aiPlan) throw new Error("AI 返回为空，无法生成投胎方案。");
             if (!aiPlan.name || !aiPlan.englishName) throw new Error("AI 未返回有效主角姓名。");
             if (!Number.isFinite(aiPlan.ageYears)) throw new Error("AI 未返回有效年龄。");
+            if (!Number.isFinite(aiPlan.currentYear) || !Number.isFinite(aiPlan.currentMonth) || !Number.isFinite(aiPlan.currentDay)) {
+                throw new Error("AI 未返回有效初始时间（年/月/日）。");
+            }
+            if (!Array.isArray(aiPlan.stats) || !aiPlan.stats.length) {
+                throw new Error("AI 未返回有效状态栏 stats。");
+            }
             if (!Array.isArray(aiPlan.inventory) || !aiPlan.inventory.length) {
                 throw new Error("AI 未返回有效背包数据。");
             }
@@ -3378,8 +3463,7 @@
             const item = (state.inventory || []).find((it) => it.id === itemId);
             if (!item || item.count <= 0) return;
             item.count -= 1;
-            if (item.effect.includes("health")) state.stats.health = Math.min(100, state.stats.health + 2);
-            if (item.effect.includes("charisma")) state.stats.charisma = Math.min(100, state.stats.charisma + 1);
+            StatsService.applyEffect(state, item.effect);
             if (item.count <= 0) {
                 state.inventory = state.inventory.filter((it) => it.id !== itemId);
             }
@@ -3483,11 +3567,7 @@
         function deleteScenarioCard(cardId) {
             const card = ScenarioCardService.loadCards().find((c) => c.id === cardId);
             if (!card) return;
-            if (card.id === ScenarioCardService.CUSTOM_CARD_ID) {
-                alert("自定义设定卡片为置顶卡片，不可删除。");
-                return;
-            }
-            if (!confirm(`确定删除卡片「${card.title}」吗？`)) return;
+            if (!confirm(`确定删除卡片「${card.title}」吗？\n（删除自定义置顶卡片后会自动生成一张新的自定义卡片）`)) return;
             const ok = ScenarioCardService.deleteCard(cardId);
             if (!ok) return;
             SettingsService.loadToUI();
@@ -3659,6 +3739,23 @@
             closeRebornModal();
             switchView("view-main");
             renderAll();
+            // 初始化完成后：让 AI 输出开局介绍 HTML 卡片作为第一条剧情
+            (async () => {
+                try {
+                    const apiConfig = SettingsService.getApiConfig();
+                    if (apiConfig.blocked) return;
+                    const scenarioText = SettingsService.getScenarioText();
+                    const beautySetting = SettingsService.getBeautyCardSetting();
+                    const state = StateService.get();
+                    const html = await ScenarioIntroService.generateIntroHtmlCard({ apiConfig, scenarioText, state, beautySetting });
+                    if (html) {
+                        StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(state), text: html });
+                        StateService.save();
+                        UIRenderer.renderHistory(StateService.get().history);
+                    }
+                } catch (e) {
+                }
+            })();
         }
         return { init, onSendClick, sendUserText, jumpWeek, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, openCurrentCardEditor, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, applyPresetTemplate, editPresetTemplate, playPresetTemplate, selectApiCard, startFromHome, importScenarioTxt, openRebornModal, closeRebornModal, resetGameWithGender, openItemModal, useItem, openNpcProfile, sendNpcMessage, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
     })();
