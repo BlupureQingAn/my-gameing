@@ -1039,11 +1039,19 @@
             return arr[Math.floor(Math.random() * arr.length)];
         },
         nowDateStr(state) {
+            if (!state || !state.currentYear || !state.currentMonth || !state.currentDay) return "";
             const weekName = this.weekdays[state.weekdayIndex || 0];
             return `${state.currentYear}年${state.currentMonth}月${state.currentDay || 1}日 ${weekName}`;
         },
         shiftDays(state, deltaDays) {
             if (!Number.isFinite(deltaDays) || !state) return;
+            if (!state.currentYear || !state.currentMonth || !state.currentDay) {
+                const now = new Date();
+                state.currentYear = now.getFullYear();
+                state.currentMonth = now.getMonth() + 1;
+                state.currentDay = now.getDate();
+                state.weekdayIndex = (now.getDay() + 6) % 7;
+            }
             state.currentDay = state.currentDay || 1;
             state.weekdayIndex = state.weekdayIndex || 0;
             let remain = deltaDays;
@@ -1298,10 +1306,10 @@
             gender: "男",
             nationality: "待生成",
             location: "待生成",
-            birthYear: 1995,
-            currentYear: 1995,
-            currentMonth: 1,
-            currentDay: 1,
+            birthYear: null,
+            currentYear: null,
+            currentMonth: null,
+            currentDay: null,
             weekdayIndex: 0,
             age: 0,
             wealth: 500000,
@@ -1311,19 +1319,15 @@
                 { id: "diary", name: "成长日记", type: "道具", desc: "记录每周心情变化。", effect: "charisma+1", count: 1 }
             ],
             npcs: [
-                { id: "npc_mom", name: "林知晴", relation: "母亲", favor: 82, status: "在家", mood: "温和" },
-                { id: "npc_dad", name: "顾承远", relation: "父亲", favor: 75, status: "工作中", mood: "认真" },
-                { id: "npc_friend", name: "许安禾", relation: "青梅竹马", favor: 68, status: "上学", mood: "活泼" }
+                { id: "npc_mom", name: "林知晴", gender: "女", relation: "母亲", favor: 82, status: "在家", mood: "温和" },
+                { id: "npc_dad", name: "顾承远", gender: "男", relation: "父亲", favor: 75, status: "工作中", mood: "认真" },
+                { id: "npc_friend", name: "许安禾", gender: "女", relation: "青梅竹马", favor: 68, status: "上学", mood: "活泼" }
             ],
             npcChats: {},
             history: [],
             chatMemory: []
         };
         let gameState = null;
-
-        function introText(state) {
-            return `## 人生模拟器初始化\n你出生在${state.location}，国籍为**${state.nationality}**。\n当前角色：**${state.name}（${state.englishName}）**。\n\n（AI想法：先从当前家庭与环境细节展开）\n\n**可选行动**\n1. 观察父母\n2. 安静休息\n3. 查看当前状态`;
-        }
 
         function createDefaultInventory() {
             return Utils.deepClone(baseState.inventory);
@@ -1341,6 +1345,9 @@
             next.location = preset.location || identity.location;
             const ageYears = Math.max(0, Number(preset.ageYears || 0));
             next.age = ageYears * 12;
+            if (Number.isFinite(Number(preset.currentYear))) next.currentYear = Number(preset.currentYear);
+            if (Number.isFinite(Number(preset.currentMonth))) next.currentMonth = Number(preset.currentMonth);
+            if (Number.isFinite(Number(preset.currentDay))) next.currentDay = Number(preset.currentDay);
             next.inventory = Array.isArray(preset.inventory) && preset.inventory.length
                 ? Utils.deepClone(preset.inventory)
                 : createDefaultInventory();
@@ -1358,16 +1365,15 @@
             next.npcProfiles = Utils.deepClone(next.npcs);
             next.npcChats = {};
             next.chatMemory = [];
-            next.history = [{ role: "ai", date: Utils.nowDateStr(next), text: introText(next) }];
+            // 首次游玩前不注入本地预制开场，等待 AI 初始化结果写入历史。
+            next.history = [];
             return next;
         }
 
         function init() {
             const saved = StorageService.readJson(GameSessionService.activeKey(AppConfig.storageKeys.save), null);
             gameState = saved || buildInitialState(baseState.gender);
-            if (!gameState.history || !gameState.history.length) {
-                gameState.history = [{ role: "ai", date: Utils.nowDateStr(gameState), text: introText(gameState) }];
-            }
+            if (!Array.isArray(gameState.history)) gameState.history = [];
             if (!Array.isArray(gameState.inventory)) gameState.inventory = createDefaultInventory();
             if (!Array.isArray(gameState.npcs)) gameState.npcs = createDefaultNpcs();
             if (!gameState.npcChats || typeof gameState.npcChats !== "object") gameState.npcChats = {};
@@ -1375,7 +1381,7 @@
             if (typeof gameState.weekdayIndex !== "number") gameState.weekdayIndex = 0;
         }
 
-        function resetWithPreset({ selectedGender, forcedGender, name, englishName, ageYears, nationality, location, inventory, npcs, rebornReason }) {
+        function resetWithPreset({ selectedGender, forcedGender, name, englishName, ageYears, nationality, location, currentYear, currentMonth, currentDay, inventory, npcs, rebornReason }) {
             const finalGender = forcedGender || selectedGender || baseState.gender;
             gameState = buildInitialState(finalGender, {
                 gender: forcedGender,
@@ -1384,15 +1390,13 @@
                 ageYears,
                 nationality,
                 location,
+                currentYear,
+                currentMonth,
+                currentDay,
                 inventory,
                 npcs
             });
-            const reasonText = rebornReason ? `\n设定解析：${rebornReason}` : "";
-            gameState.history = [{
-                role: "ai",
-                date: Utils.nowDateStr(gameState),
-                text: `## 新人生开启\n身份：**${gameState.name}（${gameState.englishName}）**，${Math.floor((gameState.age || 0) / 12)}岁，性别**${finalGender}**。\n国籍**${gameState.nationality}**，地点**${gameState.location}**。\n背包已按设定重建，社交NPC已重置并重建。${reasonText}\n\n（AI想法：后续剧情会严格沿用这组身份信息）`
-            }];
+            gameState.history = [];
             save();
         }
 
@@ -1537,7 +1541,8 @@
                 "4) 每次回复都应包含：时间信息、状态变化、剧情对话、（AI想法：...）。",
                 "5) 回复末尾必须提供 1-3 条可执行选项，使用编号格式：1. xxx",
                 "6) 若剧情不适合选项，也要提供“继续观察/继续推进”等中性选项。",
-                "7) 事件保持现实、日常、年龄逻辑正确。"
+                "7) 事件保持现实、日常、年龄逻辑正确。",
+                "8) 不得强制使用“你出生了/婴儿开局”叙事，除非角色年龄明确 <= 1 岁。"
             ].join("\n");
         }
         function buildStateFactLock(state) {
@@ -1741,6 +1746,63 @@
         return { detectConflicts };
     })();
 
+    const TimeSyncService = (() => {
+        function weekdayIndexFromDate(y, m, d) {
+            try {
+                const dt = new Date(Number(y), Number(m) - 1, Number(d));
+                if (Number.isNaN(dt.getTime())) return null;
+                // JS: 0=Sun..6=Sat  -> 我们: 0=周一..6=周日
+                return (dt.getDay() + 6) % 7;
+            } catch (e) {
+                return null;
+            }
+        }
+        function extractWeekdayIndex(content) {
+            const map = {
+                "周一": 0, "星期一": 0,
+                "周二": 1, "星期二": 1,
+                "周三": 2, "星期三": 2,
+                "周四": 3, "星期四": 3,
+                "周五": 4, "星期五": 4,
+                "周六": 5, "星期六": 5,
+                "周日": 6, "星期日": 6, "星期天": 6
+            };
+            const m = String(content || "").match(/(周一|周二|周三|周四|周五|周六|周日|星期一|星期二|星期三|星期四|星期五|星期六|星期日|星期天)/);
+            if (!m) return null;
+            return map[m[1]] ?? null;
+        }
+        function extractLatestYmd(content) {
+            const re = /(\d{4})年\s*(\d{1,2})月\s*(\d{1,2})日/g;
+            let m;
+            let last = null;
+            while ((m = re.exec(String(content || ""))) !== null) {
+                last = { y: Number(m[1]), mo: Number(m[2]), d: Number(m[3]) };
+            }
+            if (!last) return null;
+            if (last.y >= 1 && last.mo >= 1 && last.mo <= 12 && last.d >= 1 && last.d <= 31) return last;
+            return null;
+        }
+        function syncFromAiText(state, text) {
+            if (!state) return;
+            const content = String(text || "");
+            const ymd = extractLatestYmd(content);
+            if (!ymd) return;
+            state.currentYear = ymd.y;
+            state.currentMonth = ymd.mo;
+            state.currentDay = ymd.d;
+
+            // weekdayIndex: 优先使用文本中给出的周几，其次用日期推导
+            const fromText = extractWeekdayIndex(content);
+            if (typeof fromText === "number") {
+                state.weekdayIndex = fromText;
+            } else {
+                const derived = weekdayIndexFromDate(ymd.y, ymd.mo, ymd.d);
+                if (typeof derived === "number") state.weekdayIndex = derived;
+            }
+        }
+        return { syncFromAiText };
+    })();
+
     const UIRenderer = (() => {
         let currentStreamingTarget = null;
         let currentStreamingLogDiv = null;
@@ -1748,12 +1810,13 @@
         function renderTop(state) {
             const inPlay = PlayViewStateService.isInPlayMode();
             const card = ScenarioCardService.getSelectedCard();
+            const playMeta = card ? ScenarioPlayMetaService.getMeta(card.id) : { hasInitialized: false };
             document.getElementById("site-title").innerText = "云吞吞文游模拟器";
             document.getElementById("ui-basic-info").innerText = inPlay
                 ? `当前卡片：${card?.title || "未命名卡片"}`
                 : "选择卡片后进入独立游玩界面";
             document.getElementById("ui-wealth").innerText = inPlay
-                ? `🧭 时间：${Utils.nowDateStr(state)}`
+                ? (playMeta.hasInitialized ? `🧭 时间：${Utils.nowDateStr(state)}` : "🧭 时间：")
                 : "🌥️ 独立世界线";
             document.getElementById("ui-health").innerText = state.stats.health;
             document.getElementById("ui-intellect").innerText = state.stats.intellect;
@@ -1865,7 +1928,7 @@
                 row.innerHTML = `
                     <div>
                         <div class="list-title">${npc.name}（${npc.relation}）</div>
-                        <div class="list-sub">好感 ${npc.favor}｜状态 ${npc.status}</div>
+                        <div class="list-sub">性别 ${npc.gender || "未知"}｜好感 ${npc.favor}｜状态 ${npc.status}</div>
                     </div>
                     <button class="tiny-btn">聊天</button>
                 `;
@@ -1885,7 +1948,7 @@
             if (!panel || !box || !npc) return;
             panel.style.display = "block";
             document.getElementById("social-chat-title").innerText = `和 ${npc.name} 聊天`;
-            document.getElementById("social-chat-sub").innerText = `好感 ${npc.favor}｜心情 ${npc.mood}｜状态 ${npc.status}`;
+            document.getElementById("social-chat-sub").innerText = `性别 ${npc.gender || "未知"}｜好感 ${npc.favor}｜心情 ${npc.mood}｜状态 ${npc.status}`;
             document.getElementById("social-avatar-btn").onclick = () => Controller.openNpcProfile(npc.id);
             const chats = state.npcChats[npcId] || [];
             box.innerHTML = chats.map((m) => `<div class="npc-msg ${m.from}">${m.from === "me" ? "我" : npc.name}：${MarkdownService.render(m.text)}</div>`).join("");
@@ -2696,7 +2759,7 @@
         function buildRuntimeContext(state) {
             return [
                 "【运行时上下文】",
-                `主角基础：姓名${state.name}，性别${state.gender}，年龄${Math.floor((state.age || 0) / 12)}岁，时间${Utils.nowDateStr(state)}。`,
+                `主角基础：姓名${state.name}，性别${state.gender}，年龄${Math.floor((state.age || 0) / 12)}岁，时间${Utils.nowDateStr(state) || "未设定（请在回复中给出当前时间）"}。`,
                 "请使用Markdown输出并兼容手机屏。",
                 "若用户输入与已确认事实冲突，先以礼貌方式说明冲突，再基于事实继续剧情。"
             ].join("\n");
@@ -3001,6 +3064,7 @@
                 .map((n, idx) => ({
                     id: String(n.id || `npc_${idx + 1}`).replace(/[^\w-]/g, "_"),
                     name: String(n.name).slice(0, 20),
+                    gender: String(n.gender || "未知").slice(0, 6),
                     relation: String(n.relation || "熟人").slice(0, 12),
                     favor: Math.max(0, Math.min(100, Number(n.favor) || 65)),
                     status: String(n.status || "在线").slice(0, 12),
@@ -3018,7 +3082,7 @@
                 "ageYears 为合理年龄，不要默认婴儿，除非设定明确要求幼年开局。",
                 "如果设定指向古代中国皇宫，location 优先填 北京。",
                 "inventory 是数组，每项含 name,type,desc,effect,count。",
-                "npcs 是数组，每项含 name,relation,favor,status,mood。"
+                "npcs 是数组，每项含 name,gender,relation,favor,status,mood。"
             ].join("\n");
             const userPrompt = [
                 `用户选择投胎性别：${selectedGender}`,
@@ -3185,6 +3249,7 @@
                     })
                 });
 
+                TimeSyncService.syncFromAiText(StateService.get(), finalText);
                 UIRenderer.finishStreaming(finalText, { conflictDetected: conflictResult.conflictDetected });
                 EventService.maybeTriggerAnimation(finalText);
                 StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(StateService.get()), text: finalText });
