@@ -3309,7 +3309,7 @@
                 "6) 若剧情不适合选项，也要提供“继续观察/继续推进”等中性选项。",
                 "7) 事件保持现实、日常、年龄逻辑正确。",
                 "8) 不得强制使用“你出生了/婴儿开局”叙事，除非角色年龄明确 <= 1 岁。",
-                "9) 若本轮涉及可变数据（主角属性/NPC属性/背包/时间/状态值），必须追加如下代码块：```state-patch {json} ```。",
+                "9) 无论输出 HTML 卡片还是 Markdown，若本轮涉及可变数据（主角属性/NPC属性/背包/时间/状态值），必须在 HTML 卡片之后追加如下代码块：```state-patch {json} ```。",
                 `10) 回复末尾必须追加且只追加一次结束符：${endMarker}（仅放在整条回复最末尾）。`,
                 "11) 若当前设定存在待玩家选择的开局模式/路线/阵营，不得替玩家拍板，只能给出候选选项。"
             ].join("\n");
@@ -4231,6 +4231,10 @@
                 const delta = Number.isFinite(prev) ? value - prev : 0;
                 const deltaClass = delta > 0 ? "up" : (delta < 0 ? "down" : "");
                 const stateClass = delta > 0 ? "stat-up" : (delta < 0 ? "stat-down" : "");
+                // 进度条：0-100 直接用百分比，>100 按比例缩放到最大值
+                const maxVal = Math.max(100, value);
+                const pct = Math.min(100, Math.round((value / maxVal) * 100));
+                const barColor = value >= 70 ? "var(--accent)" : value >= 40 ? "#e6a817" : "#e05555";
                 return `
                     <div class="stat-item ${stateClass}">
                         <div class="stat-item-header">
@@ -4238,6 +4242,9 @@
                             ${delta ? `<span class="stat-item-delta ${deltaClass}">${delta > 0 ? "+" : ""}${delta}</span>` : ""}
                         </div>
                         <div class="stat-item-value"><span>${value}</span></div>
+                        <div style="margin-top:4px;height:4px;border-radius:2px;background:rgba(0,0,0,.08);overflow:hidden;">
+                            <div style="height:100%;width:${pct}%;background:${barColor};border-radius:2px;transition:width .4s ease;"></div>
+                        </div>
                     </div>
                 `;
             }).join("");
@@ -6022,8 +6029,19 @@
         // 主入口：组装完整的压缩历史 prompt
         function build(state, opts = {}) {
             const parts = [];
-            const history = buildCompressedHistory(state, opts);
-            if (history) parts.push(`【近期剧情】\n${history}`);
+
+            // 找最近一次 AI 回复的完整 HTML 卡片，直接附上（让 AI 知道上次的卡片结构）
+            const history = Array.isArray(state.history) ? state.history : [];
+            const lastHtmlEntry = [...history].reverse().find((item) => {
+                const t = String(item.text || "");
+                return item.role !== "user" && (t.includes("ai-beauty-card") || t.includes("<article"));
+            });
+            if (lastHtmlEntry) {
+                parts.push(`【上一轮HTML卡片（必须参考此结构继续输出）】\n${lastHtmlEntry.text}`);
+            }
+
+            const compressedHistory = buildCompressedHistory(state, opts);
+            if (compressedHistory) parts.push(`【近期剧情摘要】\n${compressedHistory}`);
             const relations = buildRelationSnapshot(state);
             if (relations) parts.push(relations);
             const npcSnap = buildNpcSnapshot(state, opts);
@@ -6075,7 +6093,8 @@
                     : "亮色模式：温暖或高饱和视觉，保证可读性。",
                 ...PromptRulesRegistry.getBeautyCoreRules(),
                 "【卡片结构（必须严格遵守，data-block 顺序和命名不可改变）】",
-                skeletonHint
+                skeletonHint,
+                "输出完整 HTML 卡片后，若有状态变化必须在卡片之后追加 ```state-patch {...}``` 块（不要放在卡片内部）。"
             ].join("\n");
         }
         function buildSystemPrompt({ scenarioSpec, builtinRules, stateFactLock, runtimeContext, beautyRules }) {
