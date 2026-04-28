@@ -662,6 +662,87 @@
             overflow-y: auto;
         }
 
+        #view-npc-chat {
+            position: absolute;
+            inset: 0;
+            z-index: 8;
+            background: #ededed;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        #view-npc-chat.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .npc-chat-page {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            flex-direction: column;
+            background: #ededed;
+        }
+
+        .npc-chat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: calc(env(safe-area-inset-top, 0px) + 12px) 14px 10px;
+            background: #f7f7f7;
+            border-bottom: 1px solid #d8d8d8;
+        }
+
+        .npc-chat-header-left,
+        .npc-chat-header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 72px;
+        }
+
+        .npc-chat-header-right {
+            justify-content: flex-end;
+        }
+
+        .npc-chat-back-btn,
+        .npc-chat-profile-btn {
+            border: 0;
+            background: transparent;
+            color: #111;
+            font-size: 0.92rem;
+            cursor: pointer;
+            padding: 4px 2px;
+        }
+
+        .npc-chat-back-btn {
+            font-weight: 600;
+        }
+
+        .npc-chat-header-center {
+            flex: 1;
+            min-width: 0;
+            text-align: center;
+        }
+
+        .npc-chat-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #111;
+            line-height: 1.2;
+        }
+
+        .npc-chat-subtitle {
+            margin-top: 2px;
+            font-size: 0.72rem;
+            color: #666;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .swipe-row {
             position: relative;
             overflow: hidden;
@@ -708,7 +789,7 @@
             display: flex;
             align-items: flex-end;
             gap: 8px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .npc-chat-msg.me {
@@ -716,29 +797,29 @@
         }
 
         .npc-chat-avatar {
-            width: 28px;
-            height: 28px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border: 1px solid #d9b995;
-            background: #fff5e7;
-            font-size: 0.9rem;
+            border: 1px solid #d7d7d7;
+            background: #ffffff;
+            font-size: 1rem;
             flex-shrink: 0;
         }
 
         .npc-chat-bubble {
             max-width: 76%;
-            font-size: 0.82rem;
+            font-size: 0.86rem;
             line-height: 1.5;
-            padding: 8px 10px;
-            border-radius: 12px;
-            border: 1px solid #e0c5a8;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid #dddddd;
             background: #ffffff;
-            color: #5b4634;
+            color: #2d2d2d;
             word-break: break-word;
-            box-shadow: 0 1px 6px rgba(91, 70, 52, 0.08);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
             position: relative;
         }
 
@@ -746,31 +827,31 @@
             content: "";
             position: absolute;
             left: -6px;
-            top: 10px;
+            top: 12px;
             width: 10px;
             height: 10px;
             background: #fff;
-            border-left: 1px solid #e0c5a8;
-            border-bottom: 1px solid #e0c5a8;
+            border-left: 1px solid #dddddd;
+            border-bottom: 1px solid #dddddd;
             transform: rotate(45deg);
         }
 
         .npc-chat-msg.me .npc-chat-bubble {
-            background: #dff5c8;
-            border-color: #c4dfa7;
-            color: #415231;
+            background: #95ec69;
+            border-color: #8dde62;
+            color: #1f2f14;
         }
 
         .npc-chat-msg.me .npc-chat-bubble::before {
             content: "";
             position: absolute;
             right: -6px;
-            top: 10px;
+            top: 12px;
             width: 10px;
             height: 10px;
-            background: #dff5c8;
-            border-right: 1px solid #c4dfa7;
-            border-top: 1px solid #c4dfa7;
+            background: #95ec69;
+            border-right: 1px solid #8dde62;
+            border-top: 1px solid #8dde62;
             transform: rotate(45deg);
         }
 
@@ -778,17 +859,60 @@
             display: flex;
             gap: 6px;
             flex-wrap: wrap;
-            margin-top: 8px;
-            margin-bottom: 6px;
+            padding: 8px 12px 0;
+            background: #f7f7f7;
+            border-top: 1px solid #d8d8d8;
         }
 
         .emoji-btn {
-            border: 1px solid var(--line);
-            background: #fff8ee;
+            border: 1px solid #dddddd;
+            background: #ffffff;
             border-radius: 999px;
-            padding: 2px 8px;
+            padding: 3px 8px;
             font-size: 0.9rem;
             cursor: pointer;
+        }
+
+        .npc-chat-composer {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+            padding: 8px 12px calc(env(safe-area-inset-bottom, 0px) + 10px);
+            background: #f7f7f7;
+        }
+
+        .npc-chat-composer textarea {
+            min-height: 38px;
+            max-height: 128px;
+            resize: none;
+            border: 1px solid #d6d6d6;
+            border-radius: 6px;
+            background: #ffffff;
+        }
+
+        .npc-chat-composer .send-btn {
+            min-width: 64px;
+            height: 38px;
+            border-radius: 6px;
+            background: #07c160;
+            border-color: #07c160;
+        }
+
+        .npc-chat-composer .send-btn:disabled {
+            background: #9adcb5;
+            border-color: #9adcb5;
+        }
+
+        #view-npc-chat .social-chat-box {
+            flex: 1;
+            min-height: 0;
+            max-height: none;
+            height: auto;
+            margin: 0;
+            padding: 14px 12px;
+            border: 0;
+            border-radius: 0;
+            background: #ededed;
         }
 
         .npc-panel-card {
@@ -1246,15 +1370,17 @@
         </section>
 
         <section id="view-npc-chat" class="view-section">
-            <section class="card">
-                <div class="list-row">
-                    <div>
-                        <div class="list-title" id="npc-chat-title">与NPC聊天</div>
-                        <div class="list-sub" id="npc-chat-sub"></div>
+            <div class="npc-chat-page">
+                <div class="npc-chat-header">
+                    <div class="npc-chat-header-left">
+                        <button class="npc-chat-back-btn" type="button" onclick="backToSocialList()">← 返回</button>
                     </div>
-                    <div style="display:flex; gap:6px;">
-                        <button class="tiny-btn" onclick="backToSocialList()">返回</button>
-                        <button class="tiny-btn" id="npc-chat-avatar-btn">查看状态</button>
+                    <div class="npc-chat-header-center">
+                        <div class="npc-chat-title" id="npc-chat-title">与NPC聊天</div>
+                        <div class="npc-chat-subtitle" id="npc-chat-sub"></div>
+                    </div>
+                    <div class="npc-chat-header-right">
+                        <button class="npc-chat-profile-btn" type="button" id="npc-chat-avatar-btn">查看状态</button>
                     </div>
                 </div>
                 <div class="social-chat-box" id="npc-chat-box"></div>
@@ -1268,11 +1394,11 @@
                     <button class="emoji-btn" type="button" data-emoji="❤️">❤️</button>
                     <button class="emoji-btn" type="button" data-emoji="👍">👍</button>
                 </div>
-                <div class="composer" style="margin-top:8px;">
-                    <textarea id="npc-chat-input" placeholder="给这个NPC发消息"></textarea>
+                <div class="npc-chat-composer">
+                    <textarea id="npc-chat-input" placeholder="发消息"></textarea>
                     <button class="send-btn" onclick="sendNpcMessage()">发送</button>
                 </div>
-            </section>
+            </div>
         </section>
 
         <section id="view-saves" class="view-section">
@@ -1628,7 +1754,7 @@
     })();
 
     const NavigationVisibilityService = (() => {
-        const PLAY_VIEWS = new Set(["view-main", "view-inventory", "view-social", "view-npc-chat", "view-saves"]);
+            const PLAY_VIEWS = new Set(["view-main", "view-inventory", "view-social", "view-npc-chat", "view-saves"]);
         function apply(viewId) {
             const inPlay = PlayViewStateService.isInPlayMode();
             document.querySelectorAll(".nav-btn").forEach((btn) => {
@@ -1639,8 +1765,8 @@
                     btn.style.display = "";
                 }
             });
-            const isPlayView = PLAY_VIEWS.has(viewId);
-            const enableGamePanels = inPlay && isPlayView;
+                const isPlayView = PLAY_VIEWS.has(viewId);
+                const enableGamePanels = inPlay && isPlayView && viewId !== "view-npc-chat";
             const footer = document.querySelector(".chat-footer");
             if (footer) footer.style.display = enableGamePanels ? "block" : "none";
             document.getElementById("game-stats-card").style.display = enableGamePanels ? "grid" : "none";
@@ -2018,6 +2144,12 @@
                 tpl.innerHTML = candidate;
                 const card = tpl.content.querySelector(".ai-beauty-card");
                 if (card && card instanceof HTMLElement) {
+                    card.querySelectorAll(".ai-beauty-card").forEach((nested) => {
+                        if (!(nested instanceof HTMLElement) || nested === card) return;
+                        const frag = document.createDocumentFragment();
+                        while (nested.firstChild) frag.appendChild(nested.firstChild);
+                        nested.replaceWith(frag);
+                    });
                     pruneEmptyElements(card);
                     return card.outerHTML;
                 }
@@ -3203,6 +3335,13 @@
         function normalizeStatusTag(raw = "") {
             return String(raw || "").replace(/\s+/g, " ").trim().slice(0, 32);
         }
+        function isKnownStatLabel(raw = "") {
+            const text = String(raw || "").trim();
+            if (!text) return false;
+            const normalized = text.toLowerCase().replace(/[^a-z\u4e00-\u9fa5]/g, "");
+            if (STAT_ALIAS_MAP[normalized]) return true;
+            return /^(健康|体力|生命|心情|情绪|精神|学识|智力|智慧|魅力|声望|名望|财富|金钱|银两|资产|武力|战力|修为|灵力|权势|成长|亲缘|人脉|事业)$/.test(text);
+        }
         function extractRelevantText(text = "") {
             const raw = String(text || "");
             if (!raw) return "";
@@ -3213,8 +3352,14 @@
                 tpl.innerHTML = normalized;
                 const body = tpl.content.querySelector(".ai-beauty-card-body");
                 if (!(body instanceof HTMLElement)) return raw;
+                body.querySelectorAll("style, script").forEach((el) => el.remove());
                 return Array.from(body.querySelectorAll('[data-block="time"], [data-block="status"], [data-block="event"], [data-block="thought"]'))
-                    .map((el) => String(el.textContent || "").trim())
+                    .map((el) => {
+                        if (!(el instanceof HTMLElement)) return "";
+                        const clone = el.cloneNode(true);
+                        if (clone instanceof HTMLElement) clone.querySelectorAll("style, script").forEach((node) => node.remove());
+                        return String(clone.textContent || "").trim();
+                    })
                     .filter(Boolean)
                     .join("\n");
             } catch (e) {
@@ -3232,7 +3377,7 @@
             const statusTags = [];
             lines.forEach((line) => {
                 const m = line.match(/^([\u4e00-\u9fa5A-Za-z0-9_]{1,12})\s*[:：]\s*([+-]?\d{1,4})(?:\b|$)/);
-                if (m) {
+                if (m && isKnownStatLabel(m[1])) {
                     const label = toCanonicalStatLabel(m[1]);
                     statItems.push({
                         key: normalizeStatKey(label),
@@ -3770,12 +3915,13 @@
         function renderSocialChat(state, npcId) {
             const panel = document.getElementById("view-npc-chat");
             const box = document.getElementById("npc-chat-box");
-            const npc = (state.npcs || []).find((n) => n.id === npcId);
+            const npcKey = String(npcId || "");
+            const npc = (state.npcs || []).find((n) => String(n.id || "") === npcKey);
             if (!panel || !box || !npc) return;
-            document.getElementById("npc-chat-title").innerText = `和 ${npc.name} 聊天`;
-            document.getElementById("npc-chat-sub").innerText = `性别 ${npc.gender || "未知"}｜好感 ${npc.favor}｜心情 ${npc.mood}｜状态 ${npc.status}${npc.traits ? `｜特质 ${npc.traits}` : ""}`;
+            document.getElementById("npc-chat-title").innerText = npc.name || "NPC";
+            document.getElementById("npc-chat-sub").innerText = `${npc.relation || "熟人"}｜好感 ${npc.favor}｜${npc.status || "在线"}${npc.traits ? `｜${npc.traits}` : ""}`;
             document.getElementById("npc-chat-avatar-btn").onclick = () => Controller.openNpcProfile(npc.id);
-            const chats = state.npcChats[npcId] || [];
+            const chats = (state.npcChats && state.npcChats[npcKey]) || [];
             box.innerHTML = chats.map((m) => {
                 const mine = m.from === "me";
                 const who = mine ? "我" : npc.name;
@@ -4243,9 +4389,10 @@
 
     const NpcChatService = (() => {
         function ensureNpcChatStore(state, npcId) {
+            const key = String(npcId || "");
             if (!state.npcChats || typeof state.npcChats !== "object") state.npcChats = {};
-            if (!Array.isArray(state.npcChats[npcId])) state.npcChats[npcId] = [];
-            return state.npcChats[npcId];
+            if (!Array.isArray(state.npcChats[key])) state.npcChats[key] = [];
+            return state.npcChats[key];
         }
         function buildMainProgressSummary(state, limit = 8) {
             const history = Array.isArray(state?.history) ? state.history : [];
@@ -4282,10 +4429,14 @@
         }
 
         async function applyUserMessage(state, npcId, userText) {
-            const npc = (state.npcs || []).find((n) => n.id === npcId);
+            const npcKey = String(npcId || "");
+            const npc = (state.npcs || []).find((n) => String(n.id || "") === npcKey);
             if (!npc) return null;
-            const chatList = ensureNpcChatStore(state, npcId);
-            chatList.push({ from: "me", text: userText, ts: Date.now() });
+            const chatList = ensureNpcChatStore(state, npcKey);
+            const lastMsg = chatList[chatList.length - 1];
+            if (!(lastMsg && lastMsg.from === "me" && String(lastMsg.text || "") === String(userText || ""))) {
+                chatList.push({ from: "me", text: userText, ts: Date.now() });
+            }
             const apiConfig = SettingsService.getApiConfig();
             if (apiConfig.blocked || !apiConfig.upstreamUrl || !apiConfig.key || !apiConfig.model) {
                 throw new Error("未配置可用 AI-API，无法进行 NPC 对话。");
@@ -4294,24 +4445,27 @@
             const fetchUrl = AIRequestService.buildFetchUrl();
             const headers = AIRequestService.buildHeaders(apiConfig);
             const mainProgress = buildMainProgressSummary(state);
-            const npcHistory = buildNpcChatSummary(state, npcId);
-            const mem = NpcMemoryService.ensureStore(state, npcId);
+            const npcHistory = buildNpcChatSummary(state, npcKey);
+            const mem = NpcMemoryService.ensureStore(state, npcKey);
+            const playerName = String(state?.protagonistProfile?.name || state?.name || "玩家");
             const systemPrompt = [
                 "你是角色扮演对话模型，当前只扮演指定 NPC，与玩家单独聊天。",
                 "【最高优先级】必须严格遵守当前卡片设定，不可脱离世界观与年代。",
                 "【一致性】必须与主线剧情进度一致，不得与已发生事件冲突。",
                 "【角色约束】只能使用该 NPC 的身份、关系、性格视角说话，不可越权代替旁白推进整章剧情。",
+                "【发信人识别】每一轮“玩家本轮发言”都来自主角本人，你必须明确知道是谁在和你说话，并基于你与该主角的关系来回复。",
                 "【状态同步】若本轮导致可变状态变更（NPC属性/主角属性/背包/时间/状态值），必须在末尾追加```state-patch```JSON块。",
                 "回复控制在 1-3 段，口语自然，可包含简短动作描写。"
             ].join("\n");
             const userPrompt = [
                 `【当前卡片设定】\n${scenarioText}`,
                 `【主角档案】\n${JSON.stringify(state.protagonistProfile || {}, null, 2)}`,
+                `【当前与你聊天的人】\n姓名：${playerName}\n身份：主角 / 玩家本人`,
                 `【NPC档案】\n${JSON.stringify(npc, null, 2)}`,
                 `【NPC长期记忆标签】\n${NpcMemoryService.formatForPrompt(mem)}`,
                 `【主线最近进度】\n${mainProgress || "（暂无）"}`,
                 `【与该NPC最近对话】\n${npcHistory || "（暂无）"}`,
-                `【玩家本轮发言】\n${userText}`,
+                `【玩家本轮发言】\n${playerName} 对你说：${userText}`,
                 "请仅输出 NPC 回复正文，不要解释规则。"
             ].join("\n\n");
             const reply = await AIRequestService.requestCompletionWithFallback({
@@ -4883,23 +5037,9 @@
             return ScenarioPlayMetaService.getLockedSkeleton(cardId);
         }
         function finalizeCardLayout({ text, beautySetting, titleHint, nowText, policyConfig, cardId, preferredChoices = [], choiceSource = "turn" }) {
-            const lockedSkeleton = getLockedSkeleton(policyConfig, cardId);
             const normalized = HtmlCardService.normalizeHtmlCard(text);
-            const html = HtmlCardService.isRenderableHtmlCard(normalized)
-                ? normalized
-                : HtmlCardService.wrapAsHtmlCard(beautySetting || HtmlCardTemplateService.getStableThemeName(), normalized || text);
-            const finalized = HtmlCardService.enforceCardStructure(html, {
-                titleHint: titleHint || "剧情推进",
-                nowText: nowText || "",
-                lockedSkeleton,
-                preferredChoices,
-                choiceSource
-            });
-            if (policyConfig?.lockFirstCardSkeleton && !lockedSkeleton) {
-                const freshSkeleton = HtmlCardService.extractSkeleton(finalized);
-                if (freshSkeleton) ScenarioPlayMetaService.setLockedSkeleton(cardId, freshSkeleton);
-            }
-            return finalized;
+            if (HtmlCardService.isRenderableHtmlCard(normalized)) return normalized;
+            return HtmlCardService.wrapAsHtmlCard(beautySetting || HtmlCardTemplateService.getStableThemeName(), normalized || text);
         }
         return { finalizeCardLayout };
     })();
@@ -6875,7 +7015,7 @@
         }
         function openNpcProfile(npcId) {
             const state = StateService.get();
-            const npc = (state.npcs || []).find((n) => n.id === npcId);
+            const npc = (state.npcs || []).find((n) => String(n.id || "") === String(npcId || ""));
             if (!npc) return;
             const mem = NpcMemoryService.ensureStore(state, npc.id);
             const tags = mem?.tags || { promises: [], conflicts: [], secrets: [], notes: [] };
@@ -6946,44 +7086,29 @@
         async function sendNpcMessage() {
             const state = StateService.get();
             const npcId = String(currentSocialNpcId || "");
-            const npc = (state.npcs || []).find((n) => n.id === npcId);
+            const npc = (state.npcs || []).find((n) => String(n.id || "") === npcId);
             if (!npc) return;
+            const chatKey = String(npc.id || "");
             const input = document.getElementById("npc-chat-input");
             const txt = input.value.trim();
             if (!txt) return;
             const sendBtn = document.querySelector("#view-npc-chat .send-btn");
-            const oldTitle = document.getElementById("npc-chat-title")?.innerText || "";
+            const oldTitle = document.getElementById("npc-chat-title")?.innerText || npc.name || "";
             input.disabled = true;
             if (sendBtn) sendBtn.disabled = true;
             input.value = "";
 
             // 立即显示我方气泡（无需等待 AI）
             if (!state.npcChats || typeof state.npcChats !== "object") state.npcChats = {};
-            if (!Array.isArray(state.npcChats[npc.id])) state.npcChats[npc.id] = [];
-            state.npcChats[npc.id].push({ from: "me", text: txt, ts: Date.now() });
+            if (!Array.isArray(state.npcChats[chatKey])) state.npcChats[chatKey] = [];
+            state.npcChats[chatKey].push({ from: "me", text: txt, ts: Date.now() });
             StateService.save();
-            UIRenderer.renderSocialChat(state, npc.id);
+            UIRenderer.renderSocialChat(state, chatKey);
             const titleEl = document.getElementById("npc-chat-title");
-            if (titleEl) titleEl.innerText = `和 ${npc.name} 聊天 · 正在输入中...`;
+            if (titleEl) titleEl.innerText = `${npc.name}（正在输入...）`;
 
             try {
-                const beforeLen = state.npcChats[npc.id].length;
-                await NpcChatService.applyUserMessage(state, npc.id, txt);
-                // 防止重复插入“我方消息”
-                const list = state.npcChats[npc.id] || [];
-                if (list.length >= beforeLen + 2) {
-                    const mineCount = list.filter((m) => m.from === "me" && String(m.text || "") === txt).length;
-                    if (mineCount > 1) {
-                        let removed = 0;
-                        state.npcChats[npc.id] = list.filter((m) => {
-                            if (m.from === "me" && String(m.text || "") === txt && removed < mineCount - 1) {
-                                removed++;
-                                return false;
-                            }
-                            return true;
-                        });
-                    }
-                }
+                await NpcChatService.applyUserMessage(state, chatKey, txt);
                 StateService.pushHistory({
                     role: "ai",
                     date: Utils.nowDateStr(state),
@@ -6992,16 +7117,16 @@
                 StateService.save();
                 renderAll();
                 switchView("view-npc-chat");
-                UIRenderer.renderSocialChat(state, npc.id);
+                UIRenderer.renderSocialChat(state, chatKey);
             } catch (e) {
-                const list = (state.npcChats && state.npcChats[npc.id]) || [];
+                const list = (state.npcChats && state.npcChats[chatKey]) || [];
                 list.push({ from: "npc", text: `⚠️ 对话失败：${e.message}`, ts: Date.now() });
                 StateService.save();
                 renderAll();
                 switchView("view-npc-chat");
-                UIRenderer.renderSocialChat(state, npc.id);
+                UIRenderer.renderSocialChat(state, chatKey);
             } finally {
-                if (titleEl) titleEl.innerText = oldTitle || `和 ${npc.name} 聊天`;
+                if (titleEl) titleEl.innerText = oldTitle || npc.name || "NPC";
                 input.disabled = false;
                 if (sendBtn) sendBtn.disabled = false;
                 input.focus();
