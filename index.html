@@ -17,6 +17,64 @@
             --accent-dark: #845f35;
             --shadow: 0 6px 18px rgba(128, 106, 85, 0.15);
             --radius: 16px;
+            --bg-page: radial-gradient(circle at top, rgba(255, 247, 230, 0.9) 0%, rgba(242, 230, 214, 0.95) 32%, #e4d2bc 100%);
+            --app-bg: linear-gradient(180deg, rgba(247, 236, 221, 0.98), rgba(237, 222, 202, 0.96));
+            --card-strong: linear-gradient(180deg, rgba(255, 251, 244, 0.98), rgba(255, 244, 228, 0.95));
+            --card-soft: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(248, 238, 221, 0.88));
+            --glow: 0 12px 34px rgba(164, 111, 53, 0.16);
+            --line-strong: rgba(194, 145, 81, 0.35);
+            --panel-tint: rgba(255, 241, 220, 0.72);
+            --input-bg: rgba(255, 251, 245, 0.95);
+            --input-line: rgba(205, 169, 125, 0.42);
+            --story-board-bg: linear-gradient(180deg, rgba(255, 251, 244, 0.9), rgba(251, 240, 223, 0.86));
+            --story-board-line: rgba(205, 171, 124, 0.36);
+            --ai-bubble-bg: linear-gradient(180deg, rgba(255, 250, 243, 0.98), rgba(255, 242, 225, 0.96));
+            --user-bubble-bg: linear-gradient(180deg, rgba(252, 239, 227, 0.98), rgba(245, 226, 205, 0.96));
+            --code-bg: rgba(243, 230, 211, 0.95);
+            --social-bg: linear-gradient(180deg, #f8efe1 0%, #f3e6d6 100%);
+            --wechat-bg: linear-gradient(180deg, #f2ece2 0%, #e9ded0 100%);
+            --wechat-header-bg: rgba(255,255,255,0.72);
+            --wechat-toolbar-bg: rgba(255,255,255,0.62);
+            --wechat-bubble-bg: #ffffff;
+            --wechat-bubble-line: #dddddd;
+            --wechat-bubble-me-bg: linear-gradient(180deg, #d7f8b6, #bce995);
+            --wechat-bubble-me-line: #9ed377;
+            --wechat-text: #222222;
+        }
+
+        body[data-theme="dark"] {
+            --bg-main: #111723;
+            --bg-soft: #182130;
+            --card: #182131;
+            --line: #2b3750;
+            --text: #e8edf8;
+            --sub: #9aa8c4;
+            --accent: #8f7dff;
+            --accent-dark: #c8bbff;
+            --shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
+            --bg-page: radial-gradient(circle at top, rgba(83, 88, 178, 0.28) 0%, rgba(22, 28, 43, 0.96) 36%, #0a0f19 100%);
+            --app-bg: linear-gradient(180deg, rgba(20, 26, 39, 0.98), rgba(13, 18, 29, 0.98));
+            --card-strong: linear-gradient(180deg, rgba(31, 39, 58, 0.98), rgba(23, 30, 46, 0.95));
+            --card-soft: linear-gradient(180deg, rgba(29, 37, 55, 0.95), rgba(19, 26, 40, 0.92));
+            --glow: 0 14px 40px rgba(0, 0, 0, 0.35);
+            --line-strong: rgba(143, 125, 255, 0.35);
+            --panel-tint: rgba(143, 125, 255, 0.08);
+            --input-bg: rgba(15, 21, 33, 0.98);
+            --input-line: rgba(110, 129, 167, 0.35);
+            --story-board-bg: linear-gradient(180deg, rgba(24, 31, 46, 0.92), rgba(17, 23, 35, 0.96));
+            --story-board-line: rgba(110, 129, 167, 0.26);
+            --ai-bubble-bg: linear-gradient(180deg, rgba(35, 43, 64, 0.98), rgba(22, 30, 45, 0.96));
+            --user-bubble-bg: linear-gradient(180deg, rgba(44, 55, 78, 0.98), rgba(29, 38, 58, 0.96));
+            --code-bg: rgba(11, 16, 28, 0.96);
+            --social-bg: linear-gradient(180deg, #1a2334 0%, #121a27 100%);
+            --wechat-bg: linear-gradient(180deg, #111821 0%, #0c131b 100%);
+            --wechat-header-bg: rgba(22, 27, 36, 0.96);
+            --wechat-toolbar-bg: rgba(20, 26, 36, 0.95);
+            --wechat-bubble-bg: #202938;
+            --wechat-bubble-line: #39465d;
+            --wechat-bubble-me-bg: linear-gradient(180deg, #2e7d5d, #236649);
+            --wechat-bubble-me-line: #368564;
+            --wechat-text: #eef3ff;
         }
 
         /* ==================== 布局层（Base / Layout） ==================== */
@@ -28,7 +86,7 @@
         }
 
         body {
-            background: linear-gradient(180deg, #f2e6d5 0%, #e6d7c1 100%);
+            background: var(--bg-page);
             display: flex;
             justify-content: center;
             height: 100vh;
@@ -41,12 +99,59 @@
             width: 100%;
             max-width: 1120px;
             height: 100%;
-            background: var(--bg-main);
+            background: var(--app-bg);
             position: relative;
             display: flex;
             flex-direction: column;
             box-shadow: 0 0 26px rgba(0, 0, 0, 0.12);
             overflow: hidden;
+        }
+
+        #app::before,
+        #app::after {
+            content: "";
+            position: absolute;
+            inset: auto;
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(8px);
+        }
+
+        #app::before {
+            width: 340px;
+            height: 340px;
+            top: -100px;
+            right: -80px;
+            background: radial-gradient(circle, rgba(255, 215, 160, 0.24) 0%, rgba(255, 215, 160, 0) 72%);
+        }
+
+        #app::after {
+            width: 300px;
+            height: 300px;
+            bottom: -120px;
+            left: -70px;
+            background: radial-gradient(circle, rgba(149, 116, 255, 0.16) 0%, rgba(149, 116, 255, 0) 72%);
+        }
+
+        body[data-theme="dark"] .header {
+            background: linear-gradient(180deg, rgba(25, 31, 45, 0.92), rgba(18, 24, 37, 0.84));
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.26);
+        }
+
+        body[data-theme="dark"] .chat-footer {
+            background: linear-gradient(180deg, rgba(18, 24, 36, 0.92), rgba(14, 19, 30, 0.88));
+        }
+
+        body[data-theme="dark"] .ai-beauty-card {
+            background:
+                radial-gradient(circle at top right, rgba(143, 125, 255, 0.20), transparent 28%),
+                linear-gradient(180deg, rgba(34, 42, 61, 0.98), rgba(22, 29, 44, 0.96));
+            box-shadow: 0 16px 38px rgba(0, 0, 0, 0.28);
+        }
+
+        body[data-theme="dark"] .bubble code,
+        body[data-theme="dark"] .bubble pre {
+            color: #dfe7ff;
         }
 
         .bear-layer {
@@ -129,22 +234,25 @@
         /* ---- 状态组件（Status Components） ---- */
         /* 容器 */
         .header {
-            background: var(--card);
+            background: linear-gradient(180deg, rgba(255,255,255,0.76), rgba(255,250,242,0.62));
+            backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--line);
             padding: 12px 14px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 10px;
+            box-shadow: 0 10px 28px rgba(80, 53, 21, 0.08);
         }
 
         .card {
-            background: var(--card);
-            border: 1px solid var(--line);
+            background: var(--card-strong);
+            border: 1px solid var(--line-strong);
             border-radius: var(--radius);
-            box-shadow: var(--shadow);
+            box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.35);
             padding: 12px;
             margin-bottom: 10px;
+            backdrop-filter: blur(10px);
         }
 
         .stats-grid {
@@ -281,7 +389,7 @@
         }
 
         .wealth {
-            color: #a46f35;
+            color: var(--accent);
             font-weight: 700;
             white-space: nowrap;
         }
@@ -308,29 +416,88 @@
             width: 100%;
             border: 1px solid var(--line);
             border-radius: 10px;
-            background: #fffdfa;
+            background: var(--input-bg);
             padding: 10px;
             font-size: 0.86rem;
             margin-top: 8px;
+            color: var(--text);
         }
 
         .scenario-editor {
             width: 100%;
             border: 1px solid var(--line);
             border-radius: 10px;
-            background: #fffdfa;
+            background: var(--input-bg);
             padding: 10px;
             font-size: 0.84rem;
             line-height: 1.45;
             margin-top: 8px;
             min-height: 120px;
             resize: vertical;
+            color: var(--text);
         }
 
         .scenario-hint {
             margin-top: 6px;
             color: var(--sub);
             font-size: 0.75rem;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="number"],
+        textarea {
+            color: var(--text);
+            caret-color: var(--accent);
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="number"] {
+            width: 100%;
+            border: 1px solid var(--input-line);
+            border-radius: 12px;
+            background: var(--input-bg);
+            padding: 10px 12px;
+            font-size: 0.86rem;
+            margin-top: 8px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: color-mix(in srgb, var(--sub) 78%, transparent);
+        }
+
+        #story-board {
+            background: var(--story-board-bg);
+            border-color: var(--story-board-line);
+            box-shadow: var(--glow);
+        }
+
+        .story-log {
+            background: var(--card-soft);
+            border-color: color-mix(in srgb, var(--line) 76%, transparent);
+            box-shadow: 0 10px 24px rgba(72, 47, 20, 0.06);
+        }
+
+        .settings-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 10px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: 1px solid var(--line);
+            background: var(--card-soft);
+        }
+
+        .settings-toggle input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin: 0;
+            accent-color: var(--accent);
         }
 
         /* 交互态 */
@@ -358,10 +525,11 @@
         /* 容器 */
         .story-log {
             margin-bottom: 8px;
-            border: 1px solid var(--line);
+            border: 1px solid color-mix(in srgb, var(--line) 76%, transparent);
             border-radius: 12px;
-            background: #fffdf8;
+            background: var(--card-soft);
             padding: 10px;
+            box-shadow: 0 10px 24px rgba(72, 47, 20, 0.06);
         }
 
         .story-log.conflict {
@@ -407,9 +575,10 @@
         }
 
         .chat-footer {
-            background: #fff7ea;
+            background: linear-gradient(180deg, rgba(255,248,237,0.88), rgba(255,244,229,0.82));
             border-top: 1px solid var(--line);
             padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+            backdrop-filter: blur(12px);
         }
 
         /* 文本 */
@@ -432,8 +601,9 @@
         }
 
         .bubble.ai {
-            background: #fff7ef;
-            border: 1px solid var(--line);
+            background: var(--ai-bubble-bg);
+            border: 1px solid var(--line-strong);
+            box-shadow: 0 10px 22px rgba(97, 66, 36, 0.08);
         }
 
         .bubble.ai.html-host {
@@ -444,8 +614,9 @@
         }
 
         .bubble.user {
-            background: #f9f0e4;
-            border: 1px solid #e5ccb0;
+            background: var(--user-bubble-bg);
+            border: 1px solid rgba(202, 162, 106, 0.24);
+            box-shadow: 0 10px 22px rgba(97, 66, 36, 0.06);
         }
 
         .bubble h1, .bubble h2, .bubble h3 {
@@ -459,14 +630,14 @@
         }
 
         .bubble code {
-            background: #f5ead9;
+            background: var(--code-bg);
             border-radius: 6px;
             padding: 1px 4px;
             font-size: 0.82rem;
         }
 
         .bubble pre {
-            background: #f5ead9;
+            background: var(--code-bg);
             border-radius: 8px;
             padding: 8px;
             overflow-x: auto;
@@ -474,11 +645,13 @@
         }
 
         .ai-beauty-card {
-            border: 1px solid #e6c9a8;
-            border-radius: 12px;
-            background: linear-gradient(180deg, #fff8f0, #fffefb);
-            padding: 10px;
-            box-shadow: 0 4px 12px rgba(80, 40, 0, 0.08);
+            border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+            border-radius: 18px;
+            background:
+                radial-gradient(circle at top right, rgba(255,255,255,0.34), transparent 28%),
+                linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,247,236,0.94));
+            padding: 12px;
+            box-shadow: 0 14px 34px rgba(80, 40, 0, 0.10);
             width: 100%;
             max-width: 100%;
             overflow: hidden;
@@ -524,11 +697,11 @@
         .ai-beauty-card-title {
             font-weight: 700;
             margin-bottom: 6px;
-            color: #6a3f1b;
+            color: var(--accent-dark);
         }
 
         .ai-beauty-card-body {
-            color: #3f2a1a;
+            color: var(--text);
         }
 
         .ai-card-warning {
@@ -576,11 +749,12 @@
             border: 0;
             border-radius: 999px;
             padding: 8px 8px;
-            background: #efd5b6;
-            color: #5d4328;
+            background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 28%, #ffffff 72%), color-mix(in srgb, var(--accent) 54%, #ffffff 46%));
+            color: color-mix(in srgb, var(--accent-dark) 90%, var(--text) 10%);
             font-weight: 700;
             font-size: 0.82rem;
             cursor: pointer;
+            box-shadow: 0 8px 18px rgba(164, 111, 53, 0.12);
         }
 
         .nav-btn {
@@ -588,32 +762,34 @@
             border: 1px solid var(--line);
             border-radius: 999px;
             padding: 8px 8px;
-            background: #f8ecdc;
-            color: #6a4f31;
+            background: color-mix(in srgb, var(--card) 78%, white 22%);
+            color: var(--text);
             font-weight: 700;
             font-size: 0.8rem;
             cursor: pointer;
         }
 
         .nav-btn.active {
-            background: #e7c49a;
-            color: #4f371f;
+            background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 78%, white 22%), color-mix(in srgb, var(--accent) 60%, #f5d7af 40%));
+            color: #fff;
+            border-color: transparent;
         }
 
         .top-nav-btn {
             border: 1px solid var(--line);
             border-radius: 999px;
             padding: 6px 10px;
-            background: #f8ecdc;
-            color: #6a4f31;
+            background: color-mix(in srgb, var(--card) 76%, white 24%);
+            color: var(--text);
             font-weight: 700;
             font-size: 0.75rem;
             cursor: pointer;
         }
 
         .top-nav-btn.active {
-            background: #e7c49a;
-            color: #4f371f;
+            background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 72%, white 28%), color-mix(in srgb, var(--accent) 54%, #f5d7af 46%));
+            color: #fff;
+            border-color: transparent;
         }
 
         .list-row {
@@ -625,7 +801,8 @@
             border: 1px solid var(--line);
             border-radius: 10px;
             margin-bottom: 8px;
-            background: #fffdf8;
+            background: var(--card-soft);
+            box-shadow: 0 10px 22px rgba(72, 47, 20, 0.06);
         }
 
         .list-title {
@@ -642,8 +819,8 @@
 
         .tiny-btn {
             border: 1px solid var(--line);
-            background: #fff2df;
-            color: #644a2f;
+            background: color-mix(in srgb, var(--card) 70%, white 30%);
+            color: var(--text);
             border-radius: 8px;
             padding: 6px 8px;
             font-size: 0.75rem;
@@ -654,19 +831,20 @@
             margin-top: 8px;
             border: 1px solid var(--line);
             border-radius: 10px;
-            background: linear-gradient(180deg, #f8efe1 0%, #f3e6d6 100%);
+            background: var(--social-bg);
             padding: 10px;
             height: calc(100dvh - 300px);
             min-height: 360px;
             max-height: 72dvh;
             overflow-y: auto;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.16);
         }
 
         #view-npc-chat {
             position: absolute;
             inset: 0;
             z-index: 8;
-            background: #ededed;
+            background: var(--wechat-bg);
             margin: 0;
             padding: 0;
             overflow: hidden;
@@ -682,7 +860,7 @@
             flex: 1;
             min-height: 0;
             flex-direction: column;
-            background: #ededed;
+            background: var(--wechat-bg);
         }
 
         .npc-chat-header {
@@ -691,8 +869,9 @@
             justify-content: space-between;
             gap: 10px;
             padding: calc(env(safe-area-inset-top, 0px) + 12px) 14px 10px;
-            background: #f7f7f7;
-            border-bottom: 1px solid #d8d8d8;
+            background: var(--wechat-header-bg);
+            border-bottom: 1px solid var(--wechat-bubble-line);
+            backdrop-filter: blur(14px);
         }
 
         .npc-chat-header-left,
@@ -711,7 +890,7 @@
         .npc-chat-profile-btn {
             border: 0;
             background: transparent;
-            color: #111;
+            color: var(--wechat-text);
             font-size: 0.92rem;
             cursor: pointer;
             padding: 4px 2px;
@@ -730,14 +909,14 @@
         .npc-chat-title {
             font-size: 1rem;
             font-weight: 700;
-            color: #111;
+            color: var(--wechat-text);
             line-height: 1.2;
         }
 
         .npc-chat-subtitle {
             margin-top: 2px;
             font-size: 0.72rem;
-            color: #666;
+            color: color-mix(in srgb, var(--wechat-text) 62%, transparent);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -807,8 +986,8 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border: 1px solid #d7d7d7;
-            background: #ffffff;
+            border: 1px solid var(--wechat-bubble-line);
+            background: color-mix(in srgb, var(--card) 68%, white 32%);
             font-size: 1rem;
             flex-shrink: 0;
         }
@@ -823,11 +1002,11 @@
             line-height: 1.5;
             padding: 10px 12px;
             border-radius: 6px;
-            border: 1px solid #dddddd;
-            background: #ffffff;
-            color: #2d2d2d;
+            border: 1px solid var(--wechat-bubble-line);
+            background: var(--wechat-bubble-bg);
+            color: var(--wechat-text);
             word-break: break-word;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.10);
             position: relative;
         }
 
@@ -838,16 +1017,16 @@
             top: 12px;
             width: 10px;
             height: 10px;
-            background: #fff;
-            border-left: 1px solid #dddddd;
-            border-bottom: 1px solid #dddddd;
+            background: var(--wechat-bubble-bg);
+            border-left: 1px solid var(--wechat-bubble-line);
+            border-bottom: 1px solid var(--wechat-bubble-line);
             transform: rotate(45deg);
         }
 
         .npc-chat-msg.me .npc-chat-bubble {
-            background: #95ec69;
-            border-color: #8dde62;
-            color: #1f2f14;
+            background: var(--wechat-bubble-me-bg);
+            border-color: var(--wechat-bubble-me-line);
+            color: #f8fffb;
         }
 
         .npc-chat-msg.me .npc-chat-bubble::before {
@@ -857,9 +1036,9 @@
             top: 12px;
             width: 10px;
             height: 10px;
-            background: #95ec69;
-            border-right: 1px solid #8dde62;
-            border-top: 1px solid #8dde62;
+            background: color-mix(in srgb, var(--wechat-bubble-me-line) 60%, var(--wechat-bubble-me-bg) 40%);
+            border-right: 1px solid var(--wechat-bubble-me-line);
+            border-top: 1px solid var(--wechat-bubble-me-line);
             transform: rotate(45deg);
         }
 
@@ -868,17 +1047,18 @@
             gap: 6px;
             flex-wrap: wrap;
             padding: 8px 12px 0;
-            background: #f7f7f7;
-            border-top: 1px solid #d8d8d8;
+            background: var(--wechat-toolbar-bg);
+            border-top: 1px solid var(--wechat-bubble-line);
         }
 
         .emoji-btn {
-            border: 1px solid #dddddd;
-            background: #ffffff;
+            border: 1px solid var(--wechat-bubble-line);
+            background: color-mix(in srgb, var(--card) 70%, white 30%);
             border-radius: 999px;
             padding: 3px 8px;
             font-size: 0.9rem;
             cursor: pointer;
+            color: var(--wechat-text);
         }
 
         .npc-chat-composer {
@@ -886,7 +1066,7 @@
             gap: 8px;
             align-items: flex-end;
             padding: 8px 12px calc(env(safe-area-inset-bottom, 0px) + 10px);
-            background: #f7f7f7;
+            background: var(--wechat-toolbar-bg);
         }
 
         .npc-chat-composer textarea {
@@ -895,17 +1075,18 @@
             min-height: 38px;
             max-height: 128px;
             resize: none;
-            border: 1px solid #d6d6d6;
+            border: 1px solid var(--wechat-bubble-line);
             border-radius: 6px;
-            background: #ffffff;
+            background: color-mix(in srgb, var(--input-bg) 92%, white 8%);
+            color: var(--wechat-text);
         }
 
         .npc-chat-composer .send-btn {
             min-width: 64px;
             height: 38px;
             border-radius: 6px;
-            background: #07c160;
-            border-color: #07c160;
+            background: linear-gradient(180deg, #22c55e, #16a34a);
+            border-color: #1fa451;
         }
 
         .npc-chat-composer .send-btn:disabled {
@@ -922,7 +1103,9 @@
             padding: 14px 12px;
             border: 0;
             border-radius: 0;
-            background: #ededed;
+            background:
+                radial-gradient(circle at top, rgba(255,255,255,0.08), transparent 30%),
+                var(--wechat-bg);
         }
 
         .npc-panel-card {
@@ -931,12 +1114,12 @@
             align-items: stretch;
             gap: 12px;
             padding: 14px;
-            border: 1px solid rgba(193, 149, 92, 0.36);
+            border: 1px solid color-mix(in srgb, var(--accent) 26%, var(--line) 74%);
             border-radius: 18px;
             margin-bottom: 10px;
             background:
                 radial-gradient(circle at top right, rgba(255, 215, 156, 0.35), transparent 34%),
-                linear-gradient(135deg, #fff8ef 0%, #fdebd3 52%, #f8ddbb 100%);
+                linear-gradient(135deg, color-mix(in srgb, var(--card) 88%, white 12%) 0%, color-mix(in srgb, var(--card) 70%, #ffd7aa 30%) 52%, color-mix(in srgb, var(--accent) 22%, var(--card) 78%) 100%);
             box-shadow: 0 8px 22px rgba(108, 79, 49, 0.13);
             position: relative;
             overflow: hidden;
@@ -1023,19 +1206,20 @@
             border-radius: 12px;
             padding: 0;
             margin-bottom: 8px;
-            background: #fffdf8;
+            background: var(--card-soft);
             overflow: hidden;
             position: relative;
+            box-shadow: 0 12px 28px rgba(88, 57, 22, 0.08);
         }
 
         .scenario-card.active {
-            border-color: var(--accent);
-            background: #fff4e5;
+            border-color: color-mix(in srgb, var(--accent) 62%, transparent);
+            background: linear-gradient(180deg, color-mix(in srgb, var(--card) 82%, white 18%), color-mix(in srgb, var(--accent) 14%, var(--card) 86%));
         }
 
         .scenario-card-main {
             padding: 10px;
-            background: #fffdf8;
+            background: transparent;
             transition: transform 0.2s ease;
         }
 
@@ -1127,7 +1311,8 @@
             border-radius: 12px;
             padding: 10px;
             margin-bottom: 8px;
-            background: #fffdf8;
+            background: var(--card-soft);
+            box-shadow: 0 10px 24px rgba(72, 47, 20, 0.06);
         }
 
         .composer textarea {
@@ -1137,10 +1322,12 @@
             border: 1px solid var(--line);
             border-radius: 12px;
             padding: 8px 10px;
-            background: #fffdf8;
+            background: var(--input-bg);
+            color: var(--text);
             resize: none;
             font-size: 0.9rem;
             line-height: 1.35;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
         }
 
         .send-btn {
@@ -1177,10 +1364,11 @@
         .modal-card {
             width: 100%;
             max-width: 420px;
-            background: #fff8ed;
+            background: var(--card-strong);
             border-radius: 16px;
             border: 1px solid var(--line);
             padding: 14px;
+            box-shadow: var(--glow);
         }
 
         /* 文本 */
@@ -1368,7 +1556,14 @@
         <section id="view-settings" class="view-section">
             <section class="card">
                 <div class="list-title">⚙️ 设置页面</div>
-                <div class="list-sub">主页设置仅保留用户 API（所有卡可复用）</div>
+                <div class="list-sub">主页设置仅保留用户 API（所有卡可复用）与全局界面主题。</div>
+                <label class="settings-toggle">
+                    <span>
+                        <strong style="display:block; color:var(--text);">暗夜模式</strong>
+                        <span class="list-sub" style="margin-top:4px; display:block;">开启后，主页、生涯、AI 回复卡片、社交和微信聊天界面都会切换到夜间风格。</span>
+                    </span>
+                    <input type="checkbox" id="ui-dark-mode-enabled">
+                </label>
                 <input type="text" id="active-user-id" placeholder="当前用户ID（例如 user_001）">
                 <input type="text" id="user-api-url" placeholder="用户上游API URL（例如: https://integrate.api.nvidia.com/v1）">
                 <input type="password" id="user-api-key" placeholder="用户 API Key">
@@ -1557,7 +1752,8 @@
             userApiSelectedCardMap: "bitlife_user_api_selected_card_map_v1",
             userApiCustomConfigMap: "bitlife_user_api_custom_config_map_v1",
             scenarioPlayMetaMap: "bitlife_scenario_play_meta_map_v1",
-            scenarioDismissedWarningsMap: "bitlife_scenario_dismissed_warnings_map_v1"
+            scenarioDismissedWarningsMap: "bitlife_scenario_dismissed_warnings_map_v1",
+            uiThemeMode: "bitlife_ui_theme_mode_v1"
         },
         identityPools: {
             cnNames: ["沈知夏", "苏见微", "江望舒", "程以宁", "周晚棠", "宋栖月", "陆听岚", "秦若禾", "林清和", "许映棠", "叶若岚", "顾晚晴", "姜令仪", "白昭宁"],
@@ -1684,6 +1880,30 @@
             localStorage.setItem(key, value);
         }
         return { readJson, writeJson, readText, writeText };
+    })();
+
+    const ThemeService = (() => {
+        function normalize(mode) {
+            return mode === "dark" ? "dark" : "light";
+        }
+        function getMode() {
+            return normalize(StorageService.readText(AppConfig.storageKeys.uiThemeMode, "light"));
+        }
+        function apply(mode) {
+            const safe = normalize(mode);
+            document.body.dataset.theme = safe;
+            return safe;
+        }
+        function setMode(mode) {
+            const safe = normalize(mode);
+            StorageService.writeText(AppConfig.storageKeys.uiThemeMode, safe);
+            apply(safe);
+            return safe;
+        }
+        function applyStored() {
+            return apply(getMode());
+        }
+        return { getMode, apply, setMode, applyStored };
     })();
 
     const DecisionModalService = (() => {
@@ -3967,11 +4187,11 @@
                 `;
                 row.querySelector('[data-op="chat"]').onclick = () => {
                     currentSocialNpcId = npc.id;
-                    Controller.openNpcChat(npc.id);
+                    Controller.openNpcChat(npc.id || npc.name);
                 };
-                row.querySelector('[data-op="profile"]').onclick = () => Controller.openNpcProfile(npc.id);
+                row.querySelector('[data-op="profile"]').onclick = () => Controller.openNpcProfile(npc.id || npc.name);
                 row.querySelector('[data-op="delete"]').onclick = () => Controller.deleteNpc(npc.id);
-                row.querySelector(".npc-panel-title").onclick = () => Controller.openNpcProfile(npc.id);
+                row.querySelector(".npc-panel-title").onclick = () => Controller.openNpcProfile(npc.id || npc.name);
                 ScenarioCardInteractionService.bindSwipeAndSort(row, {
                     onReorder: (fromId, toId) => Controller.reorderNpcs(fromId, toId),
                     dataIdAttr: "npcId"
@@ -3984,11 +4204,11 @@
             const panel = document.getElementById("view-npc-chat");
             const box = document.getElementById("npc-chat-box");
             const npcKey = String(npcId || "");
-            const npc = (state.npcs || []).find((n) => String(n.id || "") === npcKey);
+            const npc = findNpcByRef(state, npcKey);
             if (!panel || !box || !npc) return;
             document.getElementById("npc-chat-title").innerText = npc.name || "NPC";
             document.getElementById("npc-chat-sub").innerText = `${npc.relation || "熟人"}｜好感 ${npc.favor}｜${npc.status || "在线"}${npc.traits ? `｜${npc.traits}` : ""}`;
-            document.getElementById("npc-chat-avatar-btn").onclick = () => Controller.openNpcProfile(npc.id);
+            document.getElementById("npc-chat-avatar-btn").onclick = () => Controller.openNpcProfile(npc.id || npc.name);
             const chats = (state.npcChats && state.npcChats[npcKey]) || [];
             box.innerHTML = chats.map((m) => {
                 const mine = m.from === "me";
@@ -4174,6 +4394,8 @@
             const policy = ChatPolicyConfigService.load();
             const globalThinkingInput = document.getElementById("global-thinking-enabled");
             if (globalThinkingInput) globalThinkingInput.checked = policy.globalThinkingEnabled === true;
+            const darkModeInput = document.getElementById("ui-dark-mode-enabled");
+            if (darkModeInput) darkModeInput.checked = ThemeService.getMode() === "dark";
             const selectedCardId = ScenarioCardService.getSelectedId();
             const cardThinkingInput = document.getElementById("card-thinking-enabled");
             if (cardThinkingInput) cardThinkingInput.checked = !!policy.cardThinkingMap?.[selectedCardId];
@@ -4204,6 +4426,7 @@
                 ...currentPolicy,
                 globalThinkingEnabled: !!globalThinkingInput?.checked
             });
+            ThemeService.setMode(document.getElementById("ui-dark-mode-enabled")?.checked ? "dark" : "light");
             loadToUI();
         }
         function getApiConfig() {
@@ -6937,6 +7160,7 @@
             switchView(activeView, true);
         }
         async function init() {
+            ThemeService.applyStored();
             StateService.init();
             SettingsService.loadToUI();
             presetManifest = await PresetResourceService.loadManifest();
@@ -7081,10 +7305,21 @@
             renderAll();
             switchView("view-inventory");
         }
+        function findNpcByRef(state, npcRef) {
+            const ref = String(npcRef || "").trim();
+            const npcs = Array.isArray(state?.npcs) ? state.npcs : [];
+            if (!ref) return null;
+            return npcs.find((n) => String(n.id || "") === ref)
+                || npcs.find((n) => String(n.name || "").trim() === ref)
+                || null;
+        }
         function openNpcProfile(npcId) {
             const state = StateService.get();
-            const npc = (state.npcs || []).find((n) => String(n.id || "") === String(npcId || ""));
-            if (!npc) return;
+            const npc = findNpcByRef(state, npcId) || findNpcByRef(state, currentSocialNpcId);
+            if (!npc) {
+                openInfoModal("无法打开档案", "当前 NPC 数据不存在，可能是旧存档中的 NPC 标识丢失了。请重新进入社交页后再试。");
+                return;
+            }
             const mem = NpcMemoryService.ensureStore(state, npc.id);
             const tags = mem?.tags || { promises: [], conflicts: [], secrets: [], notes: [] };
             const listHtml = (arr) => {
@@ -7103,7 +7338,13 @@
             openInfoModal(`NPC：${npc.name}`, desc);
         }
         function openNpcChat(npcId) {
-            currentSocialNpcId = String(npcId || "");
+            const state = StateService.get();
+            const npc = findNpcByRef(state, npcId);
+            if (!npc) {
+                openInfoModal("无法打开聊天", "当前 NPC 数据不存在，可能是旧存档中的 NPC 标识丢失了。请重新进入社交页后再试。");
+                return;
+            }
+            currentSocialNpcId = String(npc.id || npc.name || "");
             switchView("view-npc-chat");
             renderAll();
             UIRenderer.renderSocialChat(StateService.get(), currentSocialNpcId);
