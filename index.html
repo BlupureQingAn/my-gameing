@@ -151,10 +151,8 @@
             display: grid;
             gap: 8px;
             grid-template-columns: repeat(4, minmax(70px, 1fr));
-            position: sticky;
-            top: 8px;
-            z-index: 12;
-            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 2;
         }
 
         .stat-item {
@@ -497,16 +495,6 @@
             max-width: 100% !important;
             margin-left: 0 !important;
             margin-right: 0 !important;
-            --text-main: #2c3e50 !important;
-            --text-muted: #5f6b76 !important;
-            color: var(--text-main) !important;
-        }
-
-        .bubble.ai .ai-beauty-card .wy-content,
-        .bubble.ai .ai-beauty-card .ai-beauty-card-body,
-        .bubble.ai .ai-beauty-card .wy-stat-item,
-        .bubble.ai .ai-beauty-card .wy-scene {
-            color: var(--text-main) !important;
         }
 
         .bubble.ai .ai-beauty-card img,
@@ -2051,13 +2039,45 @@
         return { containsHtmlCard, normalizeHtmlCard, isRenderableHtmlCard, pruneEmptyElements };
     })();
 
-    const HtmlFallbackService = (() => {
+    const HtmlCardTemplateService = (() => {
+        const DEFAULT_THEME_HINT = "按设定自动生成高质量页游风卡片：色调统一、装饰丰富、排版分区清晰";
+        const DEFAULT_THEME_NAME = "云吞页游沉浸风";
+        const DEFAULT_THEME_NAME_STABLE = "云吞页游沉浸风（稳定主题）";
+        const DEFAULT_THEME_NAME_RICH = "云吞页游沉浸风（高信息密度、丰富装饰元素）";
+        const DEFAULT_CHOICES = ["继续观察局势", "与关键人物交流", "推进当前主线"];
+        const REQUIRED_BLOCKS = ["time", "status", "event", "choices"];
+        const BASE_STYLE = "--theme-primary:#6a11cb;--theme-secondary:#2575fc;--card-bg:linear-gradient(to bottom right,#ffffff,#f0f4fd);--text-main:#2c3e50;--text-muted:#7f8c8d;--font-family:'PingFang SC','Microsoft YaHei',sans-serif;--border-radius:12px;--card-shadow:0 10px 25px rgba(106,17,203,0.15)";
+        const EMBED_STYLE = ".wenyou-card .wy-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}.wenyou-card .wy-header-left{display:flex;align-items:center;gap:12px}.wenyou-card .wy-avatar{font-size:28px;color:var(--theme-primary)}.wenyou-card .wy-role-name{font-size:1.1rem;font-weight:700;color:var(--theme-primary);margin:0;line-height:1.2}.wenyou-card .wy-scene{font-size:.8rem;color:var(--text-muted);margin-top:2px}.wenyou-card .wy-divider{display:flex;align-items:center;text-align:center;margin:15px 0;color:var(--theme-secondary)}.wenyou-card .wy-divider:before,.wenyou-card .wy-divider:after{content:'';flex:1;border-bottom:1px dashed var(--theme-secondary);opacity:.4}.wenyou-card .wy-divider-icon{padding:0 10px;font-size:.9rem}.wenyou-card .wy-content{font-size:.95rem;line-height:1.6;margin-bottom:14px;text-align:justify}.wenyou-card .wy-meta{font-size:.82rem;color:var(--text-muted);margin-bottom:10px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.38);display:inline-flex;max-width:100%}.wenyou-card .wy-stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;background:rgba(128,128,128,.05);padding:10px;border-radius:8px;border-left:3px solid var(--theme-secondary)}.wenyou-card .wy-stat-item{font-size:.85rem;background:rgba(255,255,255,.55);padding:4px 8px;border-radius:4px;display:flex;align-items:center;gap:4px}.wenyou-card .wy-stat-value{font-weight:700;color:var(--theme-primary)}.wenyou-card .wy-options{display:flex;flex-direction:column;gap:10px}.wenyou-card .wy-option-btn{display:flex;align-items:center;padding:12px 15px;background:transparent;border:1px solid var(--theme-primary);color:var(--theme-primary);border-radius:var(--border-radius);font-size:.95rem;cursor:pointer;transition:all .2s;text-decoration:none}.wenyou-card .wy-option-btn:hover{background:var(--theme-primary);color:#fff;transform:translateX(5px)}.wenyou-card .wy-opt-icon{margin-right:10px;font-size:1.1rem}.wenyou-card .wy-footer-decor{text-align:center;margin-top:16px;font-size:1.3rem;color:var(--theme-secondary);opacity:.35;letter-spacing:4px}";
+        function getDefaultBeautyHint() {
+            return DEFAULT_THEME_HINT;
+        }
+        function getDefaultThemeName() {
+            return DEFAULT_THEME_NAME;
+        }
+        function getStableThemeName() {
+            return DEFAULT_THEME_NAME_STABLE;
+        }
+        function getRichThemeName() {
+            return DEFAULT_THEME_NAME_RICH;
+        }
+        function getDefaultChoices() {
+            return [...DEFAULT_CHOICES];
+        }
+        function getRequiredBlocks() {
+            return [...REQUIRED_BLOCKS];
+        }
+        function getSkeletonHtml() {
+            return "<article class=\"ai-beauty-card wenyou-card\" style=\"--theme-primary:{THEME_PRIMARY};--theme-secondary:{THEME_SECONDARY};--card-bg:{CARD_BG};--text-main:{TEXT_MAIN};--text-muted:{TEXT_MUTED};--font-family:{FONT_FAMILY};--border-radius:{BORDER_RADIUS};--card-shadow:{CARD_SHADOW};position:relative;overflow:hidden;background:var(--card-bg);border-radius:var(--border-radius);box-shadow:var(--card-shadow);border:1px solid color-mix(in srgb,var(--theme-primary) 26%,#ffffff 74%);font-family:var(--font-family);color:var(--text-main)\"><div style=\"position:absolute;inset:0;background:radial-gradient(circle at top right,color-mix(in srgb,var(--theme-secondary) 18%,transparent 82%),transparent 42%),radial-gradient(circle at bottom left,color-mix(in srgb,var(--theme-primary) 16%,transparent 84%),transparent 38%);pointer-events:none\"></div><div style=\"position:absolute;top:10px;right:12px;padding:4px 10px;border-radius:999px;background:linear-gradient(90deg,var(--theme-primary),var(--theme-secondary));color:#fff;font-size:12px;font-weight:700;letter-spacing:.08em;box-shadow:0 4px 12px rgba(0,0,0,.16)\">{TOP_DECOR_ICON} 华彩卡面</div><div style=\"position:relative;padding:18px\"><header class=\"wy-header ai-beauty-card-title\" style=\"display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:14px 16px;border-radius:calc(var(--border-radius) - 4px);background:linear-gradient(135deg,color-mix(in srgb,var(--theme-primary) 18%,#ffffff 82%),color-mix(in srgb,var(--theme-secondary) 12%,#ffffff 88%));border:1px solid color-mix(in srgb,var(--theme-primary) 20%,#ffffff 80%)\"><div class=\"wy-header-left\" style=\"display:flex;align-items:center;gap:12px\"><div class=\"wy-avatar\" style=\"width:48px;height:48px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));color:#fff;font-size:26px;box-shadow:0 8px 18px rgba(0,0,0,.14)\">{AVATAR_EMOJI}</div><div class=\"wy-title-box\"><div style=\"display:inline-flex;align-items:center;gap:6px;padding:3px 10px;margin-bottom:8px;border-radius:999px;background:rgba(255,255,255,.65);font-size:12px;color:var(--text-muted)\">主题视觉 {BOTTOM_DECOR}</div><h3 class=\"wy-role-name\" style=\"margin:0;font-size:1.22rem;font-weight:800;color:var(--theme-primary);line-height:1.2\">{ROLE_NAME}</h3><span class=\"wy-scene\" style=\"display:block;margin-top:4px;color:var(--text-muted);font-size:.86rem\">{SCENE_TITLE}</span></div></div><div style=\"text-align:right\"><div style=\"font-size:1.25rem;color:var(--theme-secondary)\">{TOP_DECOR_ICON}</div><div style=\"margin-top:8px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.7);font-size:12px;color:var(--text-muted)\">章节焦点</div></div></header><div class=\"wy-divider\" style=\"display:flex;align-items:center;gap:10px;margin:14px 0 12px\"><span style=\"flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--theme-primary),transparent)\"></span><span class=\"wy-divider-icon\" style=\"padding:0 10px;color:var(--theme-secondary);font-size:1rem\">{DIVIDER_EMOJI}</span><span style=\"flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--theme-secondary),transparent)\"></span></div><section class=\"ai-beauty-card-body\"><section class=\"wy-meta\" data-block=\"time\" style=\"display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.66);border:1px solid rgba(255,255,255,.5);backdrop-filter:blur(6px)\"><span style=\"font-weight:700;color:var(--theme-primary)\">时间轴</span><span>{TIME_TEXT}</span></section><section class=\"wy-stats\" data-block=\"status\" style=\"display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px;padding:12px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.74),rgba(255,255,255,.52));border:1px solid color-mix(in srgb,var(--theme-secondary) 14%,#ffffff 86%)\"><div class=\"wy-stat-item\" style=\"padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(255,244,232,.88));border-left:4px solid var(--theme-primary)\">✨ 主角状态：{STATS_HTML}</div><div class=\"wy-stat-item\" style=\"padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(239,247,255,.88));border-left:4px solid var(--theme-secondary)\">🏷 关键标签：身份 / 阵营 / 处境</div></section><section data-block=\"event\" style=\"margin-top:14px;padding:14px 15px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(255,251,245,.92));border:1px solid rgba(226,205,173,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.85)\"><div style=\"display:inline-flex;align-items:center;gap:6px;padding:4px 10px;margin-bottom:10px;border-radius:999px;background:color-mix(in srgb,var(--theme-primary) 12%,#ffffff 88%);color:var(--theme-primary);font-size:12px;font-weight:700\">剧情正文</div><div class=\"wy-content\" style=\"line-height:1.78;color:var(--text-main)\">{MAIN_STORY_TEXT}</div></section><section data-block=\"thought\" style=\"margin-top:12px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,color-mix(in srgb,var(--theme-secondary) 10%,#ffffff 90%),rgba(255,255,255,.88));border:1px dashed color-mix(in srgb,var(--theme-secondary) 32%,#ffffff 68%)\"><div style=\"font-size:12px;font-weight:700;color:var(--theme-secondary);margin-bottom:8px\">AI想法</div><div class=\"wy-content\" style=\"color:var(--text-main);line-height:1.7\">{AI_THOUGHT_TEXT}</div></section><section class=\"wy-options\" data-block=\"choices\" style=\"display:flex;flex-direction:column;gap:10px;margin-top:14px\"><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_1}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(255,243,231,.92));border:1px solid color-mix(in srgb,var(--theme-primary) 24%,#ffffff 76%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));color:#fff\">{OPT_ICON_1}</span><span>1. {OPT_TEXT_1}</span></div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_2}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(238,247,255,.92));border:1px solid color-mix(in srgb,var(--theme-secondary) 24%,#ffffff 76%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-secondary),var(--theme-primary));color:#fff\">{OPT_ICON_2}</span><span>2. {OPT_TEXT_2}</span></div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_3}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(246,239,255,.92));border:1px solid color-mix(in srgb,var(--theme-primary) 20%,var(--theme-secondary) 18%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));color:#fff\">{OPT_ICON_3}</span><span>3. {OPT_TEXT_3}</span></div></section><div class=\"wy-footer-decor\" data-block=\"hint\" style=\"margin-top:16px;padding:12px 14px;border-radius:16px;text-align:center;background:linear-gradient(90deg,color-mix(in srgb,var(--theme-primary) 10%,#ffffff 90%),color-mix(in srgb,var(--theme-secondary) 10%,#ffffff 90%));color:var(--text-muted);font-size:.88rem\">{BOTTOM_DECOR} {BOTTOM_DECOR} 提示：可直接点击上方按钮继续剧情 {BOTTOM_DECOR} {BOTTOM_DECOR}</div></section></div></article>";
+        }
+        function buildChoicesHtml(choices = DEFAULT_CHOICES) {
+            return choices.map((txt, idx) => `<div class="wy-option-btn" data-choice="${MarkdownService.escapeHtml(txt)}"><span class="wy-opt-icon">${["①", "②", "③"][idx] || String(idx + 1)}</span>${idx + 1}. ${MarkdownService.escapeHtml(txt)}</div>`).join("");
+        }
         function wrapAsHtmlCard(theme, bodyText) {
-            const safeTheme = MarkdownService.escapeHtml(theme || "云吞页游沉浸风");
+            const safeTheme = MarkdownService.escapeHtml(theme || DEFAULT_THEME_NAME);
             const bodyHtml = MarkdownService.render(bodyText || "剧情推进中...");
             return [
-                `<article class="ai-beauty-card wenyou-card" data-theme="${safeTheme}" style="--theme-primary:#6a11cb;--theme-secondary:#2575fc;--card-bg:linear-gradient(to bottom right,#ffffff,#f0f4fd);--text-main:#2c3e50;--text-muted:#7f8c8d;--font-family:'PingFang SC','Microsoft YaHei',sans-serif;--border-radius:12px;--card-shadow:0 10px 25px rgba(106,17,203,0.15);max-width:500px;margin:8px auto;background:var(--card-bg);border-radius:var(--border-radius);box-shadow:var(--card-shadow);font-family:var(--font-family);color:var(--text-main);overflow:hidden;border-top:4px solid var(--theme-primary);padding:20px;box-sizing:border-box;">`,
-                `<style>.wenyou-card .wy-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}.wenyou-card .wy-header-left{display:flex;align-items:center;gap:12px}.wenyou-card .wy-avatar{font-size:28px;color:var(--theme-primary)}.wenyou-card .wy-role-name{font-size:1.1rem;font-weight:700;color:var(--theme-primary);margin:0;line-height:1.2}.wenyou-card .wy-scene{font-size:.8rem;color:var(--text-muted);margin-top:2px}.wenyou-card .wy-divider{display:flex;align-items:center;text-align:center;margin:15px 0;color:var(--theme-secondary)}.wenyou-card .wy-divider:before,.wenyou-card .wy-divider:after{content:'';flex:1;border-bottom:1px dashed var(--theme-secondary);opacity:.4}.wenyou-card .wy-divider-icon{padding:0 10px;font-size:.9rem}.wenyou-card .wy-content{font-size:.95rem;line-height:1.6;margin-bottom:14px;text-align:justify}.wenyou-card .wy-meta{font-size:.82rem;color:var(--text-muted);margin-bottom:10px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.38);display:inline-flex;max-width:100%}.wenyou-card .wy-stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;background:rgba(128,128,128,.05);padding:10px;border-radius:8px;border-left:3px solid var(--theme-secondary)}.wenyou-card .wy-stat-item{font-size:.85rem;background:rgba(255,255,255,.55);padding:4px 8px;border-radius:4px;display:flex;align-items:center;gap:4px}.wenyou-card .wy-stat-value{font-weight:700;color:var(--theme-primary)}.wenyou-card .wy-options{display:flex;flex-direction:column;gap:10px}.wenyou-card .wy-option-btn{display:flex;align-items:center;padding:12px 15px;background:transparent;border:1px solid var(--theme-primary);color:var(--theme-primary);border-radius:var(--border-radius);font-size:.95rem;cursor:pointer;transition:all .2s;text-decoration:none}.wenyou-card .wy-option-btn:hover{background:var(--theme-primary);color:#fff;transform:translateX(5px)}.wenyou-card .wy-opt-icon{margin-right:10px;font-size:1.1rem}.wenyou-card .wy-footer-decor{text-align:center;margin-top:16px;font-size:1.3rem;color:var(--theme-secondary);opacity:.35;letter-spacing:4px}</style>`,
+                `<article class="ai-beauty-card wenyou-card" data-theme="${safeTheme}" style="${BASE_STYLE};max-width:500px;margin:8px auto;background:var(--card-bg);border-radius:var(--border-radius);box-shadow:var(--card-shadow);font-family:var(--font-family);color:var(--text-main);overflow:hidden;border-top:4px solid var(--theme-primary);padding:20px;box-sizing:border-box;">`,
+                `<style>${EMBED_STYLE}</style>`,
                 `<header class="wy-header ai-beauty-card-title"><div class="wy-header-left"><div class="wy-avatar">🎭</div><div class="wy-title-box"><h3 class="wy-role-name">${safeTheme}</h3><span class="wy-scene">当前回合</span></div></div><div class="wy-top-decor">✦</div></header>`,
                 `<div class="wy-divider"><span class="wy-divider-icon">✧</span></div>`,
                 `<section class="ai-beauty-card-body">`,
@@ -2065,17 +2085,25 @@
                 `<section class="wy-stats" data-block="status"><div class="wy-stat-item"><span>📌</span> 状态: <span class="wy-stat-value">待更新</span></div></section>`,
                 `<section class="wy-content" data-block="event">${bodyHtml}</section>`,
                 `<section class="wy-content" data-block="thought">AI想法：继续观察局势，等待玩家决断。</section>`,
-                `<section class="wy-options" data-block="choices"><div class="wy-option-btn" data-choice="继续观察局势"><span class="wy-opt-icon">①</span>1. 继续观察局势</div><div class="wy-option-btn" data-choice="与关键人物交流"><span class="wy-opt-icon">②</span>2. 与关键人物交流</div><div class="wy-option-btn" data-choice="推进当前主线"><span class="wy-opt-icon">③</span>3. 推进当前主线</div></section>`,
+                `<section class="wy-options" data-block="choices">${buildChoicesHtml(DEFAULT_CHOICES)}</section>`,
                 `<div class="wy-footer-decor" data-block="hint">✧ ✦ ✧ 提示：可直接点击上方按钮继续剧情 ✧ ✦ ✧</div>`,
                 `</section>`,
                 `</article>`
             ].join("");
         }
-        return { wrapAsHtmlCard };
+        return {
+            getDefaultBeautyHint,
+            getDefaultThemeName,
+            getStableThemeName,
+            getRichThemeName,
+            getDefaultChoices,
+            getRequiredBlocks,
+            getSkeletonHtml,
+            wrapAsHtmlCard
+        };
     })();
 
     const HtmlStructureService = (() => {
-        const REQUIRED_BLOCKS = ["time", "status", "event", "choices"];
         function getDirectBlockNodes(body) {
             if (!(body instanceof HTMLElement)) return [];
             return Array.from(body.children || []).filter((el) => el instanceof HTMLElement && String(el.getAttribute("data-block") || "").trim());
@@ -2153,7 +2181,7 @@
             const bodyNode = document.createElement(safeBodyTag);
             bodyNode.className = String(skeleton.bodyClass || "ai-beauty-card-body").trim() || "ai-beauty-card-body";
             if (!bodyNode.classList.contains("ai-beauty-card-body")) bodyNode.classList.add("ai-beauty-card-body");
-            const order = Array.isArray(skeleton.blockOrder) && skeleton.blockOrder.length ? skeleton.blockOrder.map((x) => String(x || "").trim()).filter(Boolean) : ["time", "status", "event", "thought", "choices", "hint"];
+            const order = Array.isArray(skeleton.blockOrder) && skeleton.blockOrder.length ? skeleton.blockOrder.map((x) => String(x || "").trim()).filter(Boolean) : [...HtmlCardTemplateService.getRequiredBlocks(), "thought", "hint"];
             const used = new Set();
             if (oldBody) {
                 const blockMap = getDirectBlockMap(oldBody);
@@ -2195,7 +2223,7 @@
             removeDuplicateBlocks(body, "choices");
             const host = getDirectBlockMap(body).get("choices");
             if (!host) return;
-            const source = labels.length ? labels : ["继续观察局势", "与关键人物交流", "推进当前主线"];
+            const source = labels.length ? labels : HtmlCardTemplateService.getDefaultChoices();
             const dedup = [];
             const seen = new Set();
             source.forEach((txt) => {
@@ -2208,7 +2236,7 @@
             });
             const picked = dedup.slice(0, 3);
             while (picked.length < 3) {
-                const fallback = ["继续观察局势", "与关键人物交流", "推进当前主线"][picked.length];
+                const fallback = HtmlCardTemplateService.getDefaultChoices()[picked.length];
                 if (!picked.includes(fallback)) picked.push(fallback);
                 else picked.push(`继续行动${picked.length + 1}`);
             }
@@ -2299,7 +2327,7 @@
                     const ol = document.createElement("section");
                     ol.className = "wy-options";
                     ol.setAttribute("data-block", "choices");
-                    ["继续观察局势", "与关键人物交流", "推进当前主线"].forEach((txt, idx) => {
+                    HtmlCardTemplateService.getDefaultChoices().forEach((txt, idx) => {
                         const li = document.createElement("div");
                         li.className = "wy-option-btn";
                         li.setAttribute("data-choice", txt);
@@ -2312,7 +2340,7 @@
                 if (choiceSource === "opening" || choiceSource === "turn") rebuildChoicesBlock(body, normalizedChoices);
                 else if (normalizedChoices.length) rebuildChoicesBlock(body, normalizedChoices);
                 stripInlineChoicesFromEvent(body);
-                REQUIRED_BLOCKS.forEach((name) => {
+                HtmlCardTemplateService.getRequiredBlocks().forEach((name) => {
                     const node = getDirectBlockMap(body).get(name);
                     if (node && String(node.textContent || "").trim() === "") {
                         node.textContent = name === "time" ? (nowText || "时间信息：待更新") : "（待补充）";
@@ -2340,14 +2368,174 @@
         function isBeautyModeEnabled(setting) {
             return true;
         }
+        function parseColorToRgb(colorText = "") {
+            const raw = String(colorText || "").trim();
+            if (!raw) return null;
+            const hex = raw.match(/^#([0-9a-f]{3,8})$/i);
+            if (hex) {
+                const value = hex[1];
+                if (value.length === 3 || value.length === 4) {
+                    const r = Number.parseInt(value[0] + value[0], 16);
+                    const g = Number.parseInt(value[1] + value[1], 16);
+                    const b = Number.parseInt(value[2] + value[2], 16);
+                    const a = value.length === 4 ? Number.parseInt(value[3] + value[3], 16) / 255 : 1;
+                    if (a <= 0.01) return null;
+                    return { r, g, b, a };
+                }
+                if (value.length === 6 || value.length === 8) {
+                    const r = Number.parseInt(value.slice(0, 2), 16);
+                    const g = Number.parseInt(value.slice(2, 4), 16);
+                    const b = Number.parseInt(value.slice(4, 6), 16);
+                    const a = value.length === 8 ? Number.parseInt(value.slice(6, 8), 16) / 255 : 1;
+                    if (a <= 0.01) return null;
+                    return { r, g, b, a };
+                }
+            }
+            const match = raw.match(/rgba?\(([^)]+)\)/i);
+            if (!match) return null;
+            const parts = match[1].split(",").map((x) => Number.parseFloat(String(x).trim()));
+            if (parts.length < 3 || !parts.every((x, idx) => idx < 3 ? Number.isFinite(x) : true)) return null;
+            const alpha = Number.isFinite(parts[3]) ? parts[3] : 1;
+            if (alpha <= 0.01) return null;
+            return {
+                r: Math.max(0, Math.min(255, parts[0])),
+                g: Math.max(0, Math.min(255, parts[1])),
+                b: Math.max(0, Math.min(255, parts[2])),
+                a: alpha
+            };
+        }
+        function getLuminance({ r, g, b }) {
+            const normalize = (v) => {
+                const x = v / 255;
+                return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+            };
+            return 0.2126 * normalize(r) + 0.7152 * normalize(g) + 0.0722 * normalize(b);
+        }
+        function getReadableTextColor(rgb, muted = false) {
+            const lum = getLuminance(rgb);
+            if (lum >= 0.62) return muted ? "#5f6b76" : "#2c3e50";
+            return muted ? "#e7edf3" : "#ffffff";
+        }
+        function hasMeaningfulOwnText(el) {
+            if (!(el instanceof HTMLElement)) return false;
+            const ownText = Array.from(el.childNodes || [])
+                .filter((n) => n.nodeType === Node.TEXT_NODE)
+                .map((n) => String(n.textContent || ""))
+                .join(" ")
+                .replace(/\s+/g, " ")
+                .trim();
+            if (ownText) return true;
+            return el.children.length === 0 && String(el.textContent || "").replace(/\s+/g, " ").trim().length > 0;
+        }
+        function shouldSkipAutoColor(el) {
+            if (!(el instanceof HTMLElement)) return true;
+            if (el.closest(".wy-avatar, .wy-opt-icon")) return true;
+            const tag = el.tagName.toLowerCase();
+            if (["style", "script"].includes(tag)) return true;
+            return false;
+        }
+        function splitGradientArgs(text = "") {
+            const out = [];
+            let buf = "";
+            let depth = 0;
+            for (const ch of String(text || "")) {
+                if (ch === "(") depth++;
+                if (ch === ")") depth = Math.max(0, depth - 1);
+                if (ch === "," && depth === 0) {
+                    out.push(buf.trim());
+                    buf = "";
+                    continue;
+                }
+                buf += ch;
+            }
+            if (buf.trim()) out.push(buf.trim());
+            return out;
+        }
+        function parseGradientColorStops(backgroundImage = "") {
+            const raw = String(backgroundImage || "").trim();
+            if (!raw || raw === "none") return [];
+            const gradientMatches = raw.match(/(?:linear|radial)-gradient\(([^()]*|\((?:[^()]*|\([^()]*\))*\))*\)/gi) || [];
+            const colors = [];
+            gradientMatches.forEach((item) => {
+                const body = item.slice(item.indexOf("(") + 1, -1);
+                const parts = splitGradientArgs(body);
+                parts.forEach((part, idx) => {
+                    if (idx === 0 && /(deg|to\s+|circle|ellipse|closest|farthest|at\s+)/i.test(part)) return;
+                    const colorMatch = part.match(/(rgba?\([^)]+\)|#[0-9a-f]{3,8})/i);
+                    const rgb = parseColorToRgb(colorMatch?.[1] || "");
+                    if (rgb) colors.push(rgb);
+                });
+            });
+            return colors;
+        }
+        function mixColors(colors = []) {
+            const valid = colors.filter((c) => c && Number.isFinite(c.r) && Number.isFinite(c.g) && Number.isFinite(c.b));
+            if (!valid.length) return null;
+            const total = valid.reduce((sum, c) => sum + (Number.isFinite(c.a) ? c.a : 1), 0) || valid.length;
+            const mixed = valid.reduce((acc, c) => {
+                const weight = Number.isFinite(c.a) ? c.a : 1;
+                acc.r += c.r * weight;
+                acc.g += c.g * weight;
+                acc.b += c.b * weight;
+                acc.a += weight;
+                return acc;
+            }, { r: 0, g: 0, b: 0, a: 0 });
+            return {
+                r: mixed.r / total,
+                g: mixed.g / total,
+                b: mixed.b / total,
+                a: Math.min(1, mixed.a / valid.length)
+            };
+        }
+        function getApproxBackgroundColor(style) {
+            if (!style) return null;
+            const solid = parseColorToRgb(style.backgroundColor || "");
+            if (solid) return solid;
+            const stops = parseGradientColorStops(style.backgroundImage || "");
+            if (!stops.length) return null;
+            if (stops.length === 1) return stops[0];
+            const first = stops[0];
+            const middle = stops[Math.floor(stops.length / 2)];
+            return mixColors([first, middle]) || first || middle;
+        }
+        function findNearestBackgroundColor(el, root) {
+            let current = el;
+            while (current instanceof HTMLElement) {
+                const style = window.getComputedStyle(current);
+                const rgb = getApproxBackgroundColor(style);
+                if (rgb) return rgb;
+                if (current === root) break;
+                current = current.parentElement;
+            }
+            const rootStyle = root instanceof HTMLElement ? window.getComputedStyle(root) : null;
+            return getApproxBackgroundColor(rootStyle) || { r: 255, g: 248, b: 240, a: 1 };
+        }
+        function applyReadableTextColors(container) {
+            const card = container instanceof HTMLElement && container.classList.contains("ai-beauty-card")
+                ? container
+                : container instanceof HTMLElement
+                    ? container.querySelector(".ai-beauty-card")
+                    : null;
+            if (!(card instanceof HTMLElement)) return;
+            card.querySelectorAll("*").forEach((el) => {
+                if (!(el instanceof HTMLElement)) return;
+                if (shouldSkipAutoColor(el)) return;
+                if (!hasMeaningfulOwnText(el)) return;
+                const bg = findNearestBackgroundColor(el, card);
+                const classText = `${el.className || ""}`;
+                const muted = /wy-scene|wy-meta|wy-footer-decor|wy-divider|hint/i.test(classText);
+                el.style.color = getReadableTextColor(bg, muted);
+            });
+        }
         return {
             isBeautyModeEnabled,
             containsHtmlCard: HtmlNormalizeService.containsHtmlCard,
             normalizeHtmlCard: HtmlNormalizeService.normalizeHtmlCard,
             isRenderableHtmlCard: HtmlNormalizeService.isRenderableHtmlCard,
-            wrapAsHtmlCard: HtmlFallbackService.wrapAsHtmlCard,
+            wrapAsHtmlCard: HtmlCardTemplateService.wrapAsHtmlCard,
             enforceCardStructure: HtmlStructureService.enforceCardStructure,
-            extractSkeleton: HtmlStructureService.extractSkeleton
+            extractSkeleton: HtmlStructureService.extractSkeleton,
+            applyReadableTextColors
         };
     })();
 
@@ -2377,6 +2565,7 @@
             if (!container) return;
             const card = container.querySelector(".ai-beauty-card");
             if (!(card instanceof HTMLElement)) return;
+            HtmlCardService.applyReadableTextColors(card);
             const isTrueChoiceNode = (el) => {
                 if (!(el instanceof HTMLElement)) return false;
                 if (el.hasAttribute("data-choice")) return true;
@@ -2955,11 +3144,54 @@
     })();
 
     const AiPanelSyncService = (() => {
+        const STAT_ALIAS_MAP = {
+            health: "健康",
+            hp: "健康",
+            vitality: "体力",
+            stamina: "体力",
+            energy: "体力",
+            mood: "心情",
+            happiness: "心情",
+            emotion: "心情",
+            spirit: "灵力",
+            mana: "灵力",
+            knowledge: "学识",
+            intelligence: "学识",
+            intellect: "学识",
+            wisdom: "学识",
+            smarts: "学识",
+            charm: "魅力",
+            looks: "魅力",
+            charisma: "魅力",
+            fame: "声望",
+            reputation: "声望",
+            prestige: "声望",
+            wealth: "财富",
+            money: "财富",
+            cash: "财富",
+            asset: "资产",
+            assets: "资产",
+            power: "权势",
+            force: "武力",
+            combat: "武力",
+            martial: "武力",
+            growth: "成长",
+            family: "亲缘",
+            social: "人脉",
+            career: "事业"
+        };
+        function toCanonicalStatLabel(raw = "") {
+            const text = String(raw || "").trim();
+            if (!text) return "";
+            const normalized = text.toLowerCase().replace(/[^a-z\u4e00-\u9fa5]/g, "");
+            return STAT_ALIAS_MAP[normalized] || text;
+        }
         function normalizeStatKey(label = "") {
-            return String(label || "").trim().replace(/\s+/g, "_").replace(/[^\w\u4e00-\u9fa5-]/g, "_").slice(0, 24) || "stat_auto";
+            const canonical = toCanonicalStatLabel(label);
+            return String(canonical || "").trim().replace(/\s+/g, "_").replace(/[^\w\u4e00-\u9fa5-]/g, "_").slice(0, 24) || "stat_auto";
         }
         function inferStatIcon(label = "") {
-            const t = String(label || "");
+            const t = toCanonicalStatLabel(label);
             if (/体力|健康|生命/.test(t)) return "💪";
             if (/心情|情绪|精神/.test(t)) return "🌤️";
             if (/学识|智力|智慧/.test(t)) return "📚";
@@ -3001,10 +3233,11 @@
             lines.forEach((line) => {
                 const m = line.match(/^([\u4e00-\u9fa5A-Za-z0-9_]{1,12})\s*[:：]\s*([+-]?\d{1,4})(?:\b|$)/);
                 if (m) {
+                    const label = toCanonicalStatLabel(m[1]);
                     statItems.push({
-                        key: normalizeStatKey(m[1]),
-                        label: m[1],
-                        icon: inferStatIcon(m[1]),
+                        key: normalizeStatKey(label),
+                        label,
+                        icon: inferStatIcon(label),
                         value: Math.max(0, Math.min(999, Number(m[2]) || 0))
                     });
                     return;
@@ -3039,10 +3272,11 @@
             const pairRe = /(健康|体力|生命|心情|情绪|精神|学识|智力|智慧|魅力|声望|名望|财富|金钱|银两|资产|武力|战力|修为|灵力|权势|成长|亲缘|人脉|事业)\s*[:：]\s*([+-]?\d{1,4})/g;
             let m;
             while ((m = pairRe.exec(String(text || ""))) !== null) {
+                const label = toCanonicalStatLabel(m[1]);
                 items.push({
-                    key: normalizeStatKey(m[1]),
-                    label: m[1],
-                    icon: inferStatIcon(m[1]),
+                    key: normalizeStatKey(label),
+                    label,
+                    icon: inferStatIcon(label),
                     value: Math.max(0, Math.min(999, Number(m[2]) || 0))
                 });
             }
@@ -3081,7 +3315,7 @@
             const map = new Map();
             (Array.isArray(list) ? list : []).forEach((item, idx) => {
                 if (!item || item.value === undefined || item.value === null) return;
-                const label = String(item.label || item.key || `属性${idx + 1}`).trim();
+                const label = toCanonicalStatLabel(item.label || item.key || `属性${idx + 1}`);
                 const key = normalizeStatKey(item.key || label);
                 map.set(key, {
                     key,
@@ -3159,10 +3393,53 @@
     })();
 
     const StatsService = (() => {
+        const STAT_ALIAS_MAP = {
+            health: "健康",
+            hp: "健康",
+            vitality: "体力",
+            stamina: "体力",
+            energy: "体力",
+            mood: "心情",
+            happiness: "心情",
+            emotion: "心情",
+            spirit: "灵力",
+            mana: "灵力",
+            knowledge: "学识",
+            intelligence: "学识",
+            intellect: "学识",
+            wisdom: "学识",
+            smarts: "学识",
+            charm: "魅力",
+            looks: "魅力",
+            charisma: "魅力",
+            fame: "声望",
+            reputation: "声望",
+            prestige: "声望",
+            wealth: "财富",
+            money: "财富",
+            cash: "财富",
+            asset: "资产",
+            assets: "资产",
+            power: "权势",
+            force: "武力",
+            combat: "武力",
+            martial: "武力",
+            growth: "成长",
+            family: "亲缘",
+            social: "人脉",
+            career: "事业"
+        };
+        function toCanonicalStatLabel(raw = "") {
+            const text = String(raw || "").trim();
+            if (!text) return "";
+            const normalized = text.toLowerCase().replace(/[^a-z\u4e00-\u9fa5]/g, "");
+            return STAT_ALIAS_MAP[normalized] || text;
+        }
         function normalizeStatItem(it, idx) {
-            const key = String(it?.key || it?.name || `stat_${idx}`).replace(/[^\w-]/g, "_");
-            const label = String(it?.label || it?.name || key).slice(0, 12);
-            const icon = String(it?.icon || "✨").trim() || "✨";
+            const canonical = toCanonicalStatLabel(it?.label || it?.name || it?.key || `stat_${idx}`);
+            const key = String(canonical || it?.key || it?.name || `stat_${idx}`).replace(/[^\w\u4e00-\u9fa5-]/g, "_");
+            const label = canonical.slice(0, 12);
+            const icon = String(it?.icon || "").trim() || "✨";
             const value = Math.max(0, Math.min(999, Number(it?.value) || 0));
             return { key, label, icon, value };
         }
@@ -3324,7 +3601,10 @@
             bubble.innerHTML = canUseHtmlCard
                 ? AiResponseLayoutService.renderAiMessage(normalizedText, false)
                 : MarkdownService.render(text) + (streaming ? '<span class="streaming-cursor"></span>' : "");
-            if (canUseHtmlCard) AiResponseLayoutService.bindHtmlChoiceEvents(bubble);
+            if (canUseHtmlCard) {
+                HtmlCardService.applyReadableTextColors(bubble);
+                AiResponseLayoutService.bindHtmlChoiceEvents(bubble);
+            }
 
             if (role === "user") { row.appendChild(bubble); row.appendChild(avatar); }
             else { row.appendChild(avatar); row.appendChild(bubble); }
@@ -3363,6 +3643,7 @@
                     ? '<div class="ai-card-warning">⚠️ 检测到设定冲突，已自动纠偏重试一次。</div>'
                     : "";
                 currentStreamingTarget.innerHTML = `${warningHtml}${AiResponseLayoutService.renderAiMessage(normalizedText, false)}`;
+                HtmlCardService.applyReadableTextColors(currentStreamingTarget);
                 AiResponseLayoutService.bindHtmlChoiceEvents(currentStreamingTarget);
             } else {
                 currentStreamingTarget.classList.remove("html-host");
@@ -4606,7 +4887,7 @@
             const normalized = HtmlCardService.normalizeHtmlCard(text);
             const html = HtmlCardService.isRenderableHtmlCard(normalized)
                 ? normalized
-                : HtmlCardService.wrapAsHtmlCard(beautySetting || "云吞页游沉浸风（稳定主题）", normalized || text);
+                : HtmlCardService.wrapAsHtmlCard(beautySetting || HtmlCardTemplateService.getStableThemeName(), normalized || text);
             const finalized = HtmlCardService.enforceCardStructure(html, {
                 titleHint: titleHint || "剧情推进",
                 nowText: nowText || "",
@@ -4660,16 +4941,6 @@
         return { isDismissed, dismiss };
     })();
 
-    const HtmlCardPromptTemplateService = (() => {
-        function getDefaultBeautyHint() {
-            return "按设定自动生成高质量页游风卡片：色调统一、装饰丰富、排版分区清晰";
-        }
-        function getSkeletonHtml() {
-            return "<article class=\"ai-beauty-card wenyou-card\" style=\"--theme-primary:{THEME_PRIMARY};--theme-secondary:{THEME_SECONDARY};--card-bg:{CARD_BG};--text-main:{TEXT_MAIN};--text-muted:{TEXT_MUTED};--font-family:{FONT_FAMILY};--border-radius:{BORDER_RADIUS};--card-shadow:{CARD_SHADOW}\"><header class=\"wy-header ai-beauty-card-title\"><div class=\"wy-header-left\"><div class=\"wy-avatar\">{AVATAR_EMOJI}</div><div class=\"wy-title-box\"><h3 class=\"wy-role-name\">{ROLE_NAME}</h3><span class=\"wy-scene\">{SCENE_TITLE}</span></div></div><div class=\"wy-top-decor\">{TOP_DECOR_ICON}</div></header><div class=\"wy-divider\"><span class=\"wy-divider-icon\">{DIVIDER_EMOJI}</span></div><section class=\"ai-beauty-card-body\"><section class=\"wy-meta\" data-block=\"time\">{TIME_TEXT}</section><section class=\"wy-stats\" data-block=\"status\">{STATS_HTML}</section><section class=\"wy-content\" data-block=\"event\">{MAIN_STORY_TEXT}</section><section class=\"wy-content\" data-block=\"thought\">{AI_THOUGHT_TEXT}</section><section class=\"wy-options\" data-block=\"choices\"><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_1}\"><span class=\"wy-opt-icon\">{OPT_ICON_1}</span>1. {OPT_TEXT_1}</div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_2}\"><span class=\"wy-opt-icon\">{OPT_ICON_2}</span>2. {OPT_TEXT_2}</div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_3}\"><span class=\"wy-opt-icon\">{OPT_ICON_3}</span>3. {OPT_TEXT_3}</div></section><div class=\"wy-footer-decor\" data-block=\"hint\">{BOTTOM_DECOR} 提示：可直接点击上方按钮继续剧情</div></section></article>";
-        }
-        return { getDefaultBeautyHint, getSkeletonHtml };
-    })();
-
     const PromptRulesRegistry = (() => {
         function getBeautyCoreRules() {
             return [
@@ -4678,9 +4949,9 @@
                 "必须严格参考下方提供的本地模板骨架，尤其保持 ai-beauty-card-body 内 data-block=time/status/event/thought/choices/hint 的层级与命名一致。",
                 "若设定存在待玩家选择的开局模式/路线，只能在 choices 中列出，不得替玩家做最终选择。",
                 "状态区必须包含主角状态；若本轮涉及关键NPC变化，状态区需附带NPC状态摘要。",
-                "视觉要求：卡片必须具备丰富且清晰的页游式视觉结构（标题条、信息区、标签/徽章、分隔线、强调块、层次化排版），并与当前设定的时代与题材一致。",
-                "同一张卡后续回合必须延续同一视觉骨架（标题区/信息区/选项区布局稳定），不要每回合随机换主题。",
-                "禁止输出纯 Markdown 或纯文本；必须输出 HTML。"
+                "视觉要求：卡片必须具备色彩丰富且清晰的页游式视觉结构（标题条、信息区、标签/徽章、分隔线、强调块、层次化排版），并与当前设定的时代与题材一致。",
+                "同一张卡后续回合不要每回合随机换主题。",
+                "禁止输出 Md格式；必须输出 HTML。"
             ];
         }
         function getIntroCoreRules() {
@@ -4700,7 +4971,7 @@
         async function generateIntroTemplate({ apiConfig, scenarioText, beautySetting }) {
             const fetchUrl = AIRequestService.buildFetchUrl();
             const headers = AIRequestService.buildHeaders(apiConfig);
-            const themeHint = String(beautySetting || HtmlCardPromptTemplateService.getDefaultBeautyHint()).trim();
+            const themeHint = String(beautySetting || HtmlCardTemplateService.getDefaultBeautyHint()).trim();
             const systemPrompt = [
                 "你是文游HTML卡片模板设计器。",
                 "请仅输出一张可渲染的HTML卡片模板，最外层必须是 class=\"ai-beauty-card\"。",
@@ -4710,7 +4981,7 @@
                 "必须在模板内显式体现：标题区、分隔装饰、正文区、状态区、结尾选项区（仅一组3选项）。",
                 "颜色对比必须可读：正文文字与背景需保持明显反差，避免近色。",
                 "以下是必须参考的本地模板骨架，请保留结构语义，只替换主题视觉与占位内容：",
-                HtmlCardPromptTemplateService.getSkeletonHtml()
+                HtmlCardTemplateService.getSkeletonHtml()
             ].join("\n");
             const userPrompt = [
                 `设定文本：\n${scenarioText}`,
@@ -4751,11 +5022,11 @@
                 "",
                 ...PromptRulesRegistry.getIntroCoreRules(),
                 "以下是必须参考的本地卡片骨架（不是 Markdown 示例，而是实际结构约束；可改色调和装饰，但 data-block 层级必须一致）：",
-                HtmlCardPromptTemplateService.getSkeletonHtml(),
+                HtmlCardTemplateService.getSkeletonHtml(),
                 choiceLines.length
                     ? `你必须在本次“开局介绍”卡片的 choices 区保留这些候选开局选项（可润色但语义不能丢）：\n${choiceLines.join("\n")}`
                     : "若无候选开局项，则按剧情生成 1-3 条可执行编号选项。",
-                `美化设定提示词：${beautySetting || HtmlCardPromptTemplateService.getDefaultBeautyHint()}`
+                `美化设定提示词：${beautySetting || HtmlCardTemplateService.getDefaultBeautyHint()}`
             ].join("\n");
             const userPrompt = [
                 "以下是当前角色档案（必须一致）：",
@@ -4952,14 +5223,14 @@
         function buildBeautyRules(beautyCardSetting, beautyModeEnabled) {
             if (!beautyModeEnabled) return "";
             const normalizedTheme = (!beautyCardSetting || beautyCardSetting === "网络模板" || beautyCardSetting === "默认主题" || beautyCardSetting === "默认")
-                ? "云吞页游沉浸风（高信息密度、丰富装饰元素）"
+                ? HtmlCardTemplateService.getRichThemeName()
                 : beautyCardSetting;
             return [
                 "【美化卡片强制规则】",
                 `当前美化卡片设定：${normalizedTheme}`,
                 ...PromptRulesRegistry.getBeautyCoreRules(),
                 "以下是必须参考的本地模板骨架（直接按此结构生成，不要改动 ai-beauty-card-body 内 data-block 命名和顺序）：",
-                HtmlCardPromptTemplateService.getSkeletonHtml()
+                HtmlCardTemplateService.getSkeletonHtml()
             ].join("\n");
         }
         function buildSystemPrompt({ scenarioSpec, builtinRules, stateFactLock, runtimeContext, beautyRules }) {
@@ -4998,19 +5269,6 @@
                 `待纠偏文本：\n${finalText}`
             ].join("\n\n");
         }
-        function buildHtmlRetryPrompt(userText, recentHistory, finalText, scenarioSpec) {
-            return [
-                "【最高优先级：先遵守当前卡设定】",
-                `当前卡设定：\n${scenarioSpec || ""}`,
-                `玩家最新输入：${userText}`,
-                `最近记录：\n${recentHistory}`,
-                "上一版回复未能正确渲染为 HTML 卡片。",
-                "请严格重写为可直接渲染的 HTML，最外层 class 必须是 ai-beauty-card。",
-                "必须严格参考本地模板骨架，保持 ai-beauty-card-body 下的 data-block=time/status/event/thought/choices/hint。",
-                "同时保留剧情连续性，并且只保留一组 1-3 条编号选项。",
-                `上一版文本：\n${finalText}`
-            ].join("\n\n");
-        }
         function buildWarningRetryPrompt(userText, recentHistory, warnings, finalText, scenarioSpec) {
             const warningLines = (Array.isArray(warnings) ? warnings : []).map((x) => x?.message || String(x || "")).filter(Boolean);
             return [
@@ -5030,7 +5288,6 @@
             buildMainUserPrompt,
             buildChoiceRetryPrompt,
             buildConflictRetryPrompt,
-            buildHtmlRetryPrompt,
             buildWarningRetryPrompt
         };
     })();
@@ -5055,9 +5312,6 @@
         function buildConflictRetryPrompt(userText, recentHistory, conflictReport, finalText, scenarioSpec) {
             return PromptTemplateService.buildConflictRetryPrompt(userText, recentHistory, conflictReport, finalText, scenarioSpec);
         }
-        function buildHtmlRetryPrompt(userText, recentHistory, finalText, scenarioSpec) {
-            return PromptTemplateService.buildHtmlRetryPrompt(userText, recentHistory, finalText, scenarioSpec);
-        }
         function buildWarningRetryPrompt(userText, recentHistory, warnings, finalText, scenarioSpec) {
             return PromptTemplateService.buildWarningRetryPrompt(userText, recentHistory, warnings, finalText, scenarioSpec);
         }
@@ -5067,7 +5321,6 @@
             buildMainUserPrompt,
             buildChoiceRetryPrompt,
             buildConflictRetryPrompt,
-            buildHtmlRetryPrompt,
             buildWarningRetryPrompt
         };
     })();
@@ -5400,23 +5653,7 @@
                 warnings: activeWarnings
             };
         }
-        async function enforceBeautyCard({ text, beautyModeEnabled, htmlForceEnabled, retryCount, beautyCardSetting, requestRewrite }) {
-            let finalText = HtmlCardService.normalizeHtmlCard(text);
-            if (!beautyModeEnabled || !htmlForceEnabled) return { finalText, usedFallback: false };
-            let remain = Math.max(0, Number(retryCount) || 0);
-            while (!HtmlCardService.isRenderableHtmlCard(finalText) && remain > 0) {
-                const htmlText = await requestRewrite(finalText);
-                if (htmlText) finalText = HtmlCardService.normalizeHtmlCard(htmlText);
-                remain--;
-            }
-            let usedFallback = false;
-            if (!HtmlCardService.isRenderableHtmlCard(finalText)) {
-                finalText = HtmlCardService.wrapAsHtmlCard(beautyCardSetting, finalText);
-                usedFallback = true;
-            }
-            return { finalText, usedFallback };
-        }
-        return { enforceChoices, enforceConflict, appendWarning, enforceBeautyCard };
+        return { enforceChoices, enforceConflict, appendWarning };
     })();
 
     const ScenarioInitPlanService = (() => {
