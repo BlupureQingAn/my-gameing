@@ -158,6 +158,10 @@
             background: linear-gradient(180deg, rgba(18, 24, 36, 0.92), rgba(14, 19, 30, 0.88));
         }
 
+        body[data-theme="dark"] .quick-btn {
+            color: #ffffff;
+        }
+
         body[data-theme="dark"] .ai-beauty-card {
             background:
                 radial-gradient(circle at top right, rgba(143, 125, 255, 0.20), transparent 28%),
@@ -689,11 +693,24 @@
             padding-left: 22px;
         }
 
-        .chat-footer.nav-collapsed .nav-actions {
-            max-width: 0;
+        .chat-footer.nav-collapsed .play-toolbar {
+            gap: 0;
+        }
+
+        .chat-footer.nav-collapsed .quick-actions,
+        .chat-footer.nav-collapsed .composer {
+            max-height: 0;
             opacity: 0;
             pointer-events: none;
-            transform: translateX(-10px);
+            overflow: hidden;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .chat-footer .quick-actions,
+        .chat-footer .composer {
+            transition: max-height 0.22s ease, opacity 0.18s ease;
+            max-height: 200px;
         }
 
         .chat-footer .nav-actions {
@@ -1487,6 +1504,8 @@
         .modal-card {
             width: 100%;
             max-width: 420px;
+            max-height: 82vh;
+            overflow-y: auto;
             background: var(--card-strong);
             border-radius: 16px;
             border: 1px solid var(--line);
@@ -2581,7 +2600,7 @@
         const DEFAULT_THEME_NAME_STABLE = "云吞页游沉浸风（稳定主题）";
         const DEFAULT_THEME_NAME_RICH = "云吞页游沉浸风（高信息密度、丰富装饰元素）";
         const DEFAULT_CHOICES = ["继续观察局势", "与关键人物交流", "推进当前主线"];
-        const REQUIRED_BLOCKS = ["time", "status", "event", "choices"];
+        const REQUIRED_BLOCKS = ["time", "status", "relations", "event", "choices"];
         const BASE_STYLE = "--theme-primary:#6a11cb;--theme-secondary:#2575fc;--card-bg:linear-gradient(to bottom right,#ffffff,#f0f4fd);--text-main:#2c3e50;--text-muted:#7f8c8d;--font-family:'PingFang SC','Microsoft YaHei',sans-serif;--border-radius:12px;--card-shadow:0 10px 25px rgba(106,17,203,0.15)";
         const BASE_STYLE_DARK = "--theme-primary:#9b8bff;--theme-secondary:#45b6ff;--card-bg:linear-gradient(180deg,rgba(20,28,42,0.28),rgba(13,19,31,0.22));--text-main:#eaf0ff;--text-muted:#a8b6d4;--font-family:'PingFang SC','Microsoft YaHei',sans-serif;--border-radius:12px;--card-shadow:0 16px 34px rgba(0,0,0,0.3)";
         const EMBED_STYLE = ".wenyou-card .wy-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}.wenyou-card .wy-header-left{display:flex;align-items:center;gap:12px}.wenyou-card .wy-avatar{font-size:28px;color:var(--theme-primary)}.wenyou-card .wy-role-name{font-size:1.1rem;font-weight:700;color:var(--theme-primary);margin:0;line-height:1.2}.wenyou-card .wy-scene{font-size:.8rem;color:var(--text-muted);margin-top:2px}.wenyou-card .wy-divider{display:flex;align-items:center;text-align:center;margin:15px 0;color:var(--theme-secondary)}.wenyou-card .wy-divider:before,.wenyou-card .wy-divider:after{content:'';flex:1;border-bottom:1px dashed var(--theme-secondary);opacity:.4}.wenyou-card .wy-divider-icon{padding:0 10px;font-size:.9rem}.wenyou-card .wy-content{font-size:.95rem;line-height:1.6;margin-bottom:14px;text-align:justify}.wenyou-card .wy-meta{font-size:.82rem;color:var(--text-muted);margin-bottom:10px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.38);display:inline-flex;max-width:100%}.wenyou-card .wy-stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;background:rgba(128,128,128,.05);padding:10px;border-radius:8px;border-left:3px solid var(--theme-secondary)}.wenyou-card .wy-stat-item{font-size:.85rem;background:rgba(255,255,255,.55);padding:4px 8px;border-radius:4px;display:flex;align-items:center;gap:4px}.wenyou-card .wy-stat-value{font-weight:700;color:var(--theme-primary)}.wenyou-card .wy-options{display:flex;flex-direction:column;gap:10px}.wenyou-card .wy-option-btn{display:flex;align-items:center;padding:12px 15px;background:transparent;border:1px solid var(--theme-primary);color:var(--theme-primary);border-radius:var(--border-radius);font-size:.95rem;cursor:pointer;transition:all .2s;text-decoration:none}.wenyou-card .wy-option-btn:hover{background:var(--theme-primary);color:#fff;transform:translateX(5px)}.wenyou-card .wy-opt-icon{margin-right:10px;font-size:1.1rem}.wenyou-card .wy-footer-decor{text-align:center;margin-top:16px;font-size:1.3rem;color:var(--theme-secondary);opacity:.35;letter-spacing:4px}";
@@ -2630,7 +2649,8 @@
         }
         function getSkeletonHtml(themeMode = "light", state = null) {
             const { statusPanelLabel, tagsHtml } = buildSkeletonStateContext(state);
-            const base = "<article class=\"ai-beauty-card wenyou-card\" style=\"--theme-primary:{THEME_PRIMARY};--theme-secondary:{THEME_SECONDARY};--card-bg:{CARD_BG};--text-main:{TEXT_MAIN};--text-muted:{TEXT_MUTED};--font-family:{FONT_FAMILY};--border-radius:{BORDER_RADIUS};--card-shadow:{CARD_SHADOW};position:relative;overflow:hidden;background:var(--card-bg);border-radius:var(--border-radius);box-shadow:var(--card-shadow);border:1px solid color-mix(in srgb,var(--theme-primary) 26%,#ffffff 74%);font-family:var(--font-family);color:var(--text-main)\"><div style=\"position:absolute;inset:0;background:radial-gradient(circle at top right,color-mix(in srgb,var(--theme-secondary) 18%,transparent 82%),transparent 42%),radial-gradient(circle at bottom left,color-mix(in srgb,var(--theme-primary) 16%,transparent 84%),transparent 38%);pointer-events:none\"></div><div style=\"position:relative;padding:18px\"><header class=\"wy-header ai-beauty-card-title\" style=\"display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:14px 16px;border-radius:calc(var(--border-radius) - 4px);background:linear-gradient(135deg,color-mix(in srgb,var(--theme-primary) 18%,#ffffff 82%),color-mix(in srgb,var(--theme-secondary) 12%,#ffffff 88%));border:1px solid color-mix(in srgb,var(--theme-primary) 20%,#ffffff 80%)\"><div class=\"wy-header-left\" style=\"display:flex;align-items:center;gap:12px\"><div class=\"wy-avatar\" style=\"width:48px;height:48px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));color:#fff;font-size:26px;box-shadow:0 8px 18px rgba(0,0,0,.14)\">{AVATAR_EMOJI}</div><div class=\"wy-title-box\"><div style=\"display:inline-flex;align-items:center;gap:6px;padding:3px 10px;margin-bottom:8px;border-radius:999px;background:rgba(255,255,255,.65);font-size:12px;color:var(--text-muted)\">主题视觉 {BOTTOM_DECOR}</div><h3 class=\"wy-role-name\" style=\"margin:0;font-size:1.22rem;font-weight:800;color:var(--theme-primary);line-height:1.2\">{ROLE_NAME}</h3><span class=\"wy-scene\" style=\"display:block;margin-top:4px;color:var(--text-muted);font-size:.86rem\">{SCENE_TITLE}</span></div></div><div style=\"text-align:right\"><div style=\"font-size:1.25rem;color:var(--theme-secondary)\">{TOP_DECOR_ICON}</div><div style=\"margin-top:8px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.7);font-size:12px;color:var(--text-muted)\">章节焦点</div></div></header><div class=\"wy-divider\" style=\"display:flex;align-items:center;gap:10px;margin:14px 0 12px\"><span style=\"flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--theme-primary),transparent)\"></span><span class=\"wy-divider-icon\" style=\"padding:0 10px;color:var(--theme-secondary);font-size:1rem\">{DIVIDER_EMOJI}</span><span style=\"flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--theme-secondary),transparent)\"></span></div><section class=\"ai-beauty-card-body\"><section class=\"wy-meta\" data-block=\"time\" style=\"display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.66);border:1px solid rgba(255,255,255,.5);backdrop-filter:blur(6px)\"><span style=\"font-weight:700;color:var(--theme-primary)\">时间轴</span><span>{TIME_TEXT}</span></section><section class=\"wy-stats\" data-block=\"status\" style=\"display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px;padding:12px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.74),rgba(255,255,255,.52));border:1px solid color-mix(in srgb,var(--theme-secondary) 14%,#ffffff 86%)\"><div class=\"wy-stat-item\" style=\"padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(255,244,232,.88));border-left:4px solid var(--theme-primary)\">✨ ${statusPanelLabel}：{STATS_HTML}</div><div class=\"wy-stat-item\" style=\"padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(239,247,255,.88));border-left:4px solid var(--theme-secondary)\">🏷 关键标签：${tagsHtml}</div></section><section data-block=\"event\" style=\"margin-top:14px;padding:14px 15px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(255,251,245,.92));border:1px solid rgba(226,205,173,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.85)\"><div style=\"display:inline-flex;align-items:center;gap:6px;padding:4px 10px;margin-bottom:10px;border-radius:999px;background:color-mix(in srgb,var(--theme-primary) 12%,#ffffff 88%);color:var(--theme-primary);font-size:12px;font-weight:700\">剧情正文</div><div class=\"wy-content\" style=\"line-height:1.78;color:var(--text-main)\">{MAIN_STORY_TEXT}</div></section><section data-block=\"thought\" style=\"margin-top:12px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,color-mix(in srgb,var(--theme-secondary) 10%,#ffffff 90%),rgba(255,255,255,.88));border:1px dashed color-mix(in srgb,var(--theme-secondary) 32%,#ffffff 68%)\"><div style=\"font-size:12px;font-weight:700;color:var(--theme-secondary);margin-bottom:8px\">AI想法</div><div class=\"wy-content\" style=\"color:var(--text-main);line-height:1.7\">{AI_THOUGHT_TEXT}</div></section><section class=\"wy-options\" data-block=\"choices\" style=\"display:flex;flex-direction:column;gap:10px;margin-top:14px\"><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_1}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(255,243,231,.92));border:1px solid color-mix(in srgb,var(--theme-primary) 24%,#ffffff 76%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));color:#fff\">{OPT_ICON_1}</span><span>1. {OPT_TEXT_1}</span></div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_2}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(238,247,255,.92));border:1px solid color-mix(in srgb,var(--theme-secondary) 24%,#ffffff 76%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-secondary),var(--theme-primary));color:#fff\">{OPT_ICON_2}</span><span>2. {OPT_TEXT_2}</span></div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_3}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(246,239,255,.92));border:1px solid color-mix(in srgb,var(--theme-primary) 20%,var(--theme-secondary) 18%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));color:#fff\">{OPT_ICON_3}</span><span>3. {OPT_TEXT_3}</span></div></section><div class=\"wy-footer-decor\" data-block=\"hint\" style=\"margin-top:16px;padding:12px 14px;border-radius:16px;text-align:center;background:linear-gradient(90deg,color-mix(in srgb,var(--theme-primary) 10%,#ffffff 90%),color-mix(in srgb,var(--theme-secondary) 10%,#ffffff 90%));color:var(--text-muted);font-size:.88rem\">{BOTTOM_DECOR} {BOTTOM_DECOR} 提示：可直接点击上方按钮继续剧情 {BOTTOM_DECOR} {BOTTOM_DECOR}</div></section></div></article>";
+            const statusBlock = `<div class="wy-stat-item" style="padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(255,244,232,.88));border-left:4px solid var(--theme-primary)">✨ ${statusPanelLabel}：{STATS_HTML}</div><div class="wy-stat-item" style="padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(239,247,255,.88));border-left:4px solid var(--theme-secondary)">🏷 关键标签：${tagsHtml}</div>`;
+            const base = "<article class=\"ai-beauty-card wenyou-card\" style=\"--theme-primary:{THEME_PRIMARY};--theme-secondary:{THEME_SECONDARY};--card-bg:{CARD_BG};--text-main:{TEXT_MAIN};--text-muted:{TEXT_MUTED};--font-family:{FONT_FAMILY};--border-radius:{BORDER_RADIUS};--card-shadow:{CARD_SHADOW};position:relative;overflow:hidden;background:var(--card-bg);border-radius:var(--border-radius);box-shadow:var(--card-shadow);border:1px solid color-mix(in srgb,var(--theme-primary) 26%,#ffffff 74%);font-family:var(--font-family);color:var(--text-main)\"><div style=\"position:absolute;inset:0;background:radial-gradient(circle at top right,color-mix(in srgb,var(--theme-secondary) 18%,transparent 82%),transparent 42%),radial-gradient(circle at bottom left,color-mix(in srgb,var(--theme-primary) 16%,transparent 84%),transparent 38%);pointer-events:none\"></div><div style=\"position:relative;padding:18px\"><header class=\"wy-header ai-beauty-card-title\" style=\"display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:14px 16px;border-radius:calc(var(--border-radius) - 4px);background:linear-gradient(135deg,color-mix(in srgb,var(--theme-primary) 18%,#ffffff 82%),color-mix(in srgb,var(--theme-secondary) 12%,#ffffff 88%));border:1px solid color-mix(in srgb,var(--theme-primary) 20%,#ffffff 80%)\"><div class=\"wy-header-left\" style=\"display:flex;align-items:center;gap:12px\"><div class=\"wy-avatar\" style=\"width:48px;height:48px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));color:#fff;font-size:26px;box-shadow:0 8px 18px rgba(0,0,0,.14)\">{AVATAR_EMOJI}</div><div class=\"wy-title-box\"><div style=\"display:inline-flex;align-items:center;gap:6px;padding:3px 10px;margin-bottom:8px;border-radius:999px;background:rgba(255,255,255,.65);font-size:12px;color:var(--text-muted)\">主题视觉 {BOTTOM_DECOR}</div><h3 class=\"wy-role-name\" style=\"margin:0;font-size:1.22rem;font-weight:800;color:var(--theme-primary);line-height:1.2\">{ROLE_NAME}</h3><span class=\"wy-scene\" style=\"display:block;margin-top:4px;color:var(--text-muted);font-size:.86rem\">{SCENE_TITLE}</span></div></div><div style=\"text-align:right\"><div style=\"font-size:1.25rem;color:var(--theme-secondary)\">{TOP_DECOR_ICON}</div><div style=\"margin-top:8px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.7);font-size:12px;color:var(--text-muted)\">章节焦点</div></div></header><div class=\"wy-divider\" style=\"display:flex;align-items:center;gap:10px;margin:14px 0 12px\"><span style=\"flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--theme-primary),transparent)\"></span><span class=\"wy-divider-icon\" style=\"padding:0 10px;color:var(--theme-secondary);font-size:1rem\">{DIVIDER_EMOJI}</span><span style=\"flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--theme-secondary),transparent)\"></span></div><section class=\"ai-beauty-card-body\"><section class=\"wy-meta\" data-block=\"time\" style=\"display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.66);border:1px solid rgba(255,255,255,.5);backdrop-filter:blur(6px)\"><span style=\"font-weight:700;color:var(--theme-primary)\">时间轴</span><span>{TIME_TEXT}</span></section><section class=\"wy-stats\" data-block=\"status\" style=\"display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px;padding:12px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.74),rgba(255,255,255,.52));border:1px solid color-mix(in srgb,var(--theme-secondary) 14%,#ffffff 86%)\">" + statusBlock + "</section><section data-block=\"relations\" style=\"margin-top:12px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,rgba(255,255,255,.92),rgba(240,248,255,.88));border:1px solid color-mix(in srgb,var(--theme-secondary) 18%,#ffffff 82%)\"><div style=\"font-size:12px;font-weight:700;color:var(--theme-secondary);margin-bottom:8px\">👥 人物关系</div><div style=\"display:flex;flex-wrap:wrap;gap:8px\">{RELATIONS_HTML}</div></section><section data-block=\"event\" style=\"margin-top:14px;padding:14px 15px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(255,251,245,.92));border:1px solid rgba(226,205,173,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.85)\"><div style=\"display:inline-flex;align-items:center;gap:6px;padding:4px 10px;margin-bottom:10px;border-radius:999px;background:color-mix(in srgb,var(--theme-primary) 12%,#ffffff 88%);color:var(--theme-primary);font-size:12px;font-weight:700\">剧情正文</div><div class=\"wy-content\" style=\"line-height:1.78;color:var(--text-main)\">{MAIN_STORY_TEXT}</div></section><section data-block=\"thought\" style=\"margin-top:12px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,color-mix(in srgb,var(--theme-secondary) 10%,#ffffff 90%),rgba(255,255,255,.88));border:1px dashed color-mix(in srgb,var(--theme-secondary) 32%,#ffffff 68%)\"><div style=\"font-size:12px;font-weight:700;color:var(--theme-secondary);margin-bottom:8px\">AI想法</div><div class=\"wy-content\" style=\"color:var(--text-main);line-height:1.7\">{AI_THOUGHT_TEXT}</div></section><section class=\"wy-options\" data-block=\"choices\" style=\"display:flex;flex-direction:column;gap:10px;margin-top:14px\"><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_1}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(255,243,231,.92));border:1px solid color-mix(in srgb,var(--theme-primary) 24%,#ffffff 76%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));color:#fff\">{OPT_ICON_1}</span><span>1. {OPT_TEXT_1}</span></div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_2}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(238,247,255,.92));border:1px solid color-mix(in srgb,var(--theme-secondary) 24%,#ffffff 76%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-secondary),var(--theme-primary));color:#fff\">{OPT_ICON_2}</span><span>2. {OPT_TEXT_2}</span></div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_3}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(246,239,255,.92));border:1px solid color-mix(in srgb,var(--theme-primary) 20%,var(--theme-secondary) 18%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));color:#fff\">{OPT_ICON_3}</span><span>3. {OPT_TEXT_3}</span></div></section><div class=\"wy-footer-decor\" data-block=\"hint\" style=\"margin-top:16px;padding:12px 14px;border-radius:16px;text-align:center;background:linear-gradient(90deg,color-mix(in srgb,var(--theme-primary) 10%,#ffffff 90%),color-mix(in srgb,var(--theme-secondary) 10%,#ffffff 90%));color:var(--text-muted);font-size:.88rem\">{BOTTOM_DECOR} {BOTTOM_DECOR} 提示：可直接点击上方按钮继续剧情 {BOTTOM_DECOR} {BOTTOM_DECOR}</div></section></div></article>";
             const tagSpans = (Array.isArray(state && state.panelStatusTags) && state.panelStatusTags.length
                 ? state.panelStatusTags.slice(0, 4)
                 : [{ label: "身份", value: "" }, { label: "阵营", value: "" }, { label: "处境", value: "" }]
@@ -2644,10 +2664,20 @@
                 const display = t.value ? `${t.label}：${t.value}` : t.label;
                 return `<span style="padding:4px 10px;border-radius:999px;${colors[i % colors.length]}font-size:12px;font-weight:700;">${display}</span>`;
             }).join("");
+            const npcs = Array.isArray(state && state.npcs) ? state.npcs.slice(0, 5) : [];
+            const npcRelationsHtml = npcs.length
+                ? npcs.map((n) => {
+                    const favor = Math.max(0, Math.min(100, Number(n.favor) || 50));
+                    const favorColor = favor >= 70 ? "color-mix(in srgb,var(--theme-primary) 80%,#2ecc71 20%)" : favor >= 40 ? "var(--theme-secondary)" : "#e74c3c";
+                    const favorBar = `<div style="height:4px;border-radius:2px;background:rgba(0,0,0,.08);margin-top:4px;overflow:hidden;"><div style="height:100%;width:${favor}%;background:${favorColor};border-radius:2px;transition:width .3s;"></div></div>`;
+                    return `<div style="display:flex;flex-direction:column;padding:8px 10px;border-radius:12px;background:rgba(255,255,255,.82);border:1px solid rgba(200,200,200,.3);min-width:80px;flex:1;"><div style="font-weight:700;font-size:.85rem;color:var(--theme-primary)">${n.name}</div><div style="font-size:.75rem;color:var(--text-muted);margin-top:2px;">${n.relation || ""}${n.gender ? "·" + n.gender : ""}</div>${favorBar}<div style="font-size:.72rem;color:${favorColor};margin-top:2px;text-align:right;">${favor}好感</div></div>`;
+                }).join("")
+                : `<div style="font-size:.82rem;color:var(--text-muted);padding:4px 0;">暂无关键人物</div>`;
             const enrichedBase = base
                 .replace("font-size:1.22rem;", "font-size:1.62rem;letter-spacing:0.02em;")
-                .replace(`✨ ${statusPanelLabel}：{STATS_HTML}`, `✨ ${statusPanelLabel}<div style="margin-top:8px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;"><span style="padding:6px 8px;border-radius:10px;background:color-mix(in srgb,var(--theme-primary) 14%,#ffffff 86%);border:1px solid color-mix(in srgb,var(--theme-primary) 28%,#ffffff 72%);font-weight:700;">{STATS_HTML}</span><span style="padding:6px 8px;border-radius:10px;background:color-mix(in srgb,var(--theme-secondary) 14%,#ffffff 86%);border:1px solid color-mix(in srgb,var(--theme-secondary) 28%,#ffffff 72%);">状态趋势：稳定</span></div>`)
-                .replace(`🏷 关键标签：${tagsHtml}`, `🏷 关键标签<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;">${tagSpans}</div>`);
+                .replace(`✨ ${statusPanelLabel}：{STATS_HTML}`, `✨ ${statusPanelLabel}<div style="margin-top:8px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;"><span style="padding:6px 8px;border-radius:10px;background:color-mix(in srgb,var(--theme-primary) 14%,#ffffff 86%);border:1px solid color-mix(in srgb,var(--theme-primary) 28%,#ffffff 72%);font-weight:700;font-size:1rem;">{STATS_HTML}</span><span style="padding:6px 8px;border-radius:10px;background:color-mix(in srgb,var(--theme-secondary) 14%,#ffffff 86%);border:1px solid color-mix(in srgb,var(--theme-secondary) 28%,#ffffff 72%);font-size:.9rem;">状态趋势：稳定</span></div>`)
+                .replace(`🏷 关键标签：${tagsHtml}`, `🏷 关键标签<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;">${tagSpans}</div>`)
+                .replace("{RELATIONS_HTML}", npcRelationsHtml);
             if (themeMode !== "dark") return enrichedBase;
             return enrichedBase
                 .replace("background:var(--card-bg);", "background:var(--card-bg);backdrop-filter:blur(10px);")
@@ -2898,6 +2928,16 @@
                     div.textContent = "状态变化：暂无变化";
                     body.appendChild(div);
                 }
+                if (!hasBlock("relations")) {
+                    const div = document.createElement("section");
+                    div.setAttribute("data-block", "relations");
+                    div.style.cssText = "margin-top:12px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,rgba(255,255,255,.92),rgba(240,248,255,.88));border:1px solid rgba(200,220,255,.4)";
+                    div.innerHTML = "<div style=\"font-size:12px;font-weight:700;color:var(--theme-secondary);margin-bottom:8px\">👥 人物关系</div><div style=\"font-size:.82rem;color:var(--text-muted)\">暂无关键人物</div>";
+                    // 插在 event 之前
+                    const eventBlock = getDirectBlockMap(body).get("event");
+                    if (eventBlock) body.insertBefore(div, eventBlock);
+                    else body.appendChild(div);
+                }
                 if (!hasBlock("event")) {
                     const div = document.createElement("section");
                     div.className = "wy-content";
@@ -3111,6 +3151,16 @@
                 card.style.border = "1px solid rgba(151,169,220,0.34)";
                 card.style.backdropFilter = "blur(10px)";
                 card.style.boxShadow = "0 18px 34px rgba(0,0,0,0.28)";
+                // 暗夜模式：直接强制所有文字为浅色，不依赖背景色计算
+                card.querySelectorAll("*").forEach((el) => {
+                    if (!(el instanceof HTMLElement)) return;
+                    if (shouldSkipAutoColor(el)) return;
+                    if (!hasMeaningfulOwnText(el)) return;
+                    const classText = `${el.className || ""}`;
+                    const muted = /wy-scene|wy-meta|wy-footer-decor|wy-divider|hint/i.test(classText);
+                    el.style.color = muted ? "#a8b6d4" : "#eaf0ff";
+                });
+                return;
             }
             card.querySelectorAll("*").forEach((el) => {
                 if (!(el instanceof HTMLElement)) return;
@@ -3577,6 +3627,15 @@
             const fields = ["name", "gender", "relation", "status", "mood", "traits"];
             fields.forEach((k) => { if (item[k] !== undefined && String(item[k]).trim()) npc[k] = String(item[k]).slice(0, 24); });
             if (item.favor !== undefined) npc.favor = Math.max(0, Math.min(100, Number(item.favor) || npc.favor || 60));
+            // 支持 NPC 独立属性面板（与主角 stats 同格式）
+            if (Array.isArray(item.stats) && item.stats.length) {
+                npc.stats = item.stats.map((s, i) => ({
+                    key: String(s.key || s.label || `stat_${i}`).replace(/[^\w\u4e00-\u9fa5-]/g, "_").slice(0, 24),
+                    label: String(s.label || s.key || `属性${i + 1}`).slice(0, 12),
+                    icon: String(s.icon || "✨").slice(0, 4),
+                    value: Math.max(0, Math.min(999, Number(s.value) || 0))
+                }));
+            }
             const nextProfile = item.profile && typeof item.profile === "object" ? item.profile : {};
             const baseProfile = npc.profile && typeof npc.profile === "object" ? npc.profile : {};
             npc.profile = {
@@ -4371,6 +4430,11 @@
             if (!list) return;
             list.innerHTML = "";
             (state.npcs || []).filter((npc) => !StatePatchService.isProtagonistLikeNpc(state, npc)).forEach((npc, idx) => {
+                // 确保每个 NPC 都有 id，旧存档可能缺失
+                if (!npc.id) {
+                    npc.id = `npc_${String(npc.name || idx).replace(/[^\w\u4e00-\u9fa5]/g, "_")}_${idx}`;
+                    StateService.save();
+                }
                 const row = document.createElement("div");
                 row.className = "swipe-row";
                 row.dataset.npcId = String(npc.id || "");
@@ -5611,7 +5675,7 @@
             return [
                 "你必须输出可直接渲染的 HTML 卡片，且最外层必须是 class=\"ai-beauty-card\" 的 article/section/div。",
                 "卡片内部需包含：时间、状态变化、剧情正文、（AI想法）以及 1-3 条编号选项。",
-                "必须严格参考下方提供的本地模板骨架，尤其保持 ai-beauty-card-body 内 data-block=time/status/event/thought/choices/hint 的层级与命名一致。",
+                "必须严格参考下方提供的本地模板骨架，尤其保持 ai-beauty-card-body 内 data-block=time/status/relations/event/thought/choices/hint 的层级与命名一致。",
                 "若设定存在待玩家选择的开局模式/路线，只能在 choices 中列出，不得替玩家做最终选择。",
                 "状态区必须包含主角状态；若本轮涉及关键NPC变化，状态区需附带NPC状态摘要。",
                 "视觉要求：卡片必须具备色彩丰富且清晰的页游式视觉结构（标题条、信息区、标签/徽章、分隔线、强调块、层次化排版），并与当前设定的时代与题材一致。",
@@ -5625,7 +5689,7 @@
                 "请基于设定与角色档案，输出一张可直接渲染的 HTML 卡片。",
                 "强制要求：最外层必须是 <article class=\"ai-beauty-card\">。",
                 "卡片内必须包含：世界背景简述、主角当前身份与处境、当前时间、关键NPC概览、1-3条编号选项。",
-                "必须严格沿用本地模板骨架的 data-block 结构，不得把 event/status/choices 混成同一区块。",
+                "必须严格沿用本地模板骨架的 data-block 结构，不得把 event/status/relations/choices 混成同一区块。",
                 "若设定存在待玩家选择的开局模式/路线/阵营，请只在选项中列出，不得替玩家代选。"
             ];
         }
@@ -5641,7 +5705,7 @@
             const systemPrompt = [
                 "你是文游HTML卡片模板设计器。",
                 "请仅输出一张可渲染的HTML卡片模板，最外层必须是 class=\"ai-beauty-card\"。",
-                "模板必须严格包含并沿用本地 data-block 结构：time/status/event/thought/choices/hint。",
+                "模板必须严格包含并沿用本地 data-block 结构：time/status/relations/event/thought/choices/hint。",
                 "内容使用中性占位文案，不要写具体剧情。",
                 `你必须严格按“美化设定”设计视觉：主色/辅色/背景材质/装饰元素/字体风格必须和美化设定一致，不得使用通用默认风格。`,
                 isDark
@@ -6933,6 +6997,20 @@
                                 status: { type: "string" },
                                 mood: { type: "string" },
                                 traits: { type: "string" },
+                                stats: {
+                                    type: "array",
+                                    items: {
+                                        type: "object",
+                                        additionalProperties: false,
+                                        properties: {
+                                            key: { type: "string" },
+                                            label: { type: "string" },
+                                            icon: { type: "string" },
+                                            value: { type: "integer" }
+                                        },
+                                        required: ["key", "label", "value"]
+                                    }
+                                },
                                 profile: {
                                     type: "object",
                                     additionalProperties: false,
@@ -7361,7 +7439,10 @@
                 UIRenderer.renderSocialList(currentState);
             } catch (error) {
                 if (!uiUnlocked) {
-                UIRenderer.finishStreaming(`⚠️ 连接失败：${error.message}\n\n请检查 API 配置后重试。`);
+                    isGenerating = false;
+                    UIRenderer.setSendingDisabled(false);
+                    uiUnlocked = true;
+                    UIRenderer.finishStreaming(`⚠️ 连接失败：${error.message}\n\n请检查 API 配置后重试。`, { conflictDetected: false });
                 }
             } finally {
                 if (!uiUnlocked) {
@@ -7636,47 +7717,98 @@
             const mem = NpcMemoryService.ensureStore(state, npc.id);
             const tags = mem?.tags || { promises: [], conflicts: [], secrets: [], notes: [] };
             const profile = npc.profile && typeof npc.profile === "object" ? npc.profile : {};
+            const npcStats = Array.isArray(npc.stats) && npc.stats.length ? npc.stats : null;
+
+            const favor = Math.max(0, Math.min(100, Number(npc.favor) || 0));
+            const favorColor = favor >= 70 ? "#2ecc71" : favor >= 40 ? "var(--accent)" : "#e74c3c";
+            const favorLabel = favor >= 80 ? "挚友" : favor >= 60 ? "友好" : favor >= 40 ? "普通" : favor >= 20 ? "疏远" : "敌对";
+
+            // 好感度进度条
+            const favorBar = `
+                <div style="margin:10px 0 4px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                        <span style="font-size:.78rem;color:var(--sub);">好感度</span>
+                        <span style="font-size:.82rem;font-weight:700;color:${favorColor};">${favor} · ${favorLabel}</span>
+                    </div>
+                    <div style="height:6px;border-radius:3px;background:rgba(0,0,0,.08);overflow:hidden;">
+                        <div style="height:100%;width:${favor}%;background:${favorColor};border-radius:3px;transition:width .4s;"></div>
+                    </div>
+                </div>`;
+
+            // 状态标签行
+            const statusTags = [
+                { label: "关系", value: npc.relation || "熟人" },
+                { label: "状态", value: npc.status || "在线" },
+                { label: "心情", value: npc.mood || "平静" },
+                { label: "性别", value: npc.gender || "未知" }
+            ].map((t) => `<span class="status-tag"><strong>${t.label}</strong><em>${MarkdownService.escapeHtml(t.value)}</em></span>`).join("");
+
+            // 属性面板（若有 stats 则显示，否则显示 profile 基础信息）
+            const statsPanel = npcStats
+                ? `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px;">
+                    ${npcStats.map((s) => `
+                        <div style="padding:8px 10px;border-radius:12px;background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(248,240,226,.88));border:1px solid color-mix(in srgb,var(--accent) 18%,transparent);text-align:center;">
+                            <div style="font-size:1.1rem;">${MarkdownService.escapeHtml(s.icon || "✨")}</div>
+                            <div style="font-size:.72rem;color:var(--sub);margin-top:2px;">${MarkdownService.escapeHtml(s.label)}</div>
+                            <div style="font-size:1.1rem;font-weight:800;color:var(--accent-dark);margin-top:2px;">${s.value}</div>
+                        </div>`).join("")}
+                   </div>`
+                : `<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px;">
+                    ${[
+                        { label: "年龄", value: profile.age },
+                        { label: "身份", value: profile.identity || npc.gender },
+                        { label: "居所", value: profile.residence },
+                        { label: "特质", value: npc.traits }
+                    ].map((r) => r.value ? `<div class="list-row" style="margin-bottom:0;flex-direction:column;align-items:flex-start;gap:2px;"><div class="list-sub" style="font-size:.72rem;">${r.label}</div><div class="list-title" style="font-size:.88rem;">${MarkdownService.escapeHtml(r.value)}</div></div>` : "").join("")}
+                   </div>`;
+
+            // profile 详情块
+            const detailRows = [
+                { label: "外貌印象", value: profile.appearance },
+                { label: "性格标签", value: profile.personality },
+                { label: "当前目标", value: profile.goal },
+                { label: "初见印象", value: profile.firstImpression },
+                { label: "隐藏信息", value: profile.secret }
+            ].filter((r) => r.value).map((r) => `
+                <div style="margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--card-soft);border:1px solid color-mix(in srgb,var(--line) 60%,transparent);">
+                    <div style="font-size:.72rem;color:var(--sub);margin-bottom:3px;">${r.label}</div>
+                    <div style="font-size:.86rem;color:var(--text);">${MarkdownService.escapeHtml(r.value)}</div>
+                </div>`).join("");
+
             const listHtml = (arr) => {
                 const a = Array.isArray(arr) ? arr.filter(Boolean) : [];
-                if (!a.length) return "<div class=\"list-sub\">（暂无）</div>";
-                return `<ul style="padding-left:18px; margin:6px 0;">${a.map((x) => `<li>${MarkdownService.escapeHtml(String(x))}</li>`).join("")}</ul>`;
+                if (!a.length) return `<span style="font-size:.8rem;color:var(--sub);">（暂无）</span>`;
+                return `<ul style="padding-left:16px;margin:4px 0;font-size:.84rem;">${a.map((x) => `<li>${MarkdownService.escapeHtml(String(x))}</li>`).join("")}</ul>`;
             };
-            const profileCard = `
-                <div style="border:1px solid color-mix(in srgb, var(--accent) 26%, transparent); border-radius:14px; padding:12px; background:var(--card-soft); box-shadow:0 10px 24px rgba(72,47,20,0.06);">
-                    <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
-                        <span class="status-tag"><strong>关系</strong><em>${MarkdownService.escapeHtml(npc.relation || "熟人")}</em></span>
-                        <span class="status-tag"><strong>好感</strong><em>${MarkdownService.escapeHtml(String(npc.favor ?? 0))}</em></span>
-                        <span class="status-tag"><strong>状态</strong><em>${MarkdownService.escapeHtml(npc.status || "在线")}</em></span>
-                        <span class="status-tag"><strong>心情</strong><em>${MarkdownService.escapeHtml(npc.mood || "平静")}</em></span>
+
+            const memSection = (mem.summary || tags.promises.length || tags.conflicts.length || tags.secrets.length || tags.notes.length)
+                ? `<div style="margin-top:12px;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--accent) 6%,var(--card-soft));border:1px solid color-mix(in srgb,var(--accent) 16%,transparent);">
+                    <div style="font-size:.78rem;font-weight:700;color:var(--accent-dark);margin-bottom:6px;">📝 记忆摘要</div>
+                    ${mem.summary ? `<div style="font-size:.82rem;color:var(--sub);margin-bottom:6px;">${MarkdownService.escapeHtml(mem.summary)}</div>` : ""}
+                    ${tags.promises.length ? `<div style="margin-top:4px;"><span style="font-size:.75rem;font-weight:700;color:var(--accent-dark);">承诺</span>${listHtml(tags.promises)}</div>` : ""}
+                    ${tags.conflicts.length ? `<div style="margin-top:4px;"><span style="font-size:.75rem;font-weight:700;color:#e74c3c;">冲突</span>${listHtml(tags.conflicts)}</div>` : ""}
+                    ${tags.secrets.length ? `<div style="margin-top:4px;"><span style="font-size:.75rem;font-weight:700;color:var(--sub);">秘密</span>${listHtml(tags.secrets)}</div>` : ""}
+                    ${tags.notes.length ? `<div style="margin-top:4px;"><span style="font-size:.75rem;font-weight:700;color:var(--sub);">备注</span>${listHtml(tags.notes)}</div>` : ""}
+                   </div>`
+                : "";
+
+            const desc = `
+                <div style="border-radius:14px;overflow:hidden;border:1px solid color-mix(in srgb,var(--accent) 22%,transparent);background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 8%,var(--card)),var(--card));padding:14px;margin-bottom:10px;">
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+                        <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));display:grid;place-items:center;font-size:26px;color:#fff;flex-shrink:0;box-shadow:0 6px 16px rgba(0,0,0,.12);">🧑</div>
+                        <div>
+                            <div style="font-size:1.1rem;font-weight:800;color:var(--accent-dark);">${MarkdownService.escapeHtml(npc.name)}</div>
+                            <div style="font-size:.8rem;color:var(--sub);margin-top:2px;">${MarkdownService.escapeHtml(npc.relation || "熟人")}${profile.identity ? " · " + MarkdownService.escapeHtml(profile.identity) : ""}</div>
+                        </div>
                     </div>
-                    <div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px;">
-                        <div class="list-row" style="margin-bottom:0;"><div><div class="list-sub">年龄</div><div class="list-title">${MarkdownService.escapeHtml(profile.age || "未知")}</div></div></div>
-                        <div class="list-row" style="margin-bottom:0;"><div><div class="list-sub">身份</div><div class="list-title">${MarkdownService.escapeHtml(profile.identity || npc.gender || "未知")}</div></div></div>
-                        <div class="list-row" style="margin-bottom:0;"><div><div class="list-sub">居所</div><div class="list-title">${MarkdownService.escapeHtml(profile.residence || "未知")}</div></div></div>
-                        <div class="list-row" style="margin-bottom:0;"><div><div class="list-sub">特质</div><div class="list-title">${MarkdownService.escapeHtml(npc.traits || "暂无")}</div></div></div>
-                    </div>
+                    ${favorBar}
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">${statusTags}</div>
+                    ${statsPanel}
                 </div>
+                ${detailRows}
+                ${memSection}
             `;
-            const detailBlock = (label, value) => `
-                <div style="margin-top:8px;">
-                    <strong>${label}</strong>
-                    <div class="list-sub" style="margin-top:4px;">${MarkdownService.escapeHtml(value || "（暂无）")}</div>
-                </div>
-            `;
-            const desc = [
-                profileCard,
-                detailBlock("外貌印象", profile.appearance),
-                detailBlock("性格标签", profile.personality),
-                detailBlock("当前目标", profile.goal),
-                detailBlock("初见印象", profile.firstImpression),
-                detailBlock("隐藏信息", profile.secret),
-                `<div style="margin-top:10px;"><strong>长期记忆摘要</strong><div class="list-sub" style="margin-top:4px;">${MarkdownService.escapeHtml(mem.summary || "（暂无）")}</div></div>`,
-                `<div style="margin-top:8px;"><strong>承诺</strong>${listHtml(tags.promises)}</div>`,
-                `<div style="margin-top:8px;"><strong>冲突点</strong>${listHtml(tags.conflicts)}</div>`,
-                `<div style="margin-top:8px;"><strong>秘密</strong>${listHtml(tags.secrets)}</div>`,
-                `<div style="margin-top:8px;"><strong>备注</strong>${listHtml(tags.notes)}</div>`
-            ].join("");
-            openInfoModal(`NPC：${npc.name}`, desc);
+            openInfoModal(`${npc.name} 的档案`, desc);
         }
         function openNpcChat(npcId) {
             const state = StateService.get();
