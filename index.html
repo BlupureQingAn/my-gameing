@@ -1108,7 +1108,7 @@
 
         <section class="card stats-grid" id="game-stats-card"></section>
 
-        <section id="view-main" class="view-section active">
+        <section id="view-main" class="view-section">
             <section class="card" id="story-board"></section>
         </section>
 
@@ -6228,9 +6228,16 @@
         }
         function switchView(viewId, silent = false) {
             activeView = viewId;
-            document.querySelectorAll(".view-section").forEach((el) => el.classList.remove("active"));
+            const allViews = Array.from(document.querySelectorAll(".view-section"));
+            allViews.forEach((el) => {
+                el.classList.remove("active");
+                el.style.display = "none";
+            });
             const target = document.getElementById(viewId);
-            if (target) target.classList.add("active");
+            if (target) {
+                target.style.display = "block";
+                target.classList.add("active");
+            }
             document.querySelectorAll(".nav-btn, .top-nav-btn").forEach((btn) => {
                 if (btn.dataset.view === viewId) btn.classList.add("active");
                 else btn.classList.remove("active");
