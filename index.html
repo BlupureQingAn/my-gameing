@@ -2718,6 +2718,7 @@
             getDefaultChoices,
             getRequiredBlocks,
             getSkeletonHtml,
+            buildSkeletonStateContext,
             wrapAsHtmlCard
         };
     })();
@@ -3314,44 +3315,36 @@
             ].join("\n");
         }
         function buildStateFactLock(state) {
-            const fact = {
-                protagonist: {
-                    name: state.name,
-                    englishName: state.englishName,
-                    gender: state.gender,
-                    nationality: state.nationality,
-                    location: state.location,
-                    ageMonths: state.age,
-                    ageYears: Math.floor((state.age || 0) / 12)
-                },
-                time: {
-                    year: state.currentYear,
-                    month: state.currentMonth,
-                    day: state.currentDay,
-                    weekdayIndex: state.weekdayIndex
-                },
-                stats: state.stats,
-                npcs: (state.npcs || []).map((n) => ({
-                    id: n.id,
-                    name: n.name,
-                    relation: n.relation,
-                    favor: n.favor,
-                    status: n.status,
-                    mood: n.mood
-                })),
-                inventory: (state.inventory || []).map((i) => ({
-                    id: i.id,
-                    name: i.name,
-                    count: i.count,
-                    effect: i.effect
-                }))
-            };
+            const protagonist = [
+                `姓名:${state.name}`,
+                state.englishName ? `英文名:${state.englishName}` : "",
+                `性别:${state.gender}`,
+                state.nationality ? `国籍:${state.nationality}` : "",
+                state.location ? `地点:${state.location}` : "",
+                `年龄:${Math.floor((state.age || 0) / 12)}岁`
+            ].filter(Boolean).join("，");
+
+            const time = [
+                state.currentYear ? `${state.currentYear}年` : "",
+                state.currentMonth ? `${state.currentMonth}月` : "",
+                state.currentDay ? `${state.currentDay}日` : "",
+                state.timeEra || ""
+            ].filter(Boolean).join("");
+
+            const statsText = (Array.isArray(state.stats) && state.stats.length)
+                ? state.stats.map((s) => `${s.label}:${s.value}`).join("，")
+                : "无";
+
+            const npcText = (Array.isArray(state.npcs) && state.npcs.length)
+                ? state.npcs.map((n) => `${n.name}(${n.relation},好感${n.favor},${n.status || "在线"})`).join("；")
+                : "无";
+
             return [
-                "【角色事实锁定块（高优先级）】",
-                "以下JSON中的字段是当前已确认事实；如要修改，必须在回复中附带 state-patch 结构化变更块：",
-                "```json",
-                JSON.stringify(fact, null, 2),
-                "```"
+                "【事实锁定（高优先级，修改须附 state-patch）】",
+                `主角：${protagonist}`,
+                `时间：${time || "未设定"}`,
+                `属性：${statsText}`,
+                `NPC：${npcText}`
             ].join("\n");
         }
         return { getResponseRules, buildStateFactLock };
@@ -3900,9 +3893,11 @@
             if (STAT_ALIAS_MAP[normalized]) return true;
             return /^(健康|体力|生命|心情|情绪|精神|学识|智力|智慧|魅力|声望|名望|财富|金钱|银两|资产|武力|战力|修为|灵力|权势|成长|亲缘|人脉|事业)$/.test(text);
         }
-        function extractRelevantText(text = "") {
+        function extractRelevantText(text = "", isStreaming = false) {
             const raw = String(text || "");
             if (!raw) return "";
+            // 流式阶段 HTML 不完整，跳过 DOM 解析直接返回原文
+            if (isStreaming) return raw;
             const normalized = HtmlCardService.normalizeHtmlCard(raw);
             if (!HtmlCardService.isRenderableHtmlCard(normalized)) return raw;
             try {
@@ -4030,8 +4025,8 @@
             map.forEach((value) => out.push(value));
             return out;
         }
-        function extractFromAiCard(htmlText = "") {
-            const relevantText = extractRelevantText(htmlText);
+        function extractFromAiCard(htmlText = "", isStreaming = false) {
+            const relevantText = extractRelevantText(htmlText, isStreaming);
             const parsed = parseStatusLines(relevantText);
             const textStats = parseStatPairsFromText(relevantText);
             return {
@@ -4088,8 +4083,8 @@
             }
             return changed;
         }
-        function syncFromAiText(state, text) {
-            const snapshot = extractFromAiCard(text);
+        function syncFromAiText(state, text, isStreaming = false) {
+            const snapshot = extractFromAiCard(text, isStreaming);
             return applySnapshot(state, snapshot);
         }
         return { syncFromAiText, extractFromAiCard, applySnapshot };
@@ -4965,6 +4960,19 @@
 
         return { ensureStore, formatForPrompt, updateAfterExchange };
     })();
+
+    // 模块级 NPC 查找工具函数，供 NpcChatService 等早期模块使用
+    function findNpcByRef(state, npcRef) {
+        const ref = String(npcRef || "").trim();
+        const npcs = Array.isArray(state?.npcs) ? state.npcs : [];
+        if (!ref) return null;
+        const refLower = ref.toLowerCase();
+        return npcs.find((n) => String(n.id || "").trim() === ref)
+            || npcs.find((n) => String(n.name || "").trim() === ref)
+            || npcs.find((n) => String(n.id || "").trim().toLowerCase() === refLower)
+            || npcs.find((n) => String(n.name || "").trim().toLowerCase() === refLower)
+            || null;
+    }
 
     const NpcChatService = (() => {
         function getChatKey(state, npcId) {
@@ -5862,7 +5870,7 @@
                         if (Date.now() - lastLivePanelSyncAt >= 240) {
                             const liveState = StateService.get();
                             TimeSyncService.syncFromAiText(liveState, txt);
-                            const changed = AiPanelSyncService.syncFromAiText(liveState, txt);
+                            const changed = AiPanelSyncService.syncFromAiText(liveState, txt, true);
                             if (changed) UIRenderer.renderTop(liveState);
                             lastLivePanelSyncAt = Date.now();
                         }
@@ -5928,20 +5936,107 @@
         return { start };
     })();
 
-    const PromptComposerService = (() => {
-        function compactPromptLine(text, maxLen = 220) {
-            const normalized = String(text || "").replace(/\s+/g, " ").trim();
-            if (!normalized) return "";
-            return normalized.length > maxLen ? `${normalized.slice(0, maxLen)}…` : normalized;
+    const HistoryCompressorService = (() => {
+        // 从 HTML 卡片中提取纯文本摘要（只保留汉字内容，丢弃所有标签和代码）
+        function extractTextFromHtml(html) {
+            const raw = String(html || "");
+            if (!raw.includes("<")) return raw;
+            // 去掉 style/script 块
+            const stripped = raw
+                .replace(/<style[\s\S]*?<\/style>/gi, "")
+                .replace(/<script[\s\S]*?<\/script>/gi, "")
+                .replace(/```[\s\S]*?```/g, "")
+                // 去掉所有 HTML 标签
+                .replace(/<[^>]+>/g, " ")
+                // 合并空白
+                .replace(/\s+/g, " ")
+                .trim();
+            // 只保留中文、数字、常用标点，过滤掉残留的 CSS/JS 字符
+            return stripped
+                .replace(/[a-zA-Z_\-:#;{}()[\]@%&=+*|\\/<>^~`'"]/g, " ")
+                .replace(/\s+/g, " ")
+                .trim()
+                .slice(0, 300);
         }
+
+        // 压缩单条历史记录为简短摘要
+        function compressEntry(item, maxLen = 200) {
+            const raw = String(item.text || "");
+            const isHtml = raw.includes("<article") || raw.includes("ai-beauty-card");
+            const text = isHtml ? extractTextFromHtml(raw) : raw.replace(/\s+/g, " ").trim();
+            return text.length > maxLen ? text.slice(0, maxLen) + "…" : text;
+        }
+
+        // 构建压缩后的主线历史（最近 N 轮，越近越详细）
+        function buildCompressedHistory(state, opts = {}) {
+            const {
+                totalRounds = 8,   // 保留最近几轮对话
+                recentFull = 3,    // 最近几轮保留较长摘要
+                olderMax = 80,     // 较早轮次的最大字符数
+                recentMax = 200    // 最近轮次的最大字符数
+            } = opts;
+
+            const history = Array.isArray(state.history) ? state.history : [];
+            const entries = history.slice(-totalRounds * 2); // user+ai 各算一条
+
+            return entries.map((item, idx) => {
+                const isRecent = idx >= entries.length - recentFull * 2;
+                const maxLen = isRecent ? recentMax : olderMax;
+                const role = item.role === "user" ? "玩家" : "AI";
+                const summary = compressEntry(item, maxLen);
+                return `${role}：${summary}`;
+            }).join("\n");
+        }
+
+        // 构建人物关系快照（比 buildStateFactLock 更紧凑）
+        function buildRelationSnapshot(state) {
+            const npcs = Array.isArray(state.npcs) ? state.npcs : [];
+            if (!npcs.length) return "";
+            const lines = npcs.slice(0, 6).map((n) => {
+                const favor = `好感${n.favor ?? "?"}`;
+                const mood = n.mood ? `/${n.mood}` : "";
+                const traits = n.traits ? `，${n.traits.slice(0, 16)}` : "";
+                return `${n.name}（${n.relation}·${n.gender || "?"}·${favor}${mood}${traits}）`;
+            });
+            return `【人物关系】\n${lines.join("；")}`;
+        }
+
+        // 构建 NPC 近期对话摘要（只取最有信息量的部分）
+        function buildNpcSnapshot(state, opts = {}) {
+            const { npcLimit = 4, msgLimit = 2 } = opts;
+            const npcs = Array.isArray(state.npcs) ? state.npcs : [];
+            const lines = [];
+            npcs.slice(0, npcLimit).forEach((npc) => {
+                const mem = NpcMemoryService.ensureStore(state, npc.id);
+                const chatList = (state.npcChats || {})[String(npc.id || npc.name || "")] || [];
+                const recent = chatList.slice(-msgLimit)
+                    .map((m) => `${m.from === "me" ? "玩家" : npc.name}：${String(m.text || "").replace(/\s+/g, " ").slice(0, 60)}`)
+                    .join(" | ");
+                const memNote = mem?.summary ? `记忆：${mem.summary.slice(0, 60)}` : "";
+                const parts = [recent, memNote].filter(Boolean).join(" | ");
+                if (parts) lines.push(`${npc.name}·${npc.relation}：${parts}`);
+            });
+            return lines.length ? `【NPC近况】\n${lines.join("\n")}` : "";
+        }
+
+        // 主入口：组装完整的压缩历史 prompt
+        function build(state, opts = {}) {
+            const parts = [];
+            const history = buildCompressedHistory(state, opts);
+            if (history) parts.push(`【近期剧情】\n${history}`);
+            const relations = buildRelationSnapshot(state);
+            if (relations) parts.push(relations);
+            const npcSnap = buildNpcSnapshot(state, opts);
+            if (npcSnap) parts.push(npcSnap);
+            return parts.join("\n\n");
+        }
+
+        return { build, extractTextFromHtml, buildCompressedHistory, buildRelationSnapshot, buildNpcSnapshot };
+    })();
+
+    const PromptComposerService = (() => {
         function buildRecentHistory(state) {
-            const main = (state.history || [])
-                .slice(-12)
-                .map((item) => `${item.role === "user" ? "玩家" : "系统"}(${item.date})：${compactPromptLine(item.text, 240)}`)
-                .join("\n");
-            const npcDigest = NpcChatService.buildNpcDigestForMain(state);
-            if (!npcDigest) return main;
-            return `${main}\n\n【NPC对话摘要（用于保持主线一致性）】\n${npcDigest}`;
+            return HistoryCompressorService.build(state);
         }
         function buildRuntimeContext(state) {
             const statsText = (Array.isArray(state.stats) && state.stats.length)
@@ -5969,6 +6064,13 @@
                 ? HtmlCardTemplateService.getRichThemeName()
                 : beautyCardSetting;
             const isDark = ThemeService.getMode() === "dark";
+            // 只输出结构约束说明，不输出完整骨架 HTML（避免 prompt 过长）
+            const { statusPanelLabel, tagsHtml } = HtmlCardTemplateService.buildSkeletonStateContext(state);
+            const structureHint = [
+                `data-block 顺序：time → status（含"${statusPanelLabel}"属性面板 + 标签"${tagsHtml}"）→ relations（人物关系）→ event（剧情正文）→ thought（AI想法）→ choices（3个选项）→ hint`,
+                "最外层：<article class=\"ai-beauty-card wenyou-card\">，body 层：class=\"ai-beauty-card-body\"",
+                "每个 data-block 必须是 ai-beauty-card-body 的直接子节点，不得嵌套"
+            ].join("\n");
             return [
                 "【美化卡片强制规则】",
                 `当前美化卡片设定：${normalizedTheme}`,
@@ -5976,8 +6078,8 @@
                     ? "当前为暗夜模式：必须输出透明背景/半透明玻璃感的深色卡片（非纯黑实心底），文字需高对比易读。"
                     : "当前为亮色模式：可使用温暖或高饱和视觉，但仍需保证可读性。",
                 ...PromptRulesRegistry.getBeautyCoreRules(),
-                "以下是必须参考的本地模板骨架（直接按此结构生成，不要改动 ai-beauty-card-body 内 data-block 命名和顺序）：",
-                HtmlCardTemplateService.getSkeletonHtml(isDark ? "dark" : "light", state)
+                "【卡片结构约束（必须严格遵守）】",
+                structureHint
             ].join("\n");
         }
         function buildSystemPrompt({ scenarioSpec, builtinRules, stateFactLock, runtimeContext, beautyRules }) {
@@ -6229,24 +6331,25 @@
         async function streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken, extraBody = null, cardId = "" }) {
                 const payloadBody = buildExtraBody(extraBody, cardId);
                 const controller = new AbortController();
+                // 超时保护整个请求生命周期（含流读取阶段）
                 const timer = setTimeout(() => controller.abort(`stream timeout ${REQUEST_TIMEOUT_MS}ms`), REQUEST_TIMEOUT_MS);
                 let response;
                 try {
-                    response = await fetch(fetchUrl, {
+                response = await fetch(fetchUrl, {
                         method: "POST",
                         headers,
                         body: JSON.stringify({ model, messages, stream: true, temperature, ...payloadBody }),
                         signal: controller.signal
                     });
                 } catch (e) {
+                    clearTimeout(timer);
                     if (e?.name === "AbortError") {
                         throw createHttpError(408, `请求超时（>${REQUEST_TIMEOUT_MS / 1000}s）`, { endpoint: fetchUrl });
                     }
                     throw e;
-                } finally {
-                    clearTimeout(timer);
                 }
             if (!response.ok) {
+                clearTimeout(timer);
                 const snippet = await readResponseSnippet(response);
                 throw createHttpError(response.status, `HTTP ${response.status}`, {
                     responseSnippet: snippet,
@@ -6258,8 +6361,18 @@
                 let tail = "";
             let fullText = "";
             let stopRequested = false;
+            try {
                 while (true) {
-                    const { done, value } = await reader.read();
+                    let chunk;
+                    try {
+                        chunk = await reader.read();
+                    } catch (e) {
+                        if (e?.name === "AbortError") {
+                            throw createHttpError(408, `流读取超时（>${REQUEST_TIMEOUT_MS / 1000}s）`, { endpoint: fetchUrl });
+                        }
+                        throw e;
+                    }
+                    const { done, value } = chunk;
                     if (done) break;
                     tail += decoder.decode(value, { stream: true });
                     const lines = tail.split("\n");
@@ -6288,6 +6401,10 @@
                     }
                     break;
                 }
+            }
+            } finally {
+                clearTimeout(timer);
+                try { reader.cancel(); } catch (e) {}
             }
             return EndMarkerService.trimToMarker(fullText);
         }
@@ -7368,17 +7485,17 @@
             isGenerating = true;
             UIRenderer.setSendingDisabled(true);
             UIRenderer.appendMessage("ai", "正在生成剧情中...", Utils.nowDateStr(state), true);
-            const recentHistory = PromptPolicyService.buildRecentHistory(state);
-            const scenarioSpec = SettingsService.getScenarioTextForModel();
-            const beautyCardSetting = SettingsService.getBeautyCardSetting();
-            const beautyModeEnabled = HtmlCardService.isBeautyModeEnabled(beautyCardSetting);
-            const policyConfig = SettingsService.getChatPolicyConfig();
-            const systemPrompt = PromptPolicyService.buildSystemPrompt({ state, scenarioSpec, beautyCardSetting, beautyModeEnabled });
-            const mainUserPrompt = PromptPolicyService.buildMainUserPrompt(userText, recentHistory);
             let uiUnlocked = false;
             let lastLivePanelSyncAt = 0;
 
             try {
+                const recentHistory = PromptPolicyService.buildRecentHistory(state);
+                const scenarioSpec = SettingsService.getScenarioTextForModel();
+                const beautyCardSetting = SettingsService.getBeautyCardSetting();
+                const beautyModeEnabled = HtmlCardService.isBeautyModeEnabled(beautyCardSetting);
+                const policyConfig = SettingsService.getChatPolicyConfig();
+                const systemPrompt = PromptPolicyService.buildSystemPrompt({ state, scenarioSpec, beautyCardSetting, beautyModeEnabled });
+                const mainUserPrompt = PromptPolicyService.buildMainUserPrompt(userText, recentHistory);
                 const rawText = (await AIRequestService.streamCompletionWithFallback({
                     config,
                     fetchUrl,
@@ -7395,7 +7512,7 @@
                         if (Date.now() - lastLivePanelSyncAt >= 240) {
                             const liveState = StateService.get();
                             TimeSyncService.syncFromAiText(liveState, visibleText);
-                            const changed = AiPanelSyncService.syncFromAiText(liveState, visibleText);
+                            const changed = AiPanelSyncService.syncFromAiText(liveState, visibleText, true);
                             if (changed) UIRenderer.renderTop(liveState);
                             lastLivePanelSyncAt = Date.now();
                         }
@@ -7695,17 +7812,6 @@
             StateService.save();
             renderAll();
             switchView("view-inventory");
-        }
-        function findNpcByRef(state, npcRef) {
-            const ref = String(npcRef || "").trim();
-            const npcs = Array.isArray(state?.npcs) ? state.npcs : [];
-            if (!ref) return null;
-            const refLower = ref.toLowerCase();
-            return npcs.find((n) => String(n.id || "").trim() === ref)
-                || npcs.find((n) => String(n.name || "").trim() === ref)
-                || npcs.find((n) => String(n.id || "").trim().toLowerCase() === refLower)
-                || npcs.find((n) => String(n.name || "").trim().toLowerCase() === refLower)
-                || null;
         }
         function openNpcProfile(npcId) {
             const state = StateService.get();
