@@ -654,7 +654,8 @@
             cursor: pointer;
         }
 
-        .npc-panel-card {
+        .npc-panel-card,
+        .inventory-card {
             display: flex;
             justify-content: space-between;
             align-items: stretch;
@@ -665,27 +666,39 @@
             margin-bottom: 8px;
             background: linear-gradient(135deg, #fffdf8 0%, #f9f1e4 100%);
             box-shadow: 0 2px 10px rgba(108, 79, 49, 0.08);
+            position: relative;
+            overflow: hidden;
         }
 
-        .npc-panel-main {
+        .npc-panel-main,
+        .inventory-card-main {
             min-width: 0;
             flex: 1;
+            transition: transform 0.2s ease;
         }
 
-        .npc-panel-title {
+        .npc-panel-card.swiped .npc-panel-main,
+        .inventory-card.swiped .inventory-card-main {
+            transform: translateX(-110px);
+        }
+
+        .npc-panel-title,
+        .inventory-card-title {
             font-size: 0.9rem;
             color: #714f2c;
             font-weight: 800;
         }
 
-        .npc-panel-tags {
+        .npc-panel-tags,
+        .inventory-card-tags {
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
             margin-top: 6px;
         }
 
-        .npc-tag {
+        .npc-tag,
+        .inventory-tag {
             display: inline-flex;
             align-items: center;
             padding: 2px 8px;
@@ -696,7 +709,8 @@
             border: 1px solid #e7ceb1;
         }
 
-        .npc-panel-actions {
+        .npc-panel-actions,
+        .inventory-card-actions {
             display: flex;
             flex-direction: column;
             gap: 6px;
@@ -734,7 +748,9 @@
             transform: translateX(-110px);
         }
 
-        .scenario-card-actions {
+        .scenario-card-actions,
+        .inventory-card-actions,
+        .npc-panel-actions {
             position: absolute;
             top: 0;
             right: 0;
@@ -748,7 +764,9 @@
             transition: opacity 0.2s ease;
         }
 
-        .scenario-card.swiped .scenario-card-actions {
+        .scenario-card.swiped .scenario-card-actions,
+        .inventory-card.swiped .inventory-card-actions,
+        .npc-panel-card.swiped .npc-panel-actions {
             opacity: 1;
             pointer-events: auto;
         }
@@ -1035,7 +1053,7 @@
         <section id="view-scenario-editor" class="view-section">
             <section class="card">
                 <div class="list-title">🛠️ 设定卡片编辑页</div>
-                <div class="list-sub">可编辑当前卡片名称、文游设定、美化设定（用于 HTML 卡片风格）</div>
+                <div class="list-sub">可编辑当前卡片名称、美化设定与文游设定；首张 HTML 卡片会优先参考美化设定和本地模板结构</div>
                 <input id="scenario-title-input" type="text" placeholder="卡片标题（可自定义，含置顶卡片）">
                 <input id="scenario-theme-input" type="text" placeholder="美化设定（例如：奶油暖色玻璃、古风卷轴）">
                 <textarea id="scenario-editor" class="scenario-editor" placeholder="在这里编辑当前卡片的文游设定"></textarea>
@@ -1044,6 +1062,10 @@
                 <input type="text" id="card-api-url" placeholder="卡片上游API URL（可选）">
                 <input type="password" id="card-api-key" placeholder="卡片 API Key（可选）">
                 <input type="text" id="card-api-model" placeholder="卡片模型名（可选）">
+                <label class="list-sub" style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+                    <input type="checkbox" id="card-thinking-enabled">
+                    本卡调用 AI 时开启思考模式
+                </label>
                 <div class="setting-actions">
                     <button class="mini-btn primary" onclick="saveScenarioCard()">保存当前卡片</button>
                     <button class="mini-btn ghost" onclick="importScenarioTxt()">导入设定TXT</button>
@@ -1061,8 +1083,8 @@
                 <input type="password" id="user-api-key" placeholder="用户 API Key">
                 <input type="text" id="user-api-model" placeholder="用户模型名 (例如: gpt-4o-mini)">
                 <label class="list-sub" style="display:flex; align-items:center; gap:8px; margin-top:4px;">
-                    <input type="checkbox" id="lock-first-card-skeleton">
-                    锁定首条卡片视觉骨架（后续回合继承首条 HTML 卡片版式）
+                    <input type="checkbox" id="global-thinking-enabled">
+                    默认调用 AI 时开启思考模式
                 </label>
                 <div class="setting-actions">
                     <button class="mini-btn primary" onclick="saveUserApiSettings()">保存设置</button>
@@ -1574,8 +1596,9 @@
                 conflictRetryCount: normalizeNumber(source.conflictRetryCount, defaults.conflictRetryCount, 0, 5, true),
                 htmlRetryCount: normalizeNumber(source.htmlRetryCount, defaults.htmlRetryCount, 0, 5, true),
                 enableConflictDetection: source.enableConflictDetection !== false,
-                enableHtmlCardForce: true, // 全局强制 HTML 卡片输出
-                lockFirstCardSkeleton: source.lockFirstCardSkeleton !== false
+                enableHtmlCardForce: source.enableHtmlCardForce !== false,
+                lockFirstCardSkeleton: source.lockFirstCardSkeleton !== false,
+                globalThinkingEnabled: source.globalThinkingEnabled !== false
             };
         }
         function load() {
@@ -1589,7 +1612,12 @@
             StorageService.writeJson(AppConfig.storageKeys.chatPolicyConfig, next);
             return next;
         }
-        return { load, save, normalize };
+        function getThinkingForCard(cardApi) {
+            if (cardApi && typeof cardApi === "object" && cardApi.thinking) return cardApi.thinking;
+            const policy = load();
+            return policy.globalThinkingEnabled === false ? { type: "disabled" } : { type: "enabled" };
+        }
+        return { load, save, normalize, getThinkingForCard };
     })();
 
     const IdentityService = (() => {
@@ -1789,7 +1817,7 @@
             gameState.chatMemory.push({ role, content });
         }
 
-        return { init, get, save, resetWithPreset, advanceMonthIfNeeded, jumpWeek, pushHistory, pushChat };
+        return { init, get, save, resetWithPreset, advanceMonthIfNeeded, jumpWeek, pushHistory, pushChat, dedupeNpcs };
     })();
 
     const MarkdownService = (() => {
@@ -1893,17 +1921,33 @@
     })();
 
     const HtmlFallbackService = (() => {
+        function splitTextAndChoices(text) {
+            const lines = String(text || "").replace(/\r\n/g, "\n").split("\n");
+            const choiceStart = lines.findIndex((line) => /^\s*\d+[.)、]\s+/.test(line));
+            if (choiceStart < 0) return { body: String(text || "").trim(), choices: [] };
+            const body = lines.slice(0, choiceStart).join("\n").trim();
+            const choices = lines.slice(choiceStart).map((line) => line.trim()).filter((line) => /^\s*\d+[.)、]\s+/.test(line)).slice(0, 3);
+            return { body, choices };
+        }
         function wrapAsHtmlCard(theme, bodyText) {
             const safeTheme = MarkdownService.escapeHtml(theme || "云吞页游沉浸风");
-            const bodyHtml = MarkdownService.render(bodyText || "剧情推进中...");
+            const normalizedText = String(bodyText || "剧情推进中...").replace(/```[\s\S]*?```/g, "").trim();
+            const parts = splitTextAndChoices(normalizedText);
+            const bodyHtml = MarkdownService.render(parts.body || normalizedText || "剧情推进中...");
+            const choiceLabels = parts.choices.length ? parts.choices : ["继续观察局势", "与关键人物交流", "推进当前主线"];
+            const choiceHtml = choiceLabels.map((choice, idx) => {
+                const label = String(choice).replace(/^\s*\d+[.)、]\s*/, "").trim();
+                return `<div class="wy-option-btn" data-choice="${MarkdownService.escapeHtml(label)}"><span class="wy-opt-icon">${idx + 1}</span>${idx + 1}. ${MarkdownService.escapeHtml(label)}</div>`;
+            }).join("");
+            const statsHtml = `<div class="wy-stat-item"><span>📌</span> 状态: <span class="wy-stat-value">待更新</span></div>`;
             return [
                 `<article class="ai-beauty-card wenyou-card" data-theme="${safeTheme}" style="--theme-primary:#6a11cb;--theme-secondary:#2575fc;--card-bg:linear-gradient(to bottom right,#ffffff,#f0f4fd);--text-main:#2c3e50;--text-muted:#7f8c8d;--font-family:'PingFang SC','Microsoft YaHei',sans-serif;--border-radius:12px;--card-shadow:0 10px 25px rgba(106,17,203,0.15);max-width:500px;margin:8px auto;background:var(--card-bg);border-radius:var(--border-radius);box-shadow:var(--card-shadow);font-family:var(--font-family);color:var(--text-main);overflow:hidden;border-top:4px solid var(--theme-primary);padding:20px;box-sizing:border-box;">`,
                 `<style>.wenyou-card .wy-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}.wenyou-card .wy-header-left{display:flex;align-items:center;gap:12px}.wenyou-card .wy-avatar{font-size:28px;color:var(--theme-primary)}.wenyou-card .wy-role-name{font-size:1.1rem;font-weight:700;color:var(--theme-primary);margin:0;line-height:1.2}.wenyou-card .wy-scene{font-size:.8rem;color:var(--text-muted);margin-top:2px}.wenyou-card .wy-divider{display:flex;align-items:center;text-align:center;margin:15px 0;color:var(--theme-secondary)}.wenyou-card .wy-divider:before,.wenyou-card .wy-divider:after{content:'';flex:1;border-bottom:1px dashed var(--theme-secondary);opacity:.4}.wenyou-card .wy-divider-icon{padding:0 10px;font-size:.9rem}.wenyou-card .wy-content{font-size:.95rem;line-height:1.6;margin-bottom:14px;text-align:justify}.wenyou-card .wy-stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;background:rgba(128,128,128,.05);padding:10px;border-radius:8px;border-left:3px solid var(--theme-secondary)}.wenyou-card .wy-stat-item{font-size:.85rem;background:rgba(255,255,255,.55);padding:4px 8px;border-radius:4px;display:flex;align-items:center;gap:4px}.wenyou-card .wy-stat-value{font-weight:700;color:var(--theme-primary)}.wenyou-card .wy-options{display:flex;flex-direction:column;gap:10px}.wenyou-card .wy-option-btn{display:flex;align-items:center;padding:12px 15px;background:transparent;border:1px solid var(--theme-primary);color:var(--theme-primary);border-radius:var(--border-radius);font-size:.95rem;cursor:pointer;transition:all .2s;text-decoration:none}.wenyou-card .wy-option-btn:hover{background:var(--theme-primary);color:#fff;transform:translateX(5px)}.wenyou-card .wy-opt-icon{margin-right:10px;font-size:1.1rem}.wenyou-card .wy-footer-decor{text-align:center;margin-top:16px;font-size:1.3rem;color:var(--theme-secondary);opacity:.35;letter-spacing:4px}</style>`,
                 `<header class="wy-header ai-beauty-card-title"><div class="wy-header-left"><div class="wy-avatar">🎭</div><div class="wy-title-box"><h3 class="wy-role-name">${safeTheme}</h3><span class="wy-scene" data-block="time">当前回合</span></div></div><div class="wy-top-decor">✦</div></header>`,
                 `<div class="wy-divider"><span class="wy-divider-icon">✧</span></div>`,
                 `<section class="wy-content ai-beauty-card-body" data-block="event">${bodyHtml}</section>`,
-                `<section class="wy-stats" data-block="status"><div class="wy-stat-item"><span>📌</span> 状态: <span class="wy-stat-value">待更新</span></div></section>`,
-                `<section class="wy-options" data-block="choices"><div class="wy-option-btn" data-choice="继续观察局势"><span class="wy-opt-icon">①</span>1. 继续观察局势</div><div class="wy-option-btn" data-choice="与关键人物交流"><span class="wy-opt-icon">②</span>2. 与关键人物交流</div></section>`,
+                `<section class="wy-stats" data-block="status">${statsHtml}</section>`,
+                `<section class="wy-options" data-block="choices">${choiceHtml}</section>`,
                 `<div class="wy-footer-decor" data-block="hint">✧ ✦ ✧ 提示：可直接点击上方按钮继续剧情 ✧ ✦ ✧</div>`,
                 `</article>`
             ].join("");
@@ -2476,10 +2520,43 @@
             if (n) return n.id;
             return "";
         }
+        function dedupeNpcs(state) {
+            if (!Array.isArray(state.npcs)) state.npcs = [];
+            const seen = new Map();
+            const merged = [];
+            state.npcs.forEach((npc) => {
+                const id = String(npc?.id || "").trim();
+                const name = String(npc?.name || "").trim();
+                const key = id || name;
+                if (!key) return;
+                if (seen.has(key)) {
+                    const target = seen.get(key);
+                    Object.assign(target, npc);
+                    return;
+                }
+                const next = {
+                    id: id || `npc_${merged.length + 1}`,
+                    name: name || "未命名NPC",
+                    gender: String(npc?.gender || "未知").slice(0, 24),
+                    relation: String(npc?.relation || "熟人").slice(0, 24),
+                    favor: Math.max(0, Math.min(100, Number(npc?.favor) || 60)),
+                    status: String(npc?.status || "在线").slice(0, 24),
+                    mood: String(npc?.mood || "平静").slice(0, 24),
+                    traits: String(npc?.traits || "").slice(0, 80)
+                };
+                seen.set(key, next);
+                merged.push(next);
+            });
+            state.npcs = merged;
+            return merged;
+        }
         function upsertNpc(state, item = {}) {
             if (!Array.isArray(state.npcs)) state.npcs = [];
             const id = String(item.id || normalizeNpcIdByName(state, item.name) || (`npc_${Date.now()}_${Math.floor(Math.random() * 999)}`)).replace(/[^\w-]/g, "_");
             let npc = state.npcs.find((n) => n.id === id);
+            if (!npc && item.name) {
+                npc = state.npcs.find((n) => String(n.name || "") === String(item.name || ""));
+            }
             if (!npc) {
                 npc = { id, name: "未命名NPC", gender: "未知", relation: "熟人", favor: 60, status: "在线", mood: "平静", traits: "" };
                 state.npcs.push(npc);
@@ -2487,6 +2564,7 @@
             const fields = ["name", "gender", "relation", "status", "mood", "traits"];
             fields.forEach((k) => { if (item[k] !== undefined) npc[k] = String(item[k]).slice(0, 24); });
             if (item.favor !== undefined) npc.favor = Math.max(0, Math.min(100, Number(item.favor) || npc.favor || 60));
+            dedupeNpcs(state);
             return npc;
         }
         function upsertInventory(state, item = {}) {
@@ -2545,6 +2623,7 @@
             }
             if (Array.isArray(patch.npcs)) {
                 patch.npcs.forEach((it) => upsertNpc(state, it || {}));
+                dedupeNpcs(state);
                 state.npcProfiles = Utils.deepClone(state.npcs || []);
                 changed = true;
             }
@@ -2840,9 +2919,25 @@
             const box = document.getElementById("game-stats-card");
             if (!box) return;
             const stats = Array.isArray(state.stats) ? state.stats : [];
-            box.innerHTML = stats.map((s) => `
-                <div class="stat-item"><span>${Number(s.value || 0)}</span>${s.label} ${s.icon}</div>
-            `).join("");
+            if (!stats.length) {
+                box.innerHTML = `<div class="list-sub">当前暂无可视化状态数据，AI 初始化后会自动同步到这里。</div>`;
+                return;
+            }
+            box.innerHTML = stats.map((s) => {
+                const value = Math.max(0, Math.min(999, Number(s.value || 0)));
+                const fill = Math.max(8, Math.min(100, value));
+                return `
+                    <div class="stat-item" style="display:flex;flex-direction:column;align-items:stretch;gap:6px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                            <span style="font-weight:700;">${s.icon || "✨"} ${MarkdownService.escapeHtml(String(s.label || "状态"))}</span>
+                            <span style="font-size:.95rem;font-weight:800;color:#6a4f31;">${value}</span>
+                        </div>
+                        <div style="height:8px;background:rgba(106,79,49,.12);border-radius:999px;overflow:hidden;">
+                            <div style="width:${fill}%;height:100%;background:linear-gradient(90deg,#d27e4d,#f2c07d);border-radius:999px;"></div>
+                        </div>
+                    </div>
+                `;
+            }).join("");
         }
         function scrollToBottom() {
             const content = document.getElementById("main-content");
@@ -2983,15 +3078,26 @@
             list.innerHTML = "";
             (state.inventory || []).forEach((item) => {
                 const row = document.createElement("div");
-                row.className = "list-row";
+                row.className = "inventory-card";
+                row.dataset.itemId = item.id;
                 row.innerHTML = `
-                    <div>
-                        <div class="list-title">${item.name} ×${item.count}</div>
-                        <div class="list-sub">${item.type}｜${item.effect}</div>
+                    <div class="inventory-card-main">
+                        <div class="inventory-card-title">${item.name} ×${item.count}</div>
+                        <div class="inventory-card-tags">
+                            <span class="inventory-tag">${item.type}</span>
+                            <span class="inventory-tag">${item.effect}</span>
+                        </div>
                     </div>
-                    <button class="tiny-btn">查看/使用</button>
+                    <div class="inventory-card-actions">
+                        <button class="tiny-btn" data-op="use">查看/使用</button>
+                        <button class="tiny-btn" data-op="del">删除</button>
+                    </div>
                 `;
-                row.querySelector("button").onclick = () => Controller.openItemModal(item.id);
+                row.querySelector('[data-op="use"]').onclick = () => Controller.openItemModal(item.id);
+                row.querySelector('[data-op="del"]').onclick = () => Controller.deleteInventoryItem(item.id);
+                CardInteractionService.bindSwipeAndSort(row, {
+                    onDelete: () => Controller.deleteInventoryItem(item.id)
+                });
                 list.appendChild(row);
             });
         }
@@ -3002,6 +3108,7 @@
             (state.npcs || []).forEach((npc) => {
                 const row = document.createElement("div");
                 row.className = "npc-panel-card";
+                row.dataset.npcId = npc.id;
                 row.innerHTML = `
                     <div class="npc-panel-main">
                         <div class="npc-panel-title">${npc.name}（${npc.relation}）</div>
@@ -3016,6 +3123,7 @@
                     <div class="npc-panel-actions">
                         <button class="tiny-btn" data-op="profile">档案</button>
                         <button class="tiny-btn" data-op="chat">聊天</button>
+                        <button class="tiny-btn" data-op="del">删除</button>
                     </div>
                 `;
                 row.querySelector('[data-op="chat"]').onclick = () => {
@@ -3023,7 +3131,11 @@
                     Controller.openNpcChat(npc.id);
                 };
                 row.querySelector('[data-op="profile"]').onclick = () => Controller.openNpcProfile(npc.id);
+                row.querySelector('[data-op="del"]').onclick = () => Controller.deleteNpc(npc.id);
                 row.querySelector(".npc-panel-title").onclick = () => Controller.openNpcProfile(npc.id);
+                CardInteractionService.bindSwipeAndSort(row, {
+                    onDelete: () => Controller.deleteNpc(npc.id)
+                });
                 list.appendChild(row);
             });
             if (currentSocialNpcId) renderSocialChat(state, currentSocialNpcId);
@@ -3033,10 +3145,16 @@
             const box = document.getElementById("npc-chat-box");
             const npc = (state.npcs || []).find((n) => n.id === npcId);
             if (!panel || !box || !npc) return;
-            document.getElementById("npc-chat-title").innerText = `和 ${npc.name} 聊天`;
-            document.getElementById("npc-chat-sub").innerText = `性别 ${npc.gender || "未知"}｜好感 ${npc.favor}｜心情 ${npc.mood}｜状态 ${npc.status}${npc.traits ? `｜特质 ${npc.traits}` : ""}`;
+            const titleEl = document.getElementById("npc-chat-title");
+            const subEl = document.getElementById("npc-chat-sub");
+            const isTyping = box.dataset.typing === "1";
+            titleEl.innerText = `和 ${npc.name} 聊天${isTyping ? " · 对方正在输入中" : ""}`;
+            subEl.innerText = `性别 ${npc.gender || "未知"}｜好感 ${npc.favor}｜心情 ${npc.mood}｜状态 ${npc.status}${npc.traits ? `｜特质 ${npc.traits}` : ""}`;
             document.getElementById("npc-chat-avatar-btn").onclick = () => Controller.openNpcProfile(npc.id);
             const chats = state.npcChats[npcId] || [];
+            box.style.maxHeight = "none";
+            box.style.height = "calc(100vh - 360px)";
+            box.style.minHeight = "520px";
             box.innerHTML = chats.map((m) => {
                 const mine = m.from === "me";
                 const who = mine ? "我" : npc.name;
@@ -3211,6 +3329,8 @@
             document.getElementById("card-api-url").value = cardApi.upstreamUrl || "";
             document.getElementById("card-api-key").value = cardApi.key || "";
             document.getElementById("card-api-model").value = cardApi.model || "";
+            const cardThinkingInput = document.getElementById("card-thinking-enabled");
+            if (cardThinkingInput) cardThinkingInput.checked = cardApi.thinking?.type !== "disabled";
 
             const userCustom = UserApiProfileService.getCustomConfig();
             const activeUserId = IsolationScopeService.getActiveUserId();
@@ -3221,15 +3341,20 @@
             const policy = ChatPolicyConfigService.load();
             const lockInput = document.getElementById("lock-first-card-skeleton");
             if (lockInput) lockInput.checked = policy.lockFirstCardSkeleton !== false;
+            const globalThinking = document.getElementById("global-thinking-enabled");
+            if (globalThinking) globalThinking.checked = policy.globalThinkingEnabled !== false;
         }
         function saveFromUI() {
             const selectedScenario = ScenarioCardService.getSelectedCard();
             if (!selectedScenario) return;
+            const thinkingEnabled = !!document.getElementById("card-thinking-enabled")?.checked;
             const payload = {
+                theme: document.getElementById("scenario-theme-input").value.trim(),
                 apiConfig: {
                     upstreamUrl: document.getElementById("card-api-url").value.trim(),
                     key: document.getElementById("card-api-key").value.trim(),
-                    model: document.getElementById("card-api-model").value.trim()
+                    model: document.getElementById("card-api-model").value.trim(),
+                    thinking: thinkingEnabled ? { type: "enabled" } : { type: "disabled" }
                 }
             };
             ScenarioCardService.updateSelectedCard(payload);
@@ -3243,22 +3368,35 @@
                 model: document.getElementById("user-api-model").value.trim()
             });
             const lockInput = document.getElementById("lock-first-card-skeleton");
+            const globalThinking = document.getElementById("global-thinking-enabled");
             const currentPolicy = ChatPolicyConfigService.load();
             ChatPolicyConfigService.save({
                 ...currentPolicy,
-                lockFirstCardSkeleton: !!lockInput?.checked
+                lockFirstCardSkeleton: !!lockInput?.checked,
+                globalThinkingEnabled: !!globalThinking?.checked
             });
             loadToUI();
         }
         function getApiConfig() {
             const card = ScenarioCardService.getSelectedCard();
             const cardApi = card?.apiConfig || {};
+            const policy = ChatPolicyConfigService.load();
             if (cardApi.upstreamUrl && cardApi.key && cardApi.model) {
-                return { upstreamUrl: cardApi.upstreamUrl, key: cardApi.key, model: cardApi.model };
+                return {
+                    upstreamUrl: cardApi.upstreamUrl,
+                    key: cardApi.key,
+                    model: cardApi.model,
+                    thinking: ChatPolicyConfigService.getThinkingForCard(cardApi)
+                };
             }
             const user = UserApiProfileService.getCustomConfig();
             if (user?.upstreamUrl && user?.key && user?.model) {
-                return { upstreamUrl: user.upstreamUrl, key: user.key, model: user.model };
+                return {
+                    upstreamUrl: user.upstreamUrl,
+                    key: user.key,
+                    model: user.model,
+                    thinking: policy.globalThinkingEnabled === false ? { type: "disabled" } : { type: "enabled" }
+                };
             }
             return { blocked: true, reason: "请先在“设置页面”配置用户 API，或在“设定卡片编辑页”配置当前卡片独立 API。" };
         }
@@ -3530,11 +3668,11 @@
             return 1;
         }
 
-        async function applyUserMessage(state, npcId, userText) {
+        async function applyUserMessage(state, npcId, userText, options = {}) {
             const npc = (state.npcs || []).find((n) => n.id === npcId);
             if (!npc) return null;
             const chatList = ensureNpcChatStore(state, npcId);
-            chatList.push({ from: "me", text: userText, ts: Date.now() });
+            if (!options.skipUserPush) chatList.push({ from: "me", text: userText, ts: Date.now() });
             const apiConfig = SettingsService.getApiConfig();
             if (apiConfig.blocked || !apiConfig.upstreamUrl || !apiConfig.key || !apiConfig.model) {
                 throw new Error("未配置可用 AI-API，无法进行 NPC 对话。");
@@ -4060,7 +4198,7 @@
 
             row.addEventListener("dragstart", (e) => {
                 row.classList.add("dragging");
-                const id = row.dataset.cardId || "";
+                const id = row.dataset.cardId || row.dataset.npcId || row.dataset.itemId || "";
                 e.dataTransfer?.setData("text/plain", id);
             });
             row.addEventListener("dragend", () => {
@@ -4071,9 +4209,12 @@
             row.addEventListener("drop", (e) => {
                 e.preventDefault();
                 const fromId = e.dataTransfer?.getData("text/plain") || "";
-                const toId = row.dataset.cardId || "";
+                const toId = row.dataset.cardId || row.dataset.npcId || row.dataset.itemId || "";
                 if (fromId && toId && fromId !== toId && typeof callbacks?.onReorder === "function") {
                     callbacks.onReorder(fromId, toId);
+                }
+                if (fromId && toId && fromId !== toId && typeof callbacks?.onDelete === "function" && row.classList.contains("swiped")) {
+                    callbacks.onDelete(fromId, toId);
                 }
             });
         }
@@ -4132,11 +4273,12 @@
         }
         function finalizeCardLayout({ text, beautySetting, titleHint, nowText, policyConfig, cardId, preferredChoices = [] }) {
             const lockedSkeleton = getLockedSkeleton(policyConfig, cardId);
-            const normalized = HtmlCardService.normalizeHtmlCard(text);
-            const html = HtmlCardService.isRenderableHtmlCard(normalized)
-                ? normalized
-                : HtmlCardService.wrapAsHtmlCard(beautySetting || "云吞页游沉浸风（稳定主题）", normalized || text);
-            const finalized = HtmlCardService.enforceCardStructure(html, {
+            let normalized = String(text || "");
+            const rendered = HtmlCardService.isRenderableHtmlCard(HtmlCardService.normalizeHtmlCard(normalized));
+            if (!rendered) {
+                normalized = HtmlCardService.wrapAsHtmlCard(beautySetting || "云吞页游沉浸风（稳定主题）", normalized);
+            }
+            const finalized = HtmlCardService.enforceCardStructure(normalized, {
                 titleHint: titleHint || "剧情推进",
                 nowText: nowText || "",
                 lockedSkeleton,
@@ -4420,6 +4562,7 @@
                         const latest = StateService.get();
                         UIRenderer.renderTop(latest);
                         UIRenderer.renderSocialList(latest);
+                        UIRenderer.renderInventory(latest);
                     }
                     StateService.save();
                 }
@@ -4470,7 +4613,9 @@
                 : beautyCardSetting;
             return [
                 "【美化卡片强制规则】",
-                `当前美化卡片设定：${normalizedTheme}`,
+                `当前美化设定（最高权重）：${normalizedTheme}`,
+                "文游剧情设定仅作为内容素材，权重低于美化设定，禁止让剧情结构压过视觉模板。",
+                "首张 HTML 卡片必须优先参考本地模板骨架与当前美化设定，再结合剧情文本微调。",
                 ...PromptRulesRegistry.getBeautyCoreRules(),
                 "以下是默认通用模板骨架（请按设定替换变量，允许扩展装饰，但保持 data-block 与选项可点击结构）：",
                 "```html",
@@ -4735,11 +4880,25 @@
                 "X-OpenAI-Base-URL": upstreamUrl
             };
         }
-        async function streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken }) {
+        function buildRequestBody({ model, messages, temperature, stream, extraBody = null }) {
+            const body = { model, messages, stream: !!stream, temperature };
+            const thinking = extraBody && typeof extraBody === "object" && extraBody.thinking !== undefined
+                ? extraBody.thinking
+                : { type: "enabled" };
+            if (thinking) body.thinking = thinking;
+            if (extraBody && typeof extraBody === "object") {
+                Object.entries(extraBody).forEach(([key, value]) => {
+                    if (key === "thinking") return;
+                    body[key] = value;
+                });
+            }
+            return body;
+        }
+        async function streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken, extraBody = null }) {
                 const response = await fetch(fetchUrl, {
                     method: "POST",
                 headers,
-                body: JSON.stringify({ model, messages, stream: true, temperature })
+                body: JSON.stringify(buildRequestBody({ model, messages, temperature, stream: true, extraBody }))
             });
             if (!response.ok) {
                 const snippet = await readResponseSnippet(response);
@@ -4802,15 +4961,15 @@
             delete copied["X-OpenAI-Base-URL"];
             return copied;
         }
-        async function streamCompletionWithFallback({ config, fetchUrl, headers, model, messages, temperature, onToken }) {
+        async function streamCompletionWithFallback({ config, fetchUrl, headers, model, messages, temperature, onToken, extraBody = null }) {
             try {
-                return await streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken });
+                return await streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken, extraBody });
             } catch (proxyErr) {
                 if (!isRetryableProxyError(proxyErr)) throw proxyErr;
                 const directFetchUrl = buildDirectFetchUrl(config);
                 const directHeaders = stripProxyHeaders(headers);
                 try {
-                    return await streamCompletion({ fetchUrl: directFetchUrl, headers: directHeaders, model, messages, temperature, onToken });
+                    return await streamCompletion({ fetchUrl: directFetchUrl, headers: directHeaders, model, messages, temperature, onToken, extraBody });
                 } catch (directErr) {
                     const msg = [
                         "代理连接失败，且直连上游也失败。",
@@ -4828,7 +4987,7 @@
             const response = await fetch(fetchUrl, {
                 method: "POST",
                 headers,
-                body: JSON.stringify({ model, messages, stream: false, temperature, ...(extraBody && typeof extraBody === "object" ? extraBody : {}) })
+                body: JSON.stringify(buildRequestBody({ model, messages, temperature, stream: false, extraBody }))
             });
             if (!response.ok) {
                 const snippet = await readResponseSnippet(response);
@@ -5909,7 +6068,8 @@
                 apiConfig: {
                     upstreamUrl: document.getElementById("card-api-url").value.trim(),
                     key: document.getElementById("card-api-key").value.trim(),
-                    model: document.getElementById("card-api-model").value.trim()
+                    model: document.getElementById("card-api-model").value.trim(),
+                    thinking: document.getElementById("card-thinking-enabled")?.checked ? { type: "enabled" } : { type: "disabled" }
                 }
             });
             renderAll();
@@ -6127,6 +6287,19 @@
             renderAll();
             switchView("view-inventory");
         }
+        function deleteInventoryItem(itemId) {
+            const state = StateService.get();
+            state.inventory = (state.inventory || []).filter((it) => it.id !== itemId);
+            StateService.save();
+            renderAll();
+        }
+        function deleteNpc(npcId) {
+            const state = StateService.get();
+            state.npcs = (state.npcs || []).filter((n) => n.id !== npcId);
+            if (currentSocialNpcId === npcId) currentSocialNpcId = state.npcs[0]?.id || null;
+            StateService.save();
+            renderAll();
+        }
         function openNpcProfile(npcId) {
             const state = StateService.get();
             const npc = (state.npcs || []).find((n) => n.id === npcId);
@@ -6172,15 +6345,23 @@
             input.disabled = true;
             if (sendBtn) sendBtn.disabled = true;
             input.value = "";
+            const chatList = (state.npcChats && state.npcChats[npc.id]) || (state.npcChats[npc.id] = []);
+            chatList.push({ from: "me", text: txt, ts: Date.now() });
+            StateService.save();
+            UIRenderer.renderSocialChat(state, npc.id);
+            const box = document.getElementById("npc-chat-box");
+            if (box) box.scrollTop = box.scrollHeight;
+            if (box) box.dataset.typing = "1";
+            UIRenderer.renderSocialChat(state, npc.id);
             try {
-                await NpcChatService.applyUserMessage(state, npc.id, txt);
-                // 关键：NPC线写入主线历史摘要锚点，保证后续生涯推进可感知社交线变化
+                await NpcChatService.applyUserMessage(state, npc.id, txt, { skipUserPush: true });
                 StateService.pushHistory({
                     role: "ai",
                     date: Utils.nowDateStr(state),
                     text: `【社交线更新】你与 ${npc.name} 完成了一轮对话。关系：${npc.relation}｜好感：${npc.favor}。`
                 });
                 StateService.save();
+                if (box) box.dataset.typing = "0";
                 renderAll();
                 switchView("view-npc-chat");
                 UIRenderer.renderSocialChat(state, npc.id);
@@ -6188,6 +6369,7 @@
                 const list = (state.npcChats && state.npcChats[npc.id]) || [];
                 list.push({ from: "npc", text: `⚠️ 对话失败：${e.message}`, ts: Date.now() });
                 StateService.save();
+                if (box) box.dataset.typing = "0";
                 renderAll();
                 switchView("view-npc-chat");
                 UIRenderer.renderSocialChat(state, npc.id);
