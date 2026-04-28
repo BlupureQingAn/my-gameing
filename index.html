@@ -151,15 +151,120 @@
             display: grid;
             gap: 8px;
             grid-template-columns: repeat(4, minmax(70px, 1fr));
+            position: sticky;
+            top: 8px;
+            z-index: 12;
+            backdrop-filter: blur(10px);
         }
 
         .stat-item {
-            background: var(--bg-soft);
-            border-radius: 10px;
-            text-align: center;
-            padding: 8px 4px;
+            position: relative;
+            background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(252,247,240,0.92));
+            border: 1px solid rgba(202, 162, 106, 0.18);
+            border-radius: 12px;
+            text-align: left;
+            padding: 10px 10px 8px;
             font-size: 0.8rem;
             color: var(--sub);
+            overflow: hidden;
+            box-shadow: 0 6px 16px rgba(164, 111, 53, 0.08);
+            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        }
+
+        .stat-item::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 3px;
+            background: linear-gradient(90deg, rgba(212, 166, 95, 0.88), rgba(255, 214, 138, 0.25));
+        }
+
+        .stat-item.stat-up {
+            border-color: rgba(77, 170, 112, 0.35);
+            box-shadow: 0 10px 22px rgba(77, 170, 112, 0.14);
+            transform: translateY(-1px);
+        }
+
+        .stat-item.stat-down {
+            border-color: rgba(202, 88, 88, 0.32);
+            box-shadow: 0 10px 22px rgba(202, 88, 88, 0.12);
+            transform: translateY(-1px);
+        }
+
+        .stat-item-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .stat-item-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--sub);
+            font-size: 0.76rem;
+        }
+
+        .stat-item-value {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .stat-item-delta {
+            font-size: 0.72rem;
+            font-weight: 700;
+            border-radius: 999px;
+            padding: 2px 6px;
+            background: rgba(212, 166, 95, 0.12);
+            color: #a46f35;
+        }
+
+        .stat-item-delta.up {
+            background: rgba(77, 170, 112, 0.16);
+            color: #2f8a56;
+        }
+
+        .stat-item-delta.down {
+            background: rgba(202, 88, 88, 0.14);
+            color: #b14b4b;
+        }
+
+        .status-tag-row {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 4px 0 2px;
+        }
+
+        .status-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(202, 162, 106, 0.2);
+            background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(248,240,226,0.9));
+            color: var(--accent-dark);
+            font-size: 0.76rem;
+            box-shadow: 0 4px 12px rgba(164, 111, 53, 0.08);
+        }
+
+        .status-tag strong {
+            font-weight: 700;
+        }
+
+        .status-tag em {
+            font-style: normal;
+            color: var(--sub);
+        }
+
+        .status-tag.highlight {
+            border-color: rgba(212, 166, 95, 0.4);
+            box-shadow: 0 8px 18px rgba(212, 166, 95, 0.16);
         }
 
         /* 文本 */
@@ -1720,6 +1825,7 @@
                 { id: "npc_dad", name: "顾承远", gender: "女", relation: "母亲", favor: 75, status: "工作中", mood: "认真" },
                 { id: "npc_friend", name: "许安禾", gender: "女", relation: "青梅竹马", favor: 68, status: "上学", mood: "活泼" }
             ],
+            panelStatusTags: [],
             npcChats: {},
             npcMemoryMap: {},
             history: [],
@@ -1951,13 +2057,17 @@
             const bodyHtml = MarkdownService.render(bodyText || "剧情推进中...");
             return [
                 `<article class="ai-beauty-card wenyou-card" data-theme="${safeTheme}" style="--theme-primary:#6a11cb;--theme-secondary:#2575fc;--card-bg:linear-gradient(to bottom right,#ffffff,#f0f4fd);--text-main:#2c3e50;--text-muted:#7f8c8d;--font-family:'PingFang SC','Microsoft YaHei',sans-serif;--border-radius:12px;--card-shadow:0 10px 25px rgba(106,17,203,0.15);max-width:500px;margin:8px auto;background:var(--card-bg);border-radius:var(--border-radius);box-shadow:var(--card-shadow);font-family:var(--font-family);color:var(--text-main);overflow:hidden;border-top:4px solid var(--theme-primary);padding:20px;box-sizing:border-box;">`,
-                `<style>.wenyou-card .wy-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}.wenyou-card .wy-header-left{display:flex;align-items:center;gap:12px}.wenyou-card .wy-avatar{font-size:28px;color:var(--theme-primary)}.wenyou-card .wy-role-name{font-size:1.1rem;font-weight:700;color:var(--theme-primary);margin:0;line-height:1.2}.wenyou-card .wy-scene{font-size:.8rem;color:var(--text-muted);margin-top:2px}.wenyou-card .wy-divider{display:flex;align-items:center;text-align:center;margin:15px 0;color:var(--theme-secondary)}.wenyou-card .wy-divider:before,.wenyou-card .wy-divider:after{content:'';flex:1;border-bottom:1px dashed var(--theme-secondary);opacity:.4}.wenyou-card .wy-divider-icon{padding:0 10px;font-size:.9rem}.wenyou-card .wy-content{font-size:.95rem;line-height:1.6;margin-bottom:14px;text-align:justify}.wenyou-card .wy-stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;background:rgba(128,128,128,.05);padding:10px;border-radius:8px;border-left:3px solid var(--theme-secondary)}.wenyou-card .wy-stat-item{font-size:.85rem;background:rgba(255,255,255,.55);padding:4px 8px;border-radius:4px;display:flex;align-items:center;gap:4px}.wenyou-card .wy-stat-value{font-weight:700;color:var(--theme-primary)}.wenyou-card .wy-options{display:flex;flex-direction:column;gap:10px}.wenyou-card .wy-option-btn{display:flex;align-items:center;padding:12px 15px;background:transparent;border:1px solid var(--theme-primary);color:var(--theme-primary);border-radius:var(--border-radius);font-size:.95rem;cursor:pointer;transition:all .2s;text-decoration:none}.wenyou-card .wy-option-btn:hover{background:var(--theme-primary);color:#fff;transform:translateX(5px)}.wenyou-card .wy-opt-icon{margin-right:10px;font-size:1.1rem}.wenyou-card .wy-footer-decor{text-align:center;margin-top:16px;font-size:1.3rem;color:var(--theme-secondary);opacity:.35;letter-spacing:4px}</style>`,
-                `<header class="wy-header ai-beauty-card-title"><div class="wy-header-left"><div class="wy-avatar">🎭</div><div class="wy-title-box"><h3 class="wy-role-name">${safeTheme}</h3><span class="wy-scene" data-block="time">当前回合</span></div></div><div class="wy-top-decor">✦</div></header>`,
+                `<style>.wenyou-card .wy-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}.wenyou-card .wy-header-left{display:flex;align-items:center;gap:12px}.wenyou-card .wy-avatar{font-size:28px;color:var(--theme-primary)}.wenyou-card .wy-role-name{font-size:1.1rem;font-weight:700;color:var(--theme-primary);margin:0;line-height:1.2}.wenyou-card .wy-scene{font-size:.8rem;color:var(--text-muted);margin-top:2px}.wenyou-card .wy-divider{display:flex;align-items:center;text-align:center;margin:15px 0;color:var(--theme-secondary)}.wenyou-card .wy-divider:before,.wenyou-card .wy-divider:after{content:'';flex:1;border-bottom:1px dashed var(--theme-secondary);opacity:.4}.wenyou-card .wy-divider-icon{padding:0 10px;font-size:.9rem}.wenyou-card .wy-content{font-size:.95rem;line-height:1.6;margin-bottom:14px;text-align:justify}.wenyou-card .wy-meta{font-size:.82rem;color:var(--text-muted);margin-bottom:10px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.38);display:inline-flex;max-width:100%}.wenyou-card .wy-stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;background:rgba(128,128,128,.05);padding:10px;border-radius:8px;border-left:3px solid var(--theme-secondary)}.wenyou-card .wy-stat-item{font-size:.85rem;background:rgba(255,255,255,.55);padding:4px 8px;border-radius:4px;display:flex;align-items:center;gap:4px}.wenyou-card .wy-stat-value{font-weight:700;color:var(--theme-primary)}.wenyou-card .wy-options{display:flex;flex-direction:column;gap:10px}.wenyou-card .wy-option-btn{display:flex;align-items:center;padding:12px 15px;background:transparent;border:1px solid var(--theme-primary);color:var(--theme-primary);border-radius:var(--border-radius);font-size:.95rem;cursor:pointer;transition:all .2s;text-decoration:none}.wenyou-card .wy-option-btn:hover{background:var(--theme-primary);color:#fff;transform:translateX(5px)}.wenyou-card .wy-opt-icon{margin-right:10px;font-size:1.1rem}.wenyou-card .wy-footer-decor{text-align:center;margin-top:16px;font-size:1.3rem;color:var(--theme-secondary);opacity:.35;letter-spacing:4px}</style>`,
+                `<header class="wy-header ai-beauty-card-title"><div class="wy-header-left"><div class="wy-avatar">🎭</div><div class="wy-title-box"><h3 class="wy-role-name">${safeTheme}</h3><span class="wy-scene">当前回合</span></div></div><div class="wy-top-decor">✦</div></header>`,
                 `<div class="wy-divider"><span class="wy-divider-icon">✧</span></div>`,
-                `<section class="wy-content ai-beauty-card-body" data-block="event">${bodyHtml}</section>`,
+                `<section class="ai-beauty-card-body">`,
+                `<section class="wy-meta" data-block="time">当前回合</section>`,
                 `<section class="wy-stats" data-block="status"><div class="wy-stat-item"><span>📌</span> 状态: <span class="wy-stat-value">待更新</span></div></section>`,
-                `<section class="wy-options" data-block="choices"><div class="wy-option-btn" data-choice="继续观察局势"><span class="wy-opt-icon">①</span>1. 继续观察局势</div><div class="wy-option-btn" data-choice="与关键人物交流"><span class="wy-opt-icon">②</span>2. 与关键人物交流</div></section>`,
+                `<section class="wy-content" data-block="event">${bodyHtml}</section>`,
+                `<section class="wy-content" data-block="thought">AI想法：继续观察局势，等待玩家决断。</section>`,
+                `<section class="wy-options" data-block="choices"><div class="wy-option-btn" data-choice="继续观察局势"><span class="wy-opt-icon">①</span>1. 继续观察局势</div><div class="wy-option-btn" data-choice="与关键人物交流"><span class="wy-opt-icon">②</span>2. 与关键人物交流</div><div class="wy-option-btn" data-choice="推进当前主线"><span class="wy-opt-icon">③</span>3. 推进当前主线</div></section>`,
                 `<div class="wy-footer-decor" data-block="hint">✧ ✦ ✧ 提示：可直接点击上方按钮继续剧情 ✧ ✦ ✧</div>`,
+                `</section>`,
                 `</article>`
             ].join("");
         }
@@ -1966,6 +2076,36 @@
 
     const HtmlStructureService = (() => {
         const REQUIRED_BLOCKS = ["time", "status", "event", "choices"];
+        function getDirectBlockNodes(body) {
+            if (!(body instanceof HTMLElement)) return [];
+            return Array.from(body.children || []).filter((el) => el instanceof HTMLElement && String(el.getAttribute("data-block") || "").trim());
+        }
+        function getDirectBlockMap(body) {
+            const map = new Map();
+            getDirectBlockNodes(body).forEach((el) => {
+                const name = String(el.getAttribute("data-block") || "").trim();
+                if (name && !map.has(name)) map.set(name, el);
+            });
+            return map;
+        }
+        function normalizeLegacyBodyStructure(body) {
+            if (!(body instanceof HTMLElement)) return body;
+            if (String(body.getAttribute("data-block") || "").trim() === "event") {
+                body.removeAttribute("data-block");
+                const eventNode = document.createElement("section");
+                eventNode.className = "wy-content";
+                eventNode.setAttribute("data-block", "event");
+                eventNode.innerHTML = body.innerHTML;
+                body.innerHTML = "";
+                body.appendChild(eventNode);
+            }
+            return body;
+        }
+        function removeDuplicateBlocks(body, name) {
+            if (!(body instanceof HTMLElement)) return;
+            const all = getDirectBlockNodes(body).filter((el) => String(el.getAttribute("data-block") || "").trim() === name);
+            all.slice(1).forEach((el) => el.remove());
+        }
         function extractSkeleton(html) {
             const normalized = HtmlNormalizeService.normalizeHtmlCard(html);
             if (!HtmlNormalizeService.isRenderableHtmlCard(normalized)) return null;
@@ -1974,10 +2114,10 @@
                 tpl.innerHTML = normalized;
                 const card = tpl.content.querySelector(".ai-beauty-card");
                 if (!(card instanceof HTMLElement)) return null;
-                const body = card.querySelector(".ai-beauty-card-body");
+                const body = normalizeLegacyBodyStructure(card.querySelector(".ai-beauty-card-body"));
                 const title = card.querySelector(".ai-beauty-card-title");
                 const blockOrder = body
-                    ? Array.from(body.querySelectorAll("[data-block]")).map((el) => String(el.getAttribute("data-block") || "").trim()).filter(Boolean)
+                    ? getDirectBlockNodes(body).map((el) => String(el.getAttribute("data-block") || "").trim()).filter(Boolean)
                     : [];
                 return {
                     rootTag: card.tagName.toLowerCase(),
@@ -2004,7 +2144,7 @@
             const safeTitleTag = /^[a-z][a-z0-9-]*$/i.test(String(skeleton.titleTag || "")) ? String(skeleton.titleTag).toLowerCase() : "header";
             const safeBodyTag = /^[a-z][a-z0-9-]*$/i.test(String(skeleton.bodyTag || "")) ? String(skeleton.bodyTag).toLowerCase() : "section";
             const oldTitle = card.querySelector(".ai-beauty-card-title");
-            const oldBody = card.querySelector(".ai-beauty-card-body");
+            const oldBody = normalizeLegacyBodyStructure(card.querySelector(".ai-beauty-card-body"));
             const titleNode = document.createElement(safeTitleTag);
             titleNode.className = String(skeleton.titleClass || "ai-beauty-card-title").trim() || "ai-beauty-card-title";
             if (!titleNode.classList.contains("ai-beauty-card-title")) titleNode.classList.add("ai-beauty-card-title");
@@ -2016,8 +2156,9 @@
             const order = Array.isArray(skeleton.blockOrder) && skeleton.blockOrder.length ? skeleton.blockOrder.map((x) => String(x || "").trim()).filter(Boolean) : ["time", "status", "event", "thought", "choices", "hint"];
             const used = new Set();
             if (oldBody) {
+                const blockMap = getDirectBlockMap(oldBody);
                 order.forEach((name) => {
-                    const node = oldBody.querySelector(`[data-block="${name}"]`);
+                    const node = blockMap.get(name);
                     if (node) {
                         bodyNode.appendChild(node.cloneNode(true));
                         used.add(node);
@@ -2033,20 +2174,44 @@
         }
         function normalizePreferredChoices(preferredChoices = []) {
             if (!Array.isArray(preferredChoices)) return [];
-            return preferredChoices
-                .map((it, idx) => {
-                    if (typeof it === "string") return it.trim();
-                    if (!it || typeof it !== "object") return "";
-                    return String(it.label || it.key || `选项${idx + 1}`).trim();
-                })
-                .filter(Boolean)
-                .slice(0, 3);
+            const seen = new Set();
+            const out = [];
+            preferredChoices.forEach((it, idx) => {
+                const raw = typeof it === "string"
+                    ? it.trim()
+                    : (!it || typeof it !== "object")
+                        ? ""
+                        : String(it.label || it.key || `选项${idx + 1}`).trim();
+                if (!raw) return;
+                const key = raw.replace(/^\s*(\d+[.)、]|[①②③④⑤⑥⑦⑧⑨⑩])\s*/, "").trim().toLowerCase();
+                if (!key || seen.has(key)) return;
+                seen.add(key);
+                out.push(raw.replace(/^\s*(\d+[.)、]|[①②③④⑤⑥⑦⑧⑨⑩])\s*/, "").trim());
+            });
+            return out.slice(0, 3);
         }
         function rebuildChoicesBlock(body, labels = []) {
             if (!(body instanceof HTMLElement)) return;
-            const host = body.querySelector('[data-block="choices"]');
+            removeDuplicateBlocks(body, "choices");
+            const host = getDirectBlockMap(body).get("choices");
             if (!host) return;
-            const picked = labels.length ? labels : ["继续观察局势", "与关键人物交流", "推进当前主线"];
+            const source = labels.length ? labels : ["继续观察局势", "与关键人物交流", "推进当前主线"];
+            const dedup = [];
+            const seen = new Set();
+            source.forEach((txt) => {
+                const clean = String(txt || "").replace(/^\s*(\d+[.)、]|[①②③④⑤⑥⑦⑧⑨⑩])\s*/, "").trim();
+                if (!clean) return;
+                const k = clean.toLowerCase();
+                if (seen.has(k)) return;
+                seen.add(k);
+                dedup.push(clean);
+            });
+            const picked = dedup.slice(0, 3);
+            while (picked.length < 3) {
+                const fallback = ["继续观察局势", "与关键人物交流", "推进当前主线"][picked.length];
+                if (!picked.includes(fallback)) picked.push(fallback);
+                else picked.push(`继续行动${picked.length + 1}`);
+            }
             const targetTag = host.tagName.toLowerCase();
             const canUseDivMode = targetTag === "section" || targetTag === "div";
             if (canUseDivMode) {
@@ -2063,8 +2228,9 @@
         }
         function stripInlineChoicesFromEvent(body) {
             if (!(body instanceof HTMLElement)) return;
-            const eventBlock = body.querySelector('[data-block="event"]');
-            const choicesBlock = body.querySelector('[data-block="choices"]');
+            const blockMap = getDirectBlockMap(body);
+            const eventBlock = blockMap.get("event");
+            const choicesBlock = blockMap.get("choices");
             if (!(eventBlock instanceof HTMLElement) || !(choicesBlock instanceof HTMLElement)) return;
             const text = String(eventBlock.textContent || "");
             if (!text) return;
@@ -2073,7 +2239,7 @@
             if (filtered.length === lines.length) return;
             eventBlock.textContent = filtered.join("\n").trim();
         }
-        function enforceCardStructure(html, { titleHint = "剧情推进", nowText = "", lockedSkeleton = null, preferredChoices = [] } = {}) {
+        function enforceCardStructure(html, { titleHint = "剧情推进", nowText = "", lockedSkeleton = null, preferredChoices = [], choiceSource = "turn" } = {}) {
             const normalized = HtmlNormalizeService.normalizeHtmlCard(html);
             if (!HtmlNormalizeService.isRenderableHtmlCard(normalized)) return normalized;
             try {
@@ -2093,36 +2259,49 @@
                     while (card.firstChild) body.appendChild(card.firstChild);
                     card.appendChild(body);
                 }
+                normalizeLegacyBodyStructure(body);
                 if (!card.querySelector(".ai-beauty-card-title")) {
                     const header = document.createElement("header");
                     header.className = "ai-beauty-card-title";
                     header.textContent = titleHint;
                     card.insertBefore(header, body);
                 }
-                const hasBlock = (name) => !!body.querySelector(`[data-block="${name}"]`);
+                const hasBlock = (name) => !!getDirectBlockMap(body).get(name);
                 if (!hasBlock("time")) {
-                    const div = document.createElement("div");
+                    const div = document.createElement("section");
+                    div.className = "wy-meta";
                     div.setAttribute("data-block", "time");
                     div.textContent = nowText || "时间信息：待更新";
                     body.insertBefore(div, body.firstChild);
                 }
                 if (!hasBlock("status")) {
-                    const div = document.createElement("div");
+                    const div = document.createElement("section");
+                    div.className = "wy-stats";
                     div.setAttribute("data-block", "status");
                     div.textContent = "状态变化：暂无变化";
                     body.appendChild(div);
                 }
                 if (!hasBlock("event")) {
-                    const div = document.createElement("div");
+                    const div = document.createElement("section");
+                    div.className = "wy-content";
                     div.setAttribute("data-block", "event");
                     div.textContent = "事件：剧情继续推进中。";
                     body.appendChild(div);
                 }
+                if (!hasBlock("thought")) {
+                    const div = document.createElement("section");
+                    div.className = "wy-content";
+                    div.setAttribute("data-block", "thought");
+                    div.textContent = "AI想法：暂无补充。";
+                    body.appendChild(div);
+                }
                 if (!hasBlock("choices")) {
-                    const ol = document.createElement("ol");
+                    const ol = document.createElement("section");
+                    ol.className = "wy-options";
                     ol.setAttribute("data-block", "choices");
                     ["继续观察局势", "与关键人物交流", "推进当前主线"].forEach((txt, idx) => {
-                        const li = document.createElement("li");
+                        const li = document.createElement("div");
+                        li.className = "wy-option-btn";
                         li.setAttribute("data-choice", txt);
                         li.textContent = `${idx + 1}. ${txt}`;
                         ol.appendChild(li);
@@ -2130,15 +2309,16 @@
                     body.appendChild(ol);
                 }
                 const normalizedChoices = normalizePreferredChoices(preferredChoices);
-                if (normalizedChoices.length) rebuildChoicesBlock(body, normalizedChoices);
+                if (choiceSource === "opening" || choiceSource === "turn") rebuildChoicesBlock(body, normalizedChoices);
+                else if (normalizedChoices.length) rebuildChoicesBlock(body, normalizedChoices);
                 stripInlineChoicesFromEvent(body);
                 REQUIRED_BLOCKS.forEach((name) => {
-                    const node = body.querySelector(`[data-block="${name}"]`);
+                    const node = getDirectBlockMap(body).get(name);
                     if (node && String(node.textContent || "").trim() === "") {
                         node.textContent = name === "time" ? (nowText || "时间信息：待更新") : "（待补充）";
                     }
                 });
-                if (!body.querySelector('[data-block="hint"]')) {
+                if (!getDirectBlockMap(body).get("hint")) {
                     const hint = document.createElement("div");
                     hint.setAttribute("data-block", "hint");
                     hint.style.marginTop = "8px";
@@ -2288,7 +2468,7 @@
                 "【内置返回规则】",
                 "1) 必须优先遵循“角色事实锁定块”；若剧情中发生状态变更，必须通过 state-patch 结构化块同步改动。",
                 "2) 必须只基于玩家最新输入和上下文推进剧情，不可脱离输入自说自话，不可重置世界观。",
-                "3) 输出使用 Markdown，内容贴近手机阅读。",
+                "3) 若当前启用了美化卡片规则，则直接输出 HTML 卡片；否则输出 Markdown，内容贴近手机阅读。",
                 "4) 每次回复都应包含：时间信息、状态变化、剧情对话、（AI想法：...）。",
                 "5) 回复末尾必须提供 1-3 条可执行选项，使用编号格式：1. xxx",
                 "6) 若剧情不适合选项，也要提供“继续观察/继续推进”等中性选项。",
@@ -2344,16 +2524,59 @@
     })();
 
     const ChoiceService = (() => {
+        function normalizeChoiceLabel(raw = "") {
+            return String(raw || "").replace(/^\s*(\d+[.)、]|[①②③④⑤⑥⑦⑧⑨⑩])\s*/, "").replace(/\s+/g, " ").trim();
+        }
+        function dedupeChoices(list = [], max = 3) {
+            const out = [];
+            const seen = new Set();
+            (Array.isArray(list) ? list : []).forEach((item) => {
+                const clean = normalizeChoiceLabel(item);
+                if (!clean) return;
+                const key = clean.toLowerCase();
+                if (seen.has(key)) return;
+                seen.add(key);
+                out.push(clean);
+            });
+            return out.slice(0, max);
+        }
         function extractChoices(text) {
             const lines = String(text || "").split("\n").map((s) => s.trim()).filter(Boolean);
             const choices = [];
             for (const line of lines) {
                 const m = line.match(/^\d+[.)、]\s+(.+)$/);
                 if (!m) continue;
-                const choiceText = m[1].trim();
+                const choiceText = normalizeChoiceLabel(m[1]);
                 if (choiceText.length <= 28) choices.push(choiceText);
             }
-            return choices.slice(0, 4);
+            return dedupeChoices(choices, 4);
+        }
+        function extractChoicesFromHtmlCard(text) {
+            const normalized = HtmlCardService.normalizeHtmlCard(text);
+            if (!HtmlCardService.isRenderableHtmlCard(normalized)) return [];
+            try {
+                const tpl = document.createElement("template");
+                tpl.innerHTML = normalized;
+                const body = tpl.content.querySelector(".ai-beauty-card-body");
+                if (!(body instanceof HTMLElement)) return [];
+                const block = body.querySelector('[data-block="choices"]');
+                if (!(block instanceof HTMLElement)) return [];
+                const items = Array.from(block.querySelectorAll("[data-choice], .wy-option-btn, li, button, a"))
+                    .map((el) => {
+                        if (!(el instanceof HTMLElement)) return "";
+                        return normalizeChoiceLabel(el.getAttribute("data-choice") || el.textContent || "");
+                    })
+                    .filter(Boolean);
+                return dedupeChoices(items, 4);
+            } catch (e) {
+                return [];
+            }
+        }
+        function collectChoices(text) {
+            return dedupeChoices([
+                ...extractChoicesFromHtmlCard(text),
+                ...extractChoices(text)
+            ], 4);
         }
 
         function buildFallbackChoices(userText, state) {
@@ -2368,14 +2591,14 @@
         }
 
         function ensureOptionsBlock(text, userText, state) {
-            const currentChoices = extractChoices(text);
+            const currentChoices = collectChoices(text);
             if (currentChoices.length > 0) return text;
             const fallback = buildFallbackChoices(userText, state);
             const optionBlock = ["", "**可选行动**", ...fallback.map((item, idx) => `${idx + 1}. ${item}`)].join("\n");
             return `${String(text || "").trim()}\n${optionBlock}`;
         }
 
-        return { extractChoices, ensureOptionsBlock };
+        return { extractChoices, extractChoicesFromHtmlCard, collectChoices, ensureOptionsBlock, dedupeChoices, normalizeChoiceLabel };
     })();
 
     const ConflictService = (() => {
@@ -2745,6 +2968,27 @@
             if (/武力|战力|修为|灵力/.test(t)) return "⚔️";
             return "✨";
         }
+        function normalizeStatusTag(raw = "") {
+            return String(raw || "").replace(/\s+/g, " ").trim().slice(0, 32);
+        }
+        function extractRelevantText(text = "") {
+            const raw = String(text || "");
+            if (!raw) return "";
+            const normalized = HtmlCardService.normalizeHtmlCard(raw);
+            if (!HtmlCardService.isRenderableHtmlCard(normalized)) return raw;
+            try {
+                const tpl = document.createElement("template");
+                tpl.innerHTML = normalized;
+                const body = tpl.content.querySelector(".ai-beauty-card-body");
+                if (!(body instanceof HTMLElement)) return raw;
+                return Array.from(body.querySelectorAll('[data-block="time"], [data-block="status"], [data-block="event"], [data-block="thought"]'))
+                    .map((el) => String(el.textContent || "").trim())
+                    .filter(Boolean)
+                    .join("\n");
+            } catch (e) {
+                return raw;
+            }
+        }
         function parseStatusLines(text = "") {
             const lines = String(text || "")
                 .replace(/<br\s*\/?>/gi, "\n")
@@ -2753,6 +2997,7 @@
                 .filter(Boolean);
             const statItems = [];
             const npcUpdates = [];
+            const statusTags = [];
             lines.forEach((line) => {
                 const m = line.match(/^([\u4e00-\u9fa5A-Za-z0-9_]{1,12})\s*[:：]\s*([+-]?\d{1,4})(?:\b|$)/);
                 if (m) {
@@ -2763,6 +3008,10 @@
                         value: Math.max(0, Math.min(999, Number(m[2]) || 0))
                     });
                     return;
+                }
+                const tagMatch = line.match(/^(身份|处境|状态|地点|身份阶段|阵营|职业|学业|职务|住处)\s*[:：]\s*(.+)$/);
+                if (tagMatch) {
+                    statusTags.push({ label: tagMatch[1], value: normalizeStatusTag(tagMatch[2]) });
                 }
                 const npcMatch = line.match(/^([\u4e00-\u9fa5A-Za-z0-9_]{2,16})(?:（([^）]{1,10})）)?/);
                 if (!npcMatch) return;
@@ -2783,22 +3032,76 @@
                     });
                 }
             });
-            return { statItems, npcUpdates };
+            return { statItems, npcUpdates, statusTags };
+        }
+        function parseStatPairsFromText(text = "") {
+            const items = [];
+            const pairRe = /(健康|体力|生命|心情|情绪|精神|学识|智力|智慧|魅力|声望|名望|财富|金钱|银两|资产|武力|战力|修为|灵力|权势|成长|亲缘|人脉|事业)\s*[:：]\s*([+-]?\d{1,4})/g;
+            let m;
+            while ((m = pairRe.exec(String(text || ""))) !== null) {
+                items.push({
+                    key: normalizeStatKey(m[1]),
+                    label: m[1],
+                    icon: inferStatIcon(m[1]),
+                    value: Math.max(0, Math.min(999, Number(m[2]) || 0))
+                });
+            }
+            return items;
+        }
+        function parseStatusTagsFromText(text = "") {
+            const tags = [];
+            const patterns = [
+                /(身份|处境|状态|地点|阵营|职业|学业|职务|住处)\s*[:：]\s*([^\n，。;；]{1,24})/g,
+                /(?:当前|目前)(身份|处境|状态)\s*(?:是|为)\s*([^\n，。;；]{1,24})/g
+            ];
+            patterns.forEach((re) => {
+                let m;
+                while ((m = re.exec(String(text || ""))) !== null) {
+                    tags.push({ label: m[1], value: normalizeStatusTag(m[2]) });
+                }
+            });
+            return tags;
+        }
+        function mergeStatusTags(list = []) {
+            const out = [];
+            const seen = new Set();
+            (Array.isArray(list) ? list : []).forEach((item) => {
+                const label = normalizeStatusTag(item?.label || "");
+                const value = normalizeStatusTag(item?.value || "");
+                if (!label || !value) return;
+                const key = `${label}::${value}`;
+                if (seen.has(key)) return;
+                seen.add(key);
+                out.push({ label, value });
+            });
+            return out.slice(0, 6);
+        }
+        function mergeStatItems(list = []) {
+            const out = [];
+            const map = new Map();
+            (Array.isArray(list) ? list : []).forEach((item, idx) => {
+                if (!item || item.value === undefined || item.value === null) return;
+                const label = String(item.label || item.key || `属性${idx + 1}`).trim();
+                const key = normalizeStatKey(item.key || label);
+                map.set(key, {
+                    key,
+                    label,
+                    icon: item.icon || inferStatIcon(label),
+                    value: Math.max(0, Math.min(999, Number(item.value) || 0))
+                });
+            });
+            map.forEach((value) => out.push(value));
+            return out;
         }
         function extractFromAiCard(htmlText = "") {
-            const html = String(htmlText || "");
-            if (!HtmlCardService.isRenderableHtmlCard(HtmlCardService.normalizeHtmlCard(html))) return { statItems: [], npcUpdates: [] };
-            try {
-                const tpl = document.createElement("template");
-                tpl.innerHTML = html;
-                const body = tpl.content.querySelector(".ai-beauty-card-body");
-                if (!(body instanceof HTMLElement)) return { statItems: [], npcUpdates: [] };
-                const statusNode = body.querySelector('[data-block="status"]');
-                if (!(statusNode instanceof HTMLElement)) return { statItems: [], npcUpdates: [] };
-                return parseStatusLines(statusNode.textContent || "");
-            } catch (e) {
-                return { statItems: [], npcUpdates: [] };
-            }
+            const relevantText = extractRelevantText(htmlText);
+            const parsed = parseStatusLines(relevantText);
+            const textStats = parseStatPairsFromText(relevantText);
+            return {
+                statItems: mergeStatItems([...(parsed.statItems || []), ...textStats]),
+                npcUpdates: parsed.npcUpdates,
+                statusTags: mergeStatusTags([...(parsed.statusTags || []), ...parseStatusTagsFromText(relevantText)])
+            };
         }
         function applySnapshot(state, snapshot = {}) {
             if (!state) return false;
@@ -2819,6 +3122,15 @@
                         changed = true;
                     }
                 });
+            }
+            const nextTags = mergeStatusTags(snapshot.statusTags);
+            if (nextTags.length) {
+                const prevRaw = JSON.stringify(Array.isArray(state.panelStatusTags) ? state.panelStatusTags : []);
+                const nextRaw = JSON.stringify(nextTags);
+                if (prevRaw !== nextRaw) {
+                    state.panelStatusTags = nextTags;
+                    changed = true;
+                }
             }
             const npcUpdates = Array.isArray(snapshot.npcUpdates) ? snapshot.npcUpdates : [];
             if (npcUpdates.length && Array.isArray(state.npcs)) {
@@ -2882,6 +3194,8 @@
         let streamThrottleTimer = null;
         let streamPendingText = null;
         let streamLastRenderAt = 0;
+        let lastRenderedStatMap = new Map();
+        let lastRenderedStatusTagMap = new Map();
         const STREAM_RENDER_INTERVAL_MS = 80;
         function setStreamingScrollMode(active) {
             const content = document.getElementById("main-content");
@@ -2935,9 +3249,34 @@
             const box = document.getElementById("game-stats-card");
             if (!box) return;
             const stats = Array.isArray(state.stats) ? state.stats : [];
-            box.innerHTML = stats.map((s) => `
-                <div class="stat-item"><span>${Number(s.value || 0)}</span>${s.label} ${s.icon}</div>
-            `).join("");
+            const statHtml = stats.map((s) => {
+                const key = String(s.key || s.label || "");
+                const value = Number(s.value || 0);
+                const prev = lastRenderedStatMap.get(key);
+                const delta = Number.isFinite(prev) ? value - prev : 0;
+                const deltaClass = delta > 0 ? "up" : (delta < 0 ? "down" : "");
+                const stateClass = delta > 0 ? "stat-up" : (delta < 0 ? "stat-down" : "");
+                return `
+                    <div class="stat-item ${stateClass}">
+                        <div class="stat-item-header">
+                            <div class="stat-item-label">${s.icon || "✨"} <strong>${MarkdownService.escapeHtml(s.label || "属性")}</strong></div>
+                            ${delta ? `<span class="stat-item-delta ${deltaClass}">${delta > 0 ? "+" : ""}${delta}</span>` : ""}
+                        </div>
+                        <div class="stat-item-value"><span>${value}</span></div>
+                    </div>
+                `;
+            }).join("");
+            const tags = Array.isArray(state.panelStatusTags) ? state.panelStatusTags : [];
+            const tagHtml = tags.length
+                ? `<div class="status-tag-row">${tags.map((tag) => {
+                    const key = `${tag.label}:${tag.value}`;
+                    const isChanged = lastRenderedStatusTagMap.get(tag.label) !== tag.value;
+                    return `<div class="status-tag ${isChanged ? "highlight" : ""}"><strong>${MarkdownService.escapeHtml(tag.label)}</strong><em>${MarkdownService.escapeHtml(tag.value)}</em></div>`;
+                }).join("")}</div>`
+                : "";
+            box.innerHTML = `${statHtml}${tagHtml}`;
+            lastRenderedStatMap = new Map(stats.map((s) => [String(s.key || s.label || ""), Number(s.value || 0)]));
+            lastRenderedStatusTagMap = new Map(tags.map((tag) => [tag.label, tag.value]));
         }
         function scrollToBottom() {
             const content = document.getElementById("main-content");
@@ -3401,8 +3740,10 @@
         function getThinkingPayloadForCard(cardId = "") {
             const policy = ChatPolicyConfigService.load();
             const sid = String(cardId || ScenarioCardService.getSelectedId() || "");
-            const cardEnabled = !!policy.cardThinkingMap?.[sid];
-            const enabled = cardEnabled || policy.globalThinkingEnabled === true;
+            const hasCardOverride = !!sid && Object.prototype.hasOwnProperty.call(policy.cardThinkingMap || {}, sid);
+            const enabled = hasCardOverride
+                ? policy.cardThinkingMap?.[sid] === true
+                : policy.globalThinkingEnabled === true;
             return { thinking: { type: enabled ? "enabled" : "disabled" } };
         }
         function importScenarioFromFile() {
@@ -4260,7 +4601,7 @@
             if (!policyConfig?.lockFirstCardSkeleton) return null;
             return ScenarioPlayMetaService.getLockedSkeleton(cardId);
         }
-        function finalizeCardLayout({ text, beautySetting, titleHint, nowText, policyConfig, cardId, preferredChoices = [] }) {
+        function finalizeCardLayout({ text, beautySetting, titleHint, nowText, policyConfig, cardId, preferredChoices = [], choiceSource = "turn" }) {
             const lockedSkeleton = getLockedSkeleton(policyConfig, cardId);
             const normalized = HtmlCardService.normalizeHtmlCard(text);
             const html = HtmlCardService.isRenderableHtmlCard(normalized)
@@ -4270,7 +4611,8 @@
                 titleHint: titleHint || "剧情推进",
                 nowText: nowText || "",
                 lockedSkeleton,
-                preferredChoices
+                preferredChoices,
+                choiceSource
             });
             if (policyConfig?.lockFirstCardSkeleton && !lockedSkeleton) {
                 const freshSkeleton = HtmlCardService.extractSkeleton(finalized);
@@ -4323,7 +4665,7 @@
             return "按设定自动生成高质量页游风卡片：色调统一、装饰丰富、排版分区清晰";
         }
         function getSkeletonHtml() {
-            return "<article class=\"ai-beauty-card wenyou-card\" style=\"--theme-primary:{THEME_PRIMARY};--theme-secondary:{THEME_SECONDARY};--card-bg:{CARD_BG};--text-main:{TEXT_MAIN};--text-muted:{TEXT_MUTED};--font-family:{FONT_FAMILY};--border-radius:{BORDER_RADIUS};--card-shadow:{CARD_SHADOW}\"><header class=\"wy-header ai-beauty-card-title\"><div class=\"wy-header-left\"><div class=\"wy-avatar\">{AVATAR_EMOJI}</div><div class=\"wy-title-box\"><h3 class=\"wy-role-name\">{ROLE_NAME}</h3><span class=\"wy-scene\" data-block=\"time\">{SCENE_TITLE}</span></div></div><div class=\"wy-top-decor\">{TOP_DECOR_ICON}</div></header><div class=\"wy-divider\"><span class=\"wy-divider-icon\">{DIVIDER_EMOJI}</span></div><section class=\"wy-content ai-beauty-card-body\" data-block=\"event\">{MAIN_STORY_TEXT}</section><section class=\"wy-stats\" data-block=\"status\">{STATS_HTML}</section><section class=\"wy-options\" data-block=\"choices\"><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_1}\"><span class=\"wy-opt-icon\">{OPT_ICON_1}</span>1. {OPT_TEXT_1}</div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_2}\"><span class=\"wy-opt-icon\">{OPT_ICON_2}</span>2. {OPT_TEXT_2}</div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_3}\"><span class=\"wy-opt-icon\">{OPT_ICON_3}</span>3. {OPT_TEXT_3}</div></section><div class=\"wy-footer-decor\" data-block=\"hint\">{BOTTOM_DECOR} 提示：可直接点击上方按钮继续剧情</div></article>";
+            return "<article class=\"ai-beauty-card wenyou-card\" style=\"--theme-primary:{THEME_PRIMARY};--theme-secondary:{THEME_SECONDARY};--card-bg:{CARD_BG};--text-main:{TEXT_MAIN};--text-muted:{TEXT_MUTED};--font-family:{FONT_FAMILY};--border-radius:{BORDER_RADIUS};--card-shadow:{CARD_SHADOW}\"><header class=\"wy-header ai-beauty-card-title\"><div class=\"wy-header-left\"><div class=\"wy-avatar\">{AVATAR_EMOJI}</div><div class=\"wy-title-box\"><h3 class=\"wy-role-name\">{ROLE_NAME}</h3><span class=\"wy-scene\">{SCENE_TITLE}</span></div></div><div class=\"wy-top-decor\">{TOP_DECOR_ICON}</div></header><div class=\"wy-divider\"><span class=\"wy-divider-icon\">{DIVIDER_EMOJI}</span></div><section class=\"ai-beauty-card-body\"><section class=\"wy-meta\" data-block=\"time\">{TIME_TEXT}</section><section class=\"wy-stats\" data-block=\"status\">{STATS_HTML}</section><section class=\"wy-content\" data-block=\"event\">{MAIN_STORY_TEXT}</section><section class=\"wy-content\" data-block=\"thought\">{AI_THOUGHT_TEXT}</section><section class=\"wy-options\" data-block=\"choices\"><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_1}\"><span class=\"wy-opt-icon\">{OPT_ICON_1}</span>1. {OPT_TEXT_1}</div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_2}\"><span class=\"wy-opt-icon\">{OPT_ICON_2}</span>2. {OPT_TEXT_2}</div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_3}\"><span class=\"wy-opt-icon\">{OPT_ICON_3}</span>3. {OPT_TEXT_3}</div></section><div class=\"wy-footer-decor\" data-block=\"hint\">{BOTTOM_DECOR} 提示：可直接点击上方按钮继续剧情</div></section></article>";
         }
         return { getDefaultBeautyHint, getSkeletonHtml };
     })();
@@ -4333,6 +4675,7 @@
             return [
                 "你必须输出可直接渲染的 HTML 卡片，且最外层必须是 class=\"ai-beauty-card\" 的 article/section/div。",
                 "卡片内部需包含：时间、状态变化、剧情正文、（AI想法）以及 1-3 条编号选项。",
+                "必须严格参考下方提供的本地模板骨架，尤其保持 ai-beauty-card-body 内 data-block=time/status/event/thought/choices/hint 的层级与命名一致。",
                 "若设定存在待玩家选择的开局模式/路线，只能在 choices 中列出，不得替玩家做最终选择。",
                 "状态区必须包含主角状态；若本轮涉及关键NPC变化，状态区需附带NPC状态摘要。",
                 "视觉要求：卡片必须具备丰富且清晰的页游式视觉结构（标题条、信息区、标签/徽章、分隔线、强调块、层次化排版），并与当前设定的时代与题材一致。",
@@ -4346,6 +4689,7 @@
                 "请基于设定与角色档案，输出一张可直接渲染的 HTML 卡片。",
                 "强制要求：最外层必须是 <article class=\"ai-beauty-card\">。",
                 "卡片内必须包含：世界背景简述、主角当前身份与处境、当前时间、关键NPC概览、1-3条编号选项。",
+                "必须严格沿用本地模板骨架的 data-block 结构，不得把 event/status/choices 混成同一区块。",
                 "若设定存在待玩家选择的开局模式/路线/阵营，请只在选项中列出，不得替玩家代选。"
             ];
         }
@@ -4360,11 +4704,13 @@
             const systemPrompt = [
                 "你是文游HTML卡片模板设计器。",
                 "请仅输出一张可渲染的HTML卡片模板，最外层必须是 class=\"ai-beauty-card\"。",
-                "模板必须包含 data-block: time/status/event/choices。",
+                "模板必须严格包含并沿用本地 data-block 结构：time/status/event/thought/choices/hint。",
                 "内容使用中性占位文案，不要写具体剧情。",
                 `你必须严格按“美化设定”设计视觉：主色/辅色/背景材质/装饰元素/字体风格必须和美化设定一致，不得使用通用默认风格。`,
                 "必须在模板内显式体现：标题区、分隔装饰、正文区、状态区、结尾选项区（仅一组3选项）。",
-                "颜色对比必须可读：正文文字与背景需保持明显反差，避免近色。"
+                "颜色对比必须可读：正文文字与背景需保持明显反差，避免近色。",
+                "以下是必须参考的本地模板骨架，请保留结构语义，只替换主题视觉与占位内容：",
+                HtmlCardPromptTemplateService.getSkeletonHtml()
             ].join("\n");
             const userPrompt = [
                 `设定文本：\n${scenarioText}`,
@@ -4404,7 +4750,7 @@
                 scenarioText,
                 "",
                 ...PromptRulesRegistry.getIntroCoreRules(),
-                "默认请使用以下“文游通用卡片模板”结构（可改色调和装饰，但保持结构清晰且 data-block 可识别）：",
+                "以下是必须参考的本地卡片骨架（不是 Markdown 示例，而是实际结构约束；可改色调和装饰，但 data-block 层级必须一致）：",
                 HtmlCardPromptTemplateService.getSkeletonHtml(),
                 choiceLines.length
                     ? `你必须在本次“开局介绍”卡片的 choices 区保留这些候选开局选项（可润色但语义不能丢）：\n${choiceLines.join("\n")}`
@@ -4491,6 +4837,7 @@
                 return lines.filter((line) => /<[^>]+>/.test(line)).length;
             }
             try {
+                let lastLivePanelSyncAt = 0;
                 const streamText = await ScenarioIntroService.streamIntroHtmlCard({
                     apiConfig,
                     scenarioText,
@@ -4502,6 +4849,13 @@
                         if (!closedLoading && htmlLineCount >= 10) {
                             InitLoadingService.close();
                             closedLoading = true;
+                        }
+                        if (Date.now() - lastLivePanelSyncAt >= 240) {
+                            const liveState = StateService.get();
+                            TimeSyncService.syncFromAiText(liveState, txt);
+                            const changed = AiPanelSyncService.syncFromAiText(liveState, txt);
+                            if (changed) UIRenderer.renderTop(liveState);
+                            lastLivePanelSyncAt = Date.now();
                         }
                         UIRenderer.updateStreaming(txt);
                     }
@@ -4519,7 +4873,8 @@
                     nowText: Utils.nowDateStr(StateService.get()),
                     policyConfig,
                     cardId: selectedCardId,
-                    preferredChoices: openingChoices
+                    preferredChoices: openingChoices,
+                    choiceSource: "opening"
                 });
                 if (usedFallback) {
                     const retryHtml = await DecisionModalService.show({
@@ -4538,7 +4893,8 @@
                             nowText: Utils.nowDateStr(StateService.get()),
                             policyConfig,
                             cardId: selectedCardId,
-                            preferredChoices: openingChoices
+                            preferredChoices: openingChoices,
+                            choiceSource: "opening"
                         });
                     }
                 }
@@ -4585,7 +4941,7 @@
                 `主角基础：姓名${state.name}，性别${state.gender}，年龄${Math.floor((state.age || 0) / 12)}岁，时间${Utils.nowDateStr(state) || "未设定（请在回复中给出当前时间）"}。`,
                 `主角状态栏：${statsText}。`,
                 `关键NPC概览：${npcText}。`,
-                "请使用Markdown输出并兼容手机屏。",
+                "若未启用美化卡片规则，可使用 Markdown；若已启用，则直接输出 HTML 卡片并兼容手机屏。",
                 "若用户输入与已确认事实冲突，先以礼貌方式说明冲突，再基于事实继续剧情。"
             ].join("\n");
         }
@@ -4602,10 +4958,8 @@
                 "【美化卡片强制规则】",
                 `当前美化卡片设定：${normalizedTheme}`,
                 ...PromptRulesRegistry.getBeautyCoreRules(),
-                "以下是默认通用模板骨架（请按设定替换变量，允许扩展装饰，但保持 data-block 与选项可点击结构）：",
-                "```html",
-                HtmlCardPromptTemplateService.getSkeletonHtml(),
-                "```"
+                "以下是必须参考的本地模板骨架（直接按此结构生成，不要改动 ai-beauty-card-body 内 data-block 命名和顺序）：",
+                HtmlCardPromptTemplateService.getSkeletonHtml()
             ].join("\n");
         }
         function buildSystemPrompt({ scenarioSpec, builtinRules, stateFactLock, runtimeContext, beautyRules }) {
@@ -4652,7 +5006,8 @@
                 `最近记录：\n${recentHistory}`,
                 "上一版回复未能正确渲染为 HTML 卡片。",
                 "请严格重写为可直接渲染的 HTML，最外层 class 必须是 ai-beauty-card。",
-                "同时保留剧情连续性，并包含 1-3 条编号选项。",
+                "必须严格参考本地模板骨架，保持 ai-beauty-card-body 下的 data-block=time/status/event/thought/choices/hint。",
+                "同时保留剧情连续性，并且只保留一组 1-3 条编号选项。",
                 `上一版文本：\n${finalText}`
             ].join("\n\n");
         }
@@ -4865,11 +5220,17 @@
                 "X-OpenAI-Base-URL": upstreamUrl
             };
         }
-        async function streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken }) {
+        function buildExtraBody(extraBody = null, cardId = "") {
+            const base = extraBody && typeof extraBody === "object" ? { ...extraBody } : {};
+            const thinkingPayload = SettingsService.getThinkingPayloadForCard(cardId || ScenarioCardService.getSelectedId());
+            return { ...base, ...thinkingPayload };
+        }
+        async function streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken, extraBody = null, cardId = "" }) {
+                const payloadBody = buildExtraBody(extraBody, cardId);
                 const response = await fetch(fetchUrl, {
                     method: "POST",
                 headers,
-                body: JSON.stringify({ model, messages, stream: true, temperature })
+                body: JSON.stringify({ model, messages, stream: true, temperature, ...payloadBody })
             });
             if (!response.ok) {
                 const snippet = await readResponseSnippet(response);
@@ -4932,15 +5293,15 @@
             delete copied["X-OpenAI-Base-URL"];
             return copied;
         }
-        async function streamCompletionWithFallback({ config, fetchUrl, headers, model, messages, temperature, onToken }) {
+        async function streamCompletionWithFallback({ config, fetchUrl, headers, model, messages, temperature, onToken, extraBody = null, cardId = "" }) {
             try {
-                return await streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken });
+                return await streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken, extraBody, cardId });
             } catch (proxyErr) {
                 if (!isRetryableProxyError(proxyErr)) throw proxyErr;
                 const directFetchUrl = buildDirectFetchUrl(config);
                 const directHeaders = stripProxyHeaders(headers);
                 try {
-                    return await streamCompletion({ fetchUrl: directFetchUrl, headers: directHeaders, model, messages, temperature, onToken });
+                    return await streamCompletion({ fetchUrl: directFetchUrl, headers: directHeaders, model, messages, temperature, onToken, extraBody, cardId });
                 } catch (directErr) {
                     const msg = [
                         "代理连接失败，且直连上游也失败。",
@@ -4954,11 +5315,12 @@
                 }
             }
         }
-        async function requestCompletion({ fetchUrl, headers, model, messages, temperature, extraBody = null }) {
+        async function requestCompletion({ fetchUrl, headers, model, messages, temperature, extraBody = null, cardId = "" }) {
+            const payloadBody = buildExtraBody(extraBody, cardId);
             const response = await fetch(fetchUrl, {
                 method: "POST",
                 headers,
-                body: JSON.stringify({ model, messages, stream: false, temperature, ...(extraBody && typeof extraBody === "object" ? extraBody : {}) })
+                body: JSON.stringify({ model, messages, stream: false, temperature, ...payloadBody })
             });
             if (!response.ok) {
                 const snippet = await readResponseSnippet(response);
@@ -4970,15 +5332,15 @@
             const data = await response.json();
             return EndMarkerService.trimToMarker(data?.choices?.[0]?.message?.content?.trim() || "");
         }
-        async function requestCompletionWithFallback({ config, fetchUrl, headers, model, messages, temperature, extraBody = null }) {
+        async function requestCompletionWithFallback({ config, fetchUrl, headers, model, messages, temperature, extraBody = null, cardId = "" }) {
             try {
-                return await requestCompletion({ fetchUrl, headers, model, messages, temperature, extraBody });
+                return await requestCompletion({ fetchUrl, headers, model, messages, temperature, extraBody, cardId });
             } catch (proxyErr) {
                 if (!isRetryableProxyError(proxyErr)) throw proxyErr;
                 const directFetchUrl = buildDirectFetchUrl(config);
                 const directHeaders = stripProxyHeaders(headers);
                 try {
-                    return await requestCompletion({ fetchUrl: directFetchUrl, headers: directHeaders, model, messages, temperature, extraBody });
+                    return await requestCompletion({ fetchUrl: directFetchUrl, headers: directHeaders, model, messages, temperature, extraBody, cardId });
                 } catch (directErr) {
                     const msg = [
                         "代理连接失败，且直连上游也失败。",
@@ -5962,6 +6324,7 @@
             const systemPrompt = PromptPolicyService.buildSystemPrompt({ state, scenarioSpec, beautyCardSetting, beautyModeEnabled });
             const mainUserPrompt = PromptPolicyService.buildMainUserPrompt(userText, recentHistory);
             let uiUnlocked = false;
+            let lastLivePanelSyncAt = 0;
 
             try {
                 const rawText = (await AIRequestService.streamCompletionWithFallback({
@@ -5977,6 +6340,13 @@
                     onToken: (text) => {
                         const trimmed = EndMarkerService.trimToMarker(text);
                         const visibleText = StatePatchService.extractPatch(trimmed).cleaned;
+                        if (Date.now() - lastLivePanelSyncAt >= 240) {
+                            const liveState = StateService.get();
+                            TimeSyncService.syncFromAiText(liveState, visibleText);
+                            const changed = AiPanelSyncService.syncFromAiText(liveState, visibleText);
+                            if (changed) UIRenderer.renderTop(liveState);
+                            lastLivePanelSyncAt = Date.now();
+                        }
                         UIRenderer.updateStreaming(visibleText);
                         return !EndMarkerService.hasMarker(text);
                     }
@@ -5986,13 +6356,16 @@
                 const rawPatchChanged = StatePatchService.applyPatch(StateService.get(), rawPatchResult.patch);
                 let displayText = rawVisibleText;
                 if (beautyModeEnabled && policyConfig.enableHtmlCardForce) {
+                    const turnChoices = ChoiceService.collectChoices(rawVisibleText);
                     displayText = HtmlCardRenderPipelineService.finalizeCardLayout({
                         text: rawVisibleText,
                         beautySetting: beautyCardSetting,
                         titleHint: "剧情推进",
                         nowText: Utils.nowDateStr(StateService.get()),
                         policyConfig,
-                        cardId: ScenarioCardService.getSelectedId()
+                        cardId: ScenarioCardService.getSelectedId(),
+                        preferredChoices: turnChoices,
+                        choiceSource: "turn"
                     });
                 }
 
