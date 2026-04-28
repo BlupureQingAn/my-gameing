@@ -2649,8 +2649,8 @@
         }
         function getSkeletonHtml(themeMode = "light", state = null) {
             const { statusPanelLabel, tagsHtml } = buildSkeletonStateContext(state);
-            const statusBlock = `<div class="wy-stat-item" style="padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(255,244,232,.88));border-left:4px solid var(--theme-primary)">✨ ${statusPanelLabel}：{STATS_HTML}</div><div class="wy-stat-item" style="padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(239,247,255,.88));border-left:4px solid var(--theme-secondary)">🏷 关键标签：${tagsHtml}</div>`;
-            const base = "<article class=\"ai-beauty-card wenyou-card\" style=\"--theme-primary:{THEME_PRIMARY};--theme-secondary:{THEME_SECONDARY};--card-bg:{CARD_BG};--text-main:{TEXT_MAIN};--text-muted:{TEXT_MUTED};--font-family:{FONT_FAMILY};--border-radius:{BORDER_RADIUS};--card-shadow:{CARD_SHADOW};position:relative;overflow:hidden;background:var(--card-bg);border-radius:var(--border-radius);box-shadow:var(--card-shadow);border:1px solid color-mix(in srgb,var(--theme-primary) 26%,#ffffff 74%);font-family:var(--font-family);color:var(--text-main)\"><div style=\"position:absolute;inset:0;background:radial-gradient(circle at top right,color-mix(in srgb,var(--theme-secondary) 18%,transparent 82%),transparent 42%),radial-gradient(circle at bottom left,color-mix(in srgb,var(--theme-primary) 16%,transparent 84%),transparent 38%);pointer-events:none\"></div><div style=\"position:relative;padding:18px\"><header class=\"wy-header ai-beauty-card-title\" style=\"display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:14px 16px;border-radius:calc(var(--border-radius) - 4px);background:linear-gradient(135deg,color-mix(in srgb,var(--theme-primary) 18%,#ffffff 82%),color-mix(in srgb,var(--theme-secondary) 12%,#ffffff 88%));border:1px solid color-mix(in srgb,var(--theme-primary) 20%,#ffffff 80%)\"><div class=\"wy-header-left\" style=\"display:flex;align-items:center;gap:12px\"><div class=\"wy-avatar\" style=\"width:48px;height:48px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));color:#fff;font-size:26px;box-shadow:0 8px 18px rgba(0,0,0,.14)\">{AVATAR_EMOJI}</div><div class=\"wy-title-box\"><div style=\"display:inline-flex;align-items:center;gap:6px;padding:3px 10px;margin-bottom:8px;border-radius:999px;background:rgba(255,255,255,.65);font-size:12px;color:var(--text-muted)\">主题视觉 {BOTTOM_DECOR}</div><h3 class=\"wy-role-name\" style=\"margin:0;font-size:1.22rem;font-weight:800;color:var(--theme-primary);line-height:1.2\">{ROLE_NAME}</h3><span class=\"wy-scene\" style=\"display:block;margin-top:4px;color:var(--text-muted);font-size:.86rem\">{SCENE_TITLE}</span></div></div><div style=\"text-align:right\"><div style=\"font-size:1.25rem;color:var(--theme-secondary)\">{TOP_DECOR_ICON}</div><div style=\"margin-top:8px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.7);font-size:12px;color:var(--text-muted)\">章节焦点</div></div></header><div class=\"wy-divider\" style=\"display:flex;align-items:center;gap:10px;margin:14px 0 12px\"><span style=\"flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--theme-primary),transparent)\"></span><span class=\"wy-divider-icon\" style=\"padding:0 10px;color:var(--theme-secondary);font-size:1rem\">{DIVIDER_EMOJI}</span><span style=\"flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--theme-secondary),transparent)\"></span></div><section class=\"ai-beauty-card-body\"><section class=\"wy-meta\" data-block=\"time\" style=\"display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.66);border:1px solid rgba(255,255,255,.5);backdrop-filter:blur(6px)\"><span style=\"font-weight:700;color:var(--theme-primary)\">时间轴</span><span>{TIME_TEXT}</span></section><section class=\"wy-stats\" data-block=\"status\" style=\"display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px;padding:12px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.74),rgba(255,255,255,.52));border:1px solid color-mix(in srgb,var(--theme-secondary) 14%,#ffffff 86%)\">" + statusBlock + "</section><section data-block=\"relations\" style=\"margin-top:12px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,rgba(255,255,255,.92),rgba(240,248,255,.88));border:1px solid color-mix(in srgb,var(--theme-secondary) 18%,#ffffff 82%)\"><div style=\"font-size:12px;font-weight:700;color:var(--theme-secondary);margin-bottom:8px\">👥 人物关系</div><div style=\"display:flex;flex-wrap:wrap;gap:8px\">{RELATIONS_HTML}</div></section><section data-block=\"event\" style=\"margin-top:14px;padding:14px 15px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(255,251,245,.92));border:1px solid rgba(226,205,173,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.85)\"><div style=\"display:inline-flex;align-items:center;gap:6px;padding:4px 10px;margin-bottom:10px;border-radius:999px;background:color-mix(in srgb,var(--theme-primary) 12%,#ffffff 88%);color:var(--theme-primary);font-size:12px;font-weight:700\">剧情正文</div><div class=\"wy-content\" style=\"line-height:1.78;color:var(--text-main)\">{MAIN_STORY_TEXT}</div></section><section data-block=\"thought\" style=\"margin-top:12px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,color-mix(in srgb,var(--theme-secondary) 10%,#ffffff 90%),rgba(255,255,255,.88));border:1px dashed color-mix(in srgb,var(--theme-secondary) 32%,#ffffff 68%)\"><div style=\"font-size:12px;font-weight:700;color:var(--theme-secondary);margin-bottom:8px\">AI想法</div><div class=\"wy-content\" style=\"color:var(--text-main);line-height:1.7\">{AI_THOUGHT_TEXT}</div></section><section class=\"wy-options\" data-block=\"choices\" style=\"display:flex;flex-direction:column;gap:10px;margin-top:14px\"><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_1}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(255,243,231,.92));border:1px solid color-mix(in srgb,var(--theme-primary) 24%,#ffffff 76%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));color:#fff\">{OPT_ICON_1}</span><span>1. {OPT_TEXT_1}</span></div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_2}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(238,247,255,.92));border:1px solid color-mix(in srgb,var(--theme-secondary) 24%,#ffffff 76%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-secondary),var(--theme-primary));color:#fff\">{OPT_ICON_2}</span><span>2. {OPT_TEXT_2}</span></div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_3}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(246,239,255,.92));border:1px solid color-mix(in srgb,var(--theme-primary) 20%,var(--theme-secondary) 18%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));color:#fff\">{OPT_ICON_3}</span><span>3. {OPT_TEXT_3}</span></div></section><div class=\"wy-footer-decor\" data-block=\"hint\" style=\"margin-top:16px;padding:12px 14px;border-radius:16px;text-align:center;background:linear-gradient(90deg,color-mix(in srgb,var(--theme-primary) 10%,#ffffff 90%),color-mix(in srgb,var(--theme-secondary) 10%,#ffffff 90%));color:var(--text-muted);font-size:.88rem\">{BOTTOM_DECOR} {BOTTOM_DECOR} 提示：可直接点击上方按钮继续剧情 {BOTTOM_DECOR} {BOTTOM_DECOR}</div></section></div></article>";
+            const statusBlock = `<div style="padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(255,244,232,.88));border-left:4px solid var(--theme-primary);margin-bottom:8px">✨ ${statusPanelLabel}：{STATS_HTML}</div><div style="padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(239,247,255,.88));border-left:4px solid var(--theme-secondary)">🏷 关键标签：${tagsHtml}</div>`;
+            const base = "<article class=\"ai-beauty-card wenyou-card\" style=\"--theme-primary:{THEME_PRIMARY};--theme-secondary:{THEME_SECONDARY};--card-bg:{CARD_BG};--text-main:{TEXT_MAIN};--text-muted:{TEXT_MUTED};--font-family:{FONT_FAMILY};--border-radius:{BORDER_RADIUS};--card-shadow:{CARD_SHADOW};position:relative;overflow:hidden;background:var(--card-bg);border-radius:var(--border-radius);box-shadow:var(--card-shadow);border:1px solid color-mix(in srgb,var(--theme-primary) 26%,#ffffff 74%);font-family:var(--font-family);color:var(--text-main)\"><div style=\"position:absolute;inset:0;background:radial-gradient(circle at top right,color-mix(in srgb,var(--theme-secondary) 18%,transparent 82%),transparent 42%),radial-gradient(circle at bottom left,color-mix(in srgb,var(--theme-primary) 16%,transparent 84%),transparent 38%);pointer-events:none\"></div><div style=\"position:relative;padding:18px\"><header class=\"wy-header ai-beauty-card-title\" style=\"display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:14px 16px;border-radius:calc(var(--border-radius) - 4px);background:linear-gradient(135deg,color-mix(in srgb,var(--theme-primary) 18%,#ffffff 82%),color-mix(in srgb,var(--theme-secondary) 12%,#ffffff 88%));border:1px solid color-mix(in srgb,var(--theme-primary) 20%,#ffffff 80%)\"><div class=\"wy-header-left\" style=\"display:flex;align-items:center;gap:12px\"><div class=\"wy-avatar\" style=\"width:48px;height:48px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));color:#fff;font-size:26px;box-shadow:0 8px 18px rgba(0,0,0,.14)\">{AVATAR_EMOJI}</div><div class=\"wy-title-box\"><div style=\"display:inline-flex;align-items:center;gap:6px;padding:3px 10px;margin-bottom:8px;border-radius:999px;background:rgba(255,255,255,.65);font-size:12px;color:var(--text-muted)\">主题视觉 {BOTTOM_DECOR}</div><h3 class=\"wy-role-name\" style=\"margin:0;font-size:1.22rem;font-weight:800;color:var(--theme-primary);line-height:1.2\">{ROLE_NAME}</h3><span class=\"wy-scene\" style=\"display:block;margin-top:4px;color:var(--text-muted);font-size:.86rem\">{SCENE_TITLE}</span></div></div><div style=\"text-align:right\"><div style=\"font-size:1.25rem;color:var(--theme-secondary)\">{TOP_DECOR_ICON}</div><div style=\"margin-top:8px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.7);font-size:12px;color:var(--text-muted)\">章节焦点</div></div></header><div class=\"wy-divider\" style=\"display:flex;align-items:center;gap:10px;margin:14px 0 12px\"><span style=\"flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--theme-primary),transparent)\"></span><span class=\"wy-divider-icon\" style=\"padding:0 10px;color:var(--theme-secondary);font-size:1rem\">{DIVIDER_EMOJI}</span><span style=\"flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--theme-secondary),transparent)\"></span></div><section class=\"ai-beauty-card-body\"><section class=\"wy-meta\" data-block=\"time\" style=\"display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.66);border:1px solid rgba(255,255,255,.5);backdrop-filter:blur(6px)\"><span style=\"font-weight:700;color:var(--theme-primary)\">时间轴</span><span>{TIME_TEXT}</span></section><section class=\"wy-stats\" data-block=\"status\" style=\"display:flex;flex-direction:column;gap:8px;margin-top:12px;padding:12px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.74),rgba(255,255,255,.52));border:1px solid color-mix(in srgb,var(--theme-secondary) 14%,#ffffff 86%)\">" + statusBlock + "</section><section data-block=\"relations\" style=\"margin-top:12px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,rgba(255,255,255,.92),rgba(240,248,255,.88));border:1px solid color-mix(in srgb,var(--theme-secondary) 18%,#ffffff 82%)\"><div style=\"font-size:12px;font-weight:700;color:var(--theme-secondary);margin-bottom:8px\">👥 人物关系</div><div style=\"display:flex;flex-wrap:wrap;gap:8px\">{RELATIONS_HTML}</div></section><section data-block=\"event\" style=\"margin-top:14px;padding:14px 15px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(255,251,245,.92));border:1px solid rgba(226,205,173,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.85)\"><div style=\"display:inline-flex;align-items:center;gap:6px;padding:4px 10px;margin-bottom:10px;border-radius:999px;background:color-mix(in srgb,var(--theme-primary) 12%,#ffffff 88%);color:var(--theme-primary);font-size:12px;font-weight:700\">剧情正文</div><div class=\"wy-content\" style=\"line-height:1.78;color:var(--text-main)\">{MAIN_STORY_TEXT}</div></section><section data-block=\"thought\" style=\"margin-top:12px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,color-mix(in srgb,var(--theme-secondary) 10%,#ffffff 90%),rgba(255,255,255,.88));border:1px dashed color-mix(in srgb,var(--theme-secondary) 32%,#ffffff 68%)\"><div style=\"font-size:12px;font-weight:700;color:var(--theme-secondary);margin-bottom:8px\">AI想法</div><div class=\"wy-content\" style=\"color:var(--text-main);line-height:1.7\">{AI_THOUGHT_TEXT}</div></section><section class=\"wy-options\" data-block=\"choices\" style=\"display:flex;flex-direction:column;gap:10px;margin-top:14px\"><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_1}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(255,243,231,.92));border:1px solid color-mix(in srgb,var(--theme-primary) 24%,#ffffff 76%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));color:#fff\">{OPT_ICON_1}</span><span>1. {OPT_TEXT_1}</span></div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_2}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(238,247,255,.92));border:1px solid color-mix(in srgb,var(--theme-secondary) 24%,#ffffff 76%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-secondary),var(--theme-primary));color:#fff\">{OPT_ICON_2}</span><span>2. {OPT_TEXT_2}</span></div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_3}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(246,239,255,.92));border:1px solid color-mix(in srgb,var(--theme-primary) 20%,var(--theme-secondary) 18%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));color:#fff\">{OPT_ICON_3}</span><span>3. {OPT_TEXT_3}</span></div></section><div class=\"wy-footer-decor\" data-block=\"hint\" style=\"margin-top:16px;padding:12px 14px;border-radius:16px;text-align:center;background:linear-gradient(90deg,color-mix(in srgb,var(--theme-primary) 10%,#ffffff 90%),color-mix(in srgb,var(--theme-secondary) 10%,#ffffff 90%));color:var(--text-muted);font-size:.88rem\">{BOTTOM_DECOR} {BOTTOM_DECOR} 提示：可直接点击上方按钮继续剧情 {BOTTOM_DECOR} {BOTTOM_DECOR}</div></section></div></article>";
             const tagSpans = (Array.isArray(state && state.panelStatusTags) && state.panelStatusTags.length
                 ? state.panelStatusTags.slice(0, 4)
                 : [{ label: "身份", value: "" }, { label: "阵营", value: "" }, { label: "处境", value: "" }]
@@ -2675,7 +2675,7 @@
                 : `<div style="font-size:.82rem;color:var(--text-muted);padding:4px 0;">暂无关键人物</div>`;
             const enrichedBase = base
                 .replace("font-size:1.22rem;", "font-size:1.62rem;letter-spacing:0.02em;")
-                .replace(`✨ ${statusPanelLabel}：{STATS_HTML}`, `✨ ${statusPanelLabel}<div style="margin-top:8px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;"><span style="padding:6px 8px;border-radius:10px;background:color-mix(in srgb,var(--theme-primary) 14%,#ffffff 86%);border:1px solid color-mix(in srgb,var(--theme-primary) 28%,#ffffff 72%);font-weight:700;font-size:1rem;">{STATS_HTML}</span><span style="padding:6px 8px;border-radius:10px;background:color-mix(in srgb,var(--theme-secondary) 14%,#ffffff 86%);border:1px solid color-mix(in srgb,var(--theme-secondary) 28%,#ffffff 72%);font-size:.9rem;">状态趋势：稳定</span></div>`)
+                .replace(`✨ ${statusPanelLabel}：{STATS_HTML}`, `✨ ${statusPanelLabel}<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">{STATS_HTML}</div>`)
                 .replace(`🏷 关键标签：${tagsHtml}`, `🏷 关键标签<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;">${tagSpans}</div>`)
                 .replace("{RELATIONS_HTML}", npcRelationsHtml);
             if (themeMode !== "dark") return enrichedBase;
@@ -6066,11 +6066,8 @@
             const isDark = ThemeService.getMode() === "dark";
             // 只输出结构约束说明，不输出完整骨架 HTML（避免 prompt 过长）
             const { statusPanelLabel, tagsHtml } = HtmlCardTemplateService.buildSkeletonStateContext(state);
-            const structureHint = [
-                `data-block 顺序：time → status（含"${statusPanelLabel}"属性面板 + 标签"${tagsHtml}"）→ relations（人物关系）→ event（剧情正文）→ thought（AI想法）→ choices（3个选项）→ hint`,
-                "最外层：<article class=\"ai-beauty-card wenyou-card\">，body 层：class=\"ai-beauty-card-body\"",
-                "每个 data-block 必须是 ai-beauty-card-body 的直接子节点，不得嵌套"
-            ].join("\n");
+            // 精简骨架：只保留结构标签，去掉所有 style，让 AI 理解结构而不被样式干扰
+            const skeletonHint = `<article class="ai-beauty-card wenyou-card"><div class="ai-beauty-card-body"><section data-block="time">时间信息</section><section data-block="status"><div>✨ ${statusPanelLabel}：各属性数值</div><div>🏷 关键标签：${tagsHtml}</div></section><section data-block="relations">👥 人物关系卡片</section><section data-block="event"><div>剧情正文</div></section><section data-block="thought"><div>AI想法</div></section><section data-block="choices"><div data-choice="选项1">1. 选项1</div><div data-choice="选项2">2. 选项2</div><div data-choice="选项3">3. 选项3</div></section><div data-block="hint">提示文字</div></div></article>`;
             return [
                 "【美化卡片强制规则】",
                 `当前美化卡片设定：${normalizedTheme}`,
@@ -6078,8 +6075,8 @@
                     ? "当前为暗夜模式：必须输出透明背景/半透明玻璃感的深色卡片（非纯黑实心底），文字需高对比易读。"
                     : "当前为亮色模式：可使用温暖或高饱和视觉，但仍需保证可读性。",
                 ...PromptRulesRegistry.getBeautyCoreRules(),
-                "【卡片结构约束（必须严格遵守）】",
-                structureHint
+                "【卡片结构约束】必须严格按以下骨架输出 HTML，data-block 顺序和命名不可改变，status 区内状态面板和标签上下排列（不并列）：",
+                skeletonHint
             ].join("\n");
         }
         function buildSystemPrompt({ scenarioSpec, builtinRules, stateFactLock, runtimeContext, beautyRules }) {
@@ -6329,50 +6326,41 @@
             return { ...base, ...thinkingPayload };
         }
         async function streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken, extraBody = null, cardId = "" }) {
-                const payloadBody = buildExtraBody(extraBody, cardId);
-                const controller = new AbortController();
-                // 超时保护整个请求生命周期（含流读取阶段）
-                const timer = setTimeout(() => controller.abort(`stream timeout ${REQUEST_TIMEOUT_MS}ms`), REQUEST_TIMEOUT_MS);
-                let response;
-                try {
+            const payloadBody = buildExtraBody(extraBody, cardId);
+            const controller = new AbortController();
+            // 只对连接阶段设超时，流读取不限时（长文本生成可能很慢）
+            const timer = setTimeout(() => controller.abort(`connect timeout ${REQUEST_TIMEOUT_MS}ms`), REQUEST_TIMEOUT_MS);
+            let response;
+            try {
                 response = await fetch(fetchUrl, {
-                        method: "POST",
-                        headers,
-                        body: JSON.stringify({ model, messages, stream: true, temperature, ...payloadBody }),
-                        signal: controller.signal
-                    });
-                } catch (e) {
-                    clearTimeout(timer);
-                    if (e?.name === "AbortError") {
-                        throw createHttpError(408, `请求超时（>${REQUEST_TIMEOUT_MS / 1000}s）`, { endpoint: fetchUrl });
-                    }
-                    throw e;
-                }
-            if (!response.ok) {
+                    method: "POST",
+                    headers,
+                    body: JSON.stringify({ model, messages, stream: true, temperature, ...payloadBody }),
+                    signal: controller.signal
+                });
+            } catch (e) {
                 clearTimeout(timer);
+                if (e?.name === "AbortError") {
+                    throw createHttpError(408, `连接超时（>${REQUEST_TIMEOUT_MS / 1000}s）`, { endpoint: fetchUrl });
+                }
+                throw e;
+            }
+            clearTimeout(timer); // 连接成功后立即清除超时
+            if (!response.ok) {
                 const snippet = await readResponseSnippet(response);
                 throw createHttpError(response.status, `HTTP ${response.status}`, {
                     responseSnippet: snippet,
                     endpoint: fetchUrl
                 });
             }
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder("utf-8");
-                let tail = "";
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            let tail = "";
             let fullText = "";
             let stopRequested = false;
             try {
                 while (true) {
-                    let chunk;
-                    try {
-                        chunk = await reader.read();
-                    } catch (e) {
-                        if (e?.name === "AbortError") {
-                            throw createHttpError(408, `流读取超时（>${REQUEST_TIMEOUT_MS / 1000}s）`, { endpoint: fetchUrl });
-                        }
-                        throw e;
-                    }
-                    const { done, value } = chunk;
+                    const { done, value } = await reader.read();
                     if (done) break;
                     tail += decoder.decode(value, { stream: true });
                     const lines = tail.split("\n");
@@ -6384,26 +6372,21 @@
                             const token = payload.choices?.[0]?.delta?.content || "";
                             if (!token) continue;
                             fullText += token;
-                        if (typeof onToken === "function") {
-                            const shouldContinue = onToken(fullText);
-                            if (shouldContinue === false) {
-                                stopRequested = true;
-                                break;
+                            if (typeof onToken === "function") {
+                                const shouldContinue = onToken(fullText);
+                                if (shouldContinue === false) {
+                                    stopRequested = true;
+                                    break;
+                                }
                             }
-                        }
-                        } catch (e) {
-                        }
+                        } catch (e) {}
                     }
-                if (stopRequested) {
-                    try {
-                        await reader.cancel("end marker reached");
-                    } catch (e) {
+                    if (stopRequested) {
+                        try { await reader.cancel("end marker reached"); } catch (e) {}
+                        break;
                     }
-                    break;
                 }
-            }
             } finally {
-                clearTimeout(timer);
                 try { reader.cancel(); } catch (e) {}
             }
             return EndMarkerService.trimToMarker(fullText);
