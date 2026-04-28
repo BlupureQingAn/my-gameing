@@ -40,6 +40,14 @@
             --wechat-bubble-me-bg: linear-gradient(180deg, #d7f8b6, #bce995);
             --wechat-bubble-me-line: #9ed377;
             --wechat-text: #222222;
+            --btn-primary-bg: linear-gradient(135deg, color-mix(in srgb, var(--accent) 82%, white 18%), color-mix(in srgb, var(--accent) 58%, #f3c78d 42%));
+            --btn-primary-text: #fffaf4;
+            --btn-ghost-bg: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(245, 231, 212, 0.9));
+            --btn-ghost-text: var(--text);
+            --btn-ghost-line: color-mix(in srgb, var(--line) 82%, transparent);
+            --btn-danger-bg: linear-gradient(135deg, #e56965, #c94857);
+            --btn-success-bg: linear-gradient(135deg, #44a97d, #2f7b61);
+            --btn-edit-bg: linear-gradient(135deg, #8a74ff, #6b56df);
         }
 
         body[data-theme="dark"] {
@@ -75,6 +83,14 @@
             --wechat-bubble-me-bg: linear-gradient(180deg, #2e7d5d, #236649);
             --wechat-bubble-me-line: #368564;
             --wechat-text: #eef3ff;
+            --btn-primary-bg: linear-gradient(135deg, #8f7dff, #6458d6);
+            --btn-primary-text: #f6f3ff;
+            --btn-ghost-bg: linear-gradient(180deg, rgba(40, 49, 69, 0.96), rgba(26, 34, 50, 0.94));
+            --btn-ghost-text: #e8edf8;
+            --btn-ghost-line: rgba(110, 129, 167, 0.34);
+            --btn-danger-bg: linear-gradient(135deg, #d95e6b, #a63e55);
+            --btn-success-bg: linear-gradient(135deg, #3f9970, #2d7658);
+            --btn-edit-bg: linear-gradient(135deg, #7d88ff, #5f68d8);
         }
 
         /* ==================== 布局层（Base / Layout） ==================== */
@@ -199,22 +215,22 @@
             margin-bottom: 8px;
         }
 
+        .play-toolbar {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
         .nav-actions {
             display: flex;
             gap: 8px;
-            margin-bottom: 8px;
+            margin-bottom: 0;
         }
 
         .top-mini-nav {
             display: flex;
             gap: 6px;
             align-items: center;
-        }
-
-        .timeline-actions {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 8px;
         }
 
         .gender-actions {
@@ -473,6 +489,42 @@
             background: var(--story-board-bg);
             border-color: var(--story-board-line);
             box-shadow: var(--glow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #story-board > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        body[data-theme="dark"] #story-board::before,
+        body[data-theme="dark"] #story-board::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        body[data-theme="dark"] #story-board::before {
+            z-index: 0;
+            background:
+                radial-gradient(circle at 12% 18%, rgba(255,255,255,0.95) 0 1px, transparent 1.8px),
+                radial-gradient(circle at 28% 42%, rgba(166,200,255,0.88) 0 1px, transparent 1.8px),
+                radial-gradient(circle at 44% 14%, rgba(255,255,255,0.9) 0 1.2px, transparent 2px),
+                radial-gradient(circle at 66% 36%, rgba(160,179,255,0.85) 0 1px, transparent 1.7px),
+                radial-gradient(circle at 82% 22%, rgba(255,255,255,0.92) 0 1.1px, transparent 1.8px),
+                radial-gradient(circle at 90% 66%, rgba(201,226,255,0.8) 0 1px, transparent 1.6px),
+                linear-gradient(180deg, rgba(9, 16, 30, 0.88), rgba(6, 12, 24, 0.94));
+            opacity: 0.9;
+        }
+
+        body[data-theme="dark"] #story-board::after {
+            z-index: 0;
+            background:
+                radial-gradient(circle at 50% -18%, rgba(141,124,255,0.26), transparent 46%),
+                radial-gradient(circle at 18% 118%, rgba(74,128,255,0.18), transparent 44%),
+                radial-gradient(circle at 84% 96%, rgba(83,193,255,0.14), transparent 40%);
         }
 
         .story-log {
@@ -502,23 +554,39 @@
 
         /* 交互态 */
         .mini-btn {
-            border: 0;
+            border: 1px solid transparent;
             border-radius: 10px;
             padding: 9px 10px;
             cursor: pointer;
             flex: 1;
             font-weight: 600;
             font-size: 0.82rem;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, filter 0.18s ease;
+            box-shadow: 0 8px 18px rgba(72, 47, 20, 0.10);
         }
 
         .mini-btn.primary {
-            background: var(--accent);
-            color: #fff;
+            background: var(--btn-primary-bg);
+            color: var(--btn-primary-text);
+            border-color: transparent;
         }
 
         .mini-btn.ghost {
-            background: #f3e5d2;
-            color: var(--text);
+            background: var(--btn-ghost-bg);
+            color: var(--btn-ghost-text);
+            border-color: var(--btn-ghost-line);
+        }
+
+        .mini-btn:hover,
+        .tiny-btn:hover,
+        .choice-btn:hover,
+        .send-btn:hover,
+        .quick-btn:hover,
+        .emoji-btn:hover,
+        .scenario-action-btn:hover,
+        .swipe-delete-btn:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.03);
         }
 
         /* ---- 聊天组件（Chat Components） ---- */
@@ -579,6 +647,58 @@
             border-top: 1px solid var(--line);
             padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
             backdrop-filter: blur(12px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .footer-nav-shell {
+            position: relative;
+            padding-left: 26px;
+        }
+
+        .footer-nav-toggle {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 18px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 18%, white 82%), color-mix(in srgb, var(--accent) 42%, transparent));
+            border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-dark);
+            user-select: none;
+            box-shadow: 0 8px 16px rgba(72, 47, 20, 0.10);
+        }
+
+        .footer-nav-toggle::before {
+            content: "‹";
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .chat-footer.nav-collapsed .footer-nav-toggle::before {
+            content: "›";
+        }
+
+        .chat-footer.nav-collapsed .footer-nav-shell {
+            padding-left: 22px;
+        }
+
+        .chat-footer.nav-collapsed .nav-actions {
+            max-width: 0;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-10px);
+        }
+
+        .chat-footer .nav-actions {
+            transition: max-width 0.22s ease, opacity 0.18s ease, transform 0.18s ease;
+            max-width: 1000px;
         }
 
         /* 文本 */
@@ -737,11 +857,12 @@
         /* 交互态 */
         .choice-btn {
             border: 1px solid var(--line);
-            background: #fff6eb;
+            background: var(--btn-ghost-bg);
             border-radius: 999px;
             padding: 6px 10px;
             cursor: pointer;
             font-size: 0.8rem;
+            color: var(--btn-ghost-text);
         }
 
         .quick-btn {
@@ -819,12 +940,13 @@
 
         .tiny-btn {
             border: 1px solid var(--line);
-            background: color-mix(in srgb, var(--card) 70%, white 30%);
-            color: var(--text);
+            background: var(--btn-ghost-bg);
+            color: var(--btn-ghost-text);
             border-radius: 8px;
             padding: 6px 8px;
             font-size: 0.75rem;
             cursor: pointer;
+            border-color: var(--btn-ghost-line);
         }
 
         .social-chat-box {
@@ -958,7 +1080,7 @@
         .swipe-delete-btn {
             width: 100%;
             border: 0;
-            background: #dc5b56;
+            background: var(--btn-danger-bg);
             color: #fff;
             font-weight: 700;
             cursor: pointer;
@@ -1252,18 +1374,19 @@
             color: #fff;
             font-size: 0.74rem;
             cursor: pointer;
+            font-weight: 700;
         }
 
         .scenario-action-btn.edit {
-            background: #7f6bf3;
+            background: var(--btn-edit-bg);
         }
 
         .scenario-action-btn.delete {
-            background: #dc5b56;
+            background: var(--btn-danger-bg);
         }
 
         .scenario-action-btn.pin {
-            background: #3a8f6d;
+            background: var(--btn-success-bg);
         }
 
         .scenario-action-btn[disabled] {
@@ -1332,8 +1455,8 @@
 
         .send-btn {
             border: 0;
-            background: var(--accent);
-            color: #fff;
+            background: var(--btn-primary-bg);
+            color: var(--btn-primary-text);
             border-radius: 12px;
             width: 86px;
             height: 42px;
@@ -1487,6 +1610,16 @@
             }
             .send-btn {
                 width: 72px;
+            }
+            .footer-nav-shell {
+                padding-left: 24px;
+            }
+            .nav-actions {
+                gap: 6px;
+            }
+            .nav-btn {
+                font-size: 0.76rem;
+                padding: 8px 6px;
             }
         }
     </style>
@@ -1653,23 +1786,24 @@
     </main>
 
     <footer class="chat-footer">
-        <div class="nav-actions">
-            <button class="nav-btn" data-view="view-main" data-nav-scope="play" onclick="switchView('view-main')">📖 生涯</button>
-            <button class="nav-btn" data-view="view-inventory" data-nav-scope="play" onclick="switchView('view-inventory')">🎒 背包</button>
-            <button class="nav-btn" data-view="view-social" data-nav-scope="play" onclick="switchView('view-social')">💬 社交</button>
-            <button class="nav-btn" data-view="view-saves" data-nav-scope="play" onclick="switchView('view-saves')">💾 存档</button>
-        </div>
-        <div class="quick-actions">
-            <button class="quick-btn" id="btn-next-month" onclick="sendUserText('下一月')">⏭ 下一月</button>
-            <button class="quick-btn" onclick="sendUserText('继续')">▶ 继续</button>
-        </div>
-        <div class="timeline-actions">
-            <button class="quick-btn" onclick="jumpWeek(-1)">⏪ 上一周</button>
-            <button class="quick-btn" onclick="jumpWeek(1)">⏩ 下一周</button>
-        </div>
-        <div class="composer">
-            <textarea id="chat-input" placeholder="输入你的行动或对白…"></textarea>
-            <button class="send-btn" id="send-btn" onclick="onSendClick()">发送</button>
+        <div class="play-toolbar">
+            <div class="quick-actions">
+                <button class="quick-btn" id="btn-next-month" onclick="sendUserText('下一月')">⏭ 下一月</button>
+                <button class="quick-btn" onclick="sendUserText('继续')">▶ 继续</button>
+            </div>
+            <div class="composer">
+                <textarea id="chat-input" placeholder="输入你的行动或对白…"></textarea>
+                <button class="send-btn" id="send-btn" onclick="onSendClick()">发送</button>
+            </div>
+            <div class="footer-nav-shell">
+                <div class="footer-nav-toggle" onclick="togglePlayDockNav()" title="收起/展开导航"></div>
+                <div class="nav-actions">
+                    <button class="nav-btn" data-view="view-main" data-nav-scope="play" onclick="switchView('view-main')">📖 生涯</button>
+                    <button class="nav-btn" data-view="view-inventory" data-nav-scope="play" onclick="switchView('view-inventory')">🎒 背包</button>
+                    <button class="nav-btn" data-view="view-social" data-nav-scope="play" onclick="switchView('view-social')">💬 社交</button>
+                    <button class="nav-btn" data-view="view-saves" data-nav-scope="play" onclick="switchView('view-saves')">💾 存档</button>
+                </div>
+            </div>
         </div>
     </footer>
 
@@ -2021,6 +2155,20 @@
         return { enterPlay, leavePlay, isInPlayMode, getActivePlayCardId };
     })();
 
+    const PlayDockService = (() => {
+        let navCollapsed = false;
+        function apply() {
+            const footer = document.querySelector(".chat-footer");
+            if (!footer) return;
+            footer.classList.toggle("nav-collapsed", navCollapsed);
+        }
+        function toggleNav() {
+            navCollapsed = !navCollapsed;
+            apply();
+        }
+        return { apply, toggleNav };
+    })();
+
     const NavigationVisibilityService = (() => {
             const PLAY_VIEWS = new Set(["view-main", "view-inventory", "view-social", "view-npc-chat", "view-saves"]);
         function apply(viewId) {
@@ -2039,8 +2187,8 @@
             if (footer) footer.style.display = enableGamePanels ? "block" : "none";
             document.getElementById("game-stats-card").style.display = enableGamePanels ? "grid" : "none";
             document.querySelector(".quick-actions").style.display = enableGamePanels ? "flex" : "none";
-            document.querySelector(".timeline-actions").style.display = enableGamePanels ? "flex" : "none";
             document.querySelector(".chat-footer .composer").style.display = enableGamePanels ? "flex" : "none";
+            PlayDockService.apply();
 
             const editBtn = document.getElementById("top-edit-card-btn");
             const hasSelectedCard = !!ScenarioCardService.getSelectedCard();
@@ -2309,18 +2457,6 @@
             Utils.shiftDays(gameState, 30);
             gameState.age += 1;
         }
-        function jumpWeek(deltaWeek) {
-            const step = Number(deltaWeek) || 0;
-            if (Number.isFinite(Number(gameState.weekIndex))) {
-                gameState.weekIndex = Math.max(1, Math.floor(Number(gameState.weekIndex)) + step);
-            } else {
-                gameState.weekIndex = Math.max(1, 1 + step);
-            }
-            // 若有明确年月日，则同步推进日期；否则仅推进周序号（年代/时期模式）
-            if (gameState.currentYear && gameState.currentMonth) {
-                Utils.shiftDays(gameState, step * 7);
-            }
-        }
 
         function pushHistory(msg) {
             gameState.history.push(msg);
@@ -2330,7 +2466,7 @@
             gameState.chatMemory.push({ role, content });
         }
 
-        return { init, get, save, resetWithPreset, advanceMonthIfNeeded, jumpWeek, pushHistory, pushChat };
+        return { init, get, save, resetWithPreset, advanceMonthIfNeeded, pushHistory, pushChat };
     })();
 
     const MarkdownService = (() => {
@@ -2447,6 +2583,7 @@
         const DEFAULT_CHOICES = ["继续观察局势", "与关键人物交流", "推进当前主线"];
         const REQUIRED_BLOCKS = ["time", "status", "event", "choices"];
         const BASE_STYLE = "--theme-primary:#6a11cb;--theme-secondary:#2575fc;--card-bg:linear-gradient(to bottom right,#ffffff,#f0f4fd);--text-main:#2c3e50;--text-muted:#7f8c8d;--font-family:'PingFang SC','Microsoft YaHei',sans-serif;--border-radius:12px;--card-shadow:0 10px 25px rgba(106,17,203,0.15)";
+        const BASE_STYLE_DARK = "--theme-primary:#9b8bff;--theme-secondary:#45b6ff;--card-bg:linear-gradient(180deg,rgba(20,28,42,0.28),rgba(13,19,31,0.22));--text-main:#eaf0ff;--text-muted:#a8b6d4;--font-family:'PingFang SC','Microsoft YaHei',sans-serif;--border-radius:12px;--card-shadow:0 16px 34px rgba(0,0,0,0.3)";
         const EMBED_STYLE = ".wenyou-card .wy-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}.wenyou-card .wy-header-left{display:flex;align-items:center;gap:12px}.wenyou-card .wy-avatar{font-size:28px;color:var(--theme-primary)}.wenyou-card .wy-role-name{font-size:1.1rem;font-weight:700;color:var(--theme-primary);margin:0;line-height:1.2}.wenyou-card .wy-scene{font-size:.8rem;color:var(--text-muted);margin-top:2px}.wenyou-card .wy-divider{display:flex;align-items:center;text-align:center;margin:15px 0;color:var(--theme-secondary)}.wenyou-card .wy-divider:before,.wenyou-card .wy-divider:after{content:'';flex:1;border-bottom:1px dashed var(--theme-secondary);opacity:.4}.wenyou-card .wy-divider-icon{padding:0 10px;font-size:.9rem}.wenyou-card .wy-content{font-size:.95rem;line-height:1.6;margin-bottom:14px;text-align:justify}.wenyou-card .wy-meta{font-size:.82rem;color:var(--text-muted);margin-bottom:10px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.38);display:inline-flex;max-width:100%}.wenyou-card .wy-stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;background:rgba(128,128,128,.05);padding:10px;border-radius:8px;border-left:3px solid var(--theme-secondary)}.wenyou-card .wy-stat-item{font-size:.85rem;background:rgba(255,255,255,.55);padding:4px 8px;border-radius:4px;display:flex;align-items:center;gap:4px}.wenyou-card .wy-stat-value{font-weight:700;color:var(--theme-primary)}.wenyou-card .wy-options{display:flex;flex-direction:column;gap:10px}.wenyou-card .wy-option-btn{display:flex;align-items:center;padding:12px 15px;background:transparent;border:1px solid var(--theme-primary);color:var(--theme-primary);border-radius:var(--border-radius);font-size:.95rem;cursor:pointer;transition:all .2s;text-decoration:none}.wenyou-card .wy-option-btn:hover{background:var(--theme-primary);color:#fff;transform:translateX(5px)}.wenyou-card .wy-opt-icon{margin-right:10px;font-size:1.1rem}.wenyou-card .wy-footer-decor{text-align:center;margin-top:16px;font-size:1.3rem;color:var(--theme-secondary);opacity:.35;letter-spacing:4px}";
         function getDefaultBeautyHint() {
             return DEFAULT_THEME_HINT;
@@ -2466,8 +2603,12 @@
         function getRequiredBlocks() {
             return [...REQUIRED_BLOCKS];
         }
-        function getSkeletonHtml() {
-            return "<article class=\"ai-beauty-card wenyou-card\" style=\"--theme-primary:{THEME_PRIMARY};--theme-secondary:{THEME_SECONDARY};--card-bg:{CARD_BG};--text-main:{TEXT_MAIN};--text-muted:{TEXT_MUTED};--font-family:{FONT_FAMILY};--border-radius:{BORDER_RADIUS};--card-shadow:{CARD_SHADOW};position:relative;overflow:hidden;background:var(--card-bg);border-radius:var(--border-radius);box-shadow:var(--card-shadow);border:1px solid color-mix(in srgb,var(--theme-primary) 26%,#ffffff 74%);font-family:var(--font-family);color:var(--text-main)\"><div style=\"position:absolute;inset:0;background:radial-gradient(circle at top right,color-mix(in srgb,var(--theme-secondary) 18%,transparent 82%),transparent 42%),radial-gradient(circle at bottom left,color-mix(in srgb,var(--theme-primary) 16%,transparent 84%),transparent 38%);pointer-events:none\"></div><div style=\"position:relative;padding:18px\"><header class=\"wy-header ai-beauty-card-title\" style=\"display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:14px 16px;border-radius:calc(var(--border-radius) - 4px);background:linear-gradient(135deg,color-mix(in srgb,var(--theme-primary) 18%,#ffffff 82%),color-mix(in srgb,var(--theme-secondary) 12%,#ffffff 88%));border:1px solid color-mix(in srgb,var(--theme-primary) 20%,#ffffff 80%)\"><div class=\"wy-header-left\" style=\"display:flex;align-items:center;gap:12px\"><div class=\"wy-avatar\" style=\"width:48px;height:48px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));color:#fff;font-size:26px;box-shadow:0 8px 18px rgba(0,0,0,.14)\">{AVATAR_EMOJI}</div><div class=\"wy-title-box\"><div style=\"display:inline-flex;align-items:center;gap:6px;padding:3px 10px;margin-bottom:8px;border-radius:999px;background:rgba(255,255,255,.65);font-size:12px;color:var(--text-muted)\">主题视觉 {BOTTOM_DECOR}</div><h3 class=\"wy-role-name\" style=\"margin:0;font-size:1.22rem;font-weight:800;color:var(--theme-primary);line-height:1.2\">{ROLE_NAME}</h3><span class=\"wy-scene\" style=\"display:block;margin-top:4px;color:var(--text-muted);font-size:.86rem\">{SCENE_TITLE}</span></div></div><div style=\"text-align:right\"><div style=\"font-size:1.25rem;color:var(--theme-secondary)\">{TOP_DECOR_ICON}</div><div style=\"margin-top:8px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.7);font-size:12px;color:var(--text-muted)\">章节焦点</div></div></header><div class=\"wy-divider\" style=\"display:flex;align-items:center;gap:10px;margin:14px 0 12px\"><span style=\"flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--theme-primary),transparent)\"></span><span class=\"wy-divider-icon\" style=\"padding:0 10px;color:var(--theme-secondary);font-size:1rem\">{DIVIDER_EMOJI}</span><span style=\"flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--theme-secondary),transparent)\"></span></div><section class=\"ai-beauty-card-body\"><section class=\"wy-meta\" data-block=\"time\" style=\"display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.66);border:1px solid rgba(255,255,255,.5);backdrop-filter:blur(6px)\"><span style=\"font-weight:700;color:var(--theme-primary)\">时间轴</span><span>{TIME_TEXT}</span></section><section class=\"wy-stats\" data-block=\"status\" style=\"display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px;padding:12px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.74),rgba(255,255,255,.52));border:1px solid color-mix(in srgb,var(--theme-secondary) 14%,#ffffff 86%)\"><div class=\"wy-stat-item\" style=\"padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(255,244,232,.88));border-left:4px solid var(--theme-primary)\">✨ 主角状态：{STATS_HTML}</div><div class=\"wy-stat-item\" style=\"padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(239,247,255,.88));border-left:4px solid var(--theme-secondary)\">🏷 关键标签：身份 / 阵营 / 处境</div></section><section data-block=\"event\" style=\"margin-top:14px;padding:14px 15px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(255,251,245,.92));border:1px solid rgba(226,205,173,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.85)\"><div style=\"display:inline-flex;align-items:center;gap:6px;padding:4px 10px;margin-bottom:10px;border-radius:999px;background:color-mix(in srgb,var(--theme-primary) 12%,#ffffff 88%);color:var(--theme-primary);font-size:12px;font-weight:700\">剧情正文</div><div class=\"wy-content\" style=\"line-height:1.78;color:var(--text-main)\">{MAIN_STORY_TEXT}</div></section><section data-block=\"thought\" style=\"margin-top:12px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,color-mix(in srgb,var(--theme-secondary) 10%,#ffffff 90%),rgba(255,255,255,.88));border:1px dashed color-mix(in srgb,var(--theme-secondary) 32%,#ffffff 68%)\"><div style=\"font-size:12px;font-weight:700;color:var(--theme-secondary);margin-bottom:8px\">AI想法</div><div class=\"wy-content\" style=\"color:var(--text-main);line-height:1.7\">{AI_THOUGHT_TEXT}</div></section><section class=\"wy-options\" data-block=\"choices\" style=\"display:flex;flex-direction:column;gap:10px;margin-top:14px\"><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_1}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(255,243,231,.92));border:1px solid color-mix(in srgb,var(--theme-primary) 24%,#ffffff 76%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));color:#fff\">{OPT_ICON_1}</span><span>1. {OPT_TEXT_1}</span></div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_2}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(238,247,255,.92));border:1px solid color-mix(in srgb,var(--theme-secondary) 24%,#ffffff 76%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-secondary),var(--theme-primary));color:#fff\">{OPT_ICON_2}</span><span>2. {OPT_TEXT_2}</span></div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_3}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(246,239,255,.92));border:1px solid color-mix(in srgb,var(--theme-primary) 20%,var(--theme-secondary) 18%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));color:#fff\">{OPT_ICON_3}</span><span>3. {OPT_TEXT_3}</span></div></section><div class=\"wy-footer-decor\" data-block=\"hint\" style=\"margin-top:16px;padding:12px 14px;border-radius:16px;text-align:center;background:linear-gradient(90deg,color-mix(in srgb,var(--theme-primary) 10%,#ffffff 90%),color-mix(in srgb,var(--theme-secondary) 10%,#ffffff 90%));color:var(--text-muted);font-size:.88rem\">{BOTTOM_DECOR} {BOTTOM_DECOR} 提示：可直接点击上方按钮继续剧情 {BOTTOM_DECOR} {BOTTOM_DECOR}</div></section></div></article>";
+        function getSkeletonHtml(themeMode = "light") {
+            const base = "<article class=\"ai-beauty-card wenyou-card\" style=\"--theme-primary:{THEME_PRIMARY};--theme-secondary:{THEME_SECONDARY};--card-bg:{CARD_BG};--text-main:{TEXT_MAIN};--text-muted:{TEXT_MUTED};--font-family:{FONT_FAMILY};--border-radius:{BORDER_RADIUS};--card-shadow:{CARD_SHADOW};position:relative;overflow:hidden;background:var(--card-bg);border-radius:var(--border-radius);box-shadow:var(--card-shadow);border:1px solid color-mix(in srgb,var(--theme-primary) 26%,#ffffff 74%);font-family:var(--font-family);color:var(--text-main)\"><div style=\"position:absolute;inset:0;background:radial-gradient(circle at top right,color-mix(in srgb,var(--theme-secondary) 18%,transparent 82%),transparent 42%),radial-gradient(circle at bottom left,color-mix(in srgb,var(--theme-primary) 16%,transparent 84%),transparent 38%);pointer-events:none\"></div><div style=\"position:relative;padding:18px\"><header class=\"wy-header ai-beauty-card-title\" style=\"display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:14px 16px;border-radius:calc(var(--border-radius) - 4px);background:linear-gradient(135deg,color-mix(in srgb,var(--theme-primary) 18%,#ffffff 82%),color-mix(in srgb,var(--theme-secondary) 12%,#ffffff 88%));border:1px solid color-mix(in srgb,var(--theme-primary) 20%,#ffffff 80%)\"><div class=\"wy-header-left\" style=\"display:flex;align-items:center;gap:12px\"><div class=\"wy-avatar\" style=\"width:48px;height:48px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));color:#fff;font-size:26px;box-shadow:0 8px 18px rgba(0,0,0,.14)\">{AVATAR_EMOJI}</div><div class=\"wy-title-box\"><div style=\"display:inline-flex;align-items:center;gap:6px;padding:3px 10px;margin-bottom:8px;border-radius:999px;background:rgba(255,255,255,.65);font-size:12px;color:var(--text-muted)\">主题视觉 {BOTTOM_DECOR}</div><h3 class=\"wy-role-name\" style=\"margin:0;font-size:1.22rem;font-weight:800;color:var(--theme-primary);line-height:1.2\">{ROLE_NAME}</h3><span class=\"wy-scene\" style=\"display:block;margin-top:4px;color:var(--text-muted);font-size:.86rem\">{SCENE_TITLE}</span></div></div><div style=\"text-align:right\"><div style=\"font-size:1.25rem;color:var(--theme-secondary)\">{TOP_DECOR_ICON}</div><div style=\"margin-top:8px;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.7);font-size:12px;color:var(--text-muted)\">章节焦点</div></div></header><div class=\"wy-divider\" style=\"display:flex;align-items:center;gap:10px;margin:14px 0 12px\"><span style=\"flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--theme-primary),transparent)\"></span><span class=\"wy-divider-icon\" style=\"padding:0 10px;color:var(--theme-secondary);font-size:1rem\">{DIVIDER_EMOJI}</span><span style=\"flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--theme-secondary),transparent)\"></span></div><section class=\"ai-beauty-card-body\"><section class=\"wy-meta\" data-block=\"time\" style=\"display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.66);border:1px solid rgba(255,255,255,.5);backdrop-filter:blur(6px)\"><span style=\"font-weight:700;color:var(--theme-primary)\">时间轴</span><span>{TIME_TEXT}</span></section><section class=\"wy-stats\" data-block=\"status\" style=\"display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px;padding:12px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.74),rgba(255,255,255,.52));border:1px solid color-mix(in srgb,var(--theme-secondary) 14%,#ffffff 86%)\"><div class=\"wy-stat-item\" style=\"padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(255,244,232,.88));border-left:4px solid var(--theme-primary)\">✨ 主角状态：{STATS_HTML}</div><div class=\"wy-stat-item\" style=\"padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(239,247,255,.88));border-left:4px solid var(--theme-secondary)\">🏷 关键标签：身份 / 阵营 / 处境</div></section><section data-block=\"event\" style=\"margin-top:14px;padding:14px 15px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(255,251,245,.92));border:1px solid rgba(226,205,173,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.85)\"><div style=\"display:inline-flex;align-items:center;gap:6px;padding:4px 10px;margin-bottom:10px;border-radius:999px;background:color-mix(in srgb,var(--theme-primary) 12%,#ffffff 88%);color:var(--theme-primary);font-size:12px;font-weight:700\">剧情正文</div><div class=\"wy-content\" style=\"line-height:1.78;color:var(--text-main)\">{MAIN_STORY_TEXT}</div></section><section data-block=\"thought\" style=\"margin-top:12px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,color-mix(in srgb,var(--theme-secondary) 10%,#ffffff 90%),rgba(255,255,255,.88));border:1px dashed color-mix(in srgb,var(--theme-secondary) 32%,#ffffff 68%)\"><div style=\"font-size:12px;font-weight:700;color:var(--theme-secondary);margin-bottom:8px\">AI想法</div><div class=\"wy-content\" style=\"color:var(--text-main);line-height:1.7\">{AI_THOUGHT_TEXT}</div></section><section class=\"wy-options\" data-block=\"choices\" style=\"display:flex;flex-direction:column;gap:10px;margin-top:14px\"><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_1}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(255,243,231,.92));border:1px solid color-mix(in srgb,var(--theme-primary) 24%,#ffffff 76%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));color:#fff\">{OPT_ICON_1}</span><span>1. {OPT_TEXT_1}</span></div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_2}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(238,247,255,.92));border:1px solid color-mix(in srgb,var(--theme-secondary) 24%,#ffffff 76%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-secondary),var(--theme-primary));color:#fff\">{OPT_ICON_2}</span><span>2. {OPT_TEXT_2}</span></div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_3}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(246,239,255,.92));border:1px solid color-mix(in srgb,var(--theme-primary) 20%,var(--theme-secondary) 18%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));color:#fff\">{OPT_ICON_3}</span><span>3. {OPT_TEXT_3}</span></div></section><div class=\"wy-footer-decor\" data-block=\"hint\" style=\"margin-top:16px;padding:12px 14px;border-radius:16px;text-align:center;background:linear-gradient(90deg,color-mix(in srgb,var(--theme-primary) 10%,#ffffff 90%),color-mix(in srgb,var(--theme-secondary) 10%,#ffffff 90%));color:var(--text-muted);font-size:.88rem\">{BOTTOM_DECOR} {BOTTOM_DECOR} 提示：可直接点击上方按钮继续剧情 {BOTTOM_DECOR} {BOTTOM_DECOR}</div></section></div></article>";
+            if (themeMode !== "dark") return base;
+            return base
+                .replace("background:var(--card-bg);", "background:var(--card-bg);backdrop-filter:blur(10px);")
+                .replace("border:1px solid color-mix(in srgb,var(--theme-primary) 26%,#ffffff 74%);", "border:1px solid color-mix(in srgb,var(--theme-primary) 44%,rgba(255,255,255,0.18) 56%);");
         }
         function buildChoicesHtml(choices = DEFAULT_CHOICES) {
             return choices.map((txt, idx) => `<div class="wy-option-btn" data-choice="${MarkdownService.escapeHtml(txt)}"><span class="wy-opt-icon">${["①", "②", "③"][idx] || String(idx + 1)}</span>${idx + 1}. ${MarkdownService.escapeHtml(txt)}</div>`).join("");
@@ -2475,8 +2616,13 @@
         function wrapAsHtmlCard(theme, bodyText) {
             const safeTheme = MarkdownService.escapeHtml(theme || DEFAULT_THEME_NAME);
             const bodyHtml = MarkdownService.render(bodyText || "剧情推进中...");
+            const isDark = ThemeService.getMode() === "dark";
+            const rootStyle = isDark ? BASE_STYLE_DARK : BASE_STYLE;
+            const extraStyle = isDark
+                ? "border:1px solid rgba(151,169,220,0.34);backdrop-filter:blur(10px);background:linear-gradient(180deg,rgba(20,28,42,0.28),rgba(13,19,31,0.22));"
+                : "border-top:4px solid var(--theme-primary);";
             return [
-                `<article class="ai-beauty-card wenyou-card" data-theme="${safeTheme}" style="${BASE_STYLE};max-width:500px;margin:8px auto;background:var(--card-bg);border-radius:var(--border-radius);box-shadow:var(--card-shadow);font-family:var(--font-family);color:var(--text-main);overflow:hidden;border-top:4px solid var(--theme-primary);padding:20px;box-sizing:border-box;">`,
+                `<article class="ai-beauty-card wenyou-card" data-theme="${safeTheme}" style="${rootStyle};max-width:500px;margin:8px auto;background:var(--card-bg);border-radius:var(--border-radius);box-shadow:var(--card-shadow);font-family:var(--font-family);color:var(--text-main);overflow:hidden;${extraStyle}padding:20px;box-sizing:border-box;">`,
                 `<style>${EMBED_STYLE}</style>`,
                 `<header class="wy-header ai-beauty-card-title"><div class="wy-header-left"><div class="wy-avatar">🎭</div><div class="wy-title-box"><h3 class="wy-role-name">${safeTheme}</h3><span class="wy-scene">当前回合</span></div></div><div class="wy-top-decor">✦</div></header>`,
                 `<div class="wy-divider"><span class="wy-divider-icon">✧</span></div>`,
@@ -2917,6 +3063,12 @@
                     ? container.querySelector(".ai-beauty-card")
                     : null;
             if (!(card instanceof HTMLElement)) return;
+            if (ThemeService.getMode() === "dark") {
+                card.style.background = "linear-gradient(180deg, rgba(20,28,42,0.26), rgba(13,19,31,0.2))";
+                card.style.border = "1px solid rgba(151,169,220,0.34)";
+                card.style.backdropFilter = "blur(10px)";
+                card.style.boxShadow = "0 18px 34px rgba(0,0,0,0.28)";
+            }
             card.querySelectorAll("*").forEach((el) => {
                 if (!(el instanceof HTMLElement)) return;
                 if (shouldSkipAutoColor(el)) return;
@@ -3382,6 +3534,18 @@
             const fields = ["name", "gender", "relation", "status", "mood", "traits"];
             fields.forEach((k) => { if (item[k] !== undefined && String(item[k]).trim()) npc[k] = String(item[k]).slice(0, 24); });
             if (item.favor !== undefined) npc.favor = Math.max(0, Math.min(100, Number(item.favor) || npc.favor || 60));
+            const nextProfile = item.profile && typeof item.profile === "object" ? item.profile : {};
+            const baseProfile = npc.profile && typeof npc.profile === "object" ? npc.profile : {};
+            npc.profile = {
+                age: String(nextProfile.age ?? baseProfile.age ?? "").slice(0, 16),
+                identity: String(nextProfile.identity ?? baseProfile.identity ?? "").slice(0, 40),
+                residence: String(nextProfile.residence ?? baseProfile.residence ?? "").slice(0, 40),
+                appearance: String(nextProfile.appearance ?? baseProfile.appearance ?? "").slice(0, 80),
+                personality: String(nextProfile.personality ?? baseProfile.personality ?? "").slice(0, 80),
+                goal: String(nextProfile.goal ?? baseProfile.goal ?? "").slice(0, 80),
+                secret: String(nextProfile.secret ?? baseProfile.secret ?? "").slice(0, 80),
+                firstImpression: String(nextProfile.firstImpression ?? baseProfile.firstImpression ?? "").slice(0, 80)
+            };
 
             // 二次去重：按 id/name 合并，优先保留信息更完整的一条
             const merged = [];
@@ -3407,6 +3571,11 @@
                 keep.status = keep.status || drop.status;
                 keep.mood = keep.mood || drop.mood;
                 keep.traits = keep.traits || drop.traits;
+                keep.profile = keep.profile && typeof keep.profile === "object" ? keep.profile : {};
+                const dropProfile = drop.profile && typeof drop.profile === "object" ? drop.profile : {};
+                ["age", "identity", "residence", "appearance", "personality", "goal", "secret", "firstImpression"].forEach((k) => {
+                    if (!String(keep.profile[k] || "").trim() && String(dropProfile[k] || "").trim()) keep.profile[k] = dropProfile[k];
+                });
                 if (!Number.isFinite(Number(keep.favor)) && Number.isFinite(Number(drop.favor))) keep.favor = drop.favor;
                 seen.set(key, keep);
             });
@@ -4206,10 +4375,15 @@
             const npcKey = String(npcId || "");
             const npc = findNpcByRef(state, npcKey);
             if (!panel || !box || !npc) return;
+            const chatKey = String(npc.id || npc.name || npcKey);
+            if (state.npcChats && npcKey && npcKey !== chatKey && Array.isArray(state.npcChats[npcKey]) && !Array.isArray(state.npcChats[chatKey])) {
+                state.npcChats[chatKey] = state.npcChats[npcKey];
+                delete state.npcChats[npcKey];
+            }
             document.getElementById("npc-chat-title").innerText = npc.name || "NPC";
             document.getElementById("npc-chat-sub").innerText = `${npc.relation || "熟人"}｜好感 ${npc.favor}｜${npc.status || "在线"}${npc.traits ? `｜${npc.traits}` : ""}`;
             document.getElementById("npc-chat-avatar-btn").onclick = () => Controller.openNpcProfile(npc.id || npc.name);
-            const chats = (state.npcChats && state.npcChats[npcKey]) || [];
+            const chats = (state.npcChats && state.npcChats[chatKey]) || [];
             box.innerHTML = chats.map((m) => {
                 const mine = m.from === "me";
                 const who = mine ? "我" : npc.name;
@@ -4679,9 +4853,19 @@
     })();
 
     const NpcChatService = (() => {
+        function getChatKey(state, npcId) {
+            const npc = findNpcByRef(state, npcId);
+            if (!npc) return String(npcId || "");
+            return String(npc.id || npc.name || "");
+        }
         function ensureNpcChatStore(state, npcId) {
-            const key = String(npcId || "");
+            const key = getChatKey(state, npcId);
             if (!state.npcChats || typeof state.npcChats !== "object") state.npcChats = {};
+            const legacyKey = String(npcId || "");
+            if (legacyKey && legacyKey !== key && Array.isArray(state.npcChats[legacyKey]) && !Array.isArray(state.npcChats[key])) {
+                state.npcChats[key] = state.npcChats[legacyKey];
+                delete state.npcChats[legacyKey];
+            }
             if (!Array.isArray(state.npcChats[key])) state.npcChats[key] = [];
             return state.npcChats[key];
         }
@@ -4720,8 +4904,8 @@
         }
 
         async function applyUserMessage(state, npcId, userText) {
-            const npcKey = String(npcId || "");
-            const npc = (state.npcs || []).find((n) => String(n.id || "") === npcKey);
+            const npcKey = getChatKey(state, npcId);
+            const npc = findNpcByRef(state, npcKey);
             if (!npc) return null;
             const chatList = ensureNpcChatStore(state, npcKey);
             const lastMsg = chatList[chatList.length - 1];
@@ -5403,16 +5587,20 @@
             const fetchUrl = AIRequestService.buildFetchUrl();
             const headers = AIRequestService.buildHeaders(apiConfig);
             const themeHint = String(beautySetting || HtmlCardTemplateService.getDefaultBeautyHint()).trim();
+            const isDark = ThemeService.getMode() === "dark";
             const systemPrompt = [
                 "你是文游HTML卡片模板设计器。",
                 "请仅输出一张可渲染的HTML卡片模板，最外层必须是 class=\"ai-beauty-card\"。",
                 "模板必须严格包含并沿用本地 data-block 结构：time/status/event/thought/choices/hint。",
                 "内容使用中性占位文案，不要写具体剧情。",
                 `你必须严格按“美化设定”设计视觉：主色/辅色/背景材质/装饰元素/字体风格必须和美化设定一致，不得使用通用默认风格。`,
+                isDark
+                    ? "当前是暗夜模式：卡片外层必须是透明/半透明深色背景（不允许纯白底），适配暗色生涯背景。"
+                    : "当前是亮色模式：卡片可采用亮底或柔和渐变。",
                 "必须在模板内显式体现：标题区、分隔装饰、正文区、状态区、结尾选项区（仅一组3选项）。",
                 "颜色对比必须可读：正文文字与背景需保持明显反差，避免近色。",
                 "以下是必须参考的本地模板骨架，请保留结构语义，只替换主题视觉与占位内容：",
-                HtmlCardTemplateService.getSkeletonHtml()
+                HtmlCardTemplateService.getSkeletonHtml(isDark ? "dark" : "light")
             ].join("\n");
             const userPrompt = [
                 `设定文本：\n${scenarioText}`,
@@ -5434,6 +5622,7 @@
         }
         function buildIntroRequestPayload({ scenarioText, state, beautySetting, openingChoices = [] }) {
             const fetchUrl = AIRequestService.buildFetchUrl();
+            const isDark = ThemeService.getMode() === "dark";
             const choiceLines = Array.isArray(openingChoices)
                 ? openingChoices
                     .map((it, idx) => {
@@ -5452,8 +5641,11 @@
                 scenarioText,
                 "",
                 ...PromptRulesRegistry.getIntroCoreRules(),
+                isDark
+                    ? "当前是暗夜模式：输出的开局 HTML 卡片必须是透明/半透明深色背景，且文本高对比。"
+                    : "当前是亮色模式：保持清晰可读并与主题一致。",
                 "以下是必须参考的本地卡片骨架（不是 Markdown 示例，而是实际结构约束；可改色调和装饰，但 data-block 层级必须一致）：",
-                HtmlCardTemplateService.getSkeletonHtml(),
+                HtmlCardTemplateService.getSkeletonHtml(isDark ? "dark" : "light"),
                 choiceLines.length
                     ? `你必须在本次“开局介绍”卡片的 choices 区保留这些候选开局选项（可润色但语义不能丢）：\n${choiceLines.join("\n")}`
                     : "若无候选开局项，则按剧情生成 1-3 条可执行编号选项。",
@@ -5656,12 +5848,16 @@
             const normalizedTheme = (!beautyCardSetting || beautyCardSetting === "网络模板" || beautyCardSetting === "默认主题" || beautyCardSetting === "默认")
                 ? HtmlCardTemplateService.getRichThemeName()
                 : beautyCardSetting;
+            const isDark = ThemeService.getMode() === "dark";
             return [
                 "【美化卡片强制规则】",
                 `当前美化卡片设定：${normalizedTheme}`,
+                isDark
+                    ? "当前为暗夜模式：必须输出透明背景/半透明玻璃感的深色卡片（非纯黑实心底），文字需高对比易读。"
+                    : "当前为亮色模式：可使用温暖或高饱和视觉，但仍需保证可读性。",
                 ...PromptRulesRegistry.getBeautyCoreRules(),
                 "以下是必须参考的本地模板骨架（直接按此结构生成，不要改动 ai-beauty-card-body 内 data-block 命名和顺序）：",
-                HtmlCardTemplateService.getSkeletonHtml()
+                HtmlCardTemplateService.getSkeletonHtml(isDark ? "dark" : "light")
             ].join("\n");
         }
         function buildSystemPrompt({ scenarioSpec, builtinRules, stateFactLock, runtimeContext, beautyRules }) {
@@ -6136,7 +6332,17 @@
                     favor: Math.max(0, Math.min(100, Number(n.favor) || 65)),
                     status: String(n.status || "在线").slice(0, 12),
                     mood: String(n.mood || "平静").slice(0, 12),
-                    traits: String(n.traits || n.attributes || "").slice(0, 48)
+                    traits: String(n.traits || n.attributes || "").slice(0, 48),
+                    profile: {
+                        age: String(n?.profile?.age || "").slice(0, 16),
+                        identity: String(n?.profile?.identity || "").slice(0, 40),
+                        residence: String(n?.profile?.residence || "").slice(0, 40),
+                        appearance: String(n?.profile?.appearance || "").slice(0, 80),
+                        personality: String(n?.profile?.personality || "").slice(0, 80),
+                        goal: String(n?.profile?.goal || "").slice(0, 80),
+                        secret: String(n?.profile?.secret || "").slice(0, 80),
+                        firstImpression: String(n?.profile?.firstImpression || "").slice(0, 80)
+                    }
                 }));
         }
         function buildFallbackStatsFromScenario(scenarioText = "", plan = {}) {
@@ -6539,7 +6745,9 @@
                 "你是文游初始化-NPC面板生成器。",
                 "只输出 JSON 对象，不要解释。",
                 "只输出字段 npcs，值必须是数组。",
-                "每项字段：id,name,gender,relation,favor,status,mood,traits。"
+                "每项字段：id,name,gender,relation,favor,status,mood,traits,profile。",
+                "profile 必须是对象，字段：age,identity,residence,appearance,personality,goal,secret,firstImpression。",
+                "这些字段要严格依据设定填写，未知可留空，不要乱编。"
             ].join("\n");
             const npcPanelText = await AIRequestService.requestCompletionWithFallback({
                 config: apiConfig,
@@ -6641,9 +6849,24 @@
                                 favor: { type: "integer" },
                                 status: { type: "string" },
                                 mood: { type: "string" },
-                                traits: { type: "string" }
+                                traits: { type: "string" },
+                                profile: {
+                                    type: "object",
+                                    additionalProperties: false,
+                                    properties: {
+                                        age: { type: "string" },
+                                        identity: { type: "string" },
+                                        residence: { type: "string" },
+                                        appearance: { type: "string" },
+                                        personality: { type: "string" },
+                                        goal: { type: "string" },
+                                        secret: { type: "string" },
+                                        firstImpression: { type: "string" }
+                                    },
+                                    required: ["age", "identity", "residence", "appearance", "personality", "goal", "secret", "firstImpression"]
+                                }
                             },
-                            required: ["id", "name", "gender", "relation", "favor", "status", "mood", "traits"]
+                            required: ["id", "name", "gender", "relation", "favor", "status", "mood", "traits", "profile"]
                         }
                     },
                     openingChoices: {
@@ -7236,15 +7459,11 @@
             renderAll();
             ChatService.requestAI(text);
         }
-        function jumpWeek(delta) {
-            StateService.jumpWeek(delta);
-            renderAll();
-            StateService.save();
-            const state = StateService.get();
-            const dateStr = Utils.nowDateStr(state) || `${state.currentYear || ""}年${state.currentMonth || ""}月`;
-            sendUserText(`时间跳转：${delta > 0 ? "下一周" : "上一周"}。当前时间已变更为：${dateStr}。请严格以该时间继续叙事。`);
+        function togglePlayDockNav() {
+            PlayDockService.toggleNav();
         }
         function switchView(viewId, silent = false) {
+            const prevView = activeView;
             activeView = viewId;
             document.querySelectorAll(".view-section").forEach((el) => el.classList.remove("active"));
             const target = document.getElementById(viewId);
@@ -7259,6 +7478,11 @@
                 content.scrollTop = content.scrollHeight;
             }
             if (viewId === "view-home") {
+                // 从卡片/游玩页回到主页时，强制刷新主页列表，避免看到旧缓存视图
+                if (prevView && prevView !== "view-home") {
+                    UIRenderer.renderScenarioCards();
+                    UIRenderer.renderPresetTemplates(presetManifest);
+                }
                 const content = document.getElementById("main-content");
                 if (content) content.scrollTop = 0;
                 if (target) target.scrollTop = 0;
@@ -7322,13 +7546,41 @@
             }
             const mem = NpcMemoryService.ensureStore(state, npc.id);
             const tags = mem?.tags || { promises: [], conflicts: [], secrets: [], notes: [] };
+            const profile = npc.profile && typeof npc.profile === "object" ? npc.profile : {};
             const listHtml = (arr) => {
                 const a = Array.isArray(arr) ? arr.filter(Boolean) : [];
                 if (!a.length) return "<div class=\"list-sub\">（暂无）</div>";
                 return `<ul style="padding-left:18px; margin:6px 0;">${a.map((x) => `<li>${MarkdownService.escapeHtml(String(x))}</li>`).join("")}</ul>`;
             };
+            const profileCard = `
+                <div style="border:1px solid color-mix(in srgb, var(--accent) 26%, transparent); border-radius:14px; padding:12px; background:var(--card-soft); box-shadow:0 10px 24px rgba(72,47,20,0.06);">
+                    <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+                        <span class="status-tag"><strong>关系</strong><em>${MarkdownService.escapeHtml(npc.relation || "熟人")}</em></span>
+                        <span class="status-tag"><strong>好感</strong><em>${MarkdownService.escapeHtml(String(npc.favor ?? 0))}</em></span>
+                        <span class="status-tag"><strong>状态</strong><em>${MarkdownService.escapeHtml(npc.status || "在线")}</em></span>
+                        <span class="status-tag"><strong>心情</strong><em>${MarkdownService.escapeHtml(npc.mood || "平静")}</em></span>
+                    </div>
+                    <div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px;">
+                        <div class="list-row" style="margin-bottom:0;"><div><div class="list-sub">年龄</div><div class="list-title">${MarkdownService.escapeHtml(profile.age || "未知")}</div></div></div>
+                        <div class="list-row" style="margin-bottom:0;"><div><div class="list-sub">身份</div><div class="list-title">${MarkdownService.escapeHtml(profile.identity || npc.gender || "未知")}</div></div></div>
+                        <div class="list-row" style="margin-bottom:0;"><div><div class="list-sub">居所</div><div class="list-title">${MarkdownService.escapeHtml(profile.residence || "未知")}</div></div></div>
+                        <div class="list-row" style="margin-bottom:0;"><div><div class="list-sub">特质</div><div class="list-title">${MarkdownService.escapeHtml(npc.traits || "暂无")}</div></div></div>
+                    </div>
+                </div>
+            `;
+            const detailBlock = (label, value) => `
+                <div style="margin-top:8px;">
+                    <strong>${label}</strong>
+                    <div class="list-sub" style="margin-top:4px;">${MarkdownService.escapeHtml(value || "（暂无）")}</div>
+                </div>
+            `;
             const desc = [
-                `关系：${npc.relation}<br>好感度：${npc.favor}<br>状态：${npc.status}<br>心情：${npc.mood}${npc.traits ? `<br>特质：${MarkdownService.escapeHtml(npc.traits)}` : ""}`,
+                profileCard,
+                detailBlock("外貌印象", profile.appearance),
+                detailBlock("性格标签", profile.personality),
+                detailBlock("当前目标", profile.goal),
+                detailBlock("初见印象", profile.firstImpression),
+                detailBlock("隐藏信息", profile.secret),
                 `<div style="margin-top:10px;"><strong>长期记忆摘要</strong><div class="list-sub" style="margin-top:4px;">${MarkdownService.escapeHtml(mem.summary || "（暂无）")}</div></div>`,
                 `<div style="margin-top:8px;"><strong>承诺</strong>${listHtml(tags.promises)}</div>`,
                 `<div style="margin-top:8px;"><strong>冲突点</strong>${listHtml(tags.conflicts)}</div>`,
@@ -7395,9 +7647,9 @@
         async function sendNpcMessage() {
             const state = StateService.get();
             const npcId = String(currentSocialNpcId || "");
-            const npc = (state.npcs || []).find((n) => String(n.id || "") === npcId);
+            const npc = findNpcByRef(state, npcId);
             if (!npc) return;
-            const chatKey = String(npc.id || "");
+            const chatKey = String(npc.id || npc.name || npcId);
             const input = document.getElementById("npc-chat-input");
             const txt = input.value.trim();
             if (!txt) return;
@@ -7745,12 +7997,12 @@
                 openingChoices: merged.openingChoices || []
             });
         }
-        return { init, onSendClick, sendUserText, jumpWeek, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, openCurrentCardEditor, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, applyPresetTemplate, editPresetTemplate, playPresetTemplate, selectApiCard, startFromPlay, importScenarioTxt, openInitPreviewModal, closeInitPreviewModal, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
+        return { init, onSendClick, sendUserText, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, openCurrentCardEditor, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, applyPresetTemplate, editPresetTemplate, playPresetTemplate, selectApiCard, startFromPlay, importScenarioTxt, openInitPreviewModal, closeInitPreviewModal, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
     function sendUserText(text) { Controller.sendUserText(text); }
-    function jumpWeek(delta) { Controller.jumpWeek(delta); }
+    function togglePlayDockNav() { Controller.togglePlayDockNav(); }
     function switchView(viewId) { Controller.switchView(viewId); }
     function saveSettings() { Controller.saveSettings(); }
     function saveUserApiSettings() { Controller.saveUserApiSettings(); }
