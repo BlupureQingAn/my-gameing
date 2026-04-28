@@ -1392,6 +1392,34 @@
         return { show, close };
     })();
 
+    const NoticeModalService = (() => {
+        function showInfo({ title = "提示", descHtml = "", actionText = "我知道了", onAction = null }) {
+            const modal = document.getElementById("info-modal");
+            const titleEl = document.getElementById("info-modal-title");
+            const descEl = document.getElementById("info-modal-desc");
+            const actionBtn = document.getElementById("info-modal-action");
+            if (!modal || !titleEl || !descEl || !actionBtn) return;
+            titleEl.innerText = String(title || "提示");
+            descEl.innerHTML = String(descHtml || "");
+            actionBtn.style.display = "block";
+            actionBtn.innerText = String(actionText || "我知道了");
+            actionBtn.onclick = () => {
+                modal.style.display = "none";
+                if (typeof onAction === "function") onAction();
+            };
+            modal.style.display = "flex";
+        }
+        async function confirm({ title = "请确认", descHtml = "", okText = "确认", cancelText = "取消" }) {
+            return await DecisionModalService.show({
+                title,
+                descHtml,
+                okText,
+                cancelText
+            });
+        }
+        return { showInfo, confirm };
+    })();
+
     const GameSessionService = (() => {
         function normalizeCardId(cardId) {
             return String(cardId || ScenarioCardService.CUSTOM_CARD_ID || "scenario_custom").replace(/[^\w-]/g, "_");
@@ -3220,14 +3248,14 @@
                 reader.onload = () => {
                     const content = String(reader.result || "").trim();
                     if (!content) {
-                        alert("导入失败：文件内容为空");
+                        NoticeModalService.showInfo({ title: "导入失败", descHtml: "文件内容为空" });
                         return;
                     }
                     document.getElementById("scenario-editor").value = content;
                     ScenarioCardService.updateSelectedCard({ text: content });
-                    alert("设定导入成功");
+                    NoticeModalService.showInfo({ title: "导入完成", descHtml: "设定导入成功" });
                 };
-                reader.onerror = () => alert("导入失败：无法读取文件");
+                reader.onerror = () => NoticeModalService.showInfo({ title: "导入失败", descHtml: "无法读取文件" });
                 reader.readAsText(file, "utf-8");
                 input.value = "";
             };
@@ -4798,6 +4826,47 @@
                     traits: String(n.traits || n.attributes || "").slice(0, 48)
                 }));
         }
+        function extractNameHintsFromScenarioText(scenarioText = "") {
+            const text = String(scenarioText || "");
+            const cnPatterns = [
+                /(?:主角|角色|你)(?:姓名|名字|名叫|叫做?)\s*[:：]?\s*([^\s，。,.!！?？"“”]{2,12})/,
+                /姓名\s*[:：]?\s*([^\s，。,.!！?？"“”]{2,12})/,
+                /名叫\s*([^\s，。,.!！?？"“”]{2,12})/
+            ];
+            const enPatterns = [
+                /英文名\s*[:：]?\s*([A-Za-z][A-Za-z\s.'-]{1,30})/,
+                /English\s*name\s*[:：]?\s*([A-Za-z][A-Za-z\s.'-]{1,30})/i
+            ];
+            let cn = "";
+            let en = "";
+            for (const re of cnPatterns) {
+                const m = text.match(re);
+                if (m && m[1]) {
+                    cn = String(m[1]).trim().slice(0, 20);
+                    break;
+                }
+            }
+            for (const re of enPatterns) {
+                const m = text.match(re);
+                if (m && m[1]) {
+                    en = String(m[1]).trim().slice(0, 32);
+                    break;
+                }
+            }
+            return { cn, en };
+        }
+        function ensureNameFallback(plan = {}, scenarioText = "") {
+            const next = { ...(plan || {}) };
+            const hints = extractNameHintsFromScenarioText(scenarioText);
+            const identity = IdentityService.generateIdentity();
+            if (!String(next.name || "").trim()) {
+                next.name = String(hints.cn || identity.name || "未命名主角").trim().slice(0, 20);
+            }
+            if (!String(next.englishName || "").trim()) {
+                next.englishName = String(hints.en || identity.englishName || "PendingName").trim().slice(0, 32);
+            }
+            return next;
+        }
         function parseFirstJsonObject(text) {
             const raw = String(text || "").trim();
             if (!raw) return null;
@@ -4859,25 +4928,26 @@
                 .slice(0, 5);
         }
         function sanitizePlan(parsed = {}, selectedGender = "") {
+            const ensured = ensureNameFallback(parsed, "");
             return {
-                name: String(parsed.name || "").trim(),
-                englishName: String(parsed.englishName || "").trim(),
-                ageYears: sanitizeAgeYears(parsed.ageYears),
-                forcedGender: String(parsed.forcedGender || "").trim(),
+                name: String(ensured.name || "").trim(),
+                englishName: String(ensured.englishName || "").trim(),
+                ageYears: sanitizeAgeYears(ensured.ageYears),
+                forcedGender: String(ensured.forcedGender || "").trim(),
                 selectedGender: String(selectedGender || ""),
-                nationality: String(parsed.nationality || "").trim(),
-                location: String(parsed.location || "").trim(),
-                timeEra: String(parsed.timeEra || "").trim(),
-                weekIndex: sanitizeTime(parsed.weekIndex, 1, 999),
-                weekdayIndex: sanitizeTime(parsed.weekdayIndex, 0, 6),
-                currentYear: sanitizeTime(parsed.currentYear, 1, 9999),
-                currentMonth: sanitizeTime(parsed.currentMonth, 1, 12),
-                currentDay: sanitizeTime(parsed.currentDay, 1, 31),
-                stats: StatsService.normalizeStats(parsed.stats),
-                inventory: sanitizeItems(parsed.inventory),
-                npcs: sanitizeNpcs(parsed.npcs),
-                openingChoices: normalizeOpeningChoices(parsed.openingChoices),
-                rebornReason: String(parsed.rebornReason || "使用AI解析设定生成").slice(0, 120)
+                nationality: String(ensured.nationality || "").trim(),
+                location: String(ensured.location || "").trim(),
+                timeEra: String(ensured.timeEra || "").trim(),
+                weekIndex: sanitizeTime(ensured.weekIndex, 1, 999),
+                weekdayIndex: sanitizeTime(ensured.weekdayIndex, 0, 6),
+                currentYear: sanitizeTime(ensured.currentYear, 1, 9999),
+                currentMonth: sanitizeTime(ensured.currentMonth, 1, 12),
+                currentDay: sanitizeTime(ensured.currentDay, 1, 31),
+                stats: StatsService.normalizeStats(ensured.stats),
+                inventory: sanitizeItems(ensured.inventory),
+                npcs: sanitizeNpcs(ensured.npcs),
+                openingChoices: normalizeOpeningChoices(ensured.openingChoices),
+                rebornReason: String(ensured.rebornReason || "使用AI解析设定生成").slice(0, 120)
             };
         }
         async function analyzeWithAI({ scenarioText, selectedGender, apiConfig, onProgress, extraHint = "", previousPlan = null }) {
@@ -5157,7 +5227,8 @@
                 });
             }
             const finalized = parseFirstJsonObject(finalizedText) || stagedDraft;
-            return sanitizePlan(finalized, selectedGender);
+            const sanitized = sanitizePlan(finalized, selectedGender);
+            return ensureNameFallback(sanitized, scenarioText);
         }
         async function buildInitPlan(selectedGender, onProgress, options = {}) {
             const scenarioText = SettingsService.getScenarioText();
@@ -5166,7 +5237,7 @@
             if (apiConfig.blocked || !apiConfig.upstreamUrl || !apiConfig.key || !apiConfig.model) {
                 throw new Error("未配置可用 AI-API，无法进行开局初始化解析。");
             }
-            const aiPlan = await analyzeWithAI({
+            const aiPlanRaw = await analyzeWithAI({
                 scenarioText,
                 selectedGender,
                 apiConfig,
@@ -5174,6 +5245,7 @@
                 extraHint: options.extraHint || "",
                 previousPlan: options.previousPlan || null
             });
+            const aiPlan = ensureNameFallback(aiPlanRaw || {}, scenarioText);
             if (!aiPlan) throw new Error("AI 返回为空，无法生成开局初始化方案。");
             if (!aiPlan.name || !aiPlan.englishName) throw new Error("AI 未返回有效主角姓名。");
             if (!Number.isFinite(aiPlan.ageYears)) throw new Error("AI 未返回有效年龄。");
@@ -5236,7 +5308,7 @@
                 "点击“确定”：执行一次纠错重写",
                 "点击“取消”：忽略并不再提示相同 warning"
             ].join("\n");
-            return window.confirm(msg) ? "fix" : "dismiss";
+            return "skip";
         }
         function replaceLastAssistantChat(rawText, nextText) {
             const state = StateService.get();
@@ -5253,11 +5325,11 @@
             const state = StateService.get();
             const config = SettingsService.getApiConfig();
             if (config.blocked) {
-                alert(config.reason);
+                NoticeModalService.showInfo({ title: "无法发起请求", descHtml: MarkdownService.escapeHtml(config.reason) });
                 return;
             }
             if (!config.upstreamUrl || !config.key || !config.model) {
-                alert("请先配置上游 API URL、API Key 和模型名。");
+                NoticeModalService.showInfo({ title: "配置不完整", descHtml: "请先配置上游 API URL、API Key 和模型名。" });
                 return;
             }
 
@@ -5356,7 +5428,7 @@
                 }
             });
             renderAll();
-            alert("设定卡片已保存");
+            NoticeModalService.showInfo({ title: "保存成功", descHtml: "设定卡片已保存" });
         }
         function createScenarioCard({ renderAll, switchView }) {
             ScenarioCardService.createCard();
@@ -5371,28 +5443,38 @@
             switchView("view-scenario-editor");
             ScenarioEditorService.focusEditor();
         }
-        function deleteScenarioCard({ cardId, renderAll }) {
+        async function deleteScenarioCard({ cardId, renderAll }) {
             const card = ScenarioCardService.loadCards().find((c) => c.id === cardId);
             if (!card) return;
-            if (!confirm(`确定删除卡片「${card.title}」吗？\n（删除自定义置顶卡片后会自动生成一张新的自定义卡片）`)) return;
+            const okDelete = await NoticeModalService.confirm({
+                title: "确认删除卡片",
+                descHtml: `<div>确定删除卡片「${MarkdownService.escapeHtml(card.title)}」吗？</div><div class="list-sub" style="margin-top:6px;">删除自定义置顶卡片后会自动生成一张新的自定义卡片。</div>`,
+                okText: "确认删除",
+                cancelText: "取消"
+            });
+            if (!okDelete) return;
             const ok = ScenarioCardService.deleteCard(cardId);
             if (!ok) return;
             SettingsService.loadToUI();
             renderAll();
         }
         async function applyPresetTemplate({ preset, silent = false, ensurePresetAsIndependentCard }) {
+            InitLoadingService.open("正在加载官方模板资源，请稍候...");
             try {
                 const payload = await ScenarioTemplateService.buildTemplateCardPayload(preset);
                 ensurePresetAsIndependentCard(payload);
             } catch (e) {
-                alert(`加载模板失败：${e.message}`);
+                InitLoadingService.close();
+                NoticeModalService.showInfo({ title: "模板加载失败", descHtml: MarkdownService.escapeHtml(String(e?.message || e || "未知错误")) });
                 return false;
             }
-            if (!silent) alert("已就地更新该预设的独立卡片");
+            InitLoadingService.close();
+            if (!silent) NoticeModalService.showInfo({ title: "模板已更新", descHtml: "已就地更新该预设的独立卡片。" });
             return true;
         }
         async function editPresetTemplate({ preset, applyPresetTemplate, switchView }) {
-            await applyPresetTemplate(preset);
+            const ok = await applyPresetTemplate(preset);
+            if (!ok) return;
             switchView("view-scenario-editor");
         }
         return { saveScenarioCard, createScenarioCard, openScenarioCardSettings, deleteScenarioCard, applyPresetTemplate, editPresetTemplate };
@@ -5652,12 +5734,12 @@
         function saveSettings() {
             SettingsService.saveFromUI();
             renderAll();
-            alert("设置已保存（含 API 与 ChatPolicyConfig）");
+            NoticeModalService.showInfo({ title: "设置已保存", descHtml: "已保存 API 与 ChatPolicyConfig。" });
         }
         function saveUserApiSettings() {
             SettingsService.saveUserApiFromUI();
             renderAll();
-            alert("用户 API 配置已保存");
+            NoticeModalService.showInfo({ title: "保存成功", descHtml: "用户 API 配置已保存。" });
         }
         function saveScenarioCard() {
             ScenarioCardControllerService.saveScenarioCard({ renderAll });
@@ -5737,7 +5819,7 @@
             renderAll();
             const card = ApiCardService.getSelectedCard();
             if (card.id !== "api_custom") {
-                alert("已切换到预设卡片。当前版本仅支持调用“自定义API”卡片。");
+                NoticeModalService.showInfo({ title: "提示", descHtml: "已切换到预设卡片。当前版本仅支持调用“自定义API”卡片。" });
             }
         }
         function startFromPlay() {
@@ -5793,6 +5875,7 @@
         }
         async function prepareInitPreview(defaultGender, loadingAlreadyOpen = false) {
             if (ChatService.getIsGenerating()) return;
+            pendingInitPlan = null;
             if (!loadingAlreadyOpen) InitLoadingService.open("正在生成角色初始化信息（角色、背包与社交）...");
             try {
                 const plan = await ScenarioInitPlanService.buildInitPlan(defaultGender || "女", InitLoadingService.updateStage);
@@ -5829,6 +5912,7 @@
                         openInitPreviewModal();
                     } catch (e2) {
                         InitLoadingService.close();
+                        pendingInitPlan = null;
                         StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(StateService.get()), text: `> ⚠️ 重试仍失败：${e2.message}` });
                         StateService.save();
                         renderAll();
@@ -5850,11 +5934,11 @@
             const edited = collectInitPreviewForm();
             const merged = { ...pendingInitPlan, ...edited };
             if (!merged.name || !merged.englishName) {
-                alert("请填写主角姓名与英文名。");
+                NoticeModalService.showInfo({ title: "信息不完整", descHtml: "请填写主角姓名与英文名。" });
                 return;
             }
             if (!Number.isFinite(Number(merged.ageYears)) || Number(merged.ageYears) < 0) {
-                alert("请填写有效年龄。");
+                NoticeModalService.showInfo({ title: "年龄无效", descHtml: "请填写有效年龄。" });
                 return;
             }
             StateService.resetWithPreset(merged);
