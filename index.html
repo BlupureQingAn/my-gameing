@@ -1088,7 +1088,7 @@
                 </label>
                 <div class="setting-actions">
                     <button class="mini-btn primary" onclick="saveUserApiSettings()">保存设置</button>
-            </div>
+                </div>
             </section>
         </section>
 
@@ -1109,7 +1109,7 @@
         <section class="card stats-grid" id="game-stats-card"></section>
 
         <section id="view-main" class="view-section active">
-        <section class="card" id="story-board"></section>
+            <section class="card" id="story-board"></section>
         </section>
 
         <section id="view-inventory" class="view-section">
@@ -1817,7 +1817,7 @@
             gameState.chatMemory.push({ role, content });
         }
 
-        return { init, get, save, resetWithPreset, advanceMonthIfNeeded, jumpWeek, pushHistory, pushChat, dedupeNpcs };
+        return { init, get, save, resetWithPreset, advanceMonthIfNeeded, jumpWeek, pushHistory, pushChat };
     })();
 
     const MarkdownService = (() => {
@@ -6140,11 +6140,7 @@
             UIRenderer.renderScenarioCards();
             UIRenderer.renderApiCards();
             UIRenderer.renderPresetTemplates(presetManifest);
-            if (activeView === "view-home" && !PlayViewStateService.isInPlayMode()) {
-                switchView("view-home", true);
-            } else {
-                NavigationVisibilityService.apply(activeView);
-            }
+            NavigationVisibilityService.apply(activeView);
         }
         async function init() {
             StateService.init();
