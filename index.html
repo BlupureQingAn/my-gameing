@@ -39,7 +39,7 @@
 
         #app {
             width: 100%;
-            max-width: 820px;
+            max-width: 1120px;
             height: 100%;
             background: var(--bg-main);
             position: relative;
@@ -387,6 +387,13 @@
             box-sizing: border-box;
         }
 
+        .bubble.ai .ai-beauty-card {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+
         .bubble.ai .ai-beauty-card img,
         .bubble.ai .ai-beauty-card video,
         .bubble.ai .ai-beauty-card canvas,
@@ -544,24 +551,146 @@
             margin-top: 8px;
             border: 1px solid var(--line);
             border-radius: 10px;
-            background: #fffdf9;
-            padding: 8px;
-            max-height: 220px;
+            background: linear-gradient(180deg, #f8efe1 0%, #f3e6d6 100%);
+            padding: 10px;
+            max-height: 360px;
             overflow-y: auto;
         }
 
-        .npc-msg {
+        .npc-chat-msg {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .npc-chat-msg.me {
+            justify-content: flex-end;
+        }
+
+        .npc-chat-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #d9b995;
+            background: #fff5e7;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .npc-chat-bubble {
+            max-width: 76%;
             font-size: 0.82rem;
-            line-height: 1.45;
+            line-height: 1.5;
+            padding: 8px 10px;
+            border-radius: 12px;
+            border: 1px solid #e0c5a8;
+            background: #ffffff;
+            color: #5b4634;
+            word-break: break-word;
+            box-shadow: 0 1px 6px rgba(91, 70, 52, 0.08);
+            position: relative;
+        }
+
+        .npc-chat-msg.npc .npc-chat-bubble::before {
+            content: "";
+            position: absolute;
+            left: -6px;
+            top: 10px;
+            width: 10px;
+            height: 10px;
+            background: #fff;
+            border-left: 1px solid #e0c5a8;
+            border-bottom: 1px solid #e0c5a8;
+            transform: rotate(45deg);
+        }
+
+        .npc-chat-msg.me .npc-chat-bubble {
+            background: #dff5c8;
+            border-color: #c4dfa7;
+            color: #415231;
+        }
+
+        .npc-chat-msg.me .npc-chat-bubble::before {
+            content: "";
+            position: absolute;
+            right: -6px;
+            top: 10px;
+            width: 10px;
+            height: 10px;
+            background: #dff5c8;
+            border-right: 1px solid #c4dfa7;
+            border-top: 1px solid #c4dfa7;
+            transform: rotate(45deg);
+        }
+
+        .npc-chat-toolbar {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+            margin-bottom: 6px;
+        }
+
+        .emoji-btn {
+            border: 1px solid var(--line);
+            background: #fff8ee;
+            border-radius: 999px;
+            padding: 2px 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .npc-panel-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            gap: 10px;
+            padding: 10px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
             margin-bottom: 8px;
+            background: linear-gradient(135deg, #fffdf8 0%, #f9f1e4 100%);
+            box-shadow: 0 2px 10px rgba(108, 79, 49, 0.08);
         }
 
-        .npc-msg.me {
-            color: #7a4d6a;
+        .npc-panel-main {
+            min-width: 0;
+            flex: 1;
         }
 
-        .npc-msg.npc {
-            color: #5d4a3b;
+        .npc-panel-title {
+            font-size: 0.9rem;
+            color: #714f2c;
+            font-weight: 800;
+        }
+
+        .npc-panel-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .npc-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            color: #6b5137;
+            background: #f6e9d7;
+            border: 1px solid #e7ceb1;
+        }
+
+        .npc-panel-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            justify-content: center;
         }
 
         .slot-grid {
@@ -978,6 +1107,16 @@
                     </div>
                 </div>
                 <div class="social-chat-box" id="npc-chat-box"></div>
+                <div class="npc-chat-toolbar" id="npc-emoji-bar">
+                    <button class="emoji-btn" type="button" data-emoji="😀">😀</button>
+                    <button class="emoji-btn" type="button" data-emoji="😊">😊</button>
+                    <button class="emoji-btn" type="button" data-emoji="🥺">🥺</button>
+                    <button class="emoji-btn" type="button" data-emoji="😂">😂</button>
+                    <button class="emoji-btn" type="button" data-emoji="😡">😡</button>
+                    <button class="emoji-btn" type="button" data-emoji="😭">😭</button>
+                    <button class="emoji-btn" type="button" data-emoji="❤️">❤️</button>
+                    <button class="emoji-btn" type="button" data-emoji="👍">👍</button>
+                </div>
                 <div class="composer" style="margin-top:8px;">
                     <textarea id="npc-chat-input" placeholder="给这个NPC发消息"></textarea>
                     <button class="send-btn" onclick="sendNpcMessage()">发送</button>
@@ -1921,12 +2060,23 @@
         function isHtmlLike(text) {
             return /<[a-z][\s\S]*>/i.test(String(text || ""));
         }
+        function formatQuotedDialogueLines(text) {
+            const src = String(text || "");
+            if (!src) return "";
+            return src
+                .replace(/\r\n/g, "\n")
+                .replace(/(^|[^\n])(\"[^\"\n]{1,200}\")/g, (m, p1, p2) => `${p1}\n${p2}`)
+                .replace(/(\"[^\"\n]{1,200}\")([^\n]|$)/g, (m, p1, p2) => `${p1}\n${p2}`)
+                .replace(/\n{3,}/g, "\n\n")
+                .trim();
+        }
         function renderAiMessage(text, streaming = false) {
             const normalized = HtmlCardService.normalizeHtmlCard(text);
             if (isHtmlLike(normalized)) {
                 return `${normalized}${streaming ? '<span class="streaming-cursor"></span>' : ""}`;
             }
-            return MarkdownService.render(text) + (streaming ? '<span class="streaming-cursor"></span>' : "");
+            const dialogueNormalized = formatQuotedDialogueLines(text);
+            return MarkdownService.render(dialogueNormalized) + (streaming ? '<span class="streaming-cursor"></span>' : "");
         }
         function bindHtmlChoiceEvents(container) {
             if (!container) return;
@@ -1997,7 +2147,7 @@
                 Controller.sendUserText(`我选择：${choice}`);
             });
         }
-        return { renderAiMessage, bindHtmlChoiceEvents };
+        return { renderAiMessage, bindHtmlChoiceEvents, formatQuotedDialogueLines };
     })();
 
     const EndMarkerService = (() => {
@@ -2424,6 +2574,121 @@
         return { syncFromAiText };
     })();
 
+    const AiPanelSyncService = (() => {
+        function normalizeStatKey(label = "") {
+            return String(label || "").trim().replace(/\s+/g, "_").replace(/[^\w\u4e00-\u9fa5-]/g, "_").slice(0, 24) || "stat_auto";
+        }
+        function inferStatIcon(label = "") {
+            const t = String(label || "");
+            if (/体力|健康|生命/.test(t)) return "💪";
+            if (/心情|情绪|精神/.test(t)) return "🌤️";
+            if (/学识|智力|智慧/.test(t)) return "📚";
+            if (/魅力|声望|名望/.test(t)) return "✨";
+            if (/财富|金钱|银两|资产/.test(t)) return "💰";
+            if (/武力|战力|修为|灵力/.test(t)) return "⚔️";
+            return "✨";
+        }
+        function parseStatusLines(text = "") {
+            const lines = String(text || "")
+                .replace(/<br\s*\/?>/gi, "\n")
+                .split(/\r?\n|；|;/)
+                .map((x) => x.replace(/\s+/g, " ").trim())
+                .filter(Boolean);
+            const statItems = [];
+            const npcUpdates = [];
+            lines.forEach((line) => {
+                const m = line.match(/^([\u4e00-\u9fa5A-Za-z0-9_]{1,12})\s*[:：]\s*([+-]?\d{1,4})(?:\b|$)/);
+                if (m) {
+                    statItems.push({
+                        key: normalizeStatKey(m[1]),
+                        label: m[1],
+                        icon: inferStatIcon(m[1]),
+                        value: Math.max(0, Math.min(999, Number(m[2]) || 0))
+                    });
+                    return;
+                }
+                const npcMatch = line.match(/^([\u4e00-\u9fa5A-Za-z0-9_]{2,16})(?:（([^）]{1,10})）)?/);
+                if (!npcMatch) return;
+                const name = npcMatch[1];
+                const relation = String(npcMatch[2] || "").trim();
+                const favorMatch = line.match(/好感\s*[:：]?\s*(-?\d{1,3})/);
+                const statusMatch = line.match(/状态\s*[:：]?\s*([^\s｜|，。;；]{1,16})/);
+                const moodMatch = line.match(/心情\s*[:：]?\s*([^\s｜|，。;；]{1,16})/);
+                const traitsMatch = line.match(/特质\s*[:：]?\s*([^\n，。;；]{1,24})/);
+                if (relation || favorMatch || statusMatch || moodMatch || traitsMatch) {
+                    npcUpdates.push({
+                        name,
+                        relation: relation || undefined,
+                        favor: favorMatch ? Math.max(0, Math.min(100, Number(favorMatch[1]) || 0)) : undefined,
+                        status: statusMatch ? statusMatch[1] : undefined,
+                        mood: moodMatch ? moodMatch[1] : undefined,
+                        traits: traitsMatch ? traitsMatch[1] : undefined
+                    });
+                }
+            });
+            return { statItems, npcUpdates };
+        }
+        function extractFromAiCard(htmlText = "") {
+            const html = String(htmlText || "");
+            if (!HtmlCardService.isRenderableHtmlCard(HtmlCardService.normalizeHtmlCard(html))) return { statItems: [], npcUpdates: [] };
+            try {
+                const tpl = document.createElement("template");
+                tpl.innerHTML = html;
+                const body = tpl.content.querySelector(".ai-beauty-card-body");
+                if (!(body instanceof HTMLElement)) return { statItems: [], npcUpdates: [] };
+                const statusNode = body.querySelector('[data-block="status"]');
+                if (!(statusNode instanceof HTMLElement)) return { statItems: [], npcUpdates: [] };
+                return parseStatusLines(statusNode.textContent || "");
+            } catch (e) {
+                return { statItems: [], npcUpdates: [] };
+            }
+        }
+        function applySnapshot(state, snapshot = {}) {
+            if (!state) return false;
+            let changed = false;
+            const stats = Array.isArray(snapshot.statItems) ? snapshot.statItems : [];
+            if (stats.length) {
+                if (!Array.isArray(state.stats)) state.stats = [];
+                stats.forEach((item) => {
+                    const idx = state.stats.findIndex((s) => String(s.key || "") === String(item.key || "") || String(s.label || "") === String(item.label || ""));
+                    if (idx >= 0) {
+                        const prev = state.stats[idx];
+                        if (Number(prev.value) !== Number(item.value) || String(prev.icon || "") !== String(item.icon || "")) {
+                            state.stats[idx] = { ...prev, value: item.value, icon: item.icon, label: prev.label || item.label, key: prev.key || item.key };
+                            changed = true;
+                        }
+                    } else {
+                        state.stats.push({ key: item.key, label: item.label, icon: item.icon, value: item.value });
+                        changed = true;
+                    }
+                });
+            }
+            const npcUpdates = Array.isArray(snapshot.npcUpdates) ? snapshot.npcUpdates : [];
+            if (npcUpdates.length && Array.isArray(state.npcs)) {
+                npcUpdates.forEach((u) => {
+                    const npc = state.npcs.find((n) => String(n.name || "") === String(u.name || ""));
+                    if (!npc) return;
+                    ["relation", "status", "mood", "traits"].forEach((k) => {
+                        if (u[k] !== undefined && String(u[k]) !== String(npc[k] || "")) {
+                            npc[k] = String(u[k]);
+                            changed = true;
+                        }
+                    });
+                    if (u.favor !== undefined && Number(npc.favor || 0) !== Number(u.favor)) {
+                        npc.favor = Math.max(0, Math.min(100, Number(u.favor) || 0));
+                        changed = true;
+                    }
+                });
+            }
+            return changed;
+        }
+        function syncFromAiText(state, text) {
+            const snapshot = extractFromAiCard(text);
+            return applySnapshot(state, snapshot);
+        }
+        return { syncFromAiText, extractFromAiCard, applySnapshot };
+    })();
+
     const StatsService = (() => {
         function normalizeStatItem(it, idx) {
             const key = String(it?.key || it?.name || `stat_${idx}`).replace(/[^\w-]/g, "_");
@@ -2605,7 +2870,7 @@
                 AiResponseLayoutService.bindHtmlChoiceEvents(currentStreamingTarget);
             } else {
                 currentStreamingTarget.classList.remove("html-host");
-                currentStreamingTarget.innerHTML = MarkdownService.render(`${prefix}${text}`);
+                currentStreamingTarget.innerHTML = AiResponseLayoutService.renderAiMessage(`${prefix}${text}`, false);
             }
             if (currentStreamingLogDiv && options.conflictDetected) currentStreamingLogDiv.classList.add("conflict");
             currentStreamingTarget = null;
@@ -2641,7 +2906,7 @@
                 AiResponseLayoutService.bindHtmlChoiceEvents(bubble);
             } else {
                 bubble.classList.remove("html-host");
-                bubble.innerHTML = MarkdownService.render(String(text || ""));
+                bubble.innerHTML = AiResponseLayoutService.renderAiMessage(String(text || ""), false);
             }
             scrollToBottom();
             return true;
@@ -2674,19 +2939,29 @@
             list.innerHTML = "";
             (state.npcs || []).forEach((npc) => {
                 const row = document.createElement("div");
-                row.className = "list-row";
+                row.className = "npc-panel-card";
                 row.innerHTML = `
-                    <div>
-                        <div class="list-title">${npc.name}（${npc.relation}）</div>
-                        <div class="list-sub">性别 ${npc.gender || "未知"}｜好感 ${npc.favor}｜状态 ${npc.status}${npc.traits ? `｜特质 ${npc.traits}` : ""}</div>
+                    <div class="npc-panel-main">
+                        <div class="npc-panel-title">${npc.name}（${npc.relation}）</div>
+                        <div class="npc-panel-tags">
+                            <span class="npc-tag">性别 ${npc.gender || "未知"}</span>
+                            <span class="npc-tag">好感 ${npc.favor}</span>
+                            <span class="npc-tag">状态 ${npc.status || "未知"}</span>
+                            <span class="npc-tag">心情 ${npc.mood || "平静"}</span>
+                            ${npc.traits ? `<span class="npc-tag">特质 ${npc.traits}</span>` : ""}
+                        </div>
                     </div>
-                    <button class="tiny-btn">聊天</button>
+                    <div class="npc-panel-actions">
+                        <button class="tiny-btn" data-op="profile">档案</button>
+                        <button class="tiny-btn" data-op="chat">聊天</button>
+                    </div>
                 `;
-                row.querySelector("button").onclick = () => {
+                row.querySelector('[data-op="chat"]').onclick = () => {
                     currentSocialNpcId = npc.id;
                     Controller.openNpcChat(npc.id);
                 };
-                row.querySelector(".list-title").onclick = () => Controller.openNpcProfile(npc.id);
+                row.querySelector('[data-op="profile"]').onclick = () => Controller.openNpcProfile(npc.id);
+                row.querySelector(".npc-panel-title").onclick = () => Controller.openNpcProfile(npc.id);
                 list.appendChild(row);
             });
             if (currentSocialNpcId) renderSocialChat(state, currentSocialNpcId);
@@ -2700,7 +2975,19 @@
             document.getElementById("npc-chat-sub").innerText = `性别 ${npc.gender || "未知"}｜好感 ${npc.favor}｜心情 ${npc.mood}｜状态 ${npc.status}${npc.traits ? `｜特质 ${npc.traits}` : ""}`;
             document.getElementById("npc-chat-avatar-btn").onclick = () => Controller.openNpcProfile(npc.id);
             const chats = state.npcChats[npcId] || [];
-            box.innerHTML = chats.map((m) => `<div class="npc-msg ${m.from}">${m.from === "me" ? "我" : npc.name}：${MarkdownService.render(m.text)}</div>`).join("");
+            box.innerHTML = chats.map((m) => {
+                const mine = m.from === "me";
+                const who = mine ? "我" : npc.name;
+                const avatar = mine ? "🐱" : "🧑";
+                const safeText = mine ? String(m.text || "") : AiResponseLayoutService.formatQuotedDialogueLines(String(m.text || ""));
+                return `
+                    <div class="npc-chat-msg ${mine ? "me" : "npc"}">
+                        ${mine ? "" : `<div class="npc-chat-avatar" title="${who}">${avatar}</div>`}
+                        <div class="npc-chat-bubble">${MarkdownService.render(safeText)}</div>
+                        ${mine ? `<div class="npc-chat-avatar" title="${who}">${avatar}</div>` : ""}
+                    </div>
+                `;
+            }).join("");
             box.scrollTop = box.scrollHeight;
         }
         function renderSaveSlots(state) {
@@ -3992,8 +4279,14 @@
                     }
                 }
                 if (normalized) {
+                    const panelChanged = AiPanelSyncService.syncFromAiText(StateService.get(), normalized);
                     UIRenderer.finishStreaming(normalized, { conflictDetected: false });
                     StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(state), text: normalized });
+                    if (panelChanged) {
+                        const latest = StateService.get();
+                        UIRenderer.renderTop(latest);
+                        UIRenderer.renderSocialList(latest);
+                    }
                     StateService.save();
                 }
             } catch (e) {
@@ -4198,14 +4491,25 @@
         function updateStage(stage) {
             const map = {
                 "连接中": "连接中：正在请求 AI 解析设定...",
-                "解析角色": "解析角色：正在生成角色信息...",
-                "生成背包": "生成背包：正在构建初始物品...",
-                "生成NPC": "生成NPC：正在构建社交关系...",
+                "解析角色": "解析设定：正在分块提取初始化线索...",
+                "生成主角面板": "主角面板：正在生成角色档案与状态栏...",
+                "生成背包面板": "背包面板：正在构建初始物品信息...",
+                "生成NPC面板": "NPC面板：正在构建初始社交关系...",
+                "结构校验": "结构校验：正在补全缺失字段并对齐格式...",
                 "生成开局介绍": "生成开局介绍：正在生成首条剧情卡片...",
                 "完成": "完成：初始化数据已生成。"
             };
             document.getElementById("init-loading-desc").innerText = map[stage] || String(stage || "");
-            const percentMap = { "连接中": 18, "解析角色": 42, "生成背包": 60, "生成NPC": 78, "生成开局介绍": 92, "完成": 100 };
+            const percentMap = {
+                "连接中": 14,
+                "解析角色": 30,
+                "生成主角面板": 46,
+                "生成背包面板": 62,
+                "生成NPC面板": 78,
+                "结构校验": 88,
+                "生成开局介绍": 94,
+                "完成": 100
+            };
             const bar = document.getElementById("init-loading-progress");
             const p = percentMap[stage] ?? 25;
             if (bar) bar.style.width = `${p}%`;
@@ -4350,11 +4654,11 @@
                 }
             }
         }
-        async function requestCompletion({ fetchUrl, headers, model, messages, temperature }) {
+        async function requestCompletion({ fetchUrl, headers, model, messages, temperature, extraBody = null }) {
             const response = await fetch(fetchUrl, {
                 method: "POST",
                 headers,
-                body: JSON.stringify({ model, messages, stream: false, temperature })
+                body: JSON.stringify({ model, messages, stream: false, temperature, ...(extraBody && typeof extraBody === "object" ? extraBody : {}) })
             });
             if (!response.ok) {
                 const snippet = await readResponseSnippet(response);
@@ -4366,15 +4670,15 @@
             const data = await response.json();
             return EndMarkerService.trimToMarker(data?.choices?.[0]?.message?.content?.trim() || "");
         }
-        async function requestCompletionWithFallback({ config, fetchUrl, headers, model, messages, temperature }) {
+        async function requestCompletionWithFallback({ config, fetchUrl, headers, model, messages, temperature, extraBody = null }) {
             try {
-                return await requestCompletion({ fetchUrl, headers, model, messages, temperature });
+                return await requestCompletion({ fetchUrl, headers, model, messages, temperature, extraBody });
             } catch (proxyErr) {
                 if (!isRetryableProxyError(proxyErr)) throw proxyErr;
                 const directFetchUrl = buildDirectFetchUrl(config);
                 const directHeaders = stripProxyHeaders(headers);
                 try {
-                    return await requestCompletion({ fetchUrl: directFetchUrl, headers: directHeaders, model, messages, temperature });
+                    return await requestCompletion({ fetchUrl: directFetchUrl, headers: directHeaders, model, messages, temperature, extraBody });
                 } catch (directErr) {
                     const msg = [
                         "代理连接失败，且直连上游也失败。",
@@ -4494,63 +4798,73 @@
                     traits: String(n.traits || n.attributes || "").slice(0, 48)
                 }));
         }
-        async function analyzeWithAI({ scenarioText, selectedGender, apiConfig, onProgress, extraHint = "", previousPlan = null }) {
-            const fetchUrl = AIRequestService.buildFetchUrl();
-            const headers = AIRequestService.buildHeaders(apiConfig);
-            if (typeof onProgress === "function") onProgress("连接中");
-            const systemPrompt = [
-                "你是文游设定解析器。根据用户设定文本输出 JSON，不要输出解释。",
-                "【最高优先级规则】用户提供的“设定文本”是唯一世界规则源，优先级高于任何通用常识或默认模板。",
-                "严禁忽略、改写或弱化设定文本中的年代、地域、身份、职业、关系与叙事风格。",
-                "必须输出字段：name, englishName, ageYears, forcedGender, nationality, location, timeEra, weekIndex, weekdayIndex, currentYear, currentMonth, currentDay, rebornReason, stats, inventory, npcs。",
-                "forcedGender 仅可为 男/女/非二元/空字符串。",
-                "ageYears 为合理年龄，不要默认婴儿，除非设定明确要求幼年开局。",
-                "时间容错：允许只返回 timeEra（如“民国时期/80年代/清末时期”等），此时不强制给出具体年月日。",
-                "若能给出具体时间，则返回 currentYear（必填）与 currentMonth（可选），currentDay 可留空。",
-                "weekIndex 建议返回（第几周），weekdayIndex 可选（0=周一..6=周日）。",
-                "stats 是数组，每项含 key,label,icon,value（icon 用恰当表情符号）。状态数量与名称由设定决定。",
-                "若设定存在“开局模式/路线/阵营/职业分支”等需要玩家先选的项：禁止你替玩家拍板，必须返回 openingChoices 数组供玩家选择。",
-                "如果设定指向古代中国皇宫，location 优先填 北京。",
-                "inventory 是数组，每项含 name,type,desc,effect,count。",
-                "npcs 是数组，每项含 name,gender,relation,favor,status,mood,traits。",
-                "openingChoices 是数组（可选），每项含 key,label,desc；若无待选项可返回空数组。"
-            ].join("\n");
-            const userPrompt = [
-                `用户选择角色性别：${selectedGender}`,
-                "你必须先从设定文本中提取主角身份约束，再生成姓名、年龄、国籍和地点；禁止使用与设定无关的默认人设。",
-                "请结合设定判断是否强制覆盖该性别，并生成初始化背包和NPC。",
-                "如果设定里有“由玩家选择开局模式/路线”的规则，你只能给候选项，不能替玩家选择最终模式。",
-                previousPlan ? `【已有解析结果（仅供复用，尽量不要改已有字段，只补缺失）】\n${JSON.stringify(previousPlan, null, 2)}` : "",
-                extraHint ? `【上次失败原因与补全要求】\n${extraHint}` : "",
-                "仅返回 JSON 对象。",
-                `设定文本：\n${scenarioText}`
-            ].join("\n\n");
-            const content = await AIRequestService.requestCompletionWithFallback({
-                config: apiConfig,
-                fetchUrl,
-                headers,
-                model: apiConfig.model,
-                messages: [
-                    { role: "system", content: systemPrompt },
-                    { role: "user", content: userPrompt }
-                ],
-                temperature: 0.2
-            });
-            if (typeof onProgress === "function") onProgress("解析角色");
-            if (!content) return null;
-            const jsonMatch = content.match(/\{[\s\S]*\}/);
-            if (!jsonMatch) return null;
-            const parsed = JSON.parse(jsonMatch[0]);
-            if (typeof onProgress === "function") onProgress("生成背包");
-            const inventory = sanitizeItems(parsed.inventory);
-            if (typeof onProgress === "function") onProgress("生成NPC");
-            const npcs = sanitizeNpcs(parsed.npcs);
+        function parseFirstJsonObject(text) {
+            const raw = String(text || "").trim();
+            if (!raw) return null;
+            try {
+                return JSON.parse(raw);
+            } catch (e) {
+            }
+            const m = raw.match(/\{[\s\S]*\}/);
+            if (!m) return null;
+            try {
+                return JSON.parse(m[0]);
+            } catch (e) {
+                return null;
+            }
+        }
+        function splitScenarioText(text, maxChars = 2800, overlapChars = 280) {
+            const src = String(text || "").trim();
+            if (!src) return [];
+            if (src.length <= maxChars) return [src];
+            const paragraphs = src.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+            const chunks = [];
+            let current = "";
+            for (const p of paragraphs) {
+                const next = current ? `${current}\n\n${p}` : p;
+                if (next.length <= maxChars) {
+                    current = next;
+                    continue;
+                }
+                if (current) chunks.push(current);
+                if (p.length <= maxChars) {
+                    current = p;
+                    continue;
+                }
+                let i = 0;
+                while (i < p.length) {
+                    const end = Math.min(i + maxChars, p.length);
+                    chunks.push(p.slice(i, end));
+                    i = Math.max(i + maxChars - overlapChars, i + 1);
+                }
+                current = "";
+            }
+            if (current) chunks.push(current);
+            return chunks.slice(0, 10);
+        }
+        function normalizeOpeningChoices(list = []) {
+            return (Array.isArray(list) ? list : [])
+                .map((it, idx) => {
+                    if (!it) return null;
+                    if (typeof it === "string") return { key: `choice_${idx + 1}`, label: String(it).trim(), desc: "" };
+                    const label = String(it.label || it.key || "").trim();
+                    if (!label) return null;
+                    return {
+                        key: String(it.key || `choice_${idx + 1}`).slice(0, 32),
+                        label: label.slice(0, 32),
+                        desc: String(it.desc || "").slice(0, 80)
+                    };
+                })
+                .filter(Boolean)
+                .slice(0, 5);
+        }
+        function sanitizePlan(parsed = {}, selectedGender = "") {
             return {
                 name: String(parsed.name || "").trim(),
                 englishName: String(parsed.englishName || "").trim(),
                 ageYears: sanitizeAgeYears(parsed.ageYears),
                 forcedGender: String(parsed.forcedGender || "").trim(),
-                selectedGender,
+                selectedGender: String(selectedGender || ""),
                 nationality: String(parsed.nationality || "").trim(),
                 location: String(parsed.location || "").trim(),
                 timeEra: String(parsed.timeEra || "").trim(),
@@ -4560,11 +4874,290 @@
                 currentMonth: sanitizeTime(parsed.currentMonth, 1, 12),
                 currentDay: sanitizeTime(parsed.currentDay, 1, 31),
                 stats: StatsService.normalizeStats(parsed.stats),
-                inventory,
-                npcs,
-                openingChoices: Array.isArray(parsed.openingChoices) ? parsed.openingChoices.slice(0, 5) : [],
+                inventory: sanitizeItems(parsed.inventory),
+                npcs: sanitizeNpcs(parsed.npcs),
+                openingChoices: normalizeOpeningChoices(parsed.openingChoices),
                 rebornReason: String(parsed.rebornReason || "使用AI解析设定生成").slice(0, 120)
             };
+        }
+        async function analyzeWithAI({ scenarioText, selectedGender, apiConfig, onProgress, extraHint = "", previousPlan = null }) {
+            const fetchUrl = AIRequestService.buildFetchUrl();
+            const headers = AIRequestService.buildHeaders(apiConfig);
+            if (typeof onProgress === "function") onProgress("连接中");
+            const chunks = splitScenarioText(scenarioText, 2800, 280);
+            if (typeof onProgress === "function") onProgress("解析角色");
+            const chunkFacts = [];
+            for (let i = 0; i < chunks.length; i++) {
+                const systemPrompt = [
+                    "你是文游设定分块解析器。给定设定片段，抽取与初始化有关的关键信息。",
+                    "只能输出一个 JSON 对象，不要输出解释。",
+                    "unknown 字段用空字符串或空数组，不要编造。"
+                ].join("\n");
+                const userPrompt = [
+                    `用户选择角色性别：${selectedGender}`,
+                    `当前是第 ${i + 1}/${chunks.length} 个片段。`,
+                    "输出字段：name,englishName,ageYears,forcedGender,nationality,location,timeEra,weekIndex,weekdayIndex,currentYear,currentMonth,currentDay,rebornReason,stats,inventory,npcs,openingChoices,evidence。",
+                    `设定片段：\n${chunks[i]}`
+                ].join("\n\n");
+                const content = await AIRequestService.requestCompletionWithFallback({
+                    config: apiConfig,
+                    fetchUrl,
+                    headers,
+                    model: apiConfig.model,
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: userPrompt }
+                    ],
+                    temperature: 0.1
+                });
+                const parsed = parseFirstJsonObject(content);
+                if (parsed && typeof parsed === "object") chunkFacts.push(parsed);
+            }
+            if (!chunkFacts.length) return null;
+
+            if (typeof onProgress === "function") onProgress("生成背包");
+            const reduceSystemPrompt = [
+                "你是文游初始化汇总器。根据多个分块抽取结果，合并成一份完整初始化草案。",
+                "如果冲突，优先采用出现频率更高且更具体的信息。",
+                "若存在开局待选项，必须保留到 openingChoices。",
+                "仅输出 JSON 对象。"
+            ].join("\n");
+            const reduceUserPrompt = [
+                `用户选择角色性别：${selectedGender}`,
+                previousPlan ? `已有结果（仅补缺，不要随意推翻）：\n${JSON.stringify(previousPlan, null, 2)}` : "",
+                extraHint ? `补充要求：\n${extraHint}` : "",
+                `分块抽取结果：\n${JSON.stringify(chunkFacts, null, 2)}`
+            ].filter(Boolean).join("\n\n");
+            const reducedText = await AIRequestService.requestCompletionWithFallback({
+                config: apiConfig,
+                fetchUrl,
+                headers,
+                model: apiConfig.model,
+                messages: [
+                    { role: "system", content: reduceSystemPrompt },
+                    { role: "user", content: reduceUserPrompt }
+                ],
+                temperature: 0.1
+            });
+            const reducedDraft = parseFirstJsonObject(reducedText) || {};
+
+            if (typeof onProgress === "function") onProgress("生成主角面板");
+            const protagonistPanelSystem = [
+                "你是文游初始化-主角面板生成器。",
+                "只输出 JSON 对象，不要解释。",
+                "根据汇总草案与分块事实，输出主角面板字段。",
+                "字段：name,englishName,ageYears,forcedGender,nationality,location,timeEra,weekIndex,weekdayIndex,currentYear,currentMonth,currentDay,rebornReason,stats,openingChoices。"
+            ].join("\n");
+            const protagonistPanelUser = [
+                `用户选择角色性别：${selectedGender}`,
+                previousPlan ? `已有结果（仅补缺，不要随意推翻）：\n${JSON.stringify(previousPlan, null, 2)}` : "",
+                extraHint ? `补充要求：\n${extraHint}` : "",
+                `汇总草案：\n${JSON.stringify(reducedDraft, null, 2)}`,
+                `分块事实：\n${JSON.stringify(chunkFacts.slice(0, 8), null, 2)}`
+            ].filter(Boolean).join("\n\n");
+            const protagonistPanelText = await AIRequestService.requestCompletionWithFallback({
+                config: apiConfig,
+                fetchUrl,
+                headers,
+                model: apiConfig.model,
+                messages: [
+                    { role: "system", content: protagonistPanelSystem },
+                    { role: "user", content: protagonistPanelUser }
+                ],
+                temperature: 0.1
+            });
+            const protagonistPanel = parseFirstJsonObject(protagonistPanelText) || {};
+
+            if (typeof onProgress === "function") onProgress("生成背包面板");
+            const inventoryPanelSystem = [
+                "你是文游初始化-背包面板生成器。",
+                "只输出 JSON 对象，不要解释。",
+                "只输出字段 inventory，值必须是数组。",
+                "每项字段：id,name,type,desc,effect,count。"
+            ].join("\n");
+            const inventoryPanelText = await AIRequestService.requestCompletionWithFallback({
+                config: apiConfig,
+                fetchUrl,
+                headers,
+                model: apiConfig.model,
+                messages: [
+                    { role: "system", content: inventoryPanelSystem },
+                    {
+                        role: "user",
+                        content: [
+                            `汇总草案：\n${JSON.stringify(reducedDraft, null, 2)}`,
+                            `分块事实：\n${JSON.stringify(chunkFacts.slice(0, 8), null, 2)}`
+                        ].join("\n\n")
+                    }
+                ],
+                temperature: 0.1
+            });
+            const inventoryPanel = parseFirstJsonObject(inventoryPanelText) || {};
+
+            if (typeof onProgress === "function") onProgress("生成NPC面板");
+            const npcPanelSystem = [
+                "你是文游初始化-NPC面板生成器。",
+                "只输出 JSON 对象，不要解释。",
+                "只输出字段 npcs，值必须是数组。",
+                "每项字段：id,name,gender,relation,favor,status,mood,traits。"
+            ].join("\n");
+            const npcPanelText = await AIRequestService.requestCompletionWithFallback({
+                config: apiConfig,
+                fetchUrl,
+                headers,
+                model: apiConfig.model,
+                messages: [
+                    { role: "system", content: npcPanelSystem },
+                    {
+                        role: "user",
+                        content: [
+                            `汇总草案：\n${JSON.stringify(reducedDraft, null, 2)}`,
+                            `分块事实：\n${JSON.stringify(chunkFacts.slice(0, 8), null, 2)}`
+                        ].join("\n\n")
+                    }
+                ],
+                temperature: 0.1
+            });
+            const npcPanel = parseFirstJsonObject(npcPanelText) || {};
+
+            const stagedDraft = {
+                ...reducedDraft,
+                ...protagonistPanel,
+                inventory: Array.isArray(inventoryPanel.inventory) ? inventoryPanel.inventory : reducedDraft.inventory,
+                npcs: Array.isArray(npcPanel.npcs) ? npcPanel.npcs : reducedDraft.npcs
+            };
+
+            if (typeof onProgress === "function") onProgress("结构校验");
+            const finalizeSystemPrompt = [
+                "你是文游初始化最终成型器。",
+                "你必须只返回 JSON 对象，且字段完整。",
+                "若某字段无法从设定确定，返回最保守的空值（字符串为空、数组为空），不要省略字段。"
+            ].join("\n");
+            const finalizeUserPrompt = [
+                `用户选择角色性别：${selectedGender}`,
+                previousPlan ? `已有结果（仅补缺，不要随意推翻）：\n${JSON.stringify(previousPlan, null, 2)}` : "",
+                extraHint ? `补充要求：\n${extraHint}` : "",
+                `阶段合并草案：\n${JSON.stringify(stagedDraft, null, 2)}`
+            ].filter(Boolean).join("\n\n");
+            const strictSchema = {
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                    name: { type: "string" },
+                    englishName: { type: "string" },
+                    ageYears: { type: "integer" },
+                    forcedGender: { type: "string" },
+                    nationality: { type: "string" },
+                    location: { type: "string" },
+                    timeEra: { type: "string" },
+                    weekIndex: { type: ["integer", "null"] },
+                    weekdayIndex: { type: ["integer", "null"] },
+                    currentYear: { type: ["integer", "null"] },
+                    currentMonth: { type: ["integer", "null"] },
+                    currentDay: { type: ["integer", "null"] },
+                    rebornReason: { type: "string" },
+                    stats: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            additionalProperties: false,
+                            properties: {
+                                key: { type: "string" },
+                                label: { type: "string" },
+                                icon: { type: "string" },
+                                value: { type: "integer" }
+                            },
+                            required: ["key", "label", "icon", "value"]
+                        }
+                    },
+                    inventory: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            additionalProperties: false,
+                            properties: {
+                                id: { type: "string" },
+                                name: { type: "string" },
+                                type: { type: "string" },
+                                desc: { type: "string" },
+                                effect: { type: "string" },
+                                count: { type: "integer" }
+                            },
+                            required: ["id", "name", "type", "desc", "effect", "count"]
+                        }
+                    },
+                    npcs: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            additionalProperties: false,
+                            properties: {
+                                id: { type: "string" },
+                                name: { type: "string" },
+                                gender: { type: "string" },
+                                relation: { type: "string" },
+                                favor: { type: "integer" },
+                                status: { type: "string" },
+                                mood: { type: "string" },
+                                traits: { type: "string" }
+                            },
+                            required: ["id", "name", "gender", "relation", "favor", "status", "mood", "traits"]
+                        }
+                    },
+                    openingChoices: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            additionalProperties: false,
+                            properties: {
+                                key: { type: "string" },
+                                label: { type: "string" },
+                                desc: { type: "string" }
+                            },
+                            required: ["key", "label", "desc"]
+                        }
+                    }
+                },
+                required: ["name", "englishName", "ageYears", "forcedGender", "nationality", "location", "timeEra", "weekIndex", "weekdayIndex", "currentYear", "currentMonth", "currentDay", "rebornReason", "stats", "inventory", "npcs", "openingChoices"]
+            };
+            let finalizedText = "";
+            try {
+                finalizedText = await AIRequestService.requestCompletionWithFallback({
+                    config: apiConfig,
+                    fetchUrl,
+                    headers,
+                    model: apiConfig.model,
+                    messages: [
+                        { role: "system", content: finalizeSystemPrompt },
+                        { role: "user", content: finalizeUserPrompt }
+                    ],
+                    temperature: 0,
+                    extraBody: {
+                        response_format: {
+                            type: "json_schema",
+                            json_schema: {
+                                name: "init_plan_schema",
+                                strict: true,
+                                schema: strictSchema
+                            }
+                        }
+                    }
+                });
+            } catch (e) {
+                finalizedText = await AIRequestService.requestCompletionWithFallback({
+                    config: apiConfig,
+                    fetchUrl,
+                    headers,
+                    model: apiConfig.model,
+                    messages: [
+                        { role: "system", content: finalizeSystemPrompt },
+                        { role: "user", content: `${finalizeUserPrompt}\n\n仅返回 JSON 对象，且包含全部字段。` }
+                    ],
+                    temperature: 0
+                });
+            }
+            const finalized = parseFirstJsonObject(finalizedText) || stagedDraft;
+            return sanitizePlan(finalized, selectedGender);
         }
         async function buildInitPlan(selectedGender, onProgress, options = {}) {
             const scenarioText = SettingsService.getScenarioText();
@@ -4718,6 +5311,7 @@
 
                 // 第一阶段：流式结束后立即完成渲染并解锁交互，避免用户体感“卡住”。
                 TimeSyncService.syncFromAiText(StateService.get(), displayText);
+                const panelChanged = AiPanelSyncService.syncFromAiText(StateService.get(), displayText);
                 UIRenderer.finishStreaming(displayText, { conflictDetected: false });
                 EventService.maybeTriggerAnimation(displayText);
                 const aiEntry = { role: "ai", date: Utils.nowDateStr(StateService.get()), text: displayText };
@@ -4727,12 +5321,10 @@
                 isGenerating = false;
                 UIRenderer.setSendingDisabled(false);
                 uiUnlocked = true;
-                if (rawPatchChanged) {
-                    const currentState = StateService.get();
-                    UIRenderer.renderTop(currentState);
-                    UIRenderer.renderInventory(currentState);
-                    UIRenderer.renderSocialList(currentState);
-                }
+                const currentState = StateService.get();
+                UIRenderer.renderTop(currentState);
+                if (rawPatchChanged || panelChanged) UIRenderer.renderInventory(currentState);
+                UIRenderer.renderSocialList(currentState);
             } catch (error) {
                 if (!uiUnlocked) {
                 UIRenderer.finishStreaming(`⚠️ 连接失败：${error.message}\n\n请检查 API 配置后重试。`);
@@ -4839,6 +5431,15 @@
                     onSendClick();
                 }
             });
+            const npcInput = document.getElementById("npc-chat-input");
+            if (npcInput) {
+                npcInput.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        sendNpcMessage();
+                    }
+                });
+            }
             const content = document.getElementById("main-content");
             if (content) {
                 content.addEventListener("scroll", () => {
@@ -4851,6 +5452,17 @@
                     UIRenderer.markUserScrolledUp(content.scrollTop);
                     UIRenderer.cancelAutoFollowByUserGesture();
                 }, { passive: true });
+            }
+            const npcEmojiBar = document.getElementById("npc-emoji-bar");
+            if (npcEmojiBar && npcInput) {
+                npcEmojiBar.querySelectorAll("[data-emoji]").forEach((btn) => {
+                    btn.addEventListener("click", () => {
+                        const emoji = String(btn.getAttribute("data-emoji") || "");
+                        if (!emoji) return;
+                        npcInput.value = `${npcInput.value || ""}${emoji}`;
+                        npcInput.focus();
+                    });
+                });
             }
             const searchInput = document.getElementById("scenario-search-input");
             if (searchInput) {
