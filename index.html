@@ -563,8 +563,52 @@
             border-radius: 10px;
             background: linear-gradient(180deg, #f8efe1 0%, #f3e6d6 100%);
             padding: 10px;
-            max-height: 360px;
+            height: calc(100dvh - 300px);
+            min-height: 360px;
+            max-height: 72dvh;
             overflow-y: auto;
+        }
+
+        .swipe-row {
+            position: relative;
+            overflow: hidden;
+            touch-action: pan-y;
+        }
+
+        .swipe-main {
+            transition: transform 0.2s ease;
+            background: inherit;
+        }
+
+        .swipe-row.swiped .swipe-main {
+            transform: translateX(-88px);
+        }
+
+        .swipe-actions {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 88px;
+            display: flex;
+            align-items: stretch;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .swipe-row.swiped .swipe-actions {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .swipe-delete-btn {
+            width: 100%;
+            border: 0;
+            background: #dc5b56;
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
         }
 
         .npc-chat-msg {
@@ -2487,16 +2531,58 @@
         }
         function upsertNpc(state, item = {}) {
             if (!Array.isArray(state.npcs)) state.npcs = [];
-            const id = String(item.id || normalizeNpcIdByName(state, item.name) || (`npc_${Date.now()}_${Math.floor(Math.random() * 999)}`)).replace(/[^\w-]/g, "_");
-            let npc = state.npcs.find((n) => n.id === id);
+            const inputName = String(item.name || "").trim();
+            const normName = inputName.toLowerCase();
+            const itemId = String(item.id || "").trim().replace(/[^\w-]/g, "_");
+            const inferredId = normalizeNpcIdByName(state, inputName);
+            const id = String(itemId || inferredId || (`npc_${Date.now()}_${Math.floor(Math.random() * 999)}`)).replace(/[^\w-]/g, "_");
+
+            let npc = state.npcs.find((n) => String(n.id || "") === id);
+            if (!npc && normName) {
+                npc = state.npcs.find((n) => String(n.name || "").trim().toLowerCase() === normName);
+            }
+
             if (!npc) {
                 npc = { id, name: "未命名NPC", gender: "未知", relation: "熟人", favor: 60, status: "在线", mood: "平静", traits: "" };
                 state.npcs.push(npc);
+            } else if (!npc.id) {
+                npc.id = id;
             }
+
             const fields = ["name", "gender", "relation", "status", "mood", "traits"];
-            fields.forEach((k) => { if (item[k] !== undefined) npc[k] = String(item[k]).slice(0, 24); });
+            fields.forEach((k) => { if (item[k] !== undefined && String(item[k]).trim()) npc[k] = String(item[k]).slice(0, 24); });
             if (item.favor !== undefined) npc.favor = Math.max(0, Math.min(100, Number(item.favor) || npc.favor || 60));
-            return npc;
+
+            // 二次去重：按 id/name 合并，优先保留信息更完整的一条
+            const merged = [];
+            const seen = new Map();
+            const score = (x) => {
+                const fields = [x?.name, x?.gender, x?.relation, x?.status, x?.mood, x?.traits].filter((v) => String(v || "").trim()).length;
+                return fields + (Number.isFinite(Number(x?.favor)) ? 1 : 0);
+            };
+            (state.npcs || []).forEach((cur) => {
+                const key = String(cur?.id || "").trim() || String(cur?.name || "").trim().toLowerCase();
+                if (!key) return;
+                if (!seen.has(key)) {
+                    seen.set(key, cur);
+                    return;
+                }
+                const prev = seen.get(key);
+                const keep = score(cur) >= score(prev) ? cur : prev;
+                const drop = keep === cur ? prev : cur;
+                keep.name = keep.name || drop.name;
+                keep.gender = keep.gender || drop.gender;
+                keep.relation = keep.relation || drop.relation;
+                keep.status = keep.status || drop.status;
+                keep.mood = keep.mood || drop.mood;
+                keep.traits = keep.traits || drop.traits;
+                if (!Number.isFinite(Number(keep.favor)) && Number.isFinite(Number(drop.favor))) keep.favor = drop.favor;
+                seen.set(key, keep);
+            });
+            seen.forEach((v) => merged.push(v));
+            state.npcs = merged;
+
+            return state.npcs.find((n) => String(n.id || "") === String(npc.id || "")) || npc;
         }
         function upsertInventory(state, item = {}) {
             if (!Array.isArray(state.inventory)) state.inventory = [];
@@ -2990,17 +3076,29 @@
             const list = document.getElementById("inventory-list");
             if (!list) return;
             list.innerHTML = "";
-            (state.inventory || []).forEach((item) => {
+            (state.inventory || []).forEach((item, idx) => {
                 const row = document.createElement("div");
-                row.className = "list-row";
+                row.className = "swipe-row";
+                row.dataset.itemId = String(item.id || "");
+                row.dataset.itemIndex = String(idx);
                 row.innerHTML = `
-                    <div>
-                        <div class="list-title">${item.name} ×${item.count}</div>
-                        <div class="list-sub">${item.type}｜${item.effect}</div>
+                    <div class="list-row swipe-main">
+                        <div>
+                            <div class="list-title">${item.name} ×${item.count}</div>
+                            <div class="list-sub">${item.type}｜${item.effect}</div>
+                        </div>
+                        <button class="tiny-btn" data-op="open">查看/使用</button>
                     </div>
-                    <button class="tiny-btn">查看/使用</button>
+                    <div class="swipe-actions">
+                        <button class="swipe-delete-btn" data-op="delete">删除</button>
+                    </div>
                 `;
-                row.querySelector("button").onclick = () => Controller.openItemModal(item.id);
+                row.querySelector('[data-op="open"]').onclick = () => Controller.openItemModal(item.id);
+                row.querySelector('[data-op="delete"]').onclick = () => Controller.deleteInventoryItem(item.id);
+                ScenarioCardInteractionService.bindSwipeAndSort(row, {
+                    onReorder: (fromId, toId) => Controller.reorderInventoryItems(fromId, toId),
+                    dataIdAttr: "itemId"
+                });
                 list.appendChild(row);
             });
         }
@@ -3008,23 +3106,30 @@
             const list = document.getElementById("social-list");
             if (!list) return;
             list.innerHTML = "";
-            (state.npcs || []).forEach((npc) => {
+            (state.npcs || []).forEach((npc, idx) => {
                 const row = document.createElement("div");
-                row.className = "npc-panel-card";
+                row.className = "swipe-row";
+                row.dataset.npcId = String(npc.id || "");
+                row.dataset.npcIndex = String(idx);
                 row.innerHTML = `
-                    <div class="npc-panel-main">
-                        <div class="npc-panel-title">${npc.name}（${npc.relation}）</div>
-                        <div class="npc-panel-tags">
-                            <span class="npc-tag">性别 ${npc.gender || "未知"}</span>
-                            <span class="npc-tag">好感 ${npc.favor}</span>
-                            <span class="npc-tag">状态 ${npc.status || "未知"}</span>
-                            <span class="npc-tag">心情 ${npc.mood || "平静"}</span>
-                            ${npc.traits ? `<span class="npc-tag">特质 ${npc.traits}</span>` : ""}
+                    <div class="npc-panel-card swipe-main">
+                        <div class="npc-panel-main">
+                            <div class="npc-panel-title">${npc.name}（${npc.relation}）</div>
+                            <div class="npc-panel-tags">
+                                <span class="npc-tag">性别 ${npc.gender || "未知"}</span>
+                                <span class="npc-tag">好感 ${npc.favor}</span>
+                                <span class="npc-tag">状态 ${npc.status || "未知"}</span>
+                                <span class="npc-tag">心情 ${npc.mood || "平静"}</span>
+                                ${npc.traits ? `<span class="npc-tag">特质 ${npc.traits}</span>` : ""}
+                            </div>
+                        </div>
+                        <div class="npc-panel-actions">
+                            <button class="tiny-btn" data-op="profile">档案</button>
+                            <button class="tiny-btn" data-op="chat">聊天</button>
                         </div>
                     </div>
-                    <div class="npc-panel-actions">
-                        <button class="tiny-btn" data-op="profile">档案</button>
-                        <button class="tiny-btn" data-op="chat">聊天</button>
+                    <div class="swipe-actions">
+                        <button class="swipe-delete-btn" data-op="delete">删除</button>
                     </div>
                 `;
                 row.querySelector('[data-op="chat"]').onclick = () => {
@@ -3032,7 +3137,12 @@
                     Controller.openNpcChat(npc.id);
                 };
                 row.querySelector('[data-op="profile"]').onclick = () => Controller.openNpcProfile(npc.id);
+                row.querySelector('[data-op="delete"]').onclick = () => Controller.deleteNpc(npc.id);
                 row.querySelector(".npc-panel-title").onclick = () => Controller.openNpcProfile(npc.id);
+                ScenarioCardInteractionService.bindSwipeAndSort(row, {
+                    onReorder: (fromId, toId) => Controller.reorderNpcs(fromId, toId),
+                    dataIdAttr: "npcId"
+                });
                 list.appendChild(row);
             });
             if (currentSocialNpcId) renderSocialChat(state, currentSocialNpcId);
@@ -4042,6 +4152,7 @@
             let moved = false;
             let dragging = false;
             let holdTimer = null;
+            const dataIdAttr = String(callbacks?.dataIdAttr || "cardId");
             const begin = (x) => {
                 startX = x;
                 moved = false;
@@ -4079,7 +4190,7 @@
 
             row.addEventListener("dragstart", (e) => {
                 row.classList.add("dragging");
-                const id = row.dataset.cardId || "";
+                const id = row.dataset[dataIdAttr] || "";
                 e.dataTransfer?.setData("text/plain", id);
             });
             row.addEventListener("dragend", () => {
@@ -4090,7 +4201,7 @@
             row.addEventListener("drop", (e) => {
                 e.preventDefault();
                 const fromId = e.dataTransfer?.getData("text/plain") || "";
-                const toId = row.dataset.cardId || "";
+                const toId = row.dataset[dataIdAttr] || "";
                 if (fromId && toId && fromId !== toId && typeof callbacks?.onReorder === "function") {
                     callbacks.onReorder(fromId, toId);
                 }
@@ -6181,6 +6292,43 @@
             const input = document.getElementById("npc-chat-input");
             if (input) input.focus();
         }
+        function deleteNpc(npcId) {
+            const state = StateService.get();
+            state.npcs = (state.npcs || []).filter((n) => String(n.id || "") !== String(npcId || ""));
+            if (state.npcChats && state.npcChats[npcId]) delete state.npcChats[npcId];
+            if (state.npcMemoryMap && state.npcMemoryMap[npcId]) delete state.npcMemoryMap[npcId];
+            if (String(currentSocialNpcId || "") === String(npcId || "")) currentSocialNpcId = null;
+            StateService.save();
+            renderAll();
+        }
+        function reorderNpcs(fromId, toId) {
+            const state = StateService.get();
+            const list = Array.isArray(state.npcs) ? state.npcs : [];
+            const fromIdx = list.findIndex((n) => String(n.id || "") === String(fromId || ""));
+            const toIdx = list.findIndex((n) => String(n.id || "") === String(toId || ""));
+            if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return;
+            const [moved] = list.splice(fromIdx, 1);
+            list.splice(toIdx, 0, moved);
+            StateService.save();
+            renderAll();
+        }
+        function deleteInventoryItem(itemId) {
+            const state = StateService.get();
+            state.inventory = (state.inventory || []).filter((it) => String(it.id || "") !== String(itemId || ""));
+            StateService.save();
+            renderAll();
+        }
+        function reorderInventoryItems(fromId, toId) {
+            const state = StateService.get();
+            const list = Array.isArray(state.inventory) ? state.inventory : [];
+            const fromIdx = list.findIndex((it) => String(it.id || "") === String(fromId || ""));
+            const toIdx = list.findIndex((it) => String(it.id || "") === String(toId || ""));
+            if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return;
+            const [moved] = list.splice(fromIdx, 1);
+            list.splice(toIdx, 0, moved);
+            StateService.save();
+            renderAll();
+        }
         function backToSocialList() {
             switchView("view-social");
             renderAll();
@@ -6194,12 +6342,38 @@
             const txt = input.value.trim();
             if (!txt) return;
             const sendBtn = document.querySelector("#view-npc-chat .send-btn");
+            const oldTitle = document.getElementById("npc-chat-title")?.innerText || "";
             input.disabled = true;
             if (sendBtn) sendBtn.disabled = true;
             input.value = "";
+
+            // 立即显示我方气泡（无需等待 AI）
+            if (!state.npcChats || typeof state.npcChats !== "object") state.npcChats = {};
+            if (!Array.isArray(state.npcChats[npc.id])) state.npcChats[npc.id] = [];
+            state.npcChats[npc.id].push({ from: "me", text: txt, ts: Date.now() });
+            StateService.save();
+            UIRenderer.renderSocialChat(state, npc.id);
+            const titleEl = document.getElementById("npc-chat-title");
+            if (titleEl) titleEl.innerText = `和 ${npc.name} 聊天 · 正在输入中...`;
+
             try {
+                const beforeLen = state.npcChats[npc.id].length;
                 await NpcChatService.applyUserMessage(state, npc.id, txt);
-                // 关键：NPC线写入主线历史摘要锚点，保证后续生涯推进可感知社交线变化
+                // 防止重复插入“我方消息”
+                const list = state.npcChats[npc.id] || [];
+                if (list.length >= beforeLen + 2) {
+                    const mineCount = list.filter((m) => m.from === "me" && String(m.text || "") === txt).length;
+                    if (mineCount > 1) {
+                        let removed = 0;
+                        state.npcChats[npc.id] = list.filter((m) => {
+                            if (m.from === "me" && String(m.text || "") === txt && removed < mineCount - 1) {
+                                removed++;
+                                return false;
+                            }
+                            return true;
+                        });
+                    }
+                }
                 StateService.pushHistory({
                     role: "ai",
                     date: Utils.nowDateStr(state),
@@ -6217,6 +6391,7 @@
                 switchView("view-npc-chat");
                 UIRenderer.renderSocialChat(state, npc.id);
             } finally {
+                if (titleEl) titleEl.innerText = oldTitle || `和 ${npc.name} 聊天`;
                 input.disabled = false;
                 if (sendBtn) sendBtn.disabled = false;
                 input.focus();
@@ -6510,7 +6685,7 @@
                 openingChoices: merged.openingChoices || []
             });
         }
-        return { init, onSendClick, sendUserText, jumpWeek, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, openCurrentCardEditor, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, applyPresetTemplate, editPresetTemplate, playPresetTemplate, selectApiCard, startFromPlay, importScenarioTxt, openInitPreviewModal, closeInitPreviewModal, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
+        return { init, onSendClick, sendUserText, jumpWeek, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, openCurrentCardEditor, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, applyPresetTemplate, editPresetTemplate, playPresetTemplate, selectApiCard, startFromPlay, importScenarioTxt, openInitPreviewModal, closeInitPreviewModal, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
