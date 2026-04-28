@@ -1038,6 +1038,10 @@
                 <div class="list-sub">可编辑当前卡片名称、文游设定、美化设定（用于 HTML 卡片风格）</div>
                 <input id="scenario-title-input" type="text" placeholder="卡片标题（可自定义，含置顶卡片）">
                 <input id="scenario-theme-input" type="text" placeholder="美化设定（例如：奶油暖色玻璃、古风卷轴）">
+                <label class="list-sub" style="display:flex; align-items:center; gap:8px; margin-top:6px;">
+                    <input type="checkbox" id="card-thinking-enabled">
+                    开启思考模式（当前卡片）
+                </label>
                 <textarea id="scenario-editor" class="scenario-editor" placeholder="在这里编辑当前卡片的文游设定"></textarea>
                 <div class="list-title" style="margin-top:8px;">🔌 当前卡片独立 API（可选）</div>
                 <div class="list-sub">留空则自动使用“设置页”的用户 API</div>
@@ -1061,8 +1065,8 @@
                 <input type="password" id="user-api-key" placeholder="用户 API Key">
                 <input type="text" id="user-api-model" placeholder="用户模型名 (例如: gpt-4o-mini)">
                 <label class="list-sub" style="display:flex; align-items:center; gap:8px; margin-top:4px;">
-                    <input type="checkbox" id="lock-first-card-skeleton">
-                    锁定首条卡片视觉骨架（后续回合继承首条 HTML 卡片版式）
+                    <input type="checkbox" id="global-thinking-enabled">
+                    开启思考模式（全局）
                 </label>
                 <div class="setting-actions">
                     <button class="mini-btn primary" onclick="saveUserApiSettings()">保存设置</button>
@@ -1289,7 +1293,9 @@
             htmlRetryCount: 1,
             enableConflictDetection: true,
             enableHtmlCardForce: true,
-            lockFirstCardSkeleton: true
+            lockFirstCardSkeleton: true,
+            globalThinkingEnabled: false,
+            cardThinkingMap: {}
         }
     };
 
@@ -1568,14 +1574,17 @@
         function normalize(raw) {
             const defaults = AppConfig.defaultChatPolicyConfig;
             const source = raw && typeof raw === "object" ? raw : {};
+            const cardThinkingMap = source.cardThinkingMap && typeof source.cardThinkingMap === "object" ? source.cardThinkingMap : {};
             return {
                 temperature: normalizeNumber(source.temperature, defaults.temperature, 0, 2, false),
                 choiceRetryCount: normalizeNumber(source.choiceRetryCount, defaults.choiceRetryCount, 0, 5, true),
                 conflictRetryCount: normalizeNumber(source.conflictRetryCount, defaults.conflictRetryCount, 0, 5, true),
                 htmlRetryCount: normalizeNumber(source.htmlRetryCount, defaults.htmlRetryCount, 0, 5, true),
                 enableConflictDetection: source.enableConflictDetection !== false,
-                enableHtmlCardForce: true, // 全局强制 HTML 卡片输出
-                lockFirstCardSkeleton: source.lockFirstCardSkeleton !== false
+                enableHtmlCardForce: true,
+                lockFirstCardSkeleton: true,
+                globalThinkingEnabled: source.globalThinkingEnabled === true,
+                cardThinkingMap
             };
         }
         function load() {
@@ -3219,8 +3228,11 @@
             document.getElementById("user-api-key").value = userCustom?.key || "";
             document.getElementById("user-api-model").value = userCustom?.model || "";
             const policy = ChatPolicyConfigService.load();
-            const lockInput = document.getElementById("lock-first-card-skeleton");
-            if (lockInput) lockInput.checked = policy.lockFirstCardSkeleton !== false;
+            const globalThinkingInput = document.getElementById("global-thinking-enabled");
+            if (globalThinkingInput) globalThinkingInput.checked = policy.globalThinkingEnabled === true;
+            const selectedCardId = ScenarioCardService.getSelectedId();
+            const cardThinkingInput = document.getElementById("card-thinking-enabled");
+            if (cardThinkingInput) cardThinkingInput.checked = !!policy.cardThinkingMap?.[selectedCardId];
         }
         function saveFromUI() {
             const selectedScenario = ScenarioCardService.getSelectedCard();
@@ -3242,11 +3254,11 @@
                 key: document.getElementById("user-api-key").value.trim(),
                 model: document.getElementById("user-api-model").value.trim()
             });
-            const lockInput = document.getElementById("lock-first-card-skeleton");
+            const globalThinkingInput = document.getElementById("global-thinking-enabled");
             const currentPolicy = ChatPolicyConfigService.load();
             ChatPolicyConfigService.save({
                 ...currentPolicy,
-                lockFirstCardSkeleton: !!lockInput?.checked
+                globalThinkingEnabled: !!globalThinkingInput?.checked
             });
             loadToUI();
         }
@@ -3275,6 +3287,13 @@
         }
         function getChatPolicyConfig() {
             return ChatPolicyConfigService.load();
+        }
+        function getThinkingPayloadForCard(cardId = "") {
+            const policy = ChatPolicyConfigService.load();
+            const sid = String(cardId || ScenarioCardService.getSelectedId() || "");
+            const cardEnabled = !!policy.cardThinkingMap?.[sid];
+            const enabled = cardEnabled || policy.globalThinkingEnabled === true;
+            return { thinking: { type: enabled ? "enabled" : "disabled" } };
         }
         function importScenarioFromFile() {
             const input = document.getElementById("scenario-file-input");
@@ -5902,6 +5921,12 @@
     const ScenarioCardControllerService = (() => {
         function saveScenarioCard({ renderAll }) {
             const form = ScenarioEditorService.readForm();
+            const currentPolicy = ChatPolicyConfigService.load();
+            const selectedCardId = ScenarioCardService.getSelectedId();
+            const cardThinkingInput = document.getElementById("card-thinking-enabled");
+            const cardThinkingMap = { ...(currentPolicy.cardThinkingMap || {}) };
+            cardThinkingMap[selectedCardId] = !!cardThinkingInput?.checked;
+            ChatPolicyConfigService.save({ ...currentPolicy, cardThinkingMap });
             ScenarioCardService.updateSelectedCard({
                 title: form.title || "未命名设定",
                 theme: form.theme,
