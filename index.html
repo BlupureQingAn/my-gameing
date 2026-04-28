@@ -2562,9 +2562,12 @@
             const fenced = extractHtmlFromCodeFence(raw);
             const candidate = (fenced && containsHtmlCard(fenced)) ? fenced : raw;
             if (!containsHtmlCard(candidate)) return candidate;
+            // 截掉 <article/section/div class="...ai-beauty-card..."> 之前的所有垃圾前缀
+            const cardStart = candidate.search(/<(article|section|div)\b[^>]*class=["'][^"']*ai-beauty-card[^"']*["'][^>]*>/i);
+            const cleaned = cardStart > 0 ? candidate.slice(cardStart) : candidate;
             try {
                 const tpl = document.createElement("template");
-                tpl.innerHTML = candidate;
+                tpl.innerHTML = cleaned;
                 const card = tpl.content.querySelector(".ai-beauty-card");
                 if (card && card instanceof HTMLElement) {
                     card.querySelectorAll(".ai-beauty-card").forEach((nested) => {
@@ -2578,7 +2581,7 @@
                 }
             } catch (e) {
             }
-            return candidate;
+            return cleaned;
         }
         function isRenderableHtmlCard(text) {
             const normalized = normalizeHtmlCard(text);
@@ -3906,15 +3909,32 @@
                 const body = tpl.content.querySelector(".ai-beauty-card-body");
                 if (!(body instanceof HTMLElement)) return raw;
                 body.querySelectorAll("style, script").forEach((el) => el.remove());
-                return Array.from(body.querySelectorAll('[data-block="time"], [data-block="status"], [data-block="event"], [data-block="thought"]'))
-                    .map((el) => {
-                        if (!(el instanceof HTMLElement)) return "";
+                const parts = [];
+                // time/event/thought 直接取文本
+                Array.from(body.querySelectorAll('[data-block="time"], [data-block="event"], [data-block="thought"]'))
+                    .forEach((el) => {
+                        if (!(el instanceof HTMLElement)) return;
                         const clone = el.cloneNode(true);
-                        if (clone instanceof HTMLElement) clone.querySelectorAll("style, script").forEach((node) => node.remove());
-                        return String(clone.textContent || "").trim();
-                    })
-                    .filter(Boolean)
-                    .join("\n");
+                        if (clone instanceof HTMLElement) clone.querySelectorAll("style, script").forEach((n) => n.remove());
+                        const t = String(clone.textContent || "").trim();
+                        if (t) parts.push(t);
+                    });
+                // status 只提取 "属性名:数字" 格式的行，过滤掉 NPC 状态描述等纯文字
+                const statusEl = body.querySelector('[data-block="status"]');
+                if (statusEl instanceof HTMLElement) {
+                    const clone = statusEl.cloneNode(true);
+                    if (clone instanceof HTMLElement) clone.querySelectorAll("style, script").forEach((n) => n.remove());
+                    const statusText = String(clone.textContent || "")
+                        .replace(/\s+/g, " ")
+                        .trim();
+                    // 只保留含数字的属性行
+                    const statLines = statusText
+                        .split(/[,，\n]/)
+                        .map((s) => s.trim())
+                        .filter((s) => /[\u4e00-\u9fa5A-Za-z]{1,8}\s*[:：]\s*[+-]?\d/.test(s));
+                    if (statLines.length) parts.push(statLines.join("\n"));
+                }
+                return parts.join("\n");
             } catch (e) {
                 return raw;
             }
@@ -4231,10 +4251,9 @@
                 const delta = Number.isFinite(prev) ? value - prev : 0;
                 const deltaClass = delta > 0 ? "up" : (delta < 0 ? "down" : "");
                 const stateClass = delta > 0 ? "stat-up" : (delta < 0 ? "stat-down" : "");
-                // 进度条：0-100 直接用百分比，>100 按比例缩放到最大值
-                const maxVal = Math.max(100, value);
-                const pct = Math.min(100, Math.round((value / maxVal) * 100));
-                const barColor = value >= 70 ? "var(--accent)" : value >= 40 ? "#e6a817" : "#e05555";
+                // 进度条：固定上限 100，超过按满格处理
+                const pct = Math.min(100, Math.max(0, value));
+                const barColor = pct >= 70 ? "var(--accent)" : pct >= 40 ? "#e6a817" : "#e05555";
                 return `
                     <div class="stat-item ${stateClass}">
                         <div class="stat-item-header">
