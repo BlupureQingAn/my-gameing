@@ -72,6 +72,10 @@
             scroll-behavior: smooth;
         }
 
+        .content.streaming-no-smooth {
+            scroll-behavior: auto;
+        }
+
         .composer {
             display: flex;
             gap: 8px;
@@ -1629,12 +1633,8 @@
         return { render, escapeHtml };
     })();
 
-    const HtmlCardService = (() => {
-        const REQUIRED_BLOCKS = ["time", "status", "event", "choices"];
+    const HtmlNormalizeService = (() => {
         const VOID_TAGS = new Set(["img", "video", "audio", "canvas", "iframe", "svg", "path", "input", "textarea", "br", "hr"]);
-        function isBeautyModeEnabled(setting) {
-            return true; // 无论主题是否为空，始终启用 HTML 美化模式
-        }
         function containsHtmlCard(text) {
             if (!text) return false;
             return /<(article|section|div)\b[^>]*class=["'][^"']*ai-beauty-card[^"']*["'][^>]*>/i.test(text);
@@ -1644,23 +1644,6 @@
             const match = String(text).match(/```html\s*([\s\S]*?)```/i);
             if (match && match[1]) return match[1].trim();
             return "";
-        }
-        function normalizeHtmlCard(text) {
-            const raw = String(text || "").trim();
-            const fenced = extractHtmlFromCodeFence(raw);
-            const candidate = (fenced && containsHtmlCard(fenced)) ? fenced : raw;
-            if (!containsHtmlCard(candidate)) return candidate;
-            try {
-                const tpl = document.createElement("template");
-                tpl.innerHTML = candidate;
-                const card = tpl.content.querySelector(".ai-beauty-card");
-                if (card && card instanceof HTMLElement) {
-                    pruneEmptyElements(card);
-                    return card.outerHTML;
-                }
-            } catch (e) {
-            }
-            return candidate;
         }
         function hasMeaningfulAttr(el) {
             const attrs = ["src", "href", "alt", "title", "value", "data-choice"];
@@ -1690,6 +1673,23 @@
                 }
             });
         }
+        function normalizeHtmlCard(text) {
+            const raw = String(text || "").trim();
+            const fenced = extractHtmlFromCodeFence(raw);
+            const candidate = (fenced && containsHtmlCard(fenced)) ? fenced : raw;
+            if (!containsHtmlCard(candidate)) return candidate;
+            try {
+                const tpl = document.createElement("template");
+                tpl.innerHTML = candidate;
+                const card = tpl.content.querySelector(".ai-beauty-card");
+                if (card && card instanceof HTMLElement) {
+                    pruneEmptyElements(card);
+                    return card.outerHTML;
+                }
+            } catch (e) {
+            }
+            return candidate;
+        }
         function isRenderableHtmlCard(text) {
             const normalized = normalizeHtmlCard(text);
             if (!containsHtmlCard(normalized)) return false;
@@ -1701,19 +1701,33 @@
                 return false;
             }
         }
+        return { containsHtmlCard, normalizeHtmlCard, isRenderableHtmlCard, pruneEmptyElements };
+    })();
+
+    const HtmlFallbackService = (() => {
         function wrapAsHtmlCard(theme, bodyText) {
-            const safeTheme = MarkdownService.escapeHtml(theme || "美化卡片");
-            const bodyHtml = MarkdownService.render(bodyText || "");
+            const safeTheme = MarkdownService.escapeHtml(theme || "云吞页游沉浸风");
+            const bodyHtml = MarkdownService.render(bodyText || "剧情推进中...");
             return [
-                `<article class="ai-beauty-card" data-theme="${safeTheme}">`,
-                `<header class="ai-beauty-card-title">${safeTheme}</header>`,
-                `<section class="ai-beauty-card-body">${bodyHtml}<div data-block="hint" style="margin-top:8px; font-size:0.82rem; opacity:.85;">提示：可直接点击上方按钮继续剧情</div></section>`,
+                `<article class="ai-beauty-card wenyou-card" data-theme="${safeTheme}" style="--theme-primary:#6a11cb;--theme-secondary:#2575fc;--card-bg:linear-gradient(to bottom right,#ffffff,#f0f4fd);--text-main:#2c3e50;--text-muted:#7f8c8d;--font-family:'PingFang SC','Microsoft YaHei',sans-serif;--border-radius:12px;--card-shadow:0 10px 25px rgba(106,17,203,0.15);max-width:500px;margin:8px auto;background:var(--card-bg);border-radius:var(--border-radius);box-shadow:var(--card-shadow);font-family:var(--font-family);color:var(--text-main);overflow:hidden;border-top:4px solid var(--theme-primary);padding:20px;box-sizing:border-box;">`,
+                `<style>.wenyou-card .wy-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}.wenyou-card .wy-header-left{display:flex;align-items:center;gap:12px}.wenyou-card .wy-avatar{font-size:28px;color:var(--theme-primary)}.wenyou-card .wy-role-name{font-size:1.1rem;font-weight:700;color:var(--theme-primary);margin:0;line-height:1.2}.wenyou-card .wy-scene{font-size:.8rem;color:var(--text-muted);margin-top:2px}.wenyou-card .wy-divider{display:flex;align-items:center;text-align:center;margin:15px 0;color:var(--theme-secondary)}.wenyou-card .wy-divider:before,.wenyou-card .wy-divider:after{content:'';flex:1;border-bottom:1px dashed var(--theme-secondary);opacity:.4}.wenyou-card .wy-divider-icon{padding:0 10px;font-size:.9rem}.wenyou-card .wy-content{font-size:.95rem;line-height:1.6;margin-bottom:14px;text-align:justify}.wenyou-card .wy-stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;background:rgba(128,128,128,.05);padding:10px;border-radius:8px;border-left:3px solid var(--theme-secondary)}.wenyou-card .wy-stat-item{font-size:.85rem;background:rgba(255,255,255,.55);padding:4px 8px;border-radius:4px;display:flex;align-items:center;gap:4px}.wenyou-card .wy-stat-value{font-weight:700;color:var(--theme-primary)}.wenyou-card .wy-options{display:flex;flex-direction:column;gap:10px}.wenyou-card .wy-option-btn{display:flex;align-items:center;padding:12px 15px;background:transparent;border:1px solid var(--theme-primary);color:var(--theme-primary);border-radius:var(--border-radius);font-size:.95rem;cursor:pointer;transition:all .2s;text-decoration:none}.wenyou-card .wy-option-btn:hover{background:var(--theme-primary);color:#fff;transform:translateX(5px)}.wenyou-card .wy-opt-icon{margin-right:10px;font-size:1.1rem}.wenyou-card .wy-footer-decor{text-align:center;margin-top:16px;font-size:1.3rem;color:var(--theme-secondary);opacity:.35;letter-spacing:4px}</style>`,
+                `<header class="wy-header ai-beauty-card-title"><div class="wy-header-left"><div class="wy-avatar">🎭</div><div class="wy-title-box"><h3 class="wy-role-name">${safeTheme}</h3><span class="wy-scene" data-block="time">当前回合</span></div></div><div class="wy-top-decor">✦</div></header>`,
+                `<div class="wy-divider"><span class="wy-divider-icon">✧</span></div>`,
+                `<section class="wy-content ai-beauty-card-body" data-block="event">${bodyHtml}</section>`,
+                `<section class="wy-stats" data-block="status"><div class="wy-stat-item"><span>📌</span> 状态: <span class="wy-stat-value">待更新</span></div></section>`,
+                `<section class="wy-options" data-block="choices"><div class="wy-option-btn" data-choice="继续观察局势"><span class="wy-opt-icon">①</span>1. 继续观察局势</div><div class="wy-option-btn" data-choice="与关键人物交流"><span class="wy-opt-icon">②</span>2. 与关键人物交流</div></section>`,
+                `<div class="wy-footer-decor" data-block="hint">✧ ✦ ✧ 提示：可直接点击上方按钮继续剧情 ✧ ✦ ✧</div>`,
                 `</article>`
             ].join("");
         }
+        return { wrapAsHtmlCard };
+    })();
+
+    const HtmlStructureService = (() => {
+        const REQUIRED_BLOCKS = ["time", "status", "event", "choices"];
         function extractSkeleton(html) {
-            const normalized = normalizeHtmlCard(html);
-            if (!isRenderableHtmlCard(normalized)) return null;
+            const normalized = HtmlNormalizeService.normalizeHtmlCard(html);
+            if (!HtmlNormalizeService.isRenderableHtmlCard(normalized)) return null;
             try {
                 const tpl = document.createElement("template");
                 tpl.innerHTML = normalized;
@@ -1722,9 +1736,7 @@
                 const body = card.querySelector(".ai-beauty-card-body");
                 const title = card.querySelector(".ai-beauty-card-title");
                 const blockOrder = body
-                    ? Array.from(body.querySelectorAll("[data-block]"))
-                        .map((el) => String(el.getAttribute("data-block") || "").trim())
-                        .filter(Boolean)
+                    ? Array.from(body.querySelectorAll("[data-block]")).map((el) => String(el.getAttribute("data-block") || "").trim()).filter(Boolean)
                     : [];
                 return {
                     rootTag: card.tagName.toLowerCase(),
@@ -1748,24 +1760,19 @@
             if (!nextCard.classList.contains("ai-beauty-card")) nextCard.classList.add("ai-beauty-card");
             const theme = String(skeleton.rootTheme || "").trim() || String(card.getAttribute("data-theme") || "").trim();
             if (theme) nextCard.setAttribute("data-theme", theme);
-
             const safeTitleTag = /^[a-z][a-z0-9-]*$/i.test(String(skeleton.titleTag || "")) ? String(skeleton.titleTag).toLowerCase() : "header";
             const safeBodyTag = /^[a-z][a-z0-9-]*$/i.test(String(skeleton.bodyTag || "")) ? String(skeleton.bodyTag).toLowerCase() : "section";
             const oldTitle = card.querySelector(".ai-beauty-card-title");
             const oldBody = card.querySelector(".ai-beauty-card-body");
-
             const titleNode = document.createElement(safeTitleTag);
             titleNode.className = String(skeleton.titleClass || "ai-beauty-card-title").trim() || "ai-beauty-card-title";
             if (!titleNode.classList.contains("ai-beauty-card-title")) titleNode.classList.add("ai-beauty-card-title");
             titleNode.innerHTML = oldTitle?.innerHTML || "剧情推进";
             nextCard.appendChild(titleNode);
-
             const bodyNode = document.createElement(safeBodyTag);
             bodyNode.className = String(skeleton.bodyClass || "ai-beauty-card-body").trim() || "ai-beauty-card-body";
             if (!bodyNode.classList.contains("ai-beauty-card-body")) bodyNode.classList.add("ai-beauty-card-body");
-            const order = Array.isArray(skeleton.blockOrder) && skeleton.blockOrder.length
-                ? skeleton.blockOrder.map((x) => String(x || "").trim()).filter(Boolean)
-                : ["time", "status", "event", "thought", "choices", "hint"];
+            const order = Array.isArray(skeleton.blockOrder) && skeleton.blockOrder.length ? skeleton.blockOrder.map((x) => String(x || "").trim()).filter(Boolean) : ["time", "status", "event", "thought", "choices", "hint"];
             const used = new Set();
             if (oldBody) {
                 order.forEach((name) => {
@@ -1783,9 +1790,39 @@
             nextCard.appendChild(bodyNode);
             card.replaceWith(nextCard);
         }
-        function enforceCardStructure(html, { titleHint = "剧情推进", nowText = "", lockedSkeleton = null } = {}) {
-            const normalized = normalizeHtmlCard(html);
-            if (!isRenderableHtmlCard(normalized)) return normalized;
+        function normalizePreferredChoices(preferredChoices = []) {
+            if (!Array.isArray(preferredChoices)) return [];
+            return preferredChoices
+                .map((it, idx) => {
+                    if (typeof it === "string") return it.trim();
+                    if (!it || typeof it !== "object") return "";
+                    return String(it.label || it.key || `选项${idx + 1}`).trim();
+                })
+                .filter(Boolean)
+                .slice(0, 3);
+        }
+        function rebuildChoicesBlock(body, labels = []) {
+            if (!(body instanceof HTMLElement)) return;
+            const host = body.querySelector('[data-block="choices"]');
+            if (!host) return;
+            const picked = labels.length ? labels : ["继续观察局势", "与关键人物交流", "推进当前主线"];
+            const targetTag = host.tagName.toLowerCase();
+            const canUseDivMode = targetTag === "section" || targetTag === "div";
+            if (canUseDivMode) {
+                host.innerHTML = picked.map((txt, idx) => `<div class="wy-option-btn" data-choice="${MarkdownService.escapeHtml(txt)}"><span class="wy-opt-icon">${idx + 1}</span>${idx + 1}. ${MarkdownService.escapeHtml(txt)}</div>`).join("");
+                return;
+            }
+            host.innerHTML = "";
+            picked.forEach((txt, idx) => {
+                const li = document.createElement("li");
+                li.setAttribute("data-choice", txt);
+                li.textContent = `${idx + 1}. ${txt}`;
+                host.appendChild(li);
+            });
+        }
+        function enforceCardStructure(html, { titleHint = "剧情推进", nowText = "", lockedSkeleton = null, preferredChoices = [] } = {}) {
+            const normalized = HtmlNormalizeService.normalizeHtmlCard(html);
+            if (!HtmlNormalizeService.isRenderableHtmlCard(normalized)) return normalized;
             try {
                 const tpl = document.createElement("template");
                 tpl.innerHTML = normalized;
@@ -1839,6 +1876,8 @@
                     });
                     body.appendChild(ol);
                 }
+                const normalizedChoices = normalizePreferredChoices(preferredChoices);
+                if (normalizedChoices.length) rebuildChoicesBlock(body, normalizedChoices);
                 REQUIRED_BLOCKS.forEach((name) => {
                     const node = body.querySelector(`[data-block="${name}"]`);
                     if (node && String(node.textContent || "").trim() === "") {
@@ -1854,13 +1893,28 @@
                     hint.textContent = "提示：可直接点击上方按钮继续剧情";
                     body.appendChild(hint);
                 }
-                pruneEmptyElements(card);
+                HtmlNormalizeService.pruneEmptyElements(card);
                 return card.outerHTML;
             } catch (e) {
                 return normalized;
             }
         }
-        return { isBeautyModeEnabled, containsHtmlCard, isRenderableHtmlCard, wrapAsHtmlCard, normalizeHtmlCard, enforceCardStructure, extractSkeleton };
+        return { extractSkeleton, enforceCardStructure };
+    })();
+
+    const HtmlCardService = (() => {
+        function isBeautyModeEnabled(setting) {
+            return true;
+        }
+        return {
+            isBeautyModeEnabled,
+            containsHtmlCard: HtmlNormalizeService.containsHtmlCard,
+            normalizeHtmlCard: HtmlNormalizeService.normalizeHtmlCard,
+            isRenderableHtmlCard: HtmlNormalizeService.isRenderableHtmlCard,
+            wrapAsHtmlCard: HtmlFallbackService.wrapAsHtmlCard,
+            enforceCardStructure: HtmlStructureService.enforceCardStructure,
+            extractSkeleton: HtmlStructureService.extractSkeleton
+        };
     })();
 
     const AiResponseLayoutService = (() => {
@@ -2403,6 +2457,45 @@
         let currentSocialNpcId = null;
         let autoFollowBottom = true;
         let lastScrollTop = 0;
+        let streamThrottleTimer = null;
+        let streamPendingText = null;
+        let streamLastRenderAt = 0;
+        const STREAM_RENDER_INTERVAL_MS = 80;
+        function setStreamingScrollMode(active) {
+            const content = document.getElementById("main-content");
+            if (!content) return;
+            content.classList.toggle("streaming-no-smooth", !!active);
+        }
+        function renderStreamingFrame(text) {
+            if (!currentStreamingTarget) return;
+            currentStreamingTarget.innerHTML = AiResponseLayoutService.renderAiMessage(text, true);
+            AiResponseLayoutService.bindHtmlChoiceEvents(currentStreamingTarget);
+            streamLastRenderAt = Date.now();
+            scrollToBottom();
+        }
+        function flushStreamingRender() {
+            if (streamThrottleTimer) {
+                clearTimeout(streamThrottleTimer);
+                streamThrottleTimer = null;
+            }
+            if (streamPendingText === null) return;
+            const nextText = streamPendingText;
+            streamPendingText = null;
+            renderStreamingFrame(nextText);
+        }
+        function scheduleStreamingRender(text) {
+            streamPendingText = String(text || "");
+            const elapsed = Date.now() - streamLastRenderAt;
+            if (elapsed >= STREAM_RENDER_INTERVAL_MS) {
+                flushStreamingRender();
+                return;
+            }
+            if (streamThrottleTimer) return;
+            streamThrottleTimer = setTimeout(() => {
+                streamThrottleTimer = null;
+                flushStreamingRender();
+            }, STREAM_RENDER_INTERVAL_MS - elapsed);
+        }
         function renderTop(state) {
             const inPlay = PlayViewStateService.isInPlayMode();
             const card = ScenarioCardService.getSelectedCard();
@@ -2435,11 +2528,14 @@
         function setAutoFollowBottom(next) {
             autoFollowBottom = !!next;
         }
+        function cancelAutoFollowByUserGesture() {
+            autoFollowBottom = false;
+        }
         function isNearBottom() {
             const content = document.getElementById("main-content");
             if (!content) return true;
             const gap = content.scrollHeight - content.scrollTop - content.clientHeight;
-            return gap <= 120;
+            return gap <= 2;
         }
         function markUserScrolledUp(currentTop) {
             const top = Number(currentTop) || 0;
@@ -2477,17 +2573,24 @@
             if (streaming) {
                 currentStreamingTarget = bubble;
                 currentStreamingLogDiv = logDiv;
+                streamPendingText = null;
+                streamLastRenderAt = 0;
+                if (streamThrottleTimer) {
+                    clearTimeout(streamThrottleTimer);
+                    streamThrottleTimer = null;
+                }
+                setStreamingScrollMode(true);
             }
             scrollToBottom();
         }
         function updateStreaming(text) {
             if (!currentStreamingTarget) return;
-            currentStreamingTarget.innerHTML = AiResponseLayoutService.renderAiMessage(text, true);
-            AiResponseLayoutService.bindHtmlChoiceEvents(currentStreamingTarget);
-            scrollToBottom();
+            scheduleStreamingRender(text);
         }
         function finishStreaming(text, options = {}) {
             if (!currentStreamingTarget) return;
+            flushStreamingRender();
+            setStreamingScrollMode(false);
             const prefix = options.conflictDetected
                 ? "**⚠️ 检测到设定冲突，已自动纠偏重试一次。**\n\n"
                 : "";
@@ -2507,6 +2610,12 @@
             if (currentStreamingLogDiv && options.conflictDetected) currentStreamingLogDiv.classList.add("conflict");
             currentStreamingTarget = null;
             currentStreamingLogDiv = null;
+            streamPendingText = null;
+            streamLastRenderAt = 0;
+            if (streamThrottleTimer) {
+                clearTimeout(streamThrottleTimer);
+                streamThrottleTimer = null;
+            }
             scrollToBottom();
         }
         function renderHistory(history) {
@@ -2718,7 +2827,7 @@
                 box.appendChild(row);
             });
         }
-        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, renderApiCards, renderPresetTemplates, setAutoFollowBottom, isNearBottom, markUserScrolledUp };
+        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, renderApiCards, renderPresetTemplates, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp };
     })();
 
     const VisualEffects = (() => {
@@ -3640,6 +3749,32 @@
         return { getMeta, setInitialized, getLockedSkeleton, setLockedSkeleton, clearLockedSkeleton };
     })();
 
+    const HtmlCardRenderPipelineService = (() => {
+        function getLockedSkeleton(policyConfig, cardId) {
+            if (!policyConfig?.lockFirstCardSkeleton) return null;
+            return ScenarioPlayMetaService.getLockedSkeleton(cardId);
+        }
+        function finalizeCardLayout({ text, beautySetting, titleHint, nowText, policyConfig, cardId, preferredChoices = [] }) {
+            const lockedSkeleton = getLockedSkeleton(policyConfig, cardId);
+            const normalized = HtmlCardService.normalizeHtmlCard(text);
+            const html = HtmlCardService.isRenderableHtmlCard(normalized)
+                ? normalized
+                : HtmlCardService.wrapAsHtmlCard(beautySetting || "云吞页游沉浸风（稳定主题）", normalized || text);
+            const finalized = HtmlCardService.enforceCardStructure(html, {
+                titleHint: titleHint || "剧情推进",
+                nowText: nowText || "",
+                lockedSkeleton,
+                preferredChoices
+            });
+            if (policyConfig?.lockFirstCardSkeleton && !lockedSkeleton) {
+                const freshSkeleton = HtmlCardService.extractSkeleton(finalized);
+                if (freshSkeleton) ScenarioPlayMetaService.setLockedSkeleton(cardId, freshSkeleton);
+            }
+            return finalized;
+        }
+        return { finalizeCardLayout };
+    })();
+
     const WarningDecisionService = (() => {
         function loadMap() {
             return StorageService.readJson(AppConfig.storageKeys.scenarioDismissedWarningsMap, {});
@@ -3677,23 +3812,67 @@
         return { isDismissed, dismiss };
     })();
 
+    const HtmlCardPromptTemplateService = (() => {
+        function getDefaultBeautyHint() {
+            return "按设定自动生成高质量页游风卡片：色调统一、装饰丰富、排版分区清晰";
+        }
+        function getSkeletonHtml() {
+            return "<article class=\"ai-beauty-card wenyou-card\" style=\"--theme-primary:{THEME_PRIMARY};--theme-secondary:{THEME_SECONDARY};--card-bg:{CARD_BG};--text-main:{TEXT_MAIN};--text-muted:{TEXT_MUTED};--font-family:{FONT_FAMILY};--border-radius:{BORDER_RADIUS};--card-shadow:{CARD_SHADOW}\"><header class=\"wy-header ai-beauty-card-title\"><div class=\"wy-header-left\"><div class=\"wy-avatar\">{AVATAR_EMOJI}</div><div class=\"wy-title-box\"><h3 class=\"wy-role-name\">{ROLE_NAME}</h3><span class=\"wy-scene\" data-block=\"time\">{SCENE_TITLE}</span></div></div><div class=\"wy-top-decor\">{TOP_DECOR_ICON}</div></header><div class=\"wy-divider\"><span class=\"wy-divider-icon\">{DIVIDER_EMOJI}</span></div><section class=\"wy-content ai-beauty-card-body\" data-block=\"event\">{MAIN_STORY_TEXT}</section><section class=\"wy-stats\" data-block=\"status\">{STATS_HTML}</section><section class=\"wy-options\" data-block=\"choices\"><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_1}\"><span class=\"wy-opt-icon\">{OPT_ICON_1}</span>1. {OPT_TEXT_1}</div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_2}\"><span class=\"wy-opt-icon\">{OPT_ICON_2}</span>2. {OPT_TEXT_2}</div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_3}\"><span class=\"wy-opt-icon\">{OPT_ICON_3}</span>3. {OPT_TEXT_3}</div></section><div class=\"wy-footer-decor\" data-block=\"hint\">{BOTTOM_DECOR} 提示：可直接点击上方按钮继续剧情</div></article>";
+        }
+        return { getDefaultBeautyHint, getSkeletonHtml };
+    })();
+
+    const PromptRulesRegistry = (() => {
+        function getBeautyCoreRules() {
+            return [
+                "你必须输出可直接渲染的 HTML 卡片，且最外层必须是 class=\"ai-beauty-card\" 的 article/section/div。",
+                "卡片内部需包含：时间、状态变化、剧情正文、（AI想法）以及 1-3 条编号选项。",
+                "若设定存在待玩家选择的开局模式/路线，只能在 choices 中列出，不得替玩家做最终选择。",
+                "状态区必须包含主角状态；若本轮涉及关键NPC变化，状态区需附带NPC状态摘要。",
+                "视觉要求：卡片必须具备丰富且清晰的页游式视觉结构（标题条、信息区、标签/徽章、分隔线、强调块、层次化排版），并与当前设定的时代与题材一致。",
+                "同一张卡后续回合必须延续同一视觉骨架（标题区/信息区/选项区布局稳定），不要每回合随机换主题。",
+                "禁止输出纯 Markdown 或纯文本；必须输出 HTML。"
+            ];
+        }
+        function getIntroCoreRules() {
+            return [
+                "【任务】你是开局介绍生成器。",
+                "请基于设定与角色档案，输出一张可直接渲染的 HTML 卡片。",
+                "强制要求：最外层必须是 <article class=\"ai-beauty-card\">。",
+                "卡片内必须包含：世界背景简述、主角当前身份与处境、当前时间、关键NPC概览、1-3条编号选项。",
+                "若设定存在待玩家选择的开局模式/路线/阵营，请只在选项中列出，不得替玩家代选。"
+            ];
+        }
+        return { getBeautyCoreRules, getIntroCoreRules };
+    })();
+
     const ScenarioIntroService = (() => {
-        function buildIntroRequestPayload({ scenarioText, state, beautySetting }) {
+        function buildIntroRequestPayload({ scenarioText, state, beautySetting, openingChoices = [] }) {
             const fetchUrl = AIRequestService.buildFetchUrl();
+            const choiceLines = Array.isArray(openingChoices)
+                ? openingChoices
+                    .map((it, idx) => {
+                        const label = typeof it === "string"
+                            ? it
+                            : String(it?.label || it?.key || "").trim();
+                        const desc = typeof it === "object" && it?.desc ? `（${String(it.desc).trim()}）` : "";
+                        return label ? `${idx + 1}. ${label}${desc}` : "";
+                    })
+                    .filter(Boolean)
+                : [];
             const systemPrompt = [
                 "【最高优先级：设定文本约束】",
                 "你必须严格以设定文本为唯一世界规则源，不得引入与设定冲突的时代/地域/身份元素。",
                 "【设定文本】",
                 scenarioText,
                 "",
-                "【任务】你是开局介绍生成器。",
-                "请基于设定与角色档案，输出一张可直接渲染的 HTML 卡片。",
-                "强制要求：最外层必须是 <article class=\"ai-beauty-card\">。",
-                "卡片内必须包含：世界背景简述、主角当前身份与处境、当前时间、关键NPC概览、1-3条编号选项。",
-                "若设定存在待玩家选择的开局模式/路线/阵营，请只在选项中列出，不得替玩家代选。",
-                "参考通用结构（色调与元素由你按设定和美化提示词自行设计）：",
-                "<article class=\"ai-beauty-card\"><header class=\"ai-beauty-card-title\">...</header><section class=\"ai-beauty-card-body\"><div data-block=\"time\">...</div><div data-block=\"status\">...</div><div data-block=\"event\">...</div><ol data-block=\"choices\"><li data-choice=\"...\">1. ...</li></ol><div data-block=\"hint\">提示：可直接点击上方按钮继续剧情</div></section></article>",
-                `美化设定提示词：${beautySetting || "按设定自动生成高质量页游风卡片：色调统一、装饰丰富、排版分区清晰"}`
+                ...PromptRulesRegistry.getIntroCoreRules(),
+                "默认请使用以下“文游通用卡片模板”结构（可改色调和装饰，但保持结构清晰且 data-block 可识别）：",
+                HtmlCardPromptTemplateService.getSkeletonHtml(),
+                choiceLines.length
+                    ? `你必须在本次“开局介绍”卡片的 choices 区保留这些候选开局选项（可润色但语义不能丢）：\n${choiceLines.join("\n")}`
+                    : "若无候选开局项，则按剧情生成 1-3 条可执行编号选项。",
+                `美化设定提示词：${beautySetting || HtmlCardPromptTemplateService.getDefaultBeautyHint()}`
             ].join("\n");
             const userPrompt = [
                 "以下是当前角色档案（必须一致）：",
@@ -3708,9 +3887,9 @@
                 userPrompt
             };
         }
-        async function generateIntroHtmlCard({ apiConfig, scenarioText, state, beautySetting }) {
+        async function generateIntroHtmlCard({ apiConfig, scenarioText, state, beautySetting, openingChoices = [] }) {
             const headers = AIRequestService.buildHeaders(apiConfig);
-            const payload = buildIntroRequestPayload({ scenarioText, state, beautySetting });
+            const payload = buildIntroRequestPayload({ scenarioText, state, beautySetting, openingChoices });
             const html = await AIRequestService.requestCompletionWithFallback({
                 config: apiConfig,
                 fetchUrl: payload.fetchUrl,
@@ -3724,9 +3903,9 @@
             });
             return String(html || "").trim();
         }
-        async function streamIntroHtmlCard({ apiConfig, scenarioText, state, beautySetting, onToken }) {
+        async function streamIntroHtmlCard({ apiConfig, scenarioText, state, beautySetting, openingChoices = [], onToken }) {
             const headers = AIRequestService.buildHeaders(apiConfig);
-            const payload = buildIntroRequestPayload({ scenarioText, state, beautySetting });
+            const payload = buildIntroRequestPayload({ scenarioText, state, beautySetting, openingChoices });
             const text = await AIRequestService.streamCompletionWithFallback({
                 config: apiConfig,
                 fetchUrl: payload.fetchUrl,
@@ -3744,7 +3923,90 @@
         return { generateIntroHtmlCard, streamIntroHtmlCard };
     })();
 
-    const PromptPolicyService = (() => {
+    const InitIntroService = (() => {
+        async function start({ apiConfig, scenarioText, beautySetting, state, policyConfig, selectedCardId, openingChoices = [] }) {
+            if (apiConfig.blocked) return;
+            if (!apiConfig.upstreamUrl || !apiConfig.key || !apiConfig.model) return;
+            InitLoadingService.open("生成开局介绍：正在生成首条剧情卡片...");
+            InitLoadingService.updateStage("生成开局介绍");
+            UIRenderer.setAutoFollowBottom(true);
+            UIRenderer.appendMessage("ai", "正在生成开局剧情卡片...", Utils.nowDateStr(state), true);
+            let closedLoading = false;
+            function countHtmlCodeLines(text) {
+                const raw = String(text || "");
+                if (!raw) return 0;
+                const normalized = raw.replace(/>\s*</g, ">\n<");
+                const lines = normalized.split(/\r?\n/);
+                return lines.filter((line) => /<[^>]+>/.test(line)).length;
+            }
+            try {
+                const streamText = await ScenarioIntroService.streamIntroHtmlCard({
+                    apiConfig,
+                    scenarioText,
+                    state,
+                    beautySetting,
+                    openingChoices,
+                    onToken: (txt) => {
+                        const htmlLineCount = countHtmlCodeLines(txt);
+                        if (!closedLoading && htmlLineCount >= 10) {
+                            InitLoadingService.close();
+                            closedLoading = true;
+                        }
+                        UIRenderer.updateStreaming(txt);
+                    }
+                });
+                let normalized = HtmlCardService.normalizeHtmlCard(streamText);
+                let usedFallback = false;
+                if (!HtmlCardService.isRenderableHtmlCard(normalized)) {
+                    normalized = HtmlCardService.wrapAsHtmlCard(beautySetting, normalized);
+                    usedFallback = true;
+                }
+                normalized = HtmlCardRenderPipelineService.finalizeCardLayout({
+                    text: normalized,
+                    beautySetting,
+                    titleHint: "开局介绍",
+                    nowText: Utils.nowDateStr(StateService.get()),
+                    policyConfig,
+                    cardId: selectedCardId,
+                    preferredChoices: openingChoices
+                });
+                if (usedFallback) {
+                    const retryHtml = await DecisionModalService.show({
+                        title: "开局卡片格式异常",
+                        descHtml: "<div class='list-sub'>AI 返回的开局内容不是可渲染 HTML 卡片，已先用兜底卡片显示。</div><div class='list-sub' style='margin-top:6px;'>是否重试一次获取真实 HTML？</div>",
+                        okText: "重试获取HTML",
+                        cancelText: "保持当前"
+                    });
+                    if (retryHtml) {
+                        const retried = await ScenarioIntroService.generateIntroHtmlCard({ apiConfig, scenarioText, state, beautySetting, openingChoices });
+                        const retriedNorm = HtmlCardService.normalizeHtmlCard(retried);
+                        normalized = HtmlCardRenderPipelineService.finalizeCardLayout({
+                            text: retriedNorm || normalized,
+                            beautySetting,
+                            titleHint: "开局介绍",
+                            nowText: Utils.nowDateStr(StateService.get()),
+                            policyConfig,
+                            cardId: selectedCardId,
+                            preferredChoices: openingChoices
+                        });
+                    }
+                }
+                if (normalized) {
+                    UIRenderer.finishStreaming(normalized, { conflictDetected: false });
+                    StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(state), text: normalized });
+                    StateService.save();
+                }
+            } catch (e) {
+                InitLoadingService.close();
+                UIRenderer.finishStreaming(`⚠️ 开局卡片生成失败：${e.message}`, { conflictDetected: false });
+            } finally {
+                InitLoadingService.close();
+            }
+        }
+        return { start };
+    })();
+
+    const PromptComposerService = (() => {
         function buildRecentHistory(state) {
             const main = (state.history || [])
                 .slice(-18)
@@ -3770,6 +4032,10 @@
                 "若用户输入与已确认事实冲突，先以礼貌方式说明冲突，再基于事实继续剧情。"
             ].join("\n");
         }
+        return { buildRecentHistory, buildRuntimeContext };
+    })();
+
+    const PromptTemplateService = (() => {
         function buildBeautyRules(beautyCardSetting, beautyModeEnabled) {
             if (!beautyModeEnabled) return "";
             const normalizedTheme = (!beautyCardSetting || beautyCardSetting === "网络模板" || beautyCardSetting === "默认主题" || beautyCardSetting === "默认")
@@ -3778,38 +4044,14 @@
             return [
                 "【美化卡片强制规则】",
                 `当前美化卡片设定：${normalizedTheme}`,
-                "你必须输出可直接渲染的 HTML 卡片，且最外层必须是 class=\"ai-beauty-card\" 的 article/section/div。",
-                "卡片内部需包含：时间、状态变化、剧情正文、（AI想法）以及 1-3 条编号选项。",
-                "若设定存在待玩家选择的开局模式/路线，只能在 choices 中列出，不得替玩家做最终选择。",
-                "状态区必须包含主角状态；若本轮涉及关键NPC变化，状态区需附带NPC状态摘要。",
-                "视觉要求：卡片必须具备丰富且清晰的页游式视觉结构（标题条、信息区、标签/徽章、分隔线、强调块、层次化排版），并与当前设定的时代与题材一致。",
-                "同一张卡后续回合必须延续同一视觉骨架（标题区/信息区/选项区布局稳定），不要每回合随机换主题。",
-                "禁止输出纯 Markdown 或纯文本；必须输出 HTML。",
-                "以下是通用模板骨架（请按当前设定自由设计色调/元素/排版，可增删内部节点，但保留 ai-beauty-card 根节点与可点击选项区）：",
+                ...PromptRulesRegistry.getBeautyCoreRules(),
+                "以下是默认通用模板骨架（请按设定替换变量，允许扩展装饰，但保持 data-block 与选项可点击结构）：",
                 "```html",
-                "<article class=\"ai-beauty-card\" data-theme=\"自动生成\">",
-                "  <header class=\"ai-beauty-card-title\">[卡片标题：由设定与当前剧情生成]</header>",
-                "  <section class=\"ai-beauty-card-body\">",
-                "    <div data-block=\"time\">[时间信息]</div>",
-                "    <div data-block=\"status\">[状态变化]</div>",
-                "    <div data-block=\"event\">[剧情正文与对话]</div>",
-                "    <div data-block=\"thought\">（AI想法：...）</div>",
-                "    <ol data-block=\"choices\">",
-                "      <li data-choice=\"选项一\">1. 选项一</li>",
-                "      <li data-choice=\"选项二\">2. 选项二</li>",
-                "      <li data-choice=\"选项三\">3. 选项三</li>",
-                "    </ol>",
-                "    <div data-block=\"hint\">提示：可直接点击上方按钮继续剧情</div>",
-                "  </section>",
-                "</article>",
+                HtmlCardPromptTemplateService.getSkeletonHtml(),
                 "```"
             ].join("\n");
         }
-        function buildSystemPrompt({ state, scenarioSpec, beautyCardSetting, beautyModeEnabled }) {
-            const builtinRules = BuiltinPromptService.getResponseRules();
-            const stateFactLock = BuiltinPromptService.buildStateFactLock(state);
-            const runtimeContext = buildRuntimeContext(state);
-            const beautyRules = buildBeautyRules(beautyCardSetting, beautyModeEnabled);
+        function buildSystemPrompt({ scenarioSpec, builtinRules, stateFactLock, runtimeContext, beautyRules }) {
             const highestPriorityScenarioRules = [
                 "【最高优先级：设定文本约束】",
                 "你必须严格以设定文本为唯一世界规则源进行回复与推进。",
@@ -3871,6 +4113,43 @@
             ].join("\n\n");
         }
         return {
+            buildBeautyRules,
+            buildSystemPrompt,
+            buildMainUserPrompt,
+            buildChoiceRetryPrompt,
+            buildConflictRetryPrompt,
+            buildHtmlRetryPrompt,
+            buildWarningRetryPrompt
+        };
+    })();
+
+    const PromptPolicyService = (() => {
+        function buildRecentHistory(state) {
+            return PromptComposerService.buildRecentHistory(state);
+        }
+        function buildSystemPrompt({ state, scenarioSpec, beautyCardSetting, beautyModeEnabled }) {
+            const builtinRules = BuiltinPromptService.getResponseRules();
+            const stateFactLock = BuiltinPromptService.buildStateFactLock(state);
+            const runtimeContext = PromptComposerService.buildRuntimeContext(state);
+            const beautyRules = PromptTemplateService.buildBeautyRules(beautyCardSetting, beautyModeEnabled);
+            return PromptTemplateService.buildSystemPrompt({ scenarioSpec, builtinRules, stateFactLock, runtimeContext, beautyRules });
+        }
+        function buildMainUserPrompt(userText, recentHistory) {
+            return PromptTemplateService.buildMainUserPrompt(userText, recentHistory);
+        }
+        function buildChoiceRetryPrompt(userText, recentHistory, rawText, scenarioSpec) {
+            return PromptTemplateService.buildChoiceRetryPrompt(userText, recentHistory, rawText, scenarioSpec);
+        }
+        function buildConflictRetryPrompt(userText, recentHistory, conflictReport, finalText, scenarioSpec) {
+            return PromptTemplateService.buildConflictRetryPrompt(userText, recentHistory, conflictReport, finalText, scenarioSpec);
+        }
+        function buildHtmlRetryPrompt(userText, recentHistory, finalText, scenarioSpec) {
+            return PromptTemplateService.buildHtmlRetryPrompt(userText, recentHistory, finalText, scenarioSpec);
+        }
+        function buildWarningRetryPrompt(userText, recentHistory, warnings, finalText, scenarioSpec) {
+            return PromptTemplateService.buildWarningRetryPrompt(userText, recentHistory, warnings, finalText, scenarioSpec);
+        }
+        return {
             buildRecentHistory,
             buildSystemPrompt,
             buildMainUserPrompt,
@@ -3879,6 +4158,64 @@
             buildHtmlRetryPrompt,
             buildWarningRetryPrompt
         };
+    })();
+
+    const InitFlowService = (() => {
+        function buildPreviewDesc(plan) {
+            return [
+                `角色：${plan.name}（${plan.englishName}）`,
+                `年龄：${plan.ageYears} 岁`,
+                `角色性别：${plan.forcedGender || plan.selectedGender || "未指定"}`,
+                `角色国籍：${plan.nationality || "按随机"}`,
+                `角色地点：${plan.location || "按随机"}`,
+                `时间：${plan.timeEra || (plan.currentYear ? `${plan.currentYear}年${plan.currentMonth ? `${plan.currentMonth}月` : ""}` : "未设定")}`,
+                `周序号：第${plan.weekIndex || 1}周`,
+                `NPC数量：${(plan.npcs || []).length}`,
+                `背包物品数量：${(plan.inventory || []).length}`,
+                Array.isArray(plan.openingChoices) && plan.openingChoices.length
+                    ? `开局待选项：${plan.openingChoices.map((x, i) => `${i + 1}.${x.label || x.key || "未命名选项"}`).join(" / ")}`
+                    : "开局待选项：无",
+                `说明：${plan.rebornReason || "无"}`
+            ].join("<br>");
+        }
+        function buildInitFailDesc(errMsg) {
+            return [
+                `<div style="font-weight:700; margin-bottom:6px;">AI 开局初始化解析失败</div>`,
+                `<div class="list-sub">原因：${MarkdownService.escapeHtml(String(errMsg || ""))}</div>`,
+                `<div class="list-sub" style="margin-top:6px;">你可以选择重试（带着缺失项提示），或返回主页并删除本次自动新建的卡片。</div>`
+            ].join("");
+        }
+        return { buildPreviewDesc, buildInitFailDesc };
+    })();
+
+    const InitLoadingService = (() => {
+        function open(text) {
+            document.getElementById("init-loading-desc").innerText = text || "AI 正在根据设定生成角色信息、背包与社交关系，请稍候...";
+            const bar = document.getElementById("init-loading-progress");
+            if (bar) bar.style.width = "8%";
+            document.getElementById("init-loading-modal").style.display = "flex";
+        }
+        function updateStage(stage) {
+            const map = {
+                "连接中": "连接中：正在请求 AI 解析设定...",
+                "解析角色": "解析角色：正在生成角色信息...",
+                "生成背包": "生成背包：正在构建初始物品...",
+                "生成NPC": "生成NPC：正在构建社交关系...",
+                "生成开局介绍": "生成开局介绍：正在生成首条剧情卡片...",
+                "完成": "完成：初始化数据已生成。"
+            };
+            document.getElementById("init-loading-desc").innerText = map[stage] || String(stage || "");
+            const percentMap = { "连接中": 18, "解析角色": 42, "生成背包": 60, "生成NPC": 78, "生成开局介绍": 92, "完成": 100 };
+            const bar = document.getElementById("init-loading-progress");
+            const p = percentMap[stage] ?? 25;
+            if (bar) bar.style.width = `${p}%`;
+        }
+        function close() {
+            document.getElementById("init-loading-modal").style.display = "none";
+            const bar = document.getElementById("init-loading-progress");
+            if (bar) bar.style.width = "0%";
+        }
+        return { open, updateStage, close };
     })();
 
     const AIRequestService = (() => {
@@ -4368,28 +4705,15 @@
                 const rawVisibleText = rawPatchResult.cleaned || rawText;
                 const rawPatchChanged = StatePatchService.applyPatch(StateService.get(), rawPatchResult.patch);
                 let displayText = rawVisibleText;
-                const selectedCardId = ScenarioCardService.getSelectedId();
-                const lockedSkeleton = policyConfig.lockFirstCardSkeleton
-                    ? ScenarioPlayMetaService.getLockedSkeleton(selectedCardId)
-                    : null;
                 if (beautyModeEnabled && policyConfig.enableHtmlCardForce) {
-                    const normalized = HtmlCardService.normalizeHtmlCard(rawVisibleText);
-                    if (HtmlCardService.isRenderableHtmlCard(normalized)) {
-                        displayText = HtmlCardService.enforceCardStructure(normalized, {
-                            titleHint: "剧情推进",
-                            nowText: Utils.nowDateStr(StateService.get()),
-                            lockedSkeleton
-                        });
-                    } else {
-                        displayText = HtmlCardService.enforceCardStructure(
-                            HtmlCardService.wrapAsHtmlCard(beautyCardSetting || "云吞页游沉浸风（稳定主题）", normalized || rawVisibleText),
-                            { titleHint: "剧情推进", nowText: Utils.nowDateStr(StateService.get()), lockedSkeleton }
-                        );
-                    }
-                    if (policyConfig.lockFirstCardSkeleton && !lockedSkeleton) {
-                        const freshSkeleton = HtmlCardService.extractSkeleton(displayText);
-                        if (freshSkeleton) ScenarioPlayMetaService.setLockedSkeleton(selectedCardId, freshSkeleton);
-                    }
+                    displayText = HtmlCardRenderPipelineService.finalizeCardLayout({
+                        text: rawVisibleText,
+                        beautySetting: beautyCardSetting,
+                        titleHint: "剧情推进",
+                        nowText: Utils.nowDateStr(StateService.get()),
+                        policyConfig,
+                        cardId: ScenarioCardService.getSelectedId()
+                    });
                 }
 
                 // 第一阶段：流式结束后立即完成渲染并解锁交互，避免用户体感“卡住”。
@@ -4424,6 +4748,62 @@
             return isGenerating;
         }
         return { requestAI, getIsGenerating };
+    })();
+
+    const ScenarioCardControllerService = (() => {
+        function saveScenarioCard({ renderAll }) {
+            const form = ScenarioEditorService.readForm();
+            ScenarioCardService.updateSelectedCard({
+                title: form.title || "未命名设定",
+                theme: form.theme,
+                text: form.text || AppConfig.defaultScenario,
+                apiConfig: {
+                    upstreamUrl: document.getElementById("card-api-url").value.trim(),
+                    key: document.getElementById("card-api-key").value.trim(),
+                    model: document.getElementById("card-api-model").value.trim()
+                }
+            });
+            renderAll();
+            alert("设定卡片已保存");
+        }
+        function createScenarioCard({ renderAll, switchView }) {
+            ScenarioCardService.createCard();
+            PlayViewStateService.leavePlay();
+            StateService.init();
+            SettingsService.loadToUI();
+            renderAll();
+            switchView("view-scenario-editor");
+        }
+        function openScenarioCardSettings({ cardId, selectScenarioCard, switchView }) {
+            selectScenarioCard(cardId);
+            switchView("view-scenario-editor");
+            ScenarioEditorService.focusEditor();
+        }
+        function deleteScenarioCard({ cardId, renderAll }) {
+            const card = ScenarioCardService.loadCards().find((c) => c.id === cardId);
+            if (!card) return;
+            if (!confirm(`确定删除卡片「${card.title}」吗？\n（删除自定义置顶卡片后会自动生成一张新的自定义卡片）`)) return;
+            const ok = ScenarioCardService.deleteCard(cardId);
+            if (!ok) return;
+            SettingsService.loadToUI();
+            renderAll();
+        }
+        async function applyPresetTemplate({ preset, silent = false, ensurePresetAsIndependentCard }) {
+            try {
+                const payload = await ScenarioTemplateService.buildTemplateCardPayload(preset);
+                ensurePresetAsIndependentCard(payload);
+            } catch (e) {
+                alert(`加载模板失败：${e.message}`);
+                return false;
+            }
+            if (!silent) alert("已就地更新该预设的独立卡片");
+            return true;
+        }
+        async function editPresetTemplate({ preset, applyPresetTemplate, switchView }) {
+            await applyPresetTemplate(preset);
+            switchView("view-scenario-editor");
+        }
+        return { saveScenarioCard, createScenarioCard, openScenarioCardSettings, deleteScenarioCard, applyPresetTemplate, editPresetTemplate };
     })();
 
     const Controller = (() => {
@@ -4463,14 +4843,13 @@
             if (content) {
                 content.addEventListener("scroll", () => {
                     UIRenderer.markUserScrolledUp(content.scrollTop);
-                    UIRenderer.setAutoFollowBottom(UIRenderer.isNearBottom());
                 });
                 content.addEventListener("wheel", (e) => {
-                    if (e.deltaY < 0) UIRenderer.setAutoFollowBottom(false);
+                    if (e.deltaY !== 0) UIRenderer.cancelAutoFollowByUserGesture();
                 }, { passive: true });
                 content.addEventListener("touchmove", () => {
                     UIRenderer.markUserScrolledUp(content.scrollTop);
-                    if (!UIRenderer.isNearBottom()) UIRenderer.setAutoFollowBottom(false);
+                    UIRenderer.cancelAutoFollowByUserGesture();
                 }, { passive: true });
             }
             const searchInput = document.getElementById("scenario-search-input");
@@ -4669,19 +5048,7 @@
             alert("用户 API 配置已保存");
         }
         function saveScenarioCard() {
-            const form = ScenarioEditorService.readForm();
-            ScenarioCardService.updateSelectedCard({
-                title: form.title || "未命名设定",
-                theme: form.theme,
-                text: form.text || AppConfig.defaultScenario,
-                apiConfig: {
-                    upstreamUrl: document.getElementById("card-api-url").value.trim(),
-                    key: document.getElementById("card-api-key").value.trim(),
-                    model: document.getElementById("card-api-model").value.trim()
-                }
-            });
-            renderAll();
-            alert("设定卡片已保存");
+            ScenarioCardControllerService.saveScenarioCard({ renderAll });
         }
         function selectScenarioCard(id) {
             ScenarioCardService.setSelectedId(id);
@@ -4691,17 +5058,10 @@
             renderAll();
         }
         function createScenarioCard() {
-            ScenarioCardService.createCard();
-            PlayViewStateService.leavePlay();
-            StateService.init();
-            SettingsService.loadToUI();
-            renderAll();
-            switchView("view-scenario-editor");
+            ScenarioCardControllerService.createScenarioCard({ renderAll, switchView });
         }
         function openScenarioCardSettings(cardId) {
-            selectScenarioCard(cardId);
-            switchView("view-scenario-editor");
-            ScenarioEditorService.focusEditor();
+            ScenarioCardControllerService.openScenarioCardSettings({ cardId, selectScenarioCard, switchView });
         }
         function openCurrentCardEditor() {
             const card = ScenarioCardService.getSelectedCard();
@@ -4709,13 +5069,7 @@
             openScenarioCardSettings(card.id);
         }
         function deleteScenarioCard(cardId) {
-            const card = ScenarioCardService.loadCards().find((c) => c.id === cardId);
-            if (!card) return;
-            if (!confirm(`确定删除卡片「${card.title}」吗？\n（删除自定义置顶卡片后会自动生成一张新的自定义卡片）`)) return;
-            const ok = ScenarioCardService.deleteCard(cardId);
-            if (!ok) return;
-            SettingsService.loadToUI();
-            renderAll();
+            ScenarioCardControllerService.deleteScenarioCard({ cardId, renderAll });
         }
         function toggleScenarioCardPin(cardId) {
             ScenarioCardService.togglePin(cardId);
@@ -4743,28 +5097,27 @@
         }
         async function applyPresetTemplate(preset, options = {}) {
             const { silent = false } = options;
-            try {
-                const payload = await ScenarioTemplateService.buildTemplateCardPayload(preset);
-                ensurePresetAsIndependentCard(payload);
-            } catch (e) {
-                alert(`加载模板失败：${e.message}`);
-                return false;
-            }
-            if (!silent) alert("已就地更新该预设的独立卡片");
-            return true;
+            return await ScenarioCardControllerService.applyPresetTemplate({
+                preset,
+                silent,
+                ensurePresetAsIndependentCard
+            });
         }
         async function editPresetTemplate(preset) {
-            await applyPresetTemplate(preset);
-            switchView("view-scenario-editor");
+            await ScenarioCardControllerService.editPresetTemplate({
+                preset,
+                applyPresetTemplate,
+                switchView
+            });
         }
         async function playPresetTemplate(preset) {
-            openInitLoadingModal("正在加载预设模板并初始化独立卡片...");
+            InitLoadingService.open("正在加载预设模板并初始化独立卡片...");
             const ok = await applyPresetTemplate(preset, { silent: true });
             if (ok === false) {
-                closeInitLoadingModal();
+                InitLoadingService.close();
                 return;
             }
-            updateInitLoadingStage("连接中");
+            InitLoadingService.updateStage("连接中");
             await playScenarioCard(ScenarioCardService.getSelectedId());
         }
         function selectApiCard(id) {
@@ -4792,32 +5145,6 @@
             document.getElementById("init-preview-modal").style.display = "none";
             pendingInitPlan = null;
         }
-        function openInitLoadingModal(text) {
-            document.getElementById("init-loading-desc").innerText = text || "AI 正在根据设定生成角色信息、背包与社交关系，请稍候...";
-            const bar = document.getElementById("init-loading-progress");
-            if (bar) bar.style.width = "8%";
-            document.getElementById("init-loading-modal").style.display = "flex";
-        }
-        function updateInitLoadingStage(stage) {
-            const map = {
-                "连接中": "连接中：正在请求 AI 解析设定...",
-                "解析角色": "解析角色：正在生成角色信息...",
-                "生成背包": "生成背包：正在构建初始物品...",
-                "生成NPC": "生成NPC：正在构建社交关系...",
-                "生成开局介绍": "生成开局介绍：正在生成首条剧情卡片...",
-                "完成": "完成：初始化数据已生成。"
-            };
-            document.getElementById("init-loading-desc").innerText = map[stage] || String(stage || "");
-            const percentMap = { "连接中": 18, "解析角色": 42, "生成背包": 60, "生成NPC": 78, "生成开局介绍": 92, "完成": 100 };
-            const bar = document.getElementById("init-loading-progress");
-            const p = percentMap[stage] ?? 25;
-            if (bar) bar.style.width = `${p}%`;
-        }
-        function closeInitLoadingModal() {
-            document.getElementById("init-loading-modal").style.display = "none";
-            const bar = document.getElementById("init-loading-progress");
-            if (bar) bar.style.width = "0%";
-        }
         function bindInitPreviewForm(plan) {
             document.getElementById("init-preview-name").value = plan.name || "";
             document.getElementById("init-preview-english-name").value = plan.englishName || "";
@@ -4840,13 +5167,13 @@
             selectScenarioCard(cardId);
             const meta = ScenarioPlayMetaService.getMeta(cardId);
             if (meta.hasInitialized) {
-                closeInitLoadingModal();
+                InitLoadingService.close();
                 PlayViewStateService.enterPlay(cardId);
                 switchView("view-main");
             renderAll();
                 return;
             }
-            openInitLoadingModal("连接中：正在请求 AI 解析设定...");
+            InitLoadingService.open("连接中：正在请求 AI 解析设定...");
             PlayViewStateService.enterPlay(cardId);
             switchView("view-main");
             renderAll();
@@ -4854,74 +5181,42 @@
         }
         async function prepareInitPreview(defaultGender, loadingAlreadyOpen = false) {
             if (ChatService.getIsGenerating()) return;
-            if (!loadingAlreadyOpen) openInitLoadingModal("正在生成角色初始化信息（角色、背包与社交）...");
+            if (!loadingAlreadyOpen) InitLoadingService.open("正在生成角色初始化信息（角色、背包与社交）...");
             try {
-                const plan = await ScenarioInitPlanService.buildInitPlan(defaultGender || "女", updateInitLoadingStage);
-                closeInitLoadingModal();
+                const plan = await ScenarioInitPlanService.buildInitPlan(defaultGender || "女", InitLoadingService.updateStage);
+                InitLoadingService.close();
                 pendingInitPlan = plan;
-                const desc = [
-                    `角色：${plan.name}（${plan.englishName}）`,
-                    `年龄：${plan.ageYears} 岁`,
-                    `角色性别：${plan.forcedGender || plan.selectedGender || "未指定"}`,
-                    `角色国籍：${plan.nationality || "按随机"}`,
-                    `角色地点：${plan.location || "按随机"}`,
-                    `时间：${plan.timeEra || (plan.currentYear ? `${plan.currentYear}年${plan.currentMonth ? `${plan.currentMonth}月` : ""}` : "未设定")}`,
-                    `周序号：第${plan.weekIndex || 1}周`,
-                    `NPC数量：${(plan.npcs || []).length}`,
-                    `背包物品数量：${(plan.inventory || []).length}`,
-                    Array.isArray(plan.openingChoices) && plan.openingChoices.length
-                        ? `开局待选项：${plan.openingChoices.map((x, i) => `${i + 1}.${x.label || x.key || "未命名选项"}`).join(" / ")}`
-                        : "开局待选项：无",
-                    `说明：${plan.rebornReason || "无"}`
-                ].join("<br>");
+                const desc = InitFlowService.buildPreviewDesc(plan);
                 document.getElementById("init-preview-desc").innerHTML = desc;
                 bindInitPreviewForm(plan);
                 const confirmBtn = document.getElementById("init-preview-confirm-btn");
                 confirmBtn.onclick = () => applyInitPreviewAndStart();
                 openInitPreviewModal();
             } catch (e) {
-                closeInitLoadingModal();
+                InitLoadingService.close();
                 const title = "初始化解析失败";
-                const desc = [
-                    `<div style="font-weight:700; margin-bottom:6px;">AI 开局初始化解析失败</div>`,
-                    `<div class="list-sub">原因：${MarkdownService.escapeHtml(String(e?.message || e || ""))}</div>`,
-                    `<div class="list-sub" style="margin-top:6px;">你可以选择重试（带着缺失项提示），或返回主页并删除本次自动新建的卡片。</div>`
-                ].join("");
+                const desc = InitFlowService.buildInitFailDesc(String(e?.message || e || ""));
                 const doRetry = await DecisionModalService.show({ title, descHtml: desc, okText: "重试", cancelText: "返回" });
                 if (doRetry) {
                     const hint = String(e?.message || "");
                     const prev = e?.partialPlan || null;
-                    openInitLoadingModal("连接中：正在请求 AI 重新补全缺失信息...");
-                    updateInitLoadingStage("连接中");
+                    InitLoadingService.open("连接中：正在请求 AI 重新补全缺失信息...");
+                    InitLoadingService.updateStage("连接中");
                     try {
-                        const plan2 = await ScenarioInitPlanService.buildInitPlan(defaultGender || "女", updateInitLoadingStage, {
+                        const plan2 = await ScenarioInitPlanService.buildInitPlan(defaultGender || "女", InitLoadingService.updateStage, {
                             extraHint: `请根据失败原因补全缺失字段：${hint}`,
                             previousPlan: prev
                         });
-                        closeInitLoadingModal();
+                        InitLoadingService.close();
                         pendingInitPlan = plan2;
-                        const desc2 = [
-                            `角色：${plan2.name}（${plan2.englishName}）`,
-                            `年龄：${plan2.ageYears} 岁`,
-                            `角色性别：${plan2.forcedGender || plan2.selectedGender || "未指定"}`,
-                            `角色国籍：${plan2.nationality || "按随机"}`,
-                            `角色地点：${plan2.location || "按随机"}`,
-                            `时间：${plan2.timeEra || (plan2.currentYear ? `${plan2.currentYear}年${plan2.currentMonth ? `${plan2.currentMonth}月` : ""}` : "未设定")}`,
-                            `周序号：第${plan2.weekIndex || 1}周`,
-                            `NPC数量：${(plan2.npcs || []).length}`,
-                            `背包物品数量：${(plan2.inventory || []).length}`,
-                            Array.isArray(plan2.openingChoices) && plan2.openingChoices.length
-                                ? `开局待选项：${plan2.openingChoices.map((x, i) => `${i + 1}.${x.label || x.key || "未命名选项"}`).join(" / ")}`
-                                : "开局待选项：无",
-                            `说明：${plan2.rebornReason || "无"}`
-                        ].join("<br>");
+                        const desc2 = InitFlowService.buildPreviewDesc(plan2);
                         document.getElementById("init-preview-desc").innerHTML = desc2;
                         bindInitPreviewForm(plan2);
                         const confirmBtn2 = document.getElementById("init-preview-confirm-btn");
                         confirmBtn2.onclick = () => applyInitPreviewAndStart();
                         openInitPreviewModal();
                     } catch (e2) {
-                        closeInitLoadingModal();
+                        InitLoadingService.close();
                         StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(StateService.get()), text: `> ⚠️ 重试仍失败：${e2.message}` });
                         StateService.save();
                         renderAll();
@@ -4956,103 +5251,15 @@
             closeInitPreviewModal();
             switchView("view-main");
             renderAll();
-            // 初始化完成后：让 AI 输出开局介绍 HTML 卡片作为第一条剧情
-            (async () => {
-                try {
-                    const apiConfig = SettingsService.getApiConfig();
-                    if (apiConfig.blocked) return;
-                    if (!apiConfig.upstreamUrl || !apiConfig.key || !apiConfig.model) return;
-                    openInitLoadingModal("生成开局介绍：正在生成首条剧情卡片...");
-                    updateInitLoadingStage("生成开局介绍");
-                    const scenarioText = SettingsService.getScenarioText();
-                    const beautySetting = SettingsService.getBeautyCardSetting();
-                    const state = StateService.get();
-                    const policyConfig = SettingsService.getChatPolicyConfig();
-                    const selectedCardId = ScenarioCardService.getSelectedId();
-                    const lockedSkeleton = policyConfig.lockFirstCardSkeleton
-                        ? ScenarioPlayMetaService.getLockedSkeleton(selectedCardId)
-                        : null;
-                    UIRenderer.setAutoFollowBottom(true);
-                    UIRenderer.appendMessage("ai", "正在生成开局剧情卡片...", Utils.nowDateStr(state), true);
-                    let closedLoading = false;
-                    let htmlSignalStreak = 0;
-                    const htmlSignalPattern = /<(article|section|div|header|ol|li)\b|class\s*=\s*["'][^"']*ai-beauty-card/i;
-                    const streamText = await ScenarioIntroService.streamIntroHtmlCard({
-                        apiConfig,
-                        scenarioText,
-                        state,
-                        beautySetting,
-                        onToken: (txt) => {
-                            const recent = String(txt || "").slice(-320);
-                            if (htmlSignalPattern.test(recent)) {
-                                htmlSignalStreak += 1;
-                            } else {
-                                htmlSignalStreak = 0;
-                            }
-                            if (!closedLoading) {
-                                // 收到“持续的HTML流式输入”后再关闭加载弹窗，避免过早关闭
-                                if (htmlSignalStreak >= 2 || recent.includes("ai-beauty-card")) {
-                                    closeInitLoadingModal();
-                                    closedLoading = true;
-                                }
-                            }
-                            // 兜底：文本过长时即便未命中明显标签，也允许关闭加载弹窗进入实时感知
-                            if (!closedLoading && String(txt || "").length >= 220) {
-                                closeInitLoadingModal();
-                                closedLoading = true;
-                            }
-                            UIRenderer.updateStreaming(txt);
-                        }
-                    });
-                    let normalized = HtmlCardService.normalizeHtmlCard(streamText);
-                    let usedFallback = false;
-                    if (!HtmlCardService.isRenderableHtmlCard(normalized)) {
-                        normalized = HtmlCardService.wrapAsHtmlCard(beautySetting, normalized);
-                        usedFallback = true;
-                    }
-                    normalized = HtmlCardService.enforceCardStructure(normalized, {
-                        titleHint: "开局介绍",
-                        nowText: Utils.nowDateStr(StateService.get()),
-                        lockedSkeleton
-                    });
-                    if (usedFallback) {
-                        const retryHtml = await DecisionModalService.show({
-                            title: "开局卡片格式异常",
-                            descHtml: "<div class='list-sub'>AI 返回的开局内容不是可渲染 HTML 卡片，已先用兜底卡片显示。</div><div class='list-sub' style='margin-top:6px;'>是否重试一次获取真实 HTML？</div>",
-                            okText: "重试获取HTML",
-                            cancelText: "保持当前"
-                        });
-                        if (retryHtml) {
-                            const retried = await ScenarioIntroService.generateIntroHtmlCard({ apiConfig, scenarioText, state, beautySetting });
-                            const retriedNorm = HtmlCardService.normalizeHtmlCard(retried);
-                            normalized = HtmlCardService.isRenderableHtmlCard(retriedNorm)
-                                ? HtmlCardService.enforceCardStructure(retriedNorm, {
-                                    titleHint: "开局介绍",
-                                    nowText: Utils.nowDateStr(StateService.get()),
-                                    lockedSkeleton
-                                })
-                                : HtmlCardService.enforceCardStructure(
-                                    HtmlCardService.wrapAsHtmlCard(beautySetting, retriedNorm || normalized),
-                                    { titleHint: "开局介绍", nowText: Utils.nowDateStr(StateService.get()), lockedSkeleton }
-                                );
-                        }
-                    }
-                    if (policyConfig.lockFirstCardSkeleton && !lockedSkeleton && normalized) {
-                        const freshSkeleton = HtmlCardService.extractSkeleton(normalized);
-                        if (freshSkeleton) ScenarioPlayMetaService.setLockedSkeleton(selectedCardId, freshSkeleton);
-                    }
-                    if (normalized) {
-                        UIRenderer.finishStreaming(normalized, { conflictDetected: false });
-                        StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(state), text: normalized });
-                        StateService.save();
-                    }
-                } catch (e) {
-                    closeInitLoadingModal();
-                    UIRenderer.finishStreaming(`⚠️ 开局卡片生成失败：${e.message}`, { conflictDetected: false });
-                } finally {
-                    closeInitLoadingModal();
-                }
-            })();
+            InitIntroService.start({
+                apiConfig: SettingsService.getApiConfig(),
+                scenarioText: SettingsService.getScenarioText(),
+                beautySetting: SettingsService.getBeautyCardSetting(),
+                state: StateService.get(),
+                policyConfig: SettingsService.getChatPolicyConfig(),
+                selectedCardId: ScenarioCardService.getSelectedId(),
+                openingChoices: merged.openingChoices || []
+            });
         }
         return { init, onSendClick, sendUserText, jumpWeek, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, openCurrentCardEditor, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, applyPresetTemplate, editPresetTemplate, playPresetTemplate, selectApiCard, startFromPlay, importScenarioTxt, openInitPreviewModal, closeInitPreviewModal, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
     })();
