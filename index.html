@@ -3303,7 +3303,7 @@
                 "【内置返回规则】",
                 "1) 必须优先遵循“角色事实锁定块”；若剧情中发生状态变更，必须通过 state-patch 结构化块同步改动。",
                 "2) 必须只基于玩家最新输入和上下文推进剧情，不可脱离输入自说自话，不可重置世界观。",
-                "3) 若当前启用了美化卡片规则，则直接输出 HTML 卡片；否则输出 Markdown，内容贴近手机阅读。",
+                "3) 当前已启用美化卡片模式：必须直接输出 HTML 卡片，严禁输出 Markdown 文本。",
                 "4) 每次回复都应包含：时间信息、状态变化、剧情对话、（AI想法：...）。",
                 "5) 回复末尾必须提供 1-3 条可执行选项，使用编号格式：1. xxx",
                 "6) 若剧情不适合选项，也要提供“继续观察/继续推进”等中性选项。",
@@ -6064,18 +6064,17 @@
                 ? HtmlCardTemplateService.getRichThemeName()
                 : beautyCardSetting;
             const isDark = ThemeService.getMode() === "dark";
-            // 只输出结构约束说明，不输出完整骨架 HTML（避免 prompt 过长）
             const { statusPanelLabel, tagsHtml } = HtmlCardTemplateService.buildSkeletonStateContext(state);
-            // 精简骨架：只保留结构标签，去掉所有 style，让 AI 理解结构而不被样式干扰
             const skeletonHint = `<article class="ai-beauty-card wenyou-card"><div class="ai-beauty-card-body"><section data-block="time">时间信息</section><section data-block="status"><div>✨ ${statusPanelLabel}：各属性数值</div><div>🏷 关键标签：${tagsHtml}</div></section><section data-block="relations">👥 人物关系卡片</section><section data-block="event"><div>剧情正文</div></section><section data-block="thought"><div>AI想法</div></section><section data-block="choices"><div data-choice="选项1">1. 选项1</div><div data-choice="选项2">2. 选项2</div><div data-choice="选项3">3. 选项3</div></section><div data-block="hint">提示文字</div></div></article>`;
             return [
-                "【美化卡片强制规则】",
-                `当前美化卡片设定：${normalizedTheme}`,
+                "【美化卡片强制规则——最高优先级】",
+                "⚠️ 本次回复必须输出 HTML 卡片，严禁输出任何 Markdown 文本。",
+                `视觉主题：${normalizedTheme}`,
                 isDark
-                    ? "当前为暗夜模式：必须输出透明背景/半透明玻璃感的深色卡片（非纯黑实心底），文字需高对比易读。"
-                    : "当前为亮色模式：可使用温暖或高饱和视觉，但仍需保证可读性。",
+                    ? "暗夜模式：透明/半透明深色背景，文字高对比。"
+                    : "亮色模式：温暖或高饱和视觉，保证可读性。",
                 ...PromptRulesRegistry.getBeautyCoreRules(),
-                "【卡片结构约束】必须严格按以下骨架输出 HTML，data-block 顺序和命名不可改变，status 区内状态面板和标签上下排列（不并列）：",
+                "【卡片结构（必须严格遵守，data-block 顺序和命名不可改变）】",
                 skeletonHint
             ].join("\n");
         }
@@ -6086,7 +6085,7 @@
                 "设定文本优先级高于任何默认现代背景、常见校园模板或现实年份。",
                 "当设定与常识冲突时，以设定为准。不得引入不符合设定年代/地域/身份的元素。"
             ].join("\n");
-            return `${highestPriorityScenarioRules}\n\n【设定文本】\n${scenarioSpec}\n\n${builtinRules}\n\n${stateFactLock}\n\n${runtimeContext}${beautyRules ? `\n\n${beautyRules}` : ""}`;
+            return `${highestPriorityScenarioRules}\n\n【设定文本】\n${scenarioSpec}${beautyRules ? `\n\n${beautyRules}` : ""}\n\n${builtinRules}\n\n${stateFactLock}\n\n${runtimeContext}`;
         }
         function buildMainUserPrompt(userText, recentHistory) {
             return `玩家最新输入：${userText}\n\n最近记录：\n${recentHistory}`;
@@ -6278,6 +6277,7 @@
 
     const AIRequestService = (() => {
         const REQUEST_TIMEOUT_MS = 60000;
+        const INIT_REQUEST_TIMEOUT_MS = 120000; // 初始化阶段允许更长等待
         function createHttpError(status, message, extra = {}) {
             const err = new Error(message || `HTTP ${status}`);
             err.status = status;
@@ -6429,10 +6429,10 @@
                 }
             }
         }
-        async function requestCompletion({ fetchUrl, headers, model, messages, temperature, extraBody = null, cardId = "" }) {
+        async function requestCompletion({ fetchUrl, headers, model, messages, temperature, extraBody = null, cardId = "", timeoutMs = REQUEST_TIMEOUT_MS }) {
             const payloadBody = buildExtraBody(extraBody, cardId);
             const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(`request timeout ${REQUEST_TIMEOUT_MS}ms`), REQUEST_TIMEOUT_MS);
+            const timer = setTimeout(() => controller.abort(`request timeout ${timeoutMs}ms`), timeoutMs);
             let response;
             try {
                 response = await fetch(fetchUrl, {
@@ -6459,15 +6459,15 @@
             const data = await response.json();
             return EndMarkerService.trimToMarker(data?.choices?.[0]?.message?.content?.trim() || "");
         }
-        async function requestCompletionWithFallback({ config, fetchUrl, headers, model, messages, temperature, extraBody = null, cardId = "" }) {
+        async function requestCompletionWithFallback({ config, fetchUrl, headers, model, messages, temperature, extraBody = null, cardId = "", timeoutMs = REQUEST_TIMEOUT_MS }) {
             try {
-                return await requestCompletion({ fetchUrl, headers, model, messages, temperature, extraBody, cardId });
+                return await requestCompletion({ fetchUrl, headers, model, messages, temperature, extraBody, cardId, timeoutMs });
             } catch (proxyErr) {
                 if (!isRetryableProxyError(proxyErr)) throw proxyErr;
                 const directFetchUrl = buildDirectFetchUrl(config);
                 const directHeaders = stripProxyHeaders(headers);
                 try {
-                    return await requestCompletion({ fetchUrl: directFetchUrl, headers: directHeaders, model, messages, temperature, extraBody, cardId });
+                    return await requestCompletion({ fetchUrl: directFetchUrl, headers: directHeaders, model, messages, temperature, extraBody, cardId, timeoutMs });
                 } catch (directErr) {
                     const msg = [
                         "代理连接失败，且直连上游也失败。",
@@ -6481,7 +6481,7 @@
                 }
             }
         }
-        return { buildFetchUrl, buildHeaders, streamCompletion, requestCompletion, streamCompletionWithFallback, requestCompletionWithFallback };
+        return { buildFetchUrl, buildHeaders, streamCompletion, requestCompletion, streamCompletionWithFallback, requestCompletionWithFallback, INIT_REQUEST_TIMEOUT_MS };
     })();
 
     const ChatPostProcessService = (() => {
@@ -6841,8 +6841,9 @@
             if (typeof onProgress === "function") onProgress("连接中");
             const chunks = splitScenarioText(scenarioText, 2800, 280);
             if (typeof onProgress === "function") onProgress("解析角色");
-            const chunkFacts = [];
-            for (let i = 0; i < chunks.length; i++) {
+
+            // 并行解析所有分块，大幅减少总等待时间
+            const chunkPromises = chunks.map((chunk, i) => {
                 const systemPrompt = [
                     "你是文游设定分块解析器。给定设定片段，抽取与初始化有关的关键信息。",
                     "只能输出一个 JSON 对象，不要输出解释。",
@@ -6852,22 +6853,21 @@
                     `用户选择角色性别：${selectedGender}`,
                     `当前是第 ${i + 1}/${chunks.length} 个片段。`,
                     "输出字段：name,englishName,ageYears,forcedGender,nationality,location,timeEra,weekIndex,weekdayIndex,currentYear,currentMonth,currentDay,rebornReason,stats,inventory,npcs,openingChoices,evidence。",
-                    `设定片段：\n${chunks[i]}`
+                    `设定片段：\n${chunk}`
                 ].join("\n\n");
-                const content = await AIRequestService.requestCompletionWithFallback({
-                    config: apiConfig,
-                    fetchUrl,
-                    headers,
+                return AIRequestService.requestCompletionWithFallback({
+                    config: apiConfig, fetchUrl, headers,
                     model: apiConfig.model,
-                    messages: [
-                        { role: "system", content: systemPrompt },
-                        { role: "user", content: userPrompt }
-                    ],
-                    temperature: 0.1
-                });
-                const parsed = parseFirstJsonObject(content);
-                if (parsed && typeof parsed === "object") chunkFacts.push(parsed);
-            }
+                    messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }],
+                    temperature: 0.1,
+                    timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
+                }).then((content) => {
+                    const parsed = parseFirstJsonObject(content);
+                    return (parsed && typeof parsed === "object") ? parsed : null;
+                }).catch(() => null);
+            });
+            const chunkResults = await Promise.all(chunkPromises);
+            const chunkFacts = chunkResults.filter(Boolean);
             if (!chunkFacts.length) return null;
 
             if (typeof onProgress === "function") onProgress("生成背包");
@@ -6892,7 +6892,8 @@
                     { role: "system", content: reduceSystemPrompt },
                     { role: "user", content: reduceUserPrompt }
                 ],
-                temperature: 0.1
+                temperature: 0.1,
+                timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
             });
             const reducedDraft = parseFirstJsonObject(reducedText) || {};
 
@@ -6919,7 +6920,8 @@
                     { role: "system", content: protagonistNameSystem },
                     { role: "user", content: protagonistNameUser }
                 ],
-                temperature: 0.1
+                temperature: 0.1,
+                timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
             });
             const protagonistNamePanel = parseFirstJsonObject(protagonistNameText) || {};
 
@@ -6938,7 +6940,8 @@
                     { role: "system", content: protagonistBaseSystem },
                     { role: "user", content: protagonistNameUser }
                 ],
-                temperature: 0.1
+                temperature: 0.1,
+                timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
             });
             const protagonistBasePanel = parseFirstJsonObject(protagonistBaseText) || {};
 
@@ -6957,7 +6960,8 @@
                     { role: "system", content: protagonistStatsSystem },
                     { role: "user", content: protagonistNameUser }
                 ],
-                temperature: 0.1
+                temperature: 0.1,
+                timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
             });
             const protagonistStatsPanel = parseFirstJsonObject(protagonistStatsText) || {};
 
@@ -6983,7 +6987,8 @@
                         ].join("\n\n")
                     }
                 ],
-                temperature: 0.1
+                temperature: 0.1,
+                timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
             });
             const inventoryPanel = parseFirstJsonObject(inventoryPanelText) || {};
 
@@ -7011,7 +7016,8 @@
                         ].join("\n\n")
                     }
                 ],
-                temperature: 0.1
+                temperature: 0.1,
+                timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
             });
             const npcPanel = parseFirstJsonObject(npcPanelText) || {};
 
@@ -7158,6 +7164,7 @@
                         { role: "user", content: finalizeUserPrompt }
                     ],
                     temperature: 0,
+                    timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS,
                     extraBody: {
                         response_format: {
                             type: "json_schema",
@@ -7179,7 +7186,8 @@
                         { role: "system", content: finalizeSystemPrompt },
                         { role: "user", content: `${finalizeUserPrompt}\n\n仅返回 JSON 对象，且包含全部字段。` }
                     ],
-                    temperature: 0
+                    temperature: 0,
+                    timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
                 });
             }
             const finalized = parseFirstJsonObject(finalizedText) || stagedDraft;
