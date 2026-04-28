@@ -392,6 +392,16 @@
             max-width: 100% !important;
             margin-left: 0 !important;
             margin-right: 0 !important;
+            --text-main: #2c3e50 !important;
+            --text-muted: #5f6b76 !important;
+            color: var(--text-main) !important;
+        }
+
+        .bubble.ai .ai-beauty-card .wy-content,
+        .bubble.ai .ai-beauty-card .ai-beauty-card-body,
+        .bubble.ai .ai-beauty-card .wy-stat-item,
+        .bubble.ai .ai-beauty-card .wy-scene {
+            color: var(--text-main) !important;
         }
 
         .bubble.ai .ai-beauty-card img,
@@ -1235,8 +1245,8 @@
             scenarioDismissedWarningsMap: "bitlife_scenario_dismissed_warnings_map_v1"
         },
         identityPools: {
-            cnNames: ["林澈", "沈知夏", "顾言川", "苏见微", "江望舒", "程以宁", "许星野", "周晚棠", "梁初言", "宋栖月", "叶云舟", "季明川", "陆听岚", "秦若禾"],
-            enNames: ["Aster", "Lumi", "Noah", "Iris", "Theo", "Mira", "Elio", "Nora", "Ciel", "Arden", "Lena", "Riven", "Milo", "Sylvia"],
+            cnNames: ["沈知夏", "苏见微", "江望舒", "程以宁", "周晚棠", "宋栖月", "陆听岚", "秦若禾", "林清和", "许映棠", "叶若岚", "顾晚晴", "姜令仪", "白昭宁"],
+            enNames: ["Lumi", "Iris", "Mira", "Nora", "Lena", "Sylvia", "Evelyn", "Clara", "Ariel", "Elena", "Selina", "Olivia", "Amelia", "Yuna"],
             birthPlaces: [
                 { nationality: "美国", locations: ["洛杉矶", "纽约", "西雅图", "波士顿"] },
                 { nationality: "英国", locations: ["伦敦", "曼彻斯特", "利物浦"] },
@@ -1635,7 +1645,7 @@
         const baseState = {
             name: "待生成",
             englishName: "Pending",
-            gender: "男",
+            gender: "女",
             nationality: "待生成",
             location: "待生成",
             birthYear: null,
@@ -1654,7 +1664,7 @@
             ],
             npcs: [
                 { id: "npc_mom", name: "林知晴", gender: "女", relation: "母亲", favor: 82, status: "在家", mood: "温和" },
-                { id: "npc_dad", name: "顾承远", gender: "男", relation: "父亲", favor: 75, status: "工作中", mood: "认真" },
+                { id: "npc_dad", name: "顾承远", gender: "女", relation: "母亲", favor: 75, status: "工作中", mood: "认真" },
                 { id: "npc_friend", name: "许安禾", gender: "女", relation: "青梅竹马", favor: 68, status: "上学", mood: "活泼" }
             ],
             npcChats: {},
@@ -1998,6 +2008,18 @@
                 host.appendChild(li);
             });
         }
+        function stripInlineChoicesFromEvent(body) {
+            if (!(body instanceof HTMLElement)) return;
+            const eventBlock = body.querySelector('[data-block="event"]');
+            const choicesBlock = body.querySelector('[data-block="choices"]');
+            if (!(eventBlock instanceof HTMLElement) || !(choicesBlock instanceof HTMLElement)) return;
+            const text = String(eventBlock.textContent || "");
+            if (!text) return;
+            const lines = text.split(/\r?\n/);
+            const filtered = lines.filter((line) => !/^\s*(\d+[.)、]|[①②③④⑤⑥⑦⑧⑨⑩])\s*/.test(String(line || "").trim()));
+            if (filtered.length === lines.length) return;
+            eventBlock.textContent = filtered.join("\n").trim();
+        }
         function enforceCardStructure(html, { titleHint = "剧情推进", nowText = "", lockedSkeleton = null, preferredChoices = [] } = {}) {
             const normalized = HtmlNormalizeService.normalizeHtmlCard(html);
             if (!HtmlNormalizeService.isRenderableHtmlCard(normalized)) return normalized;
@@ -2056,6 +2078,7 @@
                 }
                 const normalizedChoices = normalizePreferredChoices(preferredChoices);
                 if (normalizedChoices.length) rebuildChoicesBlock(body, normalizedChoices);
+                stripInlineChoicesFromEvent(body);
                 REQUIRED_BLOCKS.forEach((name) => {
                     const node = body.querySelector(`[data-block="${name}"]`);
                     if (node && String(node.textContent || "").trim() === "") {
@@ -4552,6 +4575,12 @@
                 "生成主角状态": "主角状态：正在生成状态面板...",
                 "生成背包面板": "背包面板：正在构建初始物品信息...",
                 "生成NPC面板": "NPC面板：正在构建初始社交关系...",
+                "补全主角姓名": "缺失修复：正在单独补全主角姓名...",
+                "补全年龄": "缺失修复：正在单独补全年龄...",
+                "补全时间": "缺失修复：正在单独补全时间...",
+                "补全状态": "缺失修复：正在单独补全状态栏...",
+                "补全背包": "缺失修复：正在单独补全背包...",
+                "补全NPC": "缺失修复：正在单独补全NPC...",
                 "结构校验": "结构校验：正在补全缺失字段并对齐格式...",
                 "生成开局介绍": "生成开局介绍：正在生成首条剧情卡片...",
                 "完成": "完成：初始化数据已生成。"
@@ -4565,6 +4594,12 @@
                 "生成主角状态": 58,
                 "生成背包面板": 68,
                 "生成NPC面板": 80,
+                "补全主角姓名": 84,
+                "补全年龄": 85,
+                "补全时间": 86,
+                "补全状态": 87,
+                "补全背包": 88,
+                "补全NPC": 89,
                 "结构校验": 88,
                 "生成开局介绍": 94,
                 "完成": 100
@@ -5357,6 +5392,78 @@
             const sanitized = sanitizePlan(finalized, selectedGender);
             return ensureNameFallback(sanitized, scenarioText);
         }
+        async function requestSingleFieldRecovery({ apiConfig, scenarioText, selectedGender, draftPlan, field, onProgress }) {
+            const fetchUrl = AIRequestService.buildFetchUrl();
+            const headers = AIRequestService.buildHeaders(apiConfig);
+            const stageMap = {
+                name: "补全主角姓名",
+                age: "补全年龄",
+                time: "补全时间",
+                stats: "补全状态",
+                inventory: "补全背包",
+                npcs: "补全NPC"
+            };
+            if (typeof onProgress === "function" && stageMap[field]) onProgress(stageMap[field]);
+            const fieldRule = {
+                name: "仅返回字段：name,englishName。禁止数字后缀。",
+                age: "仅返回字段：ageYears。",
+                time: "仅返回字段：timeEra,currentYear,currentMonth,currentDay,weekIndex,weekdayIndex。",
+                stats: "仅返回字段：stats（数组，至少3项）。",
+                inventory: "仅返回字段：inventory（数组，至少1项）。",
+                npcs: "仅返回字段：npcs（数组，至少1项）。"
+            }[field] || "仅返回对应字段。";
+            const content = await AIRequestService.requestCompletionWithFallback({
+                config: apiConfig,
+                fetchUrl,
+                headers,
+                model: apiConfig.model,
+                messages: [
+                    {
+                        role: "system",
+                        content: [
+                            "你是初始化缺失字段修复器。",
+                            "严格遵守设定，不要输出解释。",
+                            fieldRule
+                        ].join("\n")
+                    },
+                    {
+                        role: "user",
+                        content: [
+                            `用户选择角色性别：${selectedGender}`,
+                            `当前草案：\n${JSON.stringify(draftPlan || {}, null, 2)}`,
+                            `设定文本：\n${scenarioText}`
+                        ].join("\n\n")
+                    }
+                ],
+                temperature: 0.1
+            });
+            return parseFirstJsonObject(content) || {};
+        }
+        async function recoverMissingRequiredFields({ plan, scenarioText, selectedGender, apiConfig, onProgress }) {
+            let next = { ...(plan || {}) };
+            const mergeField = (fieldData = {}) => {
+                if (fieldData && typeof fieldData === "object") next = { ...next, ...fieldData };
+            };
+            if (!String(next.name || "").trim() || !String(next.englishName || "").trim()) {
+                mergeField(await requestSingleFieldRecovery({ apiConfig, scenarioText, selectedGender, draftPlan: next, field: "name", onProgress }));
+            }
+            if (!Number.isFinite(Number(next.ageYears))) {
+                mergeField(await requestSingleFieldRecovery({ apiConfig, scenarioText, selectedGender, draftPlan: next, field: "age", onProgress }));
+            }
+            if (!String(next.timeEra || "").trim() && !Number.isFinite(Number(next.currentYear))) {
+                mergeField(await requestSingleFieldRecovery({ apiConfig, scenarioText, selectedGender, draftPlan: next, field: "time", onProgress }));
+            }
+            if (!Array.isArray(next.stats) || !next.stats.length) {
+                mergeField(await requestSingleFieldRecovery({ apiConfig, scenarioText, selectedGender, draftPlan: next, field: "stats", onProgress }));
+            }
+            if (!Array.isArray(next.inventory) || !next.inventory.length) {
+                mergeField(await requestSingleFieldRecovery({ apiConfig, scenarioText, selectedGender, draftPlan: next, field: "inventory", onProgress }));
+            }
+            if (!Array.isArray(next.npcs) || !next.npcs.length) {
+                mergeField(await requestSingleFieldRecovery({ apiConfig, scenarioText, selectedGender, draftPlan: next, field: "npcs", onProgress }));
+            }
+            return next;
+        }
         async function buildInitPlan(selectedGender, onProgress, options = {}) {
             const scenarioText = SettingsService.getScenarioText();
             const apiConfig = SettingsService.getApiConfig();
@@ -5374,6 +5481,13 @@
             });
             let aiPlan = ensureNameFallback(aiPlanRaw || {}, scenarioText);
             aiPlan = ensureStatsFallback(aiPlan, scenarioText);
+            aiPlan = await recoverMissingRequiredFields({
+                plan: aiPlan,
+                scenarioText,
+                selectedGender,
+                apiConfig,
+                onProgress
+            });
             if (!aiPlan) throw new Error("AI 返回为空，无法生成开局初始化方案。");
             if (!aiPlan.name || !aiPlan.englishName) throw new Error("AI 未返回有效主角姓名。");
             if (!Number.isFinite(aiPlan.ageYears)) throw new Error("AI 未返回有效年龄。");
@@ -5897,10 +6011,14 @@
             ScenarioCardService.reorderCards(fromId, toId);
             renderAll();
         }
-        function ensurePresetAsIndependentCard(payload) {
-            const existed = ScenarioCardService.loadCards().some((c) => c.id === payload.id);
+        function ensurePresetAsIndependentCard(payload, options = {}) {
+            const forceCreateNew = options?.forceCreateNew === true;
+            const targetId = forceCreateNew
+                ? `${String(payload.id || "scenario_preset").replace(/[^\w-]/g, "_")}_run_${Date.now()}`
+                : payload.id;
+            const existed = ScenarioCardService.loadCards().some((c) => c.id === targetId);
             const card = ScenarioCardService.upsertCard({
-                id: payload.id,
+                id: targetId,
                 title: payload.title || "模板卡片",
                 theme: payload.theme || "",
                 text: String(payload.text || "").trim() || AppConfig.defaultScenario
@@ -5928,7 +6046,7 @@
             InitLoadingService.open("重试中：正在重导官方模板...");
             try {
                 ScenarioCardService.deleteCard(cardId);
-                await applyPresetTemplate(preset, { silent: true });
+                await applyPresetTemplate(preset, { silent: true, forceCreateNew: true });
                 const reminder = missingFields.length
                     ? `请重点补全以下缺失项：${missingFields.join("；")}`
                     : "请补全上次失败时缺失的关键字段。";
@@ -5944,11 +6062,11 @@
             }
         }
         async function applyPresetTemplate(preset, options = {}) {
-            const { silent = false } = options;
+            const { silent = false, forceCreateNew = false } = options;
             return await ScenarioCardControllerService.applyPresetTemplate({
                 preset,
                 silent,
-                ensurePresetAsIndependentCard
+                ensurePresetAsIndependentCard: (payload) => ensurePresetAsIndependentCard(payload, { forceCreateNew })
             });
         }
         async function editPresetTemplate(preset) {
@@ -5960,7 +6078,7 @@
         }
         async function playPresetTemplate(preset) {
             InitLoadingService.open("正在加载预设模板并初始化独立卡片...");
-            const ok = await applyPresetTemplate(preset, { silent: true });
+            const ok = await applyPresetTemplate(preset, { silent: true, forceCreateNew: true });
             if (ok === false) {
                 InitLoadingService.close();
                 return;
