@@ -6140,7 +6140,11 @@
             UIRenderer.renderScenarioCards();
             UIRenderer.renderApiCards();
             UIRenderer.renderPresetTemplates(presetManifest);
-            switchView(activeView, true);
+            if (activeView === "view-home" && !PlayViewStateService.isInPlayMode()) {
+                switchView("view-home", true);
+            } else {
+                NavigationVisibilityService.apply(activeView);
+            }
         }
         async function init() {
             StateService.init();
