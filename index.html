@@ -3266,6 +3266,9 @@
             const selected = ScenarioCardService.getSelectedCard();
             return selected?.text || AppConfig.defaultScenario;
         }
+        function getScenarioTextForModel() {
+            return ScenarioSpecSanitizerService.sanitizeForModel(getScenarioText());
+        }
         function getBeautyCardSetting() {
             const selected = ScenarioCardService.getSelectedCard();
             return (selected?.theme || "").trim();
@@ -3295,7 +3298,31 @@
             };
             input.click();
         }
-        return { loadToUI, saveFromUI, saveUserApiFromUI, getApiConfig, getScenarioText, getBeautyCardSetting, getChatPolicyConfig, importScenarioFromFile };
+        return { loadToUI, saveFromUI, saveUserApiFromUI, getApiConfig, getScenarioText, getScenarioTextForModel, getBeautyCardSetting, getChatPolicyConfig, importScenarioFromFile };
+    })();
+
+    const ScenarioSpecSanitizerService = (() => {
+        const IGNORE_PATTERNS = [
+            /输出格式|回复格式|回答格式|返回格式|格式要求|markdown|md格式|html格式|json格式|xml格式/i,
+            /必须输出|只能输出|务必输出|请输出(?!剧情|设定|世界观)|不要输出(?!冲突|越权)/i,
+            /存档|读档|保存进度|写入存档|存储格式|本地存储|localstorage/i,
+            /state-patch|代码块|```|<state_patch>|<\/state_patch>/i,
+            /严格按照以下格式|按如下模板回复|结尾必须带选项格式/i
+        ];
+        function shouldDropLine(line = "") {
+            const text = String(line || "").trim();
+            if (!text) return false;
+            return IGNORE_PATTERNS.some((re) => re.test(text));
+        }
+        function sanitizeForModel(scenarioText = "") {
+            const raw = String(scenarioText || "").replace(/\r\n/g, "\n");
+            if (!raw.trim()) return raw;
+            const lines = raw.split("\n");
+            const kept = lines.filter((ln) => !shouldDropLine(ln));
+            const cleaned = kept.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+            return cleaned || raw;
+        }
+        return { sanitizeForModel };
     })();
 
     const ScenarioEditorService = (() => {
@@ -3512,7 +3539,7 @@
             if (apiConfig.blocked || !apiConfig.upstreamUrl || !apiConfig.key || !apiConfig.model) {
                 throw new Error("未配置可用 AI-API，无法进行 NPC 对话。");
             }
-            const scenarioText = SettingsService.getScenarioText();
+            const scenarioText = SettingsService.getScenarioTextForModel();
             const fetchUrl = AIRequestService.buildFetchUrl();
             const headers = AIRequestService.buildHeaders(apiConfig);
             const mainProgress = buildMainProgressSummary(state);
@@ -4196,6 +4223,37 @@
     })();
 
     const ScenarioIntroService = (() => {
+        async function generateIntroTemplate({ apiConfig, scenarioText, beautySetting }) {
+            const fetchUrl = AIRequestService.buildFetchUrl();
+            const headers = AIRequestService.buildHeaders(apiConfig);
+            const themeHint = String(beautySetting || HtmlCardPromptTemplateService.getDefaultBeautyHint()).trim();
+            const systemPrompt = [
+                "你是文游HTML卡片模板设计器。",
+                "请仅输出一张可渲染的HTML卡片模板，最外层必须是 class=\"ai-beauty-card\"。",
+                "模板必须包含 data-block: time/status/event/choices。",
+                "内容使用中性占位文案，不要写具体剧情。",
+                `你必须严格按“美化设定”设计视觉：主色/辅色/背景材质/装饰元素/字体风格必须和美化设定一致，不得使用通用默认风格。`,
+                "必须在模板内显式体现：标题区、分隔装饰、正文区、状态区、结尾选项区（仅一组3选项）。",
+                "颜色对比必须可读：正文文字与背景需保持明显反差，避免近色。"
+            ].join("\n");
+            const userPrompt = [
+                `设定文本：\n${scenarioText}`,
+                `美化设定：${themeHint}`,
+                "只输出HTML，不要Markdown。"
+            ].join("\n\n");
+            const html = await AIRequestService.requestCompletionWithFallback({
+                config: apiConfig,
+                fetchUrl,
+                headers,
+                model: apiConfig.model,
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userPrompt }
+                ],
+                temperature: 0.4
+            });
+            return String(html || "").trim();
+        }
         function buildIntroRequestPayload({ scenarioText, state, beautySetting, openingChoices = [] }) {
             const fetchUrl = AIRequestService.buildFetchUrl();
             const choiceLines = Array.isArray(openingChoices)
@@ -4269,14 +4327,28 @@
             });
             return String(text || "").trim();
         }
-        return { generateIntroHtmlCard, streamIntroHtmlCard };
+        return { generateIntroTemplate, generateIntroHtmlCard, streamIntroHtmlCard };
     })();
 
     const InitIntroService = (() => {
         async function start({ apiConfig, scenarioText, beautySetting, state, policyConfig, selectedCardId, openingChoices = [] }) {
             if (apiConfig.blocked) return;
             if (!apiConfig.upstreamUrl || !apiConfig.key || !apiConfig.model) return;
-            InitLoadingService.open("生成开局介绍：正在生成首条剧情卡片...");
+            InitLoadingService.open("首卡模板设计：正在准备HTML模板...");
+            InitLoadingService.updateStage("设计首卡模板");
+            try {
+                const templateText = await ScenarioIntroService.generateIntroTemplate({
+                    apiConfig,
+                    scenarioText,
+                    beautySetting
+                });
+                const templateNorm = HtmlCardService.normalizeHtmlCard(templateText);
+                const templateSkeleton = HtmlCardService.extractSkeleton(templateNorm);
+                if (templateSkeleton && selectedCardId) {
+                    ScenarioPlayMetaService.setLockedSkeleton(selectedCardId, templateSkeleton);
+                }
+            } catch (e) {
+            }
             InitLoadingService.updateStage("生成开局介绍");
             UIRenderer.setAutoFollowBottom(true);
             UIRenderer.appendMessage("ai", "正在生成开局剧情卡片...", Utils.nowDateStr(state), true);
@@ -4569,6 +4641,7 @@
         function updateStage(stage) {
             const map = {
                 "连接中": "连接中：正在请求 AI 解析设定...",
+                "设定压缩": "设定压缩：正在分块提炼关键信息...",
                 "解析角色": "解析设定：正在分块提取初始化线索...",
                 "生成主角姓名": "主角姓名：正在生成姓名与英文名...",
                 "生成主角基础": "主角基础：正在生成身份、年龄与时间...",
@@ -4582,12 +4655,14 @@
                 "补全背包": "缺失修复：正在单独补全背包...",
                 "补全NPC": "缺失修复：正在单独补全NPC...",
                 "结构校验": "结构校验：正在补全缺失字段并对齐格式...",
+                "设计首卡模板": "首卡模板：正在设计HTML卡片骨架...",
                 "生成开局介绍": "生成开局介绍：正在生成首条剧情卡片...",
                 "完成": "完成：初始化数据已生成。"
             };
             document.getElementById("init-loading-desc").innerText = map[stage] || String(stage || "");
             const percentMap = {
                 "连接中": 14,
+                "设定压缩": 22,
                 "解析角色": 30,
                 "生成主角姓名": 42,
                 "生成主角基础": 50,
@@ -4600,8 +4675,9 @@
                 "补全状态": 87,
                 "补全背包": 88,
                 "补全NPC": 89,
-                "结构校验": 88,
-                "生成开局介绍": 94,
+                "结构校验": 90,
+                "设计首卡模板": 92,
+                "生成开局介绍": 95,
                 "完成": 100
             };
             const bar = document.getElementById("init-loading-progress");
@@ -4852,6 +4928,7 @@
     })();
 
     const ScenarioInitPlanService = (() => {
+        const SCENARIO_COMPRESSION_TRIGGER_CHARS = 6500;
         function stripNumericSuffix(name = "", isEnglish = false) {
             let value = String(name || "").trim();
             if (!value) return "";
@@ -5032,6 +5109,79 @@
             }
             if (current) chunks.push(current);
             return chunks.slice(0, 10);
+        }
+        async function compressLongScenarioText({ scenarioText, apiConfig, selectedGender, onProgress }) {
+            const raw = String(scenarioText || "").trim();
+            if (!raw) return raw;
+            if (raw.length < SCENARIO_COMPRESSION_TRIGGER_CHARS) return raw;
+            if (typeof onProgress === "function") onProgress("设定压缩");
+            const chunks = splitScenarioText(raw, 2200, 240);
+            const fetchUrl = AIRequestService.buildFetchUrl();
+            const headers = AIRequestService.buildHeaders(apiConfig);
+            const chunkDigests = [];
+            for (let i = 0; i < chunks.length; i++) {
+                const content = await AIRequestService.requestCompletionWithFallback({
+                    config: apiConfig,
+                    fetchUrl,
+                    headers,
+                    model: apiConfig.model,
+                    messages: [
+                        {
+                            role: "system",
+                            content: [
+                                "你是文游设定压缩器。",
+                                "请在不丢失关键约束的前提下压缩设定片段。",
+                                "必须保留：时代/世界规则/身份关系/时间线约束/禁止项/开局选择规则。",
+                                "输出格式：只输出纯文本要点，不要Markdown，不要解释。"
+                            ].join("\n")
+                        },
+                        {
+                            role: "user",
+                            content: [
+                                `当前是第 ${i + 1}/${chunks.length} 段，用户选择性别：${selectedGender}`,
+                                "请将本段压缩成 8-14 条要点，每条一行。",
+                                `设定片段：\n${chunks[i]}`
+                            ].join("\n\n")
+                        }
+                    ],
+                    temperature: 0.1
+                });
+                const digest = String(content || "").trim();
+                if (digest) chunkDigests.push(digest);
+            }
+            if (!chunkDigests.length) return raw;
+            const merged = await AIRequestService.requestCompletionWithFallback({
+                config: apiConfig,
+                fetchUrl,
+                headers,
+                model: apiConfig.model,
+                messages: [
+                    {
+                        role: "system",
+                        content: [
+                            "你是文游设定最终压缩器。",
+                            "把多段要点合并为一份初始化专用设定，不得遗漏关键硬约束。",
+                            "必须覆盖：世界观、主角身份边界、NPC关系边界、时间规则、禁用元素、可选开局分支。",
+                            "输出纯文本，行数控制在 30-60 行。"
+                        ].join("\n")
+                    },
+                    {
+                        role: "user",
+                        content: [
+                            `原始设定长度：${raw.length} 字符`,
+                            "请合并以下分块压缩结果：",
+                            chunkDigests.join("\n\n---\n\n")
+                        ].join("\n\n")
+                    }
+                ],
+                temperature: 0.1
+            });
+            const mergedText = String(merged || "").trim();
+            if (!mergedText) return raw;
+            return [
+                "【初始化压缩设定（由完整设定提炼，保留关键约束）】",
+                mergedText
+            ].join("\n");
         }
         function normalizeOpeningChoices(list = []) {
             return (Array.isArray(list) ? list : [])
@@ -5405,12 +5555,36 @@
             };
             if (typeof onProgress === "function" && stageMap[field]) onProgress(stageMap[field]);
             const fieldRule = {
-                name: "仅返回字段：name,englishName。禁止数字后缀。",
-                age: "仅返回字段：ageYears。",
-                time: "仅返回字段：timeEra,currentYear,currentMonth,currentDay,weekIndex,weekdayIndex。",
-                stats: "仅返回字段：stats（数组，至少3项）。",
-                inventory: "仅返回字段：inventory（数组，至少1项）。",
-                npcs: "仅返回字段：npcs（数组，至少1项）。"
+                name: [
+                    "仅返回 JSON 对象，且只能含字段：name,englishName。",
+                    "格式示例：{\"name\":\"苏见微\",\"englishName\":\"Lumi\"}",
+                    "name 与 englishName 必须是非空字符串，禁止数字后缀。"
+                ].join("\n"),
+                age: [
+                    "仅返回 JSON 对象，且只能含字段：ageYears。",
+                    "格式示例：{\"ageYears\":18}",
+                    "ageYears 必须是 0-120 的整数。"
+                ].join("\n"),
+                time: [
+                    "仅返回 JSON 对象，且只能含字段：timeEra,currentYear,currentMonth,currentDay,weekIndex,weekdayIndex。",
+                    "格式示例：{\"timeEra\":\"北宋时期\",\"currentYear\":1101,\"currentMonth\":3,\"currentDay\":1,\"weekIndex\":1,\"weekdayIndex\":0}",
+                    "至少提供 timeEra 或 currentYear 其中之一。"
+                ].join("\n"),
+                stats: [
+                    "仅返回 JSON 对象，且只能含字段：stats。",
+                    "stats 必须是数组，至少3项。",
+                    "每项必须含 key,label,icon,value；value 为 0-999 整数。"
+                ].join("\n"),
+                inventory: [
+                    "仅返回 JSON 对象，且只能含字段：inventory。",
+                    "inventory 必须是数组，至少1项。",
+                    "每项必须含 id,name,type,desc,effect,count；count 为正整数。"
+                ].join("\n"),
+                npcs: [
+                    "仅返回 JSON 对象，且只能含字段：npcs。",
+                    "npcs 必须是数组，至少1项。",
+                    "每项必须含 id,name,gender,relation,favor,status,mood,traits。"
+                ].join("\n")
             }[field] || "仅返回对应字段。";
             const content = await AIRequestService.requestCompletionWithFallback({
                 config: apiConfig,
@@ -5423,6 +5597,7 @@
                         content: [
                             "你是初始化缺失字段修复器。",
                             "严格遵守设定，不要输出解释。",
+                            "禁止返回 Markdown、代码块、注释、额外字段。",
                             fieldRule
                         ].join("\n")
                     },
@@ -5444,46 +5619,118 @@
             const mergeField = (fieldData = {}) => {
                 if (fieldData && typeof fieldData === "object") next = { ...next, ...fieldData };
             };
+            const assertValid = (ok, msg) => {
+                if (!ok) {
+                    const err = new Error(msg);
+                    err.partialPlan = next;
+                    throw err;
+                }
+            };
+            const stageNameMap = {
+                name: "补全主角姓名",
+                age: "补全年龄",
+                time: "补全时间",
+                stats: "补全状态",
+                inventory: "补全背包",
+                npcs: "补全NPC"
+            };
+            const retryLimit = 3;
+            const recoverFieldWithRetry = async (field, validator, errorText, postProcess = null) => {
+                let attempt = 0;
+                while (attempt < retryLimit) {
+                    attempt += 1;
+                    if (attempt > 1 && typeof onProgress === "function") {
+                        onProgress(`${stageNameMap[field]}（自动重试 ${attempt - 1}/${retryLimit - 1}）`);
+                    }
+                    mergeField(await requestSingleFieldRecovery({
+                        apiConfig,
+                        scenarioText,
+                        selectedGender,
+                        draftPlan: next,
+                        field,
+                        onProgress
+                    }));
+                    if (typeof postProcess === "function") next = postProcess(next);
+                    if (validator(next)) return;
+                }
+                assertValid(false, errorText);
+            };
+
             if (!String(next.name || "").trim() || !String(next.englishName || "").trim()) {
-                mergeField(await requestSingleFieldRecovery({ apiConfig, scenarioText, selectedGender, draftPlan: next, field: "name", onProgress }));
+                await recoverFieldWithRetry(
+                    "name",
+                    (draft) => {
+                        const normalized = ensureNameFallback(draft, scenarioText);
+                        next = normalized;
+                        return !!String(normalized.name || "").trim() && !!String(normalized.englishName || "").trim();
+                    },
+                    "缺失修复失败：主角姓名仍无效。"
+                );
             }
             if (!Number.isFinite(Number(next.ageYears))) {
-                mergeField(await requestSingleFieldRecovery({ apiConfig, scenarioText, selectedGender, draftPlan: next, field: "age", onProgress }));
+                await recoverFieldWithRetry(
+                    "age",
+                    (draft) => Number.isFinite(Number(draft.ageYears)),
+                    "缺失修复失败：年龄仍无效。"
+                );
             }
             if (!String(next.timeEra || "").trim() && !Number.isFinite(Number(next.currentYear))) {
-                mergeField(await requestSingleFieldRecovery({ apiConfig, scenarioText, selectedGender, draftPlan: next, field: "time", onProgress }));
+                await recoverFieldWithRetry(
+                    "time",
+                    (draft) => !!String(draft.timeEra || "").trim() || Number.isFinite(Number(draft.currentYear)),
+                    "缺失修复失败：时间仍无效。"
+                );
             }
             if (!Array.isArray(next.stats) || !next.stats.length) {
-                mergeField(await requestSingleFieldRecovery({ apiConfig, scenarioText, selectedGender, draftPlan: next, field: "stats", onProgress }));
+                await recoverFieldWithRetry(
+                    "stats",
+                    (draft) => Array.isArray(draft.stats) && draft.stats.length > 0,
+                    "缺失修复失败：状态栏仍无效。",
+                    (draft) => ensureStatsFallback(draft, scenarioText)
+                );
             }
             if (!Array.isArray(next.inventory) || !next.inventory.length) {
-                mergeField(await requestSingleFieldRecovery({ apiConfig, scenarioText, selectedGender, draftPlan: next, field: "inventory", onProgress }));
+                await recoverFieldWithRetry(
+                    "inventory",
+                    (draft) => Array.isArray(draft.inventory) && draft.inventory.length > 0,
+                    "缺失修复失败：背包仍无效。"
+                );
             }
             if (!Array.isArray(next.npcs) || !next.npcs.length) {
-                mergeField(await requestSingleFieldRecovery({ apiConfig, scenarioText, selectedGender, draftPlan: next, field: "npcs", onProgress }));
+                await recoverFieldWithRetry(
+                    "npcs",
+                    (draft) => Array.isArray(draft.npcs) && draft.npcs.length > 0,
+                    "缺失修复失败：NPC仍无效。"
+                );
             }
             return next;
         }
         async function buildInitPlan(selectedGender, onProgress, options = {}) {
-            const scenarioText = SettingsService.getScenarioText();
+            const scenarioText = SettingsService.getScenarioTextForModel();
             const apiConfig = SettingsService.getApiConfig();
             if (!scenarioText.trim()) throw new Error("当前卡片设定为空，无法进行 AI 开局初始化解析。");
             if (apiConfig.blocked || !apiConfig.upstreamUrl || !apiConfig.key || !apiConfig.model) {
                 throw new Error("未配置可用 AI-API，无法进行开局初始化解析。");
             }
-            const aiPlanRaw = await analyzeWithAI({
+            const workingScenarioText = await compressLongScenarioText({
                 scenarioText,
+                apiConfig,
+                selectedGender,
+                onProgress
+            });
+            const aiPlanRaw = await analyzeWithAI({
+                scenarioText: workingScenarioText,
                 selectedGender,
                 apiConfig,
                 onProgress,
                 extraHint: options.extraHint || "",
                 previousPlan: options.previousPlan || null
             });
-            let aiPlan = ensureNameFallback(aiPlanRaw || {}, scenarioText);
-            aiPlan = ensureStatsFallback(aiPlan, scenarioText);
+            let aiPlan = ensureNameFallback(aiPlanRaw || {}, workingScenarioText);
+            aiPlan = ensureStatsFallback(aiPlan, workingScenarioText);
             aiPlan = await recoverMissingRequiredFields({
                 plan: aiPlan,
-                scenarioText,
+                scenarioText: workingScenarioText,
                 selectedGender,
                 apiConfig,
                 onProgress
@@ -5501,7 +5748,7 @@
             if (!Number.isFinite(aiPlan.weekIndex)) aiPlan.weekIndex = 1;
             if (hasYear && !Number.isFinite(aiPlan.currentMonth)) aiPlan.currentMonth = null;
             if (!Number.isFinite(aiPlan.currentDay)) aiPlan.currentDay = 1;
-            aiPlan = ensureStatsFallback(aiPlan, scenarioText);
+            aiPlan = ensureStatsFallback(aiPlan, workingScenarioText);
             if (!Array.isArray(aiPlan.inventory) || !aiPlan.inventory.length) {
                 const err = new Error("AI 未返回有效背包数据。");
                 err.partialPlan = aiPlan;
@@ -5578,7 +5825,7 @@
             UIRenderer.setSendingDisabled(true);
             UIRenderer.appendMessage("ai", "正在生成剧情中...", Utils.nowDateStr(state), true);
             const recentHistory = PromptPolicyService.buildRecentHistory(state);
-            const scenarioSpec = SettingsService.getScenarioText();
+            const scenarioSpec = SettingsService.getScenarioTextForModel();
             const beautyCardSetting = SettingsService.getBeautyCardSetting();
             const beautyModeEnabled = HtmlCardService.isBeautyModeEnabled(beautyCardSetting);
             const policyConfig = SettingsService.getChatPolicyConfig();
@@ -6230,7 +6477,7 @@
             renderAll();
             InitIntroService.start({
                 apiConfig: SettingsService.getApiConfig(),
-                scenarioText: SettingsService.getScenarioText(),
+                scenarioText: SettingsService.getScenarioTextForModel(),
                 beautySetting: SettingsService.getBeautyCardSetting(),
                 state: StateService.get(),
                 policyConfig: SettingsService.getChatPolicyConfig(),
