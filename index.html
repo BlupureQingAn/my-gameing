@@ -1617,7 +1617,18 @@
                 location: Utils.pickRandom(region.locations)
             };
         }
-        return { generateIdentity };
+        function generateIdentityBase() {
+            const region = Utils.pickRandom(AppConfig.identityPools.birthPlaces);
+            const cn = String(Utils.pickRandom(AppConfig.identityPools.cnNames) || "未命名").trim();
+            const en = String(Utils.pickRandom(AppConfig.identityPools.enNames) || "Pending").trim();
+            return {
+                name: cn,
+                englishName: en,
+                nationality: region.nationality,
+                location: Utils.pickRandom(region.locations)
+            };
+        }
+        return { generateIdentity, generateIdentityBase };
     })();
 
     const StateService = (() => {
@@ -4482,6 +4493,17 @@
     })();
 
     const InitFlowService = (() => {
+        function detectMissingFields(errMsg = "") {
+            const msg = String(errMsg || "");
+            const out = [];
+            if (/主角姓名|姓名/.test(msg)) out.push("主角姓名（name / englishName）");
+            if (/年龄/.test(msg)) out.push("年龄（ageYears）");
+            if (/初始时间|timeEra|currentYear/.test(msg)) out.push("时间信息（timeEra / currentYear）");
+            if (/状态栏|stats/.test(msg)) out.push("状态栏（stats）");
+            if (/背包/.test(msg)) out.push("背包（inventory）");
+            if (/NPC/.test(msg)) out.push("NPC（npcs）");
+            return out;
+        }
         function buildPreviewDesc(plan) {
             return [
                 `角色：${plan.name}（${plan.englishName}）`,
@@ -4499,14 +4521,19 @@
                 `说明：${plan.rebornReason || "无"}`
             ].join("<br>");
         }
-        function buildInitFailDesc(errMsg) {
+        function buildInitFailDesc(errMsg, missingFields = []) {
+            const missing = Array.isArray(missingFields) ? missingFields.filter(Boolean) : [];
             return [
                 `<div style="font-weight:700; margin-bottom:6px;">AI 开局初始化解析失败</div>`,
                 `<div class="list-sub">原因：${MarkdownService.escapeHtml(String(errMsg || ""))}</div>`,
-                `<div class="list-sub" style="margin-top:6px;">你可以选择重试（带着缺失项提示），或返回主页并删除本次自动新建的卡片。</div>`
+                missing.length
+                    ? `<div class="list-sub" style="margin-top:6px;">缺失项提醒：${missing.map((x) => MarkdownService.escapeHtml(x)).join("；")}</div>`
+                    : "",
+                `<div class="list-sub" style="margin-top:6px;">点击重试时：若当前为官方模板卡，将执行“删除失败卡片 -> 重新导入官方模板 -> 携带缺失项提醒重试初始化”。</div>`,
+                `<div class="list-sub" style="margin-top:6px;">你也可以选择返回主页并删除本次自动新建的卡片。</div>`
             ].join("");
         }
-        return { buildPreviewDesc, buildInitFailDesc };
+        return { buildPreviewDesc, buildInitFailDesc, detectMissingFields };
     })();
 
     const InitLoadingService = (() => {
@@ -4520,7 +4547,9 @@
             const map = {
                 "连接中": "连接中：正在请求 AI 解析设定...",
                 "解析角色": "解析设定：正在分块提取初始化线索...",
-                "生成主角面板": "主角面板：正在生成角色档案与状态栏...",
+                "生成主角姓名": "主角姓名：正在生成姓名与英文名...",
+                "生成主角基础": "主角基础：正在生成身份、年龄与时间...",
+                "生成主角状态": "主角状态：正在生成状态面板...",
                 "生成背包面板": "背包面板：正在构建初始物品信息...",
                 "生成NPC面板": "NPC面板：正在构建初始社交关系...",
                 "结构校验": "结构校验：正在补全缺失字段并对齐格式...",
@@ -4531,9 +4560,11 @@
             const percentMap = {
                 "连接中": 14,
                 "解析角色": 30,
-                "生成主角面板": 46,
-                "生成背包面板": 62,
-                "生成NPC面板": 78,
+                "生成主角姓名": 42,
+                "生成主角基础": 50,
+                "生成主角状态": 58,
+                "生成背包面板": 68,
+                "生成NPC面板": 80,
                 "结构校验": 88,
                 "生成开局介绍": 94,
                 "完成": 100
@@ -4786,6 +4817,16 @@
     })();
 
     const ScenarioInitPlanService = (() => {
+        function stripNumericSuffix(name = "", isEnglish = false) {
+            let value = String(name || "").trim();
+            if (!value) return "";
+            if (isEnglish) {
+                value = value.replace(/[\s._-]*\d+\s*$/g, "").trim();
+            } else {
+                value = value.replace(/[\s._-]*\d+\s*$/g, "").trim();
+            }
+            return value;
+        }
         function sanitizeAgeYears(v) {
             const n = Number(v);
             if (!Number.isFinite(n)) return NaN;
@@ -4826,6 +4867,50 @@
                     traits: String(n.traits || n.attributes || "").slice(0, 48)
                 }));
         }
+        function buildFallbackStatsFromScenario(scenarioText = "", plan = {}) {
+            const text = String(scenarioText || "");
+            const base = [
+                { key: "health", label: "健康", icon: "💪", value: 72 },
+                { key: "mood", label: "心情", icon: "🌤️", value: 68 },
+                { key: "charm", label: "魅力", icon: "✨", value: 66 }
+            ];
+            if (/宫|皇|王府|后宅|嫔|太监|朝堂|古代|宋|唐|明|清/.test(text)) {
+                base.push({ key: "power", label: "权势", icon: "🏮", value: 55 });
+                return base;
+            }
+            if (/修仙|宗门|灵力|功法|仙|魔|道/.test(text)) {
+                base.push({ key: "spirit", label: "灵力", icon: "🌀", value: 58 });
+                return base;
+            }
+            if (/校园|学校|考试|社团|大学|高中/.test(text)) {
+                base.push({ key: "knowledge", label: "学识", icon: "📚", value: 64 });
+                return base;
+            }
+            if (/职场|公司|创业|商业|谈判/.test(text)) {
+                base.push({ key: "career", label: "事业", icon: "💼", value: 61 });
+                return base;
+            }
+            const ageYears = Number(plan?.ageYears);
+            if (Number.isFinite(ageYears) && ageYears <= 12) {
+                return [
+                    { key: "health", label: "健康", icon: "💪", value: 75 },
+                    { key: "mood", label: "心情", icon: "🌤️", value: 72 },
+                    { key: "growth", label: "成长", icon: "🌱", value: 60 },
+                    { key: "family", label: "亲缘", icon: "🏠", value: 66 }
+                ];
+            }
+            return [...base, { key: "social", label: "人脉", icon: "🤝", value: 60 }];
+        }
+        function ensureStatsFallback(plan = {}, scenarioText = "") {
+            const next = { ...(plan || {}) };
+            const stats = StatsService.normalizeStats(next.stats);
+            if (Array.isArray(stats) && stats.length > 0) {
+                next.stats = stats;
+                return next;
+            }
+            next.stats = buildFallbackStatsFromScenario(scenarioText, next);
+            return next;
+        }
         function extractNameHintsFromScenarioText(scenarioText = "") {
             const text = String(scenarioText || "");
             const cnPatterns = [
@@ -4858,13 +4943,15 @@
         function ensureNameFallback(plan = {}, scenarioText = "") {
             const next = { ...(plan || {}) };
             const hints = extractNameHintsFromScenarioText(scenarioText);
-            const identity = IdentityService.generateIdentity();
+            const identity = IdentityService.generateIdentityBase();
             if (!String(next.name || "").trim()) {
                 next.name = String(hints.cn || identity.name || "未命名主角").trim().slice(0, 20);
             }
             if (!String(next.englishName || "").trim()) {
                 next.englishName = String(hints.en || identity.englishName || "PendingName").trim().slice(0, 32);
             }
+            next.name = stripNumericSuffix(next.name, false) || String(identity.name || "未命名主角").trim().slice(0, 20);
+            next.englishName = stripNumericSuffix(next.englishName, true) || String(identity.englishName || "PendingName").trim().slice(0, 32);
             return next;
         }
         function parseFirstJsonObject(text) {
@@ -5011,32 +5098,70 @@
             });
             const reducedDraft = parseFirstJsonObject(reducedText) || {};
 
-            if (typeof onProgress === "function") onProgress("生成主角面板");
-            const protagonistPanelSystem = [
-                "你是文游初始化-主角面板生成器。",
+            if (typeof onProgress === "function") onProgress("生成主角姓名");
+            const protagonistNameSystem = [
+                "你是文游初始化-主角姓名生成器。",
                 "只输出 JSON 对象，不要解释。",
-                "根据汇总草案与分块事实，输出主角面板字段。",
-                "字段：name,englishName,ageYears,forcedGender,nationality,location,timeEra,weekIndex,weekdayIndex,currentYear,currentMonth,currentDay,rebornReason,stats,openingChoices。"
+                "只输出字段：name,englishName。",
+                "禁止给姓名追加数字后缀（如 张三2 / Alex-3）。"
             ].join("\n");
-            const protagonistPanelUser = [
+            const protagonistNameUser = [
                 `用户选择角色性别：${selectedGender}`,
                 previousPlan ? `已有结果（仅补缺，不要随意推翻）：\n${JSON.stringify(previousPlan, null, 2)}` : "",
                 extraHint ? `补充要求：\n${extraHint}` : "",
                 `汇总草案：\n${JSON.stringify(reducedDraft, null, 2)}`,
                 `分块事实：\n${JSON.stringify(chunkFacts.slice(0, 8), null, 2)}`
             ].filter(Boolean).join("\n\n");
-            const protagonistPanelText = await AIRequestService.requestCompletionWithFallback({
+            const protagonistNameText = await AIRequestService.requestCompletionWithFallback({
                 config: apiConfig,
                 fetchUrl,
                 headers,
                 model: apiConfig.model,
                 messages: [
-                    { role: "system", content: protagonistPanelSystem },
-                    { role: "user", content: protagonistPanelUser }
+                    { role: "system", content: protagonistNameSystem },
+                    { role: "user", content: protagonistNameUser }
                 ],
                 temperature: 0.1
             });
-            const protagonistPanel = parseFirstJsonObject(protagonistPanelText) || {};
+            const protagonistNamePanel = parseFirstJsonObject(protagonistNameText) || {};
+
+            if (typeof onProgress === "function") onProgress("生成主角基础");
+            const protagonistBaseSystem = [
+                "你是文游初始化-主角基础生成器。",
+                "只输出 JSON 对象，不要解释。",
+                "字段：forcedGender,ageYears,nationality,location,timeEra,weekIndex,weekdayIndex,currentYear,currentMonth,currentDay,rebornReason,openingChoices。"
+            ].join("\n");
+            const protagonistBaseText = await AIRequestService.requestCompletionWithFallback({
+                config: apiConfig,
+                fetchUrl,
+                headers,
+                model: apiConfig.model,
+                messages: [
+                    { role: "system", content: protagonistBaseSystem },
+                    { role: "user", content: protagonistNameUser }
+                ],
+                temperature: 0.1
+            });
+            const protagonistBasePanel = parseFirstJsonObject(protagonistBaseText) || {};
+
+            if (typeof onProgress === "function") onProgress("生成主角状态");
+            const protagonistStatsSystem = [
+                "你是文游初始化-主角状态面板生成器。",
+                "只输出 JSON 对象，不要解释。",
+                "只输出字段 stats，且至少 3 项。每项字段：key,label,icon,value。"
+            ].join("\n");
+            const protagonistStatsText = await AIRequestService.requestCompletionWithFallback({
+                config: apiConfig,
+                fetchUrl,
+                headers,
+                model: apiConfig.model,
+                messages: [
+                    { role: "system", content: protagonistStatsSystem },
+                    { role: "user", content: protagonistNameUser }
+                ],
+                temperature: 0.1
+            });
+            const protagonistStatsPanel = parseFirstJsonObject(protagonistStatsText) || {};
 
             if (typeof onProgress === "function") onProgress("生成背包面板");
             const inventoryPanelSystem = [
@@ -5092,7 +5217,9 @@
 
             const stagedDraft = {
                 ...reducedDraft,
-                ...protagonistPanel,
+                ...protagonistNamePanel,
+                ...protagonistBasePanel,
+                stats: Array.isArray(protagonistStatsPanel.stats) ? protagonistStatsPanel.stats : reducedDraft.stats,
                 inventory: Array.isArray(inventoryPanel.inventory) ? inventoryPanel.inventory : reducedDraft.inventory,
                 npcs: Array.isArray(npcPanel.npcs) ? npcPanel.npcs : reducedDraft.npcs
             };
@@ -5245,7 +5372,8 @@
                 extraHint: options.extraHint || "",
                 previousPlan: options.previousPlan || null
             });
-            const aiPlan = ensureNameFallback(aiPlanRaw || {}, scenarioText);
+            let aiPlan = ensureNameFallback(aiPlanRaw || {}, scenarioText);
+            aiPlan = ensureStatsFallback(aiPlan, scenarioText);
             if (!aiPlan) throw new Error("AI 返回为空，无法生成开局初始化方案。");
             if (!aiPlan.name || !aiPlan.englishName) throw new Error("AI 未返回有效主角姓名。");
             if (!Number.isFinite(aiPlan.ageYears)) throw new Error("AI 未返回有效年龄。");
@@ -5259,11 +5387,7 @@
             if (!Number.isFinite(aiPlan.weekIndex)) aiPlan.weekIndex = 1;
             if (hasYear && !Number.isFinite(aiPlan.currentMonth)) aiPlan.currentMonth = null;
             if (!Number.isFinite(aiPlan.currentDay)) aiPlan.currentDay = 1;
-            if (!Array.isArray(aiPlan.stats) || !aiPlan.stats.length) {
-                const err = new Error("AI 未返回有效状态栏 stats。");
-                err.partialPlan = aiPlan;
-                throw err;
-            }
+            aiPlan = ensureStatsFallback(aiPlan, scenarioText);
             if (!Array.isArray(aiPlan.inventory) || !aiPlan.inventory.length) {
                 const err = new Error("AI 未返回有效背包数据。");
                 err.partialPlan = aiPlan;
@@ -5789,6 +5913,36 @@
             renderAll();
             return card;
         }
+        function buildPresetCardIdFromPreset(preset) {
+            const raw = String(preset?.id || preset?.title || "");
+            return `scenario_preset_${raw}`.replace(/[^\w-]/g, "_");
+        }
+        function findOfficialPresetByCardId(cardId) {
+            const id = String(cardId || "");
+            if (!id || !Array.isArray(presetManifest)) return null;
+            return presetManifest.find((p) => buildPresetCardIdFromPreset(p) === id) || null;
+        }
+        async function retryInitByReimportOfficialTemplate(cardId, missingFields = [], defaultGender = "女") {
+            const preset = findOfficialPresetByCardId(cardId);
+            if (!preset) return false;
+            InitLoadingService.open("重试中：正在重导官方模板...");
+            try {
+                ScenarioCardService.deleteCard(cardId);
+                await applyPresetTemplate(preset, { silent: true });
+                const reminder = missingFields.length
+                    ? `请重点补全以下缺失项：${missingFields.join("；")}`
+                    : "请补全上次失败时缺失的关键字段。";
+                await prepareInitPreview(defaultGender || "女", true, { extraHint: reminder, forceOfficialReimportRetry: true });
+                return true;
+            } catch (e) {
+                InitLoadingService.close();
+                NoticeModalService.showInfo({
+                    title: "重导官方模板失败",
+                    descHtml: MarkdownService.escapeHtml(String(e?.message || e || "未知错误"))
+                });
+                return false;
+            }
+        }
         async function applyPresetTemplate(preset, options = {}) {
             const { silent = false } = options;
             return await ScenarioCardControllerService.applyPresetTemplate({
@@ -5873,12 +6027,15 @@
             renderAll();
             await prepareInitPreview(StateService.get()?.gender || "", true);
         }
-        async function prepareInitPreview(defaultGender, loadingAlreadyOpen = false) {
+        async function prepareInitPreview(defaultGender, loadingAlreadyOpen = false, retryOptions = {}) {
             if (ChatService.getIsGenerating()) return;
             pendingInitPlan = null;
             if (!loadingAlreadyOpen) InitLoadingService.open("正在生成角色初始化信息（角色、背包与社交）...");
             try {
-                const plan = await ScenarioInitPlanService.buildInitPlan(defaultGender || "女", InitLoadingService.updateStage);
+                const plan = await ScenarioInitPlanService.buildInitPlan(defaultGender || "女", InitLoadingService.updateStage, {
+                    extraHint: retryOptions?.extraHint || "",
+                    previousPlan: retryOptions?.previousPlan || null
+                });
                 InitLoadingService.close();
                 pendingInitPlan = plan;
                 const desc = InitFlowService.buildPreviewDesc(plan);
@@ -5890,32 +6047,38 @@
             } catch (e) {
                 InitLoadingService.close();
                 const title = "初始化解析失败";
-                const desc = InitFlowService.buildInitFailDesc(String(e?.message || e || ""));
-                const doRetry = await DecisionModalService.show({ title, descHtml: desc, okText: "重试", cancelText: "返回" });
+                const errMsg = String(e?.message || e || "");
+                const missingFields = InitFlowService.detectMissingFields(errMsg);
+                const desc = InitFlowService.buildInitFailDesc(errMsg, missingFields);
+                const doRetry = await DecisionModalService.show({ title, descHtml: desc, okText: "重导模板并重试", cancelText: "返回" });
                 if (doRetry) {
-                    const hint = String(e?.message || "");
-                    const prev = e?.partialPlan || null;
-                    InitLoadingService.open("连接中：正在请求 AI 重新补全缺失信息...");
-                    InitLoadingService.updateStage("连接中");
-                    try {
-                        const plan2 = await ScenarioInitPlanService.buildInitPlan(defaultGender || "女", InitLoadingService.updateStage, {
-                            extraHint: `请根据失败原因补全缺失字段：${hint}`,
-                            previousPlan: prev
-                        });
-                        InitLoadingService.close();
-                        pendingInitPlan = plan2;
-                        const desc2 = InitFlowService.buildPreviewDesc(plan2);
-                        document.getElementById("init-preview-desc").innerHTML = desc2;
-                        bindInitPreviewForm(plan2);
-                        const confirmBtn2 = document.getElementById("init-preview-confirm-btn");
-                        confirmBtn2.onclick = () => applyInitPreviewAndStart();
-                        openInitPreviewModal();
-                    } catch (e2) {
-                        InitLoadingService.close();
-                        pendingInitPlan = null;
-                        StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(StateService.get()), text: `> ⚠️ 重试仍失败：${e2.message}` });
-                        StateService.save();
-                        renderAll();
+                    const selectedId = ScenarioCardService.getSelectedId();
+                    const retriedByReimport = await retryInitByReimportOfficialTemplate(selectedId, missingFields, defaultGender || "女");
+                    if (!retriedByReimport) {
+                        const hint = String(e?.message || "");
+                        const prev = e?.partialPlan || null;
+                        InitLoadingService.open("连接中：正在请求 AI 重新补全缺失信息...");
+                        InitLoadingService.updateStage("连接中");
+                        try {
+                            const plan2 = await ScenarioInitPlanService.buildInitPlan(defaultGender || "女", InitLoadingService.updateStage, {
+                                extraHint: `请根据失败原因补全缺失字段：${hint}${missingFields.length ? `；缺失项：${missingFields.join("；")}` : ""}`,
+                                previousPlan: prev
+                            });
+                            InitLoadingService.close();
+                            pendingInitPlan = plan2;
+                            const desc2 = InitFlowService.buildPreviewDesc(plan2);
+                            document.getElementById("init-preview-desc").innerHTML = desc2;
+                            bindInitPreviewForm(plan2);
+                            const confirmBtn2 = document.getElementById("init-preview-confirm-btn");
+                            confirmBtn2.onclick = () => applyInitPreviewAndStart();
+                            openInitPreviewModal();
+                        } catch (e2) {
+                            InitLoadingService.close();
+                            pendingInitPlan = null;
+                            StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(StateService.get()), text: `> ⚠️ 重试仍失败：${e2.message}` });
+                            StateService.save();
+                            renderAll();
+                        }
                     }
                 } else {
                     // 返回：退回主页并删除刚刚自动新建的卡片（若有）
