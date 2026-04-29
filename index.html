@@ -421,8 +421,8 @@
             font-weight: 700;
         }
 
-        /* wy-stat-bar-item 全局样式（顶部面板复用卡片结构） */
-        #game-stats-card .wy-stat-bar-item {
+        /* wy-stat-bar 全局样式（顶部面板复用卡片结构，用 data-wy-stat 属性避免与AI生成内容冲突） */
+        #game-stats-card [data-wy-stat="item"] {
             display: flex;
             flex-direction: column;
             gap: 4px;
@@ -434,33 +434,33 @@
             min-width: 80px;
             box-shadow: 0 6px 16px rgba(164, 111, 53, 0.08);
         }
-        body[data-theme="dark"] #game-stats-card .wy-stat-bar-item {
+        body[data-theme="dark"] #game-stats-card [data-wy-stat="item"] {
             background: linear-gradient(180deg, rgba(31,39,58,0.98), rgba(23,30,46,0.95));
             border-color: rgba(110,129,167,0.22);
         }
-        #game-stats-card .wy-stat-bar-header {
+        #game-stats-card [data-wy-stat="header"] {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 6px;
         }
-        #game-stats-card .wy-stat-bar-label {
+        #game-stats-card [data-wy-stat="label"] {
             font-size: 0.76rem;
             font-weight: 700;
             color: var(--sub);
         }
-        #game-stats-card .wy-stat-bar-value {
+        #game-stats-card [data-wy-stat="value"] {
             font-size: 1.05rem;
             font-weight: 700;
             color: var(--accent-dark);
         }
-        #game-stats-card .wy-stat-bar-track {
+        #game-stats-card [data-wy-stat="track"] {
             height: 4px;
             border-radius: 2px;
             background: rgba(0,0,0,.08);
             overflow: hidden;
         }
-        #game-stats-card .wy-stat-bar-fill {
+        #game-stats-card [data-wy-stat="fill"] {
             height: 100%;
             border-radius: 2px;
             transition: width .4s ease;
@@ -2673,7 +2673,7 @@
         const REQUIRED_BLOCKS = ["time", "status", "relations", "event", "choices"];
         const BASE_STYLE = "--theme-primary:#6a11cb;--theme-secondary:#2575fc;--card-bg:linear-gradient(to bottom right,#ffffff,#f0f4fd);--text-main:#2c3e50;--text-muted:#7f8c8d;--font-family:'PingFang SC','Microsoft YaHei',sans-serif;--border-radius:12px;--card-shadow:0 10px 25px rgba(106,17,203,0.15)";
         const BASE_STYLE_DARK = "--theme-primary:#9b8bff;--theme-secondary:#45b6ff;--card-bg:linear-gradient(180deg,rgba(20,28,42,0.28),rgba(13,19,31,0.22));--text-main:#eaf0ff;--text-muted:#a8b6d4;--font-family:'PingFang SC','Microsoft YaHei',sans-serif;--border-radius:12px;--card-shadow:0 16px 34px rgba(0,0,0,0.3)";
-        const EMBED_STYLE = ".wenyou-card .wy-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}.wenyou-card .wy-header-left{display:flex;align-items:center;gap:12px}.wenyou-card .wy-avatar{font-size:28px;color:var(--theme-primary)}.wenyou-card .wy-role-name{font-size:1.1rem;font-weight:700;color:var(--theme-primary);margin:0;line-height:1.2}.wenyou-card .wy-scene{font-size:.8rem;color:var(--text-muted);margin-top:2px}.wenyou-card .wy-divider{display:flex;align-items:center;text-align:center;margin:15px 0;color:var(--theme-secondary)}.wenyou-card .wy-divider:before,.wenyou-card .wy-divider:after{content:'';flex:1;border-bottom:1px dashed var(--theme-secondary);opacity:.4}.wenyou-card .wy-divider-icon{padding:0 10px;font-size:.9rem}.wenyou-card .wy-content{font-size:.95rem;line-height:1.6;margin-bottom:14px;text-align:justify}.wenyou-card .wy-meta{font-size:.82rem;color:var(--text-muted);margin-bottom:10px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.38);display:inline-flex;max-width:100%}.wenyou-card .wy-stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;background:rgba(128,128,128,.05);padding:10px;border-radius:8px;border-left:3px solid var(--theme-secondary)}.wenyou-card .wy-stat-item{font-size:.85rem;background:rgba(255,255,255,.55);padding:4px 8px;border-radius:4px;display:flex;align-items:center;gap:4px}.wenyou-card .wy-stat-value{font-weight:700;color:var(--theme-primary)}.wenyou-card .wy-stat-bar-item{display:flex;flex-direction:column;gap:4px;padding:8px 10px;background:rgba(255,255,255,.7);border-radius:8px;flex:1;min-width:90px}.wenyou-card .wy-stat-bar-header{display:flex;align-items:center;justify-content:space-between;gap:6px}.wenyou-card .wy-stat-bar-label{font-size:.8rem;font-weight:700;color:var(--text-main);display:flex;align-items:center;gap:4px}.wenyou-card .wy-stat-bar-value{font-size:.9rem;font-weight:700;color:var(--theme-primary)}.wenyou-card .wy-stat-bar-track{height:5px;border-radius:3px;background:rgba(0,0,0,.08);overflow:hidden}.wenyou-card .wy-stat-bar-fill{height:100%;border-radius:3px;transition:width .4s ease}.wenyou-card .wy-options{display:flex;flex-direction:column;gap:10px}.wenyou-card .wy-option-btn{display:flex;align-items:center;padding:12px 15px;background:transparent;border:1px solid var(--theme-primary);color:var(--theme-primary);border-radius:var(--border-radius);font-size:.95rem;cursor:pointer;transition:all .2s;text-decoration:none}.wenyou-card .wy-option-btn:hover{background:var(--theme-primary);color:#fff;transform:translateX(5px)}.wenyou-card .wy-opt-icon{margin-right:10px;font-size:1.1rem}.wenyou-card .wy-footer-decor{text-align:center;margin-top:16px;font-size:1.3rem;color:var(--theme-secondary);opacity:.35;letter-spacing:4px}";
+        const EMBED_STYLE = ".wenyou-card .wy-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}.wenyou-card .wy-header-left{display:flex;align-items:center;gap:12px}.wenyou-card .wy-avatar{font-size:28px;color:var(--theme-primary)}.wenyou-card .wy-role-name{font-size:1.1rem;font-weight:700;color:var(--theme-primary);margin:0;line-height:1.2}.wenyou-card .wy-scene{font-size:.8rem;color:var(--text-muted);margin-top:2px}.wenyou-card .wy-divider{display:flex;align-items:center;text-align:center;margin:15px 0;color:var(--theme-secondary)}.wenyou-card .wy-divider:before,.wenyou-card .wy-divider:after{content:'';flex:1;border-bottom:1px dashed var(--theme-secondary);opacity:.4}.wenyou-card .wy-divider-icon{padding:0 10px;font-size:.9rem}.wenyou-card .wy-content{font-size:.95rem;line-height:1.6;margin-bottom:14px;text-align:justify}.wenyou-card .wy-meta{font-size:.82rem;color:var(--text-muted);margin-bottom:10px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.38);display:inline-flex;max-width:100%}.wenyou-card .wy-stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;background:rgba(128,128,128,.05);padding:10px;border-radius:8px;border-left:3px solid var(--theme-secondary)}.wenyou-card .wy-stat-item{font-size:.85rem;background:rgba(255,255,255,.55);padding:4px 8px;border-radius:4px;display:flex;align-items:center;gap:4px}.wenyou-card .wy-stat-value{font-weight:700;color:var(--theme-primary)}.wenyou-card [data-wy-stat='item']{display:flex;flex-direction:column;gap:4px;padding:8px 10px;background:rgba(255,255,255,.7);border-radius:8px;flex:1;min-width:90px}.wenyou-card [data-wy-stat='header']{display:flex;align-items:center;justify-content:space-between;gap:6px}.wenyou-card [data-wy-stat='label']{font-size:.8rem;font-weight:700;color:var(--text-main);display:flex;align-items:center;gap:4px}.wenyou-card [data-wy-stat='value']{font-size:.9rem;font-weight:700;color:var(--theme-primary)}.wenyou-card [data-wy-stat='track']{height:5px;border-radius:3px;background:rgba(0,0,0,.08);overflow:hidden}.wenyou-card [data-wy-stat='fill']{height:100%;border-radius:3px;transition:width .4s ease}.wenyou-card .wy-options{display:flex;flex-direction:column;gap:10px}.wenyou-card .wy-option-btn{display:flex;align-items:center;padding:12px 15px;background:transparent;border:1px solid var(--theme-primary);color:var(--theme-primary);border-radius:var(--border-radius);font-size:.95rem;cursor:pointer;transition:all .2s;text-decoration:none}.wenyou-card .wy-option-btn:hover{background:var(--theme-primary);color:#fff;transform:translateX(5px)}.wenyou-card .wy-opt-icon{margin-right:10px;font-size:1.1rem}.wenyou-card .wy-footer-decor{text-align:center;margin-top:16px;font-size:1.3rem;color:var(--theme-secondary);opacity:.35;letter-spacing:4px}";
         function getDefaultBeautyHint() {
             return DEFAULT_THEME_HINT;
         }
@@ -3369,13 +3369,13 @@
                         : "#e05555";
                 const icon = MarkdownService.escapeHtml(s.icon || "✨");
                 const label = MarkdownService.escapeHtml(s.label || s.key || "属性");
-                return `<div class="wy-stat-bar-item">` +
-                    `<div class="wy-stat-bar-header">` +
-                    `<span class="wy-stat-bar-label">${icon} ${label}</span>` +
-                    `<span class="wy-stat-bar-value">${value}</span>` +
+                return `<div data-wy-stat="item">` +
+                    `<div data-wy-stat="header">` +
+                    `<span data-wy-stat="label">${icon} ${label}</span>` +
+                    `<span data-wy-stat="value">${value}</span>` +
                     `</div>` +
-                    `<div class="wy-stat-bar-track">` +
-                    `<div class="wy-stat-bar-fill" style="width:${pct}%;background:${barColor};"></div>` +
+                    `<div data-wy-stat="track">` +
+                    `<div data-wy-stat="fill" style="width:${pct}%;background:${barColor};"></div>` +
                     `</div>` +
                     `</div>`;
             }).join("");
@@ -4111,13 +4111,13 @@
                 if (statusEl instanceof HTMLElement) {
                     const clone = statusEl.cloneNode(true);
                     if (clone instanceof HTMLElement) clone.querySelectorAll("style, script").forEach((n) => n.remove());
-                    // 尝试从 wy-stat-bar-item 结构读取（injectStatsIntoCard 注入后）
-                    const barItems = clone.querySelectorAll(".wy-stat-bar-item");
+                    // 尝试从 data-wy-stat 结构读取（injectStatsIntoCard 注入后）
+                    const barItems = clone.querySelectorAll("[data-wy-stat='item']");
                     if (barItems.length) {
                         const statLines = [];
                         barItems.forEach((el) => {
-                            const labelEl = el.querySelector(".wy-stat-bar-label");
-                            const valueEl = el.querySelector(".wy-stat-bar-value");
+                            const labelEl = el.querySelector("[data-wy-stat='label']");
+                            const valueEl = el.querySelector("[data-wy-stat='value']");
                             if (!labelEl || !valueEl) return;
                             const rawLabel = String(labelEl.textContent || "").trim()
                                 .replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]\s*/u, "");
