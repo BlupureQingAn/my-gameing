@@ -1689,6 +1689,37 @@
     </style>
 </head>
 <body>
+
+<!-- ==================== 登录/注册覆盖层 ==================== -->
+<div id="auth-overlay" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--bg-page,#efe3cf);align-items:center;justify-content:center;padding:20px;">
+    <div style="width:100%;max-width:380px;background:var(--card,#fff7ea);border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.18);padding:32px 28px;border:1px solid var(--line,#e2ccb0);">
+        <div style="text-align:center;margin-bottom:24px;">
+            <div style="font-size:2rem;margin-bottom:8px;">🍡</div>
+            <h2 style="font-size:1.2rem;font-weight:800;color:var(--accent-dark,#845f35);margin:0;">云吞吞文游模拟器</h2>
+            <p id="auth-subtitle" style="margin:6px 0 0;font-size:0.82rem;color:var(--sub,#806a55);">登录以继续</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+            <input id="auth-email" type="email" placeholder="邮箱地址" autocomplete="email"
+                style="width:100%;border:1px solid var(--line,#e2ccb0);border-radius:12px;background:var(--input-bg,#fffbf5);padding:11px 14px;font-size:0.9rem;color:var(--text,#4b3a2a);box-sizing:border-box;">
+            <input id="auth-password" type="password" placeholder="密码（至少8位）" autocomplete="current-password"
+                style="width:100%;border:1px solid var(--line,#e2ccb0);border-radius:12px;background:var(--input-bg,#fffbf5);padding:11px 14px;font-size:0.9rem;color:var(--text,#4b3a2a);box-sizing:border-box;">
+            <input id="auth-password2" type="password" placeholder="再次输入密码（首次注册）" autocomplete="new-password"
+                style="width:100%;border:1px solid var(--line,#e2ccb0);border-radius:12px;background:var(--input-bg,#fffbf5);padding:11px 14px;font-size:0.9rem;color:var(--text,#4b3a2a);box-sizing:border-box;display:none;">
+            <div id="auth-error" style="display:none;font-size:0.8rem;color:#c94857;background:#fff1f0;border:1px solid #f1c4c2;border-radius:8px;padding:8px 12px;"></div>
+            <button id="auth-submit-btn" onclick="AuthService.handleSubmit()"
+                style="width:100%;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,#b08652,#845f35);color:#fffaf4;font-size:0.95rem;font-weight:700;cursor:pointer;transition:filter .18s;">
+                登录
+            </button>
+            <div style="text-align:center;">
+                <button id="auth-toggle-btn" onclick="AuthService.toggleMode()"
+                    style="background:none;border:none;color:var(--sub,#806a55);font-size:0.82rem;cursor:pointer;text-decoration:underline;">
+                    没有账号？点击注册
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div id="app">
     <div class="bear-layer" id="bear-layer"></div>
 
@@ -1700,9 +1731,11 @@
         <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
             <div class="wealth" id="ui-wealth">🌥️ 独立世界线</div>
             <div class="top-mini-nav">
+                <span id="auth-user-badge" style="display:none;font-size:0.75rem;color:var(--sub);padding:4px 8px;border-radius:999px;background:var(--card-soft);border:1px solid var(--line);"></span>
                 <button class="top-nav-btn active" data-view="view-home" onclick="switchView('view-home')">首页</button>
                 <button class="top-nav-btn" data-view="view-settings" onclick="switchView('view-settings')">设置</button>
                 <button class="top-nav-btn" id="top-edit-card-btn" style="display:none;" onclick="openCurrentCardEditor()">编辑当前卡</button>
+                <button class="top-nav-btn" id="auth-logout-btn" style="display:none;" onclick="AuthService.logout()">登出</button>
             </div>
         </div>
     </header>
@@ -8384,7 +8417,202 @@
     function backToSocialList() { Controller.backToSocialList(); }
     function closeInfoModal() { Controller.closeInfoModal(); }
 
-    window.onload = () => Controller.init();
+    // ==================== AuthService ====================
+    const AuthService = (() => {
+        const PB_URL = "http://47.238.246.167:8090";
+        const COLLECTION = "users";
+        const TOKEN_KEY = "pb_auth_token";
+        const EMAIL_KEY = "pb_auth_email";
+        let _isRegisterMode = false;
+
+        function getToken() { return localStorage.getItem(TOKEN_KEY) || ""; }
+        function getEmail() { return localStorage.getItem(EMAIL_KEY) || ""; }
+
+        function saveSession(token, email) {
+            localStorage.setItem(TOKEN_KEY, token);
+            localStorage.setItem(EMAIL_KEY, email);
+        }
+        function clearSession() {
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(EMAIL_KEY);
+        }
+
+        function showOverlay() {
+            const el = document.getElementById("auth-overlay");
+            if (el) el.style.display = "flex";
+        }
+        function hideOverlay() {
+            const el = document.getElementById("auth-overlay");
+            if (el) el.style.display = "none";
+        }
+        function showError(msg) {
+            const el = document.getElementById("auth-error");
+            if (!el) return;
+            el.textContent = msg;
+            el.style.display = "block";
+        }
+        function clearError() {
+            const el = document.getElementById("auth-error");
+            if (el) el.style.display = "none";
+        }
+        function setLoading(on) {
+            const btn = document.getElementById("auth-submit-btn");
+            if (btn) { btn.disabled = on; btn.textContent = on ? "请稍候..." : (_isRegisterMode ? "注册" : "登录"); }
+        }
+
+        function toggleMode() {
+            _isRegisterMode = !_isRegisterMode;
+            clearError();
+            const pw2 = document.getElementById("auth-password2");
+            const subtitle = document.getElementById("auth-subtitle");
+            const toggleBtn = document.getElementById("auth-toggle-btn");
+            const submitBtn = document.getElementById("auth-submit-btn");
+            if (_isRegisterMode) {
+                if (pw2) pw2.style.display = "block";
+                if (subtitle) subtitle.textContent = "创建新账号";
+                if (toggleBtn) toggleBtn.textContent = "已有账号？点击登录";
+                if (submitBtn) submitBtn.textContent = "注册";
+            } else {
+                if (pw2) pw2.style.display = "none";
+                if (subtitle) subtitle.textContent = "登录以继续";
+                if (toggleBtn) toggleBtn.textContent = "没有账号？点击注册";
+                if (submitBtn) submitBtn.textContent = "登录";
+            }
+        }
+
+        async function handleSubmit() {
+            clearError();
+            const email = (document.getElementById("auth-email")?.value || "").trim();
+            const password = document.getElementById("auth-password")?.value || "";
+            const password2 = document.getElementById("auth-password2")?.value || "";
+
+            if (!email || !password) { showError("请填写邮箱和密码"); return; }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError("邮箱格式不正确"); return; }
+            if (password.length < 8) { showError("密码至少需要8位"); return; }
+            if (_isRegisterMode && password !== password2) { showError("两次密码不一致"); return; }
+
+            setLoading(true);
+            try {
+                if (_isRegisterMode) {
+                    await register(email, password, password2);
+                } else {
+                    await login(email, password);
+                }
+            } catch (e) {
+                showError(e.message || "操作失败，请重试");
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        async function register(email, password, passwordConfirm) {
+            const res = await fetch(`${PB_URL}/api/collections/${COLLECTION}/records`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password, passwordConfirm, emailVisibility: true })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                const msg = data?.message || "注册失败";
+                const detail = Object.values(data?.data || {}).map((v) => v?.message).filter(Boolean).join("；");
+                throw new Error(detail || msg);
+            }
+            // 注册成功后自动登录
+            await login(email, password);
+        }
+
+        async function login(email, password) {
+            const res = await fetch(`${PB_URL}/api/collections/${COLLECTION}/auth-with-password`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ identity: email, password })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data?.message || "邮箱或密码错误");
+            }
+            saveSession(data.token, email);
+            onLoginSuccess(email);
+        }
+
+        async function verifyToken() {
+            const token = getToken();
+            if (!token) return false;
+            try {
+                const res = await fetch(`${PB_URL}/api/collections/${COLLECTION}/auth-refresh`, {
+                    method: "POST",
+                    headers: { "Authorization": token }
+                });
+                if (!res.ok) { clearSession(); return false; }
+                const data = await res.json();
+                // 刷新 token
+                if (data.token) saveSession(data.token, getEmail());
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function onLoginSuccess(email) {
+            hideOverlay();
+            // 显示用户信息
+            const badge = document.getElementById("auth-user-badge");
+            const logoutBtn = document.getElementById("auth-logout-btn");
+            if (badge) { badge.textContent = `👤 ${email}`; badge.style.display = "inline-flex"; }
+            if (logoutBtn) logoutBtn.style.display = "inline-flex";
+        }
+
+        function logout() {
+            clearSession();
+            const badge = document.getElementById("auth-user-badge");
+            const logoutBtn = document.getElementById("auth-logout-btn");
+            if (badge) badge.style.display = "none";
+            if (logoutBtn) logoutBtn.style.display = "none";
+            // 重置登录表单
+            _isRegisterMode = false;
+            const pw2 = document.getElementById("auth-password2");
+            if (pw2) pw2.style.display = "none";
+            const emailInput = document.getElementById("auth-email");
+            const pwInput = document.getElementById("auth-password");
+            if (emailInput) emailInput.value = "";
+            if (pwInput) pwInput.value = "";
+            clearError();
+            showOverlay();
+        }
+
+        async function init() {
+            // 先隐藏 app，避免未登录时闪现
+            const app = document.getElementById("app");
+            if (app) app.style.visibility = "hidden";
+
+            const token = getToken();
+            if (token) {
+                const valid = await verifyToken();
+                if (valid) {
+                    if (app) app.style.visibility = "";
+                    onLoginSuccess(getEmail());
+                    return true;
+                }
+            }
+            if (app) app.style.visibility = "";
+            showOverlay();
+            return false;
+        }
+
+        // Enter 键提交
+        document.addEventListener("keydown", (e) => {
+            const overlay = document.getElementById("auth-overlay");
+            if (!overlay || overlay.style.display === "none") return;
+            if (e.key === "Enter") handleSubmit();
+        });
+
+        return { init, handleSubmit, toggleMode, logout, getToken, getEmail };
+    })();
+
+    window.onload = async () => {
+        await AuthService.init();
+        Controller.init();
+    };
 </script>
 </body>
 </html>
