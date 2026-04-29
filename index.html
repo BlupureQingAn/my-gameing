@@ -2525,8 +2525,13 @@
         }
         function extractHtmlFromCodeFence(text) {
             if (!text) return "";
-            const match = String(text).match(/```html\s*([\s\S]*?)```/i);
-            if (match && match[1]) return match[1].trim();
+            const raw = String(text);
+            // 优先匹配 ```html ... ```
+            const htmlMatch = raw.match(/```html\s*([\s\S]*?)```/i);
+            if (htmlMatch && htmlMatch[1]) return htmlMatch[1].trim();
+            // 其次匹配无标注的 ``` ... ``` 且内容含 ai-beauty-card
+            const plainMatch = raw.match(/```\s*([\s\S]*?)```/);
+            if (plainMatch && plainMatch[1] && containsHtmlCard(plainMatch[1])) return plainMatch[1].trim();
             return "";
         }
         function hasMeaningfulAttr(el) {
@@ -2581,6 +2586,15 @@
                 }
             } catch (e) {
             }
+            // template解析失败（流式阶段HTML不完整）：尝试截掉卡片根标签结束后的多余文字
+            // 找到根标签名，截到最后一个对应闭合标签
+            const rootTagMatch = cleaned.match(/^<(article|section|div)\b/i);
+            if (rootTagMatch) {
+                const tag = rootTagMatch[1].toLowerCase();
+                const closeTag = `</${tag}>`;
+                const lastClose = cleaned.lastIndexOf(closeTag);
+                if (lastClose > 0) return cleaned.slice(0, lastClose + closeTag.length);
+            }
             return cleaned;
         }
         function isRenderableHtmlCard(text) {
@@ -2606,7 +2620,7 @@
         const REQUIRED_BLOCKS = ["time", "status", "relations", "event", "choices"];
         const BASE_STYLE = "--theme-primary:#6a11cb;--theme-secondary:#2575fc;--card-bg:linear-gradient(to bottom right,#ffffff,#f0f4fd);--text-main:#2c3e50;--text-muted:#7f8c8d;--font-family:'PingFang SC','Microsoft YaHei',sans-serif;--border-radius:12px;--card-shadow:0 10px 25px rgba(106,17,203,0.15)";
         const BASE_STYLE_DARK = "--theme-primary:#9b8bff;--theme-secondary:#45b6ff;--card-bg:linear-gradient(180deg,rgba(20,28,42,0.28),rgba(13,19,31,0.22));--text-main:#eaf0ff;--text-muted:#a8b6d4;--font-family:'PingFang SC','Microsoft YaHei',sans-serif;--border-radius:12px;--card-shadow:0 16px 34px rgba(0,0,0,0.3)";
-        const EMBED_STYLE = ".wenyou-card .wy-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}.wenyou-card .wy-header-left{display:flex;align-items:center;gap:12px}.wenyou-card .wy-avatar{font-size:28px;color:var(--theme-primary)}.wenyou-card .wy-role-name{font-size:1.1rem;font-weight:700;color:var(--theme-primary);margin:0;line-height:1.2}.wenyou-card .wy-scene{font-size:.8rem;color:var(--text-muted);margin-top:2px}.wenyou-card .wy-divider{display:flex;align-items:center;text-align:center;margin:15px 0;color:var(--theme-secondary)}.wenyou-card .wy-divider:before,.wenyou-card .wy-divider:after{content:'';flex:1;border-bottom:1px dashed var(--theme-secondary);opacity:.4}.wenyou-card .wy-divider-icon{padding:0 10px;font-size:.9rem}.wenyou-card .wy-content{font-size:.95rem;line-height:1.6;margin-bottom:14px;text-align:justify}.wenyou-card .wy-meta{font-size:.82rem;color:var(--text-muted);margin-bottom:10px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.38);display:inline-flex;max-width:100%}.wenyou-card .wy-stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;background:rgba(128,128,128,.05);padding:10px;border-radius:8px;border-left:3px solid var(--theme-secondary)}.wenyou-card .wy-stat-item{font-size:.85rem;background:rgba(255,255,255,.55);padding:4px 8px;border-radius:4px;display:flex;align-items:center;gap:4px}.wenyou-card .wy-stat-value{font-weight:700;color:var(--theme-primary)}.wenyou-card .wy-options{display:flex;flex-direction:column;gap:10px}.wenyou-card .wy-option-btn{display:flex;align-items:center;padding:12px 15px;background:transparent;border:1px solid var(--theme-primary);color:var(--theme-primary);border-radius:var(--border-radius);font-size:.95rem;cursor:pointer;transition:all .2s;text-decoration:none}.wenyou-card .wy-option-btn:hover{background:var(--theme-primary);color:#fff;transform:translateX(5px)}.wenyou-card .wy-opt-icon{margin-right:10px;font-size:1.1rem}.wenyou-card .wy-footer-decor{text-align:center;margin-top:16px;font-size:1.3rem;color:var(--theme-secondary);opacity:.35;letter-spacing:4px}";
+        const EMBED_STYLE = ".wenyou-card .wy-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:15px}.wenyou-card .wy-header-left{display:flex;align-items:center;gap:12px}.wenyou-card .wy-avatar{font-size:28px;color:var(--theme-primary)}.wenyou-card .wy-role-name{font-size:1.1rem;font-weight:700;color:var(--theme-primary);margin:0;line-height:1.2}.wenyou-card .wy-scene{font-size:.8rem;color:var(--text-muted);margin-top:2px}.wenyou-card .wy-divider{display:flex;align-items:center;text-align:center;margin:15px 0;color:var(--theme-secondary)}.wenyou-card .wy-divider:before,.wenyou-card .wy-divider:after{content:'';flex:1;border-bottom:1px dashed var(--theme-secondary);opacity:.4}.wenyou-card .wy-divider-icon{padding:0 10px;font-size:.9rem}.wenyou-card .wy-content{font-size:.95rem;line-height:1.6;margin-bottom:14px;text-align:justify}.wenyou-card .wy-meta{font-size:.82rem;color:var(--text-muted);margin-bottom:10px;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.38);display:inline-flex;max-width:100%}.wenyou-card .wy-stats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;background:rgba(128,128,128,.05);padding:10px;border-radius:8px;border-left:3px solid var(--theme-secondary)}.wenyou-card .wy-stat-item{font-size:.85rem;background:rgba(255,255,255,.55);padding:4px 8px;border-radius:4px;display:flex;align-items:center;gap:4px}.wenyou-card .wy-stat-value{font-weight:700;color:var(--theme-primary)}.wenyou-card .wy-stat-bar-item{display:flex;flex-direction:column;gap:4px;padding:8px 10px;background:rgba(255,255,255,.7);border-radius:8px;flex:1;min-width:90px}.wenyou-card .wy-stat-bar-header{display:flex;align-items:center;justify-content:space-between;gap:6px}.wenyou-card .wy-stat-bar-label{font-size:.8rem;font-weight:700;color:var(--text-main);display:flex;align-items:center;gap:4px}.wenyou-card .wy-stat-bar-value{font-size:.9rem;font-weight:700;color:var(--theme-primary)}.wenyou-card .wy-stat-bar-track{height:5px;border-radius:3px;background:rgba(0,0,0,.08);overflow:hidden}.wenyou-card .wy-stat-bar-fill{height:100%;border-radius:3px;transition:width .4s ease}.wenyou-card .wy-options{display:flex;flex-direction:column;gap:10px}.wenyou-card .wy-option-btn{display:flex;align-items:center;padding:12px 15px;background:transparent;border:1px solid var(--theme-primary);color:var(--theme-primary);border-radius:var(--border-radius);font-size:.95rem;cursor:pointer;transition:all .2s;text-decoration:none}.wenyou-card .wy-option-btn:hover{background:var(--theme-primary);color:#fff;transform:translateX(5px)}.wenyou-card .wy-opt-icon{margin-right:10px;font-size:1.1rem}.wenyou-card .wy-footer-decor{text-align:center;margin-top:16px;font-size:1.3rem;color:var(--theme-secondary);opacity:.35;letter-spacing:4px}";
         function getDefaultBeautyHint() {
             return DEFAULT_THEME_HINT;
         }
@@ -3280,7 +3294,49 @@
                 Controller.sendUserText(`我选择：${choice}`);
             });
         }
-        return { renderAiMessage, bindHtmlChoiceEvents, formatQuotedDialogueLines };
+        function injectStatsIntoCard(container) {
+            if (!(container instanceof HTMLElement)) return;
+            const statusEl = container.querySelector('[data-block="status"]');
+            if (!(statusEl instanceof HTMLElement)) return;
+            const state = StateService.get();
+            const stats = Array.isArray(state && state.stats) ? state.stats : [];
+            if (!stats.length) return;
+            // 从卡片的CSS变量读主题色，fallback到accent
+            const cardRoot = container.querySelector(".ai-beauty-card") || container;
+            const cs = window.getComputedStyle(cardRoot);
+            const themePrimary = cs.getPropertyValue("--theme-primary").trim() || "var(--accent)";
+            const themeSecondary = cs.getPropertyValue("--theme-secondary").trim() || "var(--accent)";
+            const barsHtml = stats.map((s) => {
+                const value = Math.max(0, Math.min(999, Number(s.value) || 0));
+                const pct = Math.min(100, value); // 0-100 映射进度条
+                const barColor = pct >= 70
+                    ? themePrimary || "var(--accent)"
+                    : pct >= 40
+                        ? themeSecondary || "#e6a817"
+                        : "#e05555";
+                const icon = MarkdownService.escapeHtml(s.icon || "✨");
+                const label = MarkdownService.escapeHtml(s.label || s.key || "属性");
+                return `<div class="wy-stat-bar-item">` +
+                    `<div class="wy-stat-bar-header">` +
+                    `<span class="wy-stat-bar-label">${icon} ${label}</span>` +
+                    `<span class="wy-stat-bar-value">${value}</span>` +
+                    `</div>` +
+                    `<div class="wy-stat-bar-track">` +
+                    `<div class="wy-stat-bar-fill" style="width:${pct}%;background:${barColor};"></div>` +
+                    `</div>` +
+                    `</div>`;
+            }).join("");
+            // 保留 status 块原有的标签行（panelStatusTags），只替换数值部分
+            const tags = Array.isArray(state.panelStatusTags) ? state.panelStatusTags : [];
+            const tagsHtml = tags.length
+                ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">${tags.map((t) =>
+                    `<span style="padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.72);border:1px solid rgba(0,0,0,.1);font-size:.75rem;font-weight:700;">${MarkdownService.escapeHtml(t.label)}：${MarkdownService.escapeHtml(t.value)}</span>`
+                ).join("")}</div>`
+                : "";
+            statusEl.innerHTML =
+                `<div style="display:flex;flex-wrap:wrap;gap:8px;">${barsHtml}</div>${tagsHtml}`;
+        }
+        return { renderAiMessage, bindHtmlChoiceEvents, formatQuotedDialogueLines, injectStatsIntoCard };
     })();
 
     const EndMarkerService = (() => {
@@ -4328,6 +4384,7 @@
             if (canUseHtmlCard) {
                 HtmlCardService.applyReadableTextColors(bubble);
                 AiResponseLayoutService.bindHtmlChoiceEvents(bubble);
+                AiResponseLayoutService.injectStatsIntoCard(bubble);
             }
 
             if (role === "user") { row.appendChild(bubble); row.appendChild(avatar); }
@@ -4369,6 +4426,7 @@
                 currentStreamingTarget.innerHTML = `${warningHtml}${AiResponseLayoutService.renderAiMessage(normalizedText, false)}`;
                 HtmlCardService.applyReadableTextColors(currentStreamingTarget);
                 AiResponseLayoutService.bindHtmlChoiceEvents(currentStreamingTarget);
+                AiResponseLayoutService.injectStatsIntoCard(currentStreamingTarget);
             } else {
                 currentStreamingTarget.classList.remove("html-host");
                 currentStreamingTarget.innerHTML = AiResponseLayoutService.renderAiMessage(`${prefix}${text}`, false);
@@ -4405,6 +4463,7 @@
                     : "";
                 bubble.innerHTML = `${warningHtml}${AiResponseLayoutService.renderAiMessage(normalizedText, false)}`;
                 AiResponseLayoutService.bindHtmlChoiceEvents(bubble);
+                AiResponseLayoutService.injectStatsIntoCard(bubble);
             } else {
                 bubble.classList.remove("html-host");
                 bubble.innerHTML = AiResponseLayoutService.renderAiMessage(String(text || ""), false);
@@ -5708,13 +5767,13 @@
         function getBeautyCoreRules() {
             return [
                 "你必须输出可直接渲染的 HTML 卡片，且最外层必须是 class=\"ai-beauty-card\" 的 article/section/div。",
+                "【输出格式】直接输出HTML，第一个字符必须是 <，禁止任何前缀说明文字、禁止用Markdown代码块包裹、禁止在HTML前后输出任何解释。",
                 "卡片内部需包含：时间、状态变化、剧情正文、（AI想法）以及 1-3 条编号选项。",
                 "必须严格参考下方提供的本地模板骨架，尤其保持 ai-beauty-card-body 内 data-block=time/status/relations/event/thought/choices/hint 的层级与命名一致。",
                 "若设定存在待玩家选择的开局模式/路线，只能在 choices 中列出，不得替玩家做最终选择。",
                 "状态区必须包含主角状态；若本轮涉及关键NPC变化，状态区需附带NPC状态摘要。",
                 "视觉要求：卡片必须具备色彩丰富且清晰的页游式视觉结构（标题条、信息区、标签/徽章、分隔线、强调块、层次化排版），并与当前设定的时代与题材一致。",
-                "同一张卡后续回合不要每回合随机换主题。",
-                "禁止输出 Md格式；必须输出 HTML。"
+                "同一张卡后续回合不要每回合随机换主题。"
             ];
         }
         function getIntroCoreRules() {
@@ -5722,6 +5781,7 @@
                 "【任务】你是开局介绍生成器。",
                 "请基于设定与角色档案，输出一张可直接渲染的 HTML 卡片。",
                 "强制要求：最外层必须是 <article class=\"ai-beauty-card\">。",
+                "【输出格式】直接输出HTML，第一个字符必须是 <article，禁止任何前缀说明、禁止用Markdown代码块包裹、禁止在HTML前后输出任何解释文字。",
                 "卡片内必须包含：世界背景简述、主角当前身份与处境、当前时间、关键NPC概览、1-3条编号选项。",
                 "必须严格沿用本地模板骨架的 data-block 结构，不得把 event/status/relations/choices 混成同一区块。",
                 "若设定存在待玩家选择的开局模式/路线/阵营，请只在选项中列出，不得替玩家代选。"
@@ -5804,7 +5864,7 @@
                 JSON.stringify(state.protagonistProfile || {}, null, 2),
                 "以下是NPC列表（必须一致）：",
                 JSON.stringify(state.npcs || [], null, 2),
-                "请直接输出HTML，不要Markdown，不要解释。"
+                "【输出格式强制要求】直接输出HTML，第一个字符必须是 <，禁止任何前缀说明文字、禁止Markdown代码块包裹、禁止解释。"
             ].join("\n\n");
             return {
                 fetchUrl,
@@ -5852,22 +5912,7 @@
         async function start({ apiConfig, scenarioText, beautySetting, state, policyConfig, selectedCardId, openingChoices = [] }) {
             if (apiConfig.blocked) return;
             if (!apiConfig.upstreamUrl || !apiConfig.key || !apiConfig.model) return;
-            InitLoadingService.open("首卡模板设计：正在准备HTML模板...");
-            InitLoadingService.updateStage("设计首卡模板");
-            try {
-                const templateText = await ScenarioIntroService.generateIntroTemplate({
-                    apiConfig,
-                    scenarioText,
-                    beautySetting,
-                    state
-                });
-                const templateNorm = HtmlCardService.normalizeHtmlCard(templateText);
-                const templateSkeleton = HtmlCardService.extractSkeleton(templateNorm);
-                if (templateSkeleton && selectedCardId) {
-                    ScenarioPlayMetaService.setLockedSkeleton(selectedCardId, templateSkeleton);
-                }
-            } catch (e) {
-            }
+            InitLoadingService.open("生成开局介绍：正在生成首条剧情卡片...");
             InitLoadingService.updateStage("生成开局介绍");
             UIRenderer.setAutoFollowBottom(true);
             UIRenderer.appendMessage("ai", "正在生成开局剧情卡片...", Utils.nowDateStr(state), true);
@@ -5942,6 +5987,11 @@
                     }
                 }
                 if (normalized) {
+                    // 从生成结果中提取并保存 skeleton，替代原先单独的模板设计阶段
+                    const resultSkeleton = HtmlCardService.extractSkeleton(normalized);
+                    if (resultSkeleton && selectedCardId) {
+                        ScenarioPlayMetaService.setLockedSkeleton(selectedCardId, resultSkeleton);
+                    }
                     const panelChanged = AiPanelSyncService.syncFromAiText(StateService.get(), normalized);
                     UIRenderer.finishStreaming(normalized, { conflictDetected: false });
                     StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(state), text: normalized });
@@ -6264,11 +6314,11 @@
                 "连接中": "连接中：正在请求 AI 解析设定...",
                 "设定压缩": "设定压缩：正在分块提炼关键信息...",
                 "解析角色": "解析设定：正在分块提取初始化线索...",
-                "生成主角姓名": "主角姓名：正在生成姓名与英文名...",
-                "生成主角基础": "主角基础：正在生成身份、年龄与时间...",
-                "生成主角状态": "主角状态：正在生成状态面板...",
-                "生成背包面板": "背包面板：正在构建初始物品信息...",
-                "生成NPC面板": "NPC面板：正在构建初始社交关系...",
+                "生成主角姓名": "并行生成：正在同时生成角色、状态、背包与NPC...",
+                "生成主角基础": "并行生成：正在同时生成角色、状态、背包与NPC...",
+                "生成主角状态": "并行生成：正在同时生成角色、状态、背包与NPC...",
+                "生成背包面板": "并行生成：正在同时生成角色、状态、背包与NPC...",
+                "生成NPC面板": "并行生成：正在同时生成角色、状态、背包与NPC...",
                 "补全主角姓名": "缺失修复：正在单独补全主角姓名...",
                 "补全年龄": "缺失修复：正在单独补全年龄...",
                 "补全时间": "缺失修复：正在单独补全时间...",
@@ -6276,7 +6326,6 @@
                 "补全背包": "缺失修复：正在单独补全背包...",
                 "补全NPC": "缺失修复：正在单独补全NPC...",
                 "结构校验": "结构校验：正在补全缺失字段并对齐格式...",
-                "设计首卡模板": "首卡模板：正在设计HTML卡片骨架...",
                 "生成开局介绍": "生成开局介绍：正在生成首条剧情卡片...",
                 "完成": "完成：初始化数据已生成。"
             };
@@ -6286,10 +6335,10 @@
                 "设定压缩": 22,
                 "解析角色": 30,
                 "生成主角姓名": 42,
-                "生成主角基础": 50,
-                "生成主角状态": 58,
-                "生成背包面板": 68,
-                "生成NPC面板": 80,
+                "生成主角基础": 42,
+                "生成主角状态": 42,
+                "生成背包面板": 42,
+                "生成NPC面板": 42,
                 "补全主角姓名": 84,
                 "补全年龄": 85,
                 "补全时间": 86,
@@ -6297,7 +6346,6 @@
                 "补全背包": 88,
                 "补全NPC": 89,
                 "结构校验": 90,
-                "设计首卡模板": 92,
                 "生成开局介绍": 95,
                 "完成": 100
             };
@@ -6935,129 +6983,102 @@
             });
             const reducedDraft = parseFirstJsonObject(reducedText) || {};
 
+            // 5个子面板彼此独立，全部依赖 reducedDraft + chunkFacts，并行发起
             if (typeof onProgress === "function") onProgress("生成主角姓名");
-            const protagonistNameSystem = [
-                "你是文游初始化-主角姓名生成器。",
-                "只输出 JSON 对象，不要解释。",
-                "只输出字段：name,englishName。",
-                "禁止给姓名追加数字后缀（如 张三2 / Alex-3）。"
-            ].join("\n");
-            const protagonistNameUser = [
+            const sharedUserContext = [
                 `用户选择角色性别：${selectedGender}`,
                 previousPlan ? `已有结果（仅补缺，不要随意推翻）：\n${JSON.stringify(previousPlan, null, 2)}` : "",
                 extraHint ? `补充要求：\n${extraHint}` : "",
                 `汇总草案：\n${JSON.stringify(reducedDraft, null, 2)}`,
                 `分块事实：\n${JSON.stringify(chunkFacts.slice(0, 8), null, 2)}`
             ].filter(Boolean).join("\n\n");
-            const protagonistNameText = await AIRequestService.requestCompletionWithFallback({
-                config: apiConfig,
-                fetchUrl,
-                headers,
-                model: apiConfig.model,
-                messages: [
-                    { role: "system", content: protagonistNameSystem },
-                    { role: "user", content: protagonistNameUser }
-                ],
-                temperature: 0.1,
-                timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
-            });
-            const protagonistNamePanel = parseFirstJsonObject(protagonistNameText) || {};
+            const sharedInventoryNpcContext = [
+                `汇总草案：\n${JSON.stringify(reducedDraft, null, 2)}`,
+                `分块事实：\n${JSON.stringify(chunkFacts.slice(0, 8), null, 2)}`
+            ].join("\n\n");
 
-            if (typeof onProgress === "function") onProgress("生成主角基础");
-            const protagonistBaseSystem = [
-                "你是文游初始化-主角基础生成器。",
-                "只输出 JSON 对象，不要解释。",
-                "字段：forcedGender,ageYears,nationality,location,timeEra,weekIndex,weekdayIndex,currentYear,currentMonth,currentDay,rebornReason,openingChoices。"
-            ].join("\n");
-            const protagonistBaseText = await AIRequestService.requestCompletionWithFallback({
-                config: apiConfig,
-                fetchUrl,
-                headers,
-                model: apiConfig.model,
-                messages: [
-                    { role: "system", content: protagonistBaseSystem },
-                    { role: "user", content: protagonistNameUser }
-                ],
-                temperature: 0.1,
-                timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
-            });
-            const protagonistBasePanel = parseFirstJsonObject(protagonistBaseText) || {};
+            const [
+                protagonistNamePanel,
+                protagonistBasePanel,
+                protagonistStatsPanel,
+                inventoryPanel,
+                npcPanel
+            ] = await Promise.all([
+                // 姓名
+                AIRequestService.requestCompletionWithFallback({
+                    config: apiConfig, fetchUrl, headers, model: apiConfig.model,
+                    messages: [
+                        { role: "system", content: [
+                            "你是文游初始化-主角姓名生成器。",
+                            "只输出 JSON 对象，不要解释。",
+                            "只输出字段：name,englishName。",
+                            "禁止给姓名追加数字后缀（如 张三2 / Alex-3）。"
+                        ].join("\n") },
+                        { role: "user", content: sharedUserContext }
+                    ],
+                    temperature: 0.1, timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
+                }).then((t) => parseFirstJsonObject(t) || {}),
 
-            if (typeof onProgress === "function") onProgress("生成主角状态");
-            const protagonistStatsSystem = [
-                "你是文游初始化-主角状态面板生成器。",
-                "只输出 JSON 对象，不要解释。",
-                "只输出字段 stats，且至少 3 项。每项字段：key,label,icon,value。"
-            ].join("\n");
-            const protagonistStatsText = await AIRequestService.requestCompletionWithFallback({
-                config: apiConfig,
-                fetchUrl,
-                headers,
-                model: apiConfig.model,
-                messages: [
-                    { role: "system", content: protagonistStatsSystem },
-                    { role: "user", content: protagonistNameUser }
-                ],
-                temperature: 0.1,
-                timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
-            });
-            const protagonistStatsPanel = parseFirstJsonObject(protagonistStatsText) || {};
+                // 基础信息
+                AIRequestService.requestCompletionWithFallback({
+                    config: apiConfig, fetchUrl, headers, model: apiConfig.model,
+                    messages: [
+                        { role: "system", content: [
+                            "你是文游初始化-主角基础生成器。",
+                            "只输出 JSON 对象，不要解释。",
+                            "字段：forcedGender,ageYears,nationality,location,timeEra,weekIndex,weekdayIndex,currentYear,currentMonth,currentDay,rebornReason,openingChoices。"
+                        ].join("\n") },
+                        { role: "user", content: sharedUserContext }
+                    ],
+                    temperature: 0.1, timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
+                }).then((t) => parseFirstJsonObject(t) || {}),
 
-            if (typeof onProgress === "function") onProgress("生成背包面板");
-            const inventoryPanelSystem = [
-                "你是文游初始化-背包面板生成器。",
-                "只输出 JSON 对象，不要解释。",
-                "只输出字段 inventory，值必须是数组。",
-                "每项字段：id,name,type,desc,effect,count。"
-            ].join("\n");
-            const inventoryPanelText = await AIRequestService.requestCompletionWithFallback({
-                config: apiConfig,
-                fetchUrl,
-                headers,
-                model: apiConfig.model,
-                messages: [
-                    { role: "system", content: inventoryPanelSystem },
-                    {
-                        role: "user",
-                        content: [
-                            `汇总草案：\n${JSON.stringify(reducedDraft, null, 2)}`,
-                            `分块事实：\n${JSON.stringify(chunkFacts.slice(0, 8), null, 2)}`
-                        ].join("\n\n")
-                    }
-                ],
-                temperature: 0.1,
-                timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
-            });
-            const inventoryPanel = parseFirstJsonObject(inventoryPanelText) || {};
+                // 状态面板
+                AIRequestService.requestCompletionWithFallback({
+                    config: apiConfig, fetchUrl, headers, model: apiConfig.model,
+                    messages: [
+                        { role: "system", content: [
+                            "你是文游初始化-主角状态面板生成器。",
+                            "只输出 JSON 对象，不要解释。",
+                            "只输出字段 stats，且至少 3 项。每项字段：key,label,icon,value。"
+                        ].join("\n") },
+                        { role: "user", content: sharedUserContext }
+                    ],
+                    temperature: 0.1, timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
+                }).then((t) => parseFirstJsonObject(t) || {}),
 
-            if (typeof onProgress === "function") onProgress("生成NPC面板");
-            const npcPanelSystem = [
-                "你是文游初始化-NPC面板生成器。",
-                "只输出 JSON 对象，不要解释。",
-                "只输出字段 npcs，值必须是数组。",
-                "每项字段：id,name,gender,relation,favor,status,mood,traits,profile。",
-                "profile 必须是对象，字段：age,identity,residence,appearance,personality,goal,secret,firstImpression。",
-                "这些字段要严格依据设定填写，未知可留空，不要乱编。"
-            ].join("\n");
-            const npcPanelText = await AIRequestService.requestCompletionWithFallback({
-                config: apiConfig,
-                fetchUrl,
-                headers,
-                model: apiConfig.model,
-                messages: [
-                    { role: "system", content: npcPanelSystem },
-                    {
-                        role: "user",
-                        content: [
-                            `汇总草案：\n${JSON.stringify(reducedDraft, null, 2)}`,
-                            `分块事实：\n${JSON.stringify(chunkFacts.slice(0, 8), null, 2)}`
-                        ].join("\n\n")
-                    }
-                ],
-                temperature: 0.1,
-                timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
-            });
-            const npcPanel = parseFirstJsonObject(npcPanelText) || {};
+                // 背包面板
+                AIRequestService.requestCompletionWithFallback({
+                    config: apiConfig, fetchUrl, headers, model: apiConfig.model,
+                    messages: [
+                        { role: "system", content: [
+                            "你是文游初始化-背包面板生成器。",
+                            "只输出 JSON 对象，不要解释。",
+                            "只输出字段 inventory，值必须是数组。",
+                            "每项字段：id,name,type,desc,effect,count。"
+                        ].join("\n") },
+                        { role: "user", content: sharedInventoryNpcContext }
+                    ],
+                    temperature: 0.1, timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
+                }).then((t) => parseFirstJsonObject(t) || {}),
+
+                // NPC面板
+                AIRequestService.requestCompletionWithFallback({
+                    config: apiConfig, fetchUrl, headers, model: apiConfig.model,
+                    messages: [
+                        { role: "system", content: [
+                            "你是文游初始化-NPC面板生成器。",
+                            "只输出 JSON 对象，不要解释。",
+                            "只输出字段 npcs，值必须是数组。",
+                            "每项字段：id,name,gender,relation,favor,status,mood,traits,profile。",
+                            "profile 必须是对象，字段：age,identity,residence,appearance,personality,goal,secret,firstImpression。",
+                            "这些字段要严格依据设定填写，未知可留空，不要乱编。"
+                        ].join("\n") },
+                        { role: "user", content: sharedInventoryNpcContext }
+                    ],
+                    temperature: 0.1, timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
+                }).then((t) => parseFirstJsonObject(t) || {})
+            ]);
 
             const stagedDraft = {
                 ...reducedDraft,
