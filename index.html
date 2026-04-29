@@ -601,6 +601,24 @@
             accent-color: var(--accent);
         }
 
+        /* 云卡选择器 */
+        .cloud-card-item { cursor: pointer; display: block; }
+        .cloud-card-item .card-box {
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid var(--line);
+            background: var(--card-soft);
+            transition: all 0.2s;
+        }
+        .cloud-card-item input:checked + .card-box {
+            border-color: var(--accent);
+            background: linear-gradient(135deg, var(--card), #fffbf5);
+            box-shadow: 0 5px 15px rgba(176, 134, 82, 0.2);
+            transform: translateY(-2px);
+        }
+        .cloud-card-item .card-name { font-weight: 800; color: var(--accent-dark); font-size: 1rem; }
+        .cloud-card-item .card-desc { font-size: 0.75rem; color: var(--sub); margin-top: 4px; }
+
         /* 交互态 */
         .mini-btn {
             border: 1px solid transparent;
@@ -1734,7 +1752,6 @@
                 <span id="auth-user-badge" style="display:none;font-size:0.75rem;color:var(--sub);padding:4px 8px;border-radius:999px;background:var(--card-soft);border:1px solid var(--line);"></span>
                 <button class="top-nav-btn active" data-view="view-home" onclick="switchView('view-home')">首页</button>
                 <button class="top-nav-btn" data-view="view-settings" onclick="switchView('view-settings')">设置</button>
-                <button class="top-nav-btn" id="top-edit-card-btn" style="display:none;" onclick="openCurrentCardEditor()">编辑当前卡</button>
                 <button class="top-nav-btn" id="auth-logout-btn" style="display:none;" onclick="AuthService.logout()">登出</button>
             </div>
         </div>
@@ -1770,11 +1787,6 @@
                     开启思考模式（当前卡片）
                 </label>
                 <textarea id="scenario-editor" class="scenario-editor" placeholder="在这里编辑当前卡片的文游设定"></textarea>
-                <div class="list-title" style="margin-top:8px;">🔌 当前卡片独立 API（可选）</div>
-                <div class="list-sub">留空则自动使用“设置页”的用户 API</div>
-                <input type="text" id="card-api-url" placeholder="卡片上游API URL（可选）">
-                <input type="password" id="card-api-key" placeholder="卡片 API Key（可选）">
-                <input type="text" id="card-api-model" placeholder="卡片模型名（可选）">
                 <div class="setting-actions">
                     <button class="mini-btn primary" onclick="saveScenarioCard()">保存当前卡片</button>
                     <button class="mini-btn ghost" onclick="importScenarioTxt()">导入设定TXT</button>
@@ -1785,8 +1797,11 @@
 
         <section id="view-settings" class="view-section">
             <section class="card">
-                <div class="list-title">⚙️ 设置页面</div>
-                <div class="list-sub">主页设置仅保留用户 API（所有卡可复用）与全局界面主题。</div>
+                <div class="list-title">👤 账户信息</div>
+                <div style="margin: 10px 0; padding: 12px; background: var(--card-soft); border-radius: 12px; border: 1px solid var(--line);">
+                    <div style="font-size: 0.9rem;">邮箱：<span id="display-user-email" style="font-weight: 700;">-</span></div>
+                    <div style="font-size: 0.9rem; margin-top: 6px;">余额：<span id="display-user-coins" style="font-weight: 800; color: var(--accent-dark);">0.0000</span> 云币</div>
+                </div>
                 <label class="settings-toggle">
                     <span>
                         <strong style="display:block; color:var(--text);">暗夜模式</strong>
@@ -1794,33 +1809,45 @@
                     </span>
                     <input type="checkbox" id="ui-dark-mode-enabled">
                 </label>
-                <input type="text" id="active-user-id" placeholder="当前用户ID（例如 user_001）">
-                <input type="text" id="user-api-url" placeholder="用户上游API URL（例如: https://integrate.api.nvidia.com/v1）">
-                <input type="password" id="user-api-key" placeholder="用户 API Key">
-                <input type="text" id="user-api-model" placeholder="用户模型名 (例如: gpt-4o-mini)">
-                <label class="list-sub" style="display:flex; align-items:center; gap:8px; margin-top:4px;">
-                    <input type="checkbox" id="global-thinking-enabled">
-                    开启思考模式（全局）
-                </label>
                 <div class="setting-actions">
-                    <button class="mini-btn primary" onclick="saveUserApiSettings()">保存设置</button>
-            </div>
+                    <button class="mini-btn ghost" onclick="saveUserApiSettings()">保存主题</button>
+                </div>
             </section>
-        </section>
-
-        <section id="view-user-api" class="view-section">
             <section class="card">
-                <div class="list-title">👤 用户 API 配置已合并</div>
-                <div class="list-sub">请到“设置页面”配置用户 API。</div>
+                <div class="list-title">🌩️ AI 云卡选择</div>
+                <div class="list-sub">选择不同云卡将影响生成质量与消耗。</div>
+                <div id="cloud-card-selector" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                    <label class="cloud-card-item" data-card="free">
+                        <input type="radio" name="cloud-card" value="free" style="display: none;">
+                        <div class="card-box">
+                            <div class="card-info">
+                                <div class="card-name">🍡 免费云卡</div>
+                                <div class="card-desc">价格: 0 云币 | 适合尝鲜，可能不稳定</div>
+                            </div>
+                        </div>
+                    </label>
+                    <label class="cloud-card-item" data-card="silver">
+                        <input type="radio" name="cloud-card" value="silver" style="display: none;">
+                        <div class="card-box">
+                            <div class="card-info">
+                                <div class="card-name">🥈 银质云卡</div>
+                                <div class="card-desc">0.15~0.3 云币/1k | 高性价比推荐</div>
+                            </div>
+                        </div>
+                    </label>
+                    <label class="cloud-card-item" data-card="gold">
+                        <input type="radio" name="cloud-card" value="gold" style="display: none;">
+                        <div class="card-box">
+                            <div class="card-info">
+                                <div class="card-name">👑 黄金云卡</div>
+                                <div class="card-desc">1.5~3.0 云币/1k | 逻辑巅峰，适合长文</div>
+                            </div>
+                        </div>
+                    </label>
+                </div>
             </section>
         </section>
-
-        <section id="view-api-cards" class="view-section">
-            <section class="card">
-                <div class="list-title">🧠 API 卡片页已弃用</div>
-                <div class="list-sub">卡片独立 API 请在“设定卡片编辑页”配置。</div>
-            </section>
-        </section>
+        <!-- 保持 settings 视图正常闭合即可 -->
 
         <section class="card stats-grid" id="game-stats-card"></section>
 
@@ -1973,18 +2000,39 @@
             saveSlotPrefix: "bitlife_save_slot_",
             scenarioCards: "bitlife_scenario_cards_v1",
             selectedScenarioCardId: "bitlife_selected_scenario_card_v1",
-            apiCards: "bitlife_api_cards_v1",
-            selectedApiCardId: "bitlife_selected_api_card_v1",
             chatPolicyConfig: "bitlife_chat_policy_config_v1",
-            scenarioApiCardSelectionMap: "bitlife_scenario_api_card_selection_map_v1",
             scenarioChatPolicyMap: "bitlife_scenario_chat_policy_map_v1",
-            apiIsolationMode: "bitlife_api_isolation_mode_v1",
             activeUserId: "bitlife_active_user_id_v1",
-            userApiSelectedCardMap: "bitlife_user_api_selected_card_map_v1",
-            userApiCustomConfigMap: "bitlife_user_api_custom_config_map_v1",
             scenarioPlayMetaMap: "bitlife_scenario_play_meta_map_v1",
             scenarioDismissedWarningsMap: "bitlife_scenario_dismissed_warnings_map_v1",
-            uiThemeMode: "bitlife_ui_theme_mode_v1"
+            uiThemeMode: "bitlife_ui_theme_mode_v1",
+            selectedCloudCard: "bitlife_cloud_card_id"
+        },
+        cloudCards: {
+            "free": {
+                id: "free",
+                name: "免费云卡",
+                desc: "使用人数较多时可能卡顿",
+                model: "google/gemma-3-27b-it",
+                priceInput: 0,
+                priceOutput: 0
+            },
+            "silver": {
+                id: "silver",
+                name: "银质云卡",
+                desc: "性价比高，生成速度快",
+                model: "deepseek-chat",
+                priceInput: 0.00015,
+                priceOutput: 0.00030
+            },
+            "gold": {
+                id: "gold",
+                name: "黄金云卡",
+                desc: "逻辑极强，深度思考，适合复杂剧情",
+                model: "deepseek-reasoner",
+                priceInput: 0.0015,
+                priceOutput: 0.0030
+            }
         },
         identityPools: {
             cnNames: ["沈知夏", "苏见微", "江望舒", "程以宁", "周晚棠", "宋栖月", "陆听岚", "秦若禾", "林清和", "许映棠", "叶若岚", "顾晚晴", "姜令仪", "白昭宁"],
@@ -2018,11 +2066,6 @@
                 theme: "",
                 text: "请在这里粘贴你的文游设定文本。\n该设定是剧情主规则来源，若为空则使用默认写实规则。"
             }
-        ],
-        defaultApiCards: [
-            { id: "api_custom", title: "自定义API", editable: true, upstreamUrl: "https://integrate.api.nvidia.com/v1", model: "gpt-4o-mini", key: "" },
-            { id: "api_deepseek", title: "DeepSeek（预设）", editable: false, upstreamUrl: "https://api.deepseek.com/v1", model: "deepseek-chat", key: "" },
-            { id: "api_kimi", title: "Kimi（预设）", editable: false, upstreamUrl: "https://api.moonshot.cn/v1", model: "moonshot-v1-8k", key: "" }
         ],
         defaultChatPolicyConfig: {
             temperature: 0.7,
@@ -2214,27 +2257,6 @@
         return { getActiveCardId, keyFor, activeKey };
     })();
 
-    const IsolationScopeService = (() => {
-        function getMode() {
-            const mode = StorageService.readText(AppConfig.storageKeys.apiIsolationMode, "card");
-            return mode === "user" ? "user" : "card";
-        }
-        function setMode(mode) {
-            const safe = mode === "user" ? "user" : "card";
-            StorageService.writeText(AppConfig.storageKeys.apiIsolationMode, safe);
-            return safe;
-        }
-        function getActiveUserId() {
-            return StorageService.readText(AppConfig.storageKeys.activeUserId, "user_default");
-        }
-        function setActiveUserId(userId) {
-            const next = String(userId || "").trim() || "user_default";
-            StorageService.writeText(AppConfig.storageKeys.activeUserId, next);
-            return next;
-        }
-        return { getMode, setMode, getActiveUserId, setActiveUserId };
-    })();
-
     const PlayViewStateService = (() => {
         let activePlayCardId = null;
         function enterPlay(cardId) {
@@ -2286,58 +2308,8 @@
             document.querySelector(".quick-actions").style.display = enableGamePanels ? "flex" : "none";
             document.querySelector(".chat-footer .composer").style.display = enableGamePanels ? "flex" : "none";
             PlayDockService.apply();
-
-            const editBtn = document.getElementById("top-edit-card-btn");
-            const hasSelectedCard = !!ScenarioCardService.getSelectedCard();
-            if (editBtn) editBtn.style.display = inPlay && hasSelectedCard ? "" : "none";
         }
         return { apply };
-    })();
-
-    const UserApiProfileService = (() => {
-        function getActiveUserId() {
-            return IsolationScopeService.getActiveUserId();
-        }
-        function loadSelectedMap() {
-            return StorageService.readJson(AppConfig.storageKeys.userApiSelectedCardMap, {});
-        }
-        function saveSelectedMap(map) {
-            StorageService.writeJson(AppConfig.storageKeys.userApiSelectedCardMap, map);
-        }
-        function getSelectedApiCardId() {
-            const userId = getActiveUserId();
-            const map = loadSelectedMap();
-            return map[userId] || "api_custom";
-        }
-        function setSelectedApiCardId(apiCardId) {
-            const userId = getActiveUserId();
-            const map = loadSelectedMap();
-            map[userId] = apiCardId;
-            saveSelectedMap(map);
-        }
-        function loadCustomMap() {
-            return StorageService.readJson(AppConfig.storageKeys.userApiCustomConfigMap, {});
-        }
-        function saveCustomMap(map) {
-            StorageService.writeJson(AppConfig.storageKeys.userApiCustomConfigMap, map);
-        }
-        function getCustomConfig() {
-            const userId = getActiveUserId();
-            const map = loadCustomMap();
-            return map[userId] || null;
-        }
-        function setCustomConfig(config) {
-            const userId = getActiveUserId();
-            const map = loadCustomMap();
-            map[userId] = {
-                upstreamUrl: String(config?.upstreamUrl || "").trim(),
-                key: String(config?.key || "").trim(),
-                model: String(config?.model || "").trim()
-            };
-            saveCustomMap(map);
-            return map[userId];
-        }
-        return { getSelectedApiCardId, setSelectedApiCardId, getCustomConfig, setCustomConfig, getActiveUserId };
     })();
 
     const ChatPolicyConfigService = (() => {
@@ -4850,24 +4822,6 @@
                 box.appendChild(row);
             });
         }
-        function renderApiCards() {
-            const box = document.getElementById("api-card-list");
-            if (!box) return;
-            const cards = ApiCardService.loadCards();
-            const selectedId = ApiCardService.getSelectedId();
-            box.innerHTML = "";
-            cards.forEach((card) => {
-                const row = document.createElement("div");
-                row.className = "api-card";
-                row.innerHTML = `
-                    <div class="list-title">${card.title}${card.id === selectedId ? "（当前）" : ""}</div>
-                    <div class="list-sub">${card.upstreamUrl}｜模型 ${card.model}</div>
-                    <div style="margin-top:6px;"><button class="tiny-btn">设为当前</button></div>
-                `;
-                row.querySelector("button").onclick = () => Controller.selectApiCard(card.id);
-                box.appendChild(row);
-            });
-        }
         function renderPresetTemplates(presets = []) {
             const box = document.getElementById("preset-template-list");
             if (!box) return;
@@ -4901,7 +4855,7 @@
                 box.appendChild(row);
             });
         }
-        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, renderApiCards, renderPresetTemplates, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp };
+        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, renderPresetTemplates, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp };
     })();
 
     const VisualEffects = (() => {
@@ -4932,66 +4886,44 @@
             document.getElementById("scenario-theme-input").value = selectedScenario?.theme || "";
             document.getElementById("scenario-editor").value = selectedScenario?.text || AppConfig.defaultScenario;
 
-            const cardApi = selectedScenario?.apiConfig || {};
-            document.getElementById("card-api-url").value = cardApi.upstreamUrl || "";
-            document.getElementById("card-api-key").value = cardApi.key || "";
-            document.getElementById("card-api-model").value = cardApi.model || "";
+            const darkModeInput = document.getElementById("ui-dark-mode-enabled");
+            if (darkModeInput) darkModeInput.checked = ThemeService.getMode() === "dark";
 
-            const userCustom = UserApiProfileService.getCustomConfig();
-            const activeUserId = IsolationScopeService.getActiveUserId();
-            document.getElementById("active-user-id").value = activeUserId;
-            document.getElementById("user-api-url").value = userCustom?.upstreamUrl || "";
-            document.getElementById("user-api-key").value = userCustom?.key || "";
-            document.getElementById("user-api-model").value = userCustom?.model || "";
+            // 加载云卡选择
+            const selectedCardId = StorageService.readText(AppConfig.storageKeys.selectedCloudCard, "free");
+            const radio = document.querySelector(`input[name="cloud-card"][value="${selectedCardId}"]`);
+            if (radio) radio.checked = true;
+
+            // 更新账户信息
+            const user = AuthService.getUserData();
+            if (user) {
+                const emailEl = document.getElementById("display-user-email");
+                if (emailEl) emailEl.textContent = user.email || AuthService.getEmail();
+                AuthService.updateBalanceUI();
+            }
+
             const policy = ChatPolicyConfigService.load();
             const globalThinkingInput = document.getElementById("global-thinking-enabled");
             if (globalThinkingInput) globalThinkingInput.checked = policy.globalThinkingEnabled === true;
-            const darkModeInput = document.getElementById("ui-dark-mode-enabled");
-            if (darkModeInput) darkModeInput.checked = ThemeService.getMode() === "dark";
-            const selectedCardId = ScenarioCardService.getSelectedId();
+            const selectedCardId2 = ScenarioCardService.getSelectedId();
             const cardThinkingInput = document.getElementById("card-thinking-enabled");
-            if (cardThinkingInput) cardThinkingInput.checked = !!policy.cardThinkingMap?.[selectedCardId];
+            if (cardThinkingInput) cardThinkingInput.checked = !!policy.cardThinkingMap?.[selectedCardId2];
         }
         function saveFromUI() {
             const selectedScenario = ScenarioCardService.getSelectedCard();
             if (!selectedScenario) return;
-            const payload = {
-                apiConfig: {
-                    upstreamUrl: document.getElementById("card-api-url").value.trim(),
-                    key: document.getElementById("card-api-key").value.trim(),
-                    model: document.getElementById("card-api-model").value.trim()
-                }
-            };
-            ScenarioCardService.updateSelectedCard(payload);
         }
         function saveUserApiFromUI() {
-            const userId = document.getElementById("active-user-id").value.trim();
-            IsolationScopeService.setActiveUserId(userId);
-            UserApiProfileService.setCustomConfig({
-                upstreamUrl: document.getElementById("user-api-url").value.trim(),
-                key: document.getElementById("user-api-key").value.trim(),
-                model: document.getElementById("user-api-model").value.trim()
-            });
-            const globalThinkingInput = document.getElementById("global-thinking-enabled");
-            const currentPolicy = ChatPolicyConfigService.load();
-            ChatPolicyConfigService.save({
-                ...currentPolicy,
-                globalThinkingEnabled: !!globalThinkingInput?.checked
-            });
             ThemeService.setMode(document.getElementById("ui-dark-mode-enabled")?.checked ? "dark" : "light");
             loadToUI();
         }
         function getApiConfig() {
-            const card = ScenarioCardService.getSelectedCard();
-            const cardApi = card?.apiConfig || {};
-            if (cardApi.upstreamUrl && cardApi.key && cardApi.model) {
-                return { upstreamUrl: cardApi.upstreamUrl, key: cardApi.key, model: cardApi.model };
+            const selectedCloudCardId = StorageService.readText(AppConfig.storageKeys.selectedCloudCard, "free");
+            const cloudCard = AppConfig.cloudCards[selectedCloudCardId];
+            if (cloudCard) {
+                return { upstreamUrl: AppConfig.proxy.baseUrl, key: "", model: cloudCard.model, cloudCard };
             }
-            const user = UserApiProfileService.getCustomConfig();
-            if (user?.upstreamUrl && user?.key && user?.model) {
-                return { upstreamUrl: user.upstreamUrl, key: user.key, model: user.model };
-            }
-            return { blocked: true, reason: "请先在“设置页面”配置用户 API，或在“设定卡片编辑页”配置当前卡片独立 API。" };
+            return { blocked: true, reason: "请先在设置页面选择云卡。" };
         }
         function getScenarioText() {
             const selected = ScenarioCardService.getSelectedCard();
@@ -5304,8 +5236,8 @@
                 chatList.push({ from: "me", text: userText, ts: Date.now() });
             }
             const apiConfig = SettingsService.getApiConfig();
-            if (apiConfig.blocked || !apiConfig.upstreamUrl || !apiConfig.key || !apiConfig.model) {
-                throw new Error("未配置可用 AI-API，无法进行 NPC 对话。");
+            if (apiConfig.blocked || !apiConfig.model) {
+                throw new Error("请先在设置页选择云卡，无法进行 NPC 对话。");
             }
             const scenarioText = SettingsService.getScenarioTextForModel();
             const fetchUrl = AIRequestService.buildFetchUrl();
@@ -5500,13 +5432,6 @@
                     StorageService.writeJson(AppConfig.storageKeys.scenarioPlayMetaMap, playMetaMap);
                 }
 
-                // 4) 删除卡片级 API 选择映射
-                const apiMap = StorageService.readJson(AppConfig.storageKeys.scenarioApiCardSelectionMap, {});
-                if (apiMap && typeof apiMap === "object" && apiMap[id]) {
-                    delete apiMap[id];
-                    StorageService.writeJson(AppConfig.storageKeys.scenarioApiCardSelectionMap, apiMap);
-                }
-
                 // 5) 删除卡片级 ChatPolicy 映射
                 const policyMap = StorageService.readJson(AppConfig.storageKeys.scenarioChatPolicyMap, {});
                 if (policyMap && typeof policyMap === "object" && policyMap[id]) {
@@ -5577,32 +5502,6 @@
         function getActiveScenarioId() {
             return ScenarioCardService.getSelectedId();
         }
-        function loadApiSelectionMap() {
-            return StorageService.readJson(AppConfig.storageKeys.scenarioApiCardSelectionMap, {});
-        }
-        function saveApiSelectionMap(map) {
-            StorageService.writeJson(AppConfig.storageKeys.scenarioApiCardSelectionMap, map);
-        }
-        function getSelectedApiCardId() {
-            if (IsolationScopeService.getMode() === "user") {
-                return UserApiProfileService.getSelectedApiCardId();
-            }
-            const scenarioId = getActiveScenarioId();
-            const map = loadApiSelectionMap();
-            const scoped = map[scenarioId];
-            if (scoped) return scoped;
-            return StorageService.readText(AppConfig.storageKeys.selectedApiCardId, "api_custom");
-        }
-        function setSelectedApiCardId(apiCardId) {
-            if (IsolationScopeService.getMode() === "user") {
-                UserApiProfileService.setSelectedApiCardId(apiCardId);
-                return;
-            }
-            const scenarioId = getActiveScenarioId();
-            const map = loadApiSelectionMap();
-            map[scenarioId] = apiCardId;
-            saveApiSelectionMap(map);
-        }
         function loadChatPolicyMap() {
             return StorageService.readJson(AppConfig.storageKeys.scenarioChatPolicyMap, {});
         }
@@ -5624,48 +5523,7 @@
             saveChatPolicyMap(map);
             return map[scenarioId];
         }
-        return { getSelectedApiCardId, setSelectedApiCardId, getChatPolicyConfig, setChatPolicyConfig };
-    })();
-
-    const ApiCardService = (() => {
-        function loadCards() {
-            const cards = StorageService.readJson(AppConfig.storageKeys.apiCards, null);
-            if (!Array.isArray(cards) || !cards.length) {
-                StorageService.writeJson(AppConfig.storageKeys.apiCards, AppConfig.defaultApiCards);
-                return Utils.deepClone(AppConfig.defaultApiCards);
-            }
-            return cards;
-        }
-        function saveCards(cards) {
-            StorageService.writeJson(AppConfig.storageKeys.apiCards, cards);
-        }
-        function getSelectedId() {
-            return CardScopedConfigService.getSelectedApiCardId();
-        }
-        function setSelectedId(id) {
-            CardScopedConfigService.setSelectedApiCardId(id);
-        }
-        function getSelectedCard() {
-            const cards = loadCards();
-            const selected = cards.find((c) => c.id === getSelectedId()) || cards[0];
-            if (selected?.id === "api_custom" && IsolationScopeService.getMode() === "user") {
-                const profile = UserApiProfileService.getCustomConfig();
-                if (profile) return { ...selected, ...profile };
-            }
-            return selected;
-        }
-        function updateCustomCard(payload) {
-            if (IsolationScopeService.getMode() === "user") {
-                UserApiProfileService.setCustomConfig(payload || {});
-                return;
-            }
-            const cards = loadCards();
-            const idx = cards.findIndex((c) => c.id === "api_custom");
-            if (idx < 0) return;
-            cards[idx] = { ...cards[idx], ...payload };
-            saveCards(cards);
-        }
-        return { loadCards, saveCards, getSelectedId, setSelectedId, getSelectedCard, updateCustomCard };
+        return { getChatPolicyConfig, setChatPolicyConfig };
     })();
 
     const PresetResourceService = (() => {
@@ -5709,8 +5567,8 @@
         }
         async function generateThemeWithAI({ title, text }) {
             const config = SettingsService.getApiConfig();
-            if (config.blocked || !config.upstreamUrl || !config.key || !config.model) {
-                throw new Error("未配置可用 AI-API，无法生成美化卡片模板。");
+            if (config.blocked || !config.model) {
+                throw new Error("请先在设置页选择云卡，无法生成美化卡片模板。");
             }
             try {
                 const fetchUrl = AIRequestService.buildFetchUrl();
@@ -6095,7 +5953,7 @@
     const InitIntroService = (() => {
         async function start({ apiConfig, scenarioText, beautySetting, state, policyConfig, selectedCardId, openingChoices = [] }) {
             if (apiConfig.blocked) return;
-            if (!apiConfig.upstreamUrl || !apiConfig.key || !apiConfig.model) return;
+            if (!apiConfig.model) return;
             InitLoadingService.open("生成开局介绍：正在生成首条剧情卡片...");
             InitLoadingService.updateStage("生成开局介绍");
             UIRenderer.setAutoFollowBottom(true);
@@ -6549,13 +6407,6 @@
                 return "";
             }
         }
-        function formatRequestError(err, phaseLabel, endpointLabel) {
-            const statusText = err?.status ? `HTTP ${err.status}` : "网络错误";
-            const base = `[${phaseLabel}] ${endpointLabel} 失败：${statusText}`;
-            const hint = err?.message ? `\n原因：${err.message}` : "";
-            const detail = err?.responseSnippet ? `\n响应片段：${err.responseSnippet}` : "";
-            return `${base}${hint}${detail}`.trim();
-        }
         function normalizeUrl(url) {
             const value = String(url || "").trim();
             return value.endsWith("/") ? value.slice(0, -1) : value;
@@ -6564,17 +6415,12 @@
             const proxyBase = normalizeUrl(AppConfig.proxy.baseUrl);
             return `${proxyBase}/chat/completions`;
         }
-        function buildDirectFetchUrl(config) {
-            return `${normalizeUrl(config.upstreamUrl)}/chat/completions`;
-        }
         function buildHeaders(config) {
-            const upstreamUrl = normalizeUrl(config.upstreamUrl);
+            // 云卡模式：key 由 Worker 注入，前端只传云卡 ID 和用户 token
             return {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${config.key}`,
-                "X-Upstream-Base-URL": upstreamUrl,
-                "X-Target-Base-URL": upstreamUrl,
-                "X-OpenAI-Base-URL": upstreamUrl
+                "X-Cloud-Card-Id": config.cloudCard?.id || "free",
+                "X-Auth-Token": AuthService.getToken()
             };
         }
         function buildExtraBody(extraBody = null, cardId = "") {
@@ -6648,43 +6494,26 @@
             }
             return EndMarkerService.trimToMarker(fullText);
         }
-        function isProxyNetworkError(err) {
-            const msg = String(err?.message || err || "");
-            return /Failed to fetch|ERR_CONNECTION_CLOSED|NetworkError|fetch/i.test(msg);
-        }
-        function isRetryableProxyError(err) {
-            if (isProxyNetworkError(err)) return true;
-            const status = Number(err?.status || 0);
-            return status >= 500;
-        }
-        function stripProxyHeaders(headers = {}) {
-            const copied = { ...headers };
-            delete copied["X-Upstream-Base-URL"];
-            delete copied["X-Target-Base-URL"];
-            delete copied["X-OpenAI-Base-URL"];
-            return copied;
-        }
         async function streamCompletionWithFallback({ config, fetchUrl, headers, model, messages, temperature, onToken, extraBody = null, cardId = "" }) {
-            try {
-                return await streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken, extraBody, cardId });
-            } catch (proxyErr) {
-                if (!isRetryableProxyError(proxyErr)) throw proxyErr;
-                const directFetchUrl = buildDirectFetchUrl(config);
-                const directHeaders = stripProxyHeaders(headers);
-                try {
-                    return await streamCompletion({ fetchUrl: directFetchUrl, headers: directHeaders, model, messages, temperature, onToken, extraBody, cardId });
-                } catch (directErr) {
-                    const msg = [
-                        "代理连接失败，且直连上游也失败。",
-                        formatRequestError(proxyErr, "Proxy", fetchUrl),
-                        formatRequestError(directErr, "Direct", directFetchUrl)
-                    ].join("\n\n");
-                    throw createHttpError(directErr?.status || proxyErr?.status || 0, msg, {
-                        proxyError: proxyErr,
-                        directError: directErr
-                    });
+            const cloudCard = config?.cloudCard || null;
+            // 仅做初步余额检查（防止明知没钱还发请求）
+            if (cloudCard && cloudCard.id !== "free") {
+                const user = AuthService.getUserData();
+                if (!user || (user.coins || 0) < 0.01) {
+                    throw new Error("云币余额不足，请充值后使用。");
                 }
             }
+            let fullText = "";
+            try {
+                fullText = await streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken, extraBody, cardId });
+            } catch (proxyErr) {
+                throw proxyErr;
+            }
+            // 计费由 Worker 后端完成，AI 回复后延迟刷新余额
+            if (cloudCard && cloudCard.id !== "free") {
+                setTimeout(() => AuthService.refreshBalance(), 2000);
+            }
+            return fullText;
         }
         async function requestCompletion({ fetchUrl, headers, model, messages, temperature, extraBody = null, cardId = "", timeoutMs = REQUEST_TIMEOUT_MS }) {
             const payloadBody = buildExtraBody(extraBody, cardId);
@@ -6717,26 +6546,25 @@
             return EndMarkerService.trimToMarker(data?.choices?.[0]?.message?.content?.trim() || "");
         }
         async function requestCompletionWithFallback({ config, fetchUrl, headers, model, messages, temperature, extraBody = null, cardId = "", timeoutMs = REQUEST_TIMEOUT_MS }) {
-            try {
-                return await requestCompletion({ fetchUrl, headers, model, messages, temperature, extraBody, cardId, timeoutMs });
-            } catch (proxyErr) {
-                if (!isRetryableProxyError(proxyErr)) throw proxyErr;
-                const directFetchUrl = buildDirectFetchUrl(config);
-                const directHeaders = stripProxyHeaders(headers);
-                try {
-                    return await requestCompletion({ fetchUrl: directFetchUrl, headers: directHeaders, model, messages, temperature, extraBody, cardId, timeoutMs });
-                } catch (directErr) {
-                    const msg = [
-                        "代理连接失败，且直连上游也失败。",
-                        formatRequestError(proxyErr, "Proxy", fetchUrl),
-                        formatRequestError(directErr, "Direct", directFetchUrl)
-                    ].join("\n\n");
-                    throw createHttpError(directErr?.status || proxyErr?.status || 0, msg, {
-                        proxyError: proxyErr,
-                        directError: directErr
-                    });
+            const cloudCard = config?.cloudCard || null;
+            // 仅做初步余额检查（防止明知没钱还发请求）
+            if (cloudCard && cloudCard.id !== "free") {
+                const user = AuthService.getUserData();
+                if (!user || (user.coins || 0) < 0.01) {
+                    throw new Error("云币余额不足，请充值后使用。");
                 }
             }
+            let result = "";
+            try {
+                result = await requestCompletion({ fetchUrl, headers, model, messages, temperature, extraBody, cardId, timeoutMs });
+            } catch (proxyErr) {
+                throw proxyErr;
+            }
+            // 计费由 Worker 后端完成，AI 回复后延迟刷新余额
+            if (cloudCard && cloudCard.id !== "free") {
+                setTimeout(() => AuthService.refreshBalance(), 2000);
+            }
+            return result;
         }
         return { buildFetchUrl, buildHeaders, streamCompletion, requestCompletion, streamCompletionWithFallback, requestCompletionWithFallback, INIT_REQUEST_TIMEOUT_MS };
     })();
@@ -7438,8 +7266,8 @@
             const scenarioText = SettingsService.getScenarioTextForModel();
             const apiConfig = SettingsService.getApiConfig();
             if (!scenarioText.trim()) throw new Error("当前卡片设定为空，无法进行 AI 开局初始化解析。");
-            if (apiConfig.blocked || !apiConfig.upstreamUrl || !apiConfig.key || !apiConfig.model) {
-                throw new Error("未配置可用 AI-API，无法进行开局初始化解析。");
+            if (apiConfig.blocked || !apiConfig.model) {
+                throw new Error("请先在设置页选择云卡，无法进行开局初始化解析。");
             }
             const workingScenarioText = await compressLongScenarioText({
                 scenarioText,
@@ -7542,8 +7370,8 @@
                 NoticeModalService.showInfo({ title: "无法发起请求", descHtml: MarkdownService.escapeHtml(config.reason) });
                 return;
             }
-            if (!config.upstreamUrl || !config.key || !config.model) {
-                NoticeModalService.showInfo({ title: "配置不完整", descHtml: "请先配置上游 API URL、API Key 和模型名。" });
+            if (!config.model) {
+                NoticeModalService.showInfo({ title: "配置不完整", descHtml: "请先在设置页选择云卡。" });
                 return;
             }
 
@@ -7654,12 +7482,7 @@
             ScenarioCardService.updateSelectedCard({
                 title: form.title || "未命名设定",
                 theme: form.theme,
-                text: form.text || AppConfig.defaultScenario,
-                apiConfig: {
-                    upstreamUrl: document.getElementById("card-api-url").value.trim(),
-                    key: document.getElementById("card-api-key").value.trim(),
-                    model: document.getElementById("card-api-model").value.trim()
-                }
+                text: form.text || AppConfig.defaultScenario
             });
             renderAll();
             NoticeModalService.showInfo({ title: "保存成功", descHtml: "设定卡片已保存" });
@@ -7727,7 +7550,6 @@
             UIRenderer.renderSocialList(state);
             UIRenderer.renderSaveSlots(state);
             UIRenderer.renderScenarioCards();
-            UIRenderer.renderApiCards();
             UIRenderer.renderPresetTemplates(presetManifest);
             switchView(activeView, true);
         }
@@ -7788,6 +7610,15 @@
                     UIRenderer.renderPresetTemplates(presetManifest);
                 });
             }
+            // 云卡切换监听：点击即刻生效到本地缓存，无需点保存按钮
+            document.querySelectorAll('input[name="cloud-card"]').forEach(input => {
+                input.addEventListener("change", () => {
+                    StorageService.writeText(AppConfig.storageKeys.selectedCloudCard, input.value);
+                    console.log("云卡切换至:", input.value);
+                    // 切换时立刻刷一下余额，增加"账户联动"的体感
+                    AuthService.refreshBalance();
+                });
+            });
         }
         function onSendClick() {
             const input = document.getElementById("chat-input");
@@ -8132,11 +7963,6 @@
         function openScenarioCardSettings(cardId) {
             ScenarioCardControllerService.openScenarioCardSettings({ cardId, selectScenarioCard, switchView });
         }
-        function openCurrentCardEditor() {
-            const card = ScenarioCardService.getSelectedCard();
-            if (!card) return;
-            openScenarioCardSettings(card.id);
-        }
         function deleteScenarioCard(cardId) {
             ScenarioCardControllerService.deleteScenarioCard({ cardId, renderAll });
         }
@@ -8232,14 +8058,6 @@
             }
             InitLoadingService.updateStage("连接中");
             await playScenarioCard(ScenarioCardService.getSelectedId());
-        }
-        function selectApiCard(id) {
-            ApiCardService.setSelectedId(id);
-            renderAll();
-            const card = ApiCardService.getSelectedCard();
-            if (card.id !== "api_custom") {
-                NoticeModalService.showInfo({ title: "提示", descHtml: "已切换到预设卡片。当前版本仅支持调用“自定义API”卡片。" });
-            }
         }
         function startFromPlay() {
             saveScenarioCard();
@@ -8391,7 +8209,7 @@
                 openingChoices: merged.openingChoices || []
             });
         }
-        return { init, onSendClick, sendUserText, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, openCurrentCardEditor, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, applyPresetTemplate, editPresetTemplate, playPresetTemplate, selectApiCard, startFromPlay, importScenarioTxt, openInitPreviewModal, closeInitPreviewModal, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
+        return { init, onSendClick, sendUserText, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, applyPresetTemplate, editPresetTemplate, playPresetTemplate, startFromPlay, importScenarioTxt, openInitPreviewModal, closeInitPreviewModal, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
@@ -8403,11 +8221,9 @@
     function saveScenarioCard() { Controller.saveScenarioCard(); }
     function createScenarioCard() { Controller.createScenarioCard(); }
     function selectScenarioCard(id) { Controller.selectScenarioCard(id); }
-    function openCurrentCardEditor() { Controller.openCurrentCardEditor(); }
     function applyPresetTemplate(id) { Controller.applyPresetTemplate(id); }
     function editPresetTemplate(id) { Controller.editPresetTemplate(id); }
     function playPresetTemplate(id) { Controller.playPresetTemplate(id); }
-    function selectApiCard(id) { Controller.selectApiCard(id); }
     function startFromPlay() { Controller.startFromPlay(); }
     function importScenarioTxt() { Controller.importScenarioTxt(); }
     function openInitPreviewModal() { Controller.openInitPreviewModal(); }
@@ -8419,14 +8235,16 @@
 
     // ==================== AuthService ====================
     const AuthService = (() => {
-        const PB_URL = "http://47.238.246.167:8090";
+        const PB_URL = "https://blupure.cn:8443";
         const COLLECTION = "users";
         const TOKEN_KEY = "pb_auth_token";
         const EMAIL_KEY = "pb_auth_email";
         let _isRegisterMode = false;
+        let _userData = null;
 
         function getToken() { return localStorage.getItem(TOKEN_KEY) || ""; }
         function getEmail() { return localStorage.getItem(EMAIL_KEY) || ""; }
+        function getUserData() { return _userData; }
 
         function saveSession(token, email) {
             localStorage.setItem(TOKEN_KEY, token);
@@ -8435,6 +8253,29 @@
         function clearSession() {
             localStorage.removeItem(TOKEN_KEY);
             localStorage.removeItem(EMAIL_KEY);
+        }
+
+        function updateBalanceUI() {
+            const el = document.getElementById("display-user-coins");
+            if (el && _userData) {
+                el.textContent = (_userData.coins || 0).toFixed(4);
+            }
+        }
+
+        async function refreshBalance() {
+            if (!_userData) return;
+            try {
+                const res = await fetch(`${PB_URL}/api/collections/${COLLECTION}/records/${_userData.id}`, {
+                    headers: { "Authorization": getToken() }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    _userData = data;
+                    updateBalanceUI();
+                }
+            } catch (e) {
+                console.error("刷新余额失败", e);
+            }
         }
 
         function showOverlay() {
@@ -8532,6 +8373,7 @@
                 throw new Error(data?.message || "邮箱或密码错误");
             }
             saveSession(data.token, email);
+            _userData = data.record || null;
             onLoginSuccess(email);
         }
 
@@ -8545,8 +8387,8 @@
                 });
                 if (!res.ok) { clearSession(); return false; }
                 const data = await res.json();
-                // 刷新 token
                 if (data.token) saveSession(data.token, getEmail());
+                _userData = data.record || null;
                 return true;
             } catch (e) {
                 return false;
@@ -8555,15 +8397,19 @@
 
         function onLoginSuccess(email) {
             hideOverlay();
-            // 显示用户信息
             const badge = document.getElementById("auth-user-badge");
             const logoutBtn = document.getElementById("auth-logout-btn");
             if (badge) { badge.textContent = `👤 ${email}`; badge.style.display = "inline-flex"; }
             if (logoutBtn) logoutBtn.style.display = "inline-flex";
+            // 更新设置页账户信息
+            const emailEl = document.getElementById("display-user-email");
+            if (emailEl) emailEl.textContent = email;
+            updateBalanceUI();
         }
 
         function logout() {
             clearSession();
+            _userData = null;
             const badge = document.getElementById("auth-user-badge");
             const logoutBtn = document.getElementById("auth-logout-btn");
             if (badge) badge.style.display = "none";
@@ -8606,7 +8452,7 @@
             if (e.key === "Enter") handleSubmit();
         });
 
-        return { init, handleSubmit, toggleMode, logout, getToken, getEmail };
+        return { init, handleSubmit, toggleMode, logout, getToken, getEmail, getUserData, refreshBalance, updateBalanceUI };
     })();
 
     window.onload = async () => {
