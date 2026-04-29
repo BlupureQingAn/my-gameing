@@ -2521,17 +2521,22 @@
         const VOID_TAGS = new Set(["img", "video", "audio", "canvas", "iframe", "svg", "path", "input", "textarea", "br", "hr"]);
         function containsHtmlCard(text) {
             if (!text) return false;
-            return /<(article|section|div)\b[^>]*class=["'][^"']*ai-beauty-card[^"']*["'][^>]*>/i.test(text);
+            // 匹配带引号或不带引号的 class 属性
+            const result = /<(article|section|div)\b[^>]*class=["']?[^"'\s>]*ai-beauty-card[^"'\s>]*["']?[^>]*>/i.test(text);
+            return result;
         }
         function extractHtmlFromCodeFence(text) {
             if (!text) return "";
             const raw = String(text);
             // 优先匹配 ```html ... ```
             const htmlMatch = raw.match(/```html\s*([\s\S]*?)```/i);
-            if (htmlMatch && htmlMatch[1]) return htmlMatch[1].trim();
-            // 其次匹配无标注的 ``` ... ``` 且内容含 ai-beauty-card
-            const plainMatch = raw.match(/```\s*([\s\S]*?)```/);
-            if (plainMatch && plainMatch[1] && containsHtmlCard(plainMatch[1])) return plainMatch[1].trim();
+            if (htmlMatch && htmlMatch[1] && htmlMatch[1].trim().startsWith("<")) return htmlMatch[1].trim();
+            // 其次匹配无标注的 ``` ... ``` 且内容以 < 开头并含 ai-beauty-card
+            const plainMatch = raw.match(/```\n([\s\S]*?)```/);
+            if (plainMatch && plainMatch[1]) {
+                const inner = plainMatch[1].trim();
+                if (inner.startsWith("<") && containsHtmlCard(inner)) return inner;
+            }
             return "";
         }
         function hasMeaningfulAttr(el) {
@@ -2566,9 +2571,13 @@
             const raw = String(text || "").trim();
             const fenced = extractHtmlFromCodeFence(raw);
             const candidate = (fenced && containsHtmlCard(fenced)) ? fenced : raw;
-            if (!containsHtmlCard(candidate)) return candidate;
+            if (!containsHtmlCard(candidate)) {
+                // 原始文本和 fenced 都不含 ai-beauty-card，记录前200字符便于排查
+                if (raw.length > 10) console.warn("[normalizeHtmlCard] containsHtmlCard=false, raw前200:", JSON.stringify(raw.slice(0, 200)));
+                return candidate;
+            }
             // 截掉 <article/section/div class="...ai-beauty-card..."> 之前的所有垃圾前缀
-            const cardStart = candidate.search(/<(article|section|div)\b[^>]*class=["'][^"']*ai-beauty-card[^"']*["'][^>]*>/i);
+            const cardStart = candidate.search(/<(article|section|div)\b[^>]*class=["']?[^"'\s>]*ai-beauty-card[^"'\s>]*["']?[^>]*>/i);
             const cleaned = cardStart > 0 ? candidate.slice(cardStart) : candidate;
             try {
                 const tpl = document.createElement("template");
@@ -2598,11 +2607,10 @@
             return cleaned;
         }
         function isRenderableHtmlCard(text) {
-            const normalized = normalizeHtmlCard(text);
-            if (!containsHtmlCard(normalized)) return false;
+            if (!containsHtmlCard(text)) return false;
             try {
                 const tpl = document.createElement("template");
-                tpl.innerHTML = normalized;
+                tpl.innerHTML = text;
                 return !!tpl.content.querySelector(".ai-beauty-card");
             } catch (e) {
                 return false;
@@ -6363,7 +6371,7 @@
 
     const AIRequestService = (() => {
         const REQUEST_TIMEOUT_MS = 60000;
-        const INIT_REQUEST_TIMEOUT_MS = 120000; // 初始化阶段允许更长等待
+        const INIT_REQUEST_TIMEOUT_MS = 60000; // 初始化各子请求超时，快速失败触发缺失字段补全
         function createHttpError(status, message, extra = {}) {
             const err = new Error(message || `HTTP ${status}`);
             err.status = status;
@@ -6957,31 +6965,37 @@
             if (!chunkFacts.length) return null;
 
             if (typeof onProgress === "function") onProgress("生成背包");
-            const reduceSystemPrompt = [
-                "你是文游初始化汇总器。根据多个分块抽取结果，合并成一份完整初始化草案。",
-                "如果冲突，优先采用出现频率更高且更具体的信息。",
-                "若存在开局待选项，必须保留到 openingChoices。",
-                "仅输出 JSON 对象。"
-            ].join("\n");
-            const reduceUserPrompt = [
-                `用户选择角色性别：${selectedGender}`,
-                previousPlan ? `已有结果（仅补缺，不要随意推翻）：\n${JSON.stringify(previousPlan, null, 2)}` : "",
-                extraHint ? `补充要求：\n${extraHint}` : "",
-                `分块抽取结果：\n${JSON.stringify(chunkFacts, null, 2)}`
-            ].filter(Boolean).join("\n\n");
-            const reducedText = await AIRequestService.requestCompletionWithFallback({
-                config: apiConfig,
-                fetchUrl,
-                headers,
-                model: apiConfig.model,
-                messages: [
-                    { role: "system", content: reduceSystemPrompt },
-                    { role: "user", content: reduceUserPrompt }
-                ],
-                temperature: 0.1,
-                timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
-            });
-            const reducedDraft = parseFirstJsonObject(reducedText) || {};
+            // 单分块时直接用分块结果，跳过 reduce 请求
+            let reducedDraft;
+            if (chunkFacts.length === 1) {
+                reducedDraft = chunkFacts[0];
+            } else {
+                const reduceSystemPrompt = [
+                    "你是文游初始化汇总器。根据多个分块抽取结果，合并成一份完整初始化草案。",
+                    "如果冲突，优先采用出现频率更高且更具体的信息。",
+                    "若存在开局待选项，必须保留到 openingChoices。",
+                    "仅输出 JSON 对象。"
+                ].join("\n");
+                const reduceUserPrompt = [
+                    `用户选择角色性别：${selectedGender}`,
+                    previousPlan ? `已有结果（仅补缺，不要随意推翻）：\n${JSON.stringify(previousPlan, null, 2)}` : "",
+                    extraHint ? `补充要求：\n${extraHint}` : "",
+                    `分块抽取结果：\n${JSON.stringify(chunkFacts, null, 2)}`
+                ].filter(Boolean).join("\n\n");
+                const reducedText = await AIRequestService.requestCompletionWithFallback({
+                    config: apiConfig,
+                    fetchUrl,
+                    headers,
+                    model: apiConfig.model,
+                    messages: [
+                        { role: "system", content: reduceSystemPrompt },
+                        { role: "user", content: reduceUserPrompt }
+                    ],
+                    temperature: 0.1,
+                    timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
+                });
+                reducedDraft = parseFirstJsonObject(reducedText) || {};
+            }
 
             // 5个子面板彼此独立，全部依赖 reducedDraft + chunkFacts，并行发起
             if (typeof onProgress === "function") onProgress("生成主角姓名");
@@ -7090,167 +7104,8 @@
             };
 
             if (typeof onProgress === "function") onProgress("结构校验");
-            const finalizeSystemPrompt = [
-                "你是文游初始化最终成型器。",
-                "你必须只返回 JSON 对象，且字段完整。",
-                "若某字段无法从设定确定，返回最保守的空值（字符串为空、数组为空），不要省略字段。"
-            ].join("\n");
-            const finalizeUserPrompt = [
-                `用户选择角色性别：${selectedGender}`,
-                previousPlan ? `已有结果（仅补缺，不要随意推翻）：\n${JSON.stringify(previousPlan, null, 2)}` : "",
-                extraHint ? `补充要求：\n${extraHint}` : "",
-                `阶段合并草案：\n${JSON.stringify(stagedDraft, null, 2)}`
-            ].filter(Boolean).join("\n\n");
-            const strictSchema = {
-                type: "object",
-                additionalProperties: false,
-                properties: {
-                    name: { type: "string" },
-                    englishName: { type: "string" },
-                    ageYears: { type: "integer" },
-                    forcedGender: { type: "string" },
-                    nationality: { type: "string" },
-                    location: { type: "string" },
-                    timeEra: { type: "string" },
-                    weekIndex: { type: ["integer", "null"] },
-                    weekdayIndex: { type: ["integer", "null"] },
-                    currentYear: { type: ["integer", "null"] },
-                    currentMonth: { type: ["integer", "null"] },
-                    currentDay: { type: ["integer", "null"] },
-                    rebornReason: { type: "string" },
-                    stats: {
-                        type: "array",
-                        items: {
-                            type: "object",
-                            additionalProperties: false,
-                            properties: {
-                                key: { type: "string" },
-                                label: { type: "string" },
-                                icon: { type: "string" },
-                                value: { type: "integer" }
-                            },
-                            required: ["key", "label", "icon", "value"]
-                        }
-                    },
-                    inventory: {
-                        type: "array",
-                        items: {
-                            type: "object",
-                            additionalProperties: false,
-                            properties: {
-                                id: { type: "string" },
-                                name: { type: "string" },
-                                type: { type: "string" },
-                                desc: { type: "string" },
-                                effect: { type: "string" },
-                                count: { type: "integer" }
-                            },
-                            required: ["id", "name", "type", "desc", "effect", "count"]
-                        }
-                    },
-                    npcs: {
-                        type: "array",
-                        items: {
-                            type: "object",
-                            additionalProperties: false,
-                            properties: {
-                                id: { type: "string" },
-                                name: { type: "string" },
-                                gender: { type: "string" },
-                                relation: { type: "string" },
-                                favor: { type: "integer" },
-                                status: { type: "string" },
-                                mood: { type: "string" },
-                                traits: { type: "string" },
-                                stats: {
-                                    type: "array",
-                                    items: {
-                                        type: "object",
-                                        additionalProperties: false,
-                                        properties: {
-                                            key: { type: "string" },
-                                            label: { type: "string" },
-                                            icon: { type: "string" },
-                                            value: { type: "integer" }
-                                        },
-                                        required: ["key", "label", "value"]
-                                    }
-                                },
-                                profile: {
-                                    type: "object",
-                                    additionalProperties: false,
-                                    properties: {
-                                        age: { type: "string" },
-                                        identity: { type: "string" },
-                                        residence: { type: "string" },
-                                        appearance: { type: "string" },
-                                        personality: { type: "string" },
-                                        goal: { type: "string" },
-                                        secret: { type: "string" },
-                                        firstImpression: { type: "string" }
-                                    },
-                                    required: ["age", "identity", "residence", "appearance", "personality", "goal", "secret", "firstImpression"]
-                                }
-                            },
-                            required: ["id", "name", "gender", "relation", "favor", "status", "mood", "traits", "profile"]
-                        }
-                    },
-                    openingChoices: {
-                        type: "array",
-                        items: {
-                            type: "object",
-                            additionalProperties: false,
-                            properties: {
-                                key: { type: "string" },
-                                label: { type: "string" },
-                                desc: { type: "string" }
-                            },
-                            required: ["key", "label", "desc"]
-                        }
-                    }
-                },
-                required: ["name", "englishName", "ageYears", "forcedGender", "nationality", "location", "timeEra", "weekIndex", "weekdayIndex", "currentYear", "currentMonth", "currentDay", "rebornReason", "stats", "inventory", "npcs", "openingChoices"]
-            };
-            let finalizedText = "";
-            try {
-                finalizedText = await AIRequestService.requestCompletionWithFallback({
-                    config: apiConfig,
-                    fetchUrl,
-                    headers,
-                    model: apiConfig.model,
-                    messages: [
-                        { role: "system", content: finalizeSystemPrompt },
-                        { role: "user", content: finalizeUserPrompt }
-                    ],
-                    temperature: 0,
-                    timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS,
-                    extraBody: {
-                        response_format: {
-                            type: "json_schema",
-                            json_schema: {
-                                name: "init_plan_schema",
-                                strict: true,
-                                schema: strictSchema
-                            }
-                        }
-                    }
-                });
-            } catch (e) {
-                finalizedText = await AIRequestService.requestCompletionWithFallback({
-                    config: apiConfig,
-                    fetchUrl,
-                    headers,
-                    model: apiConfig.model,
-                    messages: [
-                        { role: "system", content: finalizeSystemPrompt },
-                        { role: "user", content: `${finalizeUserPrompt}\n\n仅返回 JSON 对象，且包含全部字段。` }
-                    ],
-                    temperature: 0,
-                    timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
-                });
-            }
-            const finalized = parseFirstJsonObject(finalizedText) || stagedDraft;
-            const sanitized = sanitizePlan(finalized, selectedGender);
+            // finalize 阶段改为本地 sanitizePlan，省掉一次串行 AI 请求
+            const sanitized = sanitizePlan(stagedDraft, selectedGender);
             return ensureNameFallback(sanitized, scenarioText);
         }
         async function requestSingleFieldRecovery({ apiConfig, scenarioText, selectedGender, draftPlan, field, onProgress }) {
