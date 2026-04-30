@@ -8807,6 +8807,13 @@ function rebuildChoicesBlock(body, labels = []) {
             ScenarioCardService.reorderCards(fromId, toId);
             renderAll();
         }
+
+
+
+
+
+
+        
         function ensurePresetAsIndependentCard(payload, options = {}) {
             const forceCreateNew = options?.forceCreateNew === true;
             const preserveExistingContent = options?.preserveExistingContent === true;
@@ -8882,16 +8889,39 @@ function rebuildChoicesBlock(body, labels = []) {
                 switchView
             });
         }
-        async function playPresetTemplate(preset) {
-            InitLoadingService.open("正在加载预设模板并初始化独立卡片...");
-            const ok = await applyPresetTemplate(preset, { silent: true, forceCreateNew: true });
-            if (ok === false) {
-                InitLoadingService.close();
-                return;
+async function playPresetTemplate(preset) {
+            // 1. 根据模板信息生成该模板的“标准ID”（不含时间戳）
+            const targetId = ScenarioTemplateService.buildPresetCardId(preset);
+            
+            // 2. 检查当前卡牌列表中是否已经存在这个 ID 的卡片
+            const allCards = ScenarioCardService.loadCards();
+            const existingCard = allCards.find(c => c.id === targetId);
+
+            if (existingCard) {
+                // 如果已经有了，直接调用游玩逻辑，不再重复创建或加载
+                console.log("检测到现有卡片，直接进入游玩:", targetId);
+                await playScenarioCard(targetId);
+            } else {
+                // 如果没有，才执行“加载模板 -> 创建卡片 -> 游玩”的完整流程
+                InitLoadingService.open("正在加载预设模板并初始化独立卡片...");
+                
+                // 注意：这里传 forceCreateNew: false，确保它使用 buildPresetCardId 生成的原始ID
+                const ok = await applyPresetTemplate(preset, { 
+                    silent: true, 
+                    forceCreateNew: false 
+                });
+
+                if (ok === false) {
+                    InitLoadingService.close();
+                    return;
+                }
+                
+                // 初始化阶段逻辑
+                InitLoadingService.updateStage("连接中");
+                await playScenarioCard(ScenarioCardService.getSelectedId());
             }
-            InitLoadingService.updateStage("连接中");
-            await playScenarioCard(ScenarioCardService.getSelectedId());
         }
+        
         function startFromPlay() {
             saveScenarioCard();
             const selectedId = ScenarioCardService.getSelectedId();
