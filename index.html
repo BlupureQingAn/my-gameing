@@ -3370,7 +3370,6 @@
                     el.style.borderRadius = "4px";
                 }
             });
-            });
             // 记录颜色纠正次数，供下一轮 Prompt 反馈
             if (corrected > 0) {
                 if (!window.colorCorrectionCount) window.colorCorrectionCount = 0;
@@ -7742,7 +7741,6 @@
             StateService.init();
             SettingsService.loadToUI();
             presetManifest = await PresetResourceService.loadManifest();
-            if (typeof RechargeService !== "undefined") RechargeService.initUI();
             renderAll();
             VisualEffects.createBears();
             bindEvents();
@@ -8420,72 +8418,8 @@
     function backToSocialList() { Controller.backToSocialList(); }
     function closeInfoModal() { Controller.closeInfoModal(); }
 
-    // ==================== RechargeService (充值与兑换) ====================
+    // ==================== RechargeService (卡密兑换) ====================
     const RechargeService = (() => {
-        let selectedAmount = 1;
-        let selectedMethod = "alipay";
-
-        const RECHARGE_TIERS = [
-            { price: 1, coins: 100 },
-            { price: 5, coins: 500 },
-            { price: 10, coins: 1000 },
-            { price: 30, coins: 3000 },
-            { price: 50, coins: 5200 },
-            { price: 100, coins: 10500 }
-        ];
-
-        function initUI() {
-            const grid = document.getElementById("recharge-options");
-            if (!grid) return;
-            grid.innerHTML = RECHARGE_TIERS.map(tier => `
-                <div class="recharge-item ${tier.price === selectedAmount ? "active" : ""}" data-price="${tier.price}">
-                    <div class="recharge-coins">${tier.coins} 币</div>
-                    <div class="recharge-price">¥ ${tier.price}</div>
-                </div>
-            `).join("");
-
-            grid.querySelectorAll(".recharge-item").forEach(item => {
-                item.addEventListener("click", () => {
-                    grid.querySelectorAll(".recharge-item").forEach(el => el.classList.remove("active"));
-                    item.classList.add("active");
-                    selectedAmount = Number(item.getAttribute("data-price"));
-                });
-            });
-
-            const methods = document.getElementById("pay-methods");
-            if (methods) {
-                methods.querySelectorAll(".pay-method-btn").forEach(btn => {
-                    btn.addEventListener("click", () => {
-                        methods.querySelectorAll(".pay-method-btn").forEach(el => el.classList.remove("active"));
-                        btn.classList.add("active");
-                        selectedMethod = btn.getAttribute("data-method");
-                    });
-                });
-            }
-        }
-
-        async function initiatePayment() {
-            const user = AuthService.getUserData();
-            if (!user) {
-                NoticeModalService.showInfo({ title: "提示", descHtml: "请先登录后再进行充值。" });
-                return;
-            }
-            const tier = RECHARGE_TIERS.find(t => t.price === selectedAmount);
-            const methodName = selectedMethod === "alipay" ? "支付宝" : selectedMethod === "wechat" ? "微信" : "银联";
-            NoticeModalService.showInfo({
-                title: "正在前往支付",
-                descHtml: `
-                    <div style="text-align:center;">
-                        <p>您选择了 <b>${methodName}</b> 充值 <b>¥${tier.price}</b></p>
-                        <p>将获得 <b>${tier.coins}</b> 云币</p>
-                        <p style="color:#c94857;margin-top:10px;font-size:0.8rem;">(提示：系统尚未在Worker后端接入真实支付API，此处为流程演示)</p>
-                    </div>
-                `
-            });
-            // TODO: 调用后台支付接口
-            // const res = await fetch('你的Worker地址/api/pay', { ... });
-        }
-
         async function redeemCDK() {
             const input = document.getElementById("cdk-input");
             const btn = document.querySelector("#view-settings .mini-btn.ghost[onclick='RechargeService.redeemCDK()']");
@@ -8533,7 +8467,7 @@
             }
         }
 
-        return { initUI, initiatePayment, redeemCDK };
+        return { redeemCDK };
     })();
 
     // ==================== AuthService ====================
