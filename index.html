@@ -1942,6 +1942,30 @@ body[data-theme="dark"] {
 
 /* 如果你希望面板内的消息气泡依然可见，但背景透明，
    请确保下面的代码不会影响到 .story-log */
+/* 1. 彻底清除面板本体的所有背景层 */
+#story-board {
+    background: transparent !important;      /* 背景透明 */
+    background-image: none !important;       /* 彻底关掉渐变图层 */
+    border: none !important;                 /* 移除边框 */
+    box-shadow: none !important;             /* 移除阴影 */
+}
+
+/* 2. 彻底清除深色模式下的伪元素背景（这是最关键的一步） */
+/* 原代码中使用了 ::before 绘制星空渐变，必须强制隐藏 */
+#story-board::before, 
+#story-board::after {
+    content: none !important;
+    display: none !important;
+    background: transparent !important;
+    background-image: none !important;
+}
+
+
+.story-log {
+    background: var(--card-soft) !important; /* 确保气泡本身有颜色 */
+    opacity: 1 !important; 
+}
+
 
 
     </style>
