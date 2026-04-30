@@ -3516,10 +3516,11 @@
             const innerHtml = `<div style="display:flex;flex-wrap:wrap;gap:8px;">${barsHtml}</div>${tagsHtml}`;
             statusEl.innerHTML = innerHtml;
 
-            // 同步到顶部状态面板：直接复用卡片 status block 渲染后的 innerHTML
+            // 同步到顶部状态面板：直接复用卡片美化 HTML，并标记防止被通用渲染覆盖
             const topBox = document.getElementById("game-stats-card");
             if (topBox) {
-                topBox.innerHTML = statusEl.innerHTML;
+                topBox.innerHTML = innerHtml;
+                topBox.dataset.isFancy = "true";
             }
         }
         return { renderAiMessage, bindHtmlChoiceEvents, formatQuotedDialogueLines, injectStatsIntoCard };
@@ -4415,17 +4416,26 @@
                 // 2. 仅从 [data-block="relations"] 提取 NPC 变化
                 const relationBlock = div.querySelector('[data-block="relations"]');
                 if (relationBlock) {
-                    const npcCards = relationBlock.querySelectorAll('div');
-                    npcCards.forEach((card) => {
-                        const nameEl = card.querySelector('[style*="font-weight"]');
-                        if (!nameEl) return;
-                        const name = nameEl.textContent.trim();
-                        if (!name || name.length > 8) return;
-                        const favorMatch = card.textContent.match(/(\d+)\s*好感/);
-                        npcUpdates.push({
-                            name,
-                            favor: favorMatch ? Math.min(100, parseInt(favorMatch[1])) : undefined
-                        });
+                    const npcNodes = relationBlock.querySelectorAll('div, [style*="border"], li');
+                    npcNodes.forEach((node) => {
+                        const text = node.innerText || node.textContent || "";
+                        const cleanText = text.replace(/\s+/g, " ").trim();
+                        // 提取名字：优先加粗元素，否则取第一个短词
+                        const nameEl = node.querySelector('strong, b, [style*="font-weight"]');
+                        let name = nameEl ? nameEl.innerText.trim() : cleanText.split(/[:：\s]/)[0];
+                        if (!name || name.length > 10) return;
+                        name = name.replace(/[\(（].*?[\)）]/g, "").trim();
+                        // 增强好感度匹配：支持 "好感: 82"、"❤️ 82"、"❤️82"、"💖82" 等
+                        const favorMatch = cleanText.match(/(?:好感|❤️|💖|🧡)\s*[:：]?\s*(\d+)/u);
+                        // 提取状态
+                        const statusMatch = cleanText.match(/·\s*([^\s｜|，。;；]+)/) || cleanText.match(/状态[:：]\s*([^\s]+)/);
+                        if (favorMatch || statusMatch) {
+                            npcUpdates.push({
+                                name,
+                                favor: favorMatch ? Math.min(100, parseInt(favorMatch[1])) : undefined,
+                                status: statusMatch ? statusMatch[1].trim() : undefined
+                            });
+                        }
                     });
                 }
                 // 3. 兜底：如果 status 块没抓到数据，用 parseStatusLines 从全文提取
@@ -4649,6 +4659,8 @@
         function renderStats(state) {
             const box = document.getElementById("game-stats-card");
             if (!box) return;
+            // 如果顶部面板已由 HTML 卡片美化注入，跳过通用渲染避免样式冲突
+            if (box.dataset.isFancy === "true") return;
             const stats = Array.isArray(state.stats) ? state.stats : [];
             if (stats.length === 0) {
                 box.innerHTML = `<div class="list-sub" style="grid-column:1/-1;text-align:center;opacity:0.6;padding:8px 0;">⏳ 等待剧情初始化属性...</div>`;
@@ -4696,6 +4708,10 @@
             box.innerHTML = `${statHtml}${tagHtml}`;
             lastRenderedStatMap = new Map(stats.map((s) => [String(s.key || s.label || ""), Number(s.value || 0)]));
             lastRenderedStatusTagMap = new Map(tags.map((tag) => [tag.label, tag.value]));
+        }
+        function clearFancyStatus() {
+            const box = document.getElementById("game-stats-card");
+            if (box) delete box.dataset.isFancy;
         }
         function scrollToBottom() {
             const content = document.getElementById("main-content");
@@ -5062,7 +5078,7 @@
                 box.appendChild(row);
             });
         }
-        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, renderPresetTemplates, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp };
+        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, renderPresetTemplates, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, clearFancyStatus };
     })();
 
     const VisualEffects = (() => {
@@ -7810,6 +7826,7 @@
         }
         function sendUserText(text) {
             if (ChatService.getIsGenerating()) return;
+            UIRenderer.clearFancyStatus(); // 发送新指令时清除美化标记，等待下一次 HTML 卡片注入
             const state = StateService.get();
             UIRenderer.setAutoFollowBottom(true);
             UIRenderer.appendMessage("user", text, Utils.nowDateStr(state), false);
