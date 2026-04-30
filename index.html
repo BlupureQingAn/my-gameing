@@ -279,18 +279,18 @@
             display: flex !important;
             flex-direction: row !important;
             flex-wrap: wrap !important;
-            gap: 10px !important;
+            gap: 12px !important;
             justify-content: flex-start !important;
-            padding: 8px 0 !important;
+            padding: 10px 4px !important;
             position: relative;
             z-index: 2;
         }
 
         .stat-item {
             position: relative;
-            flex: 0 1 auto !important;
-            min-width: 140px;
-            max-width: 200px;
+            flex: 1 0 160px !important;
+            max-width: 240px !important;
+            border-left: 4px solid var(--accent) !important;
             background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(252,247,240,0.92));
             border: 1px solid rgba(202, 162, 106, 0.18);
             border-radius: 12px;
@@ -3343,46 +3343,33 @@
             card.querySelectorAll("*").forEach((el) => {
                 if (!(el instanceof HTMLElement)) return;
                 if (shouldSkipAutoColor(el)) return;
-                if (!hasMeaningfulOwnText(el)) return;
+                const tag = el.tagName.toLowerCase();
                 const bg = findNearestBackgroundColor(el, card);
-                const classText = `${el.className || ""}`;
-                const muted = /wy-scene|wy-meta|wy-footer-decor|wy-divider|hint/i.test(classText);
-                const isHeader = /h[1-6]|title|role.?name/i.test(el.className + el.tagName);
                 const bgRgb = parseColorToRgb(bg);
-                if (bgRgb) {
-                    const bgLum = (0.299 * bgRgb.r + 0.587 * bgRgb.g + 0.114 * bgRgb.b) / 255;
-                    // 读取文字当前亮度，计算色差
-                    const currentFg = window.getComputedStyle(el).color;
-                    const fgRgb = parseColorToRgb(currentFg) || (bgLum > 0.5 ? { r: 0, g: 0, b: 0 } : { r: 255, g: 255, b: 255 });
-                    const fgLum = (0.299 * fgRgb.r + 0.587 * fgRgb.g + 0.114 * fgRgb.b) / 255;
-                    const contrastGap = Math.abs(bgLum - fgLum);
-                    const currentColor = el.style.color;
-                    const isLabel = el.tagName.toLowerCase() === "span" || el.classList.contains("wy-stat-item");
-                    // 色差不足时强制反转（阈值提高到 0.5）
-                    if (contrastGap < 0.5) {
-                        const forced = muted
-                            ? (bgLum > 0.5 ? "#555555" : "#c8d4f0")
-                            : (bgLum > 0.5 ? "#000000" : "#ffffff");
-                        el.style.setProperty("color", forced, "important");
-                        if (currentColor !== forced) corrected++;
+                if (!bgRgb) return;
+                const bgLum = (0.299 * bgRgb.r + 0.587 * bgRgb.g + 0.114 * bgRgb.b) / 255;
+                const isTitle = /h[1-6]|role.?name|title/i.test(el.className + el.tagName);
+                const isImportant = hasMeaningfulOwnText(el) && (
+                    /wy-content|event|thought/i.test(el.className) ||
+                    ["p", "span", "div", "li"].includes(tag)
+                );
+                if (isTitle || isImportant) {
+                    const forcedColor = bgLum > 0.6 ? "#000000" : "#ffffff";
+                    el.style.setProperty("color", forcedColor, "important");
+                    if (isTitle) {
+                        const shadow = bgLum > 0.6 ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.8)";
+                        el.style.setProperty("text-shadow", `0px 1px 3px ${shadow},0px 0px 1px ${shadow}`, "important");
+                        el.style.setProperty("font-weight", "900", "important");
                     }
-                    // 标题：万能描边阴影
-                    if (isHeader) {
-                        el.style.fontWeight = "900";
-                        const strokeColor = bgLum > 0.5 ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.9)";
-                        el.style.textShadow = `1px 1px 0 ${strokeColor},-1px -1px 0 ${strokeColor},1px -1px 0 ${strokeColor},-1px 1px 0 ${strokeColor},0px 2px 10px rgba(0,0,0,0.3)`;
-                    } else if (bgLum <= 0.5) {
-                        el.style.textShadow = "0 1px 2px rgba(0,0,0,0.5)";
-                    }
-                    // 小标签在极浅背景下白字兜底：加半透明深色背景
-                    if (isLabel && bgLum > 0.8 && el.style.color === "rgb(255, 255, 255)") {
-                        el.style.backgroundColor = "rgba(0,0,0,0.1)";
-                        el.style.padding = "2px 6px";
-                        el.style.borderRadius = "4px";
-                    }
-                } else {
-                    el.style.color = getReadableTextColor(bg, muted);
+                    corrected++;
                 }
+                // 极浅背景下的 span 标签加半透明背景兜底
+                if (tag === "span" && bgLum > 0.8) {
+                    el.style.backgroundColor = "rgba(0,0,0,0.05)";
+                    el.style.padding = "1px 4px";
+                    el.style.borderRadius = "4px";
+                }
+            });
             });
             // 记录颜色纠正次数，供下一轮 Prompt 反馈
             if (corrected > 0) {
@@ -4382,14 +4369,80 @@
             return out;
         }
         function extractFromAiCard(htmlText = "", isStreaming = false) {
-            const relevantText = extractRelevantText(htmlText, isStreaming);
-            const parsed = parseStatusLines(relevantText);
-            const textStats = parseStatPairsFromText(relevantText);
-            return {
-                statItems: mergeStatItems([...(parsed.statItems || []), ...textStats]),
-                npcUpdates: parsed.npcUpdates,
-                statusTags: mergeStatusTags([...(parsed.statusTags || []), ...parseStatusTagsFromText(relevantText)])
-            };
+            if (isStreaming) return { statItems: [], npcUpdates: [], statusTags: [] };
+            // 属性白名单：只有这些词才视为主角属性，防止人名混入
+            const STAT_WHITE_LIST = /健康|体力|生命|心情|情绪|精神|学识|智力|智慧|魅力|声望|名望|财富|金钱|银两|资产|武力|战力|修为|灵力|权势|成长|亲缘|人脉|事业|银元|铜钱|饱食|文笔|灵感|思想|通俗|饥饿|好感|体魄|才学|威望|人望|口碑|信誉|体质|敏捷|力量|耐力|感知|意志|运气/;
+            try {
+                const div = document.createElement("div");
+                div.innerHTML = HtmlCardService.normalizeHtmlCard(htmlText);
+                const playerStats = [];
+                const npcUpdates = [];
+                const statusTags = [];
+                // 1. 仅从 [data-block="status"] 提取玩家属性
+                const statusBlock = div.querySelector('[data-block="status"]');
+                if (statusBlock) {
+                    const rawText = statusBlock.innerText || statusBlock.textContent || "";
+                    const lines = rawText.split(/[\n,，;；]/);
+                    lines.forEach((line) => {
+                        const m = line.match(/([\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]?)\s*([\u4e00-\u9fa5]{2,6})\s*([\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]?)\s*[:：\-\s]\s*([+-]?\d+(?:\.\d+)?(?:\/\d+)?%?)/u);
+                        if (m) {
+                            const label = m[2].trim();
+                            if (STAT_WHITE_LIST.test(label)) {
+                                playerStats.push({
+                                    key: normalizeStatKey(label),
+                                    label: toCanonicalStatLabel(label),
+                                    icon: m[1] || m[3] || inferStatIcon(label),
+                                    value: m[4].trim()
+                                });
+                            }
+                        }
+                    });
+                    // 提取状态标签
+                    statusBlock.querySelectorAll("span").forEach((s) => {
+                        const t = (s.textContent || "").split(/[:：\s]/);
+                        if (t.length >= 2 && /身份|处境|背景|状态|阵营/.test(t[0])) {
+                            statusTags.push({ label: t[0].trim(), value: t[1].trim() });
+                        }
+                    });
+                }
+                // 2. 仅从 [data-block="relations"] 提取 NPC 变化
+                const relationBlock = div.querySelector('[data-block="relations"]');
+                if (relationBlock) {
+                    const npcCards = relationBlock.querySelectorAll('div');
+                    npcCards.forEach((card) => {
+                        const nameEl = card.querySelector('[style*="font-weight"]');
+                        if (!nameEl) return;
+                        const name = nameEl.textContent.trim();
+                        if (!name || name.length > 8) return;
+                        const favorMatch = card.textContent.match(/(\d+)\s*好感/);
+                        npcUpdates.push({
+                            name,
+                            favor: favorMatch ? Math.min(100, parseInt(favorMatch[1])) : undefined
+                        });
+                    });
+                }
+                // 3. 兜底：如果 status 块没抓到数据，用 parseStatusLines 从全文提取
+                if (!playerStats.length) {
+                    const relevantText = extractRelevantText(htmlText, false);
+                    const parsed = parseStatusLines(relevantText);
+                    const filtered = (parsed.statItems || []).filter((s) => STAT_WHITE_LIST.test(s.label));
+                    filtered.forEach((s) => playerStats.push(s));
+                    if (parsed.statusTags) parsed.statusTags.forEach((t) => statusTags.push(t));
+                }
+                return {
+                    statItems: mergeStatItems(playerStats),
+                    npcUpdates,
+                    statusTags: mergeStatusTags(statusTags)
+                };
+            } catch (e) {
+                const relevantText = extractRelevantText(htmlText, false);
+                const parsed = parseStatusLines(relevantText);
+                return {
+                    statItems: mergeStatItems(parsed.statItems || []),
+                    npcUpdates: parsed.npcUpdates || [],
+                    statusTags: mergeStatusTags(parsed.statusTags || [])
+                };
+            }
         }
         function applySnapshot(state, snapshot = {}) {
             if (!state) return false;
@@ -4446,7 +4499,12 @@
         }
         function syncFromAiText(state, text, isStreaming = false) {
             const snapshot = extractFromAiCard(text, isStreaming);
-            return applySnapshot(state, snapshot);
+            const changed = applySnapshot(state, snapshot);
+            if (changed) {
+                UIRenderer.renderTop(state);
+                UIRenderer.renderSocialList(state);
+            }
+            return changed;
         }
         return { syncFromAiText, extractFromAiCard, applySnapshot };
     })();
