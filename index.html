@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -1753,12 +1753,44 @@ body[data-theme="dark"] .ai-beauty-card {
             user-select: none;
         }
 
+        .ai-beauty-card .card-bear-layer {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .ai-beauty-card .card-bear {
+            position: absolute;
+            top: -28px;
+            opacity: 0.35;
+            user-select: none;
+            animation: fallCard linear infinite;
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+        }
+
+        .ai-beauty-card .ai-beauty-card-title,
+        .ai-beauty-card .ai-beauty-card-body {
+            position: relative;
+            z-index: 1;
+        }
+
         @keyframes fall {
             0% {
                 transform: translateY(-5vh) rotate(0deg);
             }
             100% {
                 transform: translateY(110vh) rotate(240deg);
+            }
+        }
+
+        @keyframes fallCard {
+            0% {
+                transform: translateY(-15%) rotate(0deg);
+            }
+            100% {
+                transform: translateY(120%) rotate(240deg);
             }
         }
 
@@ -4906,6 +4938,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 HtmlCardService.applyReadableTextColors(bubble);
                 AiResponseLayoutService.bindHtmlChoiceEvents(bubble);
                 AiResponseLayoutService.injectStatsIntoCard(bubble);
+                VisualEffects.decorateAiCardBears(bubble);
             }
 
             if (role === "user") { row.appendChild(bubble); row.appendChild(avatar); }
@@ -4948,6 +4981,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 HtmlCardService.applyReadableTextColors(currentStreamingTarget);
                 AiResponseLayoutService.bindHtmlChoiceEvents(currentStreamingTarget);
                 AiResponseLayoutService.injectStatsIntoCard(currentStreamingTarget);
+                VisualEffects.decorateAiCardBears(currentStreamingTarget);
             } else {
                 currentStreamingTarget.classList.remove("html-host");
                 currentStreamingTarget.innerHTML = AiResponseLayoutService.renderAiMessage(`${prefix}${text}`, false);
@@ -4985,6 +5019,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 bubble.innerHTML = `${warningHtml}${AiResponseLayoutService.renderAiMessage(normalizedText, false)}`;
                 AiResponseLayoutService.bindHtmlChoiceEvents(bubble);
                 AiResponseLayoutService.injectStatsIntoCard(bubble);
+                VisualEffects.decorateAiCardBears(bubble);
             } else {
                 bubble.classList.remove("html-host");
                 bubble.innerHTML = AiResponseLayoutService.renderAiMessage(String(text || ""), false);
@@ -5240,7 +5275,32 @@ function rebuildChoicesBlock(body, labels = []) {
                 layer.appendChild(b);
             }
         }
-        return { createBears };
+        function decorateAiCardBears(container) {
+            if (!(container instanceof HTMLElement)) return;
+            const cards = container.classList.contains("ai-beauty-card")
+                ? [container]
+                : Array.from(container.querySelectorAll(".ai-beauty-card"));
+            const bears = ["🧸", "ʕ•ᴥ•ʔ", "ʕ·ᴥ·ʔ", "🧸"];
+            cards.forEach((card) => {
+                if (!(card instanceof HTMLElement)) return;
+                if (card.querySelector(".card-bear-layer")) return;
+                const layer = document.createElement("div");
+                layer.className = "card-bear-layer";
+                const count = 7;
+                for (let i = 0; i < count; i++) {
+                    const b = document.createElement("span");
+                    b.className = "card-bear";
+                    b.innerText = bears[i % bears.length];
+                    b.style.left = `${Math.random() * 100}%`;
+                    b.style.animationDuration = `${8 + Math.random() * 10}s`;
+                    b.style.animationDelay = `${Math.random() * 8}s`;
+                    b.style.fontSize = `${12 + Math.random() * 8}px`;
+                    layer.appendChild(b);
+                }
+                card.insertBefore(layer, card.firstChild);
+            });
+        }
+        return { createBears, decorateAiCardBears };
     })();
 
     const SettingsService = (() => {
