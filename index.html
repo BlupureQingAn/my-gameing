@@ -2718,14 +2718,16 @@
     })();
 
     const MarkdownService = (() => {
-        function escapeHtml(str) {
-            return (str || "")
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#39;");
-        }
+function escapeHtml(str) {
+    // 强制转换为字符串，处理 null, undefined 或 对象类型
+    const s = String(str === null || str === undefined ? "" : str);
+    return s
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
         function render(md) {
             let html = escapeHtml(md);
             html = html.replace(/```([\s\S]*?)```/g, "<pre><code>$1</code></pre>");
@@ -8584,22 +8586,24 @@ const token = delta.content || "";
             renderAll();
         }
 
-        
+
 function openNpcProfile(npcId) {
             const state = StateService.get();
-            // 修正查找逻辑：优先使用传入的 npcId，如果没传则尝试从聊天上下文获取
             const targetId = npcId || currentSocialNpcId;
             const npc = findNpcByRef(state, targetId);
             
             if (!npc) {
-                // 如果找不到 NPC，弹窗提示
-                const msg = "当前 NPC 数据（ID: " + targetId + "）不存在，请刷新页面重试。";
-                // 确保调用 closure 内的 openInfoModal
-                openInfoModal("无法打开档案", msg);
+                NoticeModalService.showInfo({ title: "无法打开档案", descHtml: "未找到 NPC 数据，请重试。" });
                 return;
             }
 
-            // 1. 安全提取属性和背景
+            // 安全取值的辅助函数
+            const getStr = (val, fallback = "") => {
+                if (val === null || val === undefined) return fallback;
+                if (typeof val === 'object') return JSON.stringify(val); // 如果是对象，转成字符串防止崩溃
+                return String(val);
+            };
+
             const favor = Math.max(0, Math.min(100, Number(npc.favor) || 0));
             const favorColor = favor >= 70 ? "#2ecc71" : favor >= 40 ? "var(--accent)" : "#e74c3c";
             const favorLabel = favor >= 80 ? "挚友" : favor >= 60 ? "友好" : favor >= 40 ? "普通" : favor >= 20 ? "疏远" : "敌对";
@@ -8608,7 +8612,6 @@ function openNpcProfile(npcId) {
             const mem = NpcMemoryService.ensureStore(state, npc.id);
             const tags = (mem && mem.tags) ? mem.tags : { promises: [], conflicts: [], secrets: [], notes: [] };
 
-            // 2. 好感度进度条 HTML
             const favorBar = `
                 <div style="margin:10px 0 4px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
@@ -8620,32 +8623,31 @@ function openNpcProfile(npcId) {
                     </div>
                 </div>`;
 
-            // 3. 状态标签 HTML
+            // 修复点：对 value 使用 getStr 强制转字符串
             const statusTagsHtml = [
-                { label: "关系", value: npc.relation || "熟人" },
-                { label: "状态", value: npc.status || "在线" },
-                { label: "心情", value: npc.mood || "平静" },
-                { label: "性别", value: npc.gender || "未知" }
-            ].map(t => `<span class="status-tag"><strong>${t.label}</strong><em>${MarkdownService.escapeHtml(t.value)}</em></span>`).join("");
+                { label: "关系", value: getStr(npc.relation, "熟人") },
+                { label: "状态", value: getStr(npc.status, "在线") },
+                { label: "心情", value: getStr(npc.mood, "平静") },
+                { label: "性别", value: getStr(npc.gender, "未知") }
+            ].map(t => `<span class="status-tag"><strong>${MarkdownService.escapeHtml(t.label)}</strong><em>${MarkdownService.escapeHtml(t.value)}</em></span>`).join("");
 
-            // 4. 属性面板或基础信息
             let statsPanelHtml = "";
             if (npcStats) {
                 statsPanelHtml = `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px;">
                     ${npcStats.map(s => `
                         <div style="padding:8px 10px;border-radius:12px;background:var(--card-soft);border:1px solid rgba(176,134,82,0.15);text-align:center;">
-                            <div style="font-size:1.1rem;">${MarkdownService.escapeHtml(s.icon || "✨")}</div>
-                            <div style="font-size:.72rem;color:var(--sub);margin-top:2px;">${MarkdownService.escapeHtml(s.label)}</div>
-                            <div style="font-size:1rem;font-weight:800;color:var(--accent-dark);margin-top:2px;">${s.value}</div>
+                            <div style="font-size:1.1rem;">${MarkdownService.escapeHtml(getStr(s.icon, "✨"))}</div>
+                            <div style="font-size:.72rem;color:var(--sub);margin-top:2px;">${MarkdownService.escapeHtml(getStr(s.label))}</div>
+                            <div style="font-size:1rem;font-weight:800;color:var(--accent-dark);margin-top:2px;">${getStr(s.value)}</div>
                         </div>`).join("")}
                    </div>`;
             } else {
                 statsPanelHtml = `<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px;">
                     ${[
-                        { label: "年龄", value: profile.age },
-                        { label: "身份", value: profile.identity },
-                        { label: "居所", value: profile.residence },
-                        { label: "特质", value: npc.traits }
+                        { label: "年龄", value: getStr(profile.age) },
+                        { label: "身份", value: getStr(profile.identity) },
+                        { label: "居所", value: getStr(profile.residence) },
+                        { label: "特质", value: getStr(npc.traits) }
                     ].filter(r => r.value).map(r => `
                         <div class="list-row" style="margin-bottom:0;flex-direction:column;align-items:flex-start;padding:6px 10px;">
                             <div class="list-sub" style="font-size:.72rem;">${r.label}</div>
@@ -8654,34 +8656,21 @@ function openNpcProfile(npcId) {
                    </div>`;
             }
 
-            // 5. 详细描述和记忆块
             const detailHtml = [
-                { label: "外貌", value: profile.appearance },
-                { label: "性格", value: profile.personality },
-                { label: "目标", value: profile.goal },
-                { label: "初印象", value: profile.firstImpression }
+                { label: "外貌", value: getStr(profile.appearance) },
+                { label: "性格", value: getStr(profile.personality) },
+                { label: "目标", value: getStr(profile.goal) },
+                { label: "初印象", value: getStr(profile.firstImpression) }
             ].filter(r => r.value).map(r => `
                 <div style="margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--card-soft);border:1px solid rgba(0,0,0,0.05);">
                     <div style="font-size:.72rem;color:var(--sub);margin-bottom:2px;">${r.label}</div>
                     <div style="font-size:.85rem;color:var(--text);">${MarkdownService.escapeHtml(r.value)}</div>
                 </div>`).join("");
 
-            const listRenderer = (title, items, color) => {
-                if (!items || items.length === 0) return "";
-                return `<div style="margin-top:6px;">
-                    <span style="font-size:.75rem;font-weight:700;color:${color};">${title}</span>
-                    <ul style="padding-left:16px;margin:4px 0;font-size:.82rem;color:var(--sub);">
-                        ${items.map(x => `<li>${MarkdownService.escapeHtml(String(x))}</li>`).join("")}
-                    </ul>
-                </div>`;
-            };
-
-            const memoryHtml = (mem && (mem.summary || tags.promises.length || tags.conflicts.length)) ? `
+            const memoryHtml = (mem && (mem.summary || (tags.promises && tags.promises.length))) ? `
                 <div style="margin-top:12px;padding:10px 12px;border-radius:12px;background:rgba(176,134,82,0.05);border:1px dashed rgba(176,134,82,0.3);">
                     <div style="font-size:.78rem;font-weight:700;color:var(--accent-dark);margin-bottom:6px;">📝 记忆往事</div>
-                    ${mem.summary ? `<div style="font-size:.82rem;color:var(--sub);margin-bottom:4px;">${MarkdownService.escapeHtml(mem.summary)}</div>` : ""}
-                    ${listRenderer("约定", tags.promises, "var(--accent-dark)")}
-                    ${listRenderer("冲突", tags.conflicts, "#e74c3c")}
+                    ${mem.summary ? `<div style="font-size:.82rem;color:var(--sub);margin-bottom:4px;">${MarkdownService.escapeHtml(getStr(mem.summary))}</div>` : ""}
                 </div>` : "";
 
             const desc = `
@@ -8689,8 +8678,8 @@ function openNpcProfile(npcId) {
                     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:10px;">
                         <div style="width:50px;height:50px;border-radius:50%;background:var(--accent);display:grid;place-items:center;font-size:24px;color:#fff;">🧑</div>
                         <div>
-                            <div style="font-size:1.1rem;font-weight:800;color:var(--accent-dark);">${MarkdownService.escapeHtml(npc.name)}</div>
-                            <div style="font-size:.8rem;color:var(--sub);">${MarkdownService.escapeHtml(npc.relation || "NPC")}</div>
+                            <div style="font-size:1.1rem;font-weight:800;color:var(--accent-dark);">${MarkdownService.escapeHtml(getStr(npc.name))}</div>
+                            <div style="font-size:.8rem;color:var(--sub);">${MarkdownService.escapeHtml(getStr(npc.relation, "NPC"))}</div>
                         </div>
                     </div>
                     ${favorBar}
@@ -8701,8 +8690,7 @@ function openNpcProfile(npcId) {
                 </div>
             `;
 
-            // 调用 Controller 内部的 openInfoModal
-            openInfoModal(npc.name + " 的个人档案", desc);
+            openInfoModal(getStr(npc.name) + " 的个人档案", desc);
         }
 
 
