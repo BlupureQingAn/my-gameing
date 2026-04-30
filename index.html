@@ -4270,7 +4270,7 @@
             const npcUpdates = [];
             const statusTags = [];
             lines.forEach((line) => {
-                const m = line.match(/^([\u4e00-\u9fa5A-Za-z0-9_]{1,12})\s*[:：]\s*([+-]?\d{1,4}(\/\d{1,4})?)(?:\b|$)/);
+                const m = line.match(/(?<![="])([\u4e00-\u9fa5]{1,12})\s*[:：]\s*([+-]?\d{1,4}(\/\d{1,4})?)(?:\b|$)/);
                 if (m) {
                     const rawLabel = m[1];
                     // 扩展 CSS 关键字黑名单
@@ -4582,6 +4582,10 @@
             const box = document.getElementById("game-stats-card");
             if (!box) return;
             const stats = Array.isArray(state.stats) ? state.stats : [];
+            if (stats.length === 0) {
+                box.innerHTML = `<div class="list-sub" style="grid-column:1/-1;text-align:center;opacity:0.6;padding:8px 0;">等待剧情初始化属性...</div>`;
+                return;
+            }
             const statHtml = stats.map((s) => {
                 const key = String(s.key || s.label || "");
                 const rawValue = String(s.value ?? "0");
@@ -7521,7 +7525,10 @@
                         if (Date.now() - lastLivePanelSyncAt >= 100) {
                             const liveState = StateService.get();
                             TimeSyncService.syncFromAiText(liveState, visibleText);
-                            const changed = AiPanelSyncService.syncFromAiText(liveState, visibleText, true);
+                            // 流式阶段只同步 stats，跳过 NPC（半截 JSON 容易报错）
+                            const snapshot = AiPanelSyncService.extractFromAiCard(visibleText, true);
+                            const statsOnly = { statItems: snapshot.statItems, npcUpdates: [], statusTags: snapshot.statusTags };
+                            const changed = AiPanelSyncService.applySnapshot(liveState, statsOnly);
                             if (changed) UIRenderer.renderTop(liveState);
                             lastLivePanelSyncAt = Date.now();
                         }
@@ -7560,6 +7567,7 @@
                 }
 
                 // 第一阶段：流式结束后立即完成渲染并解锁交互，避免用户体感“卡住”。
+                // state-patch 已在上方 applyPatch 中执行（最高优先级），AiPanelSync 作兜底补充
                 TimeSyncService.syncFromAiText(StateService.get(), displayText);
                 const panelChanged = AiPanelSyncService.syncFromAiText(StateService.get(), displayText);
                 UIRenderer.finishStreaming(displayText, { conflictDetected: false });
