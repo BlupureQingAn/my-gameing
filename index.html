@@ -1925,7 +1925,23 @@ body[data-theme="dark"] {
 
 
 
+/* 强制将故事面板及其装饰层设为透明 */
+#story-board {
+    background: transparent !important; /* 背景透明 */
+    border: none !important;           /* 移除边框（可选，若想保留边框可删除此行） */
+    box-shadow: none !important;       /* 移除阴影 */
+    backdrop-filter: none !important;  /* 移除模糊效果 */
+}
 
+/* 必须同时移除伪元素，否则在深色模式下依然会有星空背景 */
+#story-board::before, 
+#story-board::after {
+    display: none !important;         /* 隐藏装饰性的背景层 */
+    content: none !important;
+}
+
+/* 如果你希望面板内的消息气泡依然可见，但背景透明，
+   请确保下面的代码不会影响到 .story-log */
 
 
     </style>
