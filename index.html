@@ -2814,16 +2814,21 @@
                 const tpl = document.createElement("template");
                 tpl.innerHTML = candidate;
                 const card = tpl.content.querySelector(".ai-beauty-card");
-                if (card && card instanceof HTMLElement) {
-                    card.querySelectorAll(".ai-beauty-card").forEach((nested) => {
-                        if (!(nested instanceof HTMLElement) || nested === card) return;
-                        const frag = document.createDocumentFragment();
-                        while (nested.firstChild) frag.appendChild(nested.firstChild);
-                        nested.replaceWith(frag);
-                    });
-                    pruneEmptyElements(card);
-                    return card.outerHTML;
-                }
+if (card && card instanceof HTMLElement) {
+    // 【新增】清理卡片根节点下最前方的纯文本（即 AI 的复读或思考文字）
+    while (card.firstChild && card.firstChild.nodeType === 3) { // 3 代表 TEXT_NODE
+        card.removeChild(card.firstChild);
+    }
+    
+    card.querySelectorAll(".ai-beauty-card").forEach((nested) => {
+        if (!(nested instanceof HTMLElement) || nested === card) return;
+        const frag = document.createDocumentFragment();
+        while (nested.firstChild) frag.appendChild(nested.firstChild);
+        nested.replaceWith(frag);
+    });
+    pruneEmptyElements(card);
+    return card.outerHTML;
+}
             } catch (e) {
                 console.error("HTML清理失败:", e);
             }
@@ -6992,8 +6997,8 @@ function rebuildChoicesBlock(body, labels = []) {
                         try {
                             const payload = JSON.parse(line.slice(6));
                             const delta = payload.choices?.[0]?.delta || {};
-                            // 兼容深度思考模型：同时统计普通内容和思维链内容
-                            const token = (delta.content || "") + (delta.reasoning_content || "");
+// 仅获取正式回复内容，忽略 reasoning_content (思考过程)
+const token = delta.content || ""; 
                             if (!token) continue;
                             // 检测连续重复非中文字符
                             for (const char of token) {
