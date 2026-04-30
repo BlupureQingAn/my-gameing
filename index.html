@@ -2391,7 +2391,7 @@
     })();
 
     const NavigationVisibilityService = (() => {
-            const PLAY_VIEWS = new Set(["view-main", "view-inventory", "view-social", "view-npc-chat", "view-saves"]);
+        const PLAY_VIEWS = new Set(["view-main", "view-inventory", "view-social", "view-npc-chat", "view-saves"]);
         function apply(viewId) {
             const inPlay = PlayViewStateService.isInPlayMode();
             document.querySelectorAll(".nav-btn").forEach((btn) => {
@@ -2402,8 +2402,9 @@
                     btn.style.display = "";
                 }
             });
-                const isPlayView = PLAY_VIEWS.has(viewId);
-                const enableGamePanels = inPlay && isPlayView && viewId !== "view-npc-chat";
+            const isPlayView = PLAY_VIEWS.has(viewId);
+            // 只有游玩中且处于生涯相关页面时才显示状态栏，排除 NPC 聊天页保持沉浸感
+            const enableGamePanels = inPlay && isPlayView && viewId !== "view-npc-chat";
             const footer = document.querySelector(".chat-footer");
             if (footer) footer.style.display = enableGamePanels ? "block" : "none";
             document.getElementById("game-stats-card").style.display = enableGamePanels ? "grid" : "none";
@@ -2722,18 +2723,20 @@
         function normalizeHtmlCard(text) {
             const raw = String(text || "").trim();
             const fenced = extractHtmlFromCodeFence(raw);
-            const candidate = (fenced && containsHtmlCard(fenced)) ? fenced : raw;
+            let candidate = (fenced && containsHtmlCard(fenced)) ? fenced : raw;
             if (!containsHtmlCard(candidate)) {
-                // 原始文本和 fenced 都不含 ai-beauty-card，记录前200字符便于排查
                 if (raw.length > 10) console.warn("[normalizeHtmlCard] containsHtmlCard=false, raw前200:", JSON.stringify(raw.slice(0, 200)));
                 return candidate;
             }
-            // 截掉 <article/section/div class="...ai-beauty-card..."> 之前的所有垃圾前缀
-            const cardStart = candidate.search(/<(article|section|div)\b[^>]*class=["']?[^"'\s>]*ai-beauty-card[^"'\s>]*["']?[^>]*>/i);
-            const cleaned = cardStart > 0 ? candidate.slice(cardStart) : candidate;
+            // 强力清理：定位第一个包含 ai-beauty-card 的标签，丢弃之前的所有垃圾前缀
+            const cardStartRegex = /<(article|section|div)\b[^>]*class=[^>]*ai-beauty-card[^>]*>/i;
+            const matchResult = candidate.match(cardStartRegex);
+            if (matchResult && matchResult.index > 0) {
+                candidate = candidate.slice(matchResult.index);
+            }
             try {
                 const tpl = document.createElement("template");
-                tpl.innerHTML = cleaned;
+                tpl.innerHTML = candidate;
                 const card = tpl.content.querySelector(".ai-beauty-card");
                 if (card && card instanceof HTMLElement) {
                     card.querySelectorAll(".ai-beauty-card").forEach((nested) => {
@@ -2746,17 +2749,17 @@
                     return card.outerHTML;
                 }
             } catch (e) {
+                console.error("HTML清理失败:", e);
             }
-            // template解析失败（流式阶段HTML不完整）：尝试截掉卡片根标签结束后的多余文字
-            // 找到根标签名，截到最后一个对应闭合标签
-            const rootTagMatch = cleaned.match(/^<(article|section|div)\b/i);
+            // 兜底：截到最后一个闭合标签
+            const rootTagMatch = candidate.match(/^<(article|section|div)\b/i);
             if (rootTagMatch) {
                 const tag = rootTagMatch[1].toLowerCase();
                 const closeTag = `</${tag}>`;
-                const lastClose = cleaned.lastIndexOf(closeTag);
-                if (lastClose > 0) return cleaned.slice(0, lastClose + closeTag.length);
+                const lastClose = candidate.lastIndexOf(closeTag);
+                if (lastClose > 0) return candidate.slice(0, lastClose + closeTag.length);
             }
-            return cleaned;
+            return candidate;
         }
         function isRenderableHtmlCard(text) {
             if (!containsHtmlCard(text)) return false;
@@ -3925,7 +3928,7 @@
         function upsertNpc(state, item = {}) {
             if (!Array.isArray(state.npcs)) state.npcs = [];
             if (isProtagonistLikeNpc(state, item)) return null;
-            const inputName = String(item.name || "").trim();
+            const inputName = String(item.name || "").trim().replace(/[\(（].*?[\)）]/g, "");
             const normName = inputName.toLowerCase();
             const itemId = String(item.id || "").trim().replace(/[^\w-]/g, "_");
             const inferredId = normalizeNpcIdByName(state, inputName);
@@ -3943,8 +3946,21 @@
                 npc.id = id;
             }
 
-            const fields = ["name", "gender", "relation", "status", "mood", "traits"];
-            fields.forEach((k) => { if (item[k] !== undefined && String(item[k]).trim()) npc[k] = String(item[k]).slice(0, 24); });
+            // 锁定核心属性：gender/relation 只有在原值为空或"未知"时才允许 AI 补全
+            const LOCK_FIELDS = ["gender", "relation"];
+            LOCK_FIELDS.forEach((f) => {
+                if (item[f] !== undefined) {
+                    const cur = String(npc[f] || "").trim();
+                    if (cur === "" || cur === "未知" || cur === "待定") {
+                        npc[f] = String(item[f]).slice(0, 12);
+                    }
+                }
+            });
+            // 动态属性允许更新
+            if (item.name && String(item.name).trim() && item.name !== npc.name) npc.name = String(item.name).slice(0, 20);
+            if (item.status !== undefined) npc.status = String(item.status).slice(0, 16);
+            if (item.mood !== undefined) npc.mood = String(item.mood).slice(0, 16);
+            if (item.traits !== undefined && String(item.traits).trim()) npc.traits = String(item.traits).slice(0, 24);
             if (item.favor !== undefined) npc.favor = Math.max(0, Math.min(100, Number(item.favor) || npc.favor || 60));
             // 支持 NPC 独立属性面板（与主角 stats 同格式）
             if (Array.isArray(item.stats) && item.stats.length) {
@@ -4649,26 +4665,26 @@
             const statHtml = stats.map((s) => {
                 const key = String(s.key || s.label || "");
                 const rawValue = String(s.value ?? "0");
-                let current, max;
+                let currentNum, maxNum;
                 if (rawValue.includes("/")) {
-                    [current, max] = rawValue.split("/").map(v => parseFloat(v.trim()));
+                    [currentNum, maxNum] = rawValue.split("/").map(v => parseFloat(v.trim()));
                 } else {
-                    current = parseFloat(rawValue);
-                    max = 100;
+                    currentNum = parseFloat(rawValue);
+                    maxNum = 100;
                 }
-                if (!isFinite(current)) current = 0;
-                if (!isFinite(max) || max <= 0) max = 100;
-                const pct = Math.min(100, Math.max(0, (current / max) * 100));
-                const barColor = pct > 60 ? "var(--btn-success-bg, #4daa70)" : pct > 30 ? "var(--accent)" : "var(--btn-danger-bg, #e05555)";
+                if (!isFinite(currentNum)) currentNum = 0;
+                if (!isFinite(maxNum) || maxNum <= 0) maxNum = 100;
+                const pct = Math.min(100, Math.max(0, (currentNum / maxNum) * 100));
+                const barColor = pct > 60 ? "#4daa70" : pct > 30 ? "var(--accent)" : "#e05555";
                 const prev = lastRenderedStatMap.get(key);
-                const delta = Number.isFinite(prev) ? current - prev : 0;
+                const delta = Number.isFinite(prev) ? currentNum - prev : 0;
                 const deltaClass = delta > 0 ? "up" : (delta < 0 ? "down" : "");
                 const stateClass = delta > 0 ? "stat-up" : (delta < 0 ? "stat-down" : "");
                 return `
                     <div class="stat-item ${stateClass}">
                         <div class="stat-item-header">
                             <div class="stat-item-label">${s.icon || "✨"} <strong>${MarkdownService.escapeHtml(s.label || "属性")}</strong></div>
-                            ${delta ? `<span class="stat-item-delta ${deltaClass}">${delta > 0 ? "+" : ""}${delta}</span>` : ""}
+                            ${delta ? `<span class="stat-item-delta ${deltaClass}">${delta > 0 ? "+" : ""}${delta.toFixed(1)}</span>` : ""}
                         </div>
                         <div class="stat-item-value"><span style="font-weight:800">${MarkdownService.escapeHtml(rawValue)}</span></div>
                         <div class="stat-bar-container">
@@ -4873,10 +4889,11 @@
                 row.className = "swipe-row";
                 row.dataset.npcId = String(npc.id || "");
                 row.dataset.npcIndex = String(idx);
+                const cleanName = MarkdownService.escapeHtml(npc.name.replace(/[\(（].*?[\)）]/g, "").trim());
                 row.innerHTML = `
                     <div class="npc-panel-card swipe-main">
                         <div class="npc-panel-main">
-                            <div class="npc-panel-title">${npc.name}（${npc.relation}）</div>
+                            <div class="npc-panel-title">${cleanName}（${npc.relation}）</div>
                             <div class="npc-panel-summary">${npc.status || "在线"} · ${npc.mood || "平静"}${npc.traits ? ` · ${npc.traits}` : ""}</div>
                             <div class="npc-panel-tags">
                                 <span class="npc-tag">性别 ${npc.gender || "未知"}</span>
@@ -6616,10 +6633,12 @@
         }
         function buildHeaders(config) {
             // 云卡模式：key 由 Worker 注入，前端只传云卡 ID 和用户 token
+            const token = AuthService.getToken();
+            const authHeader = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
             return {
                 "Content-Type": "application/json",
                 "X-Cloud-Card-Id": config.cloudCard?.id || "free",
-                "X-Auth-Token": AuthService.getToken()
+                "X-Auth-Token": authHeader
             };
         }
         function buildExtraBody(extraBody = null, cardId = "") {
@@ -8502,8 +8521,10 @@
         async function refreshBalance() {
             if (!_userData) return;
             try {
+                const token = getToken();
+                const authHeader = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
                 const res = await fetch(`${PB_URL}/api/collections/${COLLECTION}/records/${_userData.id}`, {
-                    headers: { "Authorization": getToken() }
+                    headers: { "Authorization": authHeader }
                 });
                 if (res.ok) {
                     const data = await res.json();
@@ -8618,9 +8639,10 @@
             const token = getToken();
             if (!token) return false;
             try {
+                const authHeader = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
                 const res = await fetch(`${PB_URL}/api/collections/${COLLECTION}/auth-refresh`, {
                     method: "POST",
-                    headers: { "Authorization": token }
+                    headers: { "Authorization": authHeader }
                 });
                 if (!res.ok) { clearSession(); return false; }
                 const data = await res.json();
