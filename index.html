@@ -8869,39 +8869,34 @@ function buildPresetCardId(preset) {
             });
         }
 
-    async function playPresetTemplate(preset) {
-    // 1. 生成确定的 ID
+async function playPresetTemplate(preset) {
     const targetId = ScenarioTemplateService.buildPresetCardId(preset);
-    
-    // 2. 检查列表（增加标题匹配作为兜底，防止 ID 格式变更导致的失效）
     const allCards = ScenarioCardService.loadCards();
-    const existingCard = allCards.find(c => 
-        c.id === targetId || 
-        (c.sourceType === "official" && c.title === preset.title)
-    );
-    
+    const existingCard = allCards.find(c => c.id === targetId || (c.sourceType === "official" && c.title === preset.title));
 
     if (existingCard) {
         console.log("检测到现有卡片，直接进入游玩:", existingCard.id);
-        // 如果是用标题匹配到的，确保使用正确的 ID
         await playScenarioCard(existingCard.id);
     } else {
-        console.log("未发现现有卡片，执行加载流程");
-        InitLoadingService.open("正在加载预设模板...");
-        
-        // 注意：这里传 forceCreateNew: false
-        const ok = await applyPresetTemplate(preset, { 
-            silent: true, 
-            forceCreateNew: false 
-        });
+        console.log("执行官方模板加载流程");
+        // 注意：这里不需要手动开 InitLoadingService.open，因为 applyPresetTemplate 内部会开
+        try {
+            const ok = await applyPresetTemplate(preset, { 
+                silent: true, 
+                forceCreateNew: false 
+            });
 
-        if (ok === false) {
+            if (ok) {
+                // 关键点：稍微延迟 100ms 确保 LocalStorage 写入和 StateService 刷新完成
+                setTimeout(async () => {
+                    const newId = ScenarioCardService.getSelectedId();
+                    await playScenarioCard(newId);
+                }, 100);
+            }
+        } catch (err) {
             InitLoadingService.close();
-            return;
+            console.error("加载官方模板失败:", err);
         }
-        
-        // 获取 applyPresetTemplate 内部真正选中的 ID
-        await playScenarioCard(ScenarioCardService.getSelectedId());
     }
 }
         
