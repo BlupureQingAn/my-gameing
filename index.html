@@ -8583,23 +8583,32 @@ const token = delta.content || "";
             StateService.save();
             renderAll();
         }
-        function openNpcProfile(npcId) {
+
+        
+function openNpcProfile(npcId) {
             const state = StateService.get();
-            const npc = findNpcByRef(state, npcId) || findNpcByRef(state, currentSocialNpcId);
+            // 修正查找逻辑：优先使用传入的 npcId，如果没传则尝试从聊天上下文获取
+            const targetId = npcId || currentSocialNpcId;
+            const npc = findNpcByRef(state, targetId);
+            
             if (!npc) {
-                openInfoModal("无法打开档案", "当前 NPC 数据不存在，可能是旧存档中的 NPC 标识丢失了。请重新进入社交页后再试。");
+                // 如果找不到 NPC，弹窗提示
+                const msg = "当前 NPC 数据（ID: " + targetId + "）不存在，请刷新页面重试。";
+                // 确保调用 closure 内的 openInfoModal
+                openInfoModal("无法打开档案", msg);
                 return;
             }
-            const mem = NpcMemoryService.ensureStore(state, npc.id);
-            const tags = mem?.tags || { promises: [], conflicts: [], secrets: [], notes: [] };
-            const profile = npc.profile && typeof npc.profile === "object" ? npc.profile : {};
-            const npcStats = Array.isArray(npc.stats) && npc.stats.length ? npc.stats : null;
 
+            // 1. 安全提取属性和背景
             const favor = Math.max(0, Math.min(100, Number(npc.favor) || 0));
             const favorColor = favor >= 70 ? "#2ecc71" : favor >= 40 ? "var(--accent)" : "#e74c3c";
             const favorLabel = favor >= 80 ? "挚友" : favor >= 60 ? "友好" : favor >= 40 ? "普通" : favor >= 20 ? "疏远" : "敌对";
+            const profile = (npc.profile && typeof npc.profile === 'object') ? npc.profile : {};
+            const npcStats = Array.isArray(npc.stats) && npc.stats.length > 0 ? npc.stats : null;
+            const mem = NpcMemoryService.ensureStore(state, npc.id);
+            const tags = (mem && mem.tags) ? mem.tags : { promises: [], conflicts: [], secrets: [], notes: [] };
 
-            // 好感度进度条
+            // 2. 好感度进度条 HTML
             const favorBar = `
                 <div style="margin:10px 0 4px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
@@ -8611,81 +8620,93 @@ const token = delta.content || "";
                     </div>
                 </div>`;
 
-            // 状态标签行
-            const statusTags = [
+            // 3. 状态标签 HTML
+            const statusTagsHtml = [
                 { label: "关系", value: npc.relation || "熟人" },
                 { label: "状态", value: npc.status || "在线" },
                 { label: "心情", value: npc.mood || "平静" },
                 { label: "性别", value: npc.gender || "未知" }
-            ].map((t) => `<span class="status-tag"><strong>${t.label}</strong><em>${MarkdownService.escapeHtml(t.value)}</em></span>`).join("");
+            ].map(t => `<span class="status-tag"><strong>${t.label}</strong><em>${MarkdownService.escapeHtml(t.value)}</em></span>`).join("");
 
-            // 属性面板（若有 stats 则显示，否则显示 profile 基础信息）
-            const statsPanel = npcStats
-                ? `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px;">
-                    ${npcStats.map((s) => `
-                        <div style="padding:8px 10px;border-radius:12px;background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(248,240,226,.88));border:1px solid color-mix(in srgb,var(--accent) 18%,transparent);text-align:center;">
+            // 4. 属性面板或基础信息
+            let statsPanelHtml = "";
+            if (npcStats) {
+                statsPanelHtml = `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px;">
+                    ${npcStats.map(s => `
+                        <div style="padding:8px 10px;border-radius:12px;background:var(--card-soft);border:1px solid rgba(176,134,82,0.15);text-align:center;">
                             <div style="font-size:1.1rem;">${MarkdownService.escapeHtml(s.icon || "✨")}</div>
                             <div style="font-size:.72rem;color:var(--sub);margin-top:2px;">${MarkdownService.escapeHtml(s.label)}</div>
-                            <div style="font-size:1.1rem;font-weight:800;color:var(--accent-dark);margin-top:2px;">${s.value}</div>
+                            <div style="font-size:1rem;font-weight:800;color:var(--accent-dark);margin-top:2px;">${s.value}</div>
                         </div>`).join("")}
-                   </div>`
-                : `<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px;">
+                   </div>`;
+            } else {
+                statsPanelHtml = `<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px;">
                     ${[
                         { label: "年龄", value: profile.age },
-                        { label: "身份", value: profile.identity || npc.gender },
+                        { label: "身份", value: profile.identity },
                         { label: "居所", value: profile.residence },
                         { label: "特质", value: npc.traits }
-                    ].map((r) => r.value ? `<div class="list-row" style="margin-bottom:0;flex-direction:column;align-items:flex-start;gap:2px;"><div class="list-sub" style="font-size:.72rem;">${r.label}</div><div class="list-title" style="font-size:.88rem;">${MarkdownService.escapeHtml(r.value)}</div></div>` : "").join("")}
+                    ].filter(r => r.value).map(r => `
+                        <div class="list-row" style="margin-bottom:0;flex-direction:column;align-items:flex-start;padding:6px 10px;">
+                            <div class="list-sub" style="font-size:.72rem;">${r.label}</div>
+                            <div class="list-title" style="font-size:.85rem;">${MarkdownService.escapeHtml(r.value)}</div>
+                        </div>`).join("")}
                    </div>`;
+            }
 
-            // profile 详情块
-            const detailRows = [
-                { label: "外貌印象", value: profile.appearance },
-                { label: "性格标签", value: profile.personality },
-                { label: "当前目标", value: profile.goal },
-                { label: "初见印象", value: profile.firstImpression },
-                { label: "隐藏信息", value: profile.secret }
-            ].filter((r) => r.value).map((r) => `
-                <div style="margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--card-soft);border:1px solid color-mix(in srgb,var(--line) 60%,transparent);">
-                    <div style="font-size:.72rem;color:var(--sub);margin-bottom:3px;">${r.label}</div>
-                    <div style="font-size:.86rem;color:var(--text);">${MarkdownService.escapeHtml(r.value)}</div>
+            // 5. 详细描述和记忆块
+            const detailHtml = [
+                { label: "外貌", value: profile.appearance },
+                { label: "性格", value: profile.personality },
+                { label: "目标", value: profile.goal },
+                { label: "初印象", value: profile.firstImpression }
+            ].filter(r => r.value).map(r => `
+                <div style="margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--card-soft);border:1px solid rgba(0,0,0,0.05);">
+                    <div style="font-size:.72rem;color:var(--sub);margin-bottom:2px;">${r.label}</div>
+                    <div style="font-size:.85rem;color:var(--text);">${MarkdownService.escapeHtml(r.value)}</div>
                 </div>`).join("");
 
-            const listHtml = (arr) => {
-                const a = Array.isArray(arr) ? arr.filter(Boolean) : [];
-                if (!a.length) return `<span style="font-size:.8rem;color:var(--sub);">（暂无）</span>`;
-                return `<ul style="padding-left:16px;margin:4px 0;font-size:.84rem;">${a.map((x) => `<li>${MarkdownService.escapeHtml(String(x))}</li>`).join("")}</ul>`;
+            const listRenderer = (title, items, color) => {
+                if (!items || items.length === 0) return "";
+                return `<div style="margin-top:6px;">
+                    <span style="font-size:.75rem;font-weight:700;color:${color};">${title}</span>
+                    <ul style="padding-left:16px;margin:4px 0;font-size:.82rem;color:var(--sub);">
+                        ${items.map(x => `<li>${MarkdownService.escapeHtml(String(x))}</li>`).join("")}
+                    </ul>
+                </div>`;
             };
 
-            const memSection = (mem.summary || tags.promises.length || tags.conflicts.length || tags.secrets.length || tags.notes.length)
-                ? `<div style="margin-top:12px;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,var(--accent) 6%,var(--card-soft));border:1px solid color-mix(in srgb,var(--accent) 16%,transparent);">
-                    <div style="font-size:.78rem;font-weight:700;color:var(--accent-dark);margin-bottom:6px;">📝 记忆摘要</div>
-                    ${mem.summary ? `<div style="font-size:.82rem;color:var(--sub);margin-bottom:6px;">${MarkdownService.escapeHtml(mem.summary)}</div>` : ""}
-                    ${tags.promises.length ? `<div style="margin-top:4px;"><span style="font-size:.75rem;font-weight:700;color:var(--accent-dark);">承诺</span>${listHtml(tags.promises)}</div>` : ""}
-                    ${tags.conflicts.length ? `<div style="margin-top:4px;"><span style="font-size:.75rem;font-weight:700;color:#e74c3c;">冲突</span>${listHtml(tags.conflicts)}</div>` : ""}
-                    ${tags.secrets.length ? `<div style="margin-top:4px;"><span style="font-size:.75rem;font-weight:700;color:var(--sub);">秘密</span>${listHtml(tags.secrets)}</div>` : ""}
-                    ${tags.notes.length ? `<div style="margin-top:4px;"><span style="font-size:.75rem;font-weight:700;color:var(--sub);">备注</span>${listHtml(tags.notes)}</div>` : ""}
-                   </div>`
-                : "";
+            const memoryHtml = (mem && (mem.summary || tags.promises.length || tags.conflicts.length)) ? `
+                <div style="margin-top:12px;padding:10px 12px;border-radius:12px;background:rgba(176,134,82,0.05);border:1px dashed rgba(176,134,82,0.3);">
+                    <div style="font-size:.78rem;font-weight:700;color:var(--accent-dark);margin-bottom:6px;">📝 记忆往事</div>
+                    ${mem.summary ? `<div style="font-size:.82rem;color:var(--sub);margin-bottom:4px;">${MarkdownService.escapeHtml(mem.summary)}</div>` : ""}
+                    ${listRenderer("约定", tags.promises, "var(--accent-dark)")}
+                    ${listRenderer("冲突", tags.conflicts, "#e74c3c")}
+                </div>` : "";
 
             const desc = `
-                <div style="border-radius:14px;overflow:hidden;border:1px solid color-mix(in srgb,var(--accent) 22%,transparent);background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 8%,var(--card)),var(--card));padding:14px;margin-bottom:10px;">
-                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-                        <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent-dark));display:grid;place-items:center;font-size:26px;color:#fff;flex-shrink:0;box-shadow:0 6px 16px rgba(0,0,0,.12);">🧑</div>
+                <div style="border-radius:14px;overflow:hidden;background:var(--card);padding:2px;">
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:10px;">
+                        <div style="width:50px;height:50px;border-radius:50%;background:var(--accent);display:grid;place-items:center;font-size:24px;color:#fff;">🧑</div>
                         <div>
                             <div style="font-size:1.1rem;font-weight:800;color:var(--accent-dark);">${MarkdownService.escapeHtml(npc.name)}</div>
-                            <div style="font-size:.8rem;color:var(--sub);margin-top:2px;">${MarkdownService.escapeHtml(npc.relation || "熟人")}${profile.identity ? " · " + MarkdownService.escapeHtml(profile.identity) : ""}</div>
+                            <div style="font-size:.8rem;color:var(--sub);">${MarkdownService.escapeHtml(npc.relation || "NPC")}</div>
                         </div>
                     </div>
                     ${favorBar}
-                    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;">${statusTags}</div>
-                    ${statsPanel}
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;">${statusTagsHtml}</div>
+                    ${statsPanelHtml}
+                    ${detailHtml}
+                    ${memoryHtml}
                 </div>
-                ${detailRows}
-                ${memSection}
             `;
-            openInfoModal(`${npc.name} 的档案`, desc);
+
+            // 调用 Controller 内部的 openInfoModal
+            openInfoModal(npc.name + " 的个人档案", desc);
         }
+
+
+
         function openNpcChat(npcId) {
             const state = StateService.get();
             const npc = findNpcByRef(state, npcId);
