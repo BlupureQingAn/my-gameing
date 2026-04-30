@@ -1875,10 +1875,6 @@
                 <div class="list-sub">可编辑当前卡片名称、文游设定、美化设定（用于 HTML 卡片风格）</div>
                 <input id="scenario-title-input" type="text" placeholder="卡片标题（可自定义，含置顶卡片）">
                 <input id="scenario-theme-input" type="text" placeholder="美化设定（例如：奶油暖色玻璃、古风卷轴）">
-                <label class="list-sub" style="display:flex; align-items:center; gap:8px; margin-top:6px;">
-                    <input type="checkbox" id="card-thinking-enabled">
-                    开启思考模式（当前卡片）
-                </label>
                 <textarea id="scenario-editor" class="scenario-editor" placeholder="在这里编辑当前卡片的文游设定"></textarea>
                 <div class="setting-actions">
                     <button class="mini-btn primary" onclick="saveScenarioCard()">保存当前卡片</button>
@@ -2177,9 +2173,7 @@
             htmlRetryCount: 1,
             enableConflictDetection: true,
             enableHtmlCardForce: true,
-            lockFirstCardSkeleton: true,
-            globalThinkingEnabled: false,
-            cardThinkingMap: {}
+            lockFirstCardSkeleton: true
         }
     };
 
@@ -2426,7 +2420,6 @@
         function normalize(raw) {
             const defaults = AppConfig.defaultChatPolicyConfig;
             const source = raw && typeof raw === "object" ? raw : {};
-            const cardThinkingMap = source.cardThinkingMap && typeof source.cardThinkingMap === "object" ? source.cardThinkingMap : {};
             return {
                 temperature: normalizeNumber(source.temperature, defaults.temperature, 0, 2, false),
                 choiceRetryCount: normalizeNumber(source.choiceRetryCount, defaults.choiceRetryCount, 0, 5, true),
@@ -2434,9 +2427,7 @@
                 htmlRetryCount: normalizeNumber(source.htmlRetryCount, defaults.htmlRetryCount, 0, 5, true),
                 enableConflictDetection: source.enableConflictDetection !== false,
                 enableHtmlCardForce: true,
-                lockFirstCardSkeleton: true,
-                globalThinkingEnabled: source.globalThinkingEnabled === true,
-                cardThinkingMap
+                lockFirstCardSkeleton: true
             };
         }
         function load() {
@@ -2525,7 +2516,7 @@
             ],
             npcs: [
                 { id: "npc_mom", name: "林知晴", gender: "女", relation: "母亲", favor: 82, status: "在家", mood: "温和" },
-                { id: "npc_dad", name: "顾承远", gender: "女", relation: "母亲", favor: 75, status: "工作中", mood: "认真" },
+                { id: "npc_dad", name: "顾承远", gender: "男", relation: "父亲", favor: 75, status: "工作中", mood: "认真" },
                 { id: "npc_friend", name: "许安禾", gender: "女", relation: "青梅竹马", favor: 68, status: "上学", mood: "活泼" }
             ],
             panelStatusTags: [],
@@ -3525,10 +3516,10 @@
             const innerHtml = `<div style="display:flex;flex-wrap:wrap;gap:8px;">${barsHtml}</div>${tagsHtml}`;
             statusEl.innerHTML = innerHtml;
 
-            // 同步到顶部状态面板：直接复用卡片里的 wy-stat-bar-item 结构
+            // 同步到顶部状态面板：直接复用卡片 status block 渲染后的 innerHTML
             const topBox = document.getElementById("game-stats-card");
             if (topBox) {
-                topBox.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px;padding:2px 0;">${barsHtml}</div>${tagsHtml}`;
+                topBox.innerHTML = statusEl.innerHTML;
             }
         }
         return { renderAiMessage, bindHtmlChoiceEvents, formatQuotedDialogueLines, injectStatsIntoCard };
@@ -5119,11 +5110,7 @@
             }
 
             const policy = ChatPolicyConfigService.load();
-            const globalThinkingInput = document.getElementById("global-thinking-enabled");
-            if (globalThinkingInput) globalThinkingInput.checked = policy.globalThinkingEnabled === true;
             const selectedCardId2 = ScenarioCardService.getSelectedId();
-            const cardThinkingInput = document.getElementById("card-thinking-enabled");
-            if (cardThinkingInput) cardThinkingInput.checked = !!policy.cardThinkingMap?.[selectedCardId2];
         }
         function saveFromUI() {
             const selectedScenario = ScenarioCardService.getSelectedCard();
@@ -5155,14 +5142,8 @@
         function getChatPolicyConfig() {
             return ChatPolicyConfigService.load();
         }
-        function getThinkingPayloadForCard(cardId = "") {
-            const policy = ChatPolicyConfigService.load();
-            const sid = String(cardId || ScenarioCardService.getSelectedId() || "");
-            const hasCardOverride = !!sid && Object.prototype.hasOwnProperty.call(policy.cardThinkingMap || {}, sid);
-            const enabled = hasCardOverride
-                ? policy.cardThinkingMap?.[sid] === true
-                : policy.globalThinkingEnabled === true;
-            return enabled ? { thinking: { type: "enabled" } } : {};
+        function getThinkingPayloadForCard() {
+            return {};
         }
         function importScenarioFromFile() {
             const input = document.getElementById("scenario-file-input");
@@ -7678,10 +7659,7 @@
             const form = ScenarioEditorService.readForm();
             const currentPolicy = ChatPolicyConfigService.load();
             const selectedCardId = ScenarioCardService.getSelectedId();
-            const cardThinkingInput = document.getElementById("card-thinking-enabled");
-            const cardThinkingMap = { ...(currentPolicy.cardThinkingMap || {}) };
-            cardThinkingMap[selectedCardId] = !!cardThinkingInput?.checked;
-            ChatPolicyConfigService.save({ ...currentPolicy, cardThinkingMap });
+            ChatPolicyConfigService.save({ ...currentPolicy });
             ScenarioCardService.updateSelectedCard({
                 title: form.title || "未命名设定",
                 theme: form.theme,
