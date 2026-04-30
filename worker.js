@@ -173,7 +173,10 @@ export default {
                     const base = target.url.replace(/\/$/, "");
                     
                     const controller = new AbortController();
-                    const timeout = setTimeout(() => controller.abort(), 60000);
+                    // 流式请求：60s 超时保护连接建立阶段，连接成功后清除（流传输由 Cloudflare 30s CPU 限制兜底）
+                    // 非流式请求：120s 等待完整响应（初始化解析等大模型完整响应场景）
+                    const timeoutMs = isStream ? 60000 : 120000;
+                    const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
                     try {
                         const payload = { ...requestJson, model: target.model };
@@ -186,9 +189,12 @@ export default {
                             body: JSON.stringify(payload),
                             signal: controller.signal
                         });
-                        return response;
-                    } finally {
+                        // 连接建立后清除超时：流式响应由客户端读取，非流式响应已完整返回
                         clearTimeout(timeout);
+                        return response;
+                    } catch (e) {
+                        clearTimeout(timeout);
+                        throw e;
                     }
                 };
 
@@ -202,6 +208,9 @@ export default {
                         console.warn("free primary 失败，切换 backup:", primaryErr.message);
                         try {
                             aiResponse = await callAI(cardConfig.backup);
+                            if (!aiResponse.ok) {
+                                console.warn("free backup 也返回非 2xx:", aiResponse.status);
+                            }
                         } catch (backupErr) {
                             return errorResponse("服务暂时不可用，请稍后重试", 503, backupErr.message);
                         }

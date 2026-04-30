@@ -2126,7 +2126,7 @@
             "free": {
                 id: "free",
                 name: "免费云卡",
-                desc: "基于 Qwen3.5，速度极快",
+                desc: "基于 Qwen3.5-122B（主）/ Qwen2.5-7B（备），免费使用",
                 model: "Qwen/Qwen2.5-7B-Instruct",
                 priceInput: 0,
                 priceOutput: 0
@@ -2597,7 +2597,7 @@
             if (!gameState.npcMemoryMap || typeof gameState.npcMemoryMap !== "object") gameState.npcMemoryMap = {};
             if (typeof gameState.timeEra !== "string") gameState.timeEra = "";
             if (!Number.isFinite(Number(gameState.weekIndex))) gameState.weekIndex = 1;
-            if (!gameState.currentDay) gameState.currentDay = 1;
+            if (!Number.isFinite(Number(gameState.currentDay)) || gameState.currentDay < 1) gameState.currentDay = 1;
             if (typeof gameState.weekdayIndex !== "number") gameState.weekdayIndex = 0;
         }
 
@@ -4507,9 +4507,7 @@
                     }
                 });
             }
-            if (changed) {
-                UIRenderer.renderTop(state);
-            }
+            // 注意：不在此处调用 UIRenderer.renderTop，由调用方统一控制渲染时机
             return changed;
         }
         function syncFromAiText(state, text, isStreaming = false) {
@@ -6308,7 +6306,10 @@
                 InitLoadingService.close();
                 UIRenderer.finishStreaming(`⚠️ 开局卡片生成失败：${e.message}`, { conflictDetected: false });
             } finally {
-                InitLoadingService.close();
+                // finally 只做保底关闭（catch 已关闭时此处为空操作）
+                if (document.getElementById("init-loading-modal")?.style.display !== "none") {
+                    InitLoadingService.close();
+                }
             }
         }
         return { start };
@@ -6778,7 +6779,7 @@
     const AIRequestService = (() => {
         const REQUEST_TIMEOUT_MS = 10000;  // 连接超时 10s，快速失败触发重试
         const READ_TIMEOUT_MS = 90000;     // 流式读取超时 90s，允许长文本生成
-        const INIT_REQUEST_TIMEOUT_MS = 60000; // 初始化各子请求超时，快速失败触发缺失字段补全
+        const INIT_REQUEST_TIMEOUT_MS = 115000; // 初始化各子请求超时，比 Worker 非流式超时(120s)略短，确保 Worker 先超时触发 backup
         function createHttpError(status, message, extra = {}) {
             const err = new Error(message || `HTTP ${status}`);
             err.status = status;
@@ -6971,7 +6972,7 @@
                 });
             } catch (e) {
                 if (e?.name === "AbortError") {
-                    throw createHttpError(408, `请求超时（>${REQUEST_TIMEOUT_MS / 1000}s）`, { endpoint: fetchUrl });
+                    throw createHttpError(408, `请求超时（>${Math.round(timeoutMs / 1000)}s）`, { endpoint: fetchUrl });
                 }
                 throw e;
             } finally {
@@ -7259,9 +7260,10 @@
             const chunks = splitScenarioText(raw, 2200, 240);
             const fetchUrl = AIRequestService.buildFetchUrl();
             const headers = AIRequestService.buildHeaders(apiConfig);
-            const chunkDigests = [];
-            for (let i = 0; i < chunks.length; i++) {
-                const content = await AIRequestService.requestCompletionWithFallback({
+
+            // 并行压缩所有分块，减少总等待时间
+            const chunkPromises = chunks.map((chunk, i) =>
+                AIRequestService.requestCompletionWithFallback({
                     config: apiConfig,
                     fetchUrl,
                     headers,
@@ -7281,15 +7283,15 @@
                             content: [
                                 `当前是第 ${i + 1}/${chunks.length} 段，用户选择性别：${selectedGender}`,
                                 "请将本段压缩成 8-14 条要点，每条一行。",
-                                `设定片段：\n${chunks[i]}`
+                                `设定片段：\n${chunk}`
                             ].join("\n\n")
                         }
                     ],
-                    temperature: 0.1
-                });
-                const digest = String(content || "").trim();
-                if (digest) chunkDigests.push(digest);
-            }
+                    temperature: 0.1,
+                    timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
+                }).then((c) => String(c || "").trim()).catch(() => "")
+            );
+            const chunkDigests = (await Promise.all(chunkPromises)).filter(Boolean);
             if (!chunkDigests.length) return raw;
             const merged = await AIRequestService.requestCompletionWithFallback({
                 config: apiConfig,
@@ -7315,7 +7317,8 @@
                         ].join("\n\n")
                     }
                 ],
-                temperature: 0.1
+                temperature: 0.1,
+                timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
             });
             const mergedText = String(merged || "").trim();
             if (!mergedText) return raw;
@@ -7340,7 +7343,7 @@
                 .filter(Boolean)
                 .slice(0, 5);
         }
-        function sanitizePlan(parsed = {}, selectedGender = "") {
+        function sanitizePlan(parsed = {}, selectedGender = "", keepCollections = false) {
             const ensured = ensureNameFallback(parsed, "");
             return {
                 name: String(ensured.name || "").trim(),
@@ -7356,21 +7359,89 @@
                 currentYear: sanitizeTime(ensured.currentYear, 1, 9999),
                 currentMonth: sanitizeTime(ensured.currentMonth, 1, 12),
                 currentDay: sanitizeTime(ensured.currentDay, 1, 31),
-                stats: [],     // 由 Intro 卡片的 state-patch 补全
-                inventory: [], // 由 Intro 卡片的 state-patch 补全
-                npcs: [],      // 由 Intro 卡片的 state-patch 补全
+                // keepCollections=true 时保留 AI 返回的 npcs/inventory，避免触发不必要的兜底请求
+                stats: [],
+                inventory: keepCollections ? sanitizeItems(Array.isArray(ensured.inventory) ? ensured.inventory : []) : [],
+                npcs: keepCollections ? sanitizeNpcs(Array.isArray(ensured.npcs) ? ensured.npcs : []) : [],
                 openingChoices: normalizeOpeningChoices(ensured.openingChoices),
                 rebornReason: String(ensured.rebornReason || "使用AI解析设定生成").slice(0, 120)
             };
         }
-        async function analyzeWithAI({ scenarioText, selectedGender, apiConfig, onProgress, extraHint = "", previousPlan = null }) {
+        // 免费卡专用：单次全量请求，把所有初始化字段合并到一个 prompt，大幅减少 API 调用次数
+        async function analyzeWithAI_SingleShot({ scenarioText, selectedGender, apiConfig, onProgress, extraHint = "", previousPlan = null }) {
+            const fetchUrl = AIRequestService.buildFetchUrl();
+            const headers = AIRequestService.buildHeaders(apiConfig);
+            if (typeof onProgress === "function") onProgress("连接中");
+
+            const systemPrompt = [
+                "你是文游开局初始化解析器。根据设定文本，一次性输出完整初始化 JSON，不要解释，不要 Markdown 代码块。",
+                "unknown 字段用空字符串或空数组，不要编造。",
+                "【NPC规则】禁止使用母亲/父亲/青梅竹马等通用套路，除非设定明确出现；必须根据世界观主题构建 3 位契合的关键 NPC。",
+                "【背包规则】禁止使用手机/钱包/身份证等现代通用物品，除非设定明确是现代背景；生成 3-5 件契合世界观的初始道具。",
+                "【姓名规则】禁止给姓名追加数字后缀（如 张三2 / Alex-3）。",
+                "输出字段（全部必填）：",
+                "  name(string), englishName(string), ageYears(number), forcedGender(string),",
+                "  nationality(string), location(string), timeEra(string),",
+                "  weekIndex(number), weekdayIndex(number), currentYear(number), currentMonth(number), currentDay(number),",
+                "  rebornReason(string), openingChoices(array),",
+                "  npcs(array，每项含 id,name,gender,relation,favor,status,mood,traits,profile{age,identity,personality}),",
+                "  inventory(array，每项含 id,name,type,desc,effect,count)"
+            ].join("\n");
+
+            const userPrompt = [
+                `用户选择角色性别：${selectedGender}`,
+                previousPlan ? `已有结果（仅补缺，不要随意推翻）：\n${JSON.stringify(previousPlan, null, 2)}` : "",
+                extraHint ? `补充要求：\n${extraHint}` : "",
+                `设定文本：\n${scenarioText}`
+            ].filter(Boolean).join("\n\n");
+
+            if (typeof onProgress === "function") onProgress("解析角色");
+            const content = await AIRequestService.requestCompletionWithFallback({
+                config: apiConfig, fetchUrl, headers,
+                model: apiConfig.model,
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userPrompt }
+                ],
+                temperature: 0.3,
+                timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
+            });
+
+            const parsed = parseFirstJsonObject(content);
+            if (!parsed || typeof parsed !== "object") return null;
+
+            if (typeof onProgress === "function") onProgress("结构校验");
+            const sanitized = sanitizePlan(parsed, selectedGender, true); // keepCollections=true：保留 AI 返回的 npcs/inventory
+
+            // NPC 兜底
+            if (!sanitized.npcs || sanitized.npcs.length === 0) {
+                if (typeof onProgress === "function") onProgress("补全NPC");
+                const recovered = await requestSingleFieldRecovery({
+                    apiConfig, scenarioText, selectedGender, draftPlan: sanitized, field: "npcs", onProgress
+                }).catch(() => ({}));
+                sanitized.npcs = Array.isArray(recovered.npcs) ? recovered.npcs : [];
+            }
+
+            // 背包兜底
+            if (!sanitized.inventory || sanitized.inventory.length === 0) {
+                if (typeof onProgress === "function") onProgress("补全背包");
+                const recovered = await requestSingleFieldRecovery({
+                    apiConfig, scenarioText, selectedGender, draftPlan: sanitized, field: "inventory", onProgress
+                }).catch(() => ({}));
+                sanitized.inventory = Array.isArray(recovered.inventory) ? recovered.inventory : [];
+            }
+
+            return ensureNameFallback(sanitized, scenarioText);
+        }
+
+        // 付费卡：保留原有并行多面板逻辑（质量优先）
+        async function analyzeWithAI_MultiPanel({ scenarioText, selectedGender, apiConfig, onProgress, extraHint = "", previousPlan = null }) {
             const fetchUrl = AIRequestService.buildFetchUrl();
             const headers = AIRequestService.buildHeaders(apiConfig);
             if (typeof onProgress === "function") onProgress("连接中");
             const chunks = splitScenarioText(scenarioText, 2800, 280);
             if (typeof onProgress === "function") onProgress("解析角色");
 
-            // 并行解析所有分块，大幅减少总等待时间
             const chunkPromises = chunks.map((chunk, i) => {
                 const systemPrompt = [
                     "你是文游设定分块解析器。给定设定片段，抽取与初始化有关的关键信息。",
@@ -7399,7 +7470,6 @@
             if (!chunkFacts.length) return null;
 
             if (typeof onProgress === "function") onProgress("生成主角状态");
-            // 单分块时直接用分块结果，跳过 reduce 请求
             let reducedDraft;
             if (chunkFacts.length === 1) {
                 reducedDraft = chunkFacts[0];
@@ -7417,9 +7487,7 @@
                     `分块抽取结果：\n${JSON.stringify(chunkFacts, null, 2)}`
                 ].filter(Boolean).join("\n\n");
                 const reducedText = await AIRequestService.requestCompletionWithFallback({
-                    config: apiConfig,
-                    fetchUrl,
-                    headers,
+                    config: apiConfig, fetchUrl, headers,
                     model: apiConfig.model,
                     messages: [
                         { role: "system", content: reduceSystemPrompt },
@@ -7431,7 +7499,6 @@
                 reducedDraft = parseFirstJsonObject(reducedText) || {};
             }
 
-            // 5个子面板彼此独立，全部依赖 reducedDraft + chunkFacts，并行发起
             if (typeof onProgress === "function") onProgress("生成主角姓名");
             const sharedUserContext = [
                 `用户选择角色性别：${selectedGender}`,
@@ -7447,7 +7514,6 @@
                 npcPanel,
                 inventoryPanel
             ] = await Promise.all([
-                // 姓名
                 AIRequestService.requestCompletionWithFallback({
                     config: apiConfig, fetchUrl, headers, model: apiConfig.model,
                     messages: [
@@ -7462,7 +7528,6 @@
                     temperature: 0.1, timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
                 }).then((t) => parseFirstJsonObject(t) || {}),
 
-                // 基础信息
                 AIRequestService.requestCompletionWithFallback({
                     config: apiConfig, fetchUrl, headers, model: apiConfig.model,
                     messages: [
@@ -7476,23 +7541,19 @@
                     temperature: 0.1, timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
                 }).then((t) => parseFirstJsonObject(t) || {}),
 
-                // NPC 动态生成：严禁套用默认模板，必须契合世界观
                 AIRequestService.requestCompletionWithFallback({
                     config: apiConfig, fetchUrl, headers, model: apiConfig.model,
                     messages: [
                         { role: "system", content: [
                             "你是文游初始化-世界观NPC构建器。",
                             "【禁止】使用默认的母亲、父亲、青梅竹马等通用套路，除非设定文本中明确出现了这些角色。",
-                            "【必须】根据设定文本的主题（如：修仙、无限流、赛博朋克、宫斗、惊悚、年代文），构建 3 位身份背景完全契合该世界观的关键 NPC。",
-                            "例如：修仙世界→传功长老、竞争对手、神秘师兄；赛博朋克→黑市医生、仿生人保镖、情报掮客；惊悚→神秘室友、守门人、失忆者。",
-                            "每位 NPC 必须有鲜明的世界观身份，不得使用现代都市通用角色。",
+                            "【必须】根据设定文本的主题构建 3 位身份背景完全契合该世界观的关键 NPC。",
                             "只输出 JSON 对象，字段：npcs（数组），每项含：id, name, gender, relation, favor, status, mood, traits, profile（含 age, identity, personality）。",
                             "favor 为 0-100 整数，status 为字符串，mood 为字符串，traits 为字符串。"
                         ].join("\n") },
                         { role: "user", content: sharedUserContext }
                     ],
-                    temperature: 0.8,
-                    timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
+                    temperature: 0.8, timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
                 }).then((t) => {
                     const parsed = parseFirstJsonObject(t);
                     if (parsed && Array.isArray(parsed.npcs)) return parsed;
@@ -7500,7 +7561,6 @@
                     return { npcs: [] };
                 }).catch(() => ({ npcs: [] })),
 
-                // 背包动态生成：根据世界观生成契合的初始道具
                 AIRequestService.requestCompletionWithFallback({
                     config: apiConfig, fetchUrl, headers, model: apiConfig.model,
                     messages: [
@@ -7508,14 +7568,12 @@
                             "你是文游初始化-世界观背包构建器。",
                             "【禁止】使用手机、钱包、身份证等现代通用物品，除非设定明确是现代背景。",
                             "【必须】根据设定文本的主题生成 3-5 件完全契合该世界观的初始道具。",
-                            "例如：修仙世界→入门功法残页、聚气丹×3、储物袋；赛博朋克→神经接口破解器、医疗纳米喷雾、加密通讯芯片；古代→碎银两、令牌、匕首。",
                             "只输出 JSON 对象，字段：inventory（数组），每项含：id, name, type, desc, effect, count。",
                             "count 为正整数，type 为道具分类字符串，desc 和 effect 为简短中文描述。"
                         ].join("\n") },
                         { role: "user", content: sharedUserContext }
                     ],
-                    temperature: 0.8,
-                    timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
+                    temperature: 0.8, timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
                 }).then((t) => {
                     const parsed = parseFirstJsonObject(t);
                     if (parsed && Array.isArray(parsed.inventory)) return parsed;
@@ -7528,34 +7586,40 @@
                 ...reducedDraft,
                 ...protagonistNamePanel,
                 ...protagonistBasePanel,
-                stats: [],     // 由 Intro 卡片的 state-patch 补全
+                stats: [],
                 inventory: Array.isArray(inventoryPanel.inventory) ? inventoryPanel.inventory : [],
                 npcs: Array.isArray(npcPanel.npcs) ? npcPanel.npcs : []
             };
 
             if (typeof onProgress === "function") onProgress("结构校验");
-            // finalize 阶段改为本地 sanitizePlan，省掉一次串行 AI 请求
             const sanitized = sanitizePlan(stagedDraft, selectedGender);
 
-            // NPC 兜底：如果 AI 未生成任何 NPC，触发单字段恢复
             if (!sanitized.npcs || sanitized.npcs.length === 0) {
                 if (typeof onProgress === "function") onProgress("补全NPC");
                 const recovered = await requestSingleFieldRecovery({
                     apiConfig, scenarioText, selectedGender, draftPlan: sanitized, field: "npcs", onProgress
-                });
+                }).catch(() => ({}));
                 sanitized.npcs = Array.isArray(recovered.npcs) ? recovered.npcs : [];
             }
 
-            // 背包兜底：如果 AI 未生成任何道具，触发单字段恢复
             if (!sanitized.inventory || sanitized.inventory.length === 0) {
                 if (typeof onProgress === "function") onProgress("补全背包");
                 const recovered = await requestSingleFieldRecovery({
                     apiConfig, scenarioText, selectedGender, draftPlan: sanitized, field: "inventory", onProgress
-                });
+                }).catch(() => ({}));
                 sanitized.inventory = Array.isArray(recovered.inventory) ? recovered.inventory : [];
             }
 
             return ensureNameFallback(sanitized, scenarioText);
+        }
+
+        // 路由：免费卡走单次全量请求，付费卡走多面板并行
+        async function analyzeWithAI({ scenarioText, selectedGender, apiConfig, onProgress, extraHint = "", previousPlan = null }) {
+            const isFreeCard = !apiConfig.cloudCard || apiConfig.cloudCard.id === "free";
+            if (isFreeCard) {
+                return analyzeWithAI_SingleShot({ scenarioText, selectedGender, apiConfig, onProgress, extraHint, previousPlan });
+            }
+            return analyzeWithAI_MultiPanel({ scenarioText, selectedGender, apiConfig, onProgress, extraHint, previousPlan });
         }
         async function requestSingleFieldRecovery({ apiConfig, scenarioText, selectedGender, draftPlan, field, onProgress }) {
             const fetchUrl = AIRequestService.buildFetchUrl();
@@ -7625,7 +7689,8 @@
                         ].join("\n\n")
                     }
                 ],
-                temperature: 0.1
+                temperature: 0.1,
+                timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
             });
             return parseFirstJsonObject(content) || {};
         }
@@ -7729,7 +7794,7 @@
                 onProgress
             });
             if (!aiPlan) throw new Error("AI 返回为空，无法生成开局初始化方案。");
-            if (!aiPlan.name || !aiPlan.englishName) throw new Error("AI 未返回有效主角姓名。");
+            // name/englishName 由 ensureNameFallback 保证非空，这里只需检查数值字段
             if (!Number.isFinite(aiPlan.ageYears)) throw new Error("AI 未返回有效年龄。");
             const hasEra = !!String(aiPlan.timeEra || "").trim();
             const hasYear = Number.isFinite(aiPlan.currentYear);
@@ -8861,9 +8926,7 @@
             PlayViewStateService.enterPlay(ScenarioCardService.getSelectedId());
             closeInitPreviewModal();
             switchView("view-main");
-            renderAll();
-            // 立即刷新顶部面板（此时 stats 为空，显示占位符，Intro 卡片生成后自动填充）
-            UIRenderer.renderTop(StateService.get());
+            renderAll(); // renderAll 内部已包含 renderTop，无需重复调用
             InitIntroService.start({
                 apiConfig: SettingsService.getApiConfig(),
                 scenarioText: SettingsService.getScenarioTextForModel(),
