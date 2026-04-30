@@ -5879,10 +5879,11 @@ function rebuildChoicesBlock(body, labels = []) {
     })();
 
     const ScenarioTemplateService = (() => {
-        function buildPresetCardId(preset) {
-            const raw = String(preset?.id || preset?.title || `preset_${Date.now()}`);
-            return `scenario_preset_${raw}`.replace(/[^\w-]/g, "_");
-        }
+function buildPresetCardId(preset) {
+    // 优先使用标题作为 ID 的核心，因为标题在 manifest 中是稳定的
+    const raw = String(preset?.title || preset?.id || "unknown");
+    return `scenario_preset_${raw}`.replace(/[^\w-]/g, "_");
+}
         async function generateThemeWithAI({ title, text }) {
             const config = SettingsService.getApiConfig();
             if (config.blocked || !config.model) {
@@ -8794,18 +8795,21 @@ const token = delta.content || "";
             const targetId = forceCreateNew
                 ? `${String(payload.id || "scenario_preset").replace(/[^\w-]/g, "_")}_run_${Date.now()}`
                 : payload.id;
-            const existed = ScenarioCardService.loadCards().some((c) => c.id === targetId);
-            let card;
-            if (existed && preserveExistingContent) {
-                card = ScenarioCardService.loadCards().find((c) => c.id === targetId) || null;
-            } else {
-                card = ScenarioCardService.upsertCard({
-                    id: targetId,
-                    title: payload.title || "模板卡片",
-                    theme: payload.theme || "",
-                    text: String(payload.text || "").trim() || AppConfig.defaultScenario
-                });
-            }
+    const existedCard = ScenarioCardService.loadCards().find((c) => c.id === targetId || c.title === payload.title);
+    let card;
+    
+    // 修改此处的判断逻辑
+    if (existedCard) {
+        // 如果卡片已存在，无论是否 preserveExistingContent，都直接使用现有卡片，不再 upsert
+        card = existedCard;
+    } else {
+        card = ScenarioCardService.upsertCard({
+            id: targetId,
+            title: payload.title || "模板卡片",
+            theme: payload.theme || "",
+            text: String(payload.text || "").trim() || AppConfig.defaultScenario
+        });
+    }
             if (!card) throw new Error("模板卡片写入失败");
             lastAutoCreatedCardId = existed ? null : card.id;
             ScenarioCardService.setSelectedId(card.id);
@@ -8864,18 +8868,23 @@ function buildPresetCardId(preset) {
                 switchView
             });
         }
-async function playPresetTemplate(preset) {
+
+    async function playPresetTemplate(preset) {
     // 1. 生成确定的 ID
     const targetId = ScenarioTemplateService.buildPresetCardId(preset);
     
-    // 2. 检查列表
+    // 2. 检查列表（增加标题匹配作为兜底，防止 ID 格式变更导致的失效）
     const allCards = ScenarioCardService.loadCards();
-    const existingCard = allCards.find(c => c.id === targetId);
+    const existingCard = allCards.find(c => 
+        c.id === targetId || 
+        (c.sourceType === "official" && c.title === preset.title)
+    );
+    
 
     if (existingCard) {
-        console.log("检测到现有卡片，直接进入游玩:", targetId);
-        // 直接切换到该卡片并检查是否需要初始化
-        await playScenarioCard(targetId);
+        console.log("检测到现有卡片，直接进入游玩:", existingCard.id);
+        // 如果是用标题匹配到的，确保使用正确的 ID
+        await playScenarioCard(existingCard.id);
     } else {
         console.log("未发现现有卡片，执行加载流程");
         InitLoadingService.open("正在加载预设模板...");
