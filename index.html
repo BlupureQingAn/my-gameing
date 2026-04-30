@@ -215,19 +215,19 @@
 
         .quick-actions {
             display: flex;
-            gap: 8px;
-            margin-bottom: 8px;
+            gap: clamp(5px, 1.5vw, 10px);
+            margin-bottom: clamp(4px, 1vw, 8px);
         }
 
         .play-toolbar {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: clamp(5px, 1.2vw, 8px);
         }
 
         .nav-actions {
             display: flex;
-            gap: 8px;
+            gap: clamp(4px, 1.2vw, 8px);
             margin-bottom: 0;
         }
 
@@ -818,7 +818,7 @@
         .chat-footer {
             background: linear-gradient(180deg, rgba(255,248,237,0.88), rgba(255,244,229,0.82));
             border-top: 1px solid var(--line);
-            padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+            padding: clamp(5px, 1.5vw, 10px) clamp(6px, 2vw, 14px) calc(clamp(5px, 1.5vw, 10px) + env(safe-area-inset-bottom));
             backdrop-filter: blur(12px);
             position: relative;
             overflow: hidden;
@@ -956,7 +956,7 @@
             background:
                 radial-gradient(circle at top right, rgba(255,255,255,0.34), transparent 28%),
                 linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,247,236,0.94));
-            padding: 12px;
+            padding: 2px;
             box-shadow: 0 14px 34px rgba(80, 40, 0, 0.10);
             width: 100%;
             max-width: 100%;
@@ -1055,25 +1055,29 @@
             flex: 1;
             border: 0;
             border-radius: 999px;
-            padding: 8px 8px;
+            padding: clamp(6px, 1.2vw, 9px) clamp(6px, 1.5vw, 10px);
             background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 28%, #ffffff 72%), color-mix(in srgb, var(--accent) 54%, #ffffff 46%));
             color: color-mix(in srgb, var(--accent-dark) 90%, var(--text) 10%);
             font-weight: 700;
-            font-size: 0.82rem;
+            font-size: clamp(0.72rem, 1.8vw, 0.85rem);
             cursor: pointer;
             box-shadow: 0 8px 18px rgba(164, 111, 53, 0.12);
+            white-space: nowrap;
+            min-width: 0;
         }
 
         .nav-btn {
             flex: 1;
             border: 1px solid var(--line);
             border-radius: 999px;
-            padding: 8px 8px;
+            padding: clamp(6px, 1.2vw, 9px) clamp(5px, 1.2vw, 8px);
             background: color-mix(in srgb, var(--card) 78%, white 22%);
             color: var(--text);
             font-weight: 700;
-            font-size: 0.8rem;
+            font-size: clamp(0.72rem, 1.8vw, 0.82rem);
             cursor: pointer;
+            white-space: nowrap;
+            min-width: 0;
         }
 
         .nav-btn.active {
@@ -1626,15 +1630,15 @@
 
         .composer textarea {
             flex: 1;
-            min-height: 42px;
+            min-height: clamp(36px, 5.5vw, 46px);
             max-height: 120px;
             border: 1px solid var(--line);
             border-radius: 12px;
-            padding: 8px 10px;
+            padding: clamp(6px, 1.2vw, 9px) clamp(8px, 1.5vw, 12px);
             background: var(--input-bg);
             color: var(--text);
             resize: none;
-            font-size: 0.9rem;
+            font-size: clamp(0.82rem, 2vw, 0.92rem);
             line-height: 1.35;
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
         }
@@ -1644,8 +1648,9 @@
             background: var(--btn-primary-bg);
             color: var(--btn-primary-text);
             border-radius: 12px;
-            width: 86px;
-            height: 42px;
+            width: clamp(64px, 10vw, 90px);
+            height: clamp(36px, 5.5vw, 46px);
+            font-size: clamp(0.78rem, 1.8vw, 0.88rem);
             font-weight: 700;
             cursor: pointer;
             flex-shrink: 0;
@@ -1783,7 +1788,6 @@
         @keyframes blink {
             50% { opacity: 0; }
         }
-
         /* ==================== 响应式层（Responsive） ==================== */
         @media (max-width: 560px) {
             .header h1 {
@@ -1800,19 +1804,73 @@
                 min-width: calc(50% - 8px);
             }
             .send-btn {
-                width: 72px;
+                width: clamp(56px, 18vw, 72px);
+                height: clamp(34px, 9vw, 40px);
             }
             .footer-nav-shell {
                 padding-left: 24px;
             }
             .nav-actions {
-                gap: 6px;
+                gap: 4px;
             }
             .nav-btn {
-                font-size: 0.76rem;
-                padding: 8px 6px;
+                font-size: clamp(0.68rem, 3.2vw, 0.76rem);
+                padding: 7px 4px;
+            }
+            .quick-btn {
+                font-size: clamp(0.68rem, 3.2vw, 0.76rem);
+                padding: 7px 4px;
+            }
+            .composer textarea {
+                font-size: 0.85rem;
+                min-height: 36px;
             }
         }
+
+        @media (min-width: 768px) {
+            .chat-footer {
+                padding: 10px 18px calc(10px + env(safe-area-inset-bottom));
+            }
+            .quick-btn {
+                font-size: 0.86rem;
+                padding: 9px 14px;
+            }
+            .nav-btn {
+                font-size: 0.84rem;
+                padding: 9px 12px;
+            }
+            .send-btn {
+                width: 90px;
+                height: 44px;
+            }
+            .composer textarea {
+                min-height: 44px;
+                font-size: 0.92rem;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .chat-footer {
+                padding: 12px 24px calc(12px + env(safe-area-inset-bottom));
+            }
+            .quick-btn {
+                font-size: 0.88rem;
+                padding: 10px 18px;
+            }
+            .nav-btn {
+                font-size: 0.86rem;
+                padding: 10px 16px;
+            }
+            .send-btn {
+                width: 96px;
+                height: 46px;
+            }
+            .composer textarea {
+                min-height: 46px;
+                font-size: 0.94rem;
+            }
+        }   
+        
     </style>
 </head>
 <body>
@@ -1937,7 +1995,7 @@
                         <div class="card-box">
                             <div class="card-info">
                                 <div class="card-name">🍡 免费云卡</div>
-                                <div class="card-desc">价格: 0 云币 | 适合尝鲜，可能不稳定</div>
+                                <div class="card-desc">价格: 0 云币 | 适合尝鲜，不稳定</div>
                             </div>
                         </div>
                     </label>
@@ -1946,7 +2004,7 @@
                         <div class="card-box">
                             <div class="card-info">
                                 <div class="card-name">🥈 银质云卡</div>
-                                <div class="card-desc">0.15~0.3 云币/1k | 高性价比推荐</div>
+                                <div class="card-desc">0.15~0.3 云币/1k tokens 性价比推荐</div>
                             </div>
                         </div>
                     </label>
@@ -1955,7 +2013,7 @@
                         <div class="card-box">
                             <div class="card-info">
                                 <div class="card-name">👑 黄金云卡</div>
-                                <div class="card-desc">1.5~3.0 云币/1k | 逻辑巅峰，适合长文</div>
+                                <div class="card-desc">1.5~3.0 云币/1k tokens 逻辑巅峰</div>
                             </div>
                         </div>
                     </label>
@@ -2843,7 +2901,7 @@
         function getSkeletonHtml(themeMode = "light", state = null) {
             const { statusPanelLabel, tagsHtml } = buildSkeletonStateContext(state);
             const statusBlock = `<div style="padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(255,244,232,.88));border-left:4px solid var(--theme-primary);margin-bottom:8px">✨ ${statusPanelLabel}：{STATS_HTML}</div><div style="padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(239,247,255,.88));border-left:4px solid var(--theme-secondary)">🏷 关键标签：${tagsHtml}</div>`;
-            const base = "<article class=\"ai-beauty-card wenyou-card\" style=\"--theme-primary:{THEME_PRIMARY};--theme-secondary:{THEME_SECONDARY};--card-bg:{CARD_BG};--text-main:{TEXT_MAIN};--text-muted:{TEXT_MUTED};--font-family:{FONT_FAMILY};--border-radius:{BORDER_RADIUS};--card-shadow:{CARD_SHADOW};position:relative;overflow:hidden;background:var(--card-bg);border-radius:var(--border-radius);box-shadow:var(--card-shadow);border:1px solid color-mix(in srgb,var(--theme-primary) 26%,#ffffff 74%);font-family:var(--font-family);color:var(--text-main)\"><div style=\"position:absolute;inset:0;background:radial-gradient(circle at top right,color-mix(in srgb,var(--theme-secondary) 18%,transparent 82%),transparent 42%),radial-gradient(circle at bottom left,color-mix(in srgb,var(--theme-primary) 16%,transparent 84%),transparent 38%);pointer-events:none\"></div><div style=\"position:relative;padding:18px\"><header class=\"wy-header ai-beauty-card-title\" style=\"display:flex;flex-direction:column;align-items:center;text-align:center;padding:24px 15px 20px;border-radius:calc(var(--border-radius) - 2px);background:linear-gradient(135deg,color-mix(in srgb,var(--theme-primary) 12%,#ffffff 88%),color-mix(in srgb,var(--theme-secondary) 8%,#ffffff 92%));border:1px solid color-mix(in srgb,var(--theme-primary) 25%,#ffffff 75%);position:relative;overflow:hidden;box-shadow:inset 0 2px 10px rgba(255,255,255,0.9),0 8px 24px rgba(0,0,0,0.06);\"><div style=\"position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,transparent,var(--theme-primary),var(--theme-secondary),transparent);\"></div><div style=\"position:absolute;top:-20px;right:-20px;font-size:80px;opacity:0.05;color:var(--theme-primary);transform:rotate(15deg);\">{TOP_DECOR_ICON}</div><div style=\"font-size:0.9rem;font-weight:800;letter-spacing:4px;color:var(--theme-secondary);margin-bottom:10px;text-transform:uppercase;opacity:0.85;text-shadow:0 1px 1px rgba(255,255,255,0.8);\">✦ {当前文游/世界设定名称} ✦</div><h2 class=\"wy-role-name\" style=\"font-size:1.65rem;font-weight:900;margin:0 0 12px 0;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));-webkit-background-clip:text;color:transparent;line-height:1.35;letter-spacing:2px;text-shadow:0 2px 4px rgba(0,0,0,0.05);\">{当前剧情章节标题}</h2><div style=\"display:inline-flex;align-items:center;gap:10px;padding:5px 18px;background:rgba(255,255,255,0.75);border-radius:999px;font-size:0.82rem;color:var(--text-muted);border:1px solid rgba(255,255,255,0.9);backdrop-filter:blur(4px);box-shadow:0 2px 6px rgba(0,0,0,0.04);\"><span style=\"color:var(--theme-primary);font-weight:bold;\">⏱️</span> <span>{TIME_TEXT}</span></div></header><div class=\"wy-divider\" style=\"display:flex;align-items:center;gap:10px;margin:14px 0 12px\"><span style=\"flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--theme-primary),transparent)\"></span><span class=\"wy-divider-icon\" style=\"padding:0 10px;color:var(--theme-secondary);font-size:1rem\">{DIVIDER_EMOJI}</span><span style=\"flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--theme-secondary),transparent)\"></span></div><section class=\"ai-beauty-card-body\"><section class=\"wy-stats\" data-block=\"status\" style=\"display:flex;flex-direction:column;gap:8px;margin-top:12px;padding:12px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.74),rgba(255,255,255,.52));border:1px solid color-mix(in srgb,var(--theme-secondary) 14%,#ffffff 86%)\">" + statusBlock + "</section><section data-block=\"relations\" style=\"margin-top:12px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,rgba(255,255,255,.92),rgba(240,248,255,.88));border:1px solid color-mix(in srgb,var(--theme-secondary) 18%,#ffffff 82%)\"><div style=\"font-size:12px;font-weight:700;color:var(--theme-secondary);margin-bottom:8px\">👥 人物关系</div><div style=\"display:flex;flex-wrap:wrap;gap:8px\">{RELATIONS_HTML}</div></section><section data-block=\"event\" style=\"margin-top:14px;padding:14px 15px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(255,251,245,.92));border:1px solid rgba(226,205,173,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.85)\"><div style=\"display:inline-flex;align-items:center;gap:6px;padding:4px 10px;margin-bottom:10px;border-radius:999px;background:color-mix(in srgb,var(--theme-primary) 12%,#ffffff 88%);color:var(--theme-primary);font-size:12px;font-weight:700\">剧情正文</div><div class=\"wy-content\" style=\"line-height:1.78;color:var(--text-main)\">{MAIN_STORY_TEXT}</div></section><section data-block=\"thought\" style=\"margin-top:12px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,color-mix(in srgb,var(--theme-secondary) 10%,#ffffff 90%),rgba(255,255,255,.88));border:1px dashed color-mix(in srgb,var(--theme-secondary) 32%,#ffffff 68%)\"><div style=\"font-size:12px;font-weight:700;color:var(--theme-secondary);margin-bottom:8px\">AI想法</div><div class=\"wy-content\" style=\"color:var(--text-main);line-height:1.7\">{AI_THOUGHT_TEXT}</div></section><section class=\"wy-options\" data-block=\"choices\" style=\"display:flex;flex-direction:column;gap:10px;margin-top:14px\"><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_1}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(255,243,231,.92));border:1px solid color-mix(in srgb,var(--theme-primary) 24%,#ffffff 76%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));color:#fff\">{OPT_ICON_1}</span><span>1. {OPT_TEXT_1}</span></div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_2}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(238,247,255,.92));border:1px solid color-mix(in srgb,var(--theme-secondary) 24%,#ffffff 76%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-secondary),var(--theme-primary));color:#fff\">{OPT_ICON_2}</span><span>2. {OPT_TEXT_2}</span></div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_3}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(246,239,255,.92));border:1px solid color-mix(in srgb,var(--theme-primary) 20%,var(--theme-secondary) 18%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));color:#fff\">{OPT_ICON_3}</span><span>3. {OPT_TEXT_3}</span></div></section><div class=\"wy-footer-decor\" data-block=\"hint\" style=\"margin-top:16px;padding:12px 14px;border-radius:16px;text-align:center;background:linear-gradient(90deg,color-mix(in srgb,var(--theme-primary) 10%,#ffffff 90%),color-mix(in srgb,var(--theme-secondary) 10%,#ffffff 90%));color:var(--text-muted);font-size:.88rem\">{BOTTOM_DECOR} {BOTTOM_DECOR} 提示：可直接点击上方按钮继续剧情 {BOTTOM_DECOR} {BOTTOM_DECOR}</div></section></div></article>";
+            const base = "<article class=\"ai-beauty-card wenyou-card\" style=\"--theme-primary:{THEME_PRIMARY};--theme-secondary:{THEME_SECONDARY};--card-bg:{CARD_BG};--text-main:{TEXT_MAIN};--text-muted:{TEXT_MUTED};--font-family:{FONT_FAMILY};--border-radius:{BORDER_RADIUS};--card-shadow:{CARD_SHADOW};position:relative;overflow:hidden;background:var(--card-bg);border-radius:var(--border-radius);box-shadow:var(--card-shadow);border:1px solid color-mix(in srgb,var(--theme-primary) 26%,#ffffff 74%);font-family:var(--font-family);color:var(--text-main)\"><div style=\"position:absolute;inset:0;background:radial-gradient(circle at top right,color-mix(in srgb,var(--theme-secondary) 18%,transparent 82%),transparent 42%),radial-gradient(circle at bottom left,color-mix(in srgb,var(--theme-primary) 16%,transparent 84%),transparent 38%);pointer-events:none\"></div><div style=\"position:relative;padding:8px\"><header class=\"wy-header ai-beauty-card-title\" style=\"display:flex;flex-direction:column;align-items:center;text-align:center;padding:24px 15px 20px;border-radius:calc(var(--border-radius) - 2px);background:linear-gradient(135deg,color-mix(in srgb,var(--theme-primary) 12%,#ffffff 88%),color-mix(in srgb,var(--theme-secondary) 8%,#ffffff 92%));border:1px solid color-mix(in srgb,var(--theme-primary) 25%,#ffffff 75%);position:relative;overflow:hidden;box-shadow:inset 0 2px 10px rgba(255,255,255,0.9),0 8px 24px rgba(0,0,0,0.06);\"><div style=\"position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,transparent,var(--theme-primary),var(--theme-secondary),transparent);\"></div><div style=\"position:absolute;top:-20px;right:-20px;font-size:80px;opacity:0.05;color:var(--theme-primary);transform:rotate(15deg);\">{TOP_DECOR_ICON}</div><div style=\"font-size:0.9rem;font-weight:800;letter-spacing:4px;color:var(--theme-secondary);margin-bottom:10px;text-transform:uppercase;opacity:0.85;text-shadow:0 1px 1px rgba(255,255,255,0.8);\">✦ {当前文游/世界设定名称} ✦</div><h2 class=\"wy-role-name\" style=\"font-size:1.65rem;font-weight:900;margin:0 0 12px 0;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));-webkit-background-clip:text;color:transparent;line-height:1.35;letter-spacing:2px;text-shadow:0 2px 4px rgba(0,0,0,0.05);\">{当前剧情章节标题}</h2><div style=\"display:inline-flex;align-items:center;gap:10px;padding:5px 18px;background:rgba(255,255,255,0.75);border-radius:999px;font-size:0.82rem;color:var(--text-muted);border:1px solid rgba(255,255,255,0.9);backdrop-filter:blur(4px);box-shadow:0 2px 6px rgba(0,0,0,0.04);\"><span style=\"color:var(--theme-primary);font-weight:bold;\">⏱️</span> <span>{TIME_TEXT}</span></div></header><div class=\"wy-divider\" style=\"display:flex;align-items:center;gap:10px;margin:14px 0 12px\"><span style=\"flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--theme-primary),transparent)\"></span><span class=\"wy-divider-icon\" style=\"padding:0 10px;color:var(--theme-secondary);font-size:1rem\">{DIVIDER_EMOJI}</span><span style=\"flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--theme-secondary),transparent)\"></span></div><section class=\"ai-beauty-card-body\"><section class=\"wy-stats\" data-block=\"status\" style=\"display:flex;flex-direction:column;gap:8px;margin-top:12px;padding:12px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.74),rgba(255,255,255,.52));border:1px solid color-mix(in srgb,var(--theme-secondary) 14%,#ffffff 86%)\">" + statusBlock + "</section><section data-block=\"relations\" style=\"margin-top:12px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,rgba(255,255,255,.92),rgba(240,248,255,.88));border:1px solid color-mix(in srgb,var(--theme-secondary) 18%,#ffffff 82%)\"><div style=\"font-size:12px;font-weight:700;color:var(--theme-secondary);margin-bottom:8px\">👥 人物关系</div><div style=\"display:flex;flex-wrap:wrap;gap:8px\">{RELATIONS_HTML}</div></section><section data-block=\"event\" style=\"margin-top:14px;padding:14px 15px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(255,251,245,.92));border:1px solid rgba(226,205,173,.7);box-shadow:inset 0 1px 0 rgba(255,255,255,.85)\"><div style=\"display:inline-flex;align-items:center;gap:6px;padding:4px 10px;margin-bottom:10px;border-radius:999px;background:color-mix(in srgb,var(--theme-primary) 12%,#ffffff 88%);color:var(--theme-primary);font-size:12px;font-weight:700\">剧情正文</div><div class=\"wy-content\" style=\"line-height:1.78;color:var(--text-main)\">{MAIN_STORY_TEXT}</div></section><section data-block=\"thought\" style=\"margin-top:12px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,color-mix(in srgb,var(--theme-secondary) 10%,#ffffff 90%),rgba(255,255,255,.88));border:1px dashed color-mix(in srgb,var(--theme-secondary) 32%,#ffffff 68%)\"><div style=\"font-size:12px;font-weight:700;color:var(--theme-secondary);margin-bottom:8px\">AI想法</div><div class=\"wy-content\" style=\"color:var(--text-main);line-height:1.7\">{AI_THOUGHT_TEXT}</div></section><section class=\"wy-options\" data-block=\"choices\" style=\"display:flex;flex-direction:column;gap:10px;margin-top:14px\"><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_1}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(255,243,231,.92));border:1px solid color-mix(in srgb,var(--theme-primary) 24%,#ffffff 76%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));color:#fff\">{OPT_ICON_1}</span><span>1. {OPT_TEXT_1}</span></div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_2}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(238,247,255,.92));border:1px solid color-mix(in srgb,var(--theme-secondary) 24%,#ffffff 76%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-secondary),var(--theme-primary));color:#fff\">{OPT_ICON_2}</span><span>2. {OPT_TEXT_2}</span></div><div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_3}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(246,239,255,.92));border:1px solid color-mix(in srgb,var(--theme-primary) 20%,var(--theme-secondary) 18%);box-shadow:0 6px 14px rgba(0,0,0,.06)\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));color:#fff\">{OPT_ICON_3}</span><span>3. {OPT_TEXT_3}</span></div></section><div class=\"wy-footer-decor\" data-block=\"hint\" style=\"margin-top:16px;padding:12px 14px;border-radius:16px;text-align:center;background:linear-gradient(90deg,color-mix(in srgb,var(--theme-primary) 10%,#ffffff 90%),color-mix(in srgb,var(--theme-secondary) 10%,#ffffff 90%));color:var(--text-muted);font-size:.88rem\">{BOTTOM_DECOR} {BOTTOM_DECOR} 提示：可直接点击上方按钮继续剧情 {BOTTOM_DECOR} {BOTTOM_DECOR}</div></section></div></article>";
             const tagSpans = (Array.isArray(state && state.panelStatusTags) && state.panelStatusTags.length
                 ? state.panelStatusTags.slice(0, 4)
                 : [{ label: "身份", value: "" }, { label: "阵营", value: "" }, { label: "处境", value: "" }]
@@ -2888,7 +2946,7 @@
                 ? "border:1px solid rgba(151,169,220,0.34);backdrop-filter:blur(10px);background:linear-gradient(180deg,rgba(20,28,42,0.28),rgba(13,19,31,0.22));"
                 : "border-top:4px solid var(--theme-primary);";
             return [
-                `<article class="ai-beauty-card wenyou-card" data-theme="${safeTheme}" style="${rootStyle};max-width:500px;margin:8px auto;background:var(--card-bg);border-radius:var(--border-radius);box-shadow:var(--card-shadow);font-family:var(--font-family);color:var(--text-main);overflow:hidden;${extraStyle}padding:20px;box-sizing:border-box;">`,
+                `<article class="ai-beauty-card wenyou-card" data-theme="${safeTheme}" style="${rootStyle};max-width:500px;margin:8px auto;background:var(--card-bg);border-radius:var(--border-radius);box-shadow:var(--card-shadow);font-family:var(--font-family);color:var(--text-main);overflow:hidden;${extraStyle}padding:8px;box-sizing:border-box;">`,
                 `<style>${EMBED_STYLE}</style>`,
                 `<header class="wy-header ai-beauty-card-title"><div class="wy-header-left"><div class="wy-avatar">🎭</div><div class="wy-title-box"><h3 class="wy-role-name">${safeTheme}</h3><span class="wy-scene">当前回合</span></div></div><div class="wy-top-decor">✦</div></header>`,
                 `<div class="wy-divider"><span class="wy-divider-icon">✧</span></div>`,
@@ -6532,7 +6590,7 @@
                 if (name === "hint") return `<div data-block="hint" style="margin-top:16px;text-align:center;font-size:.88rem">{BOTTOM_DECOR} 提示：可直接点击上方按钮继续剧情 {BOTTOM_DECOR}</div>`;
                 return `<section data-block="${name}"></section>`;
             }).join("");
-            return `<${rootTag} class="${rootClass}"${themeAttr} style="--theme-primary:#6a11cb;--theme-secondary:#2575fc;--card-bg:linear-gradient(to bottom right,#ffffff,#f0f4fd);--text-main:#2c3e50;--text-muted:#7f8c8d;--border-radius:12px;--card-shadow:0 10px 25px rgba(106,17,203,0.15);background:var(--card-bg);border-radius:var(--border-radius);box-shadow:var(--card-shadow);color:var(--text-main);overflow:hidden;padding:18px"><${titleTag} class="${titleClass}" style="text-align:center;padding:20px 15px;border-radius:12px;background:linear-gradient(135deg,color-mix(in srgb,var(--theme-primary) 12%,#ffffff 88%),color-mix(in srgb,var(--theme-secondary) 8%,#ffffff 92%))"><div style="font-size:0.9rem;font-weight:800;letter-spacing:4px;color:var(--theme-secondary)">✦ {当前文游/世界设定名称} ✦</div><h2 class="wy-role-name" style="font-size:1.65rem;font-weight:900;margin:8px 0;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));-webkit-background-clip:text;color:transparent">{当前剧情章节标题}</h2></${titleTag}><${bodyTag} class="${bodyClass}">${blocks}</${bodyTag}></${rootTag}>`;
+            return `<${rootTag} class="${rootClass}"${themeAttr} style="--theme-primary:#6a11cb;--theme-secondary:#2575fc;--card-bg:linear-gradient(to bottom right,#ffffff,#f0f4fd);--text-main:#2c3e50;--text-muted:#7f8c8d;--border-radius:12px;--card-shadow:0 10px 25px rgba(106,17,203,0.15);background:var(--card-bg);border-radius:var(--border-radius);box-shadow:var(--card-shadow);color:var(--text-main);overflow:hidden;padding:8px"><${titleTag} class="${titleClass}" style="text-align:center;padding:20px 15px;border-radius:12px;background:linear-gradient(135deg,color-mix(in srgb,var(--theme-primary) 12%,#ffffff 88%),color-mix(in srgb,var(--theme-secondary) 8%,#ffffff 92%))"><div style="font-size:0.9rem;font-weight:800;letter-spacing:4px;color:var(--theme-secondary)">✦ {当前文游/世界设定名称} ✦</div><h2 class="wy-role-name" style="font-size:1.65rem;font-weight:900;margin:8px 0;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));-webkit-background-clip:text;color:transparent">{当前剧情章节标题}</h2></${titleTag}><${bodyTag} class="${bodyClass}">${blocks}</${bodyTag}></${rootTag}>`;
         }
 
         function buildBeautyRules(beautyCardSetting, beautyModeEnabled, state = null) {
