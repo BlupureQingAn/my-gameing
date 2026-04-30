@@ -276,21 +276,22 @@
         }
 
         .stats-grid {
-            display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: wrap !important;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
             gap: 12px !important;
-            justify-content: flex-start !important;
-            padding: 10px 4px !important;
+            justify-content: flex-start;
+            padding: 10px 4px;
             position: relative;
             z-index: 2;
         }
 
         .stat-item {
             position: relative;
-            flex: 1 0 160px !important;
-            max-width: 240px !important;
-            border-left: 4px solid var(--accent) !important;
+            flex: 1 0 160px;
+            max-width: 240px;
+            border-left: 4px solid var(--accent);
+            white-space: nowrap;
             background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(252,247,240,0.92));
             border: 1px solid rgba(202, 162, 106, 0.18);
             border-radius: 12px;
@@ -2407,7 +2408,7 @@
             const enableGamePanels = inPlay && isPlayView && viewId !== "view-npc-chat";
             const footer = document.querySelector(".chat-footer");
             if (footer) footer.style.display = enableGamePanels ? "block" : "none";
-            document.getElementById("game-stats-card").style.display = enableGamePanels ? "grid" : "none";
+            document.getElementById("game-stats-card").style.display = enableGamePanels ? "flex" : "none";
             document.querySelector(".quick-actions").style.display = enableGamePanels ? "flex" : "none";
             document.querySelector(".chat-footer .composer").style.display = enableGamePanels ? "flex" : "none";
             PlayDockService.apply();
