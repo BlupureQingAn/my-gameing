@@ -443,48 +443,64 @@
             transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
             box-shadow: 0 0 8px rgba(0,0,0,0.1);
         }
-        #game-stats-card [data-wy-stat="item"] {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            padding: 8px 10px;
-            background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(252,247,240,0.92));
-            border: 1px solid rgba(202, 162, 106, 0.18);
-            border-radius: 12px;
-            flex: 1;
-            min-width: 80px;
-            box-shadow: 0 6px 16px rgba(164, 111, 53, 0.08);
+        /* ---- 新版顶部状态面板（pill 卡片样式） ---- */
+        #game-stats-card {
+            padding: 10px 12px !important;
+            border-radius: 12px !important;
+            background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(255,244,232,.88)) !important;
+            border-left: 4px solid #c0392b !important;
+            margin-bottom: 8px;
+            display: block !important;
+            box-shadow: 0 4px 16px rgba(192,57,43,0.08);
         }
-        body[data-theme="dark"] #game-stats-card [data-wy-stat="item"] {
-            background: linear-gradient(180deg, rgba(31,39,58,0.98), rgba(23,30,46,0.95));
-            border-color: rgba(110,129,167,0.22);
+        body[data-theme="dark"] #game-stats-card {
+            background: linear-gradient(135deg, rgba(31,25,25,0.97), rgba(46,28,22,0.92)) !important;
+            border-left-color: #c0392b !important;
         }
-        #game-stats-card [data-wy-stat="header"] {
+        #game-stats-card .wy-stat-title {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #c0392b;
+            margin-bottom: 8px;
+            letter-spacing: 0.02em;
+        }
+        #game-stats-card .wy-stat-pills {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
+            flex-wrap: wrap;
             gap: 6px;
         }
-        #game-stats-card [data-wy-stat="label"] {
-            font-size: 0.76rem;
-            font-weight: 700;
-            color: var(--sub);
+        #game-stats-card .wy-stat-pill-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            min-width: 72px;
         }
-        #game-stats-card [data-wy-stat="value"] {
-            font-size: 1.05rem;
+        #game-stats-card .wy-stat-pill {
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, color-mix(in srgb,#c0392b 22%,#ffffff 78%), #ffffff);
+            border: 1px solid color-mix(in srgb,#c0392b 32%,#ffffff 68%);
+            font-size: 12px;
             font-weight: 700;
-            color: var(--accent-dark);
+            color: #5a1a10;
+            white-space: nowrap;
         }
-        #game-stats-card [data-wy-stat="track"] {
+        body[data-theme="dark"] #game-stats-card .wy-stat-pill {
+            background: linear-gradient(135deg, color-mix(in srgb,#c0392b 30%,#1a0a08 70%), #1a0a08);
+            border-color: color-mix(in srgb,#c0392b 45%,#1a0a08 55%);
+            color: #f5c6bb;
+        }
+        #game-stats-card .wy-stat-bar-track {
             height: 4px;
             border-radius: 2px;
-            background: rgba(0,0,0,.08);
+            background: rgba(192,57,43,0.12);
             overflow: hidden;
+            margin: 0 4px;
         }
-        #game-stats-card [data-wy-stat="fill"] {
+        #game-stats-card .wy-stat-bar-fill {
             height: 100%;
             border-radius: 2px;
-            transition: width .4s ease;
+            transition: width .5s cubic-bezier(0.34,1.56,0.64,1);
         }
 
         /* ---- 设置组件（Settings Components） ---- */
@@ -1948,7 +1964,7 @@
         </section>
         <!-- 保持 settings 视图正常闭合即可 -->
 
-        <section class="card stats-grid" id="game-stats-card"></section>
+        <section class="card" id="game-stats-card"></section>
 
         <section id="view-main" class="view-section active">
         <section class="card" id="story-board"></section>
@@ -2402,7 +2418,7 @@
             const enableGamePanels = inPlay && isPlayView && viewId !== "view-npc-chat";
             const footer = document.querySelector(".chat-footer");
             if (footer) footer.style.display = enableGamePanels ? "block" : "none";
-            document.getElementById("game-stats-card").style.display = enableGamePanels ? "flex" : "none";
+            document.getElementById("game-stats-card").style.display = enableGamePanels ? "block" : "none";
             document.querySelector(".quick-actions").style.display = enableGamePanels ? "flex" : "none";
             document.querySelector(".chat-footer .composer").style.display = enableGamePanels ? "flex" : "none";
             PlayDockService.apply();
@@ -4546,7 +4562,17 @@
             const key = String(canonical || it?.key || it?.name || `stat_${idx}`).replace(/[^\w\u4e00-\u9fa5-]/g, "_");
             const label = canonical.slice(0, 12);
             const icon = String(it?.icon || "").trim() || "✨";
-            const value = Math.max(0, Math.min(999, Number(it?.value) || 0));
+            // 保留 "85/100" 格式字符串；纯数字则 clamp 后转字符串
+            const rawVal = String(it?.value ?? "0");
+            let value;
+            if (rawVal.includes("/")) {
+                const parts = rawVal.split("/");
+                const cur = Math.max(0, Math.min(999, Number(parts[0]) || 0));
+                const max = Math.max(1, Number(parts[1]) || 100);
+                value = `${cur}/${max}`;
+            } else {
+                value = String(Math.max(0, Math.min(999, Number(rawVal) || 0)));
+            }
             return { key, label, icon, value };
         }
         function normalizeStats(list) {
@@ -4555,7 +4581,7 @@
         }
         function applyEffect(state, effectStr) {
             const effect = String(effectStr || "");
-            const m = effect.match(/([a-zA-Z_][\\w-]*)\\s*([+-])\\s*(\\d{1,3})/);
+            const m = effect.match(/([a-zA-Z_][\w-]*)\s*([+-])\s*(\d{1,3})/);
             if (!m) return;
             const key = m[1];
             const sign = m[2];
@@ -4563,7 +4589,14 @@
             if (!Array.isArray(state.stats)) return;
             const idx = state.stats.findIndex((s) => s.key === key);
             if (idx < 0) return;
-            state.stats[idx].value = Math.max(0, Math.min(999, Number(state.stats[idx].value || 0) + delta));
+            const rawVal = String(state.stats[idx].value ?? "0");
+            if (rawVal.includes("/")) {
+                const parts = rawVal.split("/");
+                const cur = Math.max(0, Math.min(999, (Number(parts[0]) || 0) + delta));
+                state.stats[idx].value = `${cur}/${parts[1]}`;
+            } else {
+                state.stats[idx].value = String(Math.max(0, Math.min(999, (Number(rawVal) || 0) + delta)));
+            }
         }
         return { normalizeStats, applyEffect };
     })();
@@ -4633,41 +4666,39 @@
             if (!box) return;
             const stats = Array.isArray(state.stats) ? state.stats : [];
             if (stats.length === 0) {
-                box.innerHTML = `<div class="list-sub" style="grid-column:1/-1;text-align:center;opacity:0.6;padding:8px 0;">⏳ 等待剧情初始化属性...</div>`;
+                box.innerHTML = `<div class="wy-stat-title">✨ 主角状态</div><div class="list-sub" style="opacity:0.6;padding:4px 0;">⏳ 等待剧情初始化属性...</div>`;
                 return;
             }
-            const statHtml = stats.map((s) => {
+            const pillsHtml = stats.map((s) => {
                 const rawValue = String(s.value ?? "0");
-                let hasProgressBar = false;
+                let hasBar = false;
                 let pct = 0;
-                // 识别 72/100 格式，有分母才显示进度条
+                let barColor = "#c0392b";
                 if (rawValue.includes("/")) {
                     const parts = rawValue.split("/");
                     const current = parseFloat(parts[0]);
                     const max = parseFloat(parts[1]);
                     if (isFinite(current) && isFinite(max) && max > 0) {
                         pct = Math.min(100, Math.max(0, (current / max) * 100));
-                        hasProgressBar = true;
+                        hasBar = true;
+                        barColor = pct > 60 ? "#4daa70" : pct > 30 ? "#e08c2b" : "#e05555";
                     }
                 }
-                const barColor = pct > 60 ? "#4daa70" : pct > 30 ? "var(--accent)" : "#e05555";
-                return `
-                    <div class="stat-item">
-                        <div class="stat-item-header">
-                            <div class="stat-item-label">${s.icon || "✨"} <strong>${MarkdownService.escapeHtml(s.label || "属性")}</strong></div>
-                        </div>
-                        <div class="stat-item-value"><span style="font-weight:800">${MarkdownService.escapeHtml(rawValue)}</span></div>
-                        ${hasProgressBar ? `<div class="stat-bar-container"><div class="stat-bar-fill" style="width:${pct}%;background:${barColor};"></div></div>` : ""}
-                    </div>
-                `;
+                const label = MarkdownService.escapeHtml(s.label || "属性");
+                const icon = s.icon || "✨";
+                const val = MarkdownService.escapeHtml(rawValue);
+                const bar = hasBar
+                    ? `<div class="wy-stat-bar-track"><div class="wy-stat-bar-fill" style="width:${pct}%;background:${barColor};"></div></div>`
+                    : "";
+                return `<div class="wy-stat-pill-wrap"><div class="wy-stat-pill">${icon}${label} ${val}</div>${bar}</div>`;
             }).join("");
             const tags = Array.isArray(state.panelStatusTags) ? state.panelStatusTags : [];
             const tagHtml = tags.length
-                ? `<div class="status-tag-row">${tags.map((tag) =>
+                ? `<div class="status-tag-row" style="margin-top:8px;">${tags.map((tag) =>
                     `<div class="status-tag"><strong>${MarkdownService.escapeHtml(tag.label)}</strong><em>${MarkdownService.escapeHtml(tag.value)}</em></div>`
                 ).join("")}</div>`
                 : "";
-            box.innerHTML = `${statHtml}${tagHtml}`;
+            box.innerHTML = `<div class="wy-stat-title">✨ 主角状态</div><div class="wy-stat-pills">${pillsHtml}</div>${tagHtml}`;
         }
         function clearFancyStatus() {
             const box = document.getElementById("game-stats-card");
@@ -6380,23 +6411,30 @@
             return lines.length ? `【NPC近况】\n${lines.join("\n")}` : "";
         }
 
-        // 将锁定骨架对象转化为极简 HTML 示意字符串
-        function skeletonToHint(lockedSkeleton) {
+        // 将锁定骨架对象转化为完整 HTML 骨架字符串（与 PromptTemplateService.buildSkeletonHintFromLocked 保持一致）
+        function skeletonToHint(lockedSkeleton, state) {
             if (!lockedSkeleton || typeof lockedSkeleton !== "object") return null;
-            // 如果存储的是完整 HTML 字符串骨架（旧格式），直接截断使用
-            if (typeof lockedSkeleton === "string") {
-                return lockedSkeleton.slice(0, 800);
-            }
-            // 如果存储的是结构化对象（新格式），生成极简示意
-            const { rootTag = "article", rootClass = "ai-beauty-card", titleTag, titleClass, bodyTag, bodyClass, blockOrder } = lockedSkeleton;
-            const blocks = Array.isArray(blockOrder)
-                ? blockOrder.map(name => `<section data-block="${name}">需包含${name}内容</section>`).join("")
-                : `<section data-block="event">剧情正文</section>`;
-            const titlePart = titleTag ? `<${titleTag}${titleClass ? ` class="${titleClass}"` : ""}>章节标题</${titleTag}>` : "";
-            const bodyPart = bodyTag
-                ? `<${bodyTag}${bodyClass ? ` class="${bodyClass}"` : ""}>${blocks}</${bodyTag}>`
-                : blocks;
-            return `<${rootTag} class="${rootClass}">${titlePart}${bodyPart}</${rootTag}>`;
+            const { statusPanelLabel, tagsHtml } = HtmlCardTemplateService.buildSkeletonStateContext(state);
+            const {
+                rootTag = "article", rootClass = "ai-beauty-card",
+                titleTag = "header", titleClass = "ai-beauty-card-title",
+                bodyTag = "section", bodyClass = "ai-beauty-card-body",
+                blockOrder, rootTheme
+            } = lockedSkeleton;
+            const themeAttr = rootTheme ? ` data-theme="${rootTheme}"` : "";
+            const defaultOrder = ["time", "status", "relations", "event", "thought", "choices", "hint"];
+            const order = Array.isArray(blockOrder) && blockOrder.length ? blockOrder : defaultOrder;
+            const blocks = order.map(name => {
+                if (name === "time") return `<section class="wy-meta" data-block="time">⏱️ {TIME_TEXT}</section>`;
+                if (name === "status") return `<section class="wy-stats" data-block="status"><div>✨ ${statusPanelLabel}：{STATS_HTML}</div><div>🏷 关键标签：${tagsHtml}</div></section>`;
+                if (name === "relations") return `<section data-block="relations"><div>👥 人物关系</div><div>{RELATIONS_HTML}</div></section>`;
+                if (name === "event") return `<section class="wy-content" data-block="event"><div>剧情正文</div><div>{MAIN_STORY_TEXT}</div></section>`;
+                if (name === "thought") return `<section class="wy-content" data-block="thought"><div>AI想法</div><div>{AI_THOUGHT_TEXT}</div></section>`;
+                if (name === "choices") return `<section class="wy-options" data-block="choices"><div class="wy-option-btn" data-choice="{OPT_TEXT_1}">1. {OPT_TEXT_1}</div><div class="wy-option-btn" data-choice="{OPT_TEXT_2}">2. {OPT_TEXT_2}</div><div class="wy-option-btn" data-choice="{OPT_TEXT_3}">3. {OPT_TEXT_3}</div></section>`;
+                if (name === "hint") return `<div data-block="hint">{BOTTOM_DECOR} 提示：可直接点击上方按钮继续剧情 {BOTTOM_DECOR}</div>`;
+                return `<section data-block="${name}"></section>`;
+            }).join("");
+            return `<${rootTag} class="${rootClass}"${themeAttr}><${titleTag} class="${titleClass}">{当前剧情章节标题}</${titleTag}><${bodyTag} class="${bodyClass}">${blocks}</${bodyTag}></${rootTag}>`;
         }
 
         // 主入口：组装完整的压缩历史 prompt
@@ -6408,7 +6446,7 @@
             // 这样历史记录里的所有 HTML 都不会再被发送给 AI，彻底切断 HTML 爆炸
             const lockedSkeleton = ScenarioPlayMetaService.getLockedSkeleton(cardId);
             if (lockedSkeleton) {
-                const hint = skeletonToHint(lockedSkeleton);
+                const hint = skeletonToHint(lockedSkeleton, state);
                 if (hint) {
                     parts.push(`【强制 HTML 结构要求（结构圣经——必须严格遵守此标签层级和 data-block 属性，禁止漂移为 Markdown）】\n${hint}`);
                 }
@@ -6450,34 +6488,48 @@
     })();
 
     const PromptTemplateService = (() => {
+        // 从 lockedSkeleton object 重建完整 HTML 骨架，供 AI 参考输出格式
+        // 有 lockedSkeleton 时用此版本（结构来自实际生成的第一张卡，已验证可渲染）
+        // 无 lockedSkeleton 时调用方降级到 getSkeletonHtml()
+        function buildSkeletonHintFromLocked(lockedSkeleton, state) {
+            if (!lockedSkeleton || typeof lockedSkeleton !== "object") return null;
+            const { statusPanelLabel, tagsHtml } = HtmlCardTemplateService.buildSkeletonStateContext(state);
+            const {
+                rootTag = "article", rootClass = "ai-beauty-card",
+                titleTag = "header", titleClass = "ai-beauty-card-title",
+                bodyTag = "section", bodyClass = "ai-beauty-card-body",
+                blockOrder, rootTheme
+            } = lockedSkeleton;
+            const themeAttr = rootTheme ? ` data-theme="${rootTheme}"` : "";
+            const defaultOrder = ["time", "status", "relations", "event", "thought", "choices", "hint"];
+            const order = Array.isArray(blockOrder) && blockOrder.length ? blockOrder : defaultOrder;
+            const blocks = order.map(name => {
+                if (name === "time") return `<section class="wy-meta" data-block="time">⏱️ {TIME_TEXT}</section>`;
+                if (name === "status") return `<section class="wy-stats" data-block="status" style="display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:16px;"><div>✨ ${statusPanelLabel}：{STATS_HTML}</div><div>🏷 关键标签：${tagsHtml}</div></section>`;
+                if (name === "relations") return `<section data-block="relations" style="padding:12px 14px;border-radius:16px;"><div style="font-size:12px;font-weight:700;margin-bottom:8px">👥 人物关系</div><div style="display:flex;flex-wrap:wrap;gap:8px">{RELATIONS_HTML}</div></section>`;
+                if (name === "event") return `<section class="wy-content" data-block="event" style="padding:14px 15px;border-radius:16px;line-height:1.78"><div style="font-weight:700;margin-bottom:10px">剧情正文</div><div>{MAIN_STORY_TEXT}</div></section>`;
+                if (name === "thought") return `<section class="wy-content" data-block="thought" style="padding:12px 14px;border-radius:16px;"><div style="font-size:12px;font-weight:700;margin-bottom:8px">AI想法</div><div>{AI_THOUGHT_TEXT}</div></section>`;
+                if (name === "choices") return `<section class="wy-options" data-block="choices" style="display:flex;flex-direction:column;gap:10px;margin-top:14px"><div class="wy-option-btn" data-choice="{OPT_TEXT_1}" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;border:1px solid var(--theme-primary)"><span>1. {OPT_TEXT_1}</span></div><div class="wy-option-btn" data-choice="{OPT_TEXT_2}" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;border:1px solid var(--theme-secondary)"><span>2. {OPT_TEXT_2}</span></div><div class="wy-option-btn" data-choice="{OPT_TEXT_3}" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;border:1px solid var(--theme-primary)"><span>3. {OPT_TEXT_3}</span></div></section>`;
+                if (name === "hint") return `<div data-block="hint" style="margin-top:16px;text-align:center;font-size:.88rem">{BOTTOM_DECOR} 提示：可直接点击上方按钮继续剧情 {BOTTOM_DECOR}</div>`;
+                return `<section data-block="${name}"></section>`;
+            }).join("");
+            return `<${rootTag} class="${rootClass}"${themeAttr} style="--theme-primary:#6a11cb;--theme-secondary:#2575fc;--card-bg:linear-gradient(to bottom right,#ffffff,#f0f4fd);--text-main:#2c3e50;--text-muted:#7f8c8d;--border-radius:12px;--card-shadow:0 10px 25px rgba(106,17,203,0.15);background:var(--card-bg);border-radius:var(--border-radius);box-shadow:var(--card-shadow);color:var(--text-main);overflow:hidden;padding:18px"><${titleTag} class="${titleClass}" style="text-align:center;padding:20px 15px;border-radius:12px;background:linear-gradient(135deg,color-mix(in srgb,var(--theme-primary) 12%,#ffffff 88%),color-mix(in srgb,var(--theme-secondary) 8%,#ffffff 92%))"><div style="font-size:0.9rem;font-weight:800;letter-spacing:4px;color:var(--theme-secondary)">✦ {当前文游/世界设定名称} ✦</div><h2 class="wy-role-name" style="font-size:1.65rem;font-weight:900;margin:8px 0;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));-webkit-background-clip:text;color:transparent">{当前剧情章节标题}</h2></${titleTag}><${bodyTag} class="${bodyClass}">${blocks}</${bodyTag}></${rootTag}>`;
+        }
+
         function buildBeautyRules(beautyCardSetting, beautyModeEnabled, state = null) {
             if (!beautyModeEnabled) return "";
             const normalizedTheme = (!beautyCardSetting || beautyCardSetting === "网络模板" || beautyCardSetting === "默认主题" || beautyCardSetting === "默认")
                 ? HtmlCardTemplateService.getRichThemeName()
                 : beautyCardSetting;
             const isDark = ThemeService.getMode() === "dark";
-            const { statusPanelLabel, tagsHtml } = HtmlCardTemplateService.buildSkeletonStateContext(state);
 
             // 优先使用锁定骨架，保证每轮结构完全一致；无锁定时降级为静态模板
             const cardId = ScenarioCardService.getSelectedId();
             const lockedSkeleton = cardId ? ScenarioPlayMetaService.getLockedSkeleton(cardId) : null;
-            const skeletonHint = lockedSkeleton
-                ? (typeof lockedSkeleton === "string"
-                    ? lockedSkeleton.slice(0, 800)
-                    : (() => {
-                        const { rootTag = "article", rootClass = "ai-beauty-card", titleTag, titleClass, bodyTag, bodyClass, blockOrder } = lockedSkeleton;
-                        const blocks = Array.isArray(blockOrder)
-                            ? blockOrder.map(name => `<section data-block="${name}">需包含${name}内容</section>`).join("")
-                            : `<section data-block="event">剧情正文</section>`;
-                        const titlePart = titleTag ? `<${titleTag}${titleClass ? ` class="${titleClass}"` : ""}>章节标题</${titleTag}>` : "";
-                        const bodyPart = bodyTag ? `<${bodyTag}${bodyClass ? ` class="${bodyClass}"` : ""}>${blocks}</${bodyTag}>` : blocks;
-                        return `<${rootTag} class="${rootClass}">${titlePart}${bodyPart}</${rootTag}>`;
-                    })())
-                : `<article class="ai-beauty-card wenyou-card"><div class="ai-beauty-card-body"><section data-block="time">时间信息</section><section data-block="status"><div>✨ ${statusPanelLabel}：各属性数值</div><div>🏷 关键标签：${tagsHtml}</div></section><section data-block="relations">👥 人物关系卡片</section><section data-block="event"><div>剧情正文</div></section><section data-block="thought"><div>AI想法</div></section><section data-block="choices"><div data-choice="选项1">1. 选项1</div><div data-choice="选项2">2. 选项2</div><div data-choice="选项3">3. 选项3</div></section><div data-block="hint">提示文字</div></div></article>`;
+            const skeletonHint = buildSkeletonHintFromLocked(lockedSkeleton, state)
+                || HtmlCardTemplateService.getSkeletonHtml(isDark ? "dark" : "light", state);
 
-            const structureRule = lockedSkeleton
-                ? "1. 必须严格按照下方【锁定骨架】的标签层级和 data-block 属性填充内容，不得新增、删除或重排任何 data-block 节点。"
-                : "1. 若上下文提供了【UI布局参考】，必须保持相同的 class 名称和 data-block 层次结构，不得新增或删除 data-block 节点。";
+            const structureRule = "1. 必须严格按照下方【卡片骨架】的标签层级和 data-block 属性填充内容，不得新增、删除或重排任何 data-block 节点。";
 
             return [
                 "【美化卡片强制规则——最高优先级】",
@@ -6495,7 +6547,7 @@
                 "4. 在 data-block=\"status\" 中更新当前属性数值。",
                 "5. 禁止输出任何 Markdown 代码块标签（```html），直接以 <article 或 <div 开头。",
                 "6. 严禁自行增加、删除或修改 HTML 标签层级，只能在现有的 div/section 容器内填充文字内容。",
-                lockedSkeleton ? "【锁定骨架（结构圣经——必须 100% 沿用，data-block 顺序和命名不可改变）】" : "【卡片结构（必须严格遵守，data-block 顺序和命名不可改变）】",
+                "【卡片骨架（必须严格遵守此结构输出 HTML，data-block 顺序和命名不可改变）】",
                 skeletonHint,
                 "输出完整 HTML 卡片后，若有状态变化必须在卡片之后追加 ```state-patch {...}``` 块（不要放在卡片内部）。"
             ].join("\n");
@@ -6551,13 +6603,27 @@
                 `待修正文本：\n${finalText}`
             ].join("\n\n");
         }
+        function buildHtmlRetryPrompt(userText, recentHistory, rawText, skeletonHint) {
+            return [
+                "【⚠️ 格式错误——必须重新输出 HTML 卡片】",
+                "你上一次的回复输出了纯文本或 Markdown，这是严重格式错误。",
+                "本次必须严格输出 HTML 卡片，最外层必须是 class=\"ai-beauty-card\" 的 article/section/div 标签。",
+                "禁止输出任何 Markdown（##、**、> 等），禁止用 ```html 代码块包裹，直接以 <article 或 <div 开头。",
+                skeletonHint ? `【强制骨架结构（必须 100% 沿用）】\n${skeletonHint}` : "",
+                `玩家最新输入：${userText}`,
+                `最近记录：\n${recentHistory}`,
+                `上一次错误输出（纯文本，请将其内容填入 HTML 卡片的 data-block="event" 区域）：\n${String(rawText || "").slice(0, 600)}`
+            ].filter(Boolean).join("\n\n");
+        }
         return {
             buildBeautyRules,
             buildSystemPrompt,
             buildMainUserPrompt,
             buildChoiceRetryPrompt,
             buildConflictRetryPrompt,
-            buildWarningRetryPrompt
+            buildWarningRetryPrompt,
+            buildHtmlRetryPrompt,
+            buildSkeletonHintFromLocked
         };
     })();
 
@@ -6584,13 +6650,17 @@
         function buildWarningRetryPrompt(userText, recentHistory, warnings, finalText, scenarioSpec) {
             return PromptTemplateService.buildWarningRetryPrompt(userText, recentHistory, warnings, finalText, scenarioSpec);
         }
+        function buildHtmlRetryPrompt(userText, recentHistory, rawText, skeletonHint) {
+            return PromptTemplateService.buildHtmlRetryPrompt(userText, recentHistory, rawText, skeletonHint);
+        }
         return {
             buildRecentHistory,
             buildSystemPrompt,
             buildMainUserPrompt,
             buildChoiceRetryPrompt,
             buildConflictRetryPrompt,
-            buildWarningRetryPrompt
+            buildWarningRetryPrompt,
+            buildHtmlRetryPrompt
         };
     })();
 
@@ -7892,16 +7962,6 @@
                     }
                 })).trim() || "（AI想法：刚刚有点卡住了，再和我说一次吧喵）";
 
-                // 检测是否被截断（无结束符）
-                if (!EndMarkerService.hasMarker(rawText) && rawText.length > 50) {
-                    // 静默追加提示，不打断流程
-                    setTimeout(() => {
-                        NoticeModalService.showInfo({
-                            title: "✂️ 剧情被截断",
-                            descHtml: "AI 回复达到了长度上限，剧情可能未完整结束。<br>你可以输入 <b>「继续」</b> 来衔接当前内容。"
-                        });
-                    }, 800);
-                }
 
                 const rawPatchResult = StatePatchService.extractPatch(rawText);
                 const rawVisibleText = rawPatchResult.cleaned || rawText;
@@ -7910,12 +7970,45 @@
                 if (beautyModeEnabled && policyConfig.enableHtmlCardForce) {
                     const turnChoices = ChoiceService.collectChoices(rawVisibleText);
                     const cardId = ScenarioCardService.getSelectedId();
-                    // 修复：如果 AI 未按要求输出 HTML，强制封装进锁定骨架
-                    if (!HtmlNormalizeService.containsHtmlCard(rawVisibleText)) {
-                        console.log("[ChatService] AI 未输出 HTML 卡片，启动强制结构恢复...");
+
+                    // HTML 重试：若 AI 未输出 HTML，用强制 prompt 重新请求一次
+                    let finalVisibleText = rawVisibleText;
+                    if (!HtmlNormalizeService.containsHtmlCard(rawVisibleText) && policyConfig.htmlRetryCount > 0) {
+                        console.log("[ChatService] AI 未输出 HTML 卡片，发起强制 HTML 重试...");
+                        const lockedSkeleton = ScenarioPlayMetaService.getLockedSkeleton(cardId);
+                        const isDark = ThemeService.getMode() === "dark";
+                        const retrySkeletonHint = PromptTemplateService.buildSkeletonHintFromLocked(lockedSkeleton, StateService.get())
+                            || HtmlCardTemplateService.getSkeletonHtml(isDark ? "dark" : "light", StateService.get());
+                        try {
+                            const retryText = (await AIRequestService.streamCompletionWithFallback({
+                                config,
+                                fetchUrl,
+                                headers: requestHeaders,
+                                model: config.model,
+                                messages: [
+                                    { role: "system", content: systemPrompt },
+                                    { role: "user", content: PromptPolicyService.buildHtmlRetryPrompt(userText, recentHistory, rawVisibleText, retrySkeletonHint) }
+                                ],
+                                temperature: policyConfig.temperature,
+                                onToken: (text) => {
+                                    const visibleText = StatePatchService.extractPatch(EndMarkerService.trimToMarker(text)).cleaned;
+                                    UIRenderer.updateStreaming(visibleText);
+                                    return !EndMarkerService.hasMarker(text);
+                                }
+                            })).trim();
+                            if (retryText && HtmlNormalizeService.containsHtmlCard(StatePatchService.extractPatch(retryText).cleaned || retryText)) {
+                                const retryPatch = StatePatchService.extractPatch(retryText);
+                                StatePatchService.applyPatch(StateService.get(), retryPatch.patch);
+                                finalVisibleText = retryPatch.cleaned || retryText;
+                                console.log("[ChatService] HTML 重试成功");
+                            }
+                        } catch (e) {
+                            console.warn("[ChatService] HTML 重试失败:", e);
+                        }
                     }
+
                     displayText = HtmlCardRenderPipelineService.finalizeCardLayout({
-                        text: rawVisibleText,
+                        text: finalVisibleText,
                         beautySetting: beautyCardSetting,
                         titleHint: "剧情推进",
                         nowText: Utils.nowDateStr(StateService.get()),
