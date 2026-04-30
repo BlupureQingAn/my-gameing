@@ -5943,11 +5943,24 @@ function buildPresetCardId(preset) {
                     messages: [
                         {
                             role: "system",
-                            content: "你是文游美化设定生成器。请根据设定文本输出一行中文“HTML卡片美化设定提示词”，长度20-60字，不要解释。"
+                            content: [
+                                "你是文游美化设定生成器。",
+                                "任务：根据设定文本输出一行中文“HTML卡片美化设定提示词”，用于指导后续卡片视觉设计。",
+                                "输出必须具体且丰富，至少覆盖以下维度：时代/题材气质、主配色与点缀色、背景材质、装饰元素、字体气质、整体氛围。",
+                                "必须出现可执行的视觉关键词（例如：鎏金边框、玻璃雾面、霓虹描边、卷轴纹理、徽章角标、颗粒光晕）。",
+                                "禁止空泛词（如：好看、高级、精美）单独出现，必须给出可落地的视觉细节。",
+                                "只输出一行提示词，不要解释，不要换行，不要加引号。建议长度 45-100 字。"
+                            ].join("\n")
                         },
                         {
                             role: "user",
-                            content: `标题：${title || "未命名模板"}\n请生成适配该设定风格的 HTML 卡片美化提示词。\n设定文本：\n${String(text || "").slice(0, 2500)}`
+                            content: [
+                                `标题：${title || "未命名模板"}`,
+                                "请生成适配该设定风格的 HTML 卡片美化提示词。",
+                                "要求：突出视觉层次与装饰丰富度，避免通用默认风格。",
+                                "建议采用“风格基调 + 配色方案 + 背景材质 + 装饰细节 + 字体气质 + 氛围光效”的短句串联。",
+                                `设定文本：\n${String(text || "").slice(0, 2500)}`
+                            ].join("\n")
                         }
                     ],
                     temperature: 0.4
@@ -6539,9 +6552,27 @@ function buildPresetCardId(preset) {
                 const isRecent = idx >= entries.length - recentFull * 2;
                 const maxLen = isRecent ? recentMax : olderMax;
                 const role = item.role === "user" ? "玩家" : "AI";
+                const isLatestAiHtml = idx === entries.length - 1
+                    && item.role === "ai"
+                    && (String(item.text || "").includes("<article") || String(item.text || "").includes("ai-beauty-card"));
+                if (isLatestAiHtml) return `${role}：[最新HTML卡片已单独提供，不在此重复]`;
                 const summary = compressEntry(item, maxLen);
                 return `${role}：${summary}`;
             }).join("\n");
+        }
+
+        function getLatestAiHtmlCard(state) {
+            const history = Array.isArray(state?.history) ? state.history : [];
+            for (let i = history.length - 1; i >= 0; i--) {
+                const item = history[i];
+                if (!item || item.role !== "ai") continue;
+                const raw = String(item.text || "");
+                if (!raw) continue;
+                if (HtmlNormalizeService.containsHtmlCard(raw)) {
+                    return HtmlNormalizeService.normalizeHtmlCard(raw);
+                }
+            }
+            return "";
         }
 
         // 构建人物关系快照（比 buildStateFactLock 更紧凑）
@@ -6642,17 +6673,20 @@ function buildPresetCardId(preset) {
             return parts.join("\n\n");
         }
 
-        return { build, extractTextFromHtml, extractSkeleton, buildCompressedHistory, buildRelationSnapshot, buildNpcSnapshot };
+        return { build, extractTextFromHtml, extractSkeleton, buildCompressedHistory, buildRelationSnapshot, buildNpcSnapshot, getLatestAiHtmlCard };
     })();
 
     const PromptComposerService = (() => {
         function buildRecentHistory(state) {
             return HistoryCompressorService.build(state);
         }
+        function buildLatestAiHtmlCard(state) {
+            return HistoryCompressorService.getLatestAiHtmlCard(state);
+        }
         function buildRuntimeContext(state) {
             return StateContextBuilder.buildRuntimeSummary(state);
         }
-        return { buildRecentHistory, buildRuntimeContext };
+        return { buildRecentHistory, buildLatestAiHtmlCard, buildRuntimeContext };
     })();
 
     const PromptTemplateService = (() => {
@@ -6712,8 +6746,11 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             // 优先使用锁定骨架，保证每轮结构完全一致；无锁定时降级为静态模板
             const cardId = ScenarioCardService.getSelectedId();
             const lockedSkeleton = cardId ? ScenarioPlayMetaService.getLockedSkeleton(cardId) : null;
+            const latestHtmlCard = state ? HistoryCompressorService.getLatestAiHtmlCard(state) : "";
             const skeletonHint = buildSkeletonHintFromLocked(lockedSkeleton, state)
                 || HtmlCardTemplateService.getSkeletonHtml(isDark ? "dark" : "light", state);
+            const useSkeletonHint = !latestHtmlCard;
+            const isFirstCardGeneration = useSkeletonHint;
 
             const structureRule = "1. 必须严格按照下方【卡片骨架】的标签层级和 data-block 属性填充内容，不得新增、删除或重排任何 data-block 节点。";
 
@@ -6728,7 +6765,9 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
                 ...PromptRulesRegistry.getBeautyCoreRules(),
                 // 在 buildBeautyRules 的数组中添加：
 "【绝对禁令】严禁在 HTML 标签的 style 属性中使用具体的十六进制颜色值（如 #F5E6C8）。",
-"【绝对禁令】严禁为任何 section、div、p 标签设置背景颜色（background），必须保持 background: transparent。",
+                isFirstCardGeneration ? "【首轮视觉增强】首次生成时，每个 data-block 容器都应有更丰富层次：可使用渐变、描边、柔光阴影或纹理叠层（至少命中两项）。" : "",
+                isFirstCardGeneration ? "【首轮视觉增强】首次生成时，请提供主色/辅色/强调色三组 CSS 变量，并在不同容器形成明显但统一的色彩区分。" : "",
+                isFirstCardGeneration ? "【首轮视觉增强】首次生成时，至少加入 4 种装饰元素（如角标、分隔线、徽章、发光点、纹理遮罩），但不得改变既有 HTML 结构。" : "",
 "【文字颜色】必须使用 CSS 变量 var(--text-main) 来控制文字颜色，严禁自创浅色字体。",
 "【视觉对比】如果当前是亮色模式（默认），请确保文字颜色为深色，严禁使用白色或淡黄色文字。",
                 "【HTML 生成继承规则】",
@@ -6738,15 +6777,15 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
                 "4. 在 data-block=\"status\" 中更新当前属性数值。",
                 "5. 禁止输出任何 Markdown 代码块标签（```html），直接以 <article 或 <div 开头。",
                 "6. 严禁自行增加、删除或修改 HTML 标签层级，只能在现有的 div/section 容器内填充文字内容。",
-                "【卡片骨架（必须严格遵守此结构输出 HTML，data-block 顺序和命名不可改变）】",
+                useSkeletonHint ? "【卡片骨架（必须严格遵守此结构输出 HTML，data-block 顺序和命名不可改变）】" : "",
 
 "【视觉连贯性要求】",
-"你必须 100% 完美复刻下方【卡片骨架】中提供的 style 属性（包括所有 CSS 变量、背景渐变和边框设定）。",
-                skeletonHint,
+                useSkeletonHint ? "你必须 100% 完美复刻下方【卡片骨架】中提供的 style 属性（包括所有 CSS 变量、背景渐变和边框设定）。" : "你必须严格沿用“最近一次完整 HTML 卡片”的样式与结构，只替换本轮内容。",
+                useSkeletonHint ? skeletonHint : "",
 "禁止自行简化 HTML 结构，禁止删除任何 CSS 样式。每一回合的精美程度必须与首回合保持高度一致。",
 "如果你发现卡片背景色导致文字难以阅读，请通过调整 CSS 变量或添加 text-shadow 来修正，而不是删除背景。",
                 "输出完整 HTML 卡片后，若有状态变化必须在卡片之后追加 ```state-patch {...}``` 块（不要放在卡片内部）。"
-            ].join("\n");
+            ].filter(Boolean).join("\n");
         }
         function buildSystemPrompt({ scenarioSpec, builtinRules, stateFactLock, runtimeContext, beautyRules }) {
             const highestPriorityScenarioRules = [
@@ -6757,55 +6796,74 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             ].join("\n");
             return `${highestPriorityScenarioRules}\n\n【设定文本】\n${scenarioSpec}${beautyRules ? `\n\n${beautyRules}` : ""}\n\n${builtinRules}\n\n${stateFactLock}\n\n${runtimeContext}`;
         }
-        function buildMainUserPrompt(userText, recentHistory) {
+        function buildMainUserPrompt(userText, recentHistory, latestHtmlCard = "") {
             const colorWarning = (window.colorCorrectionCount > 0)
                 ? `\n\n⚠️ 系统提示：检测到上一轮生成的卡片文字对比度过低，已被系统强制修正 ${window.colorCorrectionCount} 处。请在本轮选择更清晰的配色方案，确保文字与背景高对比。`
                 : "";
-            return `玩家最新输入：${userText}\n\n最近记录：\n${recentHistory}${colorWarning}`;
-        }        function buildChoiceRetryPrompt(userText, recentHistory, rawText, scenarioSpec) {
+            const latestCardBlock = latestHtmlCard
+                ? `\n\n最近一次完整HTML卡片（必须沿用其样式与结构，仅替换内容）：\n${latestHtmlCard}`
+                : "";
+            return `玩家最新输入：${userText}\n\n最近记录：\n${recentHistory}${latestCardBlock}${colorWarning}`;
+        }        function buildChoiceRetryPrompt(userText, recentHistory, rawText, scenarioSpec, latestHtmlCard = "") {
+            const latestCardBlock = latestHtmlCard
+                ? `\n\n最近一次完整HTML卡片（必须沿用其样式与结构，仅替换内容）：\n${latestHtmlCard}`
+                : "";
             return [
                 "【最高优先级：先遵守当前卡设定】",
                 `当前卡设定：\n${scenarioSpec || ""}`,
                 `玩家最新输入：${userText}`,
                 `最近记录：\n${recentHistory}`,
+                latestCardBlock,
                 "请严格重写上一条回复，必须在结尾提供1-3条编号选项。",
                 "格式强制为：1. ... 2. ... 3. ...",
                 "不要解释规则，直接输出剧情正文和编号选项。",
                 `上一版草稿（缺少编号选项）：\n${rawText}`
             ].join("\n\n");
         }
-        function buildConflictRetryPrompt(userText, recentHistory, conflictReport, finalText, scenarioSpec) {
+        function buildConflictRetryPrompt(userText, recentHistory, conflictReport, finalText, scenarioSpec, latestHtmlCard = "") {
+            const latestCardBlock = latestHtmlCard
+                ? `最近一次完整HTML卡片（必须沿用其样式与结构，仅替换内容）：\n${latestHtmlCard}`
+                : "";
             return [
                 "【最高优先级：先遵守当前卡设定】",
                 `当前卡设定：\n${scenarioSpec || ""}`,
                 `玩家最新输入：${userText}`,
                 `最近记录：\n${recentHistory}`,
+                latestCardBlock,
                 "请只做设定一致性纠偏重写，不要重开剧情。",
                 "必须严格遵守角色事实锁定块；若确需改动姓名、年龄、国籍、NPC关系等，请用 state-patch 结构化块同步。",
                 `错误级冲突清单：\n- ${conflictReport.errors.map((x) => x.message).join("\n- ")}`,
                 `待纠偏文本：\n${finalText}`
             ].join("\n\n");
         }
-        function buildWarningRetryPrompt(userText, recentHistory, warnings, finalText, scenarioSpec) {
+        function buildWarningRetryPrompt(userText, recentHistory, warnings, finalText, scenarioSpec, latestHtmlCard = "") {
             const warningLines = (Array.isArray(warnings) ? warnings : []).map((x) => x?.message || String(x || "")).filter(Boolean);
+            const latestCardBlock = latestHtmlCard
+                ? `最近一次完整HTML卡片（必须沿用其样式与结构，仅替换内容）：\n${latestHtmlCard}`
+                : "";
             return [
                 "【最高优先级：先遵守当前卡设定】",
                 `当前卡设定：\n${scenarioSpec || ""}`,
                 `玩家最新输入：${userText}`,
                 `最近记录：\n${recentHistory}`,
+                latestCardBlock,
                 "请在不改变剧情主走向的前提下，修正以下 warning 提示项。",
                 `warning清单：\n- ${warningLines.join("\n- ")}`,
                 "如果某条 warning 属于合理状态变化，请通过 state-patch 结构化块显式声明该变化。",
                 `待修正文本：\n${finalText}`
             ].join("\n\n");
         }
-        function buildHtmlRetryPrompt(userText, recentHistory, rawText, skeletonHint) {
+        function buildHtmlRetryPrompt(userText, recentHistory, rawText, skeletonHint, latestHtmlCard = "") {
+            const latestCardBlock = latestHtmlCard
+                ? `最近一次完整HTML卡片（必须沿用其样式与结构，仅替换内容）：\n${latestHtmlCard}`
+                : "";
             return [
                 "【⚠️ 格式错误——必须重新输出 HTML 卡片】",
                 "你上一次的回复输出了纯文本或 Markdown，这是严重格式错误。",
                 "本次必须严格输出 HTML 卡片，最外层必须是 class=\"ai-beauty-card\" 的 article/section/div 标签。",
                 "禁止输出任何 Markdown（##、**、> 等），禁止用 ```html 代码块包裹，直接以 <article 或 <div 开头。",
-                skeletonHint ? `【强制骨架结构（必须 100% 沿用）】\n${skeletonHint}` : "",
+                latestCardBlock,
+                !latestHtmlCard && skeletonHint ? `【强制骨架结构（必须 100% 沿用）】\n${skeletonHint}` : "",
                 `玩家最新输入：${userText}`,
                 `最近记录：\n${recentHistory}`,
                 `上一次错误输出（纯文本，请将其内容填入 HTML 卡片的 data-block="event" 区域）：\n${String(rawText || "").slice(0, 600)}`
@@ -6827,6 +6885,9 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
         function buildRecentHistory(state) {
             return PromptComposerService.buildRecentHistory(state);
         }
+        function buildLatestAiHtmlCard(state) {
+            return PromptComposerService.buildLatestAiHtmlCard(state);
+        }
         function buildSystemPrompt({ state, scenarioSpec, beautyCardSetting, beautyModeEnabled }) {
             const builtinRules = BuiltinPromptService.getResponseRules();
             const stateFactLock = BuiltinPromptService.buildStateFactLock(state);
@@ -6834,23 +6895,24 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             const beautyRules = PromptTemplateService.buildBeautyRules(beautyCardSetting, beautyModeEnabled, state);
             return PromptTemplateService.buildSystemPrompt({ scenarioSpec, builtinRules, stateFactLock, runtimeContext, beautyRules });
         }
-        function buildMainUserPrompt(userText, recentHistory) {
-            return PromptTemplateService.buildMainUserPrompt(userText, recentHistory);
+        function buildMainUserPrompt(userText, recentHistory, latestHtmlCard) {
+            return PromptTemplateService.buildMainUserPrompt(userText, recentHistory, latestHtmlCard);
         }
-        function buildChoiceRetryPrompt(userText, recentHistory, rawText, scenarioSpec) {
-            return PromptTemplateService.buildChoiceRetryPrompt(userText, recentHistory, rawText, scenarioSpec);
+        function buildChoiceRetryPrompt(userText, recentHistory, rawText, scenarioSpec, latestHtmlCard) {
+            return PromptTemplateService.buildChoiceRetryPrompt(userText, recentHistory, rawText, scenarioSpec, latestHtmlCard);
         }
-        function buildConflictRetryPrompt(userText, recentHistory, conflictReport, finalText, scenarioSpec) {
-            return PromptTemplateService.buildConflictRetryPrompt(userText, recentHistory, conflictReport, finalText, scenarioSpec);
+        function buildConflictRetryPrompt(userText, recentHistory, conflictReport, finalText, scenarioSpec, latestHtmlCard) {
+            return PromptTemplateService.buildConflictRetryPrompt(userText, recentHistory, conflictReport, finalText, scenarioSpec, latestHtmlCard);
         }
-        function buildWarningRetryPrompt(userText, recentHistory, warnings, finalText, scenarioSpec) {
-            return PromptTemplateService.buildWarningRetryPrompt(userText, recentHistory, warnings, finalText, scenarioSpec);
+        function buildWarningRetryPrompt(userText, recentHistory, warnings, finalText, scenarioSpec, latestHtmlCard) {
+            return PromptTemplateService.buildWarningRetryPrompt(userText, recentHistory, warnings, finalText, scenarioSpec, latestHtmlCard);
         }
-        function buildHtmlRetryPrompt(userText, recentHistory, rawText, skeletonHint) {
-            return PromptTemplateService.buildHtmlRetryPrompt(userText, recentHistory, rawText, skeletonHint);
+        function buildHtmlRetryPrompt(userText, recentHistory, rawText, skeletonHint, latestHtmlCard) {
+            return PromptTemplateService.buildHtmlRetryPrompt(userText, recentHistory, rawText, skeletonHint, latestHtmlCard);
         }
         return {
             buildRecentHistory,
+            buildLatestAiHtmlCard,
             buildSystemPrompt,
             buildMainUserPrompt,
             buildChoiceRetryPrompt,
@@ -8168,12 +8230,13 @@ const token = delta.content || "";
 
             try {
                 const recentHistory = PromptPolicyService.buildRecentHistory(state);
+                const latestAiHtmlCard = PromptPolicyService.buildLatestAiHtmlCard(state);
                 const scenarioSpec = SettingsService.getScenarioTextForModel();
                 const beautyCardSetting = SettingsService.getBeautyCardSetting();
                 const beautyModeEnabled = HtmlCardService.isBeautyModeEnabled(beautyCardSetting);
                 const policyConfig = SettingsService.getChatPolicyConfig();
                 const systemPrompt = PromptPolicyService.buildSystemPrompt({ state, scenarioSpec, beautyCardSetting, beautyModeEnabled });
-                const mainUserPrompt = PromptPolicyService.buildMainUserPrompt(userText, recentHistory);
+                const mainUserPrompt = PromptPolicyService.buildMainUserPrompt(userText, recentHistory, latestAiHtmlCard);
                 const rawText = (await AIRequestService.streamCompletionWithFallback({
                     config,
                     fetchUrl,
@@ -8228,7 +8291,7 @@ const token = delta.content || "";
                                 model: config.model,
                                 messages: [
                                     { role: "system", content: systemPrompt },
-                                    { role: "user", content: PromptPolicyService.buildHtmlRetryPrompt(userText, recentHistory, rawVisibleText, retrySkeletonHint) }
+                                    { role: "user", content: PromptPolicyService.buildHtmlRetryPrompt(userText, recentHistory, rawVisibleText, retrySkeletonHint, latestAiHtmlCard) }
                                 ],
                                 temperature: policyConfig.temperature,
                                 onToken: (text) => {
@@ -8263,7 +8326,7 @@ const token = delta.content || "";
                                 model: config.model,
                                 messages: [
                                     { role: "system", content: systemPrompt },
-                                    { role: "user", content: PromptPolicyService.buildConflictRetryPrompt(userText, recentHistory, report, text, scenarioSpec) }
+                                    { role: "user", content: PromptPolicyService.buildConflictRetryPrompt(userText, recentHistory, report, text, scenarioSpec, latestAiHtmlCard) }
                                 ],
                                 temperature: policyConfig.temperature,
                                 onToken: (t) => {
