@@ -3015,33 +3015,39 @@ if (card && card instanceof HTMLElement) {
             const all = getDirectBlockNodes(body).filter((el) => String(el.getAttribute("data-block") || "").trim() === name);
             all.slice(1).forEach((el) => el.remove());
         }
-        function extractSkeleton(html) {
-            const normalized = HtmlNormalizeService.normalizeHtmlCard(html);
-            if (!HtmlNormalizeService.isRenderableHtmlCard(normalized)) return null;
-            try {
-                const tpl = document.createElement("template");
-                tpl.innerHTML = normalized;
-                const card = tpl.content.querySelector(".ai-beauty-card");
-                if (!(card instanceof HTMLElement)) return null;
-                const body = normalizeLegacyBodyStructure(card.querySelector(".ai-beauty-card-body"));
-                const title = card.querySelector(".ai-beauty-card-title");
-                const blockOrder = body
-                    ? getDirectBlockNodes(body).map((el) => String(el.getAttribute("data-block") || "").trim()).filter(Boolean)
-                    : [];
-                return {
-                    rootTag: card.tagName.toLowerCase(),
-                    rootClass: String(card.className || "ai-beauty-card"),
-                    rootTheme: String(card.getAttribute("data-theme") || "").trim(),
-                    titleTag: title ? title.tagName.toLowerCase() : "header",
-                    titleClass: title ? String(title.className || "ai-beauty-card-title") : "ai-beauty-card-title",
-                    bodyTag: body ? body.tagName.toLowerCase() : "section",
-                    bodyClass: body ? String(body.className || "ai-beauty-card-body") : "ai-beauty-card-body",
-                    blockOrder: blockOrder.length ? blockOrder : ["time", "status", "event", "thought", "choices", "hint"]
-                };
-            } catch (e) {
-                return null;
-            }
-        }
+// 在 index.html 中搜索 extractSkeleton 替换为以下逻辑
+function extractSkeleton(html) {
+    const normalized = HtmlNormalizeService.normalizeHtmlCard(html);
+    if (!HtmlNormalizeService.isRenderableHtmlCard(normalized)) return null;
+    try {
+        const tpl = document.createElement("template");
+        tpl.innerHTML = normalized;
+        const card = tpl.content.querySelector(".ai-beauty-card");
+        if (!(card instanceof HTMLElement)) return null;
+        
+        const body = normalizeLegacyBodyStructure(card.querySelector(".ai-beauty-card-body"));
+        const title = card.querySelector(".ai-beauty-card-title");
+        const blockOrder = body
+            ? getDirectBlockNodes(body).map((el) => String(el.getAttribute("data-block") || "").trim()).filter(Boolean)
+            : [];
+
+        return {
+            rootTag: card.tagName.toLowerCase(),
+            rootClass: String(card.className || "ai-beauty-card"),
+            rootTheme: String(card.getAttribute("data-theme") || "").trim(),
+            // 【关键修改】：捕获第一张卡片生成的精美样式
+            rootStyle: card.getAttribute("style") || "", 
+            titleTag: title ? title.tagName.toLowerCase() : "header",
+            titleClass: title ? String(title.className || "ai-beauty-card-title") : "ai-beauty-card-title",
+            titleStyle: title ? title.getAttribute("style") : "",
+            bodyTag: body ? body.tagName.toLowerCase() : "section",
+            bodyClass: body ? String(body.className || "ai-beauty-card-body") : "ai-beauty-card-body",
+            blockOrder: blockOrder.length ? blockOrder : ["time", "status", "event", "thought", "choices", "hint"]
+        };
+    } catch (e) {
+        return null;
+    }
+}
         function applySkeleton(card, skeleton) {
             if (!(card instanceof HTMLElement) || !skeleton || typeof skeleton !== "object") return;
             const safeRootTag = /^[a-z][a-z0-9-]*$/i.test(String(skeleton.rootTag || "")) ? String(skeleton.rootTag).toLowerCase() : "article";
@@ -6538,60 +6544,64 @@ function buildPresetCardId(preset) {
             const { statusPanelLabel, tagsHtml } = HtmlCardTemplateService.buildSkeletonStateContext(state);
             const {
                 rootTag = "article", rootClass = "ai-beauty-card",
+                rootStyle = "", // 核心：第一张卡的 CSS 变量和背景
                 titleTag = "header", titleClass = "ai-beauty-card-title",
+                titleStyle = "",
                 bodyTag = "section", bodyClass = "ai-beauty-card-body",
                 blockOrder, rootTheme
             } = lockedSkeleton;
+            
             const themeAttr = rootTheme ? ` data-theme="${rootTheme}"` : "";
             const defaultOrder = ["time", "status", "relations", "event", "thought", "choices", "hint"];
             const order = Array.isArray(blockOrder) && blockOrder.length ? blockOrder : defaultOrder;
+            
             const blocks = order.map(name => {
-                if (name === "time") return `<section class="wy-meta" data-block="time">⏱️ {TIME_TEXT}</section>`;
-                if (name === "status") return `<section class="wy-stats" data-block="status"><div>✨ ${statusPanelLabel}：{STATS_HTML}</div><div>🏷 关键标签：${tagsHtml}</div></section>`;
-                if (name === "relations") return `<section data-block="relations"><div>👥 人物关系</div><div>{RELATIONS_HTML}</div></section>`;
-                if (name === "event") return `<section class="wy-content" data-block="event"><div>剧情正文</div><div>{MAIN_STORY_TEXT}</div></section>`;
-                if (name === "thought") return `<section class="wy-content" data-block="thought"><div>AI想法</div><div>{AI_THOUGHT_TEXT}</div></section>`;
-                if (name === "choices") return `<section class="wy-options" data-block="choices"><div class="wy-option-btn" data-choice="{OPT_TEXT_1}">1. {OPT_TEXT_1}</div><div class="wy-option-btn" data-choice="{OPT_TEXT_2}">2. {OPT_TEXT_2}</div><div class="wy-option-btn" data-choice="{OPT_TEXT_3}">3. {OPT_TEXT_3}</div></section>`;
-                if (name === "hint") return `<div data-block="hint">{BOTTOM_DECOR} 提示：可直接点击上方按钮继续剧情 {BOTTOM_DECOR}</div>`;
+                if (name === "time") return `<section class="wy-meta" data-block="time">⏱️ {当前时间}</section>`;
+                if (name === "status") return `<section class="wy-stats" data-block="status"><div>✨ ${statusPanelLabel}：{数值变化}</div></section>`;
+                if (name === "relations") return `<section data-block="relations"><div>👥 人物关系</div><div>{NPC状态}</div></section>`;
+                if (name === "event") return `<section class="wy-content" data-block="event"><div>【剧情正文：不少于400字】</div></section>`;
+                if (name === "thought") return `<section class="wy-content" data-block="thought"><div>AI想法：{思考}</div></section>`;
+                if (name === "choices") return `<section class="wy-options" data-block="choices">{1-3个选项按钮}</section>`;
+                if (name === "hint") return `<div data-block="hint">提示文案</div>`;
                 return `<section data-block="${name}"></section>`;
             }).join("");
-            return `<${rootTag} class="${rootClass}"${themeAttr}><${titleTag} class="${titleClass}">{当前剧情章节标题}</${titleTag}><${bodyTag} class="${bodyClass}">${blocks}</${bodyTag}></${rootTag}>`;
+
+            // 返回带样式的完整 HTML 结构作为 AI 必须遵守的“圣经”
+            return `<${rootTag} class="${rootClass}"${themeAttr} style="${rootStyle}">
+                <${titleTag} class="${titleClass}" style="${titleStyle}">{剧情章节标题}</${titleTag}>
+                <${bodyTag} class="${bodyClass}">
+                    ${blocks}
+                </${bodyTag}>
+            </${rootTag}>`;
         }
 
-        // 主入口：组装完整的压缩历史 prompt
+        // 2. 修改主 build 函数
         function build(state, opts = {}) {
             const parts = [];
             const cardId = ScenarioCardService.getSelectedId();
 
-            // 【锁定骨架】优先从 ScenarioPlayMetaService 获取初始化时锁定的骨架
-            // 这样历史记录里的所有 HTML 都不会再被发送给 AI，彻底切断 HTML 爆炸
+            // 【核心】注入锁定骨架：告诉 AI “每一回合都必须长得和这张卡一模一样”
             const lockedSkeleton = ScenarioPlayMetaService.getLockedSkeleton(cardId);
             if (lockedSkeleton) {
                 const hint = skeletonToHint(lockedSkeleton, state);
                 if (hint) {
-                    parts.push(`【强制 HTML 结构要求（结构圣经——必须严格遵守此标签层级和 data-block 属性，禁止漂移为 Markdown）】\n${hint}`);
-                }
-            } else {
-                // 降级：从历史记录里找最后一张卡片提取骨架（兼容尚未锁定的情况）
-                const history = Array.isArray(state.history) ? state.history : [];
-                const lastHtmlEntry = [...history].reverse().find((item) => {
-                    const t = String(item.text || "");
-                    return item.role !== "user" && (t.includes("ai-beauty-card") || t.includes("<article"));
-                });
-                if (lastHtmlEntry) {
-                    const skeleton = extractSkeleton(lastHtmlEntry.text);
-                    if (skeleton) {
-                        parts.push(`【UI布局参考（必须沿用此结构填充新内容，禁止输出 Markdown）】\n${skeleton}`);
-                    }
+                    parts.push(`【强制 HTML 视觉标准（必须 100% 沿用此 Style 和结构，严禁偷懒简化）】\n${hint}`);
                 }
             }
 
+            // 【关键】压缩历史：将历史记录全部转为纯文本
+            // 这一步非常重要！如果不转纯文本，历史记录里臃肿的 HTML 会让 AI 感到困惑并开始胡乱精简
             const compressedHistory = buildCompressedHistory(state, opts);
-            if (compressedHistory) parts.push(`【近期剧情摘要】\n${compressedHistory}`);
+            if (compressedHistory) {
+                parts.push(`【近期剧情文本（仅参考剧情，不要参考其格式）】\n${compressedHistory}`);
+            }
+
             const relations = buildRelationSnapshot(state);
             if (relations) parts.push(relations);
+            
             const npcSnap = buildNpcSnapshot(state, opts);
             if (npcSnap) parts.push(npcSnap);
+
             return parts.join("\n\n");
         }
 
@@ -6612,30 +6622,43 @@ function buildPresetCardId(preset) {
         // 从 lockedSkeleton object 重建完整 HTML 骨架，供 AI 参考输出格式
         // 有 lockedSkeleton 时用此版本（结构来自实际生成的第一张卡，已验证可渲染）
         // 无 lockedSkeleton 时调用方降级到 getSkeletonHtml()
-        function buildSkeletonHintFromLocked(lockedSkeleton, state) {
-            if (!lockedSkeleton || typeof lockedSkeleton !== "object") return null;
-            const { statusPanelLabel, tagsHtml } = HtmlCardTemplateService.buildSkeletonStateContext(state);
-            const {
-                rootTag = "article", rootClass = "ai-beauty-card",
-                titleTag = "header", titleClass = "ai-beauty-card-title",
-                bodyTag = "section", bodyClass = "ai-beauty-card-body",
-                blockOrder, rootTheme
-            } = lockedSkeleton;
-            const themeAttr = rootTheme ? ` data-theme="${rootTheme}"` : "";
-            const defaultOrder = ["time", "status", "relations", "event", "thought", "choices", "hint"];
-            const order = Array.isArray(blockOrder) && blockOrder.length ? blockOrder : defaultOrder;
-            const blocks = order.map(name => {
-                if (name === "time") return `<section class="wy-meta" data-block="time">⏱️ {TIME_TEXT}</section>`;
-                if (name === "status") return `<section class="wy-stats" data-block="status" style="display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:16px;"><div>✨ ${statusPanelLabel}：{STATS_HTML}</div><div>🏷 关键标签：${tagsHtml}</div></section>`;
-                if (name === "relations") return `<section data-block="relations" style="padding:12px 14px;border-radius:16px;"><div style="font-size:12px;font-weight:700;margin-bottom:8px">👥 人物关系</div><div style="display:flex;flex-wrap:wrap;gap:8px">{RELATIONS_HTML}</div></section>`;
-                if (name === "event") return `<section class="wy-content" data-block="event" style="padding:14px 15px;border-radius:16px;line-height:1.78"><div style="font-weight:700;margin-bottom:10px">剧情正文</div><div>{MAIN_STORY_TEXT}</div></section>`;
-                if (name === "thought") return `<section class="wy-content" data-block="thought" style="padding:12px 14px;border-radius:16px;"><div style="font-size:12px;font-weight:700;margin-bottom:8px">AI想法</div><div>{AI_THOUGHT_TEXT}</div></section>`;
-                if (name === "choices") return `<section class="wy-options" data-block="choices" style="display:flex;flex-direction:column;gap:10px;margin-top:14px"><div class="wy-option-btn" data-choice="{OPT_TEXT_1}" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;border:1px solid var(--theme-primary)"><span>1. {OPT_TEXT_1}</span></div><div class="wy-option-btn" data-choice="{OPT_TEXT_2}" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;border:1px solid var(--theme-secondary)"><span>2. {OPT_TEXT_2}</span></div><div class="wy-option-btn" data-choice="{OPT_TEXT_3}" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;border:1px solid var(--theme-primary)"><span>3. {OPT_TEXT_3}</span></div></section>`;
-                if (name === "hint") return `<div data-block="hint" style="margin-top:16px;text-align:center;font-size:.88rem">{BOTTOM_DECOR} 提示：可直接点击上方按钮继续剧情 {BOTTOM_DECOR}</div>`;
-                return `<section data-block="${name}"></section>`;
-            }).join("");
-            return `<${rootTag} class="${rootClass}"${themeAttr} style="--theme-primary:#6a11cb;--theme-secondary:#2575fc;--card-bg:linear-gradient(to bottom right,#ffffff,#f0f4fd);--text-main:#2c3e50;--text-muted:#7f8c8d;--border-radius:12px;--card-shadow:0 10px 25px rgba(106,17,203,0.15);background:var(--card-bg);border-radius:var(--border-radius);box-shadow:var(--card-shadow);color:var(--text-main);overflow:hidden;padding:8px"><${titleTag} class="${titleClass}" style="text-align:center;padding:20px 15px;border-radius:12px;background:linear-gradient(135deg,color-mix(in srgb,var(--theme-primary) 12%,#ffffff 88%),color-mix(in srgb,var(--theme-secondary) 8%,#ffffff 92%))"><div style="font-size:0.9rem;font-weight:800;letter-spacing:4px;color:var(--theme-secondary)">✦ {当前文游/世界设定名称} ✦</div><h2 class="wy-role-name" style="font-size:1.65rem;font-weight:900;margin:8px 0;background:linear-gradient(135deg,var(--theme-primary),var(--theme-secondary));-webkit-background-clip:text;color:transparent">{当前剧情章节标题}</h2></${titleTag}><${bodyTag} class="${bodyClass}">${blocks}</${bodyTag}></${rootTag}>`;
-        }
+// 在 index.html 中搜索 buildSkeletonHintFromLocked 替换
+function buildSkeletonHintFromLocked(lockedSkeleton, state) {
+    if (!lockedSkeleton || typeof lockedSkeleton !== "object") return null;
+    const { statusPanelLabel, tagsHtml } = HtmlCardTemplateService.buildSkeletonStateContext(state);
+    
+    // 从锁定的骨架中提取样式
+    const {
+        rootTag = "article", rootClass = "ai-beauty-card",
+        rootStyle = "", // 使用第一张卡片的样式
+        titleTag = "header", titleClass = "ai-beauty-card-title",
+        titleStyle = "",
+        bodyTag = "section", bodyClass = "ai-beauty-card-body",
+        blockOrder, rootTheme
+    } = lockedSkeleton;
+
+    const themeAttr = rootTheme ? ` data-theme="${rootTheme}"` : "";
+    const order = Array.isArray(blockOrder) && blockOrder.length ? blockOrder : ["time", "status", "relations", "event", "thought", "choices", "hint"];
+    
+    const blocks = order.map(name => {
+        if (name === "time") return `<section class="wy-meta" data-block="time">⏱️ {TIME_TEXT}</section>`;
+        if (name === "status") return `<section class="wy-stats" data-block="status"><div>✨ ${statusPanelLabel}：{STATS_HTML}</div></section>`;
+        if (name === "relations") return `<section data-block="relations"><div>👥 人物关系</div><div>{RELATIONS_HTML}</div></section>`;
+        if (name === "event") return `<section class="wy-content" data-block="event"><div>{MAIN_STORY_TEXT}</div></section>`;
+        if (name === "thought") return `<section class="wy-content" data-block="thought"><div>AI想法：{AI_THOUGHT_TEXT}</div></section>`;
+        if (name === "choices") return `<section class="wy-options" data-block="choices">{1-3个选项按钮}</section>`;
+        if (name === "hint") return `<div data-block="hint">提示文案</div>`;
+        return `<section data-block="${name}"></section>`;
+    }).join("");
+
+    // 生成发给 AI 的“结构模板”
+    return `<${rootTag} class="${rootClass}"${themeAttr} style="${rootStyle}">
+        <${titleTag} class="${titleClass}" style="${titleStyle}">{剧情章节标题}</${titleTag}>
+        <${bodyTag} class="${bodyClass}">
+            ${blocks}
+        </${bodyTag}>
+    </${rootTag}>`;
+}
 
         function buildBeautyRules(beautyCardSetting, beautyModeEnabled, state = null) {
             if (!beautyModeEnabled) return "";
@@ -6669,7 +6692,12 @@ function buildPresetCardId(preset) {
                 "5. 禁止输出任何 Markdown 代码块标签（```html），直接以 <article 或 <div 开头。",
                 "6. 严禁自行增加、删除或修改 HTML 标签层级，只能在现有的 div/section 容器内填充文字内容。",
                 "【卡片骨架（必须严格遵守此结构输出 HTML，data-block 顺序和命名不可改变）】",
+
+"【视觉连贯性要求】",
+"你必须 100% 完美复刻下方【卡片骨架】中提供的 style 属性（包括所有 CSS 变量、背景渐变和边框设定）。",
                 skeletonHint,
+"禁止自行简化 HTML 结构，禁止删除任何 CSS 样式。每一回合的精美程度必须与首回合保持高度一致。",
+"如果你发现卡片背景色导致文字难以阅读，请通过调整 CSS 变量或添加 text-shadow 来修正，而不是删除背景。",
                 "输出完整 HTML 卡片后，若有状态变化必须在卡片之后追加 ```state-patch {...}``` 块（不要放在卡片内部）。"
             ].join("\n");
         }
