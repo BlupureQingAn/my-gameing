@@ -3255,9 +3255,9 @@ function rebuildChoicesBlock(body, labels = []) {
                     });
                     body.appendChild(ol);
                 }
-                const normalizedChoices = normalizePreferredChoices(preferredChoices);
-                if (choiceSource === "opening" || choiceSource === "turn") rebuildChoicesBlock(body, normalizedChoices);
-                else if (normalizedChoices.length) rebuildChoicesBlock(body, normalizedChoices);
+ //               const normalizedChoices = normalizePreferredChoices(preferredChoices);
+ //               if (choiceSource === "opening" || choiceSource === "turn") rebuildChoicesBlock(body, normalizedChoices);
+ //               else if (normalizedChoices.length) rebuildChoicesBlock(body, normalizedChoices);
                 stripInlineChoicesFromEvent(body);
                 HtmlCardTemplateService.getRequiredBlocks().forEach((name) => {
                     const node = getDirectBlockMap(body).get(name);
@@ -7111,14 +7111,7 @@ function rebuildChoicesBlock(body, labels = []) {
 
     const ChatPostProcessService = (() => {
         async function enforceChoices({ text, userText, state, retryCount, requestRewrite }) {
-            let finalText = text;
-            let remain = Math.max(0, Number(retryCount) || 0);
-            while (ChoiceService.extractChoices(finalText).length === 0 && remain > 0) {
-                const retried = await requestRewrite(finalText);
-                if (retried) finalText = retried;
-                remain--;
-            }
-            return finalText;
+            return text; 
         }
         async function enforceConflict({ text, userText, state, enabled, retryCount, requestRewrite }) {
             let finalText = text;
@@ -8203,31 +8196,7 @@ function rebuildChoicesBlock(body, labels = []) {
                     finalVisibleText = conflictFixed;
                     conflictDetected = _cd;
 
-                    // 选项强制重试
-                    finalVisibleText = await ChatPostProcessService.enforceChoices({
-                        text: finalVisibleText,
-                        userText,
-                        state: StateService.get(),
-                        retryCount: policyConfig.choiceRetryCount,
-                        requestRewrite: async (text) => {
-                            const retried = (await AIRequestService.streamCompletionWithFallback({
-                                config,
-                                fetchUrl,
-                                headers: requestHeaders,
-                                model: config.model,
-                                messages: [
-                                    { role: "system", content: systemPrompt },
-                                    { role: "user", content: PromptPolicyService.buildChoiceRetryPrompt(userText, recentHistory, text, scenarioSpec) }
-                                ],
-                                temperature: policyConfig.temperature,
-                                onToken: (t) => {
-                                    UIRenderer.updateStreaming(StatePatchService.extractPatch(EndMarkerService.trimToMarker(t)).cleaned);
-                                    return !EndMarkerService.hasMarker(t);
-                                }
-                            })).trim();
-                            return StatePatchService.extractPatch(retried).cleaned || retried;
-                        }
-                    });
+
 
                     displayText = HtmlCardRenderPipelineService.finalizeCardLayout({
                         text: finalVisibleText,
@@ -8840,10 +8809,11 @@ function rebuildChoicesBlock(body, labels = []) {
             renderAll();
             return card;
         }
-        function buildPresetCardIdFromPreset(preset) {
-            const raw = String(preset?.id || preset?.title || "");
-            return `scenario_preset_${raw}`.replace(/[^\w-]/g, "_");
-        }
+function buildPresetCardId(preset) {
+    // 移除 Date.now()，改用 title 兜底。只要标题不变，ID 就不变。
+    const raw = String(preset?.id || preset?.title || "unknown"); 
+    return `scenario_preset_${raw}`.replace(/[^\w-]/g, "_");
+}
         function findOfficialPresetByCardId(cardId) {
             const id = String(cardId || "");
             if (!id || !Array.isArray(presetManifest)) return null;
@@ -8890,37 +8860,36 @@ function rebuildChoicesBlock(body, labels = []) {
             });
         }
 async function playPresetTemplate(preset) {
-            // 1. 根据模板信息生成该模板的“标准ID”（不含时间戳）
-            const targetId = ScenarioTemplateService.buildPresetCardId(preset);
-            
-            // 2. 检查当前卡牌列表中是否已经存在这个 ID 的卡片
-            const allCards = ScenarioCardService.loadCards();
-            const existingCard = allCards.find(c => c.id === targetId);
+    // 1. 生成确定的 ID
+    const targetId = ScenarioTemplateService.buildPresetCardId(preset);
+    
+    // 2. 检查列表
+    const allCards = ScenarioCardService.loadCards();
+    const existingCard = allCards.find(c => c.id === targetId);
 
-            if (existingCard) {
-                // 如果已经有了，直接调用游玩逻辑，不再重复创建或加载
-                console.log("检测到现有卡片，直接进入游玩:", targetId);
-                await playScenarioCard(targetId);
-            } else {
-                // 如果没有，才执行“加载模板 -> 创建卡片 -> 游玩”的完整流程
-                InitLoadingService.open("正在加载预设模板并初始化独立卡片...");
-                
-                // 注意：这里传 forceCreateNew: false，确保它使用 buildPresetCardId 生成的原始ID
-                const ok = await applyPresetTemplate(preset, { 
-                    silent: true, 
-                    forceCreateNew: false 
-                });
+    if (existingCard) {
+        console.log("检测到现有卡片，直接进入游玩:", targetId);
+        // 直接切换到该卡片并检查是否需要初始化
+        await playScenarioCard(targetId);
+    } else {
+        console.log("未发现现有卡片，执行加载流程");
+        InitLoadingService.open("正在加载预设模板...");
+        
+        // 注意：这里传 forceCreateNew: false
+        const ok = await applyPresetTemplate(preset, { 
+            silent: true, 
+            forceCreateNew: false 
+        });
 
-                if (ok === false) {
-                    InitLoadingService.close();
-                    return;
-                }
-                
-                // 初始化阶段逻辑
-                InitLoadingService.updateStage("连接中");
-                await playScenarioCard(ScenarioCardService.getSelectedId());
-            }
+        if (ok === false) {
+            InitLoadingService.close();
+            return;
         }
+        
+        // 获取 applyPresetTemplate 内部真正选中的 ID
+        await playScenarioCard(ScenarioCardService.getSelectedId());
+    }
+}
         
         function startFromPlay() {
             saveScenarioCard();
