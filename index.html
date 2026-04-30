@@ -1878,6 +1878,56 @@ body[data-theme="dark"] .ai-beauty-card {
             }
         }   
         
+
+/* --- 强制透明与颜色修正 --- */
+
+/* 1. 强制所有卡片元素背景透明，并移除 AI 生成的阴影 */
+.ai-beauty-card, 
+.ai-beauty-card *, 
+.ai-beauty-card section, 
+.ai-beauty-card div, 
+.ai-beauty-card header,
+.ai-beauty-card button {
+    background-color: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}
+
+/* 2. 移除 AI 喜欢生成的模糊文字阴影，防止亮色模式模糊 */
+.ai-beauty-card * {
+    text-shadow: none !important;
+}
+
+/* 3. 根据主题强制设定文字颜色 */
+/* 亮色模式：强制深咖啡色/黑色 */
+:root {
+    --force-card-text: #3c2415; 
+}
+
+/* 暗色模式：强制浅蓝色/白色 */
+body[data-theme="dark"] {
+    --force-card-text: #e8edf8;
+}
+
+.ai-beauty-card, 
+.ai-beauty-card .wy-content, 
+.ai-beauty-card p, 
+.ai-beauty-card span,
+.ai-beauty-card div {
+    color: var(--force-card-text) !important;
+}
+
+/* 4. 修正选项按钮在亮色模式下的边框（否则变透明看不见） */
+.ai-beauty-card .wy-option-btn {
+    border: 1px solid var(--force-card-text) !important;
+    color: var(--force-card-text) !important;
+}
+
+
+
+
+
+
     </style>
 </head>
 <body>
@@ -2916,7 +2966,7 @@ const BASE_STYLE_DARK = "--theme-primary:#e8edf8;--theme-secondary:#9aa8c4;--car
 function getSkeletonHtml(themeMode = "light", state = null) {
             const { statusPanelLabel, tagsHtml } = buildSkeletonStateContext(state);
             // 1. 将状态栏背景设为透明
-            const statusBlock = `<div style="padding:10px 12px;border-radius:12px;background:transparent;border-left:4px solid var(--theme-primary);margin-bottom:8px">✨ ${statusPanelLabel}：{STATS_HTML}</div><div style="padding:10px 12px;border-radius:12px;background:transparent;border-left:4px solid var(--theme-secondary)">🏷 关键标签：${tagsHtml}</div>`;
+            const statusBlock = `<div style="padding:10px 12px;border-radius:12px;background:transparent;border-left:4px solid var(--theme-primary);margin-bottom:8px">✨ ${statusPanelLabel}：{STATS_HTML}</div>`;
             
             // 2. 将主体、页眉、各区块、按钮背景全部设为透明，移除阴影
             const base = "<article class=\"ai-beauty-card wenyou-card\" style=\"--theme-primary:{THEME_PRIMARY};--theme-secondary:{THEME_SECONDARY};--card-bg:transparent;--text-main:{TEXT_MAIN};--text-muted:{TEXT_MUTED};--font-family:{FONT_FAMILY};--border-radius:{BORDER_RADIUS};--card-shadow:none;position:relative;overflow:hidden;background:transparent;border-radius:var(--border-radius);box-shadow:none;border:1px solid color-mix(in srgb,var(--theme-primary) 30%,transparent);font-family:var(--font-family);color:var(--text-main)\">" +
@@ -6723,6 +6773,11 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
                     ? "暗夜模式：透明/半透明深色背景，文字高对比。"
                     : "亮色模式：温暖或高饱和视觉，保证可读性。",
                 ...PromptRulesRegistry.getBeautyCoreRules(),
+                // 在 buildBeautyRules 的数组中添加：
+"【绝对禁令】严禁在 HTML 标签的 style 属性中使用具体的十六进制颜色值（如 #F5E6C8）。",
+"【绝对禁令】严禁为任何 section、div、p 标签设置背景颜色（background），必须保持 background: transparent。",
+"【文字颜色】必须使用 CSS 变量 var(--text-main) 来控制文字颜色，严禁自创浅色字体。",
+"【视觉对比】如果当前是亮色模式（默认），请确保文字颜色为深色，严禁使用白色或淡黄色文字。"
                 "【HTML 生成继承规则】",
                 structureRule,
                 "2. 不要改变卡片的视觉风格（渐变、边框、装饰），除非剧情发生了重大环境变化。",
