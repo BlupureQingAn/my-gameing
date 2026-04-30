@@ -277,17 +277,18 @@
 
         .stats-grid {
             display: flex !important;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: flex-start;
-            padding: 4px 0;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            gap: 10px !important;
+            justify-content: flex-start !important;
+            padding: 8px 0 !important;
             position: relative;
             z-index: 2;
         }
 
         .stat-item {
             position: relative;
-            flex: 1 1 auto;
+            flex: 0 1 auto !important;
             min-width: 140px;
             max-width: 200px;
             background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(252,247,240,0.92));
@@ -3352,12 +3353,13 @@
                     const bgLum = (0.299 * bgRgb.r + 0.587 * bgRgb.g + 0.114 * bgRgb.b) / 255;
                     // 读取文字当前亮度，计算色差
                     const currentFg = window.getComputedStyle(el).color;
-                    const fgRgb = parseColorToRgb(currentFg) || { r: 0, g: 0, b: 0 };
+                    const fgRgb = parseColorToRgb(currentFg) || (bgLum > 0.5 ? { r: 0, g: 0, b: 0 } : { r: 255, g: 255, b: 255 });
                     const fgLum = (0.299 * fgRgb.r + 0.587 * fgRgb.g + 0.114 * fgRgb.b) / 255;
                     const contrastGap = Math.abs(bgLum - fgLum);
                     const currentColor = el.style.color;
-                    // 色差不足时强制反转
-                    if (contrastGap < 0.45) {
+                    const isLabel = el.tagName.toLowerCase() === "span" || el.classList.contains("wy-stat-item");
+                    // 色差不足时强制反转（阈值提高到 0.5）
+                    if (contrastGap < 0.5) {
                         const forced = muted
                             ? (bgLum > 0.5 ? "#555555" : "#c8d4f0")
                             : (bgLum > 0.5 ? "#000000" : "#ffffff");
@@ -3367,11 +3369,16 @@
                     // 标题：万能描边阴影
                     if (isHeader) {
                         el.style.fontWeight = "900";
-                        const strokeColor = bgLum > 0.5 ? "#ffffff" : "#000000";
-                        const shadowColor = bgLum > 0.5 ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.8)";
-                        el.style.textShadow = `1px 1px 0 ${strokeColor},-1px -1px 0 ${strokeColor},1px -1px 0 ${strokeColor},-1px 1px 0 ${strokeColor},0px 2px 8px ${shadowColor}`;
+                        const strokeColor = bgLum > 0.5 ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.9)";
+                        el.style.textShadow = `1px 1px 0 ${strokeColor},-1px -1px 0 ${strokeColor},1px -1px 0 ${strokeColor},-1px 1px 0 ${strokeColor},0px 2px 10px rgba(0,0,0,0.3)`;
                     } else if (bgLum <= 0.5) {
                         el.style.textShadow = "0 1px 2px rgba(0,0,0,0.5)";
+                    }
+                    // 小标签在极浅背景下白字兜底：加半透明深色背景
+                    if (isLabel && bgLum > 0.8 && el.style.color === "rgb(255, 255, 255)") {
+                        el.style.backgroundColor = "rgba(0,0,0,0.1)";
+                        el.style.padding = "2px 6px";
+                        el.style.borderRadius = "4px";
                     }
                 } else {
                     el.style.color = getReadableTextColor(bg, muted);
@@ -3532,7 +3539,6 @@
             const topBox = document.getElementById("game-stats-card");
             if (topBox) {
                 topBox.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px;padding:2px 0;">${barsHtml}</div>${tagsHtml}`;
-                topBox.dataset.syncedFromCard = "1";
             }
         }
         return { renderAiMessage, bindHtmlChoiceEvents, formatQuotedDialogueLines, injectStatsIntoCard };
@@ -4275,8 +4281,8 @@
             const npcUpdates = [];
             const statusTags = [];
             lines.forEach((line) => {
-                // 全 CJK 兼容：支持简繁日韩汉字，支持 Emoji，支持小数/分数/百分比
-                const m = line.match(/([\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]?)\s*([\u4e00-\u9fa5]{2,12})\s*([\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]?)\s*[:：\-]\s*([+-]?\d+(?:\.\d+)?(?:\/\d+)?%?)/u);
+                // 全 CJK 兼容：支持简繁汉字、Emoji、冒号/空格/破折号分隔、小数/分数/百分比
+                const m = line.match(/([\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]?)\s*([\u4e00-\u9fa5]{2,12})\s*([\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]?)\s*[:：\-\s]\s*([+-]?\d+(?:\.\d+)?(?:\/\d+)?%?)/u);
                 if (m) {
                     const label = m[2].trim();
                     const val = m[4].trim();
@@ -4290,7 +4296,7 @@
                     });
                     return;
                 }
-                const tagMatch = line.match(/^(身份|处境|狀態|状态|標籤|标签|家世|背景|地点|阵营|职业)\s*[:：]\s*(.+)$/);
+                const tagMatch = line.match(/^(身份|处境|狀態|状态|標籤|标签|家世|背景|地点|阵营|职业)\s*[:：\s]\s*(.+)$/);
                 if (tagMatch) {
                     statusTags.push({ label: tagMatch[1], value: normalizeStatusTag(tagMatch[2]) });
                 }
