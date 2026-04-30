@@ -656,6 +656,75 @@
             filter: brightness(1.03);
         }
 
+        .mini-btn:hover,
+        .tiny-btn:hover,
+        .choice-btn:hover,
+        .send-btn:hover,
+        .quick-btn:hover,
+        .emoji-btn:hover,
+        .scenario-action-btn:hover,
+        .swipe-delete-btn:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.03);
+        }
+
+        /* ---- 充值面板 ---- */
+        .recharge-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .recharge-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 6px;
+            border-radius: 12px;
+            border: 1.5px solid var(--line);
+            background: var(--card-soft);
+            cursor: pointer;
+            transition: all 0.18s;
+        }
+        .recharge-item.active {
+            border-color: var(--accent);
+            background: color-mix(in srgb, var(--accent) 12%, var(--card-soft));
+            box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 25%, transparent);
+        }
+        .recharge-coins {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--accent-dark, var(--accent));
+        }
+        .recharge-price {
+            font-size: 0.78rem;
+            color: var(--sub);
+            margin-top: 3px;
+        }
+        .pay-method-grid {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .pay-method-btn {
+            flex: 1;
+            min-width: 80px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1.5px solid var(--line);
+            background: var(--card-soft);
+            color: var(--text);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.18s;
+        }
+        .pay-method-btn.active {
+            border-color: var(--accent);
+            background: color-mix(in srgb, var(--accent) 12%, var(--card-soft));
+            font-weight: 700;
+        }
+
         /* ---- 聊天组件（Chat Components） ---- */
         /* 容器 */
         .story-log {
@@ -1813,6 +1882,34 @@
                     <button class="mini-btn ghost" onclick="saveUserApiSettings()">保存主题</button>
                 </div>
             </section>
+            <!-- 【充值云币面板】 -->
+            <section class="card">
+                <div class="list-title">💰 充值云币 (1元 = 100云币)</div>
+                <div class="list-sub">选择充值金额，支付后云币将自动到账。</div>
+                <div class="recharge-grid" id="recharge-options">
+                    <!-- 动态渲染充值选项 -->
+                </div>
+                <div class="list-sub" style="margin-top: 12px; font-weight: bold;">选择支付方式：</div>
+                <div class="pay-method-grid" id="pay-methods">
+                    <button class="pay-method-btn active" data-method="alipay">🔵 支付宝</button>
+                    <button class="pay-method-btn" data-method="wechat">🟢 微信支付</button>
+                    <button class="pay-method-btn" data-method="bank">🔴 银联卡</button>
+                </div>
+                <div class="setting-actions" style="margin-top: 12px;">
+                    <button class="mini-btn primary" onclick="RechargeService.initiatePayment()">确认支付</button>
+                </div>
+            </section>
+
+            <!-- 【卡密兑换面板】 -->
+            <section class="card">
+                <div class="list-title">🎟️ 卡密兑换</div>
+                <div class="list-sub">如果你在发卡网购买了充值卡密(CDK)，请在此兑换。</div>
+                <input id="cdk-input" type="text" placeholder="请输入 16 位卡密" style="text-transform: uppercase;">
+                <div class="setting-actions">
+                    <button class="mini-btn ghost" onclick="RechargeService.redeemCDK()">立即兑换</button>
+                </div>
+            </section>
+
             <section class="card">
                 <div class="list-title">🌩️ AI 云卡选择</div>
                 <div class="list-sub">选择不同云卡将影响生成质量与消耗。</div>
@@ -7560,6 +7657,7 @@
             StateService.init();
             SettingsService.loadToUI();
             presetManifest = await PresetResourceService.loadManifest();
+            if (typeof RechargeService !== "undefined") RechargeService.initUI();
             renderAll();
             VisualEffects.createBears();
             bindEvents();
@@ -8234,6 +8332,122 @@
     function sendNpcMessage() { Controller.sendNpcMessage(); }
     function backToSocialList() { Controller.backToSocialList(); }
     function closeInfoModal() { Controller.closeInfoModal(); }
+
+    // ==================== RechargeService (充值与兑换) ====================
+    const RechargeService = (() => {
+        let selectedAmount = 1;
+        let selectedMethod = "alipay";
+
+        const RECHARGE_TIERS = [
+            { price: 1, coins: 100 },
+            { price: 5, coins: 500 },
+            { price: 10, coins: 1000 },
+            { price: 30, coins: 3000 },
+            { price: 50, coins: 5200 },
+            { price: 100, coins: 10500 }
+        ];
+
+        function initUI() {
+            const grid = document.getElementById("recharge-options");
+            if (!grid) return;
+            grid.innerHTML = RECHARGE_TIERS.map(tier => `
+                <div class="recharge-item ${tier.price === selectedAmount ? "active" : ""}" data-price="${tier.price}">
+                    <div class="recharge-coins">${tier.coins} 币</div>
+                    <div class="recharge-price">¥ ${tier.price}</div>
+                </div>
+            `).join("");
+
+            grid.querySelectorAll(".recharge-item").forEach(item => {
+                item.addEventListener("click", () => {
+                    grid.querySelectorAll(".recharge-item").forEach(el => el.classList.remove("active"));
+                    item.classList.add("active");
+                    selectedAmount = Number(item.getAttribute("data-price"));
+                });
+            });
+
+            const methods = document.getElementById("pay-methods");
+            if (methods) {
+                methods.querySelectorAll(".pay-method-btn").forEach(btn => {
+                    btn.addEventListener("click", () => {
+                        methods.querySelectorAll(".pay-method-btn").forEach(el => el.classList.remove("active"));
+                        btn.classList.add("active");
+                        selectedMethod = btn.getAttribute("data-method");
+                    });
+                });
+            }
+        }
+
+        async function initiatePayment() {
+            const user = AuthService.getUserData();
+            if (!user) {
+                NoticeModalService.showInfo({ title: "提示", descHtml: "请先登录后再进行充值。" });
+                return;
+            }
+            const tier = RECHARGE_TIERS.find(t => t.price === selectedAmount);
+            const methodName = selectedMethod === "alipay" ? "支付宝" : selectedMethod === "wechat" ? "微信" : "银联";
+            NoticeModalService.showInfo({
+                title: "正在前往支付",
+                descHtml: `
+                    <div style="text-align:center;">
+                        <p>您选择了 <b>${methodName}</b> 充值 <b>¥${tier.price}</b></p>
+                        <p>将获得 <b>${tier.coins}</b> 云币</p>
+                        <p style="color:#c94857;margin-top:10px;font-size:0.8rem;">(提示：系统尚未在Worker后端接入真实支付API，此处为流程演示)</p>
+                    </div>
+                `
+            });
+            // TODO: 调用后台支付接口
+            // const res = await fetch('你的Worker地址/api/pay', { ... });
+        }
+
+        async function redeemCDK() {
+            const input = document.getElementById("cdk-input");
+            const btn = document.querySelector("#view-settings .mini-btn.ghost[onclick='RechargeService.redeemCDK()']");
+            const cdk = (input ? input.value : "").trim().toUpperCase();
+
+            if (!cdk) {
+                NoticeModalService.showInfo({ title: "提示", descHtml: "请输入卡密！" });
+                return;
+            }
+
+            const user = AuthService.getUserData();
+            if (!user) {
+                NoticeModalService.showInfo({ title: "提示", descHtml: "请先登录后再兑换。" });
+                return;
+            }
+
+            if (btn) { btn.disabled = true; btn.innerText = "兑换中..."; }
+
+            try {
+                const response = await fetch(`${AppConfig.proxy.baseUrl}/api/redeem`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Auth-Token": AuthService.getToken()
+                    },
+                    body: JSON.stringify({ code: cdk })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    NoticeModalService.showInfo({
+                        title: "🎉 兑换成功",
+                        descHtml: `<div style="text-align:center;font-size:1.1rem;margin:10px 0;">成功充值 <b style="color:var(--accent-dark);">${data.addedCoins}</b> 云币！</div>`
+                    });
+                    if (input) input.value = "";
+                    AuthService.refreshBalance();
+                } else {
+                    NoticeModalService.showInfo({ title: "兑换失败", descHtml: data.message || "未知错误" });
+                }
+            } catch (err) {
+                NoticeModalService.showInfo({ title: "网络错误", descHtml: "无法连接到兑换服务器，请检查网络。" });
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerText = "立即兑换"; }
+            }
+        }
+
+        return { initUI, initiatePayment, redeemCDK };
+    })();
 
     // ==================== AuthService ====================
     const AuthService = (() => {
