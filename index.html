@@ -8920,36 +8920,26 @@ function openNpcProfile(npcId) {
         
 function ensurePresetAsIndependentCard(payload, options = {}) {
     const forceCreateNew = options?.forceCreateNew === true;
-    const preserveExistingContent = options?.preserveExistingContent === true;
-    
-    // 生成稳定的 ID
-    const targetId = forceCreateNew
-        ? `${String(payload.id || "scenario_preset").replace(/[^\w-]/g, "_")}_run_${Date.now()}`
-        : payload.id;
-
-    // 获取当前卡片列表
     const allCards = ScenarioCardService.loadCards();
-    // 检查是否存在（通过 ID 或 标题 匹配）
-    const existingCard = allCards.find((c) => c.id === targetId || c.title === payload.title);
+    
+    // 查找是否已存在
+    const existingCard = allCards.find((c) => c.id === payload.id || c.title === payload.title);
     
     let card;
-    if (existingCard) {
-        // 如果已存在且需要保留内容，或者不是强制新建，就使用现有的
+    if (existingCard && !forceCreateNew) {
         card = existingCard;
+        lastAutoCreatedCardId = null; // 已存在，不需要记录
     } else {
-        // 否则，创建一个新的
         card = ScenarioCardService.upsertCard({
-            id: targetId,
+            id: forceCreateNew ? `${payload.id}_${Date.now()}` : payload.id,
             title: payload.title || "模板卡片",
             theme: payload.theme || "",
             text: String(payload.text || "").trim() || AppConfig.defaultScenario
         });
+        lastAutoCreatedCardId = card.id; // 新建的，记录下来
     }
 
     if (!card) throw new Error("模板卡片写入失败");
-
-    // 注意这里：变量名必须与上方定义的 existingCard 保持一致
-    lastAutoCreatedCardId = existingCard ? null : card.id;
     
     ScenarioCardService.setSelectedId(card.id);
     StateService.init();
@@ -8963,11 +8953,12 @@ function buildPresetCardId(preset) {
     const raw = String(preset?.id || preset?.title || "unknown"); 
     return `scenario_preset_${raw}`.replace(/[^\w-]/g, "_");
 }
-        function findOfficialPresetByCardId(cardId) {
-            const id = String(cardId || "");
-            if (!id || !Array.isArray(presetManifest)) return null;
-            return presetManifest.find((p) => buildPresetCardIdFromPreset(p) === id) || null;
-        }
+function findOfficialPresetByCardId(cardId) {
+    const id = String(cardId || "");
+    if (!id || !Array.isArray(presetManifest)) return null;
+    // 这里应该调用 ScenarioTemplateService 里的函数
+    return presetManifest.find((p) => ScenarioTemplateService.buildPresetCardId(p) === id) || null;
+}
         async function retryInitByReimportOfficialTemplate(cardId, missingFields = [], defaultGender = "女") {
             const preset = findOfficialPresetByCardId(cardId);
             if (!preset) return false;
