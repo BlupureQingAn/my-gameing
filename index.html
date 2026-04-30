@@ -3105,75 +3105,80 @@ function extractSkeleton(html) {
             });
             return out.slice(0, 3);
         }
+
+        
+// 在 index.html 中搜索 rebuildChoicesBlock 替换
 function rebuildChoicesBlock(body, labels = []) {
-            if (!(body instanceof HTMLElement)) return;
-            
-            // 1. 清理旧的选项块
-            removeDuplicateBlocks(body, "choices");
-            const host = getDirectBlockMap(body).get("choices");
-            if (!host) return;
+    if (!(body instanceof HTMLElement)) return;
+    
+    // 1. 清理旧的选项块
+    removeDuplicateBlocks(body, "choices");
+    const host = getDirectBlockMap(body).get("choices");
+    if (!host) return;
 
-            // 2. 准备数据源：优先使用传入的 labels
-            const source = (Array.isArray(labels) && labels.length > 0) 
-                ? labels 
-                : HtmlCardTemplateService.getDefaultChoices();
+    // 2. 准备数据源：优先使用传入的 labels
+    const source = (Array.isArray(labels) && labels.length > 0) 
+        ? labels 
+        : HtmlCardTemplateService.getDefaultChoices();
 
-            // 3. 深度清理与去重
-            const dedup = [];
-            const seen = new Set();
-            source.forEach((txt) => {
-                // 移除 AI 可能带入的各种序号开头，例如 "1. ", "① ", "【选项1】"
-                let clean = String(txt || "")
-                    .replace(/^\s*(\d+[.)、]|[①②③④⑤⑥⑦⑧⑨⑩]|【?选项[:：]?\s*\d*】?)\s*/, "")
-                    .trim();
-                
-                if (!clean) return;
-                
-                // 转小写作为唯一键进行去重
-                const k = clean.toLowerCase();
-                if (seen.has(k)) return;
-                seen.add(k);
-                dedup.push(clean);
-            });
+    // 3. 深度清理与去重
+    const dedup = [];
+    const seen = new Set();
+    source.forEach((txt) => {
+        // 移除 AI 可能带入的各种序号开头，例如 "1. ", "① ", "【选项1】"
+        let clean = String(txt || "")
+            .replace(/^\s*(\d+[.)、]|[①②③④⑤⑥⑦⑧⑨⑩]|【?选项[:：]?\s*\d*】?)\s*/, "")
+            .trim();
+        
+        if (!clean) return;
+        
+        // 转小写作为唯一键进行去重
+        const k = clean.toLowerCase();
+        if (seen.has(k)) return;
+        seen.add(k);
+        dedup.push(clean);
+    });
 
-            // 4. 数量控制：确保至少有 1 个，至多 3 个（可根据需求调整 slice 范围）
-            let picked = dedup.slice(0, 3);
+    // 4. 数量控制：确保至少有 1 个，至多 3 个（可根据需求调整 slice 范围）
+    let picked = dedup.slice(0, 3);
 
-            // 如果选项不足 3 个且不是因为 AI 没生成（即 labels 为空时），才尝试补全
-            if (labels.length === 0) {
-                while (picked.length < 3) {
-                    const fallback = HtmlCardTemplateService.getDefaultChoices()[picked.length];
-                    if (!picked.some(p => p.toLowerCase() === fallback.toLowerCase())) {
-                        picked.push(fallback);
-                    } else {
-                        picked.push(`继续行动 ${picked.length + 1}`);
-                        break;
-                    }
-                }
-            }
-
-            // 5. 执行渲染
-            const targetTag = host.tagName.toLowerCase();
-            const canUseDivMode = targetTag === "section" || targetTag === "div";
-
-            if (canUseDivMode) {
-                // 美化卡片常用的 Div 模式
-                host.innerHTML = picked.map((txt, idx) => {
-                    const escaped = MarkdownService.escapeHtml(txt);
-                    return `<div class="wy-option-btn" data-choice="${escaped}"><span class="wy-opt-icon">${idx + 1}</span>${idx + 1}. ${escaped}</div>`;
-                }).join("");
+    // 如果选项不足 3 个且不是因为 AI 没生成（即 labels 为空时），才尝试补全
+    if (labels.length === 0) {
+        while (picked.length < 3) {
+            const fallback = HtmlCardTemplateService.getDefaultChoices()[picked.length];
+            if (!picked.some(p => p.toLowerCase() === fallback.toLowerCase())) {
+                picked.push(fallback);
             } else {
-                // 传统的 Li 列表模式
-                host.innerHTML = "";
-                picked.forEach((txt, idx) => {
-                    const li = document.createElement("li");
-                    li.className = "ai-choice-item";
-                    li.setAttribute("data-choice", txt);
-                    li.textContent = `${idx + 1}. ${txt}`;
-                    host.appendChild(li);
-                });
+                picked.push(`继续行动 ${picked.length + 1}`);
+                break;
             }
         }
+    }
+
+    // 5. 执行渲染
+    const targetTag = host.tagName.toLowerCase();
+    const canUseDivMode = targetTag === "section" || targetTag === "div";
+
+    if (canUseDivMode) {
+        // 美化卡片常用的 Div 模式
+        host.innerHTML = picked.map((txt, idx) => {
+            const escaped = MarkdownService.escapeHtml(txt);
+            return `<div class="wy-option-btn" data-choice="${escaped}"><span class="wy-opt-icon">${idx + 1}</span>${idx + 1}. ${escaped}</div>`;
+        }).join("");
+    } else {
+        // 传统的 Li 列表模式
+        host.innerHTML = "";
+        picked.forEach((txt, idx) => {
+            const li = document.createElement("li");
+            li.className = "ai-choice-item";
+            li.setAttribute("data-choice", txt);
+            li.textContent = `${idx + 1}. ${txt}`;
+            host.appendChild(li);
+        });
+    }
+}
+
+
         function stripInlineChoicesFromEvent(body) {
             if (!(body instanceof HTMLElement)) return;
             const blockMap = getDirectBlockMap(body);
@@ -6622,6 +6627,8 @@ function buildPresetCardId(preset) {
         // 从 lockedSkeleton object 重建完整 HTML 骨架，供 AI 参考输出格式
         // 有 lockedSkeleton 时用此版本（结构来自实际生成的第一张卡，已验证可渲染）
         // 无 lockedSkeleton 时调用方降级到 getSkeletonHtml()
+ 
+
 // 在 index.html 中搜索 buildSkeletonHintFromLocked 替换
 function buildSkeletonHintFromLocked(lockedSkeleton, state) {
     if (!lockedSkeleton || typeof lockedSkeleton !== "object") return null;
@@ -6645,7 +6652,7 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
         if (name === "status") return `<section class="wy-stats" data-block="status"><div>✨ ${statusPanelLabel}：{STATS_HTML}</div></section>`;
         if (name === "relations") return `<section data-block="relations"><div>👥 人物关系</div><div>{RELATIONS_HTML}</div></section>`;
         if (name === "event") return `<section class="wy-content" data-block="event"><div>{MAIN_STORY_TEXT}</div></section>`;
-        if (name === "thought") return `<section class="wy-content" data-block="thought"><div>AI想法：{AI_THOUGHT_TEXT}</div></section>`;
+        if (name === "thought") return `<section class="wy-content" data-block="thought"><div>想法：{AI_THOUGHT_TEXT}</div></section>`;
         if (name === "choices") return `<section class="wy-options" data-block="choices">{1-3个选项按钮}</section>`;
         if (name === "hint") return `<div data-block="hint">提示文案</div>`;
         return `<section data-block="${name}"></section>`;
@@ -6659,6 +6666,9 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
         </${bodyTag}>
     </${rootTag}>`;
 }
+
+
+
 
         function buildBeautyRules(beautyCardSetting, beautyModeEnabled, state = null) {
             if (!beautyModeEnabled) return "";
