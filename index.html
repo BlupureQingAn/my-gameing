@@ -6041,6 +6041,7 @@
                 `美化设定提示词：${beautySetting || HtmlCardTemplateService.getDefaultBeautyHint()}`,
                 "",
                 "【重要：初始化补全】由于这是故事的开篇，请务必在 HTML 卡片之后的 ```state-patch``` 中包含：",
+                "0. 【强制】初始属性（stats）：根据设定提供该文游所需的全部初始属性及其初始值（如健康、金钱、名望、体力等），至少 3 项，否则玩家顶部属性面板将无法显示。",
                 "1. 初始背包物品（inventory）：根据设定提供 1-3 件初始道具，每项含 id,name,type,desc,effect,count 字段。",
                 "2. 初始关键 NPC（npcs）：根据设定提供 1-3 位出现在主角身边的关键人物，每项含 id,name,gender,relation,favor,status,mood,traits 字段。",
                 "这些数据将通过 state-patch 实时同步到游戏面板，请务必填写，不可省略。"
@@ -6440,9 +6441,7 @@
             if (/主角姓名|姓名/.test(msg)) out.push("主角姓名（name / englishName）");
             if (/年龄/.test(msg)) out.push("年龄（ageYears）");
             if (/初始时间|timeEra|currentYear/.test(msg)) out.push("时间信息（timeEra / currentYear）");
-            if (/状态栏|stats/.test(msg)) out.push("状态栏（stats）");
-            if (/背包/.test(msg)) out.push("背包（inventory）");
-            if (/NPC/.test(msg)) out.push("NPC（npcs）");
+            // 背包和 NPC 允许为空，由首张卡片 state-patch 补全，不再报错
             return out;
         }
         function buildPreviewDesc(plan) {
@@ -7419,16 +7418,6 @@
             if (hasYear && !Number.isFinite(aiPlan.currentMonth)) aiPlan.currentMonth = null;
             if (!Number.isFinite(aiPlan.currentDay)) aiPlan.currentDay = 1;
             aiPlan = ensureStatsFallback(aiPlan, workingScenarioText);
-            if (!Array.isArray(aiPlan.inventory) || !aiPlan.inventory.length) {
-                const err = new Error("AI 未返回有效背包数据。");
-                err.partialPlan = aiPlan;
-                throw err;
-            }
-            if (!Array.isArray(aiPlan.npcs) || !aiPlan.npcs.length) {
-                const err = new Error("AI 未返回有效 NPC 数据。");
-                err.partialPlan = aiPlan;
-                throw err;
-            }
             if (typeof onProgress === "function") onProgress("完成");
             return aiPlan;
         }
@@ -8333,6 +8322,8 @@
             closeInitPreviewModal();
             switchView("view-main");
             renderAll();
+            // 立即刷新顶部面板（此时 stats 为空，显示占位符，Intro 卡片生成后自动填充）
+            UIRenderer.renderTop(StateService.get());
             InitIntroService.start({
                 apiConfig: SettingsService.getApiConfig(),
                 scenarioText: SettingsService.getScenarioTextForModel(),
