@@ -3563,6 +3563,7 @@
                 "12) 若当前设定存在待玩家选择的开局模式/路线/阵营，不得替玩家拍板，只能给出候选选项。",
                 "13) 【数值格式】对于有上限的属性，请使用 '当前值/最大值' 格式（如 80/100）；无上限属性直接写数字。",
                 "14) 【视觉对比】卡片背景与文字必须保持极高对比度，严禁深色背景配深色文字或浅色背景配白字。",
+                "15) 若生成过程中遇到错误或无法继续，请立即停止输出，不要尝试修复不完整的标签或重复输出任何字符。",
                 "",
                 "【state-patch 格式】在 HTML 卡片之后追加（只写本轮变化的字段）：",
                 "```state-patch",
@@ -4269,11 +4270,19 @@
             lines.forEach((line) => {
                 const m = line.match(/^([\u4e00-\u9fa5A-Za-z0-9_]{1,12})\s*[:：]\s*([+-]?\d{1,4}(\/\d{1,4})?)(?:\b|$)/);
                 if (m) {
-                    // 接受任意属性名，不再限制为已知列表
-                    // 但排除明显是 NPC 状态描述的行（含"好感"以外的关系词）
                     const rawLabel = m[1];
+                    // 扩展 CSS 关键字黑名单
+                    const CSS_BLACKLIST = new Set([
+                        'gap', 'inset', 'margin', 'padding', 'width', 'height', 'top', 'left', 'right', 'bottom',
+                        'color', 'background', 'flex', 'grid', 'display', 'position', 'z', 'opacity', 'border',
+                        'rem', 'em', 'px', 'vw', 'vh', 'font', 'line', 'max', 'min', 'align', 'justify',
+                        'overflow', 'transform', 'transition', 'animation', 'shadow', 'radius', 'content',
+                        'cursor', 'pointer', 'none', 'auto', 'solid', 'relative', 'absolute', 'fixed'
+                    ]);
+                    if (CSS_BLACKLIST.has(rawLabel.toLowerCase())) return;
+                    // 纯英文属性名必须是已知游戏术语，否则跳过
+                    if (!/[\u4e00-\u9fa5]/.test(rawLabel) && !isKnownStatLabel(rawLabel)) return;
                     if (/^(姓名|名字|性别|国籍|地点|住所|身份|职业|阵营|关系|状态|心情|特质)$/.test(rawLabel)) return;
-                    if (/^(inset|margin|padding|border|width|height|top|left|right|bottom|color|background|flex|grid|display|position|z|opacity|rem|em|px|vw|vh)$/i.test(rawLabel)) return;
                     const label = toCanonicalStatLabel(rawLabel);
                     const rawVal = m[2]; // 可能是 "80" 或 "80/100"
                     const numericVal = rawVal.includes("/")
@@ -5934,7 +5943,7 @@
         function getBeautyCoreRules() {
             return [
                 "你必须输出可直接渲染的 HTML 卡片，且最外层必须是 class=\"ai-beauty-card\" 的 article/section/div。",
-                "【输出格式】直接输出HTML，第一个字符必须是 <，禁止任何前缀说明文字、禁止用Markdown代码块包裹、禁止在HTML前后输出任何解释。",
+                "【输出格式】请直接开始输出 HTML 内容，禁止任何前缀说明文字、禁止用Markdown代码块包裹、禁止在HTML前后输出任何解释。",
                 "卡片内部需包含：状态变化、剧情正文、（AI想法）以及 1-3 条编号选项。",
                 "必须严格参考下方提供的本地模板骨架，尤其保持 ai-beauty-card-body 内 data-block 层级与命名一致。",
                 "卡片头部必须包含：{当前文游/世界设定名称}（填入当前的主题名，如'八十年代港星养成'）和 {当前剧情章节标题}（用 4-8 个字总结本轮剧情）；{TIME_TEXT} 填入当前游戏内时间。",
@@ -5949,7 +5958,7 @@
                 "【任务】你是开局介绍生成器。",
                 "请基于设定与角色档案，输出一张可直接渲染的 HTML 卡片。",
                 "强制要求：最外层必须是 <article class=\"ai-beauty-card\">。",
-                "【输出格式】直接输出HTML，第一个字符必须是 <article，禁止任何前缀说明、禁止用Markdown代码块包裹、禁止在HTML前后输出任何解释文字。",
+                "【输出格式】请直接开始输出 HTML 内容，最外层必须是 <article class=\"ai-beauty-card\">，禁止任何前缀说明、禁止用Markdown代码块包裹、禁止在HTML前后输出任何解释文字。",
                 "卡片内必须包含：世界背景简述、主角当前身份与处境、当前时间、关键NPC概览、1-3条编号选项。",
                 "必须严格沿用本地模板骨架的 data-block 结构，不得把 event/status/relations/choices 混成同一区块。",
                 "若设定存在待玩家选择的开局模式/路线/阵营，请只在选项中列出，不得替玩家代选。"
@@ -6025,14 +6034,19 @@
                 choiceLines.length
                     ? `你必须在本次“开局介绍”卡片的 choices 区保留这些候选开局选项（可润色但语义不能丢）：\n${choiceLines.join("\n")}`
                     : "若无候选开局项，则按剧情生成 1-3 条可执行编号选项。",
-                `美化设定提示词：${beautySetting || HtmlCardTemplateService.getDefaultBeautyHint()}`
+                `美化设定提示词：${beautySetting || HtmlCardTemplateService.getDefaultBeautyHint()}`,
+                "",
+                "【重要：初始化补全】由于这是故事的开篇，请务必在 HTML 卡片之后的 ```state-patch``` 中包含：",
+                "1. 初始背包物品（inventory）：根据设定提供 1-3 件初始道具，每项含 id,name,type,desc,effect,count 字段。",
+                "2. 初始关键 NPC（npcs）：根据设定提供 1-3 位出现在主角身边的关键人物，每项含 id,name,gender,relation,favor,status,mood,traits 字段。",
+                "这些数据将通过 state-patch 实时同步到游戏面板，请务必填写，不可省略。"
             ].join("\n");
             const userPrompt = [
                 "以下是当前角色档案（必须一致）：",
                 JSON.stringify(state.protagonistProfile || {}, null, 2),
                 "以下是NPC列表（必须一致）：",
                 JSON.stringify(state.npcs || [], null, 2),
-                "【输出格式强制要求】直接输出HTML，第一个字符必须是 <，禁止任何前缀说明文字、禁止Markdown代码块包裹、禁止解释。"
+                "【输出格式强制要求】请直接开始输出 HTML，禁止任何前缀说明文字、禁止Markdown代码块包裹、禁止解释。"
             ].join("\n\n");
             return {
                 fetchUrl,
@@ -6616,6 +6630,10 @@
             let tail = "";
             let fullText = "";
             let stopRequested = false;
+            // 重复字符熔断保护
+            let lastChar = "";
+            let repeatCount = 0;
+            const MAX_REPETITION = 30;
             try {
                 while (true) {
                     const { done, value } = await reader.read();
@@ -6629,6 +6647,21 @@
                             const payload = JSON.parse(line.slice(6));
                             const token = payload.choices?.[0]?.delta?.content || "";
                             if (!token) continue;
+                            // 检测连续重复非中文字符
+                            for (const char of token) {
+                                if (char === lastChar && !/[\u4e00-\u9fa5]/.test(char)) {
+                                    repeatCount++;
+                                } else {
+                                    lastChar = char;
+                                    repeatCount = 0;
+                                }
+                            }
+                            if (repeatCount > MAX_REPETITION) {
+                                console.error("检测到 AI 输出陷入无限循环，已执行熔断保护。");
+                                fullText += "\n\n[系统提示：AI 回复异常，已自动截断防止崩溃]";
+                                stopRequested = true;
+                                break;
+                            }
                             fullText += token;
                             if (typeof onToken === "function") {
                                 const shouldContinue = onToken(fullText);
@@ -7073,8 +7106,8 @@
                 currentMonth: sanitizeTime(ensured.currentMonth, 1, 12),
                 currentDay: sanitizeTime(ensured.currentDay, 1, 31),
                 stats: StatsService.normalizeStats(ensured.stats),
-                inventory: sanitizeItems(ensured.inventory),
-                npcs: sanitizeNpcs(ensured.npcs),
+                inventory: [], // 由 Intro 卡片的 state-patch 补全
+                npcs: [],      // 由 Intro 卡片的 state-patch 补全
                 openingChoices: normalizeOpeningChoices(ensured.openingChoices),
                 rebornReason: String(ensured.rebornReason || "使用AI解析设定生成").slice(0, 120)
             };
@@ -7164,9 +7197,7 @@
             const [
                 protagonistNamePanel,
                 protagonistBasePanel,
-                protagonistStatsPanel,
-                inventoryPanel,
-                npcPanel
+                protagonistStatsPanel
             ] = await Promise.all([
                 // 姓名
                 AIRequestService.requestCompletionWithFallback({
@@ -7209,38 +7240,6 @@
                         { role: "user", content: sharedUserContext }
                     ],
                     temperature: 0.1, timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
-                }).then((t) => parseFirstJsonObject(t) || {}),
-
-                // 背包面板
-                AIRequestService.requestCompletionWithFallback({
-                    config: apiConfig, fetchUrl, headers, model: apiConfig.model,
-                    messages: [
-                        { role: "system", content: [
-                            "你是文游初始化-背包面板生成器。",
-                            "只输出 JSON 对象，不要解释。",
-                            "只输出字段 inventory，值必须是数组。",
-                            "每项字段：id,name,type,desc,effect,count。"
-                        ].join("\n") },
-                        { role: "user", content: sharedInventoryNpcContext }
-                    ],
-                    temperature: 0.1, timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
-                }).then((t) => parseFirstJsonObject(t) || {}),
-
-                // NPC面板
-                AIRequestService.requestCompletionWithFallback({
-                    config: apiConfig, fetchUrl, headers, model: apiConfig.model,
-                    messages: [
-                        { role: "system", content: [
-                            "你是文游初始化-NPC面板生成器。",
-                            "只输出 JSON 对象，不要解释。",
-                            "只输出字段 npcs，值必须是数组。",
-                            "每项字段：id,name,gender,relation,favor,status,mood,traits,profile。",
-                            "profile 必须是对象，字段：age,identity,residence,appearance,personality,goal,secret,firstImpression。",
-                            "这些字段要严格依据设定填写，未知可留空，不要乱编。"
-                        ].join("\n") },
-                        { role: "user", content: sharedInventoryNpcContext }
-                    ],
-                    temperature: 0.1, timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
                 }).then((t) => parseFirstJsonObject(t) || {})
             ]);
 
@@ -7249,8 +7248,9 @@
                 ...protagonistNamePanel,
                 ...protagonistBasePanel,
                 stats: Array.isArray(protagonistStatsPanel.stats) ? protagonistStatsPanel.stats : reducedDraft.stats,
-                inventory: Array.isArray(inventoryPanel.inventory) ? inventoryPanel.inventory : reducedDraft.inventory,
-                npcs: Array.isArray(npcPanel.npcs) ? npcPanel.npcs : reducedDraft.npcs
+                // 背包和 NPC 初始化为空，由第一张 Intro 卡片的 state-patch 补全
+                inventory: [],
+                npcs: []
             };
 
             if (typeof onProgress === "function") onProgress("结构校验");
