@@ -6781,7 +6781,9 @@
                         if (!line.startsWith("data: ") || line === "data: [DONE]") continue;
                         try {
                             const payload = JSON.parse(line.slice(6));
-                            const token = payload.choices?.[0]?.delta?.content || "";
+                            const delta = payload.choices?.[0]?.delta || {};
+                            // 兼容深度思考模型：同时统计普通内容和思维链内容
+                            const token = (delta.content || "") + (delta.reasoning_content || "");
                             if (!token) continue;
                             // 检测连续重复非中文字符
                             for (const char of token) {
@@ -6834,9 +6836,9 @@
             } catch (proxyErr) {
                 throw proxyErr;
             }
-            // 计费由 Worker 后端完成，AI 回复后延迟刷新余额
+            // 计费由 Worker 后端完成，流结束后立即刷新余额（不再使用 setTimeout 延迟）
             if (cloudCard && cloudCard.id !== "free") {
-                setTimeout(() => AuthService.refreshBalance(), 2000);
+                AuthService.refreshBalance();
             }
             return fullText;
         }
@@ -6888,9 +6890,9 @@
             } catch (proxyErr) {
                 throw proxyErr;
             }
-            // 计费由 Worker 后端完成，AI 回复后延迟刷新余额
+            // 计费由 Worker 后端完成，请求结束后立即刷新余额（不再使用 setTimeout 延迟）
             if (cloudCard && cloudCard.id !== "free") {
-                setTimeout(() => AuthService.refreshBalance(), 2000);
+                AuthService.refreshBalance();
             }
             return result;
         }
