@@ -4224,33 +4224,35 @@
                         const t = String(clone.textContent || "").trim();
                         if (t) parts.push(t);
                     });
-                // status 块：优先从 wy-stat-bar-item 结构读取，fallback 到文本正则
+                // status 块：严格只取 data-block="status" 内的纯文本，防止抓到 CSS 样式
                 const statusEl = body.querySelector('[data-block="status"]');
                 if (statusEl instanceof HTMLElement) {
                     const clone = statusEl.cloneNode(true);
-                    if (clone instanceof HTMLElement) clone.querySelectorAll("style, script").forEach((n) => n.remove());
-                    // 尝试从 data-wy-stat 结构读取（injectStatsIntoCard 注入后）
-                    const barItems = clone.querySelectorAll("[data-wy-stat='item']");
-                    if (barItems.length) {
-                        const statLines = [];
-                        barItems.forEach((el) => {
-                            const labelEl = el.querySelector("[data-wy-stat='label']");
-                            const valueEl = el.querySelector("[data-wy-stat='value']");
-                            if (!labelEl || !valueEl) return;
-                            const rawLabel = String(labelEl.textContent || "").trim()
-                                .replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]\s*/u, "");
-                            const value = String(valueEl.textContent || "").trim();
-                            if (rawLabel && /^\d+$/.test(value)) statLines.push(`${rawLabel}:${value}`);
-                        });
-                        if (statLines.length) parts.push(statLines.join("\n"));
-                    } else {
-                        // fallback：文本正则，接受任意属性名（不限于已知列表）
-                        const statusText = String(clone.textContent || "").replace(/\s+/g, " ").trim();
-                        const statLines = statusText
-                            .split(/[,，\n]/)
-                            .map((s) => s.trim())
-                            .filter((s) => /[\u4e00-\u9fa5A-Za-z]{1,12}\s*[:：]\s*[+-]?\d/.test(s));
-                        if (statLines.length) parts.push(statLines.join("\n"));
+                    if (clone instanceof HTMLElement) {
+                        clone.querySelectorAll("style, script").forEach((n) => n.remove());
+                        // 优先从 data-wy-stat 结构读取（injectStatsIntoCard 注入后）
+                        const barItems = clone.querySelectorAll("[data-wy-stat='item']");
+                        if (barItems.length) {
+                            const statLines = [];
+                            barItems.forEach((el) => {
+                                const labelEl = el.querySelector("[data-wy-stat='label']");
+                                const valueEl = el.querySelector("[data-wy-stat='value']");
+                                if (!labelEl || !valueEl) return;
+                                const rawLabel = String(labelEl.textContent || "").trim()
+                                    .replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]\s*/u, "");
+                                const value = String(valueEl.textContent || "").trim();
+                                if (rawLabel && /^\d+(\/\d+)?$/.test(value)) statLines.push(`${rawLabel}:${value}`);
+                            });
+                            if (statLines.length) parts.push(statLines.join("\n"));
+                        } else {
+                            // fallback：只取纯文本，过滤掉明显是 CSS 的行
+                            const statusText = String(clone.textContent || "").replace(/\s+/g, " ").trim();
+                            const statLines = statusText
+                                .split(/[,，\n]/)
+                                .map((s) => s.trim())
+                                .filter((s) => /[\u4e00-\u9fa5]{1,12}\s*[:：]\s*[+-]?\d/.test(s));
+                            if (statLines.length) parts.push(statLines.join("\n"));
+                        }
                     }
                 }
                 return parts.join("\n");
@@ -4579,8 +4581,6 @@
         function renderStats(state) {
             const box = document.getElementById("game-stats-card");
             if (!box) return;
-            // 如果已经从卡片同步过，跳过重复渲染
-            if (box.dataset.syncedFromCard === "1") return;
             const stats = Array.isArray(state.stats) ? state.stats : [];
             const statHtml = stats.map((s) => {
                 const key = String(s.key || s.label || "");
@@ -6482,40 +6482,32 @@
         }
         function updateStage(stage) {
             const map = {
-                "连接中": "连接中：正在请求 AI 解析设定...",
-                "设定压缩": "设定压缩：正在分块提炼关键信息...",
-                "解析角色": "解析设定：正在分块提取初始化线索...",
-                "生成主角姓名": "并行生成：正在同时生成角色、状态、背包与NPC...",
-                "生成主角基础": "并行生成：正在同时生成角色、状态、背包与NPC...",
-                "生成主角状态": "并行生成：正在同时生成角色、状态、背包与NPC...",
-                "生成背包面板": "并行生成：正在同时生成角色、状态、背包与NPC...",
-                "生成NPC面板": "并行生成：正在同时生成角色、状态、背包与NPC...",
-                "补全主角姓名": "缺失修复：正在单独补全主角姓名...",
-                "补全年龄": "缺失修复：正在单独补全年龄...",
-                "补全时间": "缺失修复：正在单独补全时间...",
-                "补全状态": "缺失修复：正在单独补全状态栏...",
-                "补全背包": "缺失修复：正在单独补全背包...",
-                "补全NPC": "缺失修复：正在单独补全NPC...",
-                "结构校验": "结构校验：正在补全缺失字段并对齐格式...",
-                "生成开局介绍": "生成开局介绍：正在生成首条剧情卡片...",
-                "完成": "完成：初始化数据已生成。"
+                "连接中": "正在请求 AI 解析设定...",
+                "设定压缩": "正在分块提炼关键信息...",
+                "解析角色": "正在提取身份线索...",
+                "生成主角姓名": "正在构建角色面板...",
+                "生成主角基础": "正在构建角色面板...",
+                "生成主角状态": "正在构建角色面板...",
+                "补全主角姓名": "缺失修复：正在补全主角姓名...",
+                "补全年龄": "缺失修复：正在补全年龄...",
+                "补全时间": "缺失修复：正在补全时间...",
+                "补全状态": "缺失修复：正在补全状态栏...",
+                "结构校验": "正在对齐格式...",
+                "生成开局介绍": "正在生成首条剧情...",
+                "完成": "初始化完成！"
             };
             document.getElementById("init-loading-desc").innerText = map[stage] || String(stage || "");
             const percentMap = {
                 "连接中": 14,
                 "设定压缩": 22,
                 "解析角色": 30,
-                "生成主角姓名": 42,
-                "生成主角基础": 42,
-                "生成主角状态": 42,
-                "生成背包面板": 42,
-                "生成NPC面板": 42,
-                "补全主角姓名": 84,
-                "补全年龄": 85,
-                "补全时间": 86,
-                "补全状态": 87,
-                "补全背包": 88,
-                "补全NPC": 89,
+                "生成主角姓名": 50,
+                "生成主角基础": 55,
+                "生成主角状态": 60,
+                "补全主角姓名": 72,
+                "补全年龄": 76,
+                "补全时间": 80,
+                "补全状态": 84,
                 "结构校验": 90,
                 "生成开局介绍": 95,
                 "完成": 100
@@ -7105,7 +7097,7 @@
                 currentYear: sanitizeTime(ensured.currentYear, 1, 9999),
                 currentMonth: sanitizeTime(ensured.currentMonth, 1, 12),
                 currentDay: sanitizeTime(ensured.currentDay, 1, 31),
-                stats: StatsService.normalizeStats(ensured.stats),
+                stats: [],     // 由 Intro 卡片的 state-patch 补全
                 inventory: [], // 由 Intro 卡片的 state-patch 补全
                 npcs: [],      // 由 Intro 卡片的 state-patch 补全
                 openingChoices: normalizeOpeningChoices(ensured.openingChoices),
@@ -7147,7 +7139,7 @@
             const chunkFacts = chunkResults.filter(Boolean);
             if (!chunkFacts.length) return null;
 
-            if (typeof onProgress === "function") onProgress("生成背包");
+            if (typeof onProgress === "function") onProgress("生成主角状态");
             // 单分块时直接用分块结果，跳过 reduce 请求
             let reducedDraft;
             if (chunkFacts.length === 1) {
@@ -7189,15 +7181,10 @@
                 `汇总草案：\n${JSON.stringify(reducedDraft, null, 2)}`,
                 `分块事实：\n${JSON.stringify(chunkFacts.slice(0, 8), null, 2)}`
             ].filter(Boolean).join("\n\n");
-            const sharedInventoryNpcContext = [
-                `汇总草案：\n${JSON.stringify(reducedDraft, null, 2)}`,
-                `分块事实：\n${JSON.stringify(chunkFacts.slice(0, 8), null, 2)}`
-            ].join("\n\n");
 
             const [
                 protagonistNamePanel,
-                protagonistBasePanel,
-                protagonistStatsPanel
+                protagonistBasePanel
             ] = await Promise.all([
                 // 姓名
                 AIRequestService.requestCompletionWithFallback({
@@ -7226,20 +7213,6 @@
                         { role: "user", content: sharedUserContext }
                     ],
                     temperature: 0.1, timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
-                }).then((t) => parseFirstJsonObject(t) || {}),
-
-                // 状态面板
-                AIRequestService.requestCompletionWithFallback({
-                    config: apiConfig, fetchUrl, headers, model: apiConfig.model,
-                    messages: [
-                        { role: "system", content: [
-                            "你是文游初始化-主角状态面板生成器。",
-                            "只输出 JSON 对象，不要解释。",
-                            "只输出字段 stats，且至少 3 项。每项字段：key,label,icon,value。"
-                        ].join("\n") },
-                        { role: "user", content: sharedUserContext }
-                    ],
-                    temperature: 0.1, timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
                 }).then((t) => parseFirstJsonObject(t) || {})
             ]);
 
@@ -7247,8 +7220,7 @@
                 ...reducedDraft,
                 ...protagonistNamePanel,
                 ...protagonistBasePanel,
-                stats: Array.isArray(protagonistStatsPanel.stats) ? protagonistStatsPanel.stats : reducedDraft.stats,
-                // 背包和 NPC 初始化为空，由第一张 Intro 卡片的 state-patch 补全
+                stats: [],     // 由 Intro 卡片的 state-patch 补全
                 inventory: [],
                 npcs: []
             };
@@ -7395,28 +7367,6 @@
                     "time",
                     (draft) => !!String(draft.timeEra || "").trim() || Number.isFinite(Number(draft.currentYear)),
                     "缺失修复失败：时间仍无效。"
-                );
-            }
-            if (!Array.isArray(next.stats) || !next.stats.length) {
-                await recoverFieldWithRetry(
-                    "stats",
-                    (draft) => Array.isArray(draft.stats) && draft.stats.length > 0,
-                    "缺失修复失败：状态栏仍无效。",
-                    (draft) => ensureStatsFallback(draft, scenarioText)
-                );
-            }
-            if (!Array.isArray(next.inventory) || !next.inventory.length) {
-                await recoverFieldWithRetry(
-                    "inventory",
-                    (draft) => Array.isArray(draft.inventory) && draft.inventory.length > 0,
-                    "缺失修复失败：背包仍无效。"
-                );
-            }
-            if (!Array.isArray(next.npcs) || !next.npcs.length) {
-                await recoverFieldWithRetry(
-                    "npcs",
-                    (draft) => Array.isArray(draft.npcs) && draft.npcs.length > 0,
-                    "缺失修复失败：NPC仍无效。"
                 );
             }
             return next;
@@ -7623,7 +7573,7 @@
                 uiUnlocked = true;
                 const currentState = StateService.get();
                 UIRenderer.renderTop(currentState);
-                if (rawPatchChanged || panelChanged) UIRenderer.renderInventory(currentState);
+                UIRenderer.renderInventory(currentState);
                 UIRenderer.renderSocialList(currentState);
             } catch (error) {
                 if (!uiUnlocked) {
