@@ -3094,41 +3094,74 @@
             });
             return out.slice(0, 3);
         }
-        function rebuildChoicesBlock(body, labels = []) {
+function rebuildChoicesBlock(body, labels = []) {
             if (!(body instanceof HTMLElement)) return;
+            
+            // 1. 清理旧的选项块
             removeDuplicateBlocks(body, "choices");
             const host = getDirectBlockMap(body).get("choices");
             if (!host) return;
-            const source = labels.length ? labels : HtmlCardTemplateService.getDefaultChoices();
+
+            // 2. 准备数据源：优先使用传入的 labels
+            const source = (Array.isArray(labels) && labels.length > 0) 
+                ? labels 
+                : HtmlCardTemplateService.getDefaultChoices();
+
+            // 3. 深度清理与去重
             const dedup = [];
             const seen = new Set();
             source.forEach((txt) => {
-                const clean = String(txt || "").replace(/^\s*(\d+[.)、]|[①②③④⑤⑥⑦⑧⑨⑩])\s*/, "").trim();
+                // 移除 AI 可能带入的各种序号开头，例如 "1. ", "① ", "【选项1】"
+                let clean = String(txt || "")
+                    .replace(/^\s*(\d+[.)、]|[①②③④⑤⑥⑦⑧⑨⑩]|【?选项[:：]?\s*\d*】?)\s*/, "")
+                    .trim();
+                
                 if (!clean) return;
+                
+                // 转小写作为唯一键进行去重
                 const k = clean.toLowerCase();
                 if (seen.has(k)) return;
                 seen.add(k);
                 dedup.push(clean);
             });
-            const picked = dedup.slice(0, 3);
-            while (picked.length < 3) {
-                const fallback = HtmlCardTemplateService.getDefaultChoices()[picked.length];
-                if (!picked.includes(fallback)) picked.push(fallback);
-                else picked.push(`继续行动${picked.length + 1}`);
+
+            // 4. 数量控制：确保至少有 1 个，至多 3 个（可根据需求调整 slice 范围）
+            let picked = dedup.slice(0, 3);
+
+            // 如果选项不足 3 个且不是因为 AI 没生成（即 labels 为空时），才尝试补全
+            if (labels.length === 0) {
+                while (picked.length < 3) {
+                    const fallback = HtmlCardTemplateService.getDefaultChoices()[picked.length];
+                    if (!picked.some(p => p.toLowerCase() === fallback.toLowerCase())) {
+                        picked.push(fallback);
+                    } else {
+                        picked.push(`继续行动 ${picked.length + 1}`);
+                        break;
+                    }
+                }
             }
+
+            // 5. 执行渲染
             const targetTag = host.tagName.toLowerCase();
             const canUseDivMode = targetTag === "section" || targetTag === "div";
+
             if (canUseDivMode) {
-                host.innerHTML = picked.map((txt, idx) => `<div class="wy-option-btn" data-choice="${MarkdownService.escapeHtml(txt)}"><span class="wy-opt-icon">${idx + 1}</span>${idx + 1}. ${MarkdownService.escapeHtml(txt)}</div>`).join("");
-                return;
+                // 美化卡片常用的 Div 模式
+                host.innerHTML = picked.map((txt, idx) => {
+                    const escaped = MarkdownService.escapeHtml(txt);
+                    return `<div class="wy-option-btn" data-choice="${escaped}"><span class="wy-opt-icon">${idx + 1}</span>${idx + 1}. ${escaped}</div>`;
+                }).join("");
+            } else {
+                // 传统的 Li 列表模式
+                host.innerHTML = "";
+                picked.forEach((txt, idx) => {
+                    const li = document.createElement("li");
+                    li.className = "ai-choice-item";
+                    li.setAttribute("data-choice", txt);
+                    li.textContent = `${idx + 1}. ${txt}`;
+                    host.appendChild(li);
+                });
             }
-            host.innerHTML = "";
-            picked.forEach((txt, idx) => {
-                const li = document.createElement("li");
-                li.setAttribute("data-choice", txt);
-                li.textContent = `${idx + 1}. ${txt}`;
-                host.appendChild(li);
-            });
         }
         function stripInlineChoicesFromEvent(body) {
             if (!(body instanceof HTMLElement)) return;
@@ -3741,7 +3774,7 @@
                 const m = line.match(/^\d+[.)、]\s+(.+)$/);
                 if (!m) continue;
                 const choiceText = normalizeChoiceLabel(m[1]);
-                if (choiceText.length <= 28) choices.push(choiceText);
+                if (choiceText.length <= 200) choices.push(choiceText);
             }
             return dedupeChoices(choices, 4);
         }
@@ -8413,10 +8446,19 @@
         }
         function onSendClick() {
             const input = document.getElementById("chat-input");
+            if (!input) return; // 安全检查
+            
             const text = input.value.trim();
-            if (!text) return;
+            if (!text) return; // 如果内容为空则不处理
+            
+            // 重要：显式调用 Controller 内部的发送逻辑，并传入当前输入框的文字
+            sendUserText(text); 
+            
+            // 清空输入框内容
             input.value = "";
-            sendUserText(text);
+            
+            // 发送后自动聚焦，方便连续输入
+            input.focus();
         }
         function sendUserText(text) {
             if (ChatService.getIsGenerating()) return;
