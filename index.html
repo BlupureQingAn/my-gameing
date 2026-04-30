@@ -3338,14 +3338,23 @@
                 const bg = findNearestBackgroundColor(el, card);
                 const classText = `${el.className || ""}`;
                 const muted = /wy-scene|wy-meta|wy-footer-decor|wy-divider|hint/i.test(classText);
-                // 计算背景亮度，强制高对比色
+                const isHeader = /h[1-6]|title|role.?name/i.test(el.className + el.tagName);
                 const rgb = parseColorToRgb(bg);
                 if (rgb) {
                     const lum = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
                     const forcedColor = lum > 0.5 ? "#1a1a1a" : "#ffffff";
                     const currentColor = el.style.color;
                     el.style.color = muted ? (lum > 0.5 ? "#555555" : "#c8d4f0") : forcedColor;
-                    if (lum <= 0.5) el.style.textShadow = "0 1px 2px rgba(0,0,0,0.5)";
+                    if (isHeader) {
+                        el.style.fontWeight = "900";
+                        if (lum > 0.5) {
+                            el.style.textShadow = "1px 1px 0px #fff,-1px -1px 0px #fff,1px -1px 0px #fff,-1px 1px 0px #fff,0px 2px 4px rgba(0,0,0,0.15)";
+                        } else {
+                            el.style.textShadow = "0px 0px 8px rgba(0,0,0,0.8),2px 2px 4px rgba(0,0,0,0.9)";
+                        }
+                    } else if (lum <= 0.5) {
+                        el.style.textShadow = "0 1px 2px rgba(0,0,0,0.5)";
+                    }
                     if (currentColor && currentColor !== el.style.color) corrected++;
                 } else {
                     el.style.color = getReadableTextColor(bg, muted);
@@ -4261,40 +4270,30 @@
             }
         }
         function parseStatusLines(text = "") {
-            const lines = String(text || "")
+            const cleanText = String(text || "")
                 .replace(/<br\s*\/?>/gi, "\n")
-                .split(/\r?\n|；|;/)
-                .map((x) => x.replace(/\s+/g, " ").trim())
-                .filter(Boolean);
+                .replace(/[，,；;\t]/g, "\n")
+                .replace(/\s+/g, " ");
+            const lines = cleanText.split("\n").map(l => l.trim()).filter(Boolean);
             const statItems = [];
             const npcUpdates = [];
             const statusTags = [];
             lines.forEach((line) => {
-                const m = line.match(/(?<![="])([\u4e00-\u9fa5]{1,12})\s*[:：]\s*([+-]?\d{1,4}(\/\d{1,4})?)(?:\b|$)/);
+                // 支持 Emoji 捕获：左侧Emoji(1) + 中文标签(2) + 右侧Emoji(3) + 数值(4)
+                const m = line.match(/(?<![="])([\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]?)\s*([\u4e00-\u9fa5]{2,10})\s*([\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]?)\s*[:：]\s*([+-]?\d+(?:\.\d+)?(?:\/\d+)?)/u);
                 if (m) {
-                    const rawLabel = m[1];
-                    // 扩展 CSS 关键字黑名单
-                    const CSS_BLACKLIST = new Set([
-                        'gap', 'inset', 'margin', 'padding', 'width', 'height', 'top', 'left', 'right', 'bottom',
-                        'color', 'background', 'flex', 'grid', 'display', 'position', 'z', 'opacity', 'border',
-                        'rem', 'em', 'px', 'vw', 'vh', 'font', 'line', 'max', 'min', 'align', 'justify',
-                        'overflow', 'transform', 'transition', 'animation', 'shadow', 'radius', 'content',
-                        'cursor', 'pointer', 'none', 'auto', 'solid', 'relative', 'absolute', 'fixed'
-                    ]);
-                    if (CSS_BLACKLIST.has(rawLabel.toLowerCase())) return;
-                    // 纯英文属性名必须是已知游戏术语，否则跳过
-                    if (!/[\u4e00-\u9fa5]/.test(rawLabel) && !isKnownStatLabel(rawLabel)) return;
-                    if (/^(姓名|名字|性别|国籍|地点|住所|身份|职业|阵营|关系|状态|心情|特质)$/.test(rawLabel)) return;
+                    const leftEmoji = m[1] || "";
+                    const rawLabel = m[2].trim();
+                    const rightEmoji = m[3] || "";
+                    const rawVal = m[4].trim();
+                    if (/^(姓名|名字|性别|年龄|国籍|地点|住所|身份|职业|阵营|关系|状态|心情|特质)$/.test(rawLabel)) return;
                     const label = toCanonicalStatLabel(rawLabel);
-                    const rawVal = m[2]; // 可能是 "80" 或 "80/100"
-                    const numericVal = rawVal.includes("/")
-                        ? Math.max(0, Math.min(999, parseFloat(rawVal) || 0))
-                        : Math.max(0, Math.min(999, Number(rawVal) || 0));
+                    const detectedIcon = leftEmoji || rightEmoji || inferStatIcon(label);
                     statItems.push({
                         key: normalizeStatKey(label),
                         label,
-                        icon: inferStatIcon(label),
-                        value: rawVal.includes("/") ? rawVal : numericVal
+                        icon: detectedIcon,
+                        value: rawVal
                     });
                     return;
                 }
@@ -4403,7 +4402,9 @@
                     const idx = state.stats.findIndex((s) => String(s.key || "") === String(item.key || "") || String(s.label || "") === String(item.label || ""));
                     if (idx >= 0) {
                         const prev = state.stats[idx];
-                        if (Number(prev.value) !== Number(item.value) || String(prev.icon || "") !== String(item.icon || "")) {
+                        const valueChanged = String(prev.value ?? "") !== String(item.value ?? "");
+                        const iconChanged = String(prev.icon || "") !== String(item.icon || "");
+                        if (valueChanged || iconChanged) {
                             state.stats[idx] = { ...prev, value: item.value, icon: item.icon, label: prev.label || item.label, key: prev.key || item.key };
                             changed = true;
                         }
@@ -4438,6 +4439,9 @@
                         changed = true;
                     }
                 });
+            }
+            if (changed) {
+                UIRenderer.renderTop(state);
             }
             return changed;
         }
@@ -5954,7 +5958,8 @@
                 "若设定存在待玩家选择的开局模式/路线，只能在 choices 中列出，不得替玩家做最终选择。",
                 "状态区必须包含主角状态；若本轮涉及关键NPC变化，状态区需附带NPC状态摘要。",
                 "视觉要求：卡片必须具备色彩丰富且清晰的页游式视觉结构（标题条、信息区、标签/徽章、分隔线、强调块、层次化排版），并与当前设定的时代与题材一致。",
-                "同一张卡后续回合不要每回合随机换主题。"
+                "同一张卡后续回合不要每回合随机换主题。",
+                "你必须为卡片标题（.wy-role-name）设置与其颜色相反的 text-shadow 属性（例如浅色字配深色阴影），确保在复杂的渐变背景下文字依然清晰可读。"
             ];
         }
         function getIntroCoreRules() {
