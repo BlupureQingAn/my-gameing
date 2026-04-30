@@ -5933,9 +5933,20 @@
             if (!policyConfig?.lockFirstCardSkeleton) return null;
             return ScenarioPlayMetaService.getLockedSkeleton(cardId);
         }
-        function finalizeCardLayout({ text, beautySetting, titleHint, nowText, policyConfig, cardId, preferredChoices = [], choiceSource = "turn" }) {
+        function finalizeCardLayout({ text, beautySetting, titleHint, nowText, policyConfig, cardId, preferredChoices = [], choiceSource = "turn", lockedSkeleton = null }) {
             const normalized = HtmlCardService.normalizeHtmlCard(text);
-            if (HtmlCardService.isRenderableHtmlCard(normalized)) return normalized;
+            if (HtmlCardService.isRenderableHtmlCard(normalized)) {
+                // 如果有锁定骨架且前端支持强制对齐，尝试用骨架纠偏结构
+                if (lockedSkeleton && typeof HtmlStructureService !== "undefined" && HtmlStructureService.enforceCardStructure) {
+                    try {
+                        const enforced = HtmlStructureService.enforceCardStructure(normalized, lockedSkeleton);
+                        return enforced || normalized;
+                    } catch (e) {
+                        return normalized;
+                    }
+                }
+                return normalized;
+            }
             return HtmlCardService.wrapAsHtmlCard(beautySetting || HtmlCardTemplateService.getStableThemeName(), normalized || text);
         }
         return { finalizeCardLayout };
@@ -6262,8 +6273,40 @@
         function compressEntry(item, maxLen = 200) {
             const raw = String(item.text || "");
             const isHtml = raw.includes("<article") || raw.includes("ai-beauty-card");
+            if (isHtml && item.role === "ai") {
+                // AI 卡片只提取 data-block="event" 的剧情正文，避免 HTML 结构污染历史摘要
+                const m = raw.match(/data-block=["']event["'][^>]*>([\s\S]*?)<\/section>/i);
+                const eventText = m ? extractTextFromHtml(m[1]) : extractTextFromHtml(raw);
+                return eventText.length > maxLen ? eventText.slice(0, maxLen) + "…" : eventText;
+            }
             const text = isHtml ? extractTextFromHtml(raw) : raw.replace(/\s+/g, " ").trim();
             return text.length > maxLen ? text.slice(0, maxLen) + "…" : text;
+        }
+
+        // 提取 HTML 卡片的结构骨架（清空文本内容，只保留标签层次和 data-block 属性）
+        function extractSkeleton(html) {
+            const raw = String(html || "");
+            if (!raw.includes("ai-beauty-card")) return null;
+            try {
+                const tpl = document.createElement("template");
+                tpl.innerHTML = HtmlNormalizeService.normalizeHtmlCard(raw);
+                const card = tpl.content.querySelector(".ai-beauty-card");
+                if (!card) return null;
+                const clone = card.cloneNode(true);
+                // 递归清空所有文本节点，只保留标签骨架
+                const walk = (node) => {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        node.textContent = "";
+                    } else if (node.nodeType === Node.ELEMENT_NODE) {
+                        Array.from(node.childNodes).forEach(walk);
+                    }
+                };
+                walk(clone);
+                // 压缩空白，限制长度
+                return clone.outerHTML.replace(/>\s+</g, "><").slice(0, 1500);
+            } catch (e) {
+                return null;
+            }
         }
 
         // 构建压缩后的主线历史（最近 N 轮，越近越详细）
@@ -6318,18 +6361,51 @@
             return lines.length ? `【NPC近况】\n${lines.join("\n")}` : "";
         }
 
+        // 将锁定骨架对象转化为极简 HTML 示意字符串
+        function skeletonToHint(lockedSkeleton) {
+            if (!lockedSkeleton || typeof lockedSkeleton !== "object") return null;
+            // 如果存储的是完整 HTML 字符串骨架（旧格式），直接截断使用
+            if (typeof lockedSkeleton === "string") {
+                return lockedSkeleton.slice(0, 800);
+            }
+            // 如果存储的是结构化对象（新格式），生成极简示意
+            const { rootTag = "article", rootClass = "ai-beauty-card", titleTag, titleClass, bodyTag, bodyClass, blockOrder } = lockedSkeleton;
+            const blocks = Array.isArray(blockOrder)
+                ? blockOrder.map(name => `<section data-block="${name}">需包含${name}内容</section>`).join("")
+                : `<section data-block="event">剧情正文</section>`;
+            const titlePart = titleTag ? `<${titleTag}${titleClass ? ` class="${titleClass}"` : ""}>章节标题</${titleTag}>` : "";
+            const bodyPart = bodyTag
+                ? `<${bodyTag}${bodyClass ? ` class="${bodyClass}"` : ""}>${blocks}</${bodyTag}>`
+                : blocks;
+            return `<${rootTag} class="${rootClass}">${titlePart}${bodyPart}</${rootTag}>`;
+        }
+
         // 主入口：组装完整的压缩历史 prompt
         function build(state, opts = {}) {
             const parts = [];
+            const cardId = ScenarioCardService.getSelectedId();
 
-            // 找最近一次 AI 回复的完整 HTML 卡片，直接附上（让 AI 知道上次的卡片结构）
-            const history = Array.isArray(state.history) ? state.history : [];
-            const lastHtmlEntry = [...history].reverse().find((item) => {
-                const t = String(item.text || "");
-                return item.role !== "user" && (t.includes("ai-beauty-card") || t.includes("<article"));
-            });
-            if (lastHtmlEntry) {
-                parts.push(`【上一轮HTML卡片（必须参考此结构继续输出）】\n${lastHtmlEntry.text}`);
+            // 【锁定骨架】优先从 ScenarioPlayMetaService 获取初始化时锁定的骨架
+            // 这样历史记录里的所有 HTML 都不会再被发送给 AI，彻底切断 HTML 爆炸
+            const lockedSkeleton = ScenarioPlayMetaService.getLockedSkeleton(cardId);
+            if (lockedSkeleton) {
+                const hint = skeletonToHint(lockedSkeleton);
+                if (hint) {
+                    parts.push(`【强制 HTML 结构要求（必须严格遵守此标签层级和 data-block 属性）】\n${hint}`);
+                }
+            } else {
+                // 降级：从历史记录里找最后一张卡片提取骨架（兼容尚未锁定的情况）
+                const history = Array.isArray(state.history) ? state.history : [];
+                const lastHtmlEntry = [...history].reverse().find((item) => {
+                    const t = String(item.text || "");
+                    return item.role !== "user" && (t.includes("ai-beauty-card") || t.includes("<article"));
+                });
+                if (lastHtmlEntry) {
+                    const skeleton = extractSkeleton(lastHtmlEntry.text);
+                    if (skeleton) {
+                        parts.push(`【UI布局参考（仅保留结构，请在此基础上填充新内容）】\n${skeleton}`);
+                    }
+                }
             }
 
             const compressedHistory = buildCompressedHistory(state, opts);
@@ -6341,7 +6417,7 @@
             return parts.join("\n\n");
         }
 
-        return { build, extractTextFromHtml, buildCompressedHistory, buildRelationSnapshot, buildNpcSnapshot };
+        return { build, extractTextFromHtml, extractSkeleton, buildCompressedHistory, buildRelationSnapshot, buildNpcSnapshot };
     })();
 
     const PromptComposerService = (() => {
@@ -6362,7 +6438,28 @@
                 : beautyCardSetting;
             const isDark = ThemeService.getMode() === "dark";
             const { statusPanelLabel, tagsHtml } = HtmlCardTemplateService.buildSkeletonStateContext(state);
-            const skeletonHint = `<article class="ai-beauty-card wenyou-card"><div class="ai-beauty-card-body"><section data-block="time">时间信息</section><section data-block="status"><div>✨ ${statusPanelLabel}：各属性数值</div><div>🏷 关键标签：${tagsHtml}</div></section><section data-block="relations">👥 人物关系卡片</section><section data-block="event"><div>剧情正文</div></section><section data-block="thought"><div>AI想法</div></section><section data-block="choices"><div data-choice="选项1">1. 选项1</div><div data-choice="选项2">2. 选项2</div><div data-choice="选项3">3. 选项3</div></section><div data-block="hint">提示文字</div></div></article>`;
+
+            // 优先使用锁定骨架，保证每轮结构完全一致；无锁定时降级为静态模板
+            const cardId = ScenarioCardService.getSelectedId();
+            const lockedSkeleton = cardId ? ScenarioPlayMetaService.getLockedSkeleton(cardId) : null;
+            const skeletonHint = lockedSkeleton
+                ? (typeof lockedSkeleton === "string"
+                    ? lockedSkeleton.slice(0, 800)
+                    : (() => {
+                        const { rootTag = "article", rootClass = "ai-beauty-card", titleTag, titleClass, bodyTag, bodyClass, blockOrder } = lockedSkeleton;
+                        const blocks = Array.isArray(blockOrder)
+                            ? blockOrder.map(name => `<section data-block="${name}">需包含${name}内容</section>`).join("")
+                            : `<section data-block="event">剧情正文</section>`;
+                        const titlePart = titleTag ? `<${titleTag}${titleClass ? ` class="${titleClass}"` : ""}>章节标题</${titleTag}>` : "";
+                        const bodyPart = bodyTag ? `<${bodyTag}${bodyClass ? ` class="${bodyClass}"` : ""}>${blocks}</${bodyTag}>` : blocks;
+                        return `<${rootTag} class="${rootClass}">${titlePart}${bodyPart}</${rootTag}>`;
+                    })())
+                : `<article class="ai-beauty-card wenyou-card"><div class="ai-beauty-card-body"><section data-block="time">时间信息</section><section data-block="status"><div>✨ ${statusPanelLabel}：各属性数值</div><div>🏷 关键标签：${tagsHtml}</div></section><section data-block="relations">👥 人物关系卡片</section><section data-block="event"><div>剧情正文</div></section><section data-block="thought"><div>AI想法</div></section><section data-block="choices"><div data-choice="选项1">1. 选项1</div><div data-choice="选项2">2. 选项2</div><div data-choice="选项3">3. 选项3</div></section><div data-block="hint">提示文字</div></div></article>`;
+
+            const structureRule = lockedSkeleton
+                ? "1. 必须严格按照下方【锁定骨架】的标签层级和 data-block 属性填充内容，不得新增、删除或重排任何 data-block 节点。"
+                : "1. 若上下文提供了【UI布局参考】，必须保持相同的 class 名称和 data-block 层次结构，不得新增或删除 data-block 节点。";
+
             return [
                 "【美化卡片强制规则——最高优先级】",
                 "⚠️ 本次回复必须输出 HTML 卡片，严禁输出任何 Markdown 文本。",
@@ -6371,7 +6468,13 @@
                     ? "暗夜模式：透明/半透明深色背景，文字高对比。"
                     : "亮色模式：温暖或高饱和视觉，保证可读性。",
                 ...PromptRulesRegistry.getBeautyCoreRules(),
-                "【卡片结构（必须严格遵守，data-block 顺序和命名不可改变）】",
+                "【HTML 生成继承规则】",
+                structureRule,
+                "2. 不要改变卡片的视觉风格（渐变、边框、装饰），除非剧情发生了重大环境变化。",
+                "3. 在 data-block=\"event\" 中填入不少于 400 字的剧情描写。",
+                "4. 在 data-block=\"status\" 中更新当前属性数值。",
+                "5. 禁止输出任何 Markdown 代码块标签（```html），直接以 <article 或 <div 开头。",
+                lockedSkeleton ? "【锁定骨架（必须严格遵守，data-block 顺序和命名不可改变）】" : "【卡片结构（必须严格遵守，data-block 顺序和命名不可改变）】",
                 skeletonHint,
                 "输出完整 HTML 卡片后，若有状态变化必须在卡片之后追加 ```state-patch {...}``` 块（不要放在卡片内部）。"
             ].join("\n");
@@ -7581,13 +7684,15 @@
                 let displayText = rawVisibleText;
                 if (beautyModeEnabled && policyConfig.enableHtmlCardForce) {
                     const turnChoices = ChoiceService.collectChoices(rawVisibleText);
+                    const cardId = ScenarioCardService.getSelectedId();
                     displayText = HtmlCardRenderPipelineService.finalizeCardLayout({
                         text: rawVisibleText,
                         beautySetting: beautyCardSetting,
                         titleHint: "剧情推进",
                         nowText: Utils.nowDateStr(StateService.get()),
                         policyConfig,
-                        cardId: ScenarioCardService.getSelectedId(),
+                        cardId: cardId,
+                        lockedSkeleton: ScenarioPlayMetaService.getLockedSkeleton(cardId),
                         preferredChoices: turnChoices,
                         choiceSource: "turn"
                     });
