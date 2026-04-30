@@ -1964,9 +1964,8 @@
         </section>
         <!-- 保持 settings 视图正常闭合即可 -->
 
-        <section class="card" id="game-stats-card"></section>
-
         <section id="view-main" class="view-section active">
+        <section class="card" id="game-stats-card"></section>
         <section class="card" id="story-board"></section>
         </section>
 
@@ -2127,7 +2126,7 @@
             "free": {
                 id: "free",
                 name: "免费云卡",
-                desc: "速度极快，长上下文不断流（基于 Qwen2.5）",
+                desc: "基于 Qwen3.5，速度极快",
                 model: "Qwen/Qwen2.5-7B-Instruct",
                 priceInput: 0,
                 priceOutput: 0
@@ -7762,6 +7761,7 @@
             const plainResponse = String(aiResponse || "")
                 .replace(/<style[\s\S]*?<\/style>/gi, "")
                 .replace(/<script[\s\S]*?<\/script>/gi, "")
+                .replace(/style\s*=\s*["'][^"']*["']/gi, "") // 移除内联 style 属性，防止 CSS 值污染文本
                 .replace(/<[^>]+>/g, " ")
                 .replace(/\s+/g, " ")
                 .trim()
@@ -8141,9 +8141,7 @@
     const ScenarioCardControllerService = (() => {
         function saveScenarioCard({ renderAll }) {
             const form = ScenarioEditorService.readForm();
-            const currentPolicy = ChatPolicyConfigService.load();
             const selectedCardId = ScenarioCardService.getSelectedId();
-            ChatPolicyConfigService.save({ ...currentPolicy });
             ScenarioCardService.updateSelectedCard({
                 title: form.title || "未命名设定",
                 theme: form.theme,
@@ -8376,7 +8374,6 @@
             StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(state), text: `你使用了 **${item.name}**，状态发生了细微变化。` });
             StateService.save();
             renderAll();
-            switchView("view-inventory");
         }
         function openNpcProfile(npcId) {
             const state = StateService.get();
@@ -8567,15 +8564,12 @@
                     text: `【社交线更新】你与 ${npc.name} 完成了一轮对话。关系：${npc.relation}｜好感：${npc.favor}。`
                 });
                 StateService.save();
-                renderAll();
-                switchView("view-npc-chat");
+                UIRenderer.renderSocialList(state);
                 UIRenderer.renderSocialChat(state, chatKey);
             } catch (e) {
                 const list = (state.npcChats && state.npcChats[chatKey]) || [];
                 list.push({ from: "npc", text: `⚠️ 对话失败：${e.message}`, ts: Date.now() });
                 StateService.save();
-                renderAll();
-                switchView("view-npc-chat");
                 UIRenderer.renderSocialChat(state, chatKey);
             } finally {
                 if (titleEl) titleEl.innerText = oldTitle || npc.name || "NPC";
@@ -8595,6 +8589,9 @@
             if (!saved?.state) return;
             StorageService.writeJson(GameSessionService.activeKey(AppConfig.storageKeys.save), saved.state);
             StateService.init();
+            // 恢复游玩状态，确保 footer 和状态栏正常显示
+            const cardId = ScenarioCardService.getSelectedId();
+            PlayViewStateService.enterPlay(cardId);
             renderAll();
             switchView("view-main");
         }

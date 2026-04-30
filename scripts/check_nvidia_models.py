@@ -1,6 +1,10 @@
-import urllib.request, json
+import urllib.request, json, os
 
-key = "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"
+# 从环境变量读取，不要硬编码在代码里
+# 使用前请先设置：export NVIDIA_API_KEY="nvapi-..."
+key = os.environ.get("NVIDIA_API_KEY", "")
+if not key:
+    raise RuntimeError("请设置环境变量 NVIDIA_API_KEY")
 models = [
     "meta/llama-3.3-70b-instruct",
     "meta/llama-3.1-405b-instruct",

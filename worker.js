@@ -8,7 +8,7 @@ const CLOUD_CARD_CONFIGS = {
         },
         backup: { 
             url: "https://api.siliconflow.cn/v1", 
-            apiKey: "sk-ratpznxmrhdzrrlnjeowovgtpkpyziizvarfoahjpgyfqjzk", 
+            apiKeyEnv: "SILICONFLOW_KEY", 
             model: "Qwen/Qwen2.5-7B-Instruct" 
         },
         priceInput: 0, 
