@@ -2417,7 +2417,7 @@
             // 只有游玩中且处于生涯相关页面时才显示状态栏，排除 NPC 聊天页保持沉浸感
             const enableGamePanels = inPlay && isPlayView && viewId !== "view-npc-chat";
             const footer = document.querySelector(".chat-footer");
-            if (footer) footer.style.display = enableGamePanels ? "block" : "none";
+            if (footer) footer.style.display = enableGamePanels ? "flex" : "none";
             document.getElementById("game-stats-card").style.display = enableGamePanels ? "block" : "none";
             document.querySelector(".quick-actions").style.display = enableGamePanels ? "flex" : "none";
             document.querySelector(".chat-footer .composer").style.display = enableGamePanels ? "flex" : "none";
@@ -2633,7 +2633,9 @@
         }
 
         function advanceMonthIfNeeded(input) {
-            if (!input.includes("下一月") && !input.includes("继续")) return;
+            // 只有"下一月"才在前端硬推时间和年龄
+            // "继续"的时间推进完全由 AI 根据剧情决定，TimeSyncService 会从回复中解析同步
+            if (!input.includes("下一月")) return;
             Utils.shiftDays(gameState, 30);
             gameState.age += 1;
         }
@@ -2644,6 +2646,10 @@
 
         function pushChat(role, content) {
             gameState.chatMemory.push({ role, content });
+            // 防止无限增长，保留最近 60 条（30轮对话）
+            if (gameState.chatMemory.length > 60) {
+                gameState.chatMemory = gameState.chatMemory.slice(-60);
+            }
         }
 
         return { init, get, save, resetWithPreset, advanceMonthIfNeeded, pushHistory, pushChat };
@@ -2670,8 +2676,8 @@
             html = html.replace(/^\> (.*)$/gm, "<blockquote>$1</blockquote>");
             html = html.replace(/(?:^|\n)- (.*)(?=\n|$)/g, "\n<li>$1</li>");
             html = html.replace(/(?:^|\n)\d+[.)] (.*)(?=\n|$)/g, "\n<li>$1</li>");
-            html = html.replace(/(<li>[\s\S]*?<\/li>)/g, "<ul>$1</ul>");
-            html = html.replace(/<\/ul>\s*<ul>/g, "");
+            // 将连续的 <li> 块整体包裹进一个 <ul>，避免每个 <li> 单独包裹再合并的嵌套问题
+            html = html.replace(/((?:<li>.*?<\/li>\s*)+)/g, "<ul>$1</ul>");
             html = html.replace(/\n/g, "<br>");
             return html;
         }
@@ -3545,7 +3551,7 @@
             }, null, 2);
             return [
                 "【内置返回规则】",
-                "1) 必须优先遵循角色事实锁定块；若剧情中发生状态变更，必须通过 state-patch 结构化块同步改动。",
+                "1) 必须优先遵循角色事实锁定块；状态数据同步由系统后台自动完成，无需输出 state-patch。",
                 "2) 必须只基于玩家最新输入和上下文推进剧情，不可脱离输入自说自话，不可重置世界观。",
                 "3) 当前已启用美化卡片模式：必须直接输出 HTML 卡片，严禁输出 Markdown 文本。",
                 "4) 【字数硬约束】每次回复的剧情正文部分必须不少于 400 字。请通过环境描写、人物神态、心理活动和细腻的对话来丰富内容，禁止敷衍简短。",
@@ -3560,11 +3566,6 @@
                 "13) 【数值格式】对于有上限的属性，请使用 '当前值/最大值' 格式（如 80/100）；无上限属性直接写数字。",
                 "14) 【视觉对比】卡片背景与文字必须保持极高对比度，严禁深色背景配深色文字或浅色背景配白字。",
                 "15) 若生成过程中遇到错误或无法继续，请立即停止输出，不要尝试修复不完整的标签或重复输出任何字符。",
-                "",
-                "【state-patch 格式】在 HTML 卡片之后追加（只写本轮变化的字段）：",
-                "```state-patch",
-                patchExample,
-                "```",
                 "说明：stats 若有变化需写全部属性。inventory op=upsert 为新增/更新，op=remove 为移除。NPC 用 id 定位，不存在则新建。"
             ].join("\n");
         }
@@ -4047,7 +4048,17 @@
                 changed = true;
             }
             if (Array.isArray(patch.stats) && patch.stats.length > 0) {
-                state.stats = StatsService.normalizeStats(patch.stats);
+                // 增量 merge：只更新/新增本次 patch 中的属性，不全量覆盖
+                if (!Array.isArray(state.stats)) state.stats = [];
+                StatsService.normalizeStats(patch.stats).forEach((item) => {
+                    const existing = state.stats.find(s => s.key === item.key || s.label === item.label);
+                    if (existing) {
+                        existing.value = item.value;
+                        existing.icon = item.icon || existing.icon;
+                    } else {
+                        state.stats.push(item);
+                    }
+                });
                 changed = true;
             }
             if (Array.isArray(patch.npcs)) {
@@ -5394,6 +5405,11 @@
                 delete state.npcChats[legacyKey];
             }
             if (!Array.isArray(state.npcChats[key])) state.npcChats[key] = [];
+            // 防止无限增长，每个 NPC 保留最近 100 条消息
+            const MAX_NPC_CHAT = 100;
+            if (state.npcChats[key].length > MAX_NPC_CHAT) {
+                state.npcChats[key] = state.npcChats[key].slice(-MAX_NPC_CHAT);
+            }
             return state.npcChats[key];
         }
         function buildMainProgressSummary(state, limit = 8) {
@@ -6208,7 +6224,10 @@
                         if (Date.now() - lastLivePanelSyncAt >= 100) {
                             const liveState = StateService.get();
                             TimeSyncService.syncFromAiText(liveState, txt);
-                            const changed = AiPanelSyncService.syncFromAiText(liveState, txt, true);
+                            // 流式阶段只同步 stats/statusTags，跳过 NPC（半截 JSON 容易报错）
+                            const snapshot = AiPanelSyncService.extractFromAiCard(txt, true);
+                            const statsOnly = { statItems: snapshot.statItems, npcUpdates: [], statusTags: snapshot.statusTags };
+                            const changed = AiPanelSyncService.applySnapshot(liveState, statsOnly);
                             if (changed) UIRenderer.renderTop(liveState);
                             lastLivePanelSyncAt = Date.now();
                         }
@@ -6786,12 +6805,16 @@
         function buildHeaders(config) {
             // 云卡模式：key 由 Worker 注入，前端只传云卡 ID 和用户 token
             const token = AuthService.getToken();
-            const authHeader = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
-            return {
+            const cardId = config.cloudCard?.id || "free";
+            const headers = {
                 "Content-Type": "application/json",
-                "X-Cloud-Card-Id": config.cloudCard?.id || "free",
-                "X-Auth-Token": authHeader
+                "X-Cloud-Card-Id": cardId
             };
+            // 免费云卡且未登录时不发 X-Auth-Token，避免 "Bearer " 空 token 导致鉴权失败
+            if (token) {
+                headers["X-Auth-Token"] = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
+            }
+            return headers;
         }
         function buildExtraBody(extraBody = null, cardId = "") {
             const base = extraBody && typeof extraBody === "object" ? { ...extraBody } : {};
@@ -6822,8 +6845,8 @@
             }
             throw lastError;
         }
-        async function streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken, extraBody = null, cardId = "" }) {
-            const cloudCardId = cardId || ScenarioCardService.getSelectedId() || "free";
+        async function streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken, extraBody = null, cardId = "", cloudCardId: explicitCloudCardId = "" }) {
+            const cloudCardId = explicitCloudCardId || "free";
             return await fetchWithRetry(async () => {
             const payloadBody = buildExtraBody(extraBody, cardId);
             const controller = new AbortController();
@@ -6923,7 +6946,7 @@
             }
             let fullText = "";
             try {
-                fullText = await streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken, extraBody, cardId });
+                fullText = await streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken, extraBody, cardId, cloudCardId: cloudCard?.id || "free" });
             } catch (proxyErr) {
                 throw proxyErr;
             }
@@ -6966,7 +6989,7 @@
             return EndMarkerService.trimToMarker(data?.choices?.[0]?.message?.content?.trim() || "");
             }, 5, cloudCardId);
         }
-        async function requestCompletionWithFallback({ config, fetchUrl, headers, model, messages, temperature, extraBody = null, cardId = "", timeoutMs = REQUEST_TIMEOUT_MS }) {
+        async function requestCompletionWithFallback({ config, fetchUrl, headers, model, messages, temperature, extraBody = null, cardId = "", timeoutMs = READ_TIMEOUT_MS }) {
             const cloudCard = config?.cloudCard || null;
             // 仅做初步余额检查（防止明知没钱还发请求）
             if (cloudCard && cloudCard.id !== "free") {
@@ -7795,24 +7818,17 @@
             // 应用 stats
             if (Array.isArray(patch.stats) && patch.stats.length > 0) {
                 const statsArr = Array.isArray(state.stats) ? state.stats : (state.stats = []);
-                patch.stats.forEach(({ key, label, value }) => {
+                patch.stats.forEach((item) => {
+                    const { key, label, value } = item;
                     if (value === undefined || value === null) return;
-                    const existing = statsArr.find(s => s.key === key || s.label === label);
+                    // 复用 StatsService.normalizeStatItem 做类型校验和格式统一
+                    const normalized = StatsService.normalizeStatItem(item, 0);
+                    const existing = statsArr.find(s => s.key === normalized.key || s.label === normalized.label);
                     if (existing) {
-                        existing.value = value;
+                        existing.value = normalized.value;
                         changed = true;
-                    } else if (label) {
-                        // 开局或新属性：允许直接创建，推断图标
-                        const icon = /体力|健康|生命/.test(label) ? "💪"
-                            : /心情|情绪|快乐/.test(label) ? "😊"
-                            : /金钱|财富|银两|铜钱/.test(label) ? "💰"
-                            : /魅力|颜值|外貌/.test(label) ? "✨"
-                            : /智力|学识|知识/.test(label) ? "📚"
-                            : /武力|战力|攻击/.test(label) ? "⚔️"
-                            : /名望|声望|名誉/.test(label) ? "🏆"
-                            : /灵力|法力|魔力/.test(label) ? "🔮"
-                            : "📊";
-                        statsArr.push({ key: key || label, label, icon, value });
+                    } else if (normalized.label) {
+                        statsArr.push(normalized);
                         changed = true;
                     }
                 });
@@ -7890,17 +7906,6 @@
             ].join("\n");
             return "skip";
         }
-        function replaceLastAssistantChat(rawText, nextText) {
-            const state = StateService.get();
-            if (!state || !Array.isArray(state.chatMemory)) return;
-            for (let i = state.chatMemory.length - 1; i >= 0; i--) {
-                const item = state.chatMemory[i];
-                if (item && item.role === "assistant" && String(item.content || "") === String(rawText || "")) {
-                    item.content = nextText;
-                    return;
-                }
-            }
-        }
         async function requestAI(userText) {
             const state = StateService.get();
             const config = SettingsService.getApiConfig();
@@ -7967,6 +7972,7 @@
                 const rawVisibleText = rawPatchResult.cleaned || rawText;
                 const rawPatchChanged = StatePatchService.applyPatch(StateService.get(), rawPatchResult.patch);
                 let displayText = rawVisibleText;
+                let conflictDetected = false;
                 if (beautyModeEnabled && policyConfig.enableHtmlCardForce) {
                     const turnChoices = ChoiceService.collectChoices(rawVisibleText);
                     const cardId = ScenarioCardService.getSelectedId();
@@ -8007,6 +8013,61 @@
                         }
                     }
 
+                    // 冲突检测重试
+                    const { finalText: conflictFixed, conflictDetected: _cd } = await ChatPostProcessService.enforceConflict({
+                        text: finalVisibleText,
+                        userText,
+                        state: StateService.get(),
+                        enabled: policyConfig.enableConflictDetection,
+                        retryCount: policyConfig.conflictRetryCount,
+                        requestRewrite: async (report, text) => {
+                            const retried = (await AIRequestService.streamCompletionWithFallback({
+                                config,
+                                fetchUrl,
+                                headers: requestHeaders,
+                                model: config.model,
+                                messages: [
+                                    { role: "system", content: systemPrompt },
+                                    { role: "user", content: PromptPolicyService.buildConflictRetryPrompt(userText, recentHistory, report, text, scenarioSpec) }
+                                ],
+                                temperature: policyConfig.temperature,
+                                onToken: (t) => {
+                                    UIRenderer.updateStreaming(StatePatchService.extractPatch(EndMarkerService.trimToMarker(t)).cleaned);
+                                    return !EndMarkerService.hasMarker(t);
+                                }
+                            })).trim();
+                            return StatePatchService.extractPatch(retried).cleaned || retried;
+                        }
+                    });
+                    finalVisibleText = conflictFixed;
+                    conflictDetected = _cd;
+
+                    // 选项强制重试
+                    finalVisibleText = await ChatPostProcessService.enforceChoices({
+                        text: finalVisibleText,
+                        userText,
+                        state: StateService.get(),
+                        retryCount: policyConfig.choiceRetryCount,
+                        requestRewrite: async (text) => {
+                            const retried = (await AIRequestService.streamCompletionWithFallback({
+                                config,
+                                fetchUrl,
+                                headers: requestHeaders,
+                                model: config.model,
+                                messages: [
+                                    { role: "system", content: systemPrompt },
+                                    { role: "user", content: PromptPolicyService.buildChoiceRetryPrompt(userText, recentHistory, text, scenarioSpec) }
+                                ],
+                                temperature: policyConfig.temperature,
+                                onToken: (t) => {
+                                    UIRenderer.updateStreaming(StatePatchService.extractPatch(EndMarkerService.trimToMarker(t)).cleaned);
+                                    return !EndMarkerService.hasMarker(t);
+                                }
+                            })).trim();
+                            return StatePatchService.extractPatch(retried).cleaned || retried;
+                        }
+                    });
+
                     displayText = HtmlCardRenderPipelineService.finalizeCardLayout({
                         text: finalVisibleText,
                         beautySetting: beautyCardSetting,
@@ -8018,13 +8079,15 @@
                         preferredChoices: turnChoices,
                         choiceSource: "turn"
                     });
+
+                    // finishStreaming 时传入冲突标记（conflictDetected 已在下方使用）
                 }
 
                 // 第一阶段：流式结束后立即完成渲染并解锁交互，避免用户体感“卡住”。
                 // state-patch 已在上方 applyPatch 中执行（最高优先级），AiPanelSync 作兜底补充
                 TimeSyncService.syncFromAiText(StateService.get(), displayText);
                 const panelChanged = AiPanelSyncService.syncFromAiText(StateService.get(), displayText);
-                UIRenderer.finishStreaming(displayText, { conflictDetected: false });
+                UIRenderer.finishStreaming(displayText, { conflictDetected });
                 EventService.maybeTriggerAnimation(displayText);
                 const aiEntry = { role: "ai", date: Utils.nowDateStr(StateService.get()), text: displayText };
                 StateService.pushHistory(aiEntry);
@@ -8042,7 +8105,7 @@
                 // 剧情渲染完成后，后台静默分析本轮状态变化并自动刷新面板
                 (async () => {
                     try {
-                        const patch = await StateAuditorService.auditStateChange(StateService.get(), userText, rawText);
+                const patch = await StateAuditorService.auditStateChange(StateService.get(), userText, displayText);
                         const changed = StateAuditorService.applyAuditPatch(patch);
                         if (changed) {
                             const audited = StateService.get();
@@ -9029,7 +9092,7 @@
             });
             const data = await res.json();
             if (!res.ok) {
-                throw new Error(data?.message || "邮箱或密码错误");
+                throw new Error("邮箱或密码错误，请检查后重试");
             }
             saveSession(data.token, email);
             _userData = data.record || null;
@@ -9056,6 +9119,8 @@
         }
 
         function onLoginSuccess(email) {
+            // 重置注册/登录模式为登录态，避免下次登出后状态残留
+            _isRegisterMode = false;
             hideOverlay();
             const badge = document.getElementById("auth-user-badge");
             const logoutBtn = document.getElementById("auth-logout-btn");
@@ -9074,14 +9139,27 @@
             const logoutBtn = document.getElementById("auth-logout-btn");
             if (badge) badge.style.display = "none";
             if (logoutBtn) logoutBtn.style.display = "none";
-            // 重置登录表单
+            // 清空余额显示
+            const coinsEl = document.getElementById("display-user-coins");
+            if (coinsEl) coinsEl.textContent = "0.0000";
+            const emailEl = document.getElementById("display-user-email");
+            if (emailEl) emailEl.textContent = "-";
+            // 重置登录表单及 UI 状态
             _isRegisterMode = false;
             const pw2 = document.getElementById("auth-password2");
+            const subtitle = document.getElementById("auth-subtitle");
+            const toggleBtn = document.getElementById("auth-toggle-btn");
+            const submitBtn = document.getElementById("auth-submit-btn");
             if (pw2) pw2.style.display = "none";
+            if (subtitle) subtitle.textContent = "登录以继续";
+            if (toggleBtn) toggleBtn.textContent = "没有账号？点击注册";
+            if (submitBtn) { submitBtn.textContent = "登录"; submitBtn.disabled = false; }
             const emailInput = document.getElementById("auth-email");
             const pwInput = document.getElementById("auth-password");
+            const pw2Input = document.getElementById("auth-password2");
             if (emailInput) emailInput.value = "";
             if (pwInput) pwInput.value = "";
+            if (pw2Input) pw2Input.value = "";
             clearError();
             showOverlay();
         }
