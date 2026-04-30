@@ -6519,7 +6519,8 @@
     })();
 
     const AIRequestService = (() => {
-        const REQUEST_TIMEOUT_MS = 60000;
+        const REQUEST_TIMEOUT_MS = 10000;  // 连接超时 10s，快速失败触发重试
+        const READ_TIMEOUT_MS = 90000;     // 流式读取超时 90s，允许长文本生成
         const INIT_REQUEST_TIMEOUT_MS = 60000; // 初始化各子请求超时，快速失败触发缺失字段补全
         function createHttpError(status, message, extra = {}) {
             const err = new Error(message || `HTTP ${status}`);
@@ -6556,7 +6557,33 @@
             const thinkingPayload = SettingsService.getThinkingPayloadForCard(cardId || ScenarioCardService.getSelectedId());
             return { ...base, ...thinkingPayload };
         }
+        async function fetchWithRetry(fetchFn, maxRetries = 3, cloudCardId = "free") {
+            let lastError;
+            const baseDelay = cloudCardId === "free" ? 5000 : 1500;
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    return await fetchFn();
+                } catch (e) {
+                    lastError = e;
+                    const retryable = e.status === 429 || e.status === 503 || e.status === 408
+                        || String(e.message || "").toLowerCase().includes("timeout");
+                    if (retryable && i < maxRetries - 1) {
+                        const delay = baseDelay * (i + 1);
+                        console.warn(`[重试 ${i + 1}/${maxRetries}] 服务器繁忙 (${e.status || e.message})，等待 ${delay}ms...`);
+                        if (typeof UIRenderer !== "undefined" && UIRenderer.updateStreaming) {
+                            UIRenderer.updateStreaming(`[系统：当前服务器拥挤，正在排队重试 (${i + 1}/${maxRetries})，请稍候...]`);
+                        }
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        continue;
+                    }
+                    throw e;
+                }
+            }
+            throw lastError;
+        }
         async function streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken, extraBody = null, cardId = "" }) {
+            const cloudCardId = cardId || ScenarioCardService.getSelectedId() || "free";
+            return await fetchWithRetry(async () => {
             const payloadBody = buildExtraBody(extraBody, cardId);
             const controller = new AbortController();
             // 只对连接阶段设超时，流读取不限时（长文本生成可能很慢）
@@ -6621,6 +6648,7 @@
                 try { reader.cancel(); } catch (e) {}
             }
             return EndMarkerService.trimToMarker(fullText);
+            }, 3, cloudCardId);
         }
         async function streamCompletionWithFallback({ config, fetchUrl, headers, model, messages, temperature, onToken, extraBody = null, cardId = "" }) {
             const cloudCard = config?.cloudCard || null;
@@ -6643,7 +6671,9 @@
             }
             return fullText;
         }
-        async function requestCompletion({ fetchUrl, headers, model, messages, temperature, extraBody = null, cardId = "", timeoutMs = REQUEST_TIMEOUT_MS }) {
+        async function requestCompletion({ fetchUrl, headers, model, messages, temperature, extraBody = null, cardId = "", timeoutMs = READ_TIMEOUT_MS, config = null }) {
+            const cloudCardId = config?.cloudCard?.id || cardId || "free";
+            return await fetchWithRetry(async () => {
             const payloadBody = buildExtraBody(extraBody, cardId);
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(`request timeout ${timeoutMs}ms`), timeoutMs);
@@ -6672,6 +6702,7 @@
             }
             const data = await response.json();
             return EndMarkerService.trimToMarker(data?.choices?.[0]?.message?.content?.trim() || "");
+            }, 5, cloudCardId);
         }
         async function requestCompletionWithFallback({ config, fetchUrl, headers, model, messages, temperature, extraBody = null, cardId = "", timeoutMs = REQUEST_TIMEOUT_MS }) {
             const cloudCard = config?.cloudCard || null;
@@ -7508,7 +7539,11 @@
 
             isGenerating = true;
             UIRenderer.setSendingDisabled(true);
-            UIRenderer.appendMessage("ai", "正在生成剧情中...", Utils.nowDateStr(state), true);
+            const selectedCardId = StorageService.readText(AppConfig.storageKeys.selectedCloudCard, "free");
+            const waitingMsg = selectedCardId === "free"
+                ? "正在通过公共通道排队，高峰期预计等待 5-10 秒..."
+                : "正在生成剧情中...";
+            UIRenderer.appendMessage("ai", waitingMsg, Utils.nowDateStr(state), true);
             let uiUnlocked = false;
             let lastLivePanelSyncAt = 0;
 
