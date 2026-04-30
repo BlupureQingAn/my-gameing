@@ -162,13 +162,11 @@
             color: #ffffff;
         }
 
-        body[data-theme="dark"] .ai-beauty-card {
-            background:
-                radial-gradient(circle at top right, rgba(143, 125, 255, 0.20), transparent 28%),
-                linear-gradient(180deg, rgba(34, 42, 61, 0.98), rgba(22, 29, 44, 0.96));
-            box-shadow: 0 16px 38px rgba(0, 0, 0, 0.28);
-        }
-
+/* 2. 针对深色模式也要设为透明 */
+body[data-theme="dark"] .ai-beauty-card {
+    background: transparent !important;
+    box-shadow: none !important;
+}
         body[data-theme="dark"] .bubble code,
         body[data-theme="dark"] .bubble pre {
             color: #dfe7ff;
@@ -917,12 +915,13 @@
             box-shadow: 0 10px 22px rgba(97, 66, 36, 0.08);
         }
 
-        .bubble.ai.html-host {
-            padding: 0;
-            border: 0;
-            background: transparent;
-            border-radius: 0;
-        }
+/* 3. 确保气泡容器完全透明 */
+.bubble.ai.html-host {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
 
         .bubble.user {
             background: var(--user-bubble-bg);
@@ -1011,9 +1010,12 @@
             color: var(--accent-dark);
         }
 
-        .ai-beauty-card-body {
-            color: var(--text);
-        }
+/* 1. 强制将美化卡片的背景设为透明 */
+.ai-beauty-card {
+    background: transparent !important;
+    box-shadow: none !important; /* 如果不需要阴影也可以去掉 */
+    border: 1px solid rgba(202, 162, 106, 0.2) !important; /* 保留一个淡淡的边框，或者设为 transparent */
+}
 
         .ai-card-warning {
             margin-bottom: 8px;
