@@ -3342,16 +3342,14 @@
                 const rgb = parseColorToRgb(bg);
                 if (rgb) {
                     const lum = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
-                    const forcedColor = lum > 0.5 ? "#1a1a1a" : "#ffffff";
                     const currentColor = el.style.color;
-                    el.style.color = muted ? (lum > 0.5 ? "#555555" : "#c8d4f0") : forcedColor;
+                    el.style.color = muted ? (lum > 0.5 ? "#555555" : "#c8d4f0") : (lum > 0.5 ? "#1a1a1a" : "#ffffff");
                     if (isHeader) {
                         el.style.fontWeight = "900";
-                        if (lum > 0.5) {
-                            el.style.textShadow = "1px 1px 0px #fff,-1px -1px 0px #fff,1px -1px 0px #fff,-1px 1px 0px #fff,0px 2px 4px rgba(0,0,0,0.15)";
-                        } else {
-                            el.style.textShadow = "0px 0px 8px rgba(0,0,0,0.8),2px 2px 4px rgba(0,0,0,0.9)";
-                        }
+                        // 万能描边：无论深浅背景都清晰可读
+                        el.style.textShadow = lum > 0.5
+                            ? "0px 0px 3px #ffffff,0px 0px 5px #ffffff,1px 1px 2px rgba(0,0,0,0.2)"
+                            : "1px 1px 0px #000,-1px -1px 0px #000,1px -1px 0px #000,-1px 1px 0px #000,0px 2px 5px rgba(0,0,0,0.8)";
                     } else if (lum <= 0.5) {
                         el.style.textShadow = "0 1px 2px rgba(0,0,0,0.5)";
                     }
@@ -4213,7 +4211,6 @@
         function extractRelevantText(text = "", isStreaming = false) {
             const raw = String(text || "");
             if (!raw) return "";
-            // 流式阶段 HTML 不完整，跳过 DOM 解析直接返回原文
             if (isStreaming) return raw;
             const normalized = HtmlCardService.normalizeHtmlCard(raw);
             if (!HtmlCardService.isRenderableHtmlCard(normalized)) return raw;
@@ -4233,7 +4230,7 @@
                         const t = String(clone.textContent || "").trim();
                         if (t) parts.push(t);
                     });
-                // status 块：严格只取 data-block="status" 内的纯文本，防止抓到 CSS 样式
+                // status 块：把所有"药丸"子节点逐一转成文本行，防止标签隔断正则匹配
                 const statusEl = body.querySelector('[data-block="status"]');
                 if (statusEl instanceof HTMLElement) {
                     const clone = statusEl.cloneNode(true);
@@ -4254,10 +4251,18 @@
                             });
                             if (statLines.length) parts.push(statLines.join("\n"));
                         } else {
-                            // fallback：只取纯文本，过滤掉明显是 CSS 的行
-                            const statusText = String(clone.textContent || "").replace(/\s+/g, " ").trim();
+                            // 核心修复：遍历所有叶子节点，每个药丸后加换行，防止文字挤在一起
+                            let virtualText = "";
+                            clone.querySelectorAll("*").forEach((el) => {
+                                if (el.children.length === 0) {
+                                    const t = String(el.textContent || "").trim();
+                                    if (t) virtualText += t + "\n";
+                                }
+                            });
+                            // 如果叶子遍历没抓到，回退到整块 textContent
+                            const statusText = virtualText || String(clone.textContent || "").replace(/\s+/g, " ").trim();
                             const statLines = statusText
-                                .split(/[,，\n]/)
+                                .split(/\n/)
                                 .map((s) => s.trim())
                                 .filter((s) => /[\u4e00-\u9fa5]{1,12}\s*[:：]\s*[+-]?\d/.test(s));
                             if (statLines.length) parts.push(statLines.join("\n"));
@@ -4587,7 +4592,7 @@
             if (!box) return;
             const stats = Array.isArray(state.stats) ? state.stats : [];
             if (stats.length === 0) {
-                box.innerHTML = `<div class="list-sub" style="grid-column:1/-1;text-align:center;opacity:0.6;padding:8px 0;">等待剧情初始化属性...</div>`;
+                box.innerHTML = `<div class="list-sub" style="grid-column:1/-1;text-align:center;opacity:0.6;padding:8px 0;">⏳ 等待剧情初始化属性...</div>`;
                 return;
             }
             const statHtml = stats.map((s) => {
