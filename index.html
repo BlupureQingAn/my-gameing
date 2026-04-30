@@ -3538,7 +3538,7 @@
                 "7) 若剧情不适合选项，也要提供继续观察/继续推进等中性选项。",
                 "8) 事件保持现实、日常、年龄逻辑正确。",
                 "9) 不得强制使用你出生了/婴儿开局叙事，除非角色年龄明确 <= 1 岁。",
-                "10) 若本轮涉及可变数据（主角属性/NPC属性/背包/时间/状态值），必须在 HTML 卡片之后追加 state-patch 代码块。",
+                "10) 【禁止输出 state-patch】本轮只需输出 HTML 卡片，严禁输出 ```state-patch``` 或任何 JSON 数据块，数据同步将由系统后台自动完成。",
                 `11) 回复末尾必须追加且只追加一次结束符：${endMarker}（仅放在整条回复最末尾）。`,
                 "12) 若当前设定存在待玩家选择的开局模式/路线/阵营，不得替玩家拍板，只能给出候选选项。",
                 "13) 【数值格式】对于有上限的属性，请使用 '当前值/最大值' 格式（如 80/100）；无上限属性直接写数字。",
@@ -6007,12 +6007,14 @@
         function getIntroCoreRules() {
             return [
                 "【任务】你是开局介绍生成器。",
-                "请基于设定与角色档案，输出一张可直接渲染的 HTML 卡片。",
+                "请基于设定与角色档案，输出一张高质量、细腻的 HTML 卡片，字数不少于 400 字。",
                 "强制要求：最外层必须是 <article class=\"ai-beauty-card\">。",
                 "【输出格式】请直接开始输出 HTML 内容，最外层必须是 <article class=\"ai-beauty-card\">，禁止任何前缀说明、禁止用Markdown代码块包裹、禁止在HTML前后输出任何解释文字。",
                 "卡片内必须包含：世界背景简述、主角当前身份与处境、当前时间、关键NPC概览、1-3条编号选项。",
                 "必须严格沿用本地模板骨架的 data-block 结构，不得把 event/status/relations/choices 混成同一区块。",
-                "若设定存在待玩家选择的开局模式/路线/阵营，请只在选项中列出，不得替玩家代选。"
+                "若设定存在待玩家选择的开局模式/路线/阵营，请只在选项中列出，不得替玩家代选。",
+                "【禁止】在本次回复中输出 state-patch 块，数据同步由后台审计员负责。",
+                "【特别要求】在剧情描写中，请自然地提及主角的初始身体状况（如健康、体力、心情等数值）、随身携带的 2-3 件重要物品，以及身边的关键人物及其关系，以便系统审计员进行初始化数据提取。"
             ];
         }
         return { getBeautyCoreRules, getIntroCoreRules };
@@ -6235,6 +6237,23 @@
                         UIRenderer.renderSocialList(latest);
                     }
                     StateService.save();
+
+                    // 开局辅路审计：补全初始属性、背包、NPC（异步，不阻塞渲染）
+                    (async () => {
+                        try {
+                            const patch = await StateAuditorService.auditStateChange(StateService.get(), "初始化开局", streamText);
+                            const changed = StateAuditorService.applyAuditPatch(patch);
+                            if (changed) {
+                                const audited = StateService.get();
+                                UIRenderer.renderTop(audited);
+                                UIRenderer.renderInventory(audited);
+                                UIRenderer.renderSocialList(audited);
+                                console.log("[StateAuditor] 开局数据已自动补全:", patch);
+                            }
+                        } catch (e) {
+                            console.warn("[StateAuditor] 开局审计异常:", e);
+                        }
+                    })();
                 }
             } catch (e) {
                 InitLoadingService.close();
@@ -6391,7 +6410,7 @@
             if (lockedSkeleton) {
                 const hint = skeletonToHint(lockedSkeleton);
                 if (hint) {
-                    parts.push(`【强制 HTML 结构要求（必须严格遵守此标签层级和 data-block 属性）】\n${hint}`);
+                    parts.push(`【强制 HTML 结构要求（结构圣经——必须严格遵守此标签层级和 data-block 属性，禁止漂移为 Markdown）】\n${hint}`);
                 }
             } else {
                 // 降级：从历史记录里找最后一张卡片提取骨架（兼容尚未锁定的情况）
@@ -6403,7 +6422,7 @@
                 if (lastHtmlEntry) {
                     const skeleton = extractSkeleton(lastHtmlEntry.text);
                     if (skeleton) {
-                        parts.push(`【UI布局参考（仅保留结构，请在此基础上填充新内容）】\n${skeleton}`);
+                        parts.push(`【UI布局参考（必须沿用此结构填充新内容，禁止输出 Markdown）】\n${skeleton}`);
                     }
                 }
             }
@@ -6462,7 +6481,8 @@
 
             return [
                 "【美化卡片强制规则——最高优先级】",
-                "⚠️ 本次回复必须输出 HTML 卡片，严禁输出任何 Markdown 文本。",
+                "⚠️ 本次回复必须输出 HTML 卡片，严禁输出任何 Markdown 文本（如 ##、**、> 等符号）。",
+                "⚠️ 严禁使用 ```html 代码块包裹输出，必须直接以 <article 或 <div 开头。",
                 `视觉主题：${normalizedTheme}`,
                 isDark
                     ? "暗夜模式：透明/半透明深色背景，文字高对比。"
@@ -6474,7 +6494,8 @@
                 "3. 在 data-block=\"event\" 中填入不少于 400 字的剧情描写。",
                 "4. 在 data-block=\"status\" 中更新当前属性数值。",
                 "5. 禁止输出任何 Markdown 代码块标签（```html），直接以 <article 或 <div 开头。",
-                lockedSkeleton ? "【锁定骨架（必须严格遵守，data-block 顺序和命名不可改变）】" : "【卡片结构（必须严格遵守，data-block 顺序和命名不可改变）】",
+                "6. 严禁自行增加、删除或修改 HTML 标签层级，只能在现有的 div/section 容器内填充文字内容。",
+                lockedSkeleton ? "【锁定骨架（结构圣经——必须 100% 沿用，data-block 顺序和命名不可改变）】" : "【卡片结构（必须严格遵守，data-block 顺序和命名不可改变）】",
                 skeletonHint,
                 "输出完整 HTML 卡片后，若有状态变化必须在卡片之后追加 ```state-patch {...}``` 块（不要放在卡片内部）。"
             ].join("\n");
@@ -7330,7 +7351,9 @@
 
             const [
                 protagonistNamePanel,
-                protagonistBasePanel
+                protagonistBasePanel,
+                npcPanel,
+                inventoryPanel
             ] = await Promise.all([
                 // 姓名
                 AIRequestService.requestCompletionWithFallback({
@@ -7359,7 +7382,54 @@
                         { role: "user", content: sharedUserContext }
                     ],
                     temperature: 0.1, timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
-                }).then((t) => parseFirstJsonObject(t) || {})
+                }).then((t) => parseFirstJsonObject(t) || {}),
+
+                // NPC 动态生成：严禁套用默认模板，必须契合世界观
+                AIRequestService.requestCompletionWithFallback({
+                    config: apiConfig, fetchUrl, headers, model: apiConfig.model,
+                    messages: [
+                        { role: "system", content: [
+                            "你是文游初始化-世界观NPC构建器。",
+                            "【禁止】使用默认的母亲、父亲、青梅竹马等通用套路，除非设定文本中明确出现了这些角色。",
+                            "【必须】根据设定文本的主题（如：修仙、无限流、赛博朋克、宫斗、惊悚、年代文），构建 3 位身份背景完全契合该世界观的关键 NPC。",
+                            "例如：修仙世界→传功长老、竞争对手、神秘师兄；赛博朋克→黑市医生、仿生人保镖、情报掮客；惊悚→神秘室友、守门人、失忆者。",
+                            "每位 NPC 必须有鲜明的世界观身份，不得使用现代都市通用角色。",
+                            "只输出 JSON 对象，字段：npcs（数组），每项含：id, name, gender, relation, favor, status, mood, traits, profile（含 age, identity, personality）。",
+                            "favor 为 0-100 整数，status 为字符串，mood 为字符串，traits 为字符串。"
+                        ].join("\n") },
+                        { role: "user", content: sharedUserContext }
+                    ],
+                    temperature: 0.8,
+                    timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
+                }).then((t) => {
+                    const parsed = parseFirstJsonObject(t);
+                    if (parsed && Array.isArray(parsed.npcs)) return parsed;
+                    if (Array.isArray(parsed)) return { npcs: parsed };
+                    return { npcs: [] };
+                }).catch(() => ({ npcs: [] })),
+
+                // 背包动态生成：根据世界观生成契合的初始道具
+                AIRequestService.requestCompletionWithFallback({
+                    config: apiConfig, fetchUrl, headers, model: apiConfig.model,
+                    messages: [
+                        { role: "system", content: [
+                            "你是文游初始化-世界观背包构建器。",
+                            "【禁止】使用手机、钱包、身份证等现代通用物品，除非设定明确是现代背景。",
+                            "【必须】根据设定文本的主题生成 3-5 件完全契合该世界观的初始道具。",
+                            "例如：修仙世界→入门功法残页、聚气丹×3、储物袋；赛博朋克→神经接口破解器、医疗纳米喷雾、加密通讯芯片；古代→碎银两、令牌、匕首。",
+                            "只输出 JSON 对象，字段：inventory（数组），每项含：id, name, type, desc, effect, count。",
+                            "count 为正整数，type 为道具分类字符串，desc 和 effect 为简短中文描述。"
+                        ].join("\n") },
+                        { role: "user", content: sharedUserContext }
+                    ],
+                    temperature: 0.8,
+                    timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
+                }).then((t) => {
+                    const parsed = parseFirstJsonObject(t);
+                    if (parsed && Array.isArray(parsed.inventory)) return parsed;
+                    if (Array.isArray(parsed)) return { inventory: parsed };
+                    return { inventory: [] };
+                }).catch(() => ({ inventory: [] }))
             ]);
 
             const stagedDraft = {
@@ -7367,13 +7437,32 @@
                 ...protagonistNamePanel,
                 ...protagonistBasePanel,
                 stats: [],     // 由 Intro 卡片的 state-patch 补全
-                inventory: [],
-                npcs: []
+                inventory: Array.isArray(inventoryPanel.inventory) ? inventoryPanel.inventory : [],
+                npcs: Array.isArray(npcPanel.npcs) ? npcPanel.npcs : []
             };
 
             if (typeof onProgress === "function") onProgress("结构校验");
             // finalize 阶段改为本地 sanitizePlan，省掉一次串行 AI 请求
             const sanitized = sanitizePlan(stagedDraft, selectedGender);
+
+            // NPC 兜底：如果 AI 未生成任何 NPC，触发单字段恢复
+            if (!sanitized.npcs || sanitized.npcs.length === 0) {
+                if (typeof onProgress === "function") onProgress("补全NPC");
+                const recovered = await requestSingleFieldRecovery({
+                    apiConfig, scenarioText, selectedGender, draftPlan: sanitized, field: "npcs", onProgress
+                });
+                sanitized.npcs = Array.isArray(recovered.npcs) ? recovered.npcs : [];
+            }
+
+            // 背包兜底：如果 AI 未生成任何道具，触发单字段恢复
+            if (!sanitized.inventory || sanitized.inventory.length === 0) {
+                if (typeof onProgress === "function") onProgress("补全背包");
+                const recovered = await requestSingleFieldRecovery({
+                    apiConfig, scenarioText, selectedGender, draftPlan: sanitized, field: "inventory", onProgress
+                });
+                sanitized.inventory = Array.isArray(recovered.inventory) ? recovered.inventory : [];
+            }
+
             return ensureNameFallback(sanitized, scenarioText);
         }
         async function requestSingleFieldRecovery({ apiConfig, scenarioText, selectedGender, draftPlan, field, onProgress }) {
@@ -7567,6 +7656,140 @@
         return { buildInitPlan };
     })();
 
+    const StateAuditorService = (() => {
+        async function auditStateChange(state, userText, aiResponse) {
+            const config = SettingsService.getApiConfig();
+            if (config.blocked || !config.model) return null;
+
+            const scenarioText = SettingsService.getScenarioTextForModel();
+            const fetchUrl = AIRequestService.buildFetchUrl();
+            const headers = AIRequestService.buildHeaders(config);
+
+            // 从 AI 回复中提取纯文本，避免把 HTML 标签喂给审计员
+            const plainResponse = String(aiResponse || "")
+                .replace(/<style[\s\S]*?<\/style>/gi, "")
+                .replace(/<script[\s\S]*?<\/script>/gi, "")
+                .replace(/<[^>]+>/g, " ")
+                .replace(/\s+/g, " ")
+                .trim()
+                .slice(0, 1500);
+
+            const systemPrompt = [
+                "你是文游数据同步审计员。根据【本轮剧情内容】，提取主角的状态变化、背包变动及NPC关系变动。",
+                "仅输出合法 JSON 对象，不要任何解释、不要代码块包裹。",
+                "格式：",
+                "{",
+                '  "stats": [{"key": "属性key", "label": "属性名", "value": 0}],',
+                '  "inventory": [{"op": "upsert", "id": "唯一id", "name": "物品名", "type": "类型", "count": 1, "desc": "描述", "effect": "效果"}],',
+                '  "npcs": [{"id": "npc_id", "name": "NPC名", "favor": 0, "status": "状态", "mood": "心情", "relation": "关系"}]',
+                "}",
+                "规则：",
+                "- stats 只列出本轮发生变化的属性，value 为变化后的绝对值（整数）。",
+                "- inventory op 为 upsert（新增或更新）或 remove（移除）。",
+                "- npcs 只列出本轮好感/状态发生变化的 NPC，favor 为变化后的绝对值（0-100整数）。",
+                "- 若某类无变化，对应数组留空 []，不要省略字段。",
+                "- 严禁编造剧情中未发生的变化。"
+            ].join("\n");
+
+            const userPrompt = [
+                `【当前状态简报】\n属性：${JSON.stringify((state.stats || []).map(s => ({ key: s.key, label: s.label, value: s.value })))}\n背包：${(state.inventory || []).map(i => i.name).join("，") || "空"}\nNPC：${(state.npcs || []).map(n => `${n.name}(好感${n.favor ?? "?"})`).join("，") || "无"}`,
+                `【玩家行动】\n${userText}`,
+                `【最新剧情】\n${plainResponse}`,
+                "请提取上述剧情带来的数值变动、物品获得/失去、好感度增减："
+            ].join("\n\n");
+
+            try {
+                const result = await AIRequestService.requestCompletionWithFallback({
+                    config, fetchUrl, headers, model: config.model,
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: userPrompt }
+                    ],
+                    temperature: 0.1,
+                    timeoutMs: 15000
+                });
+                const match = String(result || "").match(/\{[\s\S]*\}/);
+                if (!match) return null;
+                return JSON.parse(match[0]);
+            } catch (e) {
+                console.warn("[StateAuditorService] 审计失败:", e);
+                return null;
+            }
+        }
+
+        function applyAuditPatch(patch) {
+            if (!patch) return false;
+            const state = StateService.get();
+            let changed = false;
+
+            // 应用 stats
+            if (Array.isArray(patch.stats) && patch.stats.length > 0) {
+                const statsArr = Array.isArray(state.stats) ? state.stats : (state.stats = []);
+                patch.stats.forEach(({ key, label, value }) => {
+                    if (value === undefined || value === null) return;
+                    const existing = statsArr.find(s => s.key === key || s.label === label);
+                    if (existing) {
+                        existing.value = value;
+                        changed = true;
+                    } else if (label) {
+                        // 开局或新属性：允许直接创建，推断图标
+                        const icon = /体力|健康|生命/.test(label) ? "💪"
+                            : /心情|情绪|快乐/.test(label) ? "😊"
+                            : /金钱|财富|银两|铜钱/.test(label) ? "💰"
+                            : /魅力|颜值|外貌/.test(label) ? "✨"
+                            : /智力|学识|知识/.test(label) ? "📚"
+                            : /武力|战力|攻击/.test(label) ? "⚔️"
+                            : /名望|声望|名誉/.test(label) ? "🏆"
+                            : /灵力|法力|魔力/.test(label) ? "🔮"
+                            : "📊";
+                        statsArr.push({ key: key || label, label, icon, value });
+                        changed = true;
+                    }
+                });
+            }
+
+            // 应用 inventory
+            if (Array.isArray(patch.inventory) && patch.inventory.length > 0) {
+                if (!Array.isArray(state.inventory)) state.inventory = [];
+                patch.inventory.forEach(item => {
+                    if (!item.name) return;
+                    const idx = state.inventory.findIndex(i => i.id === item.id || i.name === item.name);
+                    if (item.op === "remove") {
+                        if (idx !== -1) { state.inventory.splice(idx, 1); changed = true; }
+                    } else {
+                        if (idx !== -1) {
+                            Object.assign(state.inventory[idx], item);
+                        } else {
+                            state.inventory.push({ id: item.id || `item_${Date.now()}`, ...item });
+                        }
+                        changed = true;
+                    }
+                });
+            }
+
+            // 应用 npcs
+            if (Array.isArray(patch.npcs) && patch.npcs.length > 0) {
+                if (!Array.isArray(state.npcs)) state.npcs = [];
+                patch.npcs.forEach(npcPatch => {
+                    if (!npcPatch.name) return;
+                    const existing = state.npcs.find(n => n.id === npcPatch.id || n.name === npcPatch.name);
+                    if (existing) {
+                        if (npcPatch.favor !== undefined) existing.favor = npcPatch.favor;
+                        if (npcPatch.status) existing.status = npcPatch.status;
+                        if (npcPatch.mood) existing.mood = npcPatch.mood;
+                        if (npcPatch.relation) existing.relation = npcPatch.relation;
+                        changed = true;
+                    }
+                });
+            }
+
+            if (changed) StateService.save();
+            return changed;
+        }
+
+        return { auditStateChange, applyAuditPatch };
+    })();
+
     const ChatService = (() => {
         let isGenerating = false;
         async function decideRetry(reasonTitle, reasonLines = []) {
@@ -7687,6 +7910,10 @@
                 if (beautyModeEnabled && policyConfig.enableHtmlCardForce) {
                     const turnChoices = ChoiceService.collectChoices(rawVisibleText);
                     const cardId = ScenarioCardService.getSelectedId();
+                    // 修复：如果 AI 未按要求输出 HTML，强制封装进锁定骨架
+                    if (!HtmlNormalizeService.containsHtmlCard(rawVisibleText)) {
+                        console.log("[ChatService] AI 未输出 HTML 卡片，启动强制结构恢复...");
+                    }
                     displayText = HtmlCardRenderPipelineService.finalizeCardLayout({
                         text: rawVisibleText,
                         beautySetting: beautyCardSetting,
@@ -7717,6 +7944,24 @@
                 UIRenderer.renderTop(currentState);
                 UIRenderer.renderInventory(currentState);
                 UIRenderer.renderSocialList(currentState);
+
+                // 第二阶段：辅路审计（异步，不阻塞 UI）
+                // 剧情渲染完成后，后台静默分析本轮状态变化并自动刷新面板
+                (async () => {
+                    try {
+                        const patch = await StateAuditorService.auditStateChange(StateService.get(), userText, rawText);
+                        const changed = StateAuditorService.applyAuditPatch(patch);
+                        if (changed) {
+                            const audited = StateService.get();
+                            UIRenderer.renderTop(audited);
+                            UIRenderer.renderInventory(audited);
+                            UIRenderer.renderSocialList(audited);
+                            console.log("[StateAuditor] 数据已自动更新:", patch);
+                        }
+                    } catch (e) {
+                        console.warn("[StateAuditor] 辅路审计异常:", e);
+                    }
+                })();
             } catch (error) {
                 if (!uiUnlocked) {
                     isGenerating = false;
