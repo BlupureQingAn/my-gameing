@@ -8789,20 +8789,26 @@ const token = delta.content || "";
 
 
         
-        function ensurePresetAsIndependentCard(payload, options = {}) {
-            const forceCreateNew = options?.forceCreateNew === true;
-            const preserveExistingContent = options?.preserveExistingContent === true;
-            const targetId = forceCreateNew
-                ? `${String(payload.id || "scenario_preset").replace(/[^\w-]/g, "_")}_run_${Date.now()}`
-                : payload.id;
-    const existedCard = ScenarioCardService.loadCards().find((c) => c.id === targetId || c.title === payload.title);
-    let card;
+function ensurePresetAsIndependentCard(payload, options = {}) {
+    const forceCreateNew = options?.forceCreateNew === true;
+    const preserveExistingContent = options?.preserveExistingContent === true;
     
-    // 修改此处的判断逻辑
-    if (existedCard) {
-        // 如果卡片已存在，无论是否 preserveExistingContent，都直接使用现有卡片，不再 upsert
-        card = existedCard;
+    // 生成稳定的 ID
+    const targetId = forceCreateNew
+        ? `${String(payload.id || "scenario_preset").replace(/[^\w-]/g, "_")}_run_${Date.now()}`
+        : payload.id;
+
+    // 获取当前卡片列表
+    const allCards = ScenarioCardService.loadCards();
+    // 检查是否存在（通过 ID 或 标题 匹配）
+    const existingCard = allCards.find((c) => c.id === targetId || c.title === payload.title);
+    
+    let card;
+    if (existingCard) {
+        // 如果已存在且需要保留内容，或者不是强制新建，就使用现有的
+        card = existingCard;
     } else {
+        // 否则，创建一个新的
         card = ScenarioCardService.upsertCard({
             id: targetId,
             title: payload.title || "模板卡片",
@@ -8810,14 +8816,19 @@ const token = delta.content || "";
             text: String(payload.text || "").trim() || AppConfig.defaultScenario
         });
     }
-            if (!card) throw new Error("模板卡片写入失败");
-            lastAutoCreatedCardId = existed ? null : card.id;
-            ScenarioCardService.setSelectedId(card.id);
-            StateService.init();
-            SettingsService.loadToUI();
-            renderAll();
-            return card;
-        }
+
+    if (!card) throw new Error("模板卡片写入失败");
+
+    // 注意这里：变量名必须与上方定义的 existingCard 保持一致
+    lastAutoCreatedCardId = existingCard ? null : card.id;
+    
+    ScenarioCardService.setSelectedId(card.id);
+    StateService.init();
+    SettingsService.loadToUI();
+    renderAll();
+    return card;
+}
+
 function buildPresetCardId(preset) {
     // 移除 Date.now()，改用 title 兜底。只要标题不变，ID 就不变。
     const raw = String(preset?.id || preset?.title || "unknown"); 
@@ -8870,32 +8881,35 @@ function buildPresetCardId(preset) {
         }
 
 async function playPresetTemplate(preset) {
+    // 1. 获取稳定 ID
     const targetId = ScenarioTemplateService.buildPresetCardId(preset);
     const allCards = ScenarioCardService.loadCards();
+    
+    // 2. 检查列表里是否已经有这张官方卡
     const existingCard = allCards.find(c => c.id === targetId || (c.sourceType === "official" && c.title === preset.title));
 
     if (existingCard) {
-        console.log("检测到现有卡片，直接进入游玩:", existingCard.id);
+        console.log("卡片已存在，直接进入游玩:", existingCard.id);
         await playScenarioCard(existingCard.id);
     } else {
-        console.log("执行官方模板加载流程");
-        // 注意：这里不需要手动开 InitLoadingService.open，因为 applyPresetTemplate 内部会开
+        console.log("准备加载新模板...");
+        // 移除多余的 open 提示，让 applyPresetTemplate 自己处理
         try {
+            // 注意：applyPresetTemplate 内部会调用 ensurePresetAsIndependentCard
             const ok = await applyPresetTemplate(preset, { 
                 silent: true, 
                 forceCreateNew: false 
             });
 
             if (ok) {
-                // 关键点：稍微延迟 100ms 确保 LocalStorage 写入和 StateService 刷新完成
-                setTimeout(async () => {
-                    const newId = ScenarioCardService.getSelectedId();
-                    await playScenarioCard(newId);
-                }, 100);
+                // 成功后，获取最新的选中 ID 并开始游玩
+                const newId = ScenarioCardService.getSelectedId();
+                await playScenarioCard(newId);
             }
         } catch (err) {
             InitLoadingService.close();
-            console.error("加载官方模板失败:", err);
+            console.error("加载模板失败:", err);
+            NoticeModalService.showInfo({ title: "加载失败", descHtml: err.message });
         }
     }
 }
