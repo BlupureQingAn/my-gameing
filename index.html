@@ -1792,10 +1792,10 @@ body[data-theme="dark"] .ai-beauty-card {
 
         @keyframes fallCard {
             0% {
-                transform: translateY(-15%) rotate(0deg);
+                transform: translateY(-60px) rotate(0deg);
             }
             100% {
-                transform: translateY(120%) rotate(240deg);
+                transform: translateY(160vh) rotate(240deg);
             }
         }
 
@@ -5300,7 +5300,7 @@ function rebuildChoicesBlock(body, labels = []) {
                     b.className = "card-bear";
                     b.innerText = bears[i % bears.length];
                     b.style.left = `${Math.random() * 100}%`;
-                    b.style.animationDuration = `${8 + Math.random() * 10}s`;
+                    b.style.animationDuration = `${4.2 + Math.random() * 5.8}s`;
                     b.style.animationDelay = `${Math.random() * 8}s`;
                     b.style.fontSize = `${12 + Math.random() * 8}px`;
                     layer.appendChild(b);
