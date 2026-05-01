@@ -1753,6 +1753,11 @@ body[data-theme="dark"] .ai-beauty-card {
             user-select: none;
         }
 
+        .ai-beauty-card .card-bear-host {
+            position: relative;
+            overflow: hidden;
+        }
+
         .ai-beauty-card .card-bear-layer {
             position: absolute;
             inset: 0;
@@ -5283,7 +5288,10 @@ function rebuildChoicesBlock(body, labels = []) {
             const bears = ["🧸", "ʕ•ᴥ•ʔ", "ʕ·ᴥ·ʔ", "🧸"];
             cards.forEach((card) => {
                 if (!(card instanceof HTMLElement)) return;
-                if (card.querySelector(".card-bear-layer")) return;
+                const host = card.querySelector(':scope > div[style*="position:relative"][style*="padding:8px"]') || card;
+                if (!(host instanceof HTMLElement)) return;
+                if (host.querySelector(":scope > .card-bear-layer")) return;
+                host.classList.add("card-bear-host");
                 const layer = document.createElement("div");
                 layer.className = "card-bear-layer";
                 const count = 7;
@@ -5297,7 +5305,9 @@ function rebuildChoicesBlock(body, labels = []) {
                     b.style.fontSize = `${12 + Math.random() * 8}px`;
                     layer.appendChild(b);
                 }
-                card.insertBefore(layer, card.firstChild);
+                const firstHeader = host.querySelector(':scope > .ai-beauty-card-title, :scope > header');
+                if (firstHeader && firstHeader.parentElement === host) host.insertBefore(layer, firstHeader);
+                else host.insertBefore(layer, host.firstChild);
             });
         }
         return { createBears, decorateAiCardBears };
