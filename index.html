@@ -3277,7 +3277,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 if (el.querySelector("*")) return false;
                 const text = String(el.textContent || "").trim();
                 if (!text) return false;
-                return /(?:好感\s*[:：]?\s*-?\d{1,3}|-?\d{1,3}\s*好感|(?:❤|❤️|💖|🧡)\s*-?\d{1,3})/u.test(text);
+                return /(?:好感\s*[:：]?\s*-?\d{1,3}|-?\d{1,3}\s*好感|(?:❤|❤️|💖|🧡|💗|💘|💕|🤍)\s*[:：]?\s*-?\d{1,3})/u.test(text);
             });
             favorLines.forEach((lineEl) => {
                 if (!(lineEl instanceof HTMLElement)) return;
