@@ -2831,28 +2831,14 @@ function escapeHtml(str) {
         }
         function cleanupBrokenInlineSvgArtifacts(root) {
             if (!(root instanceof HTMLElement)) return;
-            // Remove unstable inline SVG data-url decorations from model output.
-            root.querySelectorAll("*").forEach((el) => {
-                if (!(el instanceof HTMLElement)) return;
-                const styleText = String(el.getAttribute("style") || "");
-                if (/data:image\/svg\+xml/i.test(styleText)) {
-                    el.remove();
-                    return;
-                }
-                // Browser can split malformed inline style into garbage attributes.
-                Array.from(el.attributes || []).forEach((attr) => {
-                    const name = String(attr.name || "");
-                    if (/[/:]/.test(name) || /^www\./i.test(name)) el.removeAttribute(name);
-                });
-            });
-
+            // Keep cleanup narrow: only remove leaked css text fragments.
             const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
             const badTextNodes = [];
             while (walker.nextNode()) {
                 const textNode = walker.currentNode;
                 const text = String(textNode.nodeValue || "").trim();
                 if (!text) continue;
-                if (/^'\);\s*background-size:/i.test(text) || /pointer-events\s*:\s*none/i.test(text) || /background-size:\s*\d+px\s+\d+px/i.test(text)) {
+                if (/^'\);\s*background-size:/i.test(text) || /^&gt;\s*'\);\s*background-size:/i.test(text)) {
                     badTextNodes.push(textNode);
                 }
             }
@@ -2862,6 +2848,8 @@ function escapeHtml(str) {
             const raw = String(text || "").trim();
             const fenced = extractHtmlFromCodeFence(raw);
             let candidate = (fenced && containsHtmlCard(fenced)) ? fenced : raw;
+            // Remove known leaked tail from malformed inline svg style quoting.
+            candidate = candidate.replace(/'\);\s*background-size:\s*[^;]{1,80};\s*opacity:\s*[^;]{1,20};\s*pointer-events:\s*none;?"&gt;/gi, "");
             if (!containsHtmlCard(candidate)) {
                 if (raw.length > 10) console.warn("[normalizeHtmlCard] containsHtmlCard=false, raw前200:", JSON.stringify(raw.slice(0, 200)));
                 return candidate;
