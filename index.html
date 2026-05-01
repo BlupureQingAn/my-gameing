@@ -2188,10 +2188,19 @@
                 }
                 return choice;
             };
+            const hasChoiceAncestor = (el) => {
+                if (!(el instanceof HTMLElement)) return false;
+                let parent = el.parentElement;
+                while (parent && parent !== card) {
+                    if (isTrueChoiceNode(parent)) return true;
+                    parent = parent.parentElement;
+                }
+                return false;
+            };
             card.querySelectorAll("li, [data-choice], button, a, p, div, span").forEach((node) => {
                 const el = node;
                 if (!(el instanceof HTMLElement)) return;
-                if (isTrueChoiceNode(el)) el.classList.add("ai-choice-item");
+                if (isTrueChoiceNode(el) && !hasChoiceAncestor(el)) el.classList.add("ai-choice-item");
                 else el.classList.remove("ai-choice-item");
             });
             if (card.dataset.choiceBound === "1") return;
