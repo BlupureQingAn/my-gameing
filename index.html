@@ -2829,6 +2829,35 @@ function escapeHtml(str) {
                 }
             });
         }
+        function cleanupBrokenInlineSvgArtifacts(root) {
+            if (!(root instanceof HTMLElement)) return;
+            // Remove unstable inline SVG data-url decorations from model output.
+            root.querySelectorAll("*").forEach((el) => {
+                if (!(el instanceof HTMLElement)) return;
+                const styleText = String(el.getAttribute("style") || "");
+                if (/data:image\/svg\+xml/i.test(styleText)) {
+                    el.remove();
+                    return;
+                }
+                // Browser can split malformed inline style into garbage attributes.
+                Array.from(el.attributes || []).forEach((attr) => {
+                    const name = String(attr.name || "");
+                    if (/[/:]/.test(name) || /^www\./i.test(name)) el.removeAttribute(name);
+                });
+            });
+
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+            const badTextNodes = [];
+            while (walker.nextNode()) {
+                const textNode = walker.currentNode;
+                const text = String(textNode.nodeValue || "").trim();
+                if (!text) continue;
+                if (/^'\);\s*background-size:/i.test(text) || /pointer-events\s*:\s*none/i.test(text) || /background-size:\s*\d+px\s+\d+px/i.test(text)) {
+                    badTextNodes.push(textNode);
+                }
+            }
+            badTextNodes.forEach((node) => node.parentNode && node.parentNode.removeChild(node));
+        }
         function normalizeHtmlCard(text) {
             const raw = String(text || "").trim();
             const fenced = extractHtmlFromCodeFence(raw);
@@ -2859,6 +2888,7 @@ if (card && card instanceof HTMLElement) {
         while (nested.firstChild) frag.appendChild(nested.firstChild);
         nested.replaceWith(frag);
     });
+    cleanupBrokenInlineSvgArtifacts(card);
     pruneEmptyElements(card);
     return card.outerHTML;
 }
@@ -5264,7 +5294,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 b.className = "bear";
                 b.innerText = bears[i % bears.length];
                 b.style.left = `${Math.random() * 100}%`;
-                b.style.animationDuration = `${10 + Math.random() * 12}s`;
+                b.style.animationDuration = `${15 + Math.random() * 12}s`;
                 b.style.animationDelay = `${Math.random() * 8}s`;
                 b.style.fontSize = `${15 + Math.random() * 9}px`;
                 layer.appendChild(b);
@@ -5290,7 +5320,7 @@ function rebuildChoicesBlock(body, labels = []) {
                     b.className = "card-bear";
                     b.innerText = bears[i % bears.length];
                     b.style.left = `${Math.random() * 100}%`;
-                    b.style.animationDuration = `${4.2 + Math.random() * 5.8}s`;
+                    b.style.animationDuration = `${7 + Math.random() * 5.8}s`;
                     b.style.animationDelay = `${Math.random() * 8}s`;
                     b.style.fontSize = `${12 + Math.random() * 8}px`;
                     layer.appendChild(b);
