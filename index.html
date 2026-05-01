@@ -3268,6 +3268,37 @@ function rebuildChoicesBlock(body, labels = []) {
             if (filtered.length === lines.length) return;
             eventBlock.textContent = filtered.join("\n").trim();
         }
+        function enhanceRelationsFavorVisual(body) {
+            if (!(body instanceof HTMLElement)) return;
+            const relationsBlock = getDirectBlockMap(body).get("relations");
+            if (!(relationsBlock instanceof HTMLElement)) return;
+            const favorLines = Array.from(relationsBlock.querySelectorAll("*")).filter((el) => {
+                if (!(el instanceof HTMLElement)) return false;
+                if (el.querySelector("*")) return false;
+                const text = String(el.textContent || "").trim();
+                if (!text) return false;
+                return /(?:好感\s*[:：]?\s*-?\d{1,3}|-?\d{1,3}\s*好感|(?:❤|❤️|💖|🧡)\s*-?\d{1,3})/u.test(text);
+            });
+            favorLines.forEach((lineEl) => {
+                if (!(lineEl instanceof HTMLElement)) return;
+                const parent = lineEl.parentElement;
+                if (!(parent instanceof HTMLElement)) return;
+                if (parent.querySelector(':scope > [data-favor-visual="1"]')) return;
+                const text = String(lineEl.textContent || "");
+                const m = text.match(/(-?\d{1,3})/);
+                if (!m) return;
+                const favor = Math.max(0, Math.min(100, Number(m[1]) || 0));
+                const favorColor = favor >= 70 ? "var(--theme-primary)" : favor >= 40 ? "var(--theme-secondary)" : "#e74c3c";
+                const filled = Math.max(0, Math.min(5, Math.round(favor / 20)));
+                const hearts = `${"❤️".repeat(filled)}${"🤍".repeat(5 - filled)}`;
+
+                const visual = document.createElement("div");
+                visual.setAttribute("data-favor-visual", "1");
+                visual.style.cssText = "margin-top:6px;";
+                visual.innerHTML = `<div style="height:5px;border-radius:999px;background:color-mix(in srgb,var(--text-muted) 25%, transparent);overflow:hidden;"><div style="height:100%;width:${favor}%;background:${favorColor};border-radius:999px;"></div></div><div style="margin-top:4px;font-size:.72rem;letter-spacing:1px;color:${favorColor};opacity:.92;">${hearts}</div>`;
+                parent.insertBefore(visual, lineEl);
+            });
+        }
         function enforceCardStructure(html, { titleHint = "剧情推进", nowText = "", lockedSkeleton = null, preferredChoices = [], choiceSource = "turn" } = {}) {
             const normalized = HtmlNormalizeService.normalizeHtmlCard(html);
             if (!HtmlNormalizeService.isRenderableHtmlCard(normalized)) return normalized;
@@ -3351,6 +3382,7 @@ function rebuildChoicesBlock(body, labels = []) {
  //               if (choiceSource === "opening" || choiceSource === "turn") rebuildChoicesBlock(body, normalizedChoices);
  //               else if (normalizedChoices.length) rebuildChoicesBlock(body, normalizedChoices);
                 stripInlineChoicesFromEvent(body);
+                enhanceRelationsFavorVisual(body);
                 HtmlCardTemplateService.getRequiredBlocks().forEach((name) => {
                     const node = getDirectBlockMap(body).get(name);
                     if (node && String(node.textContent || "").trim() === "") {
