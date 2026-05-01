@@ -6251,7 +6251,13 @@ function buildPresetCardId(preset) {
                 // 如果有锁定骨架且前端支持强制对齐，尝试用骨架纠偏结构
                 if (lockedSkeleton && typeof HtmlStructureService !== "undefined" && HtmlStructureService.enforceCardStructure) {
                     try {
-                        const enforced = HtmlStructureService.enforceCardStructure(normalized, lockedSkeleton);
+                        const enforced = HtmlStructureService.enforceCardStructure(normalized, {
+                            lockedSkeleton,
+                            titleHint,
+                            nowText,
+                            preferredChoices,
+                            choiceSource
+                        });
                         return enforced || normalized;
                     } catch (e) {
                         return normalized;
@@ -8856,10 +8862,26 @@ function openNpcProfile(npcId) {
                     <div style="font-size:.85rem;color:var(--text);">${MarkdownService.escapeHtml(r.value)}</div>
                 </div>`).join("");
 
-            const memoryHtml = (mem && (mem.summary || (tags.promises && tags.promises.length))) ? `
+            const memoryTagSections = [
+                { label: "承诺", items: Array.isArray(tags.promises) ? tags.promises : [] },
+                { label: "冲突点", items: Array.isArray(tags.conflicts) ? tags.conflicts : [] },
+                { label: "秘密", items: Array.isArray(tags.secrets) ? tags.secrets : [] },
+                { label: "备注", items: Array.isArray(tags.notes) ? tags.notes : [] }
+            ].map((group) => {
+                const list = group.items
+                    .map((it) => getStr(it).trim())
+                    .filter(Boolean)
+                    .slice(0, 6);
+                if (!list.length) return "";
+                const chips = list.map((txt) => `<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;border:1px solid rgba(176,134,82,0.28);background:rgba(176,134,82,0.08);font-size:.74rem;color:var(--sub);">${MarkdownService.escapeHtml(txt)}</span>`).join("");
+                return `<div style="margin-top:8px;"><div style="font-size:.74rem;font-weight:700;color:var(--accent-dark);margin-bottom:4px;">${group.label}</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${chips}</div></div>`;
+            }).join("");
+            const hasMemoryContent = !!(mem && (getStr(mem.summary).trim() || memoryTagSections));
+            const memoryHtml = hasMemoryContent ? `
                 <div style="margin-top:12px;padding:10px 12px;border-radius:12px;background:rgba(176,134,82,0.05);border:1px dashed rgba(176,134,82,0.3);">
                     <div style="font-size:.78rem;font-weight:700;color:var(--accent-dark);margin-bottom:6px;">📝 记忆往事</div>
                     ${mem.summary ? `<div style="font-size:.82rem;color:var(--sub);margin-bottom:4px;">${MarkdownService.escapeHtml(getStr(mem.summary))}</div>` : ""}
+                    ${memoryTagSections}
                 </div>` : "";
 
             const desc = `
