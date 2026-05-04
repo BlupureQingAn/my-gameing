@@ -71,6 +71,10 @@ function errorResponse(msg, status = 500, detail = null) {
     });
 }
 
+function escapePocketBaseFilterValue(value) {
+    return String(value || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+}
+
 // ==================== 3. 数据库服务层 ====================
 
 async function getAdminToken(env) {
@@ -268,35 +272,56 @@ export default {
                 if (!authRes.ok) return errorResponse("权限验证失败", 401);
                 const userData = await authRes.json();
 
-                const cdkQuery = await fetch(`${pbUrl}/api/collections/cdks/records?filter=(code='${encodeURIComponent(code)}'%26%26used=false)`, {
+                const escapedCode = escapePocketBaseFilterValue(code);
+                const cdkQuery = await fetch(`${pbUrl}/api/collections/cdks/records?filter=(code='${escapedCode}'&&is_used=false)`, {
                     headers: { "Authorization": `Bearer ${adminToken}` }
                 });
                 const cdkData = await cdkQuery.json();
 
-                if (!cdkData.items.length) return errorResponse("卡密无效或已使用", 400);
+                if (!cdkData.items || !cdkData.items.length) return errorResponse("卡密无效或已使用", 400);
                 const cdk = cdkData.items[0];
 
                 // 先标记卡密已使用（防止并发重复兑换）
                 const markRes = await fetch(`${pbUrl}/api/collections/cdks/records/${cdk.id}`, {
                     method: "PATCH",
                     headers: { "Authorization": `Bearer ${adminToken}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ used: true, used_by: userData.record.id }),
+                    body: JSON.stringify({
+                        is_used: true,
+                        assigned_to: userData.record.id
+                    }),
                 });
-                if (!markRes.ok) return errorResponse("卡密兑换失败，请重试", 500);
+                if (!markRes.ok) {
+                    const errText = await markRes.text().catch(() => "");
+                    return errorResponse("卡密兑换失败，请重试", 500, errText);
+                }
 
                 // 再加余额（用数据库当前值做增量，避免覆盖并发写入）
                 const latestUserRes = await fetch(`${pbUrl}/api/collections/users/records/${userData.record.id}`, {
                     headers: { "Authorization": `Bearer ${adminToken}` }
                 });
+                if (!latestUserRes.ok) {
+                    const errText = await latestUserRes.text().catch(() => "");
+                    return errorResponse("读取用户信息失败", 500, errText);
+                }
                 const latestUser = await latestUserRes.json();
-                await fetch(`${pbUrl}/api/collections/users/records/${userData.record.id}`, {
+                const currentCoins = Number(latestUser.coins || 0);
+                const addCoins = Number(cdk.value || 0);
+                if (!Number.isFinite(addCoins)) {
+                    return errorResponse("卡密面额无效", 500);
+                }
+                const nextCoins = currentCoins + addCoins;
+                const balanceRes = await fetch(`${pbUrl}/api/collections/users/records/${userData.record.id}`, {
                     method: "PATCH",
                     headers: { "Authorization": `Bearer ${adminToken}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ coins: (latestUser.coins || 0) + cdk.value }),
+                    body: JSON.stringify({ coins: nextCoins }),
                     keepalive: true
                 });
+                if (!balanceRes.ok) {
+                    const errText = await balanceRes.text().catch(() => "");
+                    return errorResponse("卡密兑换成功但余额更新失败", 500, errText);
+                }
 
-                return new Response(JSON.stringify({ success: true, addedCoins: cdk.value }), {
+                return new Response(JSON.stringify({ success: true, addedCoins: addCoins, newBalance: nextCoins }), {
                     headers: { ...corsHeaders(), "Content-Type": "application/json" }
                 });
             }
