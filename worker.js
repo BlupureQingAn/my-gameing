@@ -64,6 +64,19 @@ function countTokens(text) {
     return Math.ceil(tokens);
 }
 
+function escapePocketBaseFilterValue(value) {
+    return String(value)
+        .replace(/\\/g, "\\\\")
+        .replace(/'/g, "\\'");
+}
+
+function normalizeRedeemCode(value) {
+    return String(value || "")
+        .trim()
+        .replace(/[\s\u00A0]+/g, "")
+        .toLowerCase();
+}
+
 function errorResponse(msg, status = 500, detail = null) {
     return new Response(JSON.stringify({ error: msg, detail }), {
         status,
@@ -71,9 +84,6 @@ function errorResponse(msg, status = 500, detail = null) {
     });
 }
 
-function escapePocketBaseFilterValue(value) {
-    return String(value || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
-}
 
 // ==================== 3. 数据库服务层 ====================
 
@@ -85,8 +95,7 @@ async function getAdminToken(env) {
     const res = await fetch(`${pbUrl}/api/collections/_superusers/auth-with-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(credentials),
-        keepalive: true
+        body: JSON.stringify(credentials)
     });
     
     if (res.ok) return (await res.json()).token;
@@ -95,8 +104,7 @@ async function getAdminToken(env) {
     const resOld = await fetch(`${pbUrl}/api/collections/admins/auth-with-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(credentials),
-        keepalive: true
+        body: JSON.stringify(credentials)
     });
     
     if (resOld.ok) return (await resOld.json()).token;
@@ -114,8 +122,7 @@ async function updateBalance(env, userId, newBalance, maxRetries = 3) {
                     "Authorization": `Bearer ${adminToken}`,
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ coins: newBalance }),
-                keepalive: true // 极其重要：确保后台任务在连接断开后继续完成
+                body: JSON.stringify({ coins: newBalance })
             });
             if (res.ok) return; // 成功，退出
             const errText = await res.text().catch(() => "");
@@ -258,12 +265,12 @@ export default {
                 const userAuthToken = request.headers.get("X-Auth-Token");
                 if (!userAuthToken) return errorResponse("请先登录", 401);
                 const { code } = await request.json();
-                if (!code) return errorResponse("请输入卡密", 400);
-                // 严格校验：只允许字母和数字，防止 filter 注入
-                if (!/^[A-Za-z0-9]{1,32}$/.test(code)) return errorResponse("卡密格式无效", 400);
+                const rawCode = String(code || "");
+                const normalizedCode = normalizeRedeemCode(rawCode);
+                if (!normalizedCode) return errorResponse("请输入卡密", 400);
 
                 const adminToken = await getAdminToken(env);
-                const pbUrl = env.PB_URL.replace(/\/$/, "");
+                const pbUrl = (env.PB_URL || "").replace(/\/$/, "");
 
                 const authRes = await fetch(`${pbUrl}/api/collections/users/auth-refresh`, {
                     method: "POST",
@@ -271,33 +278,70 @@ export default {
                 });
                 if (!authRes.ok) return errorResponse("权限验证失败", 401);
                 const userData = await authRes.json();
+                const userId = userData.record.id;
 
-                const escapedCode = escapePocketBaseFilterValue(code);
-                const cdkQuery = await fetch(`${pbUrl}/api/collections/cdks/records?filter=(code='${escapedCode}'&&is_used=false)`, {
-                    headers: { "Authorization": `Bearer ${adminToken}` }
-                });
-                const cdkData = await cdkQuery.json();
+                const normalizedAllSpaces = rawCode.trim().replace(/\s+/g, "");
+                const candidateCodes = Array.from(new Set([
+                    normalizedCode,
+                    normalizedAllSpaces,
+                    String(code || "").trim().toLowerCase()
+                ].filter(Boolean)));
 
-                if (!cdkData.items || !cdkData.items.length) return errorResponse("卡密无效或已使用", 400);
-                const cdk = cdkData.items[0];
+                let cdk = null;
+                let cdkStatus = null;
+                let matchedCode = null;
+                const probeHeaders = { "Authorization": `Bearer ${adminToken}` };
 
-                // 先标记卡密已使用（防止并发重复兑换）
+                for (const candidate of candidateCodes) {
+                    const escapedCandidate = escapePocketBaseFilterValue(candidate);
+                    const cdkQuery = await fetch(`${pbUrl}/api/collections/cdks/records?perPage=1&skipTotal=true&filter=code='${escapedCandidate}'`, {
+                        headers: probeHeaders
+                    });
+                    if (!cdkQuery.ok) {
+                        const errText = await cdkQuery.text().catch(() => "");
+                        return errorResponse("查询卡密失败", 500, errText);
+                    }
+                    const cdkData = await cdkQuery.json();
+                    if (cdkData.items?.length) {
+                        cdk = cdkData.items[0];
+                        matchedCode = candidate;
+                        cdkStatus = cdk.is_used ? "used" : "available";
+                        break;
+                    }
+                }
+
+                if (!cdk) {
+                    return errorResponse("卡密不存在", 404, { rawCode, normalizedCode });
+                }
+                if (cdkStatus === "used") {
+                    return errorResponse("卡密已使用", 409, { code: matchedCode, assigned_to: cdk.assigned_to || null });
+                }
+
+                const redeemValue = Number(cdk.value || 0);
+                if (!Number.isFinite(redeemValue) || redeemValue <= 0) {
+                    return errorResponse("卡密面额无效", 500, { code: matchedCode, value: cdk.value });
+                }
+
+                const timestamp = new Date().toISOString();
                 const markRes = await fetch(`${pbUrl}/api/collections/cdks/records/${cdk.id}`, {
                     method: "PATCH",
                     headers: { "Authorization": `Bearer ${adminToken}`, "Content-Type": "application/json" },
                     body: JSON.stringify({
                         is_used: true,
-                        assigned_to: userData.record.id
-                    }),
+                        assigned_to: userId,
+                        used_at: timestamp
+                    })
                 });
                 if (!markRes.ok) {
                     const errText = await markRes.text().catch(() => "");
+                    if (markRes.status === 400 || markRes.status === 409) {
+                        return errorResponse("卡密已被其他请求兑换，请刷新后重试", 409, errText);
+                    }
                     return errorResponse("卡密兑换失败，请重试", 500, errText);
                 }
 
-                // 再加余额（用数据库当前值做增量，避免覆盖并发写入）
-                const latestUserRes = await fetch(`${pbUrl}/api/collections/users/records/${userData.record.id}`, {
-                    headers: { "Authorization": `Bearer ${adminToken}` }
+                const latestUserRes = await fetch(`${pbUrl}/api/collections/users/records/${userId}`, {
+                    headers: probeHeaders
                 });
                 if (!latestUserRes.ok) {
                     const errText = await latestUserRes.text().catch(() => "");
@@ -305,23 +349,24 @@ export default {
                 }
                 const latestUser = await latestUserRes.json();
                 const currentCoins = Number(latestUser.coins || 0);
-                const addCoins = Number(cdk.value || 0);
-                if (!Number.isFinite(addCoins)) {
-                    return errorResponse("卡密面额无效", 500);
-                }
-                const nextCoins = currentCoins + addCoins;
-                const balanceRes = await fetch(`${pbUrl}/api/collections/users/records/${userData.record.id}`, {
+                const nextCoins = currentCoins + redeemValue;
+
+                const balanceRes = await fetch(`${pbUrl}/api/collections/users/records/${userId}`, {
                     method: "PATCH",
                     headers: { "Authorization": `Bearer ${adminToken}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ coins: nextCoins }),
-                    keepalive: true
+                    body: JSON.stringify({ coins: nextCoins })
                 });
                 if (!balanceRes.ok) {
                     const errText = await balanceRes.text().catch(() => "");
                     return errorResponse("卡密兑换成功但余额更新失败", 500, errText);
                 }
 
-                return new Response(JSON.stringify({ success: true, addedCoins: addCoins, newBalance: nextCoins }), {
+                return new Response(JSON.stringify({
+                    success: true,
+                    code: matchedCode,
+                    addedCoins: redeemValue,
+                    newBalance: nextCoins
+                }), {
                     headers: { ...corsHeaders(), "Content-Type": "application/json" }
                 });
             }
