@@ -1113,7 +1113,7 @@
 
         /* ============ M4 样式库：10+ 主题（每主题 = --ct-* 变量集 + 装饰伪元素） ============ */
         /* 1 retro-paper 复古纸张（牛皮纸纹理/手写体/邮票角） */
-        .card.card-theme-retro-paper {
+        .card.card-theme-retro-paper, .scenario-card.card-theme-retro-paper {
             --ct-primary: #7a4a1d;
             --ct-secondary: #a8784a;
             --ct-text: #4a3422;
@@ -1132,7 +1132,7 @@
             content: ""; position: absolute; top: 5px; left: 5px; right: 5px; bottom: 5px;
             border: 1px dashed rgba(122, 74, 29, 0.45); border-radius: 12px; pointer-events: none;
         }
-        body[data-theme="dark"] .card.card-theme-retro-paper {
+        body[data-theme="dark"] .card.card-theme-retro-paper, body[data-theme="dark"] .scenario-card.card-theme-retro-paper {
             --ct-primary: #d8a65a;
             --ct-secondary: #b08048;
             --ct-text: #e8d9bd;
@@ -1143,7 +1143,7 @@
         }
 
         /* 2 cyber-neon 赛博霓虹（黑底霓虹描边/故障字） */
-        .card.card-theme-cyber-neon {
+        .card.card-theme-cyber-neon, .scenario-card.card-theme-cyber-neon {
             --ct-primary: #00f0ff;
             --ct-secondary: #ff2fd6;
             --ct-text: #d8f6ff;
@@ -1153,7 +1153,7 @@
             --ct-glow: rgba(0, 240, 255, 0.22);
             --ct-title-font: "Consolas", "Courier New", monospace;
         }
-        .card.card-theme-cyber-neon { box-shadow: 0 0 18px rgba(0, 240, 255, 0.18), 0 10px 28px var(--ct-glow); }
+        .card.card-theme-cyber-neon, .scenario-card.card-theme-cyber-neon { box-shadow: 0 0 18px rgba(0, 240, 255, 0.18), 0 10px 28px var(--ct-glow); }
         .card.card-theme-cyber-neon .card-title {
             text-shadow: -1px 0 rgba(255, 47, 214, 0.9), 1px 0 rgba(0, 240, 255, 0.9);
             letter-spacing: 3px;
@@ -1166,7 +1166,7 @@
         .card.card-theme-cyber-neon .card-option-btn { text-shadow: 0 0 8px rgba(0, 240, 255, 0.35); }
 
         /* 3 ink-wash 水墨（晕染/宣纸/书法标题） */
-        .card.card-theme-ink-wash {
+        .card.card-theme-ink-wash, .scenario-card.card-theme-ink-wash {
             --ct-primary: #2b2b2b;
             --ct-secondary: #5a5a5a;
             --ct-text: #33302a;
@@ -1183,7 +1183,7 @@
         }
         .card.card-theme-ink-wash .card-title { letter-spacing: 6px; font-weight: 900; }
         .card.card-theme-ink-wash .card-meta { border-bottom-color: rgba(70, 65, 55, 0.18); }
-        body[data-theme="dark"] .card.card-theme-ink-wash {
+        body[data-theme="dark"] .card.card-theme-ink-wash, body[data-theme="dark"] .scenario-card.card-theme-ink-wash {
             --ct-primary: #c9c2b4;
             --ct-secondary: #8a8478;
             --ct-text: #d8d2c4;
@@ -1194,7 +1194,7 @@
         }
 
         /* 4 glass 玻璃拟态（frosted blur/折射高光） */
-        .card.card-theme-glass {
+        .card.card-theme-glass, .scenario-card.card-theme-glass {
             --ct-primary: #3d6ea5;
             --ct-secondary: #7ba6d6;
             --ct-text: #2e3a48;
@@ -1210,7 +1210,7 @@
             background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
         }
         .card.card-theme-glass .card-title { letter-spacing: 2px; }
-        body[data-theme="dark"] .card.card-theme-glass {
+        body[data-theme="dark"] .card.card-theme-glass, body[data-theme="dark"] .scenario-card.card-theme-glass {
             --ct-primary: #8fc1ff;
             --ct-secondary: #6f93c8;
             --ct-text: #dce8f6;
@@ -1221,7 +1221,7 @@
         }
 
         /* 5 liquid Liquid Glass（多层斜面/环境光漂移） */
-        .card.card-theme-liquid {
+        .card.card-theme-liquid, .scenario-card.card-theme-liquid {
             --ct-primary: #4a76b8;
             --ct-secondary: #7d9fd6;
             --ct-text: #33415a;
@@ -1235,7 +1235,7 @@
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
         }
-        body[data-theme="dark"] .card.card-theme-liquid {
+        body[data-theme="dark"] .card.card-theme-liquid, body[data-theme="dark"] .scenario-card.card-theme-liquid {
             --ct-primary: #9fc3ff;
             --ct-secondary: #7a9fe0;
             --ct-text: #dbe7f7;
@@ -1248,7 +1248,7 @@
         }
 
         /* 6 gothic 哥特暗黑（暗金/荆棘纹饰） */
-        .card.card-theme-gothic {
+        .card.card-theme-gothic, .scenario-card.card-theme-gothic {
             --ct-primary: #d4af37;
             --ct-secondary: #8c6d1f;
             --ct-text: #e8dcc0;
@@ -1275,7 +1275,7 @@
         }
 
         /* 7 minimal 极简排版（大留白/衬线字/细线分隔） */
-        .card.card-theme-minimal {
+        .card.card-theme-minimal, .scenario-card.card-theme-minimal {
             --ct-primary: #222222;
             --ct-secondary: #888888;
             --ct-text: #333333;
@@ -1294,7 +1294,7 @@
             border-color: #dddddd;
             background: #f7f7f7;
         }
-        body[data-theme="dark"] .card.card-theme-minimal {
+        body[data-theme="dark"] .card.card-theme-minimal, body[data-theme="dark"] .scenario-card.card-theme-minimal {
             --ct-primary: #eeeeee;
             --ct-secondary: #999999;
             --ct-text: #cccccc;
@@ -1305,7 +1305,7 @@
         }
 
         /* 8 fantasy 奇幻羊皮纸（羊皮卷/烫金/符文） */
-        .card.card-theme-fantasy {
+        .card.card-theme-fantasy, .scenario-card.card-theme-fantasy {
             --ct-primary: #8c5a1f;
             --ct-secondary: #c99b3f;
             --ct-text: #4a3a22;
@@ -1326,7 +1326,7 @@
             content: "✧ ✦ ✧"; position: absolute; top: -4px; right: 12px;
             font-size: 0.7rem; color: rgba(140, 90, 31, 0.55); pointer-events: none;
         }
-        body[data-theme="dark"] .card.card-theme-fantasy {
+        body[data-theme="dark"] .card.card-theme-fantasy, body[data-theme="dark"] .scenario-card.card-theme-fantasy {
             --ct-primary: #e0b063;
             --ct-secondary: #c99b3f;
             --ct-text: #eadfc4;
@@ -1337,7 +1337,7 @@
         }
 
         /* 9 sci-fi-hud 科幻 HUD（等宽字体/扫描线/边框角标） */
-        .card.card-theme-sci-fi-hud {
+        .card.card-theme-sci-fi-hud, .scenario-card.card-theme-sci-fi-hud {
             --ct-primary: #4df3ff;
             --ct-secondary: #7be0ff;
             --ct-text: #cfeaff;
@@ -1369,7 +1369,7 @@
         .card.card-theme-sci-fi-hud .card-option-btn { font-family: "Consolas", "Courier New", monospace; }
 
         /* 10 cottage 田园暖色（奶油/碎花/圆角） */
-        .card.card-theme-cottage {
+        .card.card-theme-cottage, .scenario-card.card-theme-cottage {
             --ct-primary: #c07a3e;
             --ct-secondary: #8fb56b;
             --ct-text: #5b4632;
@@ -1390,7 +1390,7 @@
                 radial-gradient(circle 2px at 52% 12%, rgba(213, 150, 160, 0.4), transparent 2.4px);
         }
         .card.card-theme-cottage .card-option-btn { border-radius: 999px; }
-        body[data-theme="dark"] .card.card-theme-cottage {
+        body[data-theme="dark"] .card.card-theme-cottage, body[data-theme="dark"] .scenario-card.card-theme-cottage {
             --ct-primary: #e2a268;
             --ct-secondary: #9cbf78;
             --ct-text: #eadbc4;
@@ -2068,6 +2068,16 @@
             pointer-events: auto;
         }
 
+        /* 剧本列表卡消费卡片主题样式（--ct-* 变量来自 .card.card-theme-* / .scenario-card.card-theme-* 变量集） */
+        .scenario-card[class*="card-theme-"] {
+            border-color: var(--ct-border, var(--line));
+            background: var(--ct-bg, var(--card-soft));
+            box-shadow: 0 12px 28px var(--ct-glow, rgba(88, 57, 22, 0.08));
+        }
+        .scenario-card[class*="card-theme-"] .list-title { color: var(--ct-primary, var(--text-main)); }
+        .scenario-card[class*="card-theme-"] .list-sub { color: var(--ct-muted, var(--sub)); }
+        .scenario-card[class*="card-theme-"] .scenario-badge { border-color: color-mix(in srgb, var(--ct-primary, var(--accent)) 35%, transparent); }
+
         .scenario-action-btn {
             flex: 1;
             border: 0;
@@ -2499,7 +2509,7 @@
         <section id="view-home" class="view-section active">
             <section class="card">
                 <div class="list-title">🧩 文游设定卡片列表</div>
-                <input id="scenario-search-input" type="text" placeholder="搜索卡片（标题/分组/主题/设定内容）">
+                <input id="scenario-search-input" type="text" placeholder="搜索卡片（标题/分组/样式/设定内容）">
                 <div id="scenario-filter-bar" class="scenario-filter-bar"></div>
                 <div class="setting-actions" style="margin:6px 0 2px;">
                     <button class="mini-btn primary" onclick="createScenarioCard()">＋ 新建卡片</button>
@@ -2512,9 +2522,9 @@
         <section id="view-scenario-editor" class="view-section">
             <section class="card">
                 <div class="list-title">🛠️ 设定卡片编辑页</div>
-                <div class="list-sub">编辑当前卡片名称与主题风格，剧情设定以结构化表单为准</div>
+                <div class="list-sub">编辑当前卡片名称与卡片样式，剧情设定以结构化表单为准</div>
                 <input id="scenario-title-input" type="text" placeholder="卡片标题（可自定义，含置顶卡片）">
-                <div class="sf-section-title" style="margin-top:8px;">🎨 卡片主题风格</div>
+                <div class="sf-section-title" style="margin-top:8px;">🎨 卡片样式</div>
                 <input id="scenario-theme-input" type="hidden">
                 <div id="scenario-theme-picker" class="theme-picker"></div>
 
@@ -2601,7 +2611,7 @@
                     <input type="checkbox" id="ui-dark-mode-enabled">
                 </label>
                 <div class="setting-actions">
-                    <button class="mini-btn ghost" onclick="saveUserApiSettings()">保存主题</button>
+                    <button class="mini-btn ghost" onclick="saveUserApiSettings()">保存样式</button>
                 </div>
             </section>
             <section class="card">
@@ -3128,6 +3138,15 @@
     })();
 
     const StateService = (() => {
+        // 兼容字符串形态旧数据("标签：值"),统一为 {label,value} 对象数组,否则背包页渲染出空白气泡
+        function normalizeStatusTagList(list) {
+            return (Array.isArray(list) ? list : []).map((t) => {
+                if (t && typeof t === "object") return { label: String(t.label || ""), value: String(t.value ?? "") };
+                const s = String(t || "");
+                const i = s.indexOf("：");
+                return i > 0 ? { label: s.slice(0, i), value: s.slice(i + 1) } : { label: "", value: s };
+            }).filter((t) => t.label || t.value);
+        }
         const baseState = {
             name: "待生成",
             englishName: "Pending",
@@ -3186,7 +3205,7 @@
                 ? Utils.deepClone(preset.npcs)
                 : createDefaultNpcs();
             next.stats = Array.isArray(preset.stats) ? Utils.deepClone(preset.stats) : [];
-            next.panelStatusTags = Array.isArray(preset.panelStatusTags) ? Utils.deepClone(preset.panelStatusTags) : [];
+            next.panelStatusTags = normalizeStatusTagList(preset.panelStatusTags);
             next.npcMemoryMap = {};
             next.protagonistProfile = {
                 name: next.name,
@@ -4248,7 +4267,20 @@ function rebuildChoicesBlock(body, labels = []) {
             const topBox = document.getElementById("game-stats-card");
             if (topBox) delete topBox.dataset.isFancy;
         }
-        return { renderAiMessage, bindHtmlChoiceEvents, formatQuotedDialogueLines, injectStatsIntoCard };
+        // AI 直接输出 HTML 的卡片注入主题 class(JSON 填空路径 fillCardTemplate 已自带,此处补主路径)
+        function applyCardTheme(container) {
+            if (!(container instanceof HTMLElement)) return;
+            const card = container.querySelector(".ai-beauty-card");
+            if (!(card instanceof HTMLElement)) return;
+            let themeKey = "";
+            try { themeKey = String(FillProtocolService.getCardTheme() || "").replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase(); } catch { }
+            card.classList.add("card");
+            if (themeKey) card.classList.add(`card-theme-${themeKey}`);
+            card.dataset.theme = themeKey || "default";
+            // 主题库接管主视觉:移除 AI 根节点内联背景/边框/文字色(beautyRules 已指示 AI 无需输出样式)
+            ["background", "background-color", "background-image", "border", "color"].forEach((p) => card.style.removeProperty(p));
+        }
+        return { renderAiMessage, bindHtmlChoiceEvents, formatQuotedDialogueLines, injectStatsIntoCard, applyCardTheme };
     })();
 
     // ==================== 填空协议服务（M3：AI 只回 JSON，前端套模板渲染） ====================
@@ -5608,6 +5640,7 @@ function rebuildChoicesBlock(body, labels = []) {
                     ? AiResponseLayoutService.renderAiMessage(normalizedText, false)
                     : MarkdownService.render(text) + (streaming ? '<span class="streaming-cursor"></span>' : "");
             if (fillFields || canUseHtmlCard) {
+                if (canUseHtmlCard) AiResponseLayoutService.applyCardTheme(bubble);
                 HtmlCardService.applyReadableTextColors(bubble);
                 AiResponseLayoutService.bindHtmlChoiceEvents(bubble);
                 AiResponseLayoutService.injectStatsIntoCard(bubble);
@@ -5912,7 +5945,8 @@ function rebuildChoicesBlock(body, labels = []) {
             const recentIds = new Set(recentCards.map((c) => c.id));
             const renderRow = (card) => {
                 const row = document.createElement("div");
-                row.className = `scenario-card ${card.id === selectedId ? "active" : ""}`;
+                const themeKey = String(card.theme || "").replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase();
+                row.className = `scenario-card ${themeKey ? `card-theme-${themeKey}` : ""} ${card.id === selectedId ? "active" : ""}`;
                 row.dataset.cardId = card.id;
                 const customPinned = card.id === ScenarioCardService.CUSTOM_CARD_ID;
                 row.innerHTML = `
@@ -5922,7 +5956,7 @@ function rebuildChoicesBlock(body, labels = []) {
                             <span class="scenario-badge ${ScenarioCardViewService.groupClass(card)}">${ScenarioCardViewService.groupLabel(card)}</span>
                             ${card.pinned ? '<span class="scenario-badge">置顶</span>' : ""}
                         </div>
-                        <div class="list-sub">主题：${card.theme || "未设置"}｜设定长度：${(card.text || "").length}</div>
+                        <div class="list-sub">样式：${card.theme || "未设置"}｜设定长度：${(card.text || "").length}</div>
                         <div style="margin-top:6px;">
                             <button class="tiny-btn" data-op="play">游玩</button>
                             <button class="tiny-btn" data-op="edit">设置</button>
@@ -6183,7 +6217,7 @@ function rebuildChoicesBlock(body, labels = []) {
 
     const ScenarioEditorService = (() => {
         const BUILTIN_THEMES = [
-            { key: "default", name: "默认主题", swatch: "#8a7a63" },
+            { key: "default", name: "默认样式", swatch: "#8a7a63" },
             { key: "retro-paper", name: "复古纸卷", swatch: "#b89a6a" },
             { key: "cyber-neon", name: "赛博霓虹", swatch: "#00e5ff" },
             { key: "ink-wash", name: "水墨丹青", swatch: "#4a4a4a" },
@@ -9048,8 +9082,8 @@ const token = delta.content || "";
                 ],
                 stats,
                 panelStatusTags: [
-                    genre ? `身份：${genre}` : "",
-                    locationRaw ? `处境：${locationRaw}` : ""
+                    genre ? { label: "身份", value: genre } : null,
+                    locationRaw ? { label: "处境", value: locationRaw } : null
                 ].filter(Boolean)
             };
         }
