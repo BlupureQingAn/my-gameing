@@ -5841,7 +5841,9 @@ function rebuildChoicesBlock(body, labels = []) {
             });
             // 搜索时展开所有组，便于直接看到命中结果
             if (keyword) ScenarioCardViewService.expandAllGroups();
-            groups.forEach((groupKey) => {
+            // 渲染层双保险：自定义组始终置顶（无自定义卡时跳过）
+            const orderedGroups = ["自定义", ...groups.filter((g) => g !== "自定义")].filter((g) => byGroup.has(g));
+            orderedGroups.forEach((groupKey) => {
                 const groupCards = byGroup.get(groupKey);
                 const catCount = groupKey === "自定义" ? "" : `（${groupCards.length} 个）`;
                 const collapsed = ScenarioCardViewService.isCollapsed(groupKey);
@@ -6624,7 +6626,9 @@ function rebuildChoicesBlock(body, labels = []) {
             custom = buildCustomCard(custom);
             const merged = [custom, ...others].map((c, idx) => normalizeCard(c, idx));
             const sorted = sortCards(merged);
-            return sorted.map((c, idx) => ({ ...c, order: idx + 1 }));
+            // 自定义卡永远置顶（需求），不受 pinned/order/历史数据影响
+            const finalOrder = [custom, ...sorted.filter((c) => c.id !== custom.id)];
+            return finalOrder.map((c, idx) => ({ ...c, order: idx + 1 }));
         }
         function buildInitialCards() {
             // 官方剧本库来自 scenarios/scenarios.js（build-scenarios.mjs 生成），自定义卡永远保留第一张
