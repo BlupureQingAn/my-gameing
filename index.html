@@ -6849,13 +6849,17 @@ function rebuildChoicesBlock(body, labels = []) {
             const official = (Array.isArray(window.SCENARIO_LIBRARY) ? window.SCENARIO_LIBRARY : []);
             if (official.length) {
                 const existingIds = new Set(cards.map((c) => String(c.id || "")));
+                // 官方卡字段级刷新:localStorage 旧副本(无 customized 编辑标记)用库最新版覆盖,库更新(如 theme 差异化)自动生效;保留用户排序/置顶
+                const refreshed = cards.map((c) => {
+                    const src = official.find((o) => String(o.id || "") === String(c.id || ""));
+                    if (!src || c.customized) return c;
+                    return { ...Utils.deepClone(src), order: c.order, pinned: c.pinned };
+                });
                 const missing = official.filter((c) => !existingIds.has(String(c.id || "")));
-                if (missing.length) {
-                    const merged = [...cards, ...Utils.deepClone(missing)];
-                    const replenished = normalizeCards(merged);
-                    StorageService.writeJson(AppConfig.storageKeys.scenarioCards, replenished);
-                    return replenished;
-                }
+                const merged = [...refreshed, ...Utils.deepClone(missing)];
+                const replenished = normalizeCards(merged);
+                StorageService.writeJson(AppConfig.storageKeys.scenarioCards, replenished);
+                return replenished;
             }
             const normalized = normalizeCards(cards);
             StorageService.writeJson(AppConfig.storageKeys.scenarioCards, normalized);
@@ -6882,7 +6886,9 @@ function rebuildChoicesBlock(body, labels = []) {
             const id = getSelectedId();
             const idx = cards.findIndex((c) => c.id === id);
             if (idx < 0) return;
-            cards[idx] = { ...cards[idx], ...payload };
+            // 编辑过官方卡 → 打 customized 标记,loadCards 不再用库版本覆盖用户改动
+            const isOfficial = String(cards[idx].sourceType || "") === "official";
+            cards[idx] = { ...cards[idx], ...payload, ...(isOfficial ? { customized: true } : {}) };
             saveCards(cards);
         }
         function deleteCard(cardId) {
