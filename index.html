@@ -5817,9 +5817,10 @@ function rebuildChoicesBlock(body, labels = []) {
             const category = ScenarioCardViewService.getCategory();
             box.innerHTML = "";
             ScenarioCardViewService.renderFilter();
-            // 分类筛选 + 关键词筛选
+            // 分类筛选 + 关键词筛选（自定义卡不参与分类筛选，始终置顶显示）
             const filteredCards = cards.filter((card) => {
-                const catKey = card.sourceType === "official" ? String(card.category || "其他") : "自定义";
+                if (card.sourceType !== "official") return ScenarioCardViewService.matchesSearch(card, keyword);
+                const catKey = String(card.category || "其他");
                 if (category !== "全部" && catKey !== category) return false;
                 return ScenarioCardViewService.matchesSearch(card, keyword);
             });
@@ -6835,8 +6836,8 @@ function rebuildChoicesBlock(body, labels = []) {
             const input = document.getElementById("scenario-search-input");
             return input ? String(input.value || "").trim() : "";
         }
-        // 分类筛选：默认"全部"；collapsed 记录当前折叠的组（首次渲染时官方组全部加入=默认折叠，自定义组默认展开）
-        const filterState = { category: "全部", collapsed: new Set(), inited: false };
+        // 分类筛选：默认"全部"且全部展开；collapsed 仅记录用户手动折叠的组
+        const filterState = { category: "全部", collapsed: new Set() };
         function getCategories() {
             const cats = [];
             (Array.isArray(window.SCENARIO_LIBRARY) ? window.SCENARIO_LIBRARY : []).forEach((c) => {
@@ -6845,28 +6846,18 @@ function rebuildChoicesBlock(body, labels = []) {
             });
             return cats;
         }
-        function ensureInit() {
-            if (filterState.inited) return;
-            filterState.inited = true;
-            getCategories().forEach((k) => filterState.collapsed.add(k));
-        }
         function getCategory() { return filterState.category; }
-        function setCategory(cat) {
-            ensureInit();
-            filterState.category = cat;
-        }
+        function setCategory(cat) { filterState.category = cat; }
         function isCollapsed(groupKey) {
-            ensureInit();
-            // 选中具体分类时直接展开该组；"全部"视图按折叠状态显示
+            // 选中具体分类时直接展开该组；"全部"视图按用户手动折叠状态显示
             if (filterState.category !== "全部") return false;
             return filterState.collapsed.has(groupKey);
         }
         function toggleCollapsed(groupKey) {
-            ensureInit();
             if (filterState.collapsed.has(groupKey)) filterState.collapsed.delete(groupKey);
             else filterState.collapsed.add(groupKey);
         }
-        function expandAllGroups() { ensureInit(); filterState.collapsed.clear(); }
+        function expandAllGroups() { filterState.collapsed.clear(); }
         function renderFilter() {
             const bar = document.getElementById("scenario-filter-bar");
             if (!bar) return;
@@ -6877,7 +6868,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 chip.type = "button";
                 chip.className = `scenario-filter-chip${current === cat ? " active" : ""}`;
                 chip.textContent = cat;
-                chip.onclick = () => { setCategory(cat); renderScenarioCards(); };
+                chip.onclick = () => { setCategory(cat); UIRenderer.renderScenarioCards(); };
                 bar.appendChild(chip);
             });
         }
