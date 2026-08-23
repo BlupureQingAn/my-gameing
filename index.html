@@ -1510,6 +1510,17 @@
             gap: 8px;
         }
 
+        .scenario-group-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent-dark);
+            padding: 10px 4px 4px;
+            letter-spacing: 1px;
+        }
+        .scenario-group-title:first-child {
+            padding-top: 0;
+        }
+
         .scenario-card {
             border: 1px solid var(--line);
             border-radius: 12px;
@@ -1989,6 +2000,7 @@
                 <input id="scenario-search-input" type="text" placeholder="搜索卡片（标题/分组/主题/设定内容）">
                 <div class="setting-actions" style="margin:6px 0 2px;">
                     <button class="mini-btn primary" onclick="createScenarioCard()">＋ 新建卡片</button>
+                    <button class="mini-btn ghost" onclick="restoreOfficialScenarioCards()">↺ 恢复官方剧本库</button>
                 </div>
                 <div id="scenario-card-list" style="margin-top:8px;"></div>
                 <div class="list-title" style="margin-top:8px;">📚 官方预设模板（可一键套用）</div>
@@ -2183,6 +2195,7 @@
     </div>
 </div>
 
+<script src="scenarios.js"></script>
 <script>
     const AppConfig = {
         storageKeys: {
@@ -2233,14 +2246,6 @@
             "请在这里粘贴你的文游设定文本。",
             "该设定是剧情主规则来源，若为空则使用默认写实规则。"
         ].join("\n"),
-        defaultScenarioCards: [
-            {
-                id: "scenario_custom",
-                title: "自定义设定卡片",
-                theme: "",
-                text: "请在这里粘贴你的文游设定文本。\n该设定是剧情主规则来源，若为空则使用默认写实规则。"
-            }
-        ],
         defaultChatPolicyConfig: {
             temperature: 0.7,
             choiceRetryCount: 1,
@@ -5189,40 +5194,59 @@ function rebuildChoicesBlock(body, labels = []) {
                 box.innerHTML = `<div class="list-sub">未找到匹配卡片：${keyword}</div>`;
                 return;
             }
+            // 按分类分组渲染（官方卡按 category，自定义卡单独一组排最前）
+            const groups = [];
+            const byGroup = new Map();
             filteredCards.forEach((card) => {
-                const row = document.createElement("div");
-                row.className = `scenario-card ${card.id === selectedId ? "active" : ""}`;
-                row.dataset.cardId = card.id;
-                const customPinned = card.id === ScenarioCardService.CUSTOM_CARD_ID;
-                row.innerHTML = `
-                    <div class="scenario-card-main">
-                        <div class="list-title">${card.title}${customPinned ? "（置顶）" : ""}</div>
-                        <div class="scenario-badges">
-                            <span class="scenario-badge ${ScenarioCardViewService.groupClass(card)}">${ScenarioCardViewService.groupLabel(card)}</span>
-                            ${card.pinned ? '<span class="scenario-badge">置顶</span>' : ""}
+                const key = card.sourceType === "official" ? String(card.category || "其他") : "自定义";
+                if (!byGroup.has(key)) {
+                    byGroup.set(key, []);
+                    groups.push(key);
+                }
+                byGroup.get(key).push(card);
+            });
+            groups.forEach((groupKey) => {
+                const head = document.createElement("div");
+                head.className = "scenario-group-title";
+                const groupCards = byGroup.get(groupKey);
+                const catCount = groupKey === "自定义" ? "" : `（${groupCards.length} 个）`;
+                head.textContent = `${groupKey}${catCount}`;
+                box.appendChild(head);
+                groupCards.forEach((card) => {
+                    const row = document.createElement("div");
+                    row.className = `scenario-card ${card.id === selectedId ? "active" : ""}`;
+                    row.dataset.cardId = card.id;
+                    const customPinned = card.id === ScenarioCardService.CUSTOM_CARD_ID;
+                    row.innerHTML = `
+                        <div class="scenario-card-main">
+                            <div class="list-title">${card.title}${customPinned ? "（置顶）" : ""}</div>
+                            <div class="scenario-badges">
+                                <span class="scenario-badge ${ScenarioCardViewService.groupClass(card)}">${ScenarioCardViewService.groupLabel(card)}</span>
+                                ${card.pinned ? '<span class="scenario-badge">置顶</span>' : ""}
+                            </div>
+                            <div class="list-sub">主题：${card.theme || "未设置"}｜设定长度：${(card.text || "").length}</div>
+                            <div style="margin-top:6px;">
+                                <button class="tiny-btn" data-op="play">游玩</button>
+                                <button class="tiny-btn" data-op="edit">设置</button>
+                            </div>
                         </div>
-                        <div class="list-sub">主题：${card.theme || "未设置"}｜设定长度：${(card.text || "").length}</div>
-                        <div style="margin-top:6px;">
-                            <button class="tiny-btn" data-op="play">游玩</button>
-                            <button class="tiny-btn" data-op="edit">设置</button>
+                        <div class="scenario-card-actions">
+                            <button class="scenario-action-btn edit" data-op="swipe-edit">设置</button>
+                            <button class="scenario-action-btn pin" data-op="swipe-pin">${ScenarioCardViewService.pinLabel(card)}</button>
+                            <button class="scenario-action-btn delete" data-op="swipe-del">删除</button>
                         </div>
-                    </div>
-                    <div class="scenario-card-actions">
-                        <button class="scenario-action-btn edit" data-op="swipe-edit">设置</button>
-                        <button class="scenario-action-btn pin" data-op="swipe-pin">${ScenarioCardViewService.pinLabel(card)}</button>
-                        <button class="scenario-action-btn delete" data-op="swipe-del">删除</button>
-                    </div>
-                `;
-                row.querySelector('[data-op="play"]').onclick = () => Controller.playScenarioCard(card.id);
-                row.querySelector('[data-op="edit"]').onclick = () => Controller.openScenarioCardSettings(card.id);
-                row.querySelector('[data-op="swipe-edit"]').onclick = () => Controller.openScenarioCardSettings(card.id);
-                row.querySelector('[data-op="swipe-pin"]').onclick = () => Controller.toggleScenarioCardPin(card.id);
-                const delBtn = row.querySelector('[data-op="swipe-del"]');
-                if (delBtn) delBtn.onclick = () => Controller.deleteScenarioCard(card.id);
-                ScenarioCardInteractionService.bindSwipeAndSort(row, {
-                    onReorder: (fromId, toId) => Controller.reorderScenarioCards(fromId, toId)
+                    `;
+                    row.querySelector('[data-op="play"]').onclick = () => Controller.playScenarioCard(card.id);
+                    row.querySelector('[data-op="edit"]').onclick = () => Controller.openScenarioCardSettings(card.id);
+                    row.querySelector('[data-op="swipe-edit"]').onclick = () => Controller.openScenarioCardSettings(card.id);
+                    row.querySelector('[data-op="swipe-pin"]').onclick = () => Controller.toggleScenarioCardPin(card.id);
+                    const delBtn = row.querySelector('[data-op="swipe-del"]');
+                    if (delBtn) delBtn.onclick = () => Controller.deleteScenarioCard(card.id);
+                    ScenarioCardInteractionService.bindSwipeAndSort(row, {
+                        onReorder: (fromId, toId) => Controller.reorderScenarioCards(fromId, toId)
+                    });
+                    box.appendChild(row);
                 });
-                box.appendChild(row);
             });
         }
         function renderPresetTemplates(presets = []) {
@@ -5778,10 +5802,15 @@ function rebuildChoicesBlock(body, labels = []) {
             const sorted = sortCards(merged);
             return sorted.map((c, idx) => ({ ...c, order: idx + 1 }));
         }
+        function buildInitialCards() {
+            // 官方剧本库来自 scenarios/scenarios.js（build-scenarios.mjs 生成），自定义卡永远保留第一张
+            const official = (Array.isArray(window.SCENARIO_LIBRARY) ? window.SCENARIO_LIBRARY : []);
+            return Utils.deepClone([buildCustomCard(), ...official]);
+        }
         function loadCards() {
             const cards = StorageService.readJson(AppConfig.storageKeys.scenarioCards, null);
             if (!Array.isArray(cards) || !cards.length) {
-                const initial = [...Utils.deepClone(AppConfig.defaultScenarioCards)];
+                const initial = buildInitialCards();
                 StorageService.writeJson(AppConfig.storageKeys.scenarioCards, initial);
                 return initial;
             }
@@ -5793,7 +5822,7 @@ function rebuildChoicesBlock(body, labels = []) {
             StorageService.writeJson(AppConfig.storageKeys.scenarioCards, normalizeCards(cards));
         }
         function getSelectedId() {
-            const raw = StorageService.readText(AppConfig.storageKeys.selectedScenarioCardId, AppConfig.defaultScenarioCards[0].id);
+            const raw = StorageService.readText(AppConfig.storageKeys.selectedScenarioCardId, CUSTOM_CARD_ID);
             return LEGACY_CUSTOM_IDS.has(raw) ? CUSTOM_CARD_ID : raw;
         }
         function setSelectedId(id) {
@@ -6066,6 +6095,7 @@ function buildPresetCardId(preset) {
             if (!q) return true;
             const haystack = [
                 card?.title || "",
+                card?.category || "",
                 card?.theme || "",
                 card?.text || "",
                 groupLabel(card)
@@ -8973,6 +9003,15 @@ function openNpcProfile(npcId) {
         function createScenarioCard() {
             ScenarioCardControllerService.createScenarioCard({ renderAll, switchView });
         }
+        function restoreOfficialScenarioCards() {
+            // 官方剧本库来自 scenarios/scenarios.js，删除后可一键恢复（保留自定义卡与用户改动）
+            const official = (Array.isArray(window.SCENARIO_LIBRARY) ? window.SCENARIO_LIBRARY : []);
+            if (!official.length) return;
+            const cards = ScenarioCardService.loadCards().filter((c) => c.sourceType !== "official");
+            const merged = [...cards, ...Utils.deepClone(official)];
+            ScenarioCardService.saveCards(merged);
+            renderAll();
+        }
         function openScenarioCardSettings(cardId) {
             ScenarioCardControllerService.openScenarioCardSettings({ cardId, selectScenarioCard, switchView });
         }
@@ -9271,6 +9310,7 @@ async function playPresetTemplate(preset) {
     function saveUserApiSettings() { Controller.saveUserApiSettings(); }
     function saveScenarioCard() { Controller.saveScenarioCard(); }
     function createScenarioCard() { Controller.createScenarioCard(); }
+    function restoreOfficialScenarioCards() { Controller.restoreOfficialScenarioCards(); }
     function selectScenarioCard(id) { Controller.selectScenarioCard(id); }
     function applyPresetTemplate(id) { Controller.applyPresetTemplate(id); }
     function editPresetTemplate(id) { Controller.editPresetTemplate(id); }
