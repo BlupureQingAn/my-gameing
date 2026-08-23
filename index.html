@@ -1008,16 +1008,24 @@
 
         /* ============ M3 填空协议卡片骨架（article.card > header.meta + section.body + footer.options） ============ */
         .ai-beauty-card.card {
+            --ct-primary: var(--accent-dark, #845f35);
+            --ct-secondary: var(--accent, #b08652);
+            --ct-text: var(--text-main, #4b3a2a);
+            --ct-muted: var(--text-muted, #8a7a66);
+            --ct-bg: radial-gradient(circle at top right, rgba(255,255,255,0.34), transparent 28%), linear-gradient(180deg, rgba(255,255,255,0.97), rgba(255,247,236,0.95));
+            --ct-border: color-mix(in srgb, var(--accent) 30%, transparent);
+            --ct-glow: rgba(60, 30, 0, 0.08);
+            --ct-title-font: inherit;
             display: flex;
             flex-direction: column;
             gap: 0;
             padding: 14px 16px 16px;
-            border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+            border: 1px solid var(--ct-border);
             border-radius: 18px;
-            background:
-                radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 12%, transparent), transparent 30%),
-                var(--card-bg, linear-gradient(180deg, rgba(255,255,255,0.97), rgba(255,247,236,0.95)));
-            box-shadow: 0 10px 28px rgba(60, 30, 0, 0.08);
+            background: var(--ct-bg);
+            box-shadow: 0 10px 28px var(--ct-glow);
+            position: relative;
+            overflow: hidden;
         }
         .card .card-meta {
             display: flex;
@@ -1026,27 +1034,28 @@
             flex-wrap: wrap;
             gap: 6px;
             padding-bottom: 10px;
-            border-bottom: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+            border-bottom: 1px solid var(--ct-border);
         }
         .card .card-title {
             font-size: 1.02rem;
             font-weight: 800;
             letter-spacing: 1px;
-            color: var(--accent-dark);
+            color: var(--ct-primary);
+            font-family: var(--ct-title-font);
         }
         .card .card-time {
             font-size: 0.8rem;
-            color: var(--text-muted);
+            color: var(--ct-muted);
             padding: 2px 10px;
             border-radius: 999px;
-            border: 1px solid color-mix(in srgb, var(--text-muted) 30%, transparent);
+            border: 1px solid color-mix(in srgb, var(--ct-muted) 30%, transparent);
         }
         .card .card-body {
             padding: 12px 0 2px;
         }
         .card .card-story {
             line-height: 1.78;
-            color: var(--text-main);
+            color: var(--ct-text);
             margin-top: 10px;
         }
         .card .card-stats {
@@ -1061,24 +1070,24 @@
             padding: 4px 10px;
             border-radius: 999px;
             font-size: 0.78rem;
-            background: color-mix(in srgb, var(--accent) 10%, transparent);
-            border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-            color: var(--text-main);
+            background: color-mix(in srgb, var(--ct-primary) 10%, transparent);
+            border: 1px solid color-mix(in srgb, var(--ct-primary) 30%, transparent);
+            color: var(--ct-text);
         }
-        .card .card-stat-pill b { color: var(--accent-dark); font-weight: 700; }
+        .card .card-stat-pill b { color: var(--ct-primary); font-weight: 700; }
         .card .card-items {
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
             margin-top: 10px;
             font-size: 0.78rem;
-            color: var(--text-muted);
+            color: var(--ct-muted);
         }
         .card .card-item-pill {
             padding: 3px 9px;
             border-radius: 999px;
-            background: color-mix(in srgb, var(--text-muted) 9%, transparent);
-            border: 1px dashed color-mix(in srgb, var(--text-muted) 28%, transparent);
+            background: color-mix(in srgb, var(--ct-muted) 9%, transparent);
+            border: 1px dashed color-mix(in srgb, var(--ct-muted) 28%, transparent);
         }
         .card .card-options {
             display: flex;
@@ -1086,20 +1095,309 @@
             gap: 9px;
             margin-top: 14px;
             padding-top: 12px;
-            border-top: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+            border-top: 1px solid var(--ct-border);
         }
         .card .card-option-btn {
             padding: 11px 14px;
             border-radius: 13px;
-            border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
-            color: var(--accent-dark);
-            background: color-mix(in srgb, var(--accent) 6%, transparent);
+            border: 1px solid color-mix(in srgb, var(--ct-primary) 45%, transparent);
+            color: var(--ct-primary);
+            background: color-mix(in srgb, var(--ct-primary) 6%, transparent);
             cursor: pointer;
             transition: transform 0.12s ease, box-shadow 0.12s ease;
         }
         .card .card-option-btn:hover {
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 22%, transparent);
+            box-shadow: 0 4px 12px color-mix(in srgb, var(--ct-primary) 22%, transparent);
+        }
+
+        /* ============ M4 样式库：10+ 主题（每主题 = --ct-* 变量集 + 装饰伪元素） ============ */
+        /* 1 retro-paper 复古纸张（牛皮纸纹理/手写体/邮票角） */
+        .card.card-theme-retro-paper {
+            --ct-primary: #7a4a1d;
+            --ct-secondary: #a8784a;
+            --ct-text: #4a3422;
+            --ct-muted: #8a6b4e;
+            --ct-bg: linear-gradient(180deg, #f2e3c4 0%, #e9d4a9 55%, #dcc08e 100%);
+            --ct-border: rgba(122, 74, 29, 0.38);
+            --ct-glow: rgba(122, 74, 29, 0.18);
+            --ct-title-font: "KaiTi", "STKaiti", "楷体", serif;
+        }
+        .card.card-theme-retro-paper::before {
+            content: ""; position: absolute; inset: 0; pointer-events: none;
+            background-image: radial-gradient(rgba(90, 60, 20, 0.16) 0.6px, transparent 0.8px);
+            background-size: 5px 5px; opacity: 0.4; mix-blend-mode: multiply;
+        }
+        .card.card-theme-retro-paper::after {
+            content: ""; position: absolute; top: 5px; left: 5px; right: 5px; bottom: 5px;
+            border: 1px dashed rgba(122, 74, 29, 0.45); border-radius: 12px; pointer-events: none;
+        }
+        body[data-theme="dark"] .card.card-theme-retro-paper {
+            --ct-primary: #d8a65a;
+            --ct-secondary: #b08048;
+            --ct-text: #e8d9bd;
+            --ct-muted: #a8906f;
+            --ct-bg: linear-gradient(180deg, #2a1e12 0%, #352618 60%, #2e2013 100%);
+            --ct-border: rgba(216, 166, 90, 0.35);
+            --ct-glow: rgba(0, 0, 0, 0.4);
+        }
+
+        /* 2 cyber-neon 赛博霓虹（黑底霓虹描边/故障字） */
+        .card.card-theme-cyber-neon {
+            --ct-primary: #00f0ff;
+            --ct-secondary: #ff2fd6;
+            --ct-text: #d8f6ff;
+            --ct-muted: #6fa8b8;
+            --ct-bg: linear-gradient(180deg, #0b0f1e 0%, #131a30 100%);
+            --ct-border: rgba(0, 240, 255, 0.45);
+            --ct-glow: rgba(0, 240, 255, 0.22);
+            --ct-title-font: "Consolas", "Courier New", monospace;
+        }
+        .card.card-theme-cyber-neon { box-shadow: 0 0 18px rgba(0, 240, 255, 0.18), 0 10px 28px var(--ct-glow); }
+        .card.card-theme-cyber-neon .card-title {
+            text-shadow: -1px 0 rgba(255, 47, 214, 0.9), 1px 0 rgba(0, 240, 255, 0.9);
+            letter-spacing: 3px;
+        }
+        .card.card-theme-cyber-neon::before {
+            content: ""; position: absolute; inset: 0; pointer-events: none;
+            background-image: linear-gradient(0deg, rgba(0, 240, 255, 0.05) 1px, transparent 1px);
+            background-size: 100% 3px;
+        }
+        .card.card-theme-cyber-neon .card-option-btn { text-shadow: 0 0 8px rgba(0, 240, 255, 0.35); }
+
+        /* 3 ink-wash 水墨（晕染/宣纸/书法标题） */
+        .card.card-theme-ink-wash {
+            --ct-primary: #2b2b2b;
+            --ct-secondary: #5a5a5a;
+            --ct-text: #33302a;
+            --ct-muted: #7a746a;
+            --ct-bg: linear-gradient(180deg, #f7f2e6 0%, #efe6d2 100%);
+            --ct-border: rgba(70, 65, 55, 0.28);
+            --ct-glow: rgba(70, 60, 40, 0.12);
+            --ct-title-font: "KaiTi", "STKaiti", "楷体", serif;
+        }
+        .card.card-theme-ink-wash::before {
+            content: ""; position: absolute; inset: 0; pointer-events: none;
+            background: radial-gradient(ellipse 240px 120px at 88% 4%, rgba(60, 60, 55, 0.16), transparent 65%),
+                radial-gradient(ellipse 180px 90px at 6% 100%, rgba(60, 60, 55, 0.12), transparent 60%);
+        }
+        .card.card-theme-ink-wash .card-title { letter-spacing: 6px; font-weight: 900; }
+        .card.card-theme-ink-wash .card-meta { border-bottom-color: rgba(70, 65, 55, 0.18); }
+        body[data-theme="dark"] .card.card-theme-ink-wash {
+            --ct-primary: #c9c2b4;
+            --ct-secondary: #8a8478;
+            --ct-text: #d8d2c4;
+            --ct-muted: #9a9486;
+            --ct-bg: linear-gradient(180deg, #1c2430 0%, #222b38 100%);
+            --ct-border: rgba(160, 150, 130, 0.25);
+            --ct-glow: rgba(0, 0, 0, 0.4);
+        }
+
+        /* 4 glass 玻璃拟态（frosted blur/折射高光） */
+        .card.card-theme-glass {
+            --ct-primary: #3d6ea5;
+            --ct-secondary: #7ba6d6;
+            --ct-text: #2e3a48;
+            --ct-muted: #6d7f93;
+            --ct-bg: rgba(255, 255, 255, 0.5);
+            --ct-border: rgba(120, 160, 210, 0.4);
+            --ct-glow: rgba(80, 120, 180, 0.16);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+        .card.card-theme-glass::before {
+            content: ""; position: absolute; top: 0; left: 0; right: 0; height: 46%; pointer-events: none;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
+        }
+        .card.card-theme-glass .card-title { letter-spacing: 2px; }
+        body[data-theme="dark"] .card.card-theme-glass {
+            --ct-primary: #8fc1ff;
+            --ct-secondary: #6f93c8;
+            --ct-text: #dce8f6;
+            --ct-muted: #93a7c0;
+            --ct-bg: rgba(28, 38, 58, 0.55);
+            --ct-border: rgba(143, 193, 255, 0.35);
+            --ct-glow: rgba(0, 0, 0, 0.35);
+        }
+
+        /* 5 liquid Liquid Glass（多层斜面/环境光漂移） */
+        .card.card-theme-liquid {
+            --ct-primary: #4a76b8;
+            --ct-secondary: #7d9fd6;
+            --ct-text: #33415a;
+            --ct-muted: #75869f;
+            --ct-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.68), rgba(205, 222, 245, 0.5));
+            --ct-border: rgba(120, 150, 200, 0.5);
+            --ct-glow: rgba(90, 130, 190, 0.2);
+            border-top-color: rgba(255, 255, 255, 0.85);
+            border-bottom-color: rgba(90, 120, 170, 0.45);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 12px 32px var(--ct-glow);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        body[data-theme="dark"] .card.card-theme-liquid {
+            --ct-primary: #9fc3ff;
+            --ct-secondary: #7a9fe0;
+            --ct-text: #dbe7f7;
+            --ct-muted: #93a7c6;
+            --ct-bg: linear-gradient(135deg, rgba(42, 54, 84, 0.72), rgba(26, 36, 62, 0.6));
+            --ct-border: rgba(130, 165, 225, 0.4);
+            --ct-glow: rgba(0, 0, 0, 0.4);
+            border-top-color: rgba(160, 190, 240, 0.35);
+            border-bottom-color: rgba(20, 30, 55, 0.6);
+        }
+
+        /* 6 gothic 哥特暗黑（暗金/荆棘纹饰） */
+        .card.card-theme-gothic {
+            --ct-primary: #d4af37;
+            --ct-secondary: #8c6d1f;
+            --ct-text: #e8dcc0;
+            --ct-muted: #9c8a6a;
+            --ct-bg: linear-gradient(180deg, #1a1410 0%, #241a12 100%);
+            --ct-border: rgba(212, 175, 55, 0.4);
+            --ct-glow: rgba(0, 0, 0, 0.5);
+            --ct-title-font: "Georgia", "Times New Roman", serif;
+        }
+        .card.card-theme-gothic .card-title {
+            background: linear-gradient(135deg, #f0d78c 0%, #d4af37 45%, #8c6d1f 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 2px;
+        }
+        .card.card-theme-gothic::before {
+            content: ""; position: absolute; top: 0; left: 0; right: 0; height: 5px; pointer-events: none;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.7), transparent);
+        }
+        .card.card-theme-gothic .card-option-btn {
+            border-color: rgba(212, 175, 55, 0.5);
+            color: #e8dcc0;
+        }
+
+        /* 7 minimal 极简排版（大留白/衬线字/细线分隔） */
+        .card.card-theme-minimal {
+            --ct-primary: #222222;
+            --ct-secondary: #888888;
+            --ct-text: #333333;
+            --ct-muted: #aaaaaa;
+            --ct-bg: #fdfdfd;
+            --ct-border: #e6e6e6;
+            --ct-glow: rgba(0, 0, 0, 0.04);
+            --ct-title-font: "Georgia", "Times New Roman", serif;
+            border-radius: 6px;
+            padding: 20px 22px 22px;
+        }
+        .card.card-theme-minimal .card-title { letter-spacing: 4px; font-weight: 400; font-size: 1.12rem; }
+        .card.card-theme-minimal .card-meta { border-bottom-color: #eeeeee; }
+        .card.card-theme-minimal .card-option-btn {
+            border-radius: 4px;
+            border-color: #dddddd;
+            background: #f7f7f7;
+        }
+        body[data-theme="dark"] .card.card-theme-minimal {
+            --ct-primary: #eeeeee;
+            --ct-secondary: #999999;
+            --ct-text: #cccccc;
+            --ct-muted: #888888;
+            --ct-bg: #16181c;
+            --ct-border: #2c2f35;
+            --ct-glow: rgba(0, 0, 0, 0.4);
+        }
+
+        /* 8 fantasy 奇幻羊皮纸（羊皮卷/烫金/符文） */
+        .card.card-theme-fantasy {
+            --ct-primary: #8c5a1f;
+            --ct-secondary: #c99b3f;
+            --ct-text: #4a3a22;
+            --ct-muted: #8a7450;
+            --ct-bg: linear-gradient(180deg, #f5e6c8 0%, #e8cf9f 100%);
+            --ct-border: rgba(140, 90, 31, 0.4);
+            --ct-glow: rgba(140, 90, 31, 0.2);
+            --ct-title-font: "KaiTi", "STKaiti", "楷体", serif;
+        }
+        .card.card-theme-fantasy .card-title {
+            background: linear-gradient(135deg, #b8863a 0%, #8c5a1f 60%, #c99b3f 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 2px;
+        }
+        .card.card-theme-fantasy::after {
+            content: "✧ ✦ ✧"; position: absolute; top: -4px; right: 12px;
+            font-size: 0.7rem; color: rgba(140, 90, 31, 0.55); pointer-events: none;
+        }
+        body[data-theme="dark"] .card.card-theme-fantasy {
+            --ct-primary: #e0b063;
+            --ct-secondary: #c99b3f;
+            --ct-text: #eadfc4;
+            --ct-muted: #a6936c;
+            --ct-bg: linear-gradient(180deg, #2b2012 0%, #372a17 100%);
+            --ct-border: rgba(224, 176, 99, 0.35);
+            --ct-glow: rgba(0, 0, 0, 0.4);
+        }
+
+        /* 9 sci-fi-hud 科幻 HUD（等宽字体/扫描线/边框角标） */
+        .card.card-theme-sci-fi-hud {
+            --ct-primary: #4df3ff;
+            --ct-secondary: #7be0ff;
+            --ct-text: #cfeaff;
+            --ct-muted: #5f86a8;
+            --ct-bg: linear-gradient(180deg, #0a1628 0%, #0e1f38 100%);
+            --ct-border: rgba(77, 243, 255, 0.45);
+            --ct-glow: rgba(77, 243, 255, 0.15);
+            --ct-title-font: "Consolas", "Courier New", monospace;
+            border-radius: 8px;
+        }
+        .card.card-theme-sci-fi-hud::before {
+            content: ""; position: absolute; inset: 0; pointer-events: none;
+            background-image: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 3px);
+        }
+        .card.card-theme-sci-fi-hud::after {
+            content: ""; position: absolute; top: 6px; left: 6px; right: 6px; bottom: 6px;
+            pointer-events: none;
+            background:
+                linear-gradient(var(--ct-primary), var(--ct-primary)) top left / 12px 2px no-repeat,
+                linear-gradient(var(--ct-primary), var(--ct-primary)) top left / 2px 12px no-repeat,
+                linear-gradient(var(--ct-primary), var(--ct-primary)) top right / 12px 2px no-repeat,
+                linear-gradient(var(--ct-primary), var(--ct-primary)) top right / 2px 12px no-repeat,
+                linear-gradient(var(--ct-primary), var(--ct-primary)) bottom left / 12px 2px no-repeat,
+                linear-gradient(var(--ct-primary), var(--ct-primary)) bottom left / 2px 12px no-repeat,
+                linear-gradient(var(--ct-primary), var(--ct-primary)) bottom right / 12px 2px no-repeat,
+                linear-gradient(var(--ct-primary), var(--ct-primary)) bottom right / 2px 12px no-repeat;
+        }
+        .card.card-theme-sci-fi-hud .card-title { letter-spacing: 4px; text-transform: uppercase; }
+        .card.card-theme-sci-fi-hud .card-option-btn { font-family: "Consolas", "Courier New", monospace; }
+
+        /* 10 cottage 田园暖色（奶油/碎花/圆角） */
+        .card.card-theme-cottage {
+            --ct-primary: #c07a3e;
+            --ct-secondary: #8fb56b;
+            --ct-text: #5b4632;
+            --ct-muted: #a08a6f;
+            --ct-bg: linear-gradient(180deg, #fff8ec 0%, #fdeed6 100%);
+            --ct-border: rgba(192, 122, 62, 0.35);
+            --ct-glow: rgba(192, 122, 62, 0.14);
+            --ct-title-font: "KaiTi", "STKaiti", "楷体", serif;
+            border-radius: 22px;
+        }
+        .card.card-theme-cottage::before {
+            content: ""; position: absolute; inset: 0; pointer-events: none;
+            background-image:
+                radial-gradient(circle 2px at 12% 18%, rgba(192, 122, 62, 0.5), transparent 2.4px),
+                radial-gradient(circle 2px at 86% 24%, rgba(143, 181, 107, 0.55), transparent 2.4px),
+                radial-gradient(circle 2px at 22% 78%, rgba(143, 181, 107, 0.45), transparent 2.4px),
+                radial-gradient(circle 2px at 76% 82%, rgba(192, 122, 62, 0.45), transparent 2.4px),
+                radial-gradient(circle 2px at 52% 12%, rgba(213, 150, 160, 0.4), transparent 2.4px);
+        }
+        .card.card-theme-cottage .card-option-btn { border-radius: 999px; }
+        body[data-theme="dark"] .card.card-theme-cottage {
+            --ct-primary: #e2a268;
+            --ct-secondary: #9cbf78;
+            --ct-text: #eadbc4;
+            --ct-muted: #a89477;
+            --ct-bg: linear-gradient(180deg, #241c12 0%, #2e2416 100%);
+            --ct-border: rgba(226, 162, 104, 0.35);
+            --ct-glow: rgba(0, 0, 0, 0.4);
         }
 
 
