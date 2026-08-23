@@ -2596,6 +2596,7 @@
                     <button class="mini-btn primary" onclick="saveScenarioCard()">保存当前卡片</button>
                     <button class="mini-btn ghost" onclick="importScenarioTxt()">导入设定TXT</button>
                     <button class="mini-btn ghost" onclick="startFromPlay()">保存并返回游玩</button>
+                    <button class="mini-btn ghost" onclick="switchView('view-home')">取消并返回</button>
                 </div>
             </section>
         </section>
@@ -2620,6 +2621,7 @@
                 </label>
                 <div class="setting-actions">
                     <button class="mini-btn ghost" onclick="saveUserApiSettings()">保存设置</button>
+                    <button class="mini-btn ghost" onclick="switchView('view-home')">← 返回首页</button>
                 </div>
             </section>
             <section class="card">
@@ -2705,6 +2707,7 @@
                     <button class="nav-btn" data-view="view-inventory" data-nav-scope="play" onclick="switchView('view-inventory')">🎒 背包</button>
                     <button class="nav-btn" data-view="view-social" data-nav-scope="play" onclick="switchView('view-social')">💬 社交</button>
                     <button class="nav-btn" data-view="view-saves" data-nav-scope="play" onclick="switchView('view-saves')">💾 存档</button>
+                    <button class="nav-btn" data-view="view-home" data-nav-scope="play" onclick="switchView('view-home')">🏠 主页</button>
                 </div>
             </div>
         </div>
@@ -2740,6 +2743,9 @@
                         <div class="loading-progress-bar" id="init-loading-progress"></div>
                     </div>
                 </div>
+            </div>
+            <div class="gender-actions" style="margin-top:12px;justify-content:center;">
+                <button class="mini-btn ghost" onclick="InitLoadingService.cancel()">取消</button>
             </div>
         </div>
     </div>
@@ -7981,7 +7987,9 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
     })();
 
     const InitLoadingService = (() => {
+        let cancelledFlag = false;
         function open(text) {
+            cancelledFlag = false;
             document.getElementById("init-loading-desc").innerText = text || "加载中，请稍候...";
             const bar = document.getElementById("init-loading-progress");
             if (bar) bar.style.width = "8%";
@@ -8028,7 +8036,17 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             const bar = document.getElementById("init-loading-progress");
             if (bar) bar.style.width = "0%";
         }
-        return { open, updateStage, close };
+        function cancel() {
+            cancelledFlag = true;
+            close();
+            if (PlayViewStateService.isInPlayMode()) PlayViewStateService.leavePlay();
+            switchView("view-home");
+            NoticeModalService.showInfo({ title: "已取消", descHtml: "已取消本次初始化，可重新选择卡片开始游玩。" });
+        }
+        function isCancelled() {
+            return cancelledFlag;
+        }
+        return { open, updateStage, close, cancel, isCancelled };
     })();
 
     const AIRequestService = (() => {
@@ -10098,6 +10116,7 @@ function openNpcProfile(npcId) {
                     previousPlan: retryOptions?.previousPlan || null
                 });
                 InitLoadingService.close();
+                if (InitLoadingService.isCancelled()) return;
                 pendingInitPlan = plan;
                 const desc = InitFlowService.buildPreviewDesc(plan);
                 document.getElementById("init-preview-desc").innerHTML = desc;
@@ -10107,6 +10126,7 @@ function openNpcProfile(npcId) {
                 openInitPreviewModal();
             } catch (e) {
                 InitLoadingService.close();
+                if (InitLoadingService.isCancelled()) return;
                 const title = "初始化解析失败";
                 const errMsg = String(e?.message || e || "");
                 const missingFields = InitFlowService.detectMissingFields(errMsg);
@@ -10126,6 +10146,7 @@ function openNpcProfile(npcId) {
                                 previousPlan: prev
                             });
                             InitLoadingService.close();
+                            if (InitLoadingService.isCancelled()) return;
                             pendingInitPlan = plan2;
                             const desc2 = InitFlowService.buildPreviewDesc(plan2);
                             document.getElementById("init-preview-desc").innerHTML = desc2;
