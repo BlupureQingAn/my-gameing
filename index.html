@@ -1517,6 +1517,65 @@
             padding: 10px 4px 4px;
             letter-spacing: 1px;
         }
+
+        /* ==================== 结构化剧本表单 ==================== */
+        .sf-section {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-top: 10px;
+            background: var(--card-soft);
+        }
+        .sf-section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent-dark);
+            margin-bottom: 8px;
+        }
+        .sf-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .sf-grid .sf-full {
+            grid-column: 1 / -1;
+        }
+        .sf-label {
+            display: block;
+            font-size: 12px;
+            color: var(--sub);
+            margin: 4px 0 2px;
+        }
+        .sf-npc-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            padding: 8px;
+            border: 1px dashed var(--line);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            position: relative;
+        }
+        .sf-npc-row .sf-npc-del {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            font-size: 11px;
+            color: var(--sub);
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+        .sf-tip {
+            font-size: 11px;
+            color: var(--sub);
+            margin-top: 4px;
+        }
+        @media (max-width: 520px) {
+            .sf-grid, .sf-npc-row {
+                grid-template-columns: 1fr;
+            }
+        }
         .scenario-group-title:first-child {
             padding-top: 0;
         }
@@ -2019,6 +2078,67 @@
                 <div class="list-sub">可编辑当前卡片名称、文游设定、美化设定（用于 HTML 卡片风格）</div>
                 <input id="scenario-title-input" type="text" placeholder="卡片标题（可自定义，含置顶卡片）">
                 <input id="scenario-theme-input" type="text" placeholder="美化设定（例如：奶油暖色玻璃、古风卷轴）">
+                <div class="setting-actions" style="margin:6px 0 2px;">
+                    <button class="mini-btn ghost" id="sf-toggle-btn" onclick="ScenarioEditorService.toggleStructuredMode()">📋 结构化剧本表单</button>
+                    <button class="mini-btn ghost" id="sf-collapse-btn" style="display:none;" onclick="ScenarioEditorService.collapseStructuredForm()">收起表单</button>
+                </div>
+
+                <div id="scenario-structured-form" style="display:none; margin-top:4px;">
+                    <div class="sf-section">
+                        <div class="sf-section-title">🌍 世界档案</div>
+                        <div class="sf-grid">
+                            <div><label class="sf-label">时代</label><input id="sf-era" type="text" placeholder="如：1985年·香港"></div>
+                            <div><label class="sf-label">题材</label><input id="sf-genre" type="text" placeholder="如：娱乐圈/修仙/悬疑"></div>
+                            <div class="sf-full"><label class="sf-label">简介（世界观）</label><textarea id="sf-summary" class="scenario-editor" style="min-height:70px;" placeholder="世界背景与核心冲突概述"></textarea></div>
+                            <div class="sf-full"><label class="sf-label">世界规则（每行一条，最多 12 条）</label><textarea id="sf-rules" class="scenario-editor" style="min-height:90px;" placeholder="如：\n不可脱离时代\n保持港风"></textarea></div>
+                            <div class="sf-full"><label class="sf-label">氛围</label><input id="sf-atmosphere" type="text" placeholder="如：霓虹与潮湿"></div>
+                        </div>
+                    </div>
+
+                    <div class="sf-section">
+                        <div class="sf-section-title">🧍 主角身份</div>
+                        <div class="sf-grid">
+                            <div><label class="sf-label">姓名</label><input id="sf-name" type="text" placeholder="主角姓名"></div>
+                            <div><label class="sf-label">性别</label><input id="sf-gender" type="text" placeholder="男/女/自定义"></div>
+                            <div><label class="sf-label">年龄</label><input id="sf-age" type="text" placeholder="如：19"></div>
+                            <div class="sf-full"><label class="sf-label">背景</label><textarea id="sf-background" class="scenario-editor" style="min-height:60px;" placeholder="主角出身、处境、目标"></textarea></div>
+                        </div>
+                    </div>
+
+                    <div class="sf-section">
+                        <div class="sf-section-title">👥 重要人物（NPC，最多 20 个）</div>
+                        <div id="sf-npc-list"></div>
+                        <button class="mini-btn ghost" onclick="ScenarioEditorService.addNpcRow()">＋ 添加人物</button>
+                    </div>
+
+                    <div class="sf-section">
+                        <div class="sf-section-title">⏳ 时间线</div>
+                        <div class="sf-grid">
+                            <div><label class="sf-label">起始年</label><input id="sf-year" type="number" placeholder="如：1985"></div>
+                            <div><label class="sf-label">起始月</label><input id="sf-month" type="number" min="1" max="12" placeholder="1-12"></div>
+                            <div><label class="sf-label">起始日</label><input id="sf-day" type="number" min="1" max="31" placeholder="1-31"></div>
+                            <div class="sf-full"><label class="sf-label">时间线备注</label><input id="sf-timeline-note" type="text" placeholder="如：港星黄金十年开端"></div>
+                        </div>
+                    </div>
+
+                    <div class="sf-section">
+                        <div class="sf-section-title">🎬 场景风格</div>
+                        <div class="sf-grid">
+                            <div><label class="sf-label">环境模板（每行一条，最多 8 条）</label><textarea id="sf-env-templates" class="scenario-editor" style="min-height:70px;" placeholder="如：\n霓虹街道\n片场"></textarea></div>
+                            <div><label class="sf-label">选项风格</label><textarea id="sf-option-style" class="scenario-editor" style="min-height:70px;" placeholder="如：选项要带行动感"></textarea></div>
+                        </div>
+                    </div>
+
+                    <div class="sf-section">
+                        <div class="sf-section-title">🎬 首场景</div>
+                        <div class="sf-grid">
+                            <div class="sf-full"><label class="sf-label">开场剧情</label><textarea id="sf-first-story" class="scenario-editor" style="min-height:110px;" placeholder="开局时的剧情正文"></textarea></div>
+                            <div class="sf-full"><label class="sf-label">开局选项（每行一条，最多 3 条）</label><textarea id="sf-first-options" class="scenario-editor" style="min-height:60px;" placeholder="如：\n去茶餐厅\n去片场"></textarea></div>
+                        </div>
+                    </div>
+                    <div class="sf-tip">保存后将生成结构化设定文本，AI 将基于这些分区字段驱动剧情。官方剧本也可在此查看与微调。</div>
+                </div>
+
                 <textarea id="scenario-editor" class="scenario-editor" placeholder="在这里编辑当前卡片的文游设定"></textarea>
                 <div class="setting-actions">
                     <button class="mini-btn primary" onclick="saveScenarioCard()">保存当前卡片</button>
@@ -2195,7 +2315,7 @@
     </div>
 </div>
 
-<script src="scenarios.js"></script>
+<script src="scenarios/scenarios.js"></script>
 <script>
     const AppConfig = {
         storageKeys: {
@@ -5342,6 +5462,9 @@ function rebuildChoicesBlock(body, labels = []) {
             titleInput.readOnly = false;
             document.getElementById("scenario-theme-input").value = selectedScenario?.theme || "";
             document.getElementById("scenario-editor").value = selectedScenario?.text || AppConfig.defaultScenario;
+            // 打开卡片时同步结构化表单（有 structured 数据的卡片自动展开表单模式）
+            ScenarioEditorService.syncFormFromCard(selectedScenario);
+            ScenarioEditorService.showStructuredForm(!!(selectedScenario && selectedScenario.structured));
 
             const darkModeInput = document.getElementById("ui-dark-mode-enabled");
             if (darkModeInput) darkModeInput.checked = ThemeService.getMode() === "dark";
@@ -5436,6 +5559,7 @@ function rebuildChoicesBlock(body, labels = []) {
     })();
 
     const ScenarioEditorService = (() => {
+        let structuredMode = false;
         function readForm() {
             return {
                 title: document.getElementById("scenario-title-input").value.trim(),
@@ -5452,7 +5576,171 @@ function rebuildChoicesBlock(body, labels = []) {
             const editor = document.getElementById("scenario-editor");
             if (editor) editor.focus();
         }
-        return { readForm, writeForm, focusEditor };
+
+        // ==================== 结构化剧本表单 ====================
+        function isStructuredMode() {
+            return structuredMode;
+        }
+        function el(id) {
+            return document.getElementById(id);
+        }
+        function showStructuredForm(on) {
+            structuredMode = on;
+            const form = el("scenario-structured-form");
+            const toggleBtn = el("sf-toggle-btn");
+            const collapseBtn = el("sf-collapse-btn");
+            if (form) form.style.display = on ? "block" : "none";
+            if (toggleBtn) toggleBtn.style.display = on ? "none" : "";
+            if (collapseBtn) collapseBtn.style.display = on ? "" : "none";
+        }
+        function toggleStructuredMode() {
+            const next = !structuredMode;
+            if (next) syncFormFromCard(ScenarioCardService.getSelectedCard());
+            showStructuredForm(next);
+        }
+        function collapseStructuredForm() {
+            showStructuredForm(false);
+        }
+        function addNpcRow(npc = {}) {
+            const list = el("sf-npc-list");
+            if (!list) return;
+            const row = document.createElement("div");
+            row.className = "sf-npc-row";
+            const fields = [
+                ["sf-npc-name", "姓名", npc.name],
+                ["sf-npc-role", "角色/职位", npc.role],
+                ["sf-npc-personality", "性格", npc.personality],
+                ["sf-npc-relationship", "与主角的关系", npc.relationship]
+            ];
+            row.innerHTML = fields.map(([cls, ph, val]) =>
+                `<input class="${cls}" type="text" placeholder="${ph}" value="${String(val || "").replace(/"/g, "&quot;")}">`
+            ).join("") +
+                `<button class="sf-npc-del" title="删除" onclick="ScenarioEditorService.removeNpcRow(this)">✕</button>`;
+            list.appendChild(row);
+        }
+        function removeNpcRow(btn) {
+            const row = btn && btn.closest ? btn.closest(".sf-npc-row") : null;
+            if (row) row.remove();
+        }
+        function lineList(value) {
+            return String(value || "").split("\n").map((s) => s.trim()).filter(Boolean);
+        }
+        function renderTextFromData(d) {
+            const lines = [];
+            lines.push("【世界设定】");
+            if (d.world.era) lines.push(`时代：${d.world.era}`);
+            if (d.world.genre) lines.push(`题材：${d.world.genre}`);
+            lines.push(`简介：${d.world.summary || ""}`);
+            if ((d.world.rules || []).length) {
+                lines.push("规则：");
+                d.world.rules.forEach((r, i) => lines.push(`  ${i + 1}. ${r}`));
+            }
+            if (d.world.atmosphere) lines.push(`氛围：${d.world.atmosphere}`);
+            lines.push("");
+            lines.push("【主角身份】");
+            lines.push(`姓名：${d.identity.name || ""}`);
+            if (d.identity.gender) lines.push(`性别：${d.identity.gender}`);
+            if (d.identity.age) lines.push(`年龄：${d.identity.age}`);
+            lines.push(`背景：${d.identity.background || "（由故事发展决定）"}`);
+            if ((d.npcs || []).length) {
+                lines.push("");
+                lines.push("【重要人物】");
+                d.npcs.forEach((n) => {
+                    lines.push(`- ${n.name}（${n.role || "?"}）：${n.personality || ""}${n.relationship ? `；与主角：${n.relationship}` : ""}`);
+                });
+            }
+            lines.push("");
+            lines.push("【时间线】");
+            lines.push(`起始：${d.timeline.start.year}年${d.timeline.start.month}月${d.timeline.start.day}日`);
+            if (d.timeline.note) lines.push(`备注：${d.timeline.note}`);
+            if (d.scene_style.option_style) {
+                lines.push("");
+                lines.push(`【选项风格】${d.scene_style.option_style}`);
+            }
+            return lines.join("\n");
+        }
+        function syncFormFromCard(card) {
+            const d = (card && card.structured && typeof card.structured === "object") ? card.structured : null;
+            const set = (id, val) => { const node = el(id); if (node) node.value = val || ""; };
+            if (!d) {
+                set("sf-era", ""); set("sf-genre", ""); set("sf-summary", ""); set("sf-rules", "");
+                set("sf-atmosphere", "");
+                set("sf-name", ""); set("sf-gender", ""); set("sf-age", ""); set("sf-background", "");
+                set("sf-year", ""); set("sf-month", ""); set("sf-day", ""); set("sf-timeline-note", "");
+                set("sf-env-templates", ""); set("sf-option-style", "");
+                set("sf-first-story", ""); set("sf-first-options", "");
+                const list = el("sf-npc-list");
+                if (list) list.innerHTML = "";
+                return;
+            }
+            set("sf-era", d.world.era); set("sf-genre", d.world.genre);
+            set("sf-summary", d.world.summary); set("sf-rules", (d.world.rules || []).join("\n"));
+            set("sf-atmosphere", d.world.atmosphere);
+            set("sf-name", d.identity.name); set("sf-gender", d.identity.gender);
+            set("sf-age", d.identity.age); set("sf-background", d.identity.background);
+            set("sf-year", d.timeline.start.year); set("sf-month", d.timeline.start.month); set("sf-day", d.timeline.start.day);
+            set("sf-timeline-note", d.timeline.note);
+            set("sf-env-templates", (d.scene_style.env_templates || []).join("\n"));
+            set("sf-option-style", d.scene_style.option_style);
+            set("sf-first-story", d.first_scene.story);
+            set("sf-first-options", (d.first_scene.options || []).join("\n"));
+            const list = el("sf-npc-list");
+            if (list) {
+                list.innerHTML = "";
+                (d.npcs || []).forEach((n) => addNpcRow(n));
+            }
+        }
+        function readStructuredForm() {
+            const val = (id) => String(el(id) ? el(id).value : "").trim();
+            const numVal = (id, fallback) => {
+                const n = Number(val(id));
+                return Number.isFinite(n) && n > 0 ? n : fallback;
+            };
+            const y = numVal("sf-year", 2026);
+            const m = Math.min(Math.max(numVal("sf-month", 1), 1), 12);
+            const day = Math.min(Math.max(numVal("sf-day", 1), 1), 31);
+            const npcs = [];
+            const rows = el("sf-npc-list") ? [...el("sf-npc-list").querySelectorAll(".sf-npc-row")] : [];
+            rows.forEach((row) => {
+                const q = (cls) => String(row.querySelector(`.${cls}`) ? row.querySelector(`.${cls}`).value : "").trim();
+                const name = q("sf-npc-name");
+                if (!name) return;
+                npcs.push({
+                    name,
+                    role: q("sf-npc-role"),
+                    personality: q("sf-npc-personality"),
+                    relationship: q("sf-npc-relationship")
+                });
+            });
+            const data = {
+                theme: "retro-paper",
+                world: {
+                    era: val("sf-era"),
+                    genre: val("sf-genre"),
+                    summary: val("sf-summary"),
+                    rules: lineList(val("sf-rules")).slice(0, 12),
+                    atmosphere: val("sf-atmosphere")
+                },
+                identity: {
+                    name: val("sf-name"),
+                    gender: val("sf-gender"),
+                    age: val("sf-age"),
+                    background: val("sf-background")
+                },
+                npcs: npcs.slice(0, 20),
+                timeline: { start: { year: y, month: m, day }, note: val("sf-timeline-note") },
+                scene_style: {
+                    env_templates: lineList(val("sf-env-templates")).slice(0, 8),
+                    option_style: val("sf-option-style")
+                },
+                first_scene: {
+                    story: val("sf-first-story"),
+                    options: lineList(val("sf-first-options")).slice(0, 3)
+                }
+            };
+            return { structured: data, text: renderTextFromData(data) };
+        }
+        return { readForm, writeForm, focusEditor, isStructuredMode, toggleStructuredMode, collapseStructuredForm, showStructuredForm, addNpcRow, removeNpcRow, syncFormFromCard, readStructuredForm };
     })();
 
     const SaveSlotService = (() => {
@@ -8499,11 +8787,19 @@ const token = delta.content || "";
         function saveScenarioCard({ renderAll }) {
             const form = ScenarioEditorService.readForm();
             const selectedCardId = ScenarioCardService.getSelectedId();
-            ScenarioCardService.updateSelectedCard({
+            const payload = {
                 title: form.title || "未命名设定",
-                theme: form.theme,
-                text: form.text || AppConfig.defaultScenario
-            });
+                theme: form.theme
+            };
+            if (ScenarioEditorService.isStructuredMode()) {
+                // 结构化模式：以分区表单为准，生成结构化数据 + 渲染文本
+                const r = ScenarioEditorService.readStructuredForm();
+                payload.structured = r.structured;
+                payload.text = r.text || AppConfig.defaultScenario;
+            } else {
+                payload.text = form.text || AppConfig.defaultScenario;
+            }
+            ScenarioCardService.updateSelectedCard(payload);
             renderAll();
             NoticeModalService.showInfo({ title: "保存成功", descHtml: "设定卡片已保存" });
         }
@@ -9299,7 +9595,7 @@ async function playPresetTemplate(preset) {
                 openingChoices: merged.openingChoices || []
             });
         }
-        return { init, onSendClick, sendUserText, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, applyPresetTemplate, editPresetTemplate, playPresetTemplate, startFromPlay, importScenarioTxt, openInitPreviewModal, closeInitPreviewModal, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
+        return { init, onSendClick, sendUserText, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, restoreOfficialScenarioCards, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, applyPresetTemplate, editPresetTemplate, playPresetTemplate, startFromPlay, importScenarioTxt, openInitPreviewModal, closeInitPreviewModal, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
