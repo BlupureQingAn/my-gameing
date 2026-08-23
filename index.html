@@ -1949,6 +1949,10 @@
             <button onclick="MembershipService.closePanel()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--sub);">✕</button>
         </div>
         <div class="list-sub">非会员每日免费 20 次；会员期间不限量调用（模型由系统自动路由）。</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:10px 0;padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,#fff3d6,#ffe3b3);border:1px solid #e8b84b;">
+            <div style="font-size:0.9rem;font-weight:700;color:#8a4b00;">🔥 限时优惠进行中</div>
+            <div style="font-size:0.9rem;font-weight:700;color:#d63031;">距优惠结束 <span id="membership-countdown" style="font-variant-numeric:tabular-nums;background:#fff;padding:2px 8px;border-radius:6px;border:1px solid #e8b84b;">23:59:59</span></div>
+        </div>
         <div class="recharge-grid" id="membership-plan-grid"></div>
         <div class="list-title" style="font-size:0.9rem;margin-top:10px;">支付方式</div>
         <div class="pay-method-grid">
@@ -2199,10 +2203,10 @@
             uiThemeMode: "bitlife_ui_theme_mode_v1"
         },
         membershipPlans: {
-            monthly:   { id: "monthly",   name: "月度会员", price: "9.9",  days: 30,    desc: "30 天不限量" },
-            quarterly: { id: "quarterly", name: "季度会员", price: "24.9", days: 90,    desc: "90 天不限量" },
-            yearly:    { id: "yearly",    name: "年度会员", price: "52",   days: 365,   desc: "365 天不限量" },
-            lifetime:  { id: "lifetime",  name: "终身会员", price: "89",   days: 73000, desc: "永久不限量" }
+            monthly:   { id: "monthly",   name: "月度会员", price: "9.9",  originalPrice: "25",   days: 30,    desc: "30 天不限量" },
+            quarterly: { id: "quarterly", name: "季度会员", price: "24.9", originalPrice: "69",   days: 90,    desc: "90 天不限量" },
+            yearly:    { id: "yearly",    name: "年度会员", price: "52",   originalPrice: "149",  days: 365,   desc: "365 天不限量" },
+            lifetime:  { id: "lifetime",  name: "终身会员", price: "89",   originalPrice: "249",  days: 73000, desc: "永久不限量" }
         },
         identityPools: {
             cnNames: ["沈知夏", "苏见微", "江望舒", "程以宁", "周晚棠", "宋栖月", "陆听岚", "秦若禾", "林清和", "许映棠", "叶若岚", "顾晚晴", "姜令仪", "白昭宁"],
@@ -9294,6 +9298,7 @@ async function playPresetTemplate(preset) {
             if (titleEl) titleEl.innerText = isMember ? "会员续费 / 升级" : "开通会员";
             modal.style.display = "flex";
             renderPlans();
+            startCountdown();
             document.querySelectorAll(".pay-method-btn").forEach(b => b.classList.toggle("active", b.dataset.pay === selectedPayType));
             document.getElementById("membership-pay-area").innerHTML = "";
             refreshStatus();
@@ -9302,6 +9307,7 @@ async function playPresetTemplate(preset) {
             const modal = document.getElementById("membership-modal");
             if (modal) modal.style.display = "none";
             stopPoll();
+            stopCountdown();
         }
         function renderPlans() {
             const grid = document.getElementById("membership-plan-grid");
@@ -9309,12 +9315,36 @@ async function playPresetTemplate(preset) {
             const current = AuthService.getUserData()?.membership_type || "";
             grid.innerHTML = Object.values(AppConfig.membershipPlans).map(p =>
                 `<div class="recharge-item ${selectedPlan === p.id ? "active" : ""}" onclick="MembershipService.selectPlan('${p.id}')">
-                    <div class="recharge-coins">¥${p.price}</div>
+                    <div class="recharge-coins"><span style="font-size:0.75rem;color:#a89580;text-decoration:line-through;margin-right:4px;">¥${p.originalPrice}</span>¥${p.price}</div>
                     <div class="recharge-price">${p.name}${current === p.id ? "（当前）" : ""}</div>
                     <div class="recharge-price">${p.desc}</div>
                 </div>`
             ).join("");
         }
+        // 限时优惠倒计时：用户首次打开面板开始计时，24h 到期自动无缝续期（用户随时可买）
+        const COUNTDOWN_KEY = "bitlife_membership_countdown_v1";
+        const COUNTDOWN_MS = 24 * 3600 * 1000;
+        let _cdTimer = null;
+        function renderCountdown() {
+            const el = document.getElementById("membership-countdown");
+            if (!el) return;
+            let start = Number(localStorage.getItem(COUNTDOWN_KEY) || 0);
+            if (!start || Date.now() - start >= COUNTDOWN_MS) {
+                start = Date.now();
+                localStorage.setItem(COUNTDOWN_KEY, String(start));
+            }
+            const remain = Math.max(0, start + COUNTDOWN_MS - Date.now());
+            const h = String(Math.floor(remain / 3600000)).padStart(2, "0");
+            const m = String(Math.floor((remain % 3600000) / 60000)).padStart(2, "0");
+            const s = String(Math.floor((remain % 60000) / 1000)).padStart(2, "0");
+            el.textContent = `${h}:${m}:${s}`;
+        }
+        function startCountdown() {
+            stopCountdown();
+            renderCountdown();
+            _cdTimer = setInterval(renderCountdown, 1000);
+        }
+        function stopCountdown() { if (_cdTimer) { clearInterval(_cdTimer); _cdTimer = null; } }
         function selectPlan(id) {
             selectedPlan = id;
             renderPlans();
