@@ -5,9 +5,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_cy_01",
     "title": "炮灰逆袭手册",
     "category": "穿越",
-    "theme": "retro-paper",
+    "theme": "minimal",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "minimal",
       "world": {
         "era": "架空·大景王朝（穿书）",
         "genre": "穿书宅斗",
@@ -87,9 +87,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_cy_02",
     "title": "魏晋风骨录",
     "category": "穿越",
-    "theme": "retro-paper",
+    "theme": "ink-wash",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "ink-wash",
       "world": {
         "era": "魏晋·东晋永和年间",
         "genre": "历史穿越",
@@ -169,9 +169,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_cy_03",
     "title": "带着商城穿古代",
     "category": "穿越",
-    "theme": "retro-paper",
+    "theme": "cyber-neon",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "cyber-neon",
       "world": {
         "era": "架空·大梁王朝",
         "genre": "系统穿越",
@@ -251,9 +251,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_cy_04",
     "title": "兽世求生",
     "category": "穿越",
-    "theme": "retro-paper",
+    "theme": "fantasy",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "fantasy",
       "world": {
         "era": "异世界·蛮荒兽世",
         "genre": "异世生存",
@@ -333,9 +333,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_cy_05",
     "title": "星际漂流记",
     "category": "穿越",
-    "theme": "retro-paper",
+    "theme": "sci-fi-hud",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "sci-fi-hud",
       "world": {
         "era": "公元 2287 年·深空",
         "genre": "星际科幻",
@@ -498,9 +498,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_ds_02",
     "title": "我的房东是妖怪",
     "category": "都市",
-    "theme": "retro-paper",
+    "theme": "fantasy",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "fantasy",
       "world": {
         "era": "现代·都市怪谈",
         "genre": "都市",
@@ -581,9 +581,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_ds_03",
     "title": "重生之都市医仙",
     "category": "都市",
-    "theme": "retro-paper",
+    "theme": "glass",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "glass",
       "world": {
         "era": "现代·都市",
         "genre": "都市",
@@ -664,9 +664,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_ds_04",
     "title": "格子间生存法则",
     "category": "都市",
-    "theme": "retro-paper",
+    "theme": "minimal",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "minimal",
       "world": {
         "era": "现代·大厂职场",
         "genre": "都市",
@@ -747,9 +747,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_ds_05",
     "title": "天台咖啡店",
     "category": "都市",
-    "theme": "retro-paper",
+    "theme": "cottage",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "cottage",
       "world": {
         "era": "现代·治愈系",
         "genre": "都市",
@@ -830,9 +830,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_gd_01",
     "title": "冷宫惊梦",
     "category": "宫斗",
-    "theme": "retro-paper",
+    "theme": "ink-wash",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "ink-wash",
       "world": {
         "era": "清·雍正年间",
         "genre": "宫斗重生",
@@ -994,9 +994,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_gd_03",
     "title": "昭华令",
     "category": "宫斗",
-    "theme": "retro-paper",
+    "theme": "fantasy",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "fantasy",
       "world": {
         "era": "架空·大昭王朝",
         "genre": "后宫权谋",
@@ -1076,9 +1076,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_gd_04",
     "title": "玄凤双修",
     "category": "宫斗",
-    "theme": "retro-paper",
+    "theme": "gothic",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "gothic",
       "world": {
         "era": "架空·大玄王朝（灵气时代）",
         "genre": "宫斗修仙",
@@ -1158,9 +1158,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_gd_05",
     "title": "太后当国",
     "category": "宫斗",
-    "theme": "retro-paper",
+    "theme": "minimal",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "minimal",
       "world": {
         "era": "架空·大雍王朝",
         "genre": "宫廷权谋",
@@ -1240,9 +1240,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_kh_01",
     "title": "星舰维修员",
     "category": "科幻",
-    "theme": "retro-paper",
+    "theme": "sci-fi-hud",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "sci-fi-hud",
       "world": {
         "era": "公元2387年·星际殖民",
         "genre": "科幻",
@@ -1323,9 +1323,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_kh_02",
     "title": "克隆人生存指南",
     "category": "科幻",
-    "theme": "retro-paper",
+    "theme": "cyber-neon",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "cyber-neon",
       "world": {
         "era": "2050年代·义体都市",
         "genre": "科幻",
@@ -1406,9 +1406,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_kh_03",
     "title": "火星第一田",
     "category": "科幻",
-    "theme": "retro-paper",
+    "theme": "cottage",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "cottage",
       "world": {
         "era": "2089年·火星殖民",
         "genre": "科幻",
@@ -1489,9 +1489,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_kh_04",
     "title": "时间修补匠",
     "category": "科幻",
-    "theme": "retro-paper",
+    "theme": "glass",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "glass",
       "world": {
         "era": "现代·时间局",
         "genre": "科幻",
@@ -1738,9 +1738,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_ls_02",
     "title": "长安梦",
     "category": "历史",
-    "theme": "retro-paper",
+    "theme": "ink-wash",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "ink-wash",
       "world": {
         "era": "天宝年间·盛唐长安",
         "genre": "历史",
@@ -1821,9 +1821,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_ls_03",
     "title": "宋朝厨娘",
     "category": "历史",
-    "theme": "retro-paper",
+    "theme": "cottage",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "cottage",
       "world": {
         "era": "北宋·汴京城",
         "genre": "历史",
@@ -1904,9 +1904,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_ls_04",
     "title": "锦衣夜行",
     "category": "历史",
-    "theme": "retro-paper",
+    "theme": "gothic",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "gothic",
       "world": {
         "era": "万历年间·大明",
         "genre": "历史",
@@ -1987,9 +1987,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_ls_05",
     "title": "辛亥前夜",
     "category": "历史",
-    "theme": "retro-paper",
+    "theme": "minimal",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "minimal",
       "world": {
         "era": "1911年·辛亥前夕",
         "genre": "历史",
@@ -2070,9 +2070,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_ms_01",
     "title": "丧尸围城",
     "category": "末世",
-    "theme": "retro-paper",
+    "theme": "gothic",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "gothic",
       "world": {
         "era": "现代·丧尸末世",
         "genre": "末世",
@@ -2153,9 +2153,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_ms_02",
     "title": "寒潮纪元",
     "category": "末世",
-    "theme": "retro-paper",
+    "theme": "sci-fi-hud",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "sci-fi-hud",
       "world": {
         "era": "近未来·冰河末世",
         "genre": "末世",
@@ -2236,9 +2236,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_ms_03",
     "title": "植物觉醒",
     "category": "末世",
-    "theme": "retro-paper",
+    "theme": "fantasy",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "fantasy",
       "world": {
         "era": "近未来·植物末世",
         "genre": "末世",
@@ -2319,9 +2319,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_ms_04",
     "title": "天空之城",
     "category": "末世",
-    "theme": "retro-paper",
+    "theme": "cyber-neon",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "cyber-neon",
       "world": {
         "era": "近未来·灾后浮空城",
         "genre": "末世",
@@ -2568,9 +2568,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_nz_02",
     "title": "江湖女侠录",
     "category": "女尊",
-    "theme": "retro-paper",
+    "theme": "ink-wash",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "ink-wash",
       "world": {
         "era": "架空·武林江湖",
         "genre": "女尊",
@@ -2651,9 +2651,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_nz_03",
     "title": "凤冠霞帔",
     "category": "女尊",
-    "theme": "retro-paper",
+    "theme": "minimal",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "minimal",
       "world": {
         "era": "架空·贵族宅院",
         "genre": "女尊",
@@ -2734,9 +2734,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_nz_04",
     "title": "女帅点兵",
     "category": "女尊",
-    "theme": "retro-paper",
+    "theme": "gothic",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "gothic",
       "world": {
         "era": "架空·烽火边关",
         "genre": "女尊",
@@ -2817,9 +2817,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_nz_05",
     "title": "女尊学院",
     "category": "女尊",
-    "theme": "retro-paper",
+    "theme": "cyber-neon",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "cyber-neon",
       "world": {
         "era": "现代·女尊架空",
         "genre": "女尊",
@@ -2900,9 +2900,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_qh_01",
     "title": "龙族后裔",
     "category": "奇幻",
-    "theme": "retro-paper",
+    "theme": "fantasy",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "fantasy",
       "world": {
         "era": "中土·龙血大陆",
         "genre": "奇幻",
@@ -2983,9 +2983,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_qh_02",
     "title": "亡灵法师的学徒",
     "category": "奇幻",
-    "theme": "retro-paper",
+    "theme": "gothic",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "gothic",
       "world": {
         "era": "黑暗纪元·骨城",
         "genre": "奇幻",
@@ -3066,9 +3066,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_qh_03",
     "title": "精灵游侠",
     "category": "奇幻",
-    "theme": "retro-paper",
+    "theme": "glass",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "glass",
       "world": {
         "era": "银叶森林·精灵纪元",
         "genre": "奇幻",
@@ -3232,9 +3232,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_qh_05",
     "title": "魔法学院新生",
     "category": "奇幻",
-    "theme": "retro-paper",
+    "theme": "fantasy",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "fantasy",
       "world": {
         "era": "暮光之都·赫利翁学院",
         "genre": "奇幻",
@@ -3315,9 +3315,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_wxl_01",
     "title": "死亡轮回游戏",
     "category": "无限流",
-    "theme": "retro-paper",
+    "theme": "gothic",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "gothic",
       "world": {
         "era": "无限轮回·恐怖副本",
         "genre": "无限流",
@@ -3398,9 +3398,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_wxl_02",
     "title": "生存竞技场",
     "category": "无限流",
-    "theme": "retro-paper",
+    "theme": "cyber-neon",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "cyber-neon",
       "world": {
         "era": "科幻·竞技副本",
         "genre": "无限流",
@@ -3481,9 +3481,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_wxl_03",
     "title": "书海无涯",
     "category": "无限流",
-    "theme": "retro-paper",
+    "theme": "minimal",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "minimal",
       "world": {
         "era": "架空·图书馆副本",
         "genre": "无限流",
@@ -3564,9 +3564,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_wxl_04",
     "title": "梦境迷宫",
     "category": "无限流",
-    "theme": "retro-paper",
+    "theme": "glass",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "glass",
       "world": {
         "era": "现代·梦境副本",
         "genre": "无限流",
@@ -3730,9 +3730,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_xyx_01",
     "title": "天台上的告白",
     "category": "校园",
-    "theme": "retro-paper",
+    "theme": "cottage",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "cottage",
       "world": {
         "era": "现代·高中",
         "genre": "校园",
@@ -3813,9 +3813,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_xyx_02",
     "title": "学霸系统",
     "category": "校园",
-    "theme": "retro-paper",
+    "theme": "cyber-neon",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "cyber-neon",
       "world": {
         "era": "现代·高中",
         "genre": "校园",
@@ -3896,9 +3896,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_xyx_03",
     "title": "学生会选举",
     "category": "校园",
-    "theme": "retro-paper",
+    "theme": "minimal",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "minimal",
       "world": {
         "era": "现代·大学",
         "genre": "校园",
@@ -3979,9 +3979,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_xyx_04",
     "title": "社团怪谈",
     "category": "校园",
-    "theme": "retro-paper",
+    "theme": "gothic",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "gothic",
       "world": {
         "era": "现代·高中",
         "genre": "校园",
@@ -4062,9 +4062,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_xyx_05",
     "title": "转学生与怪同学",
     "category": "校园",
-    "theme": "retro-paper",
+    "theme": "glass",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "glass",
       "world": {
         "era": "现代·治愈系",
         "genre": "校园",
@@ -4228,9 +4228,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_xx_02",
     "title": "散修之路",
     "category": "修仙",
-    "theme": "retro-paper",
+    "theme": "ink-wash",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "ink-wash",
       "world": {
         "era": "九荒大泽·修仙乱世",
         "genre": "修仙·散修",
@@ -4311,9 +4311,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_xx_03",
     "title": "魔道魁首",
     "category": "修仙",
-    "theme": "retro-paper",
+    "theme": "gothic",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "gothic",
       "world": {
         "era": "血月魔渊·魔道五宗",
         "genre": "修仙·魔道",
@@ -4394,9 +4394,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_xx_04",
     "title": "剑心通明",
     "category": "修仙",
-    "theme": "retro-paper",
+    "theme": "glass",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "glass",
       "world": {
         "era": "千雪剑阁·北境雪原",
         "genre": "修仙·剑修",
@@ -4477,9 +4477,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_xx_05",
     "title": "宗门杂役",
     "category": "修仙",
-    "theme": "retro-paper",
+    "theme": "fantasy",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "fantasy",
       "world": {
         "era": "玄天宗·东荒",
         "genre": "修仙·逆袭",
@@ -4643,9 +4643,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_xy_02",
     "title": "七日轮回",
     "category": "悬疑",
-    "theme": "retro-paper",
+    "theme": "cyber-neon",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "cyber-neon",
       "world": {
         "era": "现代·孤岛实验",
         "genre": "悬疑",
@@ -4726,9 +4726,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_xy_03",
     "title": "老宅第八个房间",
     "category": "悬疑",
-    "theme": "retro-paper",
+    "theme": "gothic",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "gothic",
       "world": {
         "era": "民国·深宅大院",
         "genre": "悬疑",
@@ -4809,9 +4809,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_xy_04",
     "title": "最后一班地铁",
     "category": "悬疑",
-    "theme": "retro-paper",
+    "theme": "sci-fi-hud",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "sci-fi-hud",
       "world": {
         "era": "现代·城市怪谈",
         "genre": "悬疑",
@@ -4892,9 +4892,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_xy_05",
     "title": "完美不在场证明",
     "category": "悬疑",
-    "theme": "retro-paper",
+    "theme": "minimal",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "minimal",
       "world": {
         "era": "现代·本格推理",
         "genre": "悬疑",
@@ -5058,9 +5058,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_yl_02",
     "title": "顶流之争",
     "category": "娱乐圈",
-    "theme": "retro-paper",
+    "theme": "cyber-neon",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "cyber-neon",
       "world": {
         "era": "2026年·数字时代",
         "genre": "娱乐圈",
@@ -5141,9 +5141,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_yl_03",
     "title": "老戏骨工作室",
     "category": "娱乐圈",
-    "theme": "retro-paper",
+    "theme": "minimal",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "minimal",
       "world": {
         "era": "2020年代·影视寒冬",
         "genre": "娱乐圈",
@@ -5224,9 +5224,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_yl_04",
     "title": "星援计划",
     "category": "娱乐圈",
-    "theme": "retro-paper",
+    "theme": "sci-fi-hud",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "sci-fi-hud",
       "world": {
         "era": "2046年·元宇宙时代",
         "genre": "娱乐圈",
@@ -5307,9 +5307,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_yl_05",
     "title": "戏曲人家",
     "category": "娱乐圈",
-    "theme": "retro-paper",
+    "theme": "ink-wash",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "ink-wash",
       "world": {
         "era": "1990年代·江南",
         "genre": "娱乐圈",
@@ -5390,9 +5390,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_zt_01",
     "title": "我在古代种田",
     "category": "种田",
-    "theme": "retro-paper",
+    "theme": "cottage",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "cottage",
       "world": {
         "era": "架空·青石县",
         "genre": "种田",
@@ -5473,9 +5473,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_zt_02",
     "title": "荒岛求生",
     "category": "种田",
-    "theme": "retro-paper",
+    "theme": "fantasy",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "fantasy",
       "world": {
         "era": "孤岛·与世隔绝",
         "genre": "种田",
@@ -5556,9 +5556,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_zt_03",
     "title": "星际农场主",
     "category": "种田",
-    "theme": "retro-paper",
+    "theme": "sci-fi-hud",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "sci-fi-hud",
       "world": {
         "era": "2189年·边境行星",
         "genre": "种田",
@@ -5722,9 +5722,9 @@ window.SCENARIO_LIBRARY = [
     "id": "scenario_preset_zt_05",
     "title": "山间民宿",
     "category": "种田",
-    "theme": "retro-paper",
+    "theme": "minimal",
     "structured": {
-      "theme": "retro-paper",
+      "theme": "minimal",
       "world": {
         "era": "现代·山村",
         "genre": "种田",

@@ -5873,9 +5873,8 @@ function rebuildChoicesBlock(body, labels = []) {
             const category = ScenarioCardViewService.getCategory();
             box.innerHTML = "";
             ScenarioCardViewService.renderFilter();
-            // 分类筛选 + 关键词筛选（自定义卡不参与分类筛选，始终置顶显示）
+            // 分类筛选 + 关键词筛选（自定义卡同样按 category 参与分类）
             const filteredCards = cards.filter((card) => {
-                if (card.sourceType !== "official") return ScenarioCardViewService.matchesSearch(card, keyword);
                 const catKey = String(card.category || "其他");
                 if (category !== "全部" && catKey !== category) return false;
                 return ScenarioCardViewService.matchesSearch(card, keyword);
@@ -5884,11 +5883,11 @@ function rebuildChoicesBlock(body, labels = []) {
                 box.innerHTML = `<div class="list-sub">未找到匹配卡片：${keyword || category}</div>`;
                 return;
             }
-            // 按分类分组渲染（官方卡按 category，自定义卡单独一组排最前）
+            // 按分类分组渲染（官方/自定义卡统一按 category 归组，不再有"自定义"组）
             const groups = [];
             const byGroup = new Map();
             filteredCards.forEach((card) => {
-                const key = card.sourceType === "official" ? String(card.category || "其他") : "自定义";
+                const key = String(card.category || "其他");
                 if (!byGroup.has(key)) {
                     byGroup.set(key, []);
                     groups.push(key);
@@ -5897,11 +5896,73 @@ function rebuildChoicesBlock(body, labels = []) {
             });
             // 搜索时展开所有组，便于直接看到命中结果
             if (keyword) ScenarioCardViewService.expandAllGroups();
-            // 渲染层双保险：自定义组始终置顶（无自定义卡时跳过）
-            const orderedGroups = ["自定义", ...groups.filter((g) => g !== "自定义")].filter((g) => byGroup.has(g));
-            orderedGroups.forEach((groupKey) => {
-                const groupCards = byGroup.get(groupKey);
-                const catCount = groupKey === "自定义" ? "" : `（${groupCards.length} 个）`;
+            // 最近游玩置顶组：无筛选时取最近 5 张（lastPlayedAt 倒序），分类组内跳过已展示卡
+            const filterActive = Boolean(keyword) || category !== "全部";
+            const recentCards = [];
+            if (!filterActive) {
+                const metas = ScenarioPlayMetaService.loadMap();
+                recentCards.push(...cards
+                    .map((c) => ({ card: c, t: Number(metas[String(c.id)]?.lastPlayedAt) || 0 }))
+                    .filter((x) => x.t > 0)
+                    .sort((a, b) => b.t - a.t)
+                    .slice(0, 5)
+                    .map((x) => x.card)
+                    .filter((c) => filteredCards.includes(c)));
+            }
+            const recentIds = new Set(recentCards.map((c) => c.id));
+            const renderRow = (card) => {
+                const row = document.createElement("div");
+                row.className = `scenario-card ${card.id === selectedId ? "active" : ""}`;
+                row.dataset.cardId = card.id;
+                const customPinned = card.id === ScenarioCardService.CUSTOM_CARD_ID;
+                row.innerHTML = `
+                    <div class="scenario-card-main">
+                        <div class="list-title">${card.title}${customPinned ? "（置顶）" : ""}</div>
+                        <div class="scenario-badges">
+                            <span class="scenario-badge ${ScenarioCardViewService.groupClass(card)}">${ScenarioCardViewService.groupLabel(card)}</span>
+                            ${card.pinned ? '<span class="scenario-badge">置顶</span>' : ""}
+                        </div>
+                        <div class="list-sub">主题：${card.theme || "未设置"}｜设定长度：${(card.text || "").length}</div>
+                        <div style="margin-top:6px;">
+                            <button class="tiny-btn" data-op="play">游玩</button>
+                            <button class="tiny-btn" data-op="edit">设置</button>
+                        </div>
+                    </div>
+                    <div class="scenario-card-actions">
+                        <button class="scenario-action-btn edit" data-op="swipe-edit">设置</button>
+                        <button class="scenario-action-btn pin" data-op="swipe-pin">${ScenarioCardViewService.pinLabel(card)}</button>
+                        <button class="scenario-action-btn delete" data-op="swipe-del">删除</button>
+                    </div>
+                `;
+                row.querySelector('[data-op="play"]').onclick = () => Controller.playScenarioCard(card.id);
+                row.querySelector('[data-op="edit"]').onclick = () => Controller.openScenarioCardSettings(card.id);
+                row.querySelector('[data-op="swipe-edit"]').onclick = () => Controller.openScenarioCardSettings(card.id);
+                row.querySelector('[data-op="swipe-pin"]').onclick = () => Controller.toggleScenarioCardPin(card.id);
+                const delBtn = row.querySelector('[data-op="swipe-del"]');
+                if (delBtn) delBtn.onclick = () => Controller.deleteScenarioCard(card.id);
+                ScenarioCardInteractionService.bindSwipeAndSort(row, {
+                    onReorder: (fromId, toId) => Controller.reorderScenarioCards(fromId, toId)
+                });
+                box.appendChild(row);
+            };
+            if (recentCards.length) {
+                const collapsed = ScenarioCardViewService.isCollapsed("最近游玩");
+                const head = document.createElement("div");
+                head.className = "scenario-group-title";
+                head.style.cursor = "pointer";
+                head.style.userSelect = "none";
+                head.innerHTML = `<span class="scenario-group-arrow">${collapsed ? "▸" : "▾"}</span>最近游玩（${recentCards.length} 张）`;
+                head.onclick = () => {
+                    ScenarioCardViewService.toggleCollapsed("最近游玩");
+                    renderScenarioCards();
+                };
+                box.appendChild(head);
+                if (!collapsed) recentCards.forEach(renderRow);
+            }
+            groups.forEach((groupKey) => {
+                const groupCards = byGroup.get(groupKey).filter((c) => !recentIds.has(c.id));
+                if (!groupCards.length) return;
+                const catCount = `（${groupCards.length} 个）`;
                 const collapsed = ScenarioCardViewService.isCollapsed(groupKey);
                 const head = document.createElement("div");
                 head.className = "scenario-group-title";
@@ -5914,41 +5975,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 };
                 box.appendChild(head);
                 if (collapsed) return;
-                groupCards.forEach((card) => {
-                    const row = document.createElement("div");
-                    row.className = `scenario-card ${card.id === selectedId ? "active" : ""}`;
-                    row.dataset.cardId = card.id;
-                    const customPinned = card.id === ScenarioCardService.CUSTOM_CARD_ID;
-                    row.innerHTML = `
-                        <div class="scenario-card-main">
-                            <div class="list-title">${card.title}${customPinned ? "（置顶）" : ""}</div>
-                            <div class="scenario-badges">
-                                <span class="scenario-badge ${ScenarioCardViewService.groupClass(card)}">${ScenarioCardViewService.groupLabel(card)}</span>
-                                ${card.pinned ? '<span class="scenario-badge">置顶</span>' : ""}
-                            </div>
-                            <div class="list-sub">主题：${card.theme || "未设置"}｜设定长度：${(card.text || "").length}</div>
-                            <div style="margin-top:6px;">
-                                <button class="tiny-btn" data-op="play">游玩</button>
-                                <button class="tiny-btn" data-op="edit">设置</button>
-                            </div>
-                        </div>
-                        <div class="scenario-card-actions">
-                            <button class="scenario-action-btn edit" data-op="swipe-edit">设置</button>
-                            <button class="scenario-action-btn pin" data-op="swipe-pin">${ScenarioCardViewService.pinLabel(card)}</button>
-                            <button class="scenario-action-btn delete" data-op="swipe-del">删除</button>
-                        </div>
-                    `;
-                    row.querySelector('[data-op="play"]').onclick = () => Controller.playScenarioCard(card.id);
-                    row.querySelector('[data-op="edit"]').onclick = () => Controller.openScenarioCardSettings(card.id);
-                    row.querySelector('[data-op="swipe-edit"]').onclick = () => Controller.openScenarioCardSettings(card.id);
-                    row.querySelector('[data-op="swipe-pin"]').onclick = () => Controller.toggleScenarioCardPin(card.id);
-                    const delBtn = row.querySelector('[data-op="swipe-del"]');
-                    if (delBtn) delBtn.onclick = () => Controller.deleteScenarioCard(card.id);
-                    ScenarioCardInteractionService.bindSwipeAndSort(row, {
-                        onReorder: (fromId, toId) => Controller.reorderScenarioCards(fromId, toId)
-                    });
-                    box.appendChild(row);
-                });
+                groupCards.forEach(renderRow);
             });
         }
         return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, clearFancyStatus };
@@ -7105,6 +7132,15 @@ function rebuildChoicesBlock(body, labels = []) {
             map[id] = { ...prev, hasInitialized: !!value, updatedAt: Date.now() };
             saveMap(map);
         }
+        // 需求A:记录最近游玩时间(列表置顶排序依据),不覆盖其他元信息
+        function touchPlayed(cardId) {
+            const id = String(cardId || "");
+            if (!id) return;
+            const map = loadMap();
+            const prev = map[id] || {};
+            map[id] = { ...prev, lastPlayedAt: Date.now(), updatedAt: Date.now() };
+            saveMap(map);
+        }
         function getLockedSkeleton(cardId) {
             const meta = getMeta(cardId);
             return meta?.lockedCardSkeleton && typeof meta.lockedCardSkeleton === "object" ? meta.lockedCardSkeleton : null;
@@ -7127,7 +7163,7 @@ function rebuildChoicesBlock(body, labels = []) {
             map[id] = { ...prev, updatedAt: Date.now() };
             saveMap(map);
         }
-        return { getMeta, setInitialized, getLockedSkeleton, setLockedSkeleton, clearLockedSkeleton };
+        return { loadMap, getMeta, setInitialized, touchPlayed, getLockedSkeleton, setLockedSkeleton, clearLockedSkeleton };
     })();
 
     const HtmlCardRenderPipelineService = (() => {
@@ -7686,11 +7722,12 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             const isDark = ThemeService.getMode() === "dark";
 
             return [
-                "【填空协议——最高优先级】",
-                "⚠️ 本次回复必须输出且仅输出一个 JSON 对象，严禁输出任何 HTML 标签、Markdown 符号（如 ##、**、>）、解释文字或代码块围栏。",
-                "JSON 结构（字段说明）：",
+                "【输出格式——最高优先级】",
+                "⚠️ 本次回复必须直接输出 HTML 卡片：最外层是 class=\"ai-beauty-card\" 的 article/section/div 标签，包含剧情正文与选项等完整内容。严禁输出 Markdown 纯文本（如 ##、**、>、- 列表），严禁输出 ```state-patch``` 或任何 JSON 数据块围栏，严禁解释文字。",
+                'HTML 卡片结构要求：剧情正文（600-800字，多段；对话写成 XXX 对你说："..."）、结尾提供 1-3 个选项按钮（编号格式：1. xxx）。',
+                "若你更习惯结构化输出，可输出 JSON 填空协议（前端会自动渲染成同款卡片）：",
                 '{"story": "剧情正文（纯文本，可多段；对话写成 XXX 对你说："..."），600-800字", "time": {"year": 2026, "month": 8, "day": 15}, "stats": [{"key": "健康", "value": "78/100"}], "items": ["本轮新增物品"], "options": ["选项一", "选项二", "选项三"], "scene": "环境标签（如 夜晚/雨中/酒馆）"}',
-                "必填字段：story、options（2-4 个选项）；可选字段：time/stats/items/scene（无变化可整体省略）。",
+                "填空协议必填字段：story、options（2-4 个选项）；可选字段：time/stats/items/scene（无变化可整体省略）。",
                 "stats 键名必须来自白名单：健康/体力/生命/心情/情绪/精神/学识/智力/智慧/魅力/声望/名望/财富/金钱/武力/修为/灵力/权势/人脉/事业/饱食/饥饿/好感/体魄/才学/威望/体质/敏捷/力量/耐力/感知/意志/运气。",
                 "stats 值格式为数字或 数字/上限（如 78/100）；只列出本轮有变化或玩家最关心的 2-5 项。",
                 "items 只列本轮新获得或失去的物品名；无变化则省略该字段。",
@@ -7708,17 +7745,25 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             ].join("\n");
             return `${highestPriorityScenarioRules}\n\n【设定文本】\n${scenarioSpec}${beautyRules ? `\n\n${beautyRules}` : ""}\n\n${builtinRules}\n\n${stateFactLock}\n\n${runtimeContext}`;
         }
+        // C2:上一张 HTML 卡只保留结构骨架(清空正文),降低 TTFT 输入体积;样式与 data-block 结构完整保留
+        function slimLatestHtmlCard(latestHtmlCard) {
+            if (!latestHtmlCard) return "";
+            const skeleton = (HistoryCompressorService.extractSkeleton(latestHtmlCard) || latestHtmlCard).slice(0, 1200);
+            return skeleton;
+        }
         function buildMainUserPrompt(userText, recentHistory, latestHtmlCard = "") {
             const colorWarning = (window.colorCorrectionCount > 0)
                 ? `\n\n⚠️ 系统提示：检测到上一轮生成的卡片文字对比度过低，已被系统强制修正 ${window.colorCorrectionCount} 处。请在本轮选择更清晰的配色方案，确保文字与背景高对比。`
                 : "";
-            const latestCardBlock = latestHtmlCard
-                ? `\n\n最近一次完整HTML卡片（必须沿用其样式与结构，仅替换内容）：\n${latestHtmlCard}`
+            const latestSkeleton = slimLatestHtmlCard(latestHtmlCard);
+            const latestCardBlock = latestSkeleton
+                ? `\n\n最近一次HTML卡片结构骨架（必须沿用其样式与结构，仅替换内容；正文不需要输出）：\n${latestSkeleton}`
                 : "";
             return `玩家最新输入：${userText}\n\n最近记录：\n${recentHistory}${latestCardBlock}${colorWarning}`;
         }        function buildChoiceRetryPrompt(userText, recentHistory, rawText, scenarioSpec, latestHtmlCard = "") {
-            const latestCardBlock = latestHtmlCard
-                ? `\n\n最近一次完整HTML卡片（必须沿用其样式与结构，仅替换内容）：\n${latestHtmlCard}`
+            const latestSkeleton = slimLatestHtmlCard(latestHtmlCard);
+            const latestCardBlock = latestSkeleton
+                ? `\n\n最近一次HTML卡片结构骨架（必须沿用其样式与结构，仅替换内容；正文不需要输出）：\n${latestSkeleton}`
                 : "";
             return [
                 "【最高优先级：先遵守当前卡设定】",
@@ -7733,8 +7778,9 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             ].join("\n\n");
         }
         function buildConflictRetryPrompt(userText, recentHistory, conflictReport, finalText, scenarioSpec, latestHtmlCard = "") {
-            const latestCardBlock = latestHtmlCard
-                ? `最近一次完整HTML卡片（必须沿用其样式与结构，仅替换内容）：\n${latestHtmlCard}`
+            const latestSkeleton = slimLatestHtmlCard(latestHtmlCard);
+            const latestCardBlock = latestSkeleton
+                ? `最近一次HTML卡片结构骨架（必须沿用其样式与结构，仅替换内容；正文不需要输出）：\n${latestSkeleton}`
                 : "";
             return [
                 "【最高优先级：先遵守当前卡设定】",
@@ -7750,8 +7796,9 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
         }
         function buildWarningRetryPrompt(userText, recentHistory, warnings, finalText, scenarioSpec, latestHtmlCard = "") {
             const warningLines = (Array.isArray(warnings) ? warnings : []).map((x) => x?.message || String(x || "")).filter(Boolean);
-            const latestCardBlock = latestHtmlCard
-                ? `最近一次完整HTML卡片（必须沿用其样式与结构，仅替换内容）：\n${latestHtmlCard}`
+            const latestSkeleton = slimLatestHtmlCard(latestHtmlCard);
+            const latestCardBlock = latestSkeleton
+                ? `最近一次HTML卡片结构骨架（必须沿用其样式与结构，仅替换内容；正文不需要输出）：\n${latestSkeleton}`
                 : "";
             return [
                 "【最高优先级：先遵守当前卡设定】",
@@ -7766,8 +7813,9 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             ].join("\n\n");
         }
         function buildHtmlRetryPrompt(userText, recentHistory, rawText, skeletonHint, latestHtmlCard = "") {
-            const latestCardBlock = latestHtmlCard
-                ? `最近一次完整HTML卡片（必须沿用其样式与结构，仅替换内容）：\n${latestHtmlCard}`
+            const latestSkeleton = slimLatestHtmlCard(latestHtmlCard);
+            const latestCardBlock = latestSkeleton
+                ? `最近一次HTML卡片结构骨架（必须沿用其样式与结构，仅替换内容；正文不需要输出）：\n${latestSkeleton}`
                 : "";
             return [
                 "【⚠️ 格式错误——必须重新输出 HTML 卡片】",
@@ -9317,6 +9365,9 @@ const token = delta.content || "";
                 // 第一阶段：流式结束后立即完成渲染并解锁交互，避免用户体感“卡住”。
                 // state-patch 协议已在上方 applyWorldPatch 中执行（最高优先级），DOM 提取(AiPanelSync)作协议缺失时的兜底补充
                 TimeSyncService.syncFromAiText(StateService.get(), displayText);
+                // C3:卡片含面板数据(status/relations)时 auditor 无存在必要;仅纯文本兜底才需要辅路审计
+                const panelSnapshot = AiPanelSyncService.extractFromAiCard(displayText);
+                const panelHasData = (panelSnapshot.statItems?.length || panelSnapshot.npcUpdates?.length || panelSnapshot.statusTags?.length) > 0;
                 const panelChanged = AiPanelSyncService.syncFromAiText(StateService.get(), displayText);
                 UIRenderer.finishStreaming(displayText, { conflictDetected });
                 EventService.maybeTriggerAnimation(displayText);
@@ -9331,8 +9382,8 @@ const token = delta.content || "";
                 UIRenderer.renderInventory(currentState);
                 UIRenderer.renderSocialList(currentState);
 
-                // 第二阶段：辅路审计仅在协议缺失且 DOM 兜底也未提取到变化时触发（节省 AI 调用）
-                if (!rawPatchChanged && !panelChanged) {
+                // 第二阶段：辅路审计仅在协议缺失且卡片也未携带任何面板数据时触发（节省 AI 调用）
+                if (!rawPatchChanged && !panelHasData) {
                     (async () => {
                         try {
                             const patch = await StateAuditorService.auditStateChange(StateService.get(), userText, displayText);
@@ -9946,6 +9997,7 @@ function openNpcProfile(npcId) {
         }
         async function playScenarioCard(cardId) {
             selectScenarioCard(cardId);
+            ScenarioPlayMetaService.touchPlayed(cardId); // 需求A:记录最近游玩,列表置顶排序
             const meta = ScenarioPlayMetaService.getMeta(cardId);
             if (meta.hasInitialized) {
                 InitLoadingService.close();

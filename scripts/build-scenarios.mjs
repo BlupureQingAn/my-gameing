@@ -15,7 +15,8 @@ for (const f of files) {
     const arr = JSON.parse(fs.readFileSync(path.join(dir, f), "utf8"));
     for (const item of arr) {
         // makeCard 内部做完整 schema 校验，坏剧本直接抛错中断打包
-        const card = makeCard({ id: item.id, title: item.title, category: item.category, data: item.data });
+        // theme 在源 JSON 顶层,需并入 data 供 schema 校验读取(否则全部降级 retro-paper)
+        const card = makeCard({ id: item.id, title: item.title, category: item.category, data: { theme: item.theme, ...item.data } });
         library.push({
             id: card.id,
             title: card.title,
