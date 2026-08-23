@@ -4194,6 +4194,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const isTrueChoiceNode = (el) => {
                 if (!(el instanceof HTMLElement)) return false;
                 if (el.hasAttribute("data-choice")) return true;
+                if (el.closest(".wy-option-btn, .card-option-btn")) return false; // 选项按钮内部 span(①/文本)不再二次气泡化(按钮自身有 data-choice 已先命中)
                 const tag = el.tagName.toLowerCase();
                 if (tag === "button") return true;
                 if (tag === "a" && (el.getAttribute("href") || "").trim()) return true;
@@ -4297,7 +4298,7 @@ function rebuildChoicesBlock(body, labels = []) {
                         .slice(0, 8)
                     : [],
                 items: Array.isArray(obj.items) ? obj.items.map((i) => String(i).trim()).filter(Boolean).slice(0, 8) : [],
-                options: Array.isArray(obj.options) ? obj.options.map((o) => String(o).trim()).filter(Boolean).slice(0, 4) : [],
+                options: Array.isArray(obj.options) ? obj.options.map((o) => String(o).trim().replace(/^\s*(\d+[.)、]\s*|[①②③④⑤⑥⑦⑧⑨⑩]\s*|【?选项[:：]?\s*\d*】?\s*)/, "")).filter(Boolean).slice(0, 4) : [],
                 scene: String(obj.scene || "").trim().slice(0, 40)
             };
         }
@@ -4316,6 +4317,13 @@ function rebuildChoicesBlock(body, labels = []) {
             } catch { }
             return HtmlCardTemplateService.getDefaultThemeName();
         }
+        function stripChoiceLines(story) {
+            // 有选项时正文残留的编号行(旧 AI 习惯)会重复渲染成选项,整行剔除(与 legacy stripInlineChoicesFromEvent 同规则)
+            const src = String(story || "");
+            const lines = src.split(/\r?\n/);
+            const kept = lines.filter((l) => !/^\s*(\d+[.)、]\s*|[①②③④⑤⑥⑦⑧⑨⑩]\s*)/.test(String(l || "").trim()));
+            return kept.length === lines.length ? src : kept.join("\n").trim();
+        }
         function fillCardTemplate(theme, fields) {
             const safeTheme = MarkdownService.escapeHtml(String(theme || getCardTheme()).slice(0, 30));
             const themeClass = `card-theme-${safeTheme.replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase() || "default"}`;
@@ -4328,10 +4336,10 @@ function rebuildChoicesBlock(body, labels = []) {
             const itemsHtml = (fields.items || []).length
                 ? `<section class="card-items">📦 ${(fields.items || []).map((i) => `<span class="card-item-pill">${MarkdownService.escapeHtml(i)}</span>`).join("")}</section>`
                 : "";
-            const storyHtml = MarkdownService.render(fields.story);
+            const storyHtml = MarkdownService.render((fields.options || []).length ? stripChoiceLines(fields.story) : fields.story);
             const optionsHtml = (fields.options || []).length
                 ? `<footer class="card-options" data-block="choices">${(fields.options || []).map((o, i) =>
-                    `<div class="wy-option-btn card-option-btn" data-choice="${MarkdownService.escapeHtml(o)}"><span class="wy-opt-icon">${["①", "②", "③", "④"][i] || String(i + 1)}</span>${i + 1}. ${MarkdownService.escapeHtml(o)}</div>`).join("")}</footer>`
+                    `<div class="wy-option-btn card-option-btn" data-choice="${MarkdownService.escapeHtml(o)}"><span class="wy-opt-icon">${["①", "②", "③", "④"][i] || String(i + 1)}</span><span class="wy-opt-text">${MarkdownService.escapeHtml(o)}</span></div>`).join("")}</footer>`
                 : "";
             return [
                 `<article class="ai-beauty-card card ${themeClass}" data-theme="${safeTheme}" data-fill-card="1">`,
