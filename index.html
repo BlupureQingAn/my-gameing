@@ -3148,7 +3148,6 @@
             gender: "女",
             nationality: "待生成",
             location: "待生成",
-            birthYear: null,
             currentYear: null,
             currentMonth: null,
             currentDay: null,
@@ -3156,7 +3155,6 @@
             weekIndex: 1,
             weekdayIndex: 0,
             age: 0,
-            wealth: 500000,
             stats: [],
             inventory: [
                 { id: "milk", name: "温热牛奶", type: "消耗品", desc: "补充精力的小饮品。", effect: "health+2", count: 2 },
@@ -3170,8 +3168,7 @@
             panelStatusTags: [],
             npcChats: {},
             npcMemoryMap: {},
-            history: [],
-            chatMemory: []
+            history: []
         };
         let gameState = null;
 
@@ -3215,7 +3212,6 @@
             };
             next.npcProfiles = Utils.deepClone(next.npcs);
             next.npcChats = {};
-            next.chatMemory = [];
             // 首次游玩前不注入本地预制开场，等待 AI 初始化结果写入历史。
             next.history = [];
             return next;
@@ -3279,15 +3275,7 @@
             gameState.history.push(msg);
         }
 
-        function pushChat(role, content) {
-            gameState.chatMemory.push({ role, content });
-            // 防止无限增长，保留最近 60 条（30轮对话）
-            if (gameState.chatMemory.length > 60) {
-                gameState.chatMemory = gameState.chatMemory.slice(-60);
-            }
-        }
-
-        return { init, get, save, resetWithPreset, advanceMonthIfNeeded, pushHistory, pushChat };
+        return { init, get, save, resetWithPreset, advanceMonthIfNeeded, pushHistory };
     })();
 
     const MarkdownService = (() => {
@@ -4474,14 +4462,22 @@ function rebuildChoicesBlock(body, labels = []) {
             }).join("\n");
         }
         function buildFactLock(state) {
+            let socialDigest = "";
+            try {
+                if (typeof NpcChatService !== "undefined" && NpcChatService.buildNpcDigestForMain) {
+                    socialDigest = NpcChatService.buildNpcDigestForMain(state, 5, 2);
+                }
+            } catch (e) {
+            }
             return [
                 "【事实锁定（高优先级，修改须附 state-patch）】",
                 `主角：${serializeProtagonist(state)}`,
                 `时间：${serializeTime(state)}`,
                 `属性：${serializeStats(state)}`,
                 `背包：${serializeInventory(state)}`,
-                `NPC列表：\n${serializeNpcs(state, true)}`
-            ].join("\n");
+                `NPC列表：\n${serializeNpcs(state, true)}`,
+                socialDigest ? `【社交线近况】\n${socialDigest}` : ""
+            ].filter(Boolean).join("\n");
         }
         function buildRuntimeSummary(state) {
             return [
@@ -4914,6 +4910,36 @@ function rebuildChoicesBlock(body, labels = []) {
             return changed;
         }
         return { extractPatch, applyPatch, isProtagonistLikeNpc };
+    })();
+
+    const StateSyncService = (() => {
+        // M3:统一状态协议写路径——主线/NPC聊天/物品使用等所有写者收敛于此
+        // 协议:{protagonist, time, stats, items|inventory, npcs};顶层 fill JSON 与 state-patch 合并后应用
+        function mergeProtocolPatch(patch, fill) {
+            if (!fill) return patch;
+            const out = { ...(patch || {}) };
+            if (fill.time && (!out.time || typeof out.time !== "object")) {
+                out.time = { ...fill.time };
+            }
+            if (Array.isArray(fill.stats) && fill.stats.length) {
+                out.stats = [...(Array.isArray(out.stats) ? out.stats : []), ...fill.stats];
+            }
+            return out;
+        }
+        function applyWorldPatch(patch, options = {}) {
+            if (!patch || typeof patch !== "object") return false;
+            const state = StateService.get();
+            const changed = StatePatchService.applyPatch(state, patch);
+            if (!changed) return false;
+            StateService.save();
+            if (options.render !== false) {
+                UIRenderer.renderTop(state);
+                UIRenderer.renderInventory(state);
+                UIRenderer.renderSocialList(state);
+            }
+            return true;
+        }
+        return { applyWorldPatch, mergeProtocolPatch };
     })();
 
     const TimeSyncService = (() => {
@@ -5448,7 +5474,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 state.stats[idx].value = String(Math.max(0, Math.min(999, (Number(rawVal) || 0) + delta)));
             }
         }
-        return { normalizeStats, applyEffect };
+        return { normalizeStats, normalizeStatItem, applyEffect };
     })();
 
     const UIRenderer = (() => {
@@ -6660,13 +6686,24 @@ function rebuildChoicesBlock(body, labels = []) {
             });
             const patchResult = StatePatchService.extractPatch(reply);
             const visibleReply = String(patchResult.cleaned || "").trim();
-            StatePatchService.applyPatch(state, patchResult.patch);
+            // M3:NPC 聊天走统一写路径(校验+保存)
+            StateSyncService.applyWorldPatch(patchResult.patch, { render: false });
             if (!visibleReply) throw new Error("NPC 回复为空。");
             chatList.push({ from: "npc", text: visibleReply, ts: Date.now() });
 
-            const delta = calcFavorDelta(userText);
-            npc.favor = Math.max(0, Math.min(100, npc.favor + delta));
+            // 硬编码 favor delta 仅兜底:AI 的 state-patch 已给出该 NPC favor 时不叠加
+            const patchHasFavor = (Array.isArray(patchResult.patch?.npcs) ? patchResult.patch.npcs : []).some(
+                (n) => n?.favor !== undefined && (String(n.id || "") === String(npc.id || "") || String(n.name || "") === String(npc.name || ""))
+            );
+            if (!patchHasFavor) {
+                const delta = calcFavorDelta(userText);
+                npc.favor = Math.max(0, Math.min(100, npc.favor + delta));
+            }
             npc.status = "在线";
+
+            // M3:社交线聊天进入生涯历史,主线随后轮即可感知(【社交线】标记)
+            StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(state), text: `> 💬【社交线·${npc.name}】\n\n${visibleReply}` });
+            StateService.save();
 
             // 后台更新NPC长期记忆（不阻塞聊天体验）
             (async () => {
@@ -6683,7 +6720,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 StateService.save();
             })();
 
-            return { npc, reply: visibleReply, delta };
+            return { npc, reply: visibleReply, delta: npc.favor };
         }
 
         return { applyUserMessage, buildNpcDigestForMain };
@@ -9190,16 +9227,7 @@ const token = delta.content || "";
                     onToken: (text) => {
                         const trimmed = EndMarkerService.trimToMarker(text);
                         const visibleText = StatePatchService.extractPatch(trimmed).cleaned;
-                        if (Date.now() - lastLivePanelSyncAt >= 100) {
-                            const liveState = StateService.get();
-                            TimeSyncService.syncFromAiText(liveState, visibleText);
-                            // 流式阶段只同步 stats，跳过 NPC（半截 JSON 容易报错）
-                            const snapshot = AiPanelSyncService.extractFromAiCard(visibleText, true);
-                            const statsOnly = { statItems: snapshot.statItems, npcUpdates: [], statusTags: snapshot.statusTags };
-                            const changed = AiPanelSyncService.applySnapshot(liveState, statsOnly);
-                            if (changed) UIRenderer.renderTop(liveState);
-                            lastLivePanelSyncAt = Date.now();
-                        }
+                        // M3:流式中间不再写 state（半截 JSON 不稳,值可能翻转）,统一在流式结束后走 applyWorldPatch
                         UIRenderer.updateStreaming(visibleText);
                         return !EndMarkerService.hasMarker(text);
                     }
@@ -9208,10 +9236,11 @@ const token = delta.content || "";
 
                 const rawPatchResult = StatePatchService.extractPatch(rawText);
                 const rawVisibleText = rawPatchResult.cleaned || rawText;
-                const rawPatchChanged = StatePatchService.applyPatch(StateService.get(), rawPatchResult.patch);
+                const turnFill = FillProtocolService.parse(rawVisibleText);
+                // M3:顶层 fill 协议与 state-patch 合并,统一走单一写路径(校验+保存)
+                const rawPatchChanged = StateSyncService.applyWorldPatch(StateSyncService.mergeProtocolPatch(rawPatchResult.patch, turnFill), { render: false });
                 let displayText = rawVisibleText;
                 let conflictDetected = false;
-                const turnFill = FillProtocolService.parse(rawVisibleText);
                 if (beautyModeEnabled && policyConfig.enableHtmlCardForce && !turnFill) {
                     const turnChoices = ChoiceService.collectChoices(rawVisibleText);
                     const cardId = ScenarioCardService.getSelectedId();
@@ -9243,7 +9272,7 @@ const token = delta.content || "";
                             })).trim();
                             if (retryText && HtmlNormalizeService.containsHtmlCard(StatePatchService.extractPatch(retryText).cleaned || retryText)) {
                                 const retryPatch = StatePatchService.extractPatch(retryText);
-                                StatePatchService.applyPatch(StateService.get(), retryPatch.patch);
+                                StateSyncService.applyWorldPatch(retryPatch.patch, { render: false });
                                 finalVisibleText = retryPatch.cleaned || retryText;
                                 console.log("[ChatService] HTML 重试成功");
                             }
@@ -9299,14 +9328,13 @@ const token = delta.content || "";
                 }
 
                 // 第一阶段：流式结束后立即完成渲染并解锁交互，避免用户体感“卡住”。
-                // state-patch 已在上方 applyPatch 中执行（最高优先级），AiPanelSync 作兜底补充
+                // state-patch 协议已在上方 applyWorldPatch 中执行（最高优先级），DOM 提取(AiPanelSync)作协议缺失时的兜底补充
                 TimeSyncService.syncFromAiText(StateService.get(), displayText);
                 const panelChanged = AiPanelSyncService.syncFromAiText(StateService.get(), displayText);
                 UIRenderer.finishStreaming(displayText, { conflictDetected });
                 EventService.maybeTriggerAnimation(displayText);
                 const aiEntry = { role: "ai", date: Utils.nowDateStr(StateService.get()), text: displayText };
                 StateService.pushHistory(aiEntry);
-                StateService.pushChat("assistant", displayText);
                 StateService.save();
                 isGenerating = false;
                 UIRenderer.setSendingDisabled(false);
@@ -9316,23 +9344,24 @@ const token = delta.content || "";
                 UIRenderer.renderInventory(currentState);
                 UIRenderer.renderSocialList(currentState);
 
-                // 第二阶段：辅路审计（异步，不阻塞 UI）
-                // 剧情渲染完成后，后台静默分析本轮状态变化并自动刷新面板
-                (async () => {
-                    try {
-                const patch = await StateAuditorService.auditStateChange(StateService.get(), userText, displayText);
-                        const changed = StateAuditorService.applyAuditPatch(patch);
-                        if (changed) {
-                            const audited = StateService.get();
-                            UIRenderer.renderTop(audited);
-                            UIRenderer.renderInventory(audited);
-                            UIRenderer.renderSocialList(audited);
-                            console.log("[StateAuditor] 数据已自动更新:", patch);
+                // 第二阶段：辅路审计仅在协议缺失且 DOM 兜底也未提取到变化时触发（节省 AI 调用）
+                if (!rawPatchChanged && !panelChanged) {
+                    (async () => {
+                        try {
+                            const patch = await StateAuditorService.auditStateChange(StateService.get(), userText, displayText);
+                            const changed = StateAuditorService.applyAuditPatch(patch);
+                            if (changed) {
+                                const audited = StateService.get();
+                                UIRenderer.renderTop(audited);
+                                UIRenderer.renderInventory(audited);
+                                UIRenderer.renderSocialList(audited);
+                                console.log("[StateAuditor] 数据已自动更新:", patch);
+                            }
+                        } catch (e) {
+                            console.warn("[StateAuditor] 辅路审计异常:", e);
                         }
-                    } catch (e) {
-                        console.warn("[StateAuditor] 辅路审计异常:", e);
-                    }
-                })();
+                    })();
+                }
             } catch (error) {
                 if (!uiUnlocked) {
                     isGenerating = false;
@@ -9495,7 +9524,6 @@ const token = delta.content || "";
             UIRenderer.setAutoFollowBottom(true);
             UIRenderer.appendMessage("user", text, Utils.nowDateStr(state), false);
             StateService.pushHistory({ role: "user", date: Utils.nowDateStr(state), text });
-            StateService.pushChat("user", text);
             StateService.advanceMonthIfNeeded(text);
             StateService.save();
             // 发送后避免全量重渲染（会重建整个历史DOM，拖慢体感），仅刷新当前必要面板
@@ -9778,12 +9806,7 @@ function openNpcProfile(npcId) {
 
             try {
                 await NpcChatService.applyUserMessage(state, chatKey, txt);
-                StateService.pushHistory({
-                    role: "ai",
-                    date: Utils.nowDateStr(state),
-                    text: `【社交线更新】你与 ${npc.name} 完成了一轮对话。关系：${npc.relation}｜好感：${npc.favor}。`
-                });
-                StateService.save();
+                // 社交线完整对话内容已在 applyUserMessage 内 push 进 history（【社交线】标记），此处不再重复摘要
                 UIRenderer.renderSocialList(state);
                 UIRenderer.renderSocialChat(state, chatKey);
             } catch (e) {
