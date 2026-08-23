@@ -185,35 +185,35 @@ await t("T1 未登录401", async () => {
 
 // T2 非会员正常调用 → 200，用户计数+1，模型计数+1
 await t("T2 非会员计数", async () => {
-    reset(); newUser("user1", { usage_count: 99 });
+    reset(); newUser("user1", { usage_count: 5 });
     const res = await chat();
     const body = await res.json();
     if (res.status !== 200 || body.choices?.[0]?.message?.content !== "ok") throw new Error(`got ${res.status}`);
-    if (state.users.user1.usage_count !== 100) throw new Error(`usage_count=${state.users.user1.usage_count}`);
+    if (state.users.user1.usage_count !== 6) throw new Error(`usage_count=${state.users.user1.usage_count}`);
     if (modelCount("ca-gpt-4o-mini") !== 1) throw new Error(`modelUsage=${modelCount("ca-gpt-4o-mini")}`);
     if (state.lastUpstream.model !== "gpt-4o-mini") throw new Error(`upstream model=${state.lastUpstream.model}`);
 });
 
-// T3 150 次上限 → 402 QUOTA_EXCEEDED，不触达上游
-await t("T3 150上限拦截", async () => {
-    reset(); newUser("user1", { usage_count: 150 });
+// T3 20 次上限 → 402 QUOTA_EXCEEDED，不触达上游
+await t("T3 20上限拦截", async () => {
+    reset(); newUser("user1", { usage_count: 20 });
     const res = await chat();
     const body = await res.json();
     if (res.status !== 402 || body.code !== "QUOTA_EXCEEDED") throw new Error(`got ${res.status} ${body.code}`);
     if (state.upstreamModels.length !== 0) throw new Error("不应调用上游");
 });
 
-// T4 会员跳过次数（已满150仍放行，用户计数不增，模型计数照记）
+// T4 会员跳过次数（已满20仍放行，用户计数不增，模型计数照记）
 await t("T4 会员不限量", async () => {
     reset();
     newUser("user1", {
-        usage_count: 150,
+        usage_count: 20,
         membership_type: "monthly",
         membership_expires_at: new Date(Date.now() + 30 * 86400000).toISOString(),
     });
     const res = await chat();
     if (res.status !== 200) throw new Error(`got ${res.status}`);
-    if (state.users.user1.usage_count !== 150) throw new Error(`usage_count 不应增加: ${state.users.user1.usage_count}`);
+    if (state.users.user1.usage_count !== 20) throw new Error(`usage_count 不应增加: ${state.users.user1.usage_count}`);
     if (modelCount("ca-gpt-4o-mini") !== 1) throw new Error("模型计数应+1");
 });
 
@@ -229,9 +229,9 @@ await t("T5 会员过期", async () => {
     if (res.status !== 402 || body.code !== "MEMBERSHIP_EXPIRED") throw new Error(`got ${res.status} ${body.code}`);
 });
 
-// T6 跨天重置：昨天已满 150 → 今天重新计数
+// T6 跨天重置：昨天已满 20 → 今天重新计数
 await t("T6 跨天重置", async () => {
-    reset(); newUser("user1", { usage_date: "2020-01-01", usage_count: 150 });
+    reset(); newUser("user1", { usage_date: "2020-01-01", usage_count: 20 });
     const res = await chat();
     if (res.status !== 200) throw new Error(`got ${res.status}`);
     if (state.users.user1.usage_date !== TODAY || state.users.user1.usage_count !== 1)
@@ -328,10 +328,10 @@ await t("T13 创建订单", async () => {
 
 // T14 /api/usage：非会员显示剩余，会员显示不限
 await t("T14 usage端点", async () => {
-    reset(); newUser("user1", { usage_count: 99 });
+    reset(); newUser("user1", { usage_count: 5 });
     let res = await getUsage();
     let body = await res.json();
-    if (body.used !== 99 || body.remaining !== 51 || body.limit !== 150 || body.isMember !== false)
+    if (body.used !== 5 || body.remaining !== 15 || body.limit !== 20 || body.isMember !== false)
         throw new Error(`非会员错误: ${JSON.stringify(body)}`);
     Object.assign(state.users.user1, { membership_type: "lifetime" });
     res = await getUsage();
@@ -341,10 +341,10 @@ await t("T14 usage端点", async () => {
 
 // T15 跨天 usage 显示重置
 await t("T15 usage跨天", async () => {
-    reset(); newUser("user1", { usage_date: "2020-01-01", usage_count: 150 });
+    reset(); newUser("user1", { usage_date: "2020-01-01", usage_count: 20 });
     const res = await getUsage();
     const body = await res.json();
-    if (body.used !== 0 || body.remaining !== 150) throw new Error(`got ${JSON.stringify(body)}`);
+    if (body.used !== 0 || body.remaining !== 20) throw new Error(`got ${JSON.stringify(body)}`);
 });
 
 // T16 流式透传

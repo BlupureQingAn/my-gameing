@@ -1,7 +1,7 @@
 // ==================== 1. 配置中心 ====================
 
 // 非会员每日免费次数
-const DAILY_FREE_QUOTA = 150;
+const DAILY_FREE_QUOTA = 20;
 // Cloudflare Worker 环境是 UTC，固定用 UTC+8 计算"今天"
 const TIMEZONE_OFFSET_MS = 8 * 3600 * 1000;
 const LIFETIME_EXPIRY = "2226-01-01T00:00:00.000Z";
@@ -366,7 +366,7 @@ export default {
                 const isMemberUser = isMember(record);
                 if (!isMemberUser && Number(record.usage_count || 0) >= DAILY_FREE_QUOTA
                     && record.usage_date === getTodayStr()) {
-                    return errorResponse("今日免费次数已用完（150/150），开通会员后不限量", 402,
+                    return errorResponse("今日免费次数已用完（20/20），开通会员后不限量", 402,
                         { used: Number(record.usage_count || 0), limit: DAILY_FREE_QUOTA }, "QUOTA_EXCEEDED");
                 }
 
