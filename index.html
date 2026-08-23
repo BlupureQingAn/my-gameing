@@ -5529,7 +5529,20 @@ function rebuildChoicesBlock(body, labels = []) {
         }
         function renderStreamingFrame(text) {
             if (!currentStreamingTarget) return;
-            currentStreamingTarget.innerHTML = AiResponseLayoutService.renderAiMessage(text, true);
+            const normalizedText = HtmlCardService.normalizeHtmlCard(text);
+            const fillFields = FillProtocolService.parse(normalizedText);
+            const hasHtmlCard = !fillFields && HtmlCardService.isRenderableHtmlCard(normalizedText);
+            if (hasHtmlCard) {
+                // 流式期间 AI 已输出 HTML 卡结构:立即套主题渲染,避免生成完毕才切换样式(样式突变)
+                currentStreamingTarget.classList.add("html-host");
+                currentStreamingTarget.innerHTML = AiResponseLayoutService.renderAiMessage(normalizedText, true);
+                AiResponseLayoutService.applyCardTheme(currentStreamingTarget);
+                HtmlCardService.applyReadableTextColors(currentStreamingTarget);
+            } else {
+                // JSON 填空(半截 JSON 不稳,结束才 fillCardTemplate)/纯文本:保持文本渲染
+                currentStreamingTarget.classList.remove("html-host");
+                currentStreamingTarget.innerHTML = AiResponseLayoutService.renderAiMessage(text, true);
+            }
             AiResponseLayoutService.bindHtmlChoiceEvents(currentStreamingTarget);
             streamLastRenderAt = Date.now();
             scrollToBottom();
