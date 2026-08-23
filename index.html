@@ -3203,6 +3203,7 @@
                 ? Utils.deepClone(preset.npcs)
                 : createDefaultNpcs();
             next.stats = Array.isArray(preset.stats) ? Utils.deepClone(preset.stats) : [];
+            next.panelStatusTags = Array.isArray(preset.panelStatusTags) ? Utils.deepClone(preset.panelStatusTags) : [];
             next.npcMemoryMap = {};
             next.protagonistProfile = {
                 name: next.name,
@@ -3234,7 +3235,7 @@
             if (typeof gameState.weekdayIndex !== "number") gameState.weekdayIndex = 0;
         }
 
-        function resetWithPreset({ selectedGender, forcedGender, name, englishName, ageYears, nationality, location, currentYear, currentMonth, currentDay, timeEra, weekIndex, weekdayIndex, inventory, npcs, rebornReason }) {
+        function resetWithPreset({ selectedGender, forcedGender, name, englishName, ageYears, nationality, location, currentYear, currentMonth, currentDay, timeEra, weekIndex, weekdayIndex, inventory, npcs, stats, panelStatusTags, rebornReason }) {
             const finalGender = forcedGender || selectedGender || baseState.gender;
             gameState = buildInitialState(finalGender, {
                 gender: forcedGender,
@@ -3250,7 +3251,9 @@
                 weekIndex,
                 weekdayIndex,
                 inventory,
-                npcs
+                npcs,
+                stats,
+                panelStatusTags
             });
             gameState.history = [];
             save();
@@ -6707,7 +6710,7 @@ function rebuildChoicesBlock(body, labels = []) {
         function normalizeCard(card = {}, index = 0) {
             const id = String(card.id || "");
             const sourceType = card.sourceType || (String(id).startsWith("scenario_preset_") ? "official" : "custom");
-            return {
+            const next = {
                 ...card,
                 id,
                 title: String(card.title || "未命名设定"),
@@ -6717,6 +6720,12 @@ function rebuildChoicesBlock(body, labels = []) {
                 pinned: !!card.pinned,
                 order: Number(card.order) || (index + 1)
             };
+            // M1:旧纯文本卡(无 structured)loadCards 时自动反解析迁移,统一为结构化卡
+            if (!next.structured || typeof next.structured !== "object") {
+                next.structured = ScenarioEditorService.parseTextToStructured(next.text)
+                    || ScenarioEditorService.emptyStructuredFromText(next.text);
+            }
+            return next;
         }
         function sortCards(cards = []) {
             return [...cards].sort((a, b) => {
@@ -7321,166 +7330,63 @@ function rebuildChoicesBlock(body, labels = []) {
     })();
 
     const InitIntroService = (() => {
+        function buildFirstSceneFields(fsCard, state, firstScene, openingChoices = []) {
+            const options = (Array.isArray(firstScene.options) && firstScene.options.length
+                ? firstScene.options
+                : (openingChoices || []).map((c) => c.label || c.key || "继续")).slice(0, 4);
+            const w = fsCard.structured.world || {};
+            const fields = {
+                story: String(firstScene.story).trim(),
+                options,
+                scene: (w.era || w.genre || "开局").slice(0, 40)
+            };
+            if (state?.currentYear) {
+                fields.time = { year: state.currentYear, month: state.currentMonth || 1, day: state.currentDay || 1 };
+            }
+            return fields;
+        }
+        function buildFallbackIntroFields(fsCard, state, openingChoices = []) {
+            const st = fsCard?.structured || {};
+            const world = st.world || {};
+            const era = String(world.era || "").trim().slice(0, 40);
+            const genre = String(world.genre || "").trim().slice(0, 30);
+            const location = (state?.location && state.location !== "待生成") ? state.location : "";
+            const name = (state?.name && state.name !== "待生成") ? state.name : "你";
+            const story = [
+                `${name}缓缓睁开双眼。`,
+                era ? `眼前是${era}的天地。` : "眼前是一个陌生的世界。",
+                location ? `此刻，${name}身处${location}。` : "",
+                genre ? `一段${genre}的旅程，就此开始。` : "一段全新的旅程，就此开始。"
+            ].filter(Boolean).join("");
+            const options = (Array.isArray(openingChoices) && openingChoices.length
+                ? openingChoices.map((c) => c.label || c.key || "继续")
+                : [
+                    "先观察四周，弄清自己身在何处",
+                    "回想脑海中的记忆，确认身份与来龙去脉",
+                    "寻找身边的人，尝试获取更多线索"
+                ]).slice(0, 4);
+            const fields = { story, options, scene: (era || genre || "开局").slice(0, 40) };
+            if (state?.currentYear) {
+                fields.time = { year: state.currentYear, month: state.currentMonth || 1, day: state.currentDay || 1 };
+            }
+            return fields;
+        }
+        // M1：开局零 AI 请求——first_scene 本地渲染模板卡；缺失时用本地模板兜底开场
         async function start({ apiConfig, scenarioText, beautySetting, state, policyConfig, selectedCardId, openingChoices = [] }) {
             if (apiConfig.blocked) return;
             if (!apiConfig.model) return;
-            // M5+：结构化剧本开局免请求——first_scene 直接本地渲染模板卡，跳过 AI 请求
             const fsCard = selectedCardId ? ScenarioCardService.getSelectedCard() : null;
             const firstScene = fsCard?.structured?.first_scene;
-            if (firstScene && String(firstScene.story || "").trim()) {
-                const options = (Array.isArray(firstScene.options) && firstScene.options.length
-                    ? firstScene.options
-                    : (openingChoices || []).map((c) => c.label || c.key || "继续")).slice(0, 4);
-                const w = fsCard.structured.world || {};
-                const fillFields = {
-                    story: String(firstScene.story).trim(),
-                    options,
-                    scene: (w.era || w.genre || "开局").slice(0, 40)
-                };
-                if (state?.currentYear) {
-                    fillFields.time = { year: state.currentYear, month: state.currentMonth || 1, day: state.currentDay || 1 };
-                }
-                const html = FillProtocolService.fillCardTemplate(FillProtocolService.getCardTheme(), fillFields);
-                UIRenderer.appendMessage("ai", html, Utils.nowDateStr(state), false);
-                StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(state), text: html });
-                StateService.save();
-                // 开局辅路审计保留：补全初始属性/背包/NPC（异步，不阻塞渲染，不发主请求）
-                (async () => {
-                    try {
-                        const patch = await StateAuditorService.auditStateChange(StateService.get(), "初始化开局", String(firstScene.story).slice(0, 400));
-                        const changed = StateAuditorService.applyAuditPatch(patch);
-                        if (changed) {
-                            const audited = StateService.get();
-                            UIRenderer.renderTop(audited);
-                            UIRenderer.renderInventory(audited);
-                            UIRenderer.renderSocialList(audited);
-                            console.log("[StateAuditor] 开局数据已自动补全:", patch);
-                        }
-                    } catch (e) {
-                        console.warn("[StateAuditor] 开局审计异常:", e);
-                    }
-                })();
-                return;
-            }
-            InitLoadingService.open("生成开局介绍：正在生成首条剧情卡片...");
-            InitLoadingService.updateStage("生成开局介绍");
-            UIRenderer.setAutoFollowBottom(true);
-            UIRenderer.appendMessage("ai", "正在生成开局剧情卡片...", Utils.nowDateStr(state), true);
-            let closedLoading = false;
-            function countHtmlCodeLines(text) {
-                const raw = String(text || "");
-                if (!raw) return 0;
-                const normalized = raw.replace(/>\s*</g, ">\n<");
-                const lines = normalized.split(/\r?\n/);
-                return lines.filter((line) => /<[^>]+>/.test(line)).length;
-            }
-            try {
-                let lastLivePanelSyncAt = 0;
-                const streamText = await ScenarioIntroService.streamIntroHtmlCard({
-                    apiConfig,
-                    scenarioText,
-                    state,
-                    beautySetting,
-                    openingChoices,
-                    onToken: (txt) => {
-                        const htmlLineCount = countHtmlCodeLines(txt);
-                        if (!closedLoading && htmlLineCount >= 10) {
-                            InitLoadingService.close();
-                            closedLoading = true;
-                        }
-                        if (Date.now() - lastLivePanelSyncAt >= 100) {
-                            const liveState = StateService.get();
-                            TimeSyncService.syncFromAiText(liveState, txt);
-                            // 流式阶段只同步 stats/statusTags，跳过 NPC（半截 JSON 容易报错）
-                            const snapshot = AiPanelSyncService.extractFromAiCard(txt, true);
-                            const statsOnly = { statItems: snapshot.statItems, npcUpdates: [], statusTags: snapshot.statusTags };
-                            const changed = AiPanelSyncService.applySnapshot(liveState, statsOnly);
-                            if (changed) UIRenderer.renderTop(liveState);
-                            lastLivePanelSyncAt = Date.now();
-                        }
-                        UIRenderer.updateStreaming(txt);
-                    }
-                });
-                let normalized = HtmlCardService.normalizeHtmlCard(streamText);
-                let usedFallback = false;
-                if (!HtmlCardService.isRenderableHtmlCard(normalized)) {
-                    normalized = HtmlCardService.wrapAsHtmlCard(beautySetting, normalized);
-                    usedFallback = true;
-                }
-                normalized = HtmlCardRenderPipelineService.finalizeCardLayout({
-                    text: normalized,
-                    beautySetting,
-                    titleHint: "开局介绍",
-                    nowText: Utils.nowDateStr(StateService.get()),
-                    policyConfig,
-                    cardId: selectedCardId,
-                    preferredChoices: openingChoices,
-                    choiceSource: "opening"
-                });
-                if (usedFallback) {
-                    const retryHtml = await DecisionModalService.show({
-                        title: "开局卡片格式异常",
-                        descHtml: "<div class='list-sub'>AI 返回的开局内容不是可渲染 HTML 卡片，已先用兜底卡片显示。</div><div class='list-sub' style='margin-top:6px;'>是否重试一次获取真实 HTML？</div>",
-                        okText: "重试获取HTML",
-                        cancelText: "保持当前"
-                    });
-                    if (retryHtml) {
-                        const retried = await ScenarioIntroService.generateIntroHtmlCard({ apiConfig, scenarioText, state, beautySetting, openingChoices });
-                        const retriedNorm = HtmlCardService.normalizeHtmlCard(retried);
-                        normalized = HtmlCardRenderPipelineService.finalizeCardLayout({
-                            text: retriedNorm || normalized,
-                            beautySetting,
-                            titleHint: "开局介绍",
-                            nowText: Utils.nowDateStr(StateService.get()),
-                            policyConfig,
-                            cardId: selectedCardId,
-                            preferredChoices: openingChoices,
-                            choiceSource: "opening"
-                        });
-                    }
-                }
-                if (normalized) {
-                    // 从生成结果中提取并保存 skeleton，替代原先单独的模板设计阶段
-                    const resultSkeleton = HtmlCardService.extractSkeleton(normalized);
-                    if (resultSkeleton && selectedCardId) {
-                        ScenarioPlayMetaService.setLockedSkeleton(selectedCardId, resultSkeleton);
-                    }
-                    const panelChanged = AiPanelSyncService.syncFromAiText(StateService.get(), normalized);
-                    UIRenderer.finishStreaming(normalized, { conflictDetected: false });
-                    StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(state), text: normalized });
-                    if (panelChanged) {
-                        const latest = StateService.get();
-                        UIRenderer.renderTop(latest);
-                        UIRenderer.renderSocialList(latest);
-                    }
-                    StateService.save();
-
-                    // 开局辅路审计：补全初始属性、背包、NPC（异步，不阻塞渲染）
-                    (async () => {
-                        try {
-                            const patch = await StateAuditorService.auditStateChange(StateService.get(), "初始化开局", streamText);
-                            const changed = StateAuditorService.applyAuditPatch(patch);
-                            if (changed) {
-                                const audited = StateService.get();
-                                UIRenderer.renderTop(audited);
-                                UIRenderer.renderInventory(audited);
-                                UIRenderer.renderSocialList(audited);
-                                console.log("[StateAuditor] 开局数据已自动补全:", patch);
-                            }
-                        } catch (e) {
-                            console.warn("[StateAuditor] 开局审计异常:", e);
-                        }
-                    })();
-                }
-            } catch (e) {
-                InitLoadingService.close();
-                UIRenderer.finishStreaming(`⚠️ 开局卡片生成失败：${e.message}`, { conflictDetected: false });
-            } finally {
-                // finally 只做保底关闭（catch 已关闭时此处为空操作）
-                if (document.getElementById("init-loading-modal")?.style.display !== "none") {
-                    InitLoadingService.close();
-                }
-            }
+            const fillFields = firstScene && String(firstScene.story || "").trim()
+                ? buildFirstSceneFields(fsCard, state, firstScene, openingChoices)
+                : buildFallbackIntroFields(fsCard, state, openingChoices);
+            const html = FillProtocolService.fillCardTemplate(FillProtocolService.getCardTheme(), fillFields);
+            UIRenderer.appendMessage("ai", html, Utils.nowDateStr(state), false);
+            StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(state), text: html });
+            StateService.save();
+            UIRenderer.renderTop(state);
+            UIRenderer.renderInventory(state);
+            UIRenderer.renderSocialList(state);
         }
         return { start };
     })();
@@ -8000,7 +7906,7 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
     const AIRequestService = (() => {
         const REQUEST_TIMEOUT_MS = 10000;  // 连接超时 10s，快速失败触发重试
         const READ_TIMEOUT_MS = 90000;     // 流式读取超时 90s，允许长文本生成
-        const INIT_REQUEST_TIMEOUT_MS = 115000; // 初始化各子请求超时，比 Worker 非流式超时(120s)略短，确保 Worker 先超时触发 backup
+        const INIT_REQUEST_TIMEOUT_MS = 20000; // 初始化各子请求超时(仅 AI 回退防御链使用,M1 后常规开局零请求)
         function createHttpError(status, message, extra = {}) {
             const err = new Error(message || `HTTP ${status}`);
             err.status = status;
@@ -8170,8 +8076,8 @@ const token = delta.content || "";
             } catch (proxyErr) {
                 throw proxyErr;
             }
-            // 次数统计由 Worker 后端完成，成功后无条件刷新使用状态
-            AuthService.refreshBalance();
+            // 次数统计由 Worker 后端完成，成功后无条件刷新使用状态（fire-and-forget，不阻塞主链路）
+            AuthService.refreshBalance().catch(() => {});
             return fullText;
         }
         async function requestCompletion({ fetchUrl, headers, model, messages, temperature, extraBody = null, cardId = "", timeoutMs = READ_TIMEOUT_MS }) {
@@ -8205,7 +8111,7 @@ const token = delta.content || "";
             }
             const data = await response.json();
             return EndMarkerService.trimToMarker(data?.choices?.[0]?.message?.content?.trim() || "");
-            }, 5);
+            }, 2);
         }
         async function requestCompletionWithFallback({ config, fetchUrl, headers, model, messages, temperature, extraBody = null, cardId = "", timeoutMs = READ_TIMEOUT_MS }) {
             let result = "";
@@ -8214,8 +8120,8 @@ const token = delta.content || "";
             } catch (proxyErr) {
                 throw proxyErr;
             }
-            // 次数统计由 Worker 后端完成，成功后无条件刷新使用状态
-            AuthService.refreshBalance();
+            // 次数统计由 Worker 后端完成，成功后无条件刷新使用状态（fire-and-forget，不阻塞主链路）
+            AuthService.refreshBalance().catch(() => {});
             return result;
         }
         return { buildFetchUrl, buildHeaders, streamCompletion, requestCompletion, streamCompletionWithFallback, requestCompletionWithFallback, INIT_REQUEST_TIMEOUT_MS };
@@ -9007,7 +8913,75 @@ const token = delta.content || "";
             if (typeof onProgress === "function") onProgress("完成");
             return aiPlan;
         }
-        return { buildInitPlan };
+        // M1:结构化卡本地构建初始化计划——零 AI 请求,秒出预览
+        function buildLocalInitPlan(selectedGender = "") {
+            const card = ScenarioCardService.getSelectedCard();
+            const st = card?.structured;
+            if (!st || typeof st !== "object") return null;
+            const identity = st.identity || {};
+            const world = st.world || {};
+            const timeline = st.timeline || {};
+            const firstScene = st.first_scene || {};
+            const name = String(identity.name || "").trim().slice(0, 20)
+                || String(card.title || "").replace(/[·.。·_-]/g, "").trim().slice(0, 12)
+                || "";
+            if (!name) return null;
+            const fallbackIdentity = IdentityService.generateIdentityBase();
+            const ageRaw = Number.parseInt(String(identity.age || ""), 10);
+            const era = String(world.era || "").trim().slice(0, 40);
+            const genre = String(world.genre || "").trim().slice(0, 30);
+            const tlStart = timeline.start || {};
+            const tlYear = Number(tlStart.year);
+            const tlMonth = Number(tlStart.month);
+            const tlDay = Number(tlStart.day);
+            const nationMatch = era.match(/([一-鿿]{1,8}(?:国|朝|邦|王朝))/);
+            const background = String(identity.background || "");
+            const locationRaw = background.split(/[。；;\n]/)[0].trim().slice(0, 12);
+            const npcs = (Array.isArray(st.npcs) ? st.npcs : []).map((n, i) => ({
+                id: String(n.id || `npc_${i + 1}`).replace(/[^\w-]/g, "_"),
+                name: String(n.name || `人物${i + 1}`).slice(0, 20),
+                gender: String(n.gender || "未知").slice(0, 6),
+                relation: String(n.role || "熟人").slice(0, 12),
+                favor: 65,
+                status: "在线",
+                mood: "平静",
+                traits: String(n.personality || "").slice(0, 48),
+                profile: {
+                    identity: String(n.role || "").slice(0, 40),
+                    personality: String(n.personality || "").slice(0, 80),
+                    relationship: String(n.relationship || "").slice(0, 80),
+                    secret: String(n.secret || "").slice(0, 80)
+                }
+            })).slice(0, 12);
+            const stats = StatsService.normalizeStats(buildFallbackStatsFromScenario(card.text || "", { ageYears: Number.isFinite(ageRaw) ? ageRaw : 18 }));
+            return {
+                name,
+                englishName: String(fallbackIdentity.englishName || "PendingName").trim().slice(0, 32),
+                forcedGender: String(identity.gender || "").trim() || selectedGender || "女",
+                ageYears: Number.isFinite(ageRaw) && ageRaw >= 0 ? ageRaw : 18,
+                nationality: nationMatch ? nationMatch[1] : "",
+                location: locationRaw || "",
+                timeEra: era,
+                currentYear: Number.isFinite(tlYear) ? tlYear : null,
+                currentMonth: Number.isFinite(tlMonth) ? tlMonth : null,
+                currentDay: Number.isFinite(tlDay) && tlDay >= 1 ? tlDay : 1,
+                weekIndex: 1,
+                weekdayIndex: 0,
+                rebornReason: "",
+                openingChoices: (Array.isArray(firstScene.options) ? firstScene.options : []).map((o, i) => ({ label: String(o).trim().slice(0, 40), key: `o${i + 1}` })),
+                npcs,
+                inventory: [
+                    { id: "milk", name: "温热牛奶", type: "消耗品", desc: "补充精力的小饮品。", effect: "health+2", count: 2 },
+                    { id: "diary", name: "成长日记", type: "道具", desc: "记录每周心情变化。", effect: "charisma+1", count: 1 }
+                ],
+                stats,
+                panelStatusTags: [
+                    genre ? `身份：${genre}` : "",
+                    locationRaw ? `处境：${locationRaw}` : ""
+                ].filter(Boolean)
+            };
+        }
+        return { buildInitPlan, buildLocalInitPlan };
     })();
 
     const StateAuditorService = (() => {
@@ -9965,7 +9939,7 @@ function openNpcProfile(npcId) {
             renderAll();
                 return;
             }
-            InitLoadingService.open("连接中：正在请求 AI 解析设定...");
+            InitLoadingService.open("正在准备开局...");
             PlayViewStateService.enterPlay(cardId);
             switchView("view-main");
             renderAll();
@@ -9974,6 +9948,19 @@ function openNpcProfile(npcId) {
         async function prepareInitPreview(defaultGender, loadingAlreadyOpen = false, retryOptions = {}) {
             if (ChatService.getIsGenerating()) return;
             pendingInitPlan = null;
+            // M1:结构化卡本地构建初始化计划,零 AI 请求、秒弹预览
+            const localPlan = ScenarioInitPlanService.buildLocalInitPlan(defaultGender || "女");
+            if (localPlan) {
+                InitLoadingService.close();
+                pendingInitPlan = localPlan;
+                const desc = InitFlowService.buildPreviewDesc(localPlan);
+                document.getElementById("init-preview-desc").innerHTML = desc;
+                bindInitPreviewForm(localPlan);
+                const confirmBtn = document.getElementById("init-preview-confirm-btn");
+                confirmBtn.onclick = () => applyInitPreviewAndStart();
+                openInitPreviewModal();
+                return;
+            }
             if (!loadingAlreadyOpen) InitLoadingService.open("正在生成角色初始化信息（角色、背包与社交）...");
             try {
                 const plan = await ScenarioInitPlanService.buildInitPlan(defaultGender || "女", InitLoadingService.updateStage, {
@@ -10036,10 +10023,11 @@ function openNpcProfile(npcId) {
             if (!pendingInitPlan) return;
             const edited = collectInitPreviewForm();
             const merged = { ...pendingInitPlan, ...edited };
-            if (!merged.name || !merged.englishName) {
-                NoticeModalService.showInfo({ title: "信息不完整", descHtml: "请填写主角姓名与英文名。" });
+            if (!merged.name) {
+                NoticeModalService.showInfo({ title: "信息不完整", descHtml: "请填写主角姓名。" });
                 return;
             }
+            if (!merged.englishName) merged.englishName = merged.name;
             if (!Number.isFinite(Number(merged.ageYears)) || Number(merged.ageYears) < 0) {
                 NoticeModalService.showInfo({ title: "年龄无效", descHtml: "请填写有效年龄。" });
                 return;
