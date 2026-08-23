@@ -4268,15 +4268,15 @@ function rebuildChoicesBlock(body, labels = []) {
             const timeHtml = timeText(fields)
                 ? `<div class="card-time" data-block="time">⏱️ ${MarkdownService.escapeHtml(timeText(fields))}</div>`
                 : "";
-            const statsHtml = fields.stats.length
-                ? `<section class="card-stats" data-block="status">${fields.stats.map((s) => `<span class="card-stat-pill"><b>${MarkdownService.escapeHtml(s.key)}</b> <span class="card-stat-value">${MarkdownService.escapeHtml(s.value)}</span></span>`).join("")}</section>`
+            const statsHtml = (fields.stats || []).length
+                ? `<section class="card-stats" data-block="status">${(fields.stats || []).map((s) => `<span class="card-stat-pill"><b>${MarkdownService.escapeHtml(s.key)}</b> <span class="card-stat-value">${MarkdownService.escapeHtml(s.value)}</span></span>`).join("")}</section>`
                 : "";
-            const itemsHtml = fields.items.length
-                ? `<section class="card-items">📦 ${fields.items.map((i) => `<span class="card-item-pill">${MarkdownService.escapeHtml(i)}</span>`).join("")}</section>`
+            const itemsHtml = (fields.items || []).length
+                ? `<section class="card-items">📦 ${(fields.items || []).map((i) => `<span class="card-item-pill">${MarkdownService.escapeHtml(i)}</span>`).join("")}</section>`
                 : "";
             const storyHtml = MarkdownService.render(fields.story);
-            const optionsHtml = fields.options.length
-                ? `<footer class="card-options" data-block="choices">${fields.options.map((o, i) =>
+            const optionsHtml = (fields.options || []).length
+                ? `<footer class="card-options" data-block="choices">${(fields.options || []).map((o, i) =>
                     `<div class="wy-option-btn card-option-btn" data-choice="${MarkdownService.escapeHtml(o)}"><span class="wy-opt-icon">${["①", "②", "③", "④"][i] || String(i + 1)}</span>${i + 1}. ${MarkdownService.escapeHtml(o)}</div>`).join("")}</footer>`
                 : "";
             return [
@@ -7262,6 +7262,44 @@ function buildPresetCardId(preset) {
         async function start({ apiConfig, scenarioText, beautySetting, state, policyConfig, selectedCardId, openingChoices = [] }) {
             if (apiConfig.blocked) return;
             if (!apiConfig.model) return;
+            // M5+：结构化剧本开局免请求——first_scene 直接本地渲染模板卡，跳过 AI 请求
+            const fsCard = selectedCardId ? ScenarioCardService.getSelectedCard() : null;
+            const firstScene = fsCard?.structured?.first_scene;
+            if (firstScene && String(firstScene.story || "").trim()) {
+                const options = (Array.isArray(firstScene.options) && firstScene.options.length
+                    ? firstScene.options
+                    : (openingChoices || []).map((c) => c.label || c.key || "继续")).slice(0, 4);
+                const w = fsCard.structured.world || {};
+                const fillFields = {
+                    story: String(firstScene.story).trim(),
+                    options,
+                    scene: (w.era || w.genre || "开局").slice(0, 40)
+                };
+                if (state?.currentYear) {
+                    fillFields.time = { year: state.currentYear, month: state.currentMonth || 1, day: state.currentDay || 1 };
+                }
+                const html = FillProtocolService.fillCardTemplate(FillProtocolService.getCardTheme(), fillFields);
+                UIRenderer.appendMessage("ai", html, Utils.nowDateStr(state), false);
+                StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(state), text: html });
+                StateService.save();
+                // 开局辅路审计保留：补全初始属性/背包/NPC（异步，不阻塞渲染，不发主请求）
+                (async () => {
+                    try {
+                        const patch = await StateAuditorService.auditStateChange(StateService.get(), "初始化开局", String(firstScene.story).slice(0, 400));
+                        const changed = StateAuditorService.applyAuditPatch(patch);
+                        if (changed) {
+                            const audited = StateService.get();
+                            UIRenderer.renderTop(audited);
+                            UIRenderer.renderInventory(audited);
+                            UIRenderer.renderSocialList(audited);
+                            console.log("[StateAuditor] 开局数据已自动补全:", patch);
+                        }
+                    } catch (e) {
+                        console.warn("[StateAuditor] 开局审计异常:", e);
+                    }
+                })();
+                return;
+            }
             InitLoadingService.open("生成开局介绍：正在生成首条剧情卡片...");
             InitLoadingService.updateStage("生成开局介绍");
             UIRenderer.setAutoFollowBottom(true);
