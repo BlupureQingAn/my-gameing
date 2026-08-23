@@ -278,7 +278,8 @@ async function createPayOrder(env, userId, planId, payType) {
 
     const payRes = await fetch(env.PAY_MAPI_URL || "https://ezfp.cn/mapi.php", {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        // 易支付按 Referer 域名校验支付授权白名单;Worker 默认不带 Referer 会被判"域名没过白"
+        headers: { "Content-Type": "application/x-www-form-urlencoded", Referer: "https://bitlife.blupure.cn/" },
         body: new URLSearchParams(params)
     });
     const payJson = await payRes.json().catch(() => ({}));
