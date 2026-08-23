@@ -9222,7 +9222,7 @@ async function playPresetTemplate(preset) {
                         } catch (e2) {
                             InitLoadingService.close();
                             pendingInitPlan = null;
-                            StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(StateService.get()), text: `> ⚠️ 重试仍失败：${e2.message}` });
+                            StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(StateService.get()), text: `> ⚠️ 重试仍失败：${e2?.message || e2 || "未知错误"}` });
                             StateService.save();
                             renderAll();
                         }
