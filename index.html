@@ -3248,6 +3248,8 @@
             if (!Number.isFinite(Number(gameState.weekIndex))) gameState.weekIndex = 1;
             if (!Number.isFinite(Number(gameState.currentDay)) || gameState.currentDay < 1) gameState.currentDay = 1;
             if (typeof gameState.weekdayIndex !== "number") gameState.weekdayIndex = 0;
+            // 旧存档防御:坏 panelStatusTags(空对象等)会渲染出空白气泡
+            gameState.panelStatusTags = normalizeStatusTagList(gameState.panelStatusTags);
         }
 
         function resetWithPreset({ selectedGender, forcedGender, name, englishName, ageYears, nationality, location, currentYear, currentMonth, currentDay, timeEra, weekIndex, weekdayIndex, inventory, npcs, stats, panelStatusTags, rebornReason }) {
@@ -5605,7 +5607,8 @@ function rebuildChoicesBlock(body, labels = []) {
                     : "";
                 return `<div class="wy-stat-pill-wrap"><div class="wy-stat-pill">${icon}${label} ${val}</div>${bar}</div>`;
             }).join("");
-            const tags = Array.isArray(state.panelStatusTags) ? state.panelStatusTags : [];
+            const tags = (Array.isArray(state.panelStatusTags) ? state.panelStatusTags : [])
+                .filter((t) => t && (t.label || t.value));
             const tagHtml = tags.length
                 ? `<div class="status-tag-row" style="margin-top:8px;">${tags.map((tag) =>
                     `<div class="status-tag"><strong>${MarkdownService.escapeHtml(tag.label)}</strong><em>${MarkdownService.escapeHtml(tag.value)}</em></div>`
