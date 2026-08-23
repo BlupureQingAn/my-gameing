@@ -9492,6 +9492,13 @@ const token = delta.content || "";
             bindEvents();
         }
         function bindEvents() {
+            // 暗夜模式勾选即时生效并持久化(无需再点保存主题)
+            const darkModeInput = document.getElementById("ui-dark-mode-enabled");
+            if (darkModeInput) {
+                darkModeInput.addEventListener("change", () => {
+                    ThemeService.setMode(darkModeInput.checked ? "dark" : "light");
+                });
+            }
             const input = document.getElementById("chat-input");
             input.addEventListener("keydown", (e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
