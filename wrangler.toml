@@ -1,0 +1,8 @@
+# Cloudflare Workers 部署配置（正式路线；现有线上 worker 仍可用 dashboard 粘贴更新）
+# 注意：本文件不包含任何密钥。所有密钥必须走 Cloudflare 控制台 → Secrets：
+#   PB_URL / PB_ADMIN_EMAIL / PB_ADMIN_PASSWORD
+#   CHATANYWHERE_KEY / SILICONFLOW_KEY / NVIDIA_KEY / DEEPSEEK_KEY
+#   PAY_APP_ID=5435 / PAY_APP_SECRET / PAY_MAPI_URL / PAY_QUERY_URL / PAY_NOTIFY_URL
+name = "my-bitlife-ai"
+main = "worker.js"
+compatibility_date = "2025-01-01"

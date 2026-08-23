@@ -1,34 +1,53 @@
 // ==================== 1. 配置中心 ====================
-const CLOUD_CARD_CONFIGS = {
-    free: {
-        primary: { 
-            url: "https://integrate.api.nvidia.com/v1", 
-            apiKeyEnv: "NVIDIA_KEY", 
-            model: "qwen/qwen3.5-122b-a10b" 
-        },
-        backup: { 
-            url: "https://api.siliconflow.cn/v1", 
-            apiKeyEnv: "SILICONFLOW_KEY", 
-            model: "Qwen/Qwen2.5-7B-Instruct" 
-        },
-        priceInput: 0, 
-        priceOutput: 0
-    },
-    silver: { 
-        url: "https://api.deepseek.com/v1",
-        apiKeyEnv: "DEEPSEEK_KEY",
-        model: "deepseek-chat",
-        priceInput: 0.00015,  
-        priceOutput: 0.00030 
-    },
-    gold: { 
-        url: "https://api.deepseek.com/v1",
-        apiKeyEnv: "DEEPSEEK_KEY",
-        model: "deepseek-reasoner",
-        priceInput: 0.0015, 
-        priceOutput: 0.0030 
-    }
+
+// 非会员每日免费次数
+const DAILY_FREE_QUOTA = 150;
+// Cloudflare Worker 环境是 UTC，固定用 UTC+8 计算"今天"
+const TIMEZONE_OFFSET_MS = 8 * 3600 * 1000;
+const LIFETIME_EXPIRY = "2226-01-01T00:00:00.000Z";
+
+// 模型池：Worker 自动路由（tier 越小越优先；dailyCap 为当日全局调用上限；enabled=false 池内禁用）
+// ChatAnywhere 免费版（gpt_api_free）：每日 10000 点平台额度 + 各模型每日次数上限
+const MODEL_POOL = [
+    // ---- ChatAnywhere 100次/天档 ----
+    { id: "ca-gpt-4o-mini",   url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-4o-mini",    dailyCap: 100, tier: 10, enabled: true },
+    { id: "ca-gpt-3.5-turbo", url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-3.5-turbo",  dailyCap: 100, tier: 10, enabled: true },
+    { id: "ca-gpt-4.1-mini",  url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-4.1-mini",   dailyCap: 100, tier: 10, enabled: true },
+    { id: "ca-gpt-4.1-nano",  url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-4.1-nano",   dailyCap: 100, tier: 10, enabled: true },
+    { id: "ca-gpt-5-mini",    url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-5-mini",     dailyCap: 100, tier: 10, enabled: true },
+    { id: "ca-gpt-5-nano",    url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-5-nano",     dailyCap: 100, tier: 10, enabled: true },
+    { id: "ca-gpt-5.4-mini",  url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-5.4-mini",   dailyCap: 100, tier: 10, enabled: true },
+    { id: "ca-gpt-5.4-nano",  url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-5.4-nano",   dailyCap: 100, tier: 10, enabled: true },
+    // ---- ChatAnywhere 30次/天档（实测：deepseek-r1 免费版被限制，用 v3.2-thinking 替代）----
+    { id: "ca-deepseek-v3.2",          url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "deepseek-v3.2",        dailyCap: 30, tier: 20, enabled: true },
+    { id: "ca-deepseek-v4-flash",      url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "deepseek-v4-flash",    dailyCap: 30, tier: 20, enabled: true },
+    { id: "ca-deepseek-v4-pro",        url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "deepseek-v4-pro",      dailyCap: 30, tier: 20, enabled: true },
+    { id: "ca-deepseek-v3.2-thinking", url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "deepseek-v3.2-thinking", dailyCap: 30, tier: 20, enabled: true },
+    // ---- ChatAnywhere 5次/天档 ----
+    { id: "ca-gpt-4o",        url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-4o",         dailyCap: 5,   tier: 30, enabled: true },
+    { id: "ca-gpt-4.1",       url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-4.1",        dailyCap: 5,   tier: 30, enabled: true },
+    { id: "ca-gpt-5",         url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-5",          dailyCap: 5,   tier: 30, enabled: true },
+    // ---- DeepSeek 官方（池内禁用，等流量大了再启用）----
+    { id: "ds-deepseek-chat",     url: "https://api.deepseek.com/v1", apiKeyEnv: "DEEPSEEK_KEY",     model: "deepseek-chat",     dailyCap: Infinity, tier: 40, enabled: false },
+    { id: "ds-deepseek-reasoner", url: "https://api.deepseek.com/v1", apiKeyEnv: "DEEPSEEK_KEY",     model: "deepseek-reasoner", dailyCap: Infinity, tier: 40, enabled: false },
+    // ---- NVIDIA（原 free 卡 primary，免费额度）----
+    { id: "nv-qwen3.5-122b",  url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY",  model: "qwen/qwen3.5-122b-a10b", dailyCap: Infinity, tier: 90, enabled: true },
+    // ---- SiliconFlow Qwen3-8B（免费，最后兜底）----
+    { id: "sf-qwen3-8b",      url: "https://api.siliconflow.cn/v1",      apiKeyEnv: "SILICONFLOW_KEY", model: "Qwen/Qwen3-8B",     dailyCap: Infinity, tier: 99, enabled: true },
+];
+
+// 会员套餐（金额与 worker 校验共用，前端仅展示）
+const PAY_PLANS = {
+    monthly:   { id: "monthly",   name: "月度会员", price: "9.9",  days: 30 },
+    quarterly: { id: "quarterly", name: "季度会员", price: "24.9", days: 90 },
+    yearly:    { id: "yearly",    name: "年度会员", price: "52",   days: 365 },
+    lifetime:  { id: "lifetime",  name: "终身会员", price: "89",   days: 73000 },
 };
+
+// 环境变量（Cloudflare Secrets，勿写入代码）：
+//   CHATANYWHERE_KEY / SILICONFLOW_KEY / NVIDIA_KEY / DEEPSEEK_KEY / PB_URL / PB_ADMIN_EMAIL / PB_ADMIN_PASSWORD
+//   PAY_APP_ID=5435 / PAY_APP_SECRET / PAY_MAPI_URL=https://ezfp.cn/mapi.php / PAY_QUERY_URL=https://ezfp.cn/api.php
+//   PAY_NOTIFY_URL=https://ai.blupure.cn/api/pay/notify
 
 // ==================== 2. 工具函数 ====================
 
@@ -36,6 +55,7 @@ function corsHeaders() {
     return {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        // 保留 X-Cloud-Card-Id 兼容旧前端灰度期
         "Access-Control-Allow-Headers": "Content-Type, X-Auth-Token, X-Cloud-Card-Id",
         "Access-Control-Max-Age": "86400",
     };
@@ -54,319 +74,458 @@ function safeJsonParse(text) {
     }
 }
 
-function countTokens(text) {
-    if (!text) return 0;
-    let tokens = 0;
-    for (let i = 0; i < text.length; i++) {
-        const charCode = text.charCodeAt(i);
-        tokens += (charCode > 255) ? 0.8 : 0.3;
-    }
-    return Math.ceil(tokens);
-}
-
 function escapePocketBaseFilterValue(value) {
     return String(value)
         .replace(/\\/g, "\\\\")
         .replace(/'/g, "\\'");
 }
 
-function normalizeRedeemCode(value) {
-    return String(value || "")
-        .trim()
-        .replace(/[\s\u00A0]+/g, "")
-        .toLowerCase();
-}
-
-function errorResponse(msg, status = 500, detail = null) {
-    return new Response(JSON.stringify({ error: msg, detail }), {
+function errorResponse(msg, status = 500, detail = null, code = "") {
+    return new Response(JSON.stringify({ error: msg, detail, code }), {
         status,
         headers: { ...corsHeaders(), "Content-Type": "application/json" }
     });
 }
 
+function getTodayStr() {
+    return new Date(Date.now() + TIMEZONE_OFFSET_MS).toISOString().slice(0, 10);
+}
 
-// ==================== 3. 数据库服务层 ====================
+// 标准 MD5（公共域算法，纯 JS 免依赖；Worker 运行时 WebCrypto 不支持 MD5）
+function md5(str) {
+    const rotl = (x, n) => (x << n) | (x >>> (32 - n));
+    const add = (x, y) => (x + y) & 0xFFFFFFFF;
+    const K = [0xd76aa478,0xe8c7b756,0x242070db,0xc1bdceee,0xf57c0faf,0x4787c62a,0xa8304613,0xfd469501,0x698098d8,0x8b44f7af,0xffff5bb1,0x895cd7be,0x6b901122,0xfd987193,0xa679438e,0x49b40821,0xf61e2562,0xc040b340,0x265e5a51,0xe9b6c7aa,0xd62f105d,0x02441453,0xd8a1e681,0xe7d3fbc8,0x21e1cde6,0xc33707d6,0xf4d50d87,0x455a14ed,0xa9e3e905,0xfcefa3f8,0x676f02d9,0x8d2a4c8a,0xfffa3942,0x8771f681,0x6d9d6122,0xfde5380c,0xa4beea44,0x4bdecfa9,0xf6bb4b60,0xbebfbc70,0x289b7ec6,0xeaa127fa,0xd4ef3085,0x04881d05,0xd9d4d039,0xe6db99e5,0x1fa27cf8,0xc4ac5665,0xf4292244,0x432aff97,0xab9423a7,0xfc93a039,0x655b59c3,0x8f0ccc92,0xffeff47d,0x85845dd1,0x6fa87e4f,0xfe2ce6e0,0xa3014314,0x4e0811a1,0xf7537e82,0xbd3af235,0x2ad7d2bb,0xeb86d391];
+    const S = [7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22,5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20,4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23,6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21];
+    const bytes = unescape(encodeURIComponent(str));
+    const msg = [];
+    for (let i = 0; i < bytes.length; i++) msg.push(bytes.charCodeAt(i));
+    const origLen = msg.length * 8;
+    msg.push(0x80);
+    while (msg.length % 64 !== 56) msg.push(0);
+    for (let i = 0; i < 8; i++) msg.push(Math.floor(origLen / Math.pow(2, 8 * i)) & 0xFF);
+    let a0 = 0x67452301, b0 = 0xefcdab89, c0 = 0x98badcfe, d0 = 0x10325476;
+    for (let i = 0; i < msg.length; i += 64) {
+        const M = [];
+        for (let j = 0; j < 16; j++) M[j] = msg[i + j * 4] | (msg[i + j * 4 + 1] << 8) | (msg[i + j * 4 + 2] << 16) | (msg[i + j * 4 + 3] << 24);
+        let A = a0, B = b0, C = c0, D = d0;
+        for (let j = 0; j < 64; j++) {
+            let F, g;
+            if (j < 16) { F = (B & C) | (~B & D); g = j; }
+            else if (j < 32) { F = (D & B) | (~D & C); g = (5 * j + 1) % 16; }
+            else if (j < 48) { F = B ^ C ^ D; g = (3 * j + 5) % 16; }
+            else { F = C ^ (B | ~D); g = (7 * j) % 16; }
+            F = add(add(F, A), add(K[j], M[g]));
+            const tmp = D; D = C; C = B; B = add(B, rotl(F, S[j])); A = tmp;
+        }
+        a0 = add(a0, A); b0 = add(b0, B); c0 = add(c0, C); d0 = add(d0, D);
+    }
+    const toHex = n => {
+        let s = "";
+        for (let i = 0; i < 4; i++) s += ("0" + ((n >>> (i * 8)) & 0xFF).toString(16)).slice(-2);
+        return s;
+    };
+    return toHex(a0) + toHex(b0) + toHex(c0) + toHex(d0);
+}
+
+// ==================== 3. 数据库服务层（PocketBase） ====================
 
 async function getAdminToken(env) {
     const pbUrl = (env.PB_URL || "").replace(/\/$/, "");
     const credentials = { identity: env.PB_ADMIN_EMAIL, password: env.PB_ADMIN_PASSWORD };
-    
-    // 尝试新版超级用户接口
     const res = await fetch(`${pbUrl}/api/collections/_superusers/auth-with-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials)
     });
-    
     if (res.ok) return (await res.json()).token;
-
-    // 尝试老版本接口
     const resOld = await fetch(`${pbUrl}/api/collections/admins/auth-with-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials)
     });
-    
     if (resOld.ok) return (await resOld.json()).token;
     throw new Error("PocketBase 身份验证失败");
 }
 
-async function updateBalance(env, userId, newBalance, maxRetries = 3) {
-    const pbUrl = env.PB_URL.replace(/\/$/, "");
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-            const adminToken = await getAdminToken(env);
-            const res = await fetch(`${pbUrl}/api/collections/users/records/${userId}`, {
-                method: "PATCH",
-                headers: {
-                    "Authorization": `Bearer ${adminToken}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ coins: newBalance })
-            });
-            if (res.ok) return; // 成功，退出
-            const errText = await res.text().catch(() => "");
-            console.error(`更新余额失败 (attempt ${attempt}/${maxRetries}): HTTP ${res.status} ${errText}`);
-        } catch (e) {
-            console.error(`更新余额异常 (attempt ${attempt}/${maxRetries}):`, e.message);
+async function pbAdminFetch(env, path, options = {}) {
+    const pbUrl = (env.PB_URL || "").replace(/\/$/, "");
+    const adminToken = await getAdminToken(env);
+    return fetch(`${pbUrl}${path}`, {
+        ...options,
+        headers: {
+            "Authorization": `Bearer ${adminToken}`,
+            "Content-Type": "application/json",
+            ...(options.headers || {})
         }
-        if (attempt < maxRetries) {
-            // 指数退避：500ms, 1000ms
-            await new Promise(r => setTimeout(r, 500 * attempt));
-        }
-    }
-    console.error(`更新余额最终失败，用户 ${userId}，目标余额 ${newBalance}`);
+    });
 }
 
-// ==================== 4. 核心逻辑控制 ====================
+// 读取当日各模型已用次数 → { modelId: count }
+async function readModelUsageMap(env, today) {
+    const q = await pbAdminFetch(
+        env,
+        `/api/collections/model_usage/records?perPage=50&skipTotal=true&filter=${encodeURIComponent(`usage_date='${today}'`)}`
+    );
+    if (!q.ok) return {};
+    const data = await q.json();
+    const map = {};
+    for (const it of data.items || []) map[it.model_id] = Number(it.count || 0);
+    return map;
+}
+
+// 模型调用成功后才计数（全局配额，所有用户共享）
+async function bumpModelUsage(env, modelId, today) {
+    const filter = encodeURIComponent(`usage_date='${today}' && model_id='${escapePocketBaseFilterValue(modelId)}'`);
+    const q = await pbAdminFetch(env, `/api/collections/model_usage/records?perPage=1&skipTotal=true&filter=${filter}`);
+    if (!q.ok) return;
+    const data = await q.json();
+    if ((data.items || []).length) {
+        const rec = data.items[0];
+        await pbAdminFetch(env, `/api/collections/model_usage/records/${rec.id}`, {
+            method: "PATCH",
+            body: JSON.stringify({ count: Number(rec.count || 0) + 1 })
+        });
+    } else {
+        await pbAdminFetch(env, `/api/collections/model_usage/records`, {
+            method: "POST",
+            body: JSON.stringify({ usage_date: today, model_id: modelId, count: 1 })
+        });
+    }
+}
+
+// 用户每日计数（仅非会员；跨天重置）
+async function bumpUserUsage(env, userId, usageDate, usageCount) {
+    const today = getTodayStr();
+    const next = (usageDate === today ? Number(usageCount || 0) : 0) + 1;
+    await pbAdminFetch(env, `/api/collections/users/records/${userId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ usage_date: today, usage_count: next })
+    });
+}
+
+// ==================== 4. 会员与配额 ====================
+
+function isMember(record) {
+    const t = record.membership_type;
+    if (!t) return false;
+    if (t === "lifetime") return true;
+    return !!(record.membership_expires_at && Date.parse(record.membership_expires_at) > Date.now());
+}
+
+function isMemberExpired(record) {
+    const t = record.membership_type;
+    if (!t || t === "lifetime") return false;
+    return !!(record.membership_expires_at && Date.parse(record.membership_expires_at) <= Date.now());
+}
+
+// 按 tier 升序选当日未超限的第一个 enabled 模型；全无返回 null
+function pickModel(usageMap, today) {
+    return MODEL_POOL
+        .filter(m => m.enabled)
+        .sort((a, b) => a.tier - b.tier)
+        .find(m => (usageMap[m.id] || 0) < m.dailyCap) || null;
+}
+
+// ==================== 5. 易支付（ezfp.cn） ====================
+
+// 签名：参数（除 sign/sign_type/空值）按参数名 ASCII 升序拼接 a=b&c=d，md5(串+KEY) 小写
+function buildPaySign(params, secret) {
+    const keys = Object.keys(params)
+        .filter(k => k !== "sign" && k !== "sign_type" && params[k] !== "" && params[k] != null)
+        .sort();
+    const str = keys.map(k => `${k}=${params[k]}`).join("&");
+    return md5(str + secret);
+}
+
+function verifyPaySign(params, secret) {
+    const sign = params.sign;
+    if (!sign) return false;
+    return buildPaySign(params, secret) === sign;
+}
+
+// 创建订单：本地落库 pay_orders → 调易支付 mapi.php → 返回 { orderNo, payUrl, qrcode }
+async function createPayOrder(env, userId, planId, payType) {
+    const plan = PAY_PLANS[planId];
+    if (!plan) throw new Error("无效的会员套餐");
+    const orderNo = "MP" + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 8).toUpperCase();
+    const timestamp = new Date().toISOString();
+
+    const orderRes = await pbAdminFetch(env, `/api/collections/pay_orders/records`, {
+        method: "POST",
+        body: JSON.stringify({
+            order_no: orderNo, user_id: userId, plan_id: planId,
+            amount: plan.price, status: "pending", trade_no: "",
+            created_at: timestamp, paid_at: ""
+        })
+    });
+    if (!orderRes.ok) throw new Error("订单创建失败");
+
+    const params = {
+        pid: env.PAY_APP_ID,
+        type: payType,
+        out_trade_no: orderNo,
+        notify_url: env.PAY_NOTIFY_URL,
+        name: plan.name,
+        money: plan.price,
+        clientip: requestClientIp(),
+        device: "pc",
+        param: userId,
+    };
+    params.sign = buildPaySign(params, env.PAY_APP_SECRET);
+    params.sign_type = "MD5";
+
+    const payRes = await fetch(env.PAY_MAPI_URL || "https://ezfp.cn/mapi.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams(params)
+    });
+    const payJson = await payRes.json().catch(() => ({}));
+    if (payRes.ok && payJson.code === 1) {
+        return { orderNo, payUrl: payJson.payurl || "", qrcode: payJson.qrcode || "" };
+    }
+    throw new Error(payJson.msg || "支付网关返回异常");
+}
+
+// 回调处理：验签 → TRADE_SUCCESS → 订单/金额校验 → 幂等 → 开通会员
+async function handlePayNotify(env, params) {
+    try {
+        if (!verifyPaySign(params, env.PAY_APP_SECRET)) return "fail";
+        if (params.trade_status !== "TRADE_SUCCESS") return "fail";
+
+        const filter = encodeURIComponent(`order_no='${escapePocketBaseFilterValue(params.out_trade_no || "")}'`);
+        const q = await pbAdminFetch(env, `/api/collections/pay_orders/records?perPage=1&skipTotal=true&filter=${filter}`);
+        if (!q.ok) return "fail";
+        const data = await q.json();
+        const order = (data.items || [])[0];
+        if (!order) return "fail";
+        if (order.status === "paid") return "success"; // 幂等：重复回调不重复开通
+
+        const plan = PAY_PLANS[order.plan_id];
+        if (!plan || String(params.money) !== plan.price) return "fail"; // 金额校验防伪造
+
+        const expiresAt = plan.id === "lifetime" ? LIFETIME_EXPIRY
+            : new Date(Date.now() + plan.days * 86400000).toISOString();
+        const now = new Date().toISOString();
+
+        const userRes = await pbAdminFetch(env, `/api/collections/users/records/${order.user_id}`, {
+            method: "PATCH",
+            body: JSON.stringify({ membership_type: plan.id, membership_expires_at: expiresAt })
+        });
+        if (!userRes.ok) return "fail";
+
+        await pbAdminFetch(env, `/api/collections/pay_orders/records/${order.id}`, {
+            method: "PATCH",
+            body: JSON.stringify({ status: "paid", trade_no: params.trade_no || "", paid_at: now })
+        });
+        return "success";
+    } catch (e) {
+        console.error("handlePayNotify error:", e.message);
+        return "fail";
+    }
+}
+
+let _clientIp = "";
+function setClientIp(ip) { _clientIp = ip || ""; }
+function requestClientIp() { return _clientIp || "127.0.0.1"; }
+
+// ==================== 6. 核心逻辑控制 ====================
+
+async function authenticate(env, request) {
+    const userAuthToken = request.headers.get("X-Auth-Token");
+    if (!userAuthToken) return { error: errorResponse("请先登录", 401, null, "NOT_LOGGED_IN") };
+    const pbUrl = (env.PB_URL || "").replace(/\/$/, "");
+    const authRes = await fetch(`${pbUrl}/api/collections/users/auth-refresh`, {
+        method: "POST",
+        headers: { "Authorization": userAuthToken.startsWith("Bearer ") ? userAuthToken : `Bearer ${userAuthToken}` }
+    });
+    if (!authRes.ok) return { error: errorResponse("会话已过期", 401, null, "SESSION_EXPIRED") };
+    const authData = await authRes.json();
+    return { record: authData.record };
+}
 
 export default {
     async fetch(request, env, ctx) {
         if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders() });
 
         const url = new URL(request.url);
+        setClientIp(request.headers.get("CF-Connecting-IP") || "");
 
         try {
-            // 路由：AI 对话
+            // ---- 路由：AI 对话（模型池自动路由 + 每日限额/会员校验）----
             if (url.pathname === "/chat/completions") {
-                const cloudCardId = request.headers.get("X-Cloud-Card-Id") || "free";
-                const userAuthToken = request.headers.get("X-Auth-Token");
-                const cardConfig = CLOUD_CARD_CONFIGS[cloudCardId];
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const record = auth.record;
+                const userId = record.id;
 
-                if (!cardConfig) return errorResponse("无效的云卡 ID", 400);
-
-                // 1. 所有云卡都需要登录
-                if (!userAuthToken) return errorResponse("请先登录", 401);
-                const pbUrl = (env.PB_URL || "").replace(/\/$/, "");
-                const authRes = await fetch(`${pbUrl}/api/collections/users/auth-refresh`, {
-                    method: "POST",
-                    headers: { "Authorization": userAuthToken.startsWith("Bearer ") ? userAuthToken : `Bearer ${userAuthToken}` }
-                });
-                if (!authRes.ok) return errorResponse("会话已过期", 401);
-                const authData = await authRes.json();
-                const userId = authData.record.id;
-                const userCoins = Number(authData.record.coins || 0);
-
-                // 付费卡才检查余额
-                if ((cardConfig.priceInput > 0 || cardConfig.priceOutput > 0) && userCoins <= 0) {
-                    return errorResponse("余额不足，请充值", 402);
+                // 会员判定
+                if (isMemberExpired(record)) {
+                    return errorResponse("会员已到期，请续费", 402, { expiresAt: record.membership_expires_at }, "MEMBERSHIP_EXPIRED");
+                }
+                const isMemberUser = isMember(record);
+                if (!isMemberUser && Number(record.usage_count || 0) >= DAILY_FREE_QUOTA
+                    && record.usage_date === getTodayStr()) {
+                    return errorResponse("今日免费次数已用完（150/150），开通会员后不限量", 402,
+                        { used: Number(record.usage_count || 0), limit: DAILY_FREE_QUOTA }, "QUOTA_EXCEEDED");
                 }
 
-                // 2. 解析请求
+                // 解析请求
                 const bodyText = await request.text();
                 let requestJson = safeJsonParse(bodyText);
                 const isStream = requestJson.stream === true;
-                const inputTokens = countTokens(JSON.stringify(requestJson.messages));
 
-                // 3. 定义下游调用逻辑 (带超时控制)
-                const callAI = async (target) => {
-                    const apiKey = target.apiKey || env[target.apiKeyEnv];
+                // 模型池路由
+                const today = getTodayStr();
+                const usageMap = await readModelUsageMap(env, today);
+                const picked = pickModel(usageMap, today);
+                if (!picked) {
+                    return errorResponse("今日全部模型配额已用尽，请明天再试", 429, null, "QUOTA_EXCEEDED");
+                }
+                const candidates = [
+                    picked,
+                    ...MODEL_POOL.filter(m => m.enabled && m.id !== picked.id && (usageMap[m.id] || 0) < m.dailyCap)
+                        .sort((a, b) => a.tier - b.tier)
+                ];
+
+                // 逐候选转发：非 2xx / 网络异常 → 换下一个
+                let aiResponse = null;
+                let usedModel = null;
+                for (const target of candidates) {
+                    const apiKey = env[target.apiKeyEnv];
+                    if (!apiKey) continue;
                     const base = target.url.replace(/\/$/, "");
-                    
                     const controller = new AbortController();
-                    // 流式请求：60s 超时保护连接建立阶段，连接成功后清除（流传输由 Cloudflare 30s CPU 限制兜底）
-                    // 非流式请求：120s 等待完整响应（初始化解析等大模型完整响应场景）
                     const timeoutMs = isStream ? 60000 : 120000;
                     const timeout = setTimeout(() => controller.abort(), timeoutMs);
-
                     try {
                         const payload = { ...requestJson, model: target.model };
-                        const response = await fetch(`${base}/chat/completions`, {
+                        const resp = await fetch(`${base}/chat/completions`, {
                             method: "POST",
-                            headers: { 
-                                "Authorization": `Bearer ${apiKey}`, 
-                                "Content-Type": "application/json" 
-                            },
+                            headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
                             body: JSON.stringify(payload),
                             signal: controller.signal
                         });
-                        // 连接建立后清除超时：流式响应由客户端读取，非流式响应已完整返回
                         clearTimeout(timeout);
-                        return response;
+                        if (resp.ok) {
+                            aiResponse = resp;
+                            usedModel = target;
+                            break;
+                        }
+                        console.warn(`model ${target.id} failed (${resp.status}), fallback next`);
                     } catch (e) {
                         clearTimeout(timeout);
-                        throw e;
+                        console.warn(`model ${target.id} error: ${e.message}, fallback next`);
                     }
-                };
+                }
+                if (!aiResponse) {
+                    return errorResponse("AI 服务暂时不可用，请稍后重试", 503, null, "POOL_UNAVAILABLE");
+                }
 
-                // 4. 执行调用与重试（primary 超时也触发 backup）
-                let aiResponse;
-                if (cloudCardId === "free") {
+                // 成功后才计数（失败不扣次数）；会员不扣用户次数但照记模型级配额
+                ctx.waitUntil((async () => {
                     try {
-                        aiResponse = await callAI(cardConfig.primary);
-                        if (!aiResponse.ok) throw new Error(`primary ${aiResponse.status}`);
-                    } catch (primaryErr) {
-                        console.warn("free primary 失败，切换 backup:", primaryErr.message);
-                        try {
-                            aiResponse = await callAI(cardConfig.backup);
-                            if (!aiResponse.ok) {
-                                console.warn("free backup 也返回非 2xx:", aiResponse.status);
-                            }
-                        } catch (backupErr) {
-                            return errorResponse("服务暂时不可用，请稍后重试", 503, backupErr.message);
-                        }
+                        await bumpModelUsage(env, usedModel.id, today);
+                        if (!isMemberUser) await bumpUserUsage(env, userId, record.usage_date, record.usage_count);
+                    } catch (e) {
+                        console.error("usage bump failed:", e.message);
                     }
-                } else {
-                    aiResponse = await callAI(cardConfig);
-                }
-                if (!aiResponse.ok) {
-                    return new Response(await aiResponse.text(), { status: aiResponse.status, headers: corsHeaders() });
-                }
+                })());
 
-                // 5. 计费响应处理
                 if (isStream) {
-                    const isPaidCard = cardConfig.priceInput > 0 || cardConfig.priceOutput > 0;
-                    if (isPaidCard) {
-                        const [clientStream, billingStream] = aiResponse.body.tee();
-                        ctx.waitUntil(processStreamingBilling(env, userId, userCoins, cardConfig, inputTokens, billingStream));
-                        return new Response(clientStream, {
-                            headers: { ...corsHeaders(), "Content-Type": "text/event-stream", "Cache-Control": "no-cache" }
-                        });
-                    } else {
-                        return new Response(aiResponse.body, {
-                            headers: { ...corsHeaders(), "Content-Type": "text/event-stream", "Cache-Control": "no-cache" }
-                        });
-                    }
-                } else {
-                    const resJson = await aiResponse.json();
-                    if (cardConfig.priceInput > 0 || cardConfig.priceOutput > 0) {
-                        const outTokens = resJson.usage?.completion_tokens || countTokens(resJson.choices[0]?.message?.content || "");
-                        const cost = (inputTokens * cardConfig.priceInput) + (outTokens * cardConfig.priceOutput) + 0.001;
-                        ctx.waitUntil(updateBalance(env, userId, Math.max(0, userCoins - cost)));
-                    }
-                    return new Response(JSON.stringify(resJson), {
+                    return new Response(aiResponse.body, {
+                        headers: { ...corsHeaders(), "Content-Type": "text/event-stream", "Cache-Control": "no-cache" }
+                    });
+                }
+                const resJson = await aiResponse.json();
+                return new Response(JSON.stringify(resJson), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+
+            // ---- 路由：今日使用状态 ----
+            if (url.pathname === "/api/usage" && request.method === "GET") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const r = auth.record;
+                const today = getTodayStr();
+                const used = r.usage_date === today ? Number(r.usage_count || 0) : 0;
+                return new Response(JSON.stringify({
+                    isMember: isMember(r),
+                    membershipType: r.membership_type || "",
+                    membershipExpiresAt: r.membership_expires_at || "",
+                    usageDate: today,
+                    used,
+                    limit: DAILY_FREE_QUOTA,
+                    // 会员不限量用 -1 表示（避免 Infinity 序列化为 null）
+                    remaining: isMember(r) ? -1 : Math.max(0, DAILY_FREE_QUOTA - used)
+                }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+            }
+
+            // ---- 路由：创建支付订单 ----
+            if (url.pathname === "/api/pay/create" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                let body = {};
+                try { body = await request.json(); } catch (e) {}
+                const planId = String(body.planId || "");
+                const payType = ["alipay", "wxpay"].includes(body.payType) ? body.payType : "alipay";
+                if (!PAY_PLANS[planId]) return errorResponse("无效的会员套餐", 400, null, "INVALID_PLAN");
+                try {
+                    const { orderNo, payUrl, qrcode } = await createPayOrder(env, auth.record.id, planId, payType);
+                    return new Response(JSON.stringify({ orderNo, payUrl, qrcode }), {
                         headers: { ...corsHeaders(), "Content-Type": "application/json" }
                     });
+                } catch (e) {
+                    return errorResponse("创建订单失败：" + e.message, 502, null, "PAY_CREATE_FAILED");
                 }
             }
 
-            // 路由：卡密兑换
-            if (url.pathname === "/api/redeem" && request.method === "POST") {
-                const userAuthToken = request.headers.get("X-Auth-Token");
-                if (!userAuthToken) return errorResponse("请先登录", 401);
-                const { code } = await request.json();
-                const rawCode = String(code || "");
-                const normalizedCode = normalizeRedeemCode(rawCode);
-                if (!normalizedCode) return errorResponse("请输入卡密", 400);
+            // ---- 路由：支付回调（易支付异步通知，GET/POST 均可）----
+            if (url.pathname === "/api/pay/notify") {
+                let params;
+                if (request.method === "POST") {
+                    const text = await request.text();
+                    try { params = Object.fromEntries(new URLSearchParams(text)); }
+                    catch (e) { params = {}; }
+                } else {
+                    params = Object.fromEntries(url.searchParams);
+                }
+                const result = await handlePayNotify(env, params);
+                return new Response(result, { headers: corsHeaders() }); // "success"/"fail" 纯文本
+            }
 
-                const adminToken = await getAdminToken(env);
-                const pbUrl = (env.PB_URL || "").replace(/\/$/, "");
-
-                const authRes = await fetch(`${pbUrl}/api/collections/users/auth-refresh`, {
-                    method: "POST",
-                    headers: { "Authorization": userAuthToken.startsWith("Bearer ") ? userAuthToken : `Bearer ${userAuthToken}` }
-                });
-                if (!authRes.ok) return errorResponse("权限验证失败", 401);
-                const userData = await authRes.json();
-                const userId = userData.record.id;
-
-                const normalizedAllSpaces = rawCode.trim().replace(/\s+/g, "");
-                const candidateCodes = Array.from(new Set([
-                    normalizedCode,
-                    normalizedAllSpaces,
-                    String(code || "").trim().toLowerCase()
-                ].filter(Boolean)));
-
-                let cdk = null;
-                let cdkStatus = null;
-                let matchedCode = null;
-                const probeHeaders = { "Authorization": `Bearer ${adminToken}` };
-
-                for (const candidate of candidateCodes) {
-                    const escapedCandidate = escapePocketBaseFilterValue(candidate);
-                    const cdkQuery = await fetch(`${pbUrl}/api/collections/cdks/records?perPage=1&skipTotal=true&filter=code='${escapedCandidate}'`, {
-                        headers: probeHeaders
-                    });
-                    if (!cdkQuery.ok) {
-                        const errText = await cdkQuery.text().catch(() => "");
-                        return errorResponse("查询卡密失败", 500, errText);
-                    }
-                    const cdkData = await cdkQuery.json();
-                    if (cdkData.items?.length) {
-                        cdk = cdkData.items[0];
-                        matchedCode = candidate;
-                        cdkStatus = cdk.is_used ? "used" : "available";
-                        break;
+            // ---- 路由：查询订单状态（前端轮询兜底）----
+            if (url.pathname === "/api/pay/status" && request.method === "GET") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const orderNo = url.searchParams.get("out_trade_no") || "";
+                if (!orderNo) return errorResponse("缺少订单号", 400, null, "INVALID_ORDER");
+                const filter = encodeURIComponent(`order_no='${escapePocketBaseFilterValue(orderNo)}'`);
+                const q = await pbAdminFetch(env, `/api/collections/pay_orders/records?perPage=1&skipTotal=true&filter=${filter}`);
+                if (!q.ok) return errorResponse("查询订单失败", 500, null, "ORDER_QUERY_FAILED");
+                const data = await q.json();
+                const order = (data.items || [])[0];
+                if (!order || order.user_id !== auth.record.id) return errorResponse("订单不存在", 404, null, "INVALID_ORDER");
+                let status = order.status;
+                if (status !== "paid") {
+                    // 兜底：本地未回调时向易支付查一次
+                    try {
+                        const queryUrl = `${env.PAY_QUERY_URL || "https://ezfp.cn/api.php"}?act=order&pid=${env.PAY_APP_ID}&key=${env.PAY_APP_SECRET}&out_trade_no=${encodeURIComponent(orderNo)}`;
+                        const qr = await fetch(queryUrl);
+                        const qj = await qr.json();
+                        if (qj.code === 1 && Number(qj.status) === 1) {
+                            await pbAdminFetch(env, `/api/collections/pay_orders/records/${order.id}`, {
+                                method: "PATCH",
+                                body: JSON.stringify({ status: "paid", trade_no: qj.trade_no || "", paid_at: new Date().toISOString() })
+                            });
+                            status = "paid";
+                        }
+                    } catch (e) {
+                        console.error("pay status query failed:", e.message);
                     }
                 }
-
-                if (!cdk) {
-                    return errorResponse("卡密不存在", 404, { rawCode, normalizedCode });
-                }
-                if (cdkStatus === "used") {
-                    return errorResponse("卡密已使用", 409, { code: matchedCode, assigned_to: cdk.assigned_to || null });
-                }
-
-                const redeemValue = Number(cdk.value || 0);
-                if (!Number.isFinite(redeemValue) || redeemValue <= 0) {
-                    return errorResponse("卡密面额无效", 500, { code: matchedCode, value: cdk.value });
-                }
-
-                const timestamp = new Date().toISOString();
-                const markRes = await fetch(`${pbUrl}/api/collections/cdks/records/${cdk.id}`, {
-                    method: "PATCH",
-                    headers: { "Authorization": `Bearer ${adminToken}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        is_used: true,
-                        assigned_to: userId,
-                        used_at: timestamp
-                    })
-                });
-                if (!markRes.ok) {
-                    const errText = await markRes.text().catch(() => "");
-                    if (markRes.status === 400 || markRes.status === 409) {
-                        return errorResponse("卡密已被其他请求兑换，请刷新后重试", 409, errText);
-                    }
-                    return errorResponse("卡密兑换失败，请重试", 500, errText);
-                }
-
-                const latestUserRes = await fetch(`${pbUrl}/api/collections/users/records/${userId}`, {
-                    headers: probeHeaders
-                });
-                if (!latestUserRes.ok) {
-                    const errText = await latestUserRes.text().catch(() => "");
-                    return errorResponse("读取用户信息失败", 500, errText);
-                }
-                const latestUser = await latestUserRes.json();
-                const currentCoins = Number(latestUser.coins || 0);
-                const nextCoins = currentCoins + redeemValue;
-
-                const balanceRes = await fetch(`${pbUrl}/api/collections/users/records/${userId}`, {
-                    method: "PATCH",
-                    headers: { "Authorization": `Bearer ${adminToken}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({ coins: nextCoins })
-                });
-                if (!balanceRes.ok) {
-                    const errText = await balanceRes.text().catch(() => "");
-                    return errorResponse("卡密兑换成功但余额更新失败", 500, errText);
-                }
-
-                return new Response(JSON.stringify({
-                    success: true,
-                    code: matchedCode,
-                    addedCoins: redeemValue,
-                    newBalance: nextCoins
-                }), {
+                return new Response(JSON.stringify({ status, outTradeNo: orderNo }), {
                     headers: { ...corsHeaders(), "Content-Type": "application/json" }
                 });
             }
@@ -378,76 +537,3 @@ export default {
         }
     }
 };
-
-// ==================== 5. 异步流计费核心 (已增强兼容性) ====================
-
-async function processStreamingBilling(env, userId, oldBalance, cardConfig, inputTokens, responseStream) {
-    const reader = responseStream.getReader();
-    const decoder = new TextDecoder();
-    let totalOutputTokens = 0;
-    let remainder = ""; // 处理被截断的 SSE 行
-
-    try {
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            const chunk = remainder + decoder.decode(value, { stream: true });
-            const lines = chunk.split("\n");
-            
-            // 最后一项可能不完整，存入 remainder 等待下一块
-            remainder = lines.pop() || "";
-
-            for (let line of lines) {
-                line = line.trim();
-                if (!line || line === "data: [DONE]") continue;
-                if (line.startsWith("data: ")) {
-                    try {
-                        const json = JSON.parse(line.substring(6));
-                        const delta = json.choices?.[0]?.delta || {};
-                        
-                        // --- 关键修改点：同时统计 content 和 reasoning_content ---
-                        const content = delta.content || "";
-                        const reasoning = delta.reasoning_content || ""; // DeepSeek R1 专用字段
-                        
-                        if (content || reasoning) {
-                            // 增量统计 Token，确保思维链产生的消耗也被计算
-                            totalOutputTokens += countTokens(content + reasoning);
-                        }
-                        // -------------------------------------------------------
-                        
-                    } catch (e) {
-                        // 忽略行解析错误
-                    }
-                }
-            }
-        }
-
-        // 处理最后剩余的 remainder
-        if (remainder.startsWith("data: ") && remainder !== "data: [DONE]") {
-            try {
-                const json = JSON.parse(remainder.substring(6));
-                const delta = json.choices?.[0]?.delta || {};
-                const content = delta.content || "";
-                const reasoning = delta.reasoning_content || "";
-                if (content || reasoning) {
-                    totalOutputTokens += countTokens(content + reasoning);
-                }
-            } catch (e) {}
-        }
-
-        const finalOutputTokens = totalOutputTokens || 1;
-        // 计算总成本：(输入Token * 进价) + (输出总Token * 出价) + 固定手续费
-        const cost = (inputTokens * cardConfig.priceInput) + (finalOutputTokens * cardConfig.priceOutput) + 0.001;
-        
-        // 打印日志以便在 Cloudflare 控制台调试 (可选)
-        console.log(`用户 ${userId} 计费详情: 输入 ${inputTokens}, 输出 ${finalOutputTokens}, 扣费 ${cost.toFixed(6)}`);
-
-        await updateBalance(env, userId, Math.max(0, oldBalance - cost));
-        
-    } catch (e) {
-        console.error("流计费异常停止:", e.message);
-    } finally {
-        reader.releaseLock();
-    }
-}

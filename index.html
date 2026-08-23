@@ -637,6 +637,7 @@
 
         /* 云卡选择器 */
         .cloud-card-item { cursor: pointer; display: block; }
+        /* 旧云卡样式保留占位，避免规则错位 */
         .cloud-card-item .card-box {
             padding: 15px;
             border-radius: 12px;
@@ -1941,6 +1942,24 @@
     </div>
 </div>
 
+<div id="membership-modal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
+    <div style="width:min(92vw,460px);max-height:85vh;overflow:auto;background:var(--card-bg,#fffdf8);border-radius:16px;padding:18px;border:1px solid var(--line);">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div class="list-title" id="membership-title" style="margin:0;">开通会员</div>
+            <button onclick="MembershipService.closePanel()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--sub);">✕</button>
+        </div>
+        <div class="list-sub">非会员每日免费 150 次；会员期间不限量调用（模型由系统自动路由）。</div>
+        <div class="recharge-grid" id="membership-plan-grid"></div>
+        <div class="list-title" style="font-size:0.9rem;margin-top:10px;">支付方式</div>
+        <div class="pay-method-grid">
+            <button class="pay-method-btn active" data-pay="alipay" onclick="MembershipService.selectPayType('alipay')">💙 支付宝</button>
+            <button class="pay-method-btn" data-pay="wxpay" onclick="MembershipService.selectPayType('wxpay')">💚 微信支付</button>
+        </div>
+        <div id="membership-pay-area" style="margin-top:10px;text-align:center;"></div>
+        <button id="membership-pay-btn" class="mini-btn primary" style="width:100%;margin-top:10px;" onclick="MembershipService.startPay()">立即支付</button>
+    </div>
+</div>
+
 <div id="app">
     <div class="bear-layer" id="bear-layer"></div>
 
@@ -1953,6 +1972,7 @@
             <div class="wealth" id="ui-wealth">🌥️ 独立世界线</div>
             <div class="top-mini-nav">
                 <span id="auth-user-badge" style="display:none;font-size:0.75rem;color:var(--sub);padding:4px 8px;border-radius:999px;background:var(--card-soft);border:1px solid var(--line);"></span>
+                <span id="usage-badge" onclick="MembershipService.openPanel()" style="display:none;font-size:0.75rem;color:var(--accent-dark);padding:4px 8px;border-radius:999px;background:var(--card-soft);border:1px solid var(--line);cursor:pointer;" title="点击开通会员"></span>
                 <button class="top-nav-btn active" data-view="view-home" onclick="switchView('view-home')">首页</button>
                 <button class="top-nav-btn" data-view="view-settings" onclick="switchView('view-settings')">设置</button>
                 <button class="top-nav-btn" id="auth-logout-btn" style="display:none;" onclick="AuthService.logout()">登出</button>
@@ -1999,7 +2019,11 @@
                 <div class="list-title">👤 账户信息</div>
                 <div style="margin: 10px 0; padding: 12px; background: var(--card-soft); border-radius: 12px; border: 1px solid var(--line);">
                     <div style="font-size: 0.9rem;">邮箱：<span id="display-user-email" style="font-weight: 700;">-</span></div>
-                    <div style="font-size: 0.9rem; margin-top: 6px;">余额：<span id="display-user-coins" style="font-weight: 800; color: var(--accent-dark);">0.0000</span> 云币</div>
+                    <div style="font-size: 0.9rem; margin-top: 6px;">今日剩余：<span id="display-remaining-count" style="font-weight: 800; color: var(--accent-dark);">-</span></div>
+                    <div style="font-size: 0.9rem; margin-top: 6px;">会员：<span id="display-membership-badge" style="font-weight: 700; color: var(--accent-dark);">未开通</span></div>
+                    <div style="margin-top: 10px;">
+                        <button id="open-membership-btn" class="mini-btn primary" onclick="MembershipService.openPanel()">开通会员</button>
+                    </div>
                 </div>
                 <label class="settings-toggle">
                     <span>
@@ -2012,48 +2036,9 @@
                     <button class="mini-btn ghost" onclick="saveUserApiSettings()">保存主题</button>
                 </div>
             </section>
-            <!-- 【卡密兑换面板】 -->
             <section class="card">
-                <div class="list-title">🎟️ 卡密兑换</div>
-                <div class="list-sub">如果你在小红书购买了充值卡密(CDK)，请在此兑换。</div>
-                <input id="cdk-input" type="text" placeholder="请输入 16 位卡密" style="text-transform: uppercase;">
-                <div class="setting-actions">
-                    <button class="mini-btn ghost" onclick="RechargeService.redeemCDK()">立即兑换</button>
-                </div>
-            </section>
-
-            <section class="card">
-                <div class="list-title">🌩️ AI 云卡选择</div>
-                <div class="list-sub">选择不同云卡将影响生成质量与消耗。</div>
-                <div id="cloud-card-selector" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
-                    <label class="cloud-card-item" data-card="free">
-                        <input type="radio" name="cloud-card" value="free" style="display: none;">
-                        <div class="card-box">
-                            <div class="card-info">
-                                <div class="card-name">🍡 免费云卡</div>
-                                <div class="card-desc">价格: 0 云币 | 适合尝鲜，不稳定</div>
-                            </div>
-                        </div>
-                    </label>
-                    <label class="cloud-card-item" data-card="silver">
-                        <input type="radio" name="cloud-card" value="silver" style="display: none;">
-                        <div class="card-box">
-                            <div class="card-info">
-                                <div class="card-name">🥈 银质云卡</div>
-                                <div class="card-desc">0.15~0.3 云币/1k tokens 性价比推荐</div>
-                            </div>
-                        </div>
-                    </label>
-                    <label class="cloud-card-item" data-card="gold">
-                        <input type="radio" name="cloud-card" value="gold" style="display: none;">
-                        <div class="card-box">
-                            <div class="card-info">
-                                <div class="card-name">👑 黄金云卡</div>
-                                <div class="card-desc">1.5~3.0 云币/1k tokens 逻辑巅峰</div>
-                            </div>
-                        </div>
-                    </label>
-                </div>
+                <div class="list-title">👑 会员服务</div>
+                <div class="list-sub">非会员每天可免费体验 150 次 AI 生成；开通会员后不限量畅玩。模型由系统自动路由，无需手动选择。</div>
             </section>
         </section>
         <!-- 保持 settings 视图正常闭合即可 -->
@@ -2213,34 +2198,13 @@
             activeUserId: "bitlife_active_user_id_v1",
             scenarioPlayMetaMap: "bitlife_scenario_play_meta_map_v1",
             scenarioDismissedWarningsMap: "bitlife_scenario_dismissed_warnings_map_v1",
-            uiThemeMode: "bitlife_ui_theme_mode_v1",
-            selectedCloudCard: "bitlife_cloud_card_id"
+            uiThemeMode: "bitlife_ui_theme_mode_v1"
         },
-        cloudCards: {
-            "free": {
-                id: "free",
-                name: "免费云卡",
-                desc: "基于 Qwen3.5-122B（主）/ Qwen2.5-7B（备），免费使用",
-                model: "Qwen/Qwen2.5-7B-Instruct",
-                priceInput: 0,
-                priceOutput: 0
-            },
-            "silver": {
-                id: "silver",
-                name: "银质云卡",
-                desc: "性价比高，生成速度快",
-                model: "deepseek-chat",
-                priceInput: 0.00015,
-                priceOutput: 0.00030
-            },
-            "gold": {
-                id: "gold",
-                name: "黄金云卡",
-                desc: "逻辑极强，深度思考，适合复杂剧情",
-                model: "deepseek-reasoner",
-                priceInput: 0.0015,
-                priceOutput: 0.0030
-            }
+        membershipPlans: {
+            monthly:   { id: "monthly",   name: "月度会员", price: "9.9",  days: 30,    desc: "30 天不限量" },
+            quarterly: { id: "quarterly", name: "季度会员", price: "24.9", days: 90,    desc: "90 天不限量" },
+            yearly:    { id: "yearly",    name: "年度会员", price: "52",   days: 365,   desc: "365 天不限量" },
+            lifetime:  { id: "lifetime",  name: "终身会员", price: "89",   days: 73000, desc: "永久不限量" }
         },
         identityPools: {
             cnNames: ["沈知夏", "苏见微", "江望舒", "程以宁", "周晚棠", "宋栖月", "陆听岚", "秦若禾", "林清和", "许映棠", "叶若岚", "顾晚晴", "姜令仪", "白昭宁"],
@@ -5365,17 +5329,12 @@ function rebuildChoicesBlock(body, labels = []) {
             const darkModeInput = document.getElementById("ui-dark-mode-enabled");
             if (darkModeInput) darkModeInput.checked = ThemeService.getMode() === "dark";
 
-            // 加载云卡选择
-            const selectedCardId = StorageService.readText(AppConfig.storageKeys.selectedCloudCard, "free");
-            const radio = document.querySelector(`input[name="cloud-card"][value="${selectedCardId}"]`);
-            if (radio) radio.checked = true;
-
             // 更新账户信息
             const user = AuthService.getUserData();
             if (user) {
                 const emailEl = document.getElementById("display-user-email");
                 if (emailEl) emailEl.textContent = user.email || AuthService.getEmail();
-                AuthService.updateBalanceUI();
+                AuthService.updateUsageStatusUI();
             }
 
             const policy = ChatPolicyConfigService.load();
@@ -5390,12 +5349,8 @@ function rebuildChoicesBlock(body, labels = []) {
             loadToUI();
         }
         function getApiConfig() {
-            const selectedCloudCardId = StorageService.readText(AppConfig.storageKeys.selectedCloudCard, "free");
-            const cloudCard = AppConfig.cloudCards[selectedCloudCardId];
-            if (cloudCard) {
-                return { upstreamUrl: AppConfig.proxy.baseUrl, key: "", model: cloudCard.model, cloudCard };
-            }
-            return { blocked: true, reason: "请先在设置页面选择云卡。" };
+            // 模型由 Worker 端模型池自动路由，前端只传占位 model
+            return { upstreamUrl: AppConfig.proxy.baseUrl, key: "", model: "pool" };
         }
         function getScenarioText() {
             const selected = ScenarioCardService.getSelectedCard();
@@ -7164,27 +7119,34 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             return `${proxyBase}/chat/completions`;
         }
         function buildHeaders(config) {
-            // 云卡模式：key 由 Worker 注入，前端只传云卡 ID 和用户 token
+            // 模型池模式：key 由 Worker 注入，前端只传用户 token
             const token = AuthService.getToken();
-            const cardId = config.cloudCard?.id || "free";
-            const headers = {
-                "Content-Type": "application/json",
-                "X-Cloud-Card-Id": cardId
-            };
-            // 免费云卡且未登录时不发 X-Auth-Token，避免 "Bearer " 空 token 导致鉴权失败
+            const headers = { "Content-Type": "application/json" };
             if (token) {
                 headers["X-Auth-Token"] = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
             }
             return headers;
+        }
+        function parseWorkerCode(bodyText) {
+            try { return (JSON.parse(bodyText) || {}).code || ""; } catch (e) { return ""; }
+        }
+        // Worker 业务错误码 → 用户可读文案（无码返回空串，调用方回退 HTTP 状态文案）
+        function formatAIErrorText(bodyText) {
+            const code = parseWorkerCode(bodyText);
+            if (code === "QUOTA_EXCEEDED") return "今日免费次数已用完，开通会员后不限量畅玩";
+            if (code === "MEMBERSHIP_EXPIRED") return "会员已到期，请续费";
+            if (code === "POOL_UNAVAILABLE") return "AI 服务暂时不可用，请稍后重试";
+            if (code === "NOT_LOGGED_IN" || code === "SESSION_EXPIRED") return "登录状态已失效，请重新登录";
+            return "";
         }
         function buildExtraBody(extraBody = null, cardId = "") {
             const base = extraBody && typeof extraBody === "object" ? { ...extraBody } : {};
             const thinkingPayload = SettingsService.getThinkingPayloadForCard(cardId || ScenarioCardService.getSelectedId());
             return { ...base, ...thinkingPayload };
         }
-        async function fetchWithRetry(fetchFn, maxRetries = 3, cloudCardId = "free") {
+        async function fetchWithRetry(fetchFn, maxRetries = 3) {
             let lastError;
-            const baseDelay = cloudCardId === "free" ? 5000 : 1500;
+            const baseDelay = 5000;
             for (let i = 0; i < maxRetries; i++) {
                 try {
                     return await fetchFn();
@@ -7206,8 +7168,7 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             }
             throw lastError;
         }
-        async function streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken, extraBody = null, cardId = "", cloudCardId: explicitCloudCardId = "" }) {
-            const cloudCardId = explicitCloudCardId || "free";
+        async function streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken, extraBody = null, cardId = "" }) {
             return await fetchWithRetry(async () => {
             const payloadBody = buildExtraBody(extraBody, cardId);
             const controller = new AbortController();
@@ -7230,10 +7191,11 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             }
             clearTimeout(timer); // 连接成功后立即清除超时
             if (!response.ok) {
-                const snippet = await readResponseSnippet(response);
-                throw createHttpError(response.status, `HTTP ${response.status}`, {
-                    responseSnippet: snippet,
-                    endpoint: fetchUrl
+                const bodyText = await readResponseSnippet(response);
+                throw createHttpError(response.status, formatAIErrorText(bodyText) || `HTTP ${response.status}`, {
+                    responseSnippet: bodyText.slice(0, 300),
+                    endpoint: fetchUrl,
+                    workerCode: parseWorkerCode(bodyText)
                 });
             }
             const reader = response.body.getReader();
@@ -7294,31 +7256,20 @@ const token = delta.content || "";
                 try { reader.cancel(); } catch (e) {}
             }
             return EndMarkerService.trimToMarker(fullText);
-            }, 3, cloudCardId);
+            }, 3);
         }
         async function streamCompletionWithFallback({ config, fetchUrl, headers, model, messages, temperature, onToken, extraBody = null, cardId = "" }) {
-            const cloudCard = config?.cloudCard || null;
-            // 仅做初步余额检查（防止明知没钱还发请求）
-            if (cloudCard && cloudCard.id !== "free") {
-                const user = AuthService.getUserData();
-                if (!user || (user.coins || 0) < 0.01) {
-                    throw new Error("云币余额不足，请充值后使用。");
-                }
-            }
             let fullText = "";
             try {
-                fullText = await streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken, extraBody, cardId, cloudCardId: cloudCard?.id || "free" });
+                fullText = await streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken, extraBody, cardId });
             } catch (proxyErr) {
                 throw proxyErr;
             }
-            // 计费由 Worker 后端完成，流结束后立即刷新余额（不再使用 setTimeout 延迟）
-            if (cloudCard && cloudCard.id !== "free") {
-                AuthService.refreshBalance();
-            }
+            // 次数统计由 Worker 后端完成，成功后无条件刷新使用状态
+            AuthService.refreshBalance();
             return fullText;
         }
-        async function requestCompletion({ fetchUrl, headers, model, messages, temperature, extraBody = null, cardId = "", timeoutMs = READ_TIMEOUT_MS, config = null }) {
-            const cloudCardId = config?.cloudCard?.id || cardId || "free";
+        async function requestCompletion({ fetchUrl, headers, model, messages, temperature, extraBody = null, cardId = "", timeoutMs = READ_TIMEOUT_MS }) {
             return await fetchWithRetry(async () => {
             const payloadBody = buildExtraBody(extraBody, cardId);
             const controller = new AbortController();
@@ -7340,35 +7291,26 @@ const token = delta.content || "";
                 clearTimeout(timer);
             }
             if (!response.ok) {
-                const snippet = await readResponseSnippet(response);
-                throw createHttpError(response.status, `HTTP ${response.status}`, {
-                    responseSnippet: snippet,
-                    endpoint: fetchUrl
+                const bodyText = await readResponseSnippet(response);
+                throw createHttpError(response.status, formatAIErrorText(bodyText) || `HTTP ${response.status}`, {
+                    responseSnippet: bodyText.slice(0, 300),
+                    endpoint: fetchUrl,
+                    workerCode: parseWorkerCode(bodyText)
                 });
             }
             const data = await response.json();
             return EndMarkerService.trimToMarker(data?.choices?.[0]?.message?.content?.trim() || "");
-            }, 5, cloudCardId);
+            }, 5);
         }
         async function requestCompletionWithFallback({ config, fetchUrl, headers, model, messages, temperature, extraBody = null, cardId = "", timeoutMs = READ_TIMEOUT_MS }) {
-            const cloudCard = config?.cloudCard || null;
-            // 仅做初步余额检查（防止明知没钱还发请求）
-            if (cloudCard && cloudCard.id !== "free") {
-                const user = AuthService.getUserData();
-                if (!user || (user.coins || 0) < 0.01) {
-                    throw new Error("云币余额不足，请充值后使用。");
-                }
-            }
             let result = "";
             try {
                 result = await requestCompletion({ fetchUrl, headers, model, messages, temperature, extraBody, cardId, timeoutMs });
             } catch (proxyErr) {
                 throw proxyErr;
             }
-            // 计费由 Worker 后端完成，请求结束后立即刷新余额（不再使用 setTimeout 延迟）
-            if (cloudCard && cloudCard.id !== "free") {
-                AuthService.refreshBalance();
-            }
+            // 次数统计由 Worker 后端完成，成功后无条件刷新使用状态
+            AuthService.refreshBalance();
             return result;
         }
         return { buildFetchUrl, buildHeaders, streamCompletion, requestCompletion, streamCompletionWithFallback, requestCompletionWithFallback, INIT_REQUEST_TIMEOUT_MS };
@@ -7967,13 +7909,9 @@ const token = delta.content || "";
             return ensureNameFallback(sanitized, scenarioText);
         }
 
-        // 路由：免费卡走单次全量请求，付费卡走多面板并行
+        // 模型池模式：统一单次全量请求
         async function analyzeWithAI({ scenarioText, selectedGender, apiConfig, onProgress, extraHint = "", previousPlan = null }) {
-            const isFreeCard = !apiConfig.cloudCard || apiConfig.cloudCard.id === "free";
-            if (isFreeCard) {
-                return analyzeWithAI_SingleShot({ scenarioText, selectedGender, apiConfig, onProgress, extraHint, previousPlan });
-            }
-            return analyzeWithAI_MultiPanel({ scenarioText, selectedGender, apiConfig, onProgress, extraHint, previousPlan });
+            return analyzeWithAI_SingleShot({ scenarioText, selectedGender, apiConfig, onProgress, extraHint, previousPlan });
         }
         async function requestSingleFieldRecovery({ apiConfig, scenarioText, selectedGender, draftPlan, field, onProgress }) {
             const fetchUrl = AIRequestService.buildFetchUrl();
@@ -8342,10 +8280,7 @@ const token = delta.content || "";
 
             isGenerating = true;
             UIRenderer.setSendingDisabled(true);
-            const selectedCardId = StorageService.readText(AppConfig.storageKeys.selectedCloudCard, "free");
-            const waitingMsg = selectedCardId === "free"
-                ? "正在通过公共通道排队，高峰期预计等待 5-10 秒..."
-                : "正在生成剧情中...";
+            const waitingMsg = "正在生成剧情中...";
             UIRenderer.appendMessage("ai", waitingMsg, Utils.nowDateStr(state), true);
             let uiUnlocked = false;
             let lastLivePanelSyncAt = 0;
@@ -8519,7 +8454,10 @@ const token = delta.content || "";
                     isGenerating = false;
                     UIRenderer.setSendingDisabled(false);
                     uiUnlocked = true;
-                    UIRenderer.finishStreaming(`⚠️ 连接失败：${error.message}\n\n请检查 API 配置后重试。`, { conflictDetected: false });
+                    let extraHint = "";
+                    if (error.workerCode === "QUOTA_EXCEEDED") extraHint = "\n\n点击右上角「今日剩余」可开通会员，立即不限量。";
+                    else if (error.workerCode === "MEMBERSHIP_EXPIRED") extraHint = "\n\n会员已到期，点击右上角「今日剩余」可立即续费。";
+                    UIRenderer.finishStreaming(`⚠️ 连接失败：${error.message}${extraHint}\n\n请检查网络后重试。`, { conflictDetected: false });
                 }
             } finally {
                 if (!uiUnlocked) {
@@ -8669,15 +8607,6 @@ const token = delta.content || "";
                     UIRenderer.renderPresetTemplates(presetManifest);
                 });
             }
-            // 云卡切换监听：点击即刻生效到本地缓存，无需点保存按钮
-            document.querySelectorAll('input[name="cloud-card"]').forEach(input => {
-                input.addEventListener("change", () => {
-                    StorageService.writeText(AppConfig.storageKeys.selectedCloudCard, input.value);
-                    console.log("云卡切换至:", input.value);
-                    // 切换时立刻刷一下余额，增加"账户联动"的体感
-                    AuthService.refreshBalance();
-                });
-            });
         }
         function onSendClick() {
             const input = document.getElementById("chat-input");
@@ -9362,56 +9291,102 @@ async function playPresetTemplate(preset) {
     function backToSocialList() { Controller.backToSocialList(); }
     function closeInfoModal() { Controller.closeInfoModal(); }
 
-    // ==================== RechargeService (卡密兑换) ====================
-    const RechargeService = (() => {
-        async function redeemCDK() {
-            const input = document.getElementById("cdk-input");
-            const btn = document.querySelector("#view-settings .mini-btn.ghost[onclick='RechargeService.redeemCDK()']");
-            const cdk = (input ? input.value : "").trim().toUpperCase();
+    // ==================== MembershipService (会员开通/续费) ====================
+    const MembershipService = (() => {
+        let selectedPlan = "monthly";
+        let selectedPayType = "alipay";
+        let _pollTimer = null;
 
-            if (!cdk) {
-                NoticeModalService.showInfo({ title: "提示", descHtml: "请输入卡密！" });
-                return;
-            }
-
+        function openPanel() {
+            const modal = document.getElementById("membership-modal");
+            if (!modal) return;
+            const isMember = AuthService.hasMembership();
+            const titleEl = document.getElementById("membership-title");
+            if (titleEl) titleEl.innerText = isMember ? "会员续费 / 升级" : "开通会员";
+            modal.style.display = "flex";
+            renderPlans();
+            document.querySelectorAll(".pay-method-btn").forEach(b => b.classList.toggle("active", b.dataset.pay === selectedPayType));
+            document.getElementById("membership-pay-area").innerHTML = "";
+            refreshStatus();
+        }
+        function closePanel() {
+            const modal = document.getElementById("membership-modal");
+            if (modal) modal.style.display = "none";
+            stopPoll();
+        }
+        function renderPlans() {
+            const grid = document.getElementById("membership-plan-grid");
+            if (!grid) return;
+            const current = AuthService.getUserData()?.membership_type || "";
+            grid.innerHTML = Object.values(AppConfig.membershipPlans).map(p =>
+                `<div class="recharge-item ${selectedPlan === p.id ? "active" : ""}" onclick="MembershipService.selectPlan('${p.id}')">
+                    <div class="recharge-coins">¥${p.price}</div>
+                    <div class="recharge-price">${p.name}${current === p.id ? "（当前）" : ""}</div>
+                    <div class="recharge-price">${p.desc}</div>
+                </div>`
+            ).join("");
+        }
+        function selectPlan(id) {
+            selectedPlan = id;
+            renderPlans();
+        }
+        function selectPayType(type) {
+            selectedPayType = type;
+            document.querySelectorAll(".pay-method-btn").forEach(b => b.classList.toggle("active", b.dataset.pay === type));
+        }
+        async function startPay() {
             const user = AuthService.getUserData();
-            if (!user) {
-                NoticeModalService.showInfo({ title: "提示", descHtml: "请先登录后再兑换。" });
-                return;
-            }
-
-            if (btn) { btn.disabled = true; btn.innerText = "兑换中..."; }
-
+            if (!user) { NoticeModalService.showInfo({ title: "提示", descHtml: "请先登录" }); return; }
+            const payArea = document.getElementById("membership-pay-area");
+            if (payArea) payArea.innerHTML = '<div class="list-sub">正在创建订单...</div>';
             try {
-                const response = await fetch(`${AppConfig.proxy.baseUrl}/api/redeem`, {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/pay/create`, {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-Auth-Token": AuthService.getToken()
-                    },
-                    body: JSON.stringify({ code: cdk })
+                    headers: { "Content-Type": "application/json", "X-Auth-Token": AuthService.getToken() },
+                    body: JSON.stringify({ planId: selectedPlan, payType: selectedPayType })
                 });
-
-                const data = await response.json();
-
-                if (response.ok && data.success) {
-                    NoticeModalService.showInfo({
-                        title: "🎉 兑换成功",
-                        descHtml: `<div style="text-align:center;font-size:1.1rem;margin:10px 0;">成功充值 <b style="color:var(--accent-dark);">${data.addedCoins}</b> 云币！</div>`
-                    });
-                    if (input) input.value = "";
-                    AuthService.refreshBalance();
-                } else {
-                    NoticeModalService.showInfo({ title: "兑换失败", descHtml: data.message || "未知错误" });
+                const data = await res.json();
+                if (!res.ok || !data.payUrl) throw new Error(data.error || "创建订单失败");
+                const payMethodName = selectedPayType === "alipay" ? "支付宝" : "微信";
+                let html = `<div class="list-sub" style="margin:8px 0;">订单号：${data.orderNo}，请用${payMethodName}扫码或跳转收银台完成支付。</div>`;
+                if (data.qrcode && /^https?:/.test(data.qrcode)) {
+                    html += `<img src="${data.qrcode}" alt="支付二维码" style="width:180px;height:180px;border-radius:12px;display:block;margin:8px auto;">`;
                 }
-            } catch (err) {
-                NoticeModalService.showInfo({ title: "网络错误", descHtml: "无法连接到兑换服务器，请检查网络。" });
-            } finally {
-                if (btn) { btn.disabled = false; btn.innerText = "立即兑换"; }
+                if (/^https?:/.test(data.payUrl)) {
+                    html += `<a class="mini-btn primary" style="display:inline-block;text-decoration:none;text-align:center;margin-top:8px;" href="${data.payUrl}" target="_blank" rel="noopener">前往收银台支付</a>`;
+                }
+                html += '<div class="list-sub" style="margin-top:8px;">支付完成后将自动开通会员（1-2 分钟内生效）</div>';
+                if (payArea) payArea.innerHTML = html;
+                startPoll(data.orderNo);
+            } catch (e) {
+                if (payArea) payArea.innerHTML = `<div class="list-sub" style="color:#c0392b;">${MarkdownService.escapeHtml(e.message)}</div>`;
             }
         }
-
-        return { redeemCDK };
+        function startPoll(orderNo) {
+            stopPoll();
+            _pollTimer = setInterval(async () => {
+                try {
+                    const res = await fetch(`${AppConfig.proxy.baseUrl}/api/pay/status?out_trade_no=${encodeURIComponent(orderNo)}`, {
+                        headers: { "X-Auth-Token": AuthService.getToken() }
+                    });
+                    const data = await res.json();
+                    if (data.status === "paid") {
+                        stopPoll();
+                        closePanel();
+                        NoticeModalService.showInfo({ title: "🎉 支付成功", descHtml: "会员已开通，不限量畅玩！" });
+                        await AuthService.refreshBalance();
+                        AuthService.updateUsageStatusUI();
+                    }
+                } catch (e) {}
+            }, 3000);
+        }
+        function stopPoll() { if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; } }
+        function hasMembership() { return AuthService.hasMembership(); }
+        async function refreshStatus() {
+            await AuthService.refreshBalance();
+            AuthService.updateUsageStatusUI();
+        }
+        return { openPanel, closePanel, selectPlan, selectPayType, startPay, pollPayStatus: startPoll, hasMembership, refreshStatus };
     })();
 
     // ==================== AuthService ====================
@@ -9436,10 +9411,48 @@ async function playPresetTemplate(preset) {
             localStorage.removeItem(EMAIL_KEY);
         }
 
-        function updateBalanceUI() {
-            const el = document.getElementById("display-user-coins");
-            if (el && _userData) {
-                el.textContent = (_userData.coins || 0).toFixed(4);
+        const MEMBER_NAMES = { monthly: "月度会员", quarterly: "季度会员", yearly: "年度会员", lifetime: "终身会员" };
+        const DAILY_FREE_QUOTA = 150;
+
+        function hasMembership() {
+            const u = _userData;
+            if (!u || !u.membership_type) return false;
+            if (u.membership_type === "lifetime") return true;
+            return !!(u.membership_expires_at && Date.parse(u.membership_expires_at) > Date.now());
+        }
+
+        function updateUsageStatusUI() {
+            const u = _userData;
+            const isMember = hasMembership();
+            const today = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+            const used = u && u.usage_date === today ? Number(u.usage_count || 0) : 0;
+            const remaining = Math.max(0, DAILY_FREE_QUOTA - used);
+
+            const countEl = document.getElementById("display-remaining-count");
+            if (countEl) countEl.textContent = isMember ? "不限量" : `${remaining} / ${DAILY_FREE_QUOTA}`;
+
+            const badgeEl = document.getElementById("display-membership-badge");
+            if (badgeEl) {
+                if (!u || !u.membership_type) {
+                    badgeEl.textContent = "未开通";
+                } else if (isMember) {
+                    let label = MEMBER_NAMES[u.membership_type] || u.membership_type;
+                    if (u.membership_type !== "lifetime" && u.membership_expires_at) {
+                        label += `（${String(u.membership_expires_at).slice(0, 10)} 到期）`;
+                    }
+                    badgeEl.textContent = label;
+                } else {
+                    badgeEl.textContent = "已过期";
+                }
+            }
+
+            const btn = document.getElementById("open-membership-btn");
+            if (btn) btn.textContent = isMember ? "续费 / 升级会员" : "开通会员";
+
+            const usageBadge = document.getElementById("usage-badge");
+            if (usageBadge) {
+                usageBadge.textContent = isMember ? "👑 会员不限量" : `今日剩余 ${remaining}/${DAILY_FREE_QUOTA}`;
+                usageBadge.style.display = "inline-flex";
             }
         }
 
@@ -9454,10 +9467,10 @@ async function playPresetTemplate(preset) {
                 if (res.ok) {
                     const data = await res.json();
                     _userData = data;
-                    updateBalanceUI();
+                    updateUsageStatusUI();
                 }
             } catch (e) {
-                console.error("刷新余额失败", e);
+                console.error("刷新使用状态失败", e);
             }
         }
 
@@ -9590,7 +9603,7 @@ async function playPresetTemplate(preset) {
             // 更新设置页账户信息
             const emailEl = document.getElementById("display-user-email");
             if (emailEl) emailEl.textContent = email;
-            updateBalanceUI();
+            updateUsageStatusUI();
         }
 
         function logout() {
@@ -9600,9 +9613,13 @@ async function playPresetTemplate(preset) {
             const logoutBtn = document.getElementById("auth-logout-btn");
             if (badge) badge.style.display = "none";
             if (logoutBtn) logoutBtn.style.display = "none";
-            // 清空余额显示
-            const coinsEl = document.getElementById("display-user-coins");
-            if (coinsEl) coinsEl.textContent = "0.0000";
+            // 清空会员/次数显示
+            const countEl = document.getElementById("display-remaining-count");
+            if (countEl) countEl.textContent = "-";
+            const badgeEl = document.getElementById("display-membership-badge");
+            if (badgeEl) badgeEl.textContent = "未开通";
+            const usageBadge = document.getElementById("usage-badge");
+            if (usageBadge) usageBadge.style.display = "none";
             const emailEl = document.getElementById("display-user-email");
             if (emailEl) emailEl.textContent = "-";
             // 重置登录表单及 UI 状态
@@ -9651,7 +9668,7 @@ async function playPresetTemplate(preset) {
             if (e.key === "Enter") handleSubmit();
         });
 
-        return { init, handleSubmit, toggleMode, logout, getToken, getEmail, getUserData, refreshBalance, updateBalanceUI };
+        return { init, handleSubmit, toggleMode, logout, getToken, getEmail, getUserData, refreshBalance, updateUsageStatusUI, hasMembership };
     })();
 
     window.onload = async () => {
