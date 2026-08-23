@@ -6042,6 +6042,51 @@ function rebuildChoicesBlock(body, labels = []) {
         return { sanitizeForModel };
     })();
 
+    const ScenarioSpecCompressService = (() => {
+        function lineList(v) {
+            return String(v || "").split("\n").map((s) => s.trim()).filter(Boolean);
+        }
+        // 速查表：后续轮次用压缩版设定替换全量设定，压减每轮 payload（首轮仍用全量保证开局一致性）
+        function buildQuickRef(card) {
+            const st = card?.structured;
+            if (st && st.world && st.identity) {
+                const parts = [];
+                const era = st.world.era || "";
+                const genre = st.world.genre || "";
+                if (era || genre) parts.push(`【时代/题材】${[era, genre].filter(Boolean).join(" · ")}`);
+                const idn = st.identity;
+                const idLine = [idn.name, idn.gender, idn.age ? `约${idn.age}岁` : ""].filter(Boolean).join("·");
+                if (idLine) parts.push(`【身份】${idLine}${idn.background ? `——${String(idn.background).replace(/\s+/g, " ").slice(0, 60)}` : ""}`);
+                const npcs = (st.npcs || []).slice(0, 6).filter((n) => n && n.name);
+                if (npcs.length) parts.push(`【人物】${npcs.map((n) => `${n.name}（${n.role || "?"}·${n.relationship || "?"}）`).join("；")}`);
+                const rules = (st.world.rules || []).slice(0, 8).filter(Boolean);
+                if (rules.length) parts.push(`【世界规则】\n${rules.map((r) => "· " + String(r).slice(0, 80)).join("\n")}`);
+                const envs = (st.scene_style?.env_templates || []).slice(0, 3);
+                const optStyle = st.scene_style?.option_style || "";
+                if (envs.length || optStyle) parts.push(`【风格】${[envs.join("/"), optStyle].filter(Boolean).join("；")}`);
+                return parts.join("\n");
+            }
+            // 无结构化 → 从纯文本设定提取压缩版（身份段 2 行 + 规则段 8 行）
+            const lines = lineList(card?.text);
+            const out = [];
+            const pick = (re, max) => {
+                const idx = lines.findIndex((l) => re.test(l));
+                if (idx < 0) return;
+                let n = 0;
+                for (let i = idx + 1; i < lines.length && n < max; i++) {
+                    const l = lines[i];
+                    if (/^【/.test(l)) break;
+                    out.push(l.length > 60 ? l.slice(0, 60) + "…" : l);
+                    n++;
+                }
+            };
+            pick(/身份|主角|人物设定/, 2);
+            pick(/规则|世界法则|禁忌/, 8);
+            return out.length ? out.join("\n") : String(card?.text || "").slice(0, 400);
+        }
+        return { buildQuickRef };
+    })();
+
     const ScenarioEditorService = (() => {
         let structuredMode = false;
         function readForm() {
@@ -9048,7 +9093,11 @@ const token = delta.content || "";
             try {
                 const recentHistory = PromptPolicyService.buildRecentHistory(state);
                 const latestAiHtmlCard = PromptPolicyService.buildLatestAiHtmlCard(state);
-                const scenarioSpec = SettingsService.getScenarioTextForModel();
+                const userMsgCount = (state.history || []).filter((h) => h.role === "user").length;
+                // M5 管线优化：首轮用全量设定保证开局一致性，后续轮用速查表压缩 payload
+                const scenarioSpec = userMsgCount <= 1
+                    ? SettingsService.getScenarioTextForModel()
+                    : ScenarioSpecCompressService.buildQuickRef(ScenarioCardService.getSelectedCard()) || SettingsService.getScenarioTextForModel();
                 const beautyCardSetting = SettingsService.getBeautyCardSetting();
                 const beautyModeEnabled = HtmlCardService.isBeautyModeEnabled(beautyCardSetting);
                 const policyConfig = SettingsService.getChatPolicyConfig();

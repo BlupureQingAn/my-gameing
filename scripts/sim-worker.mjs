@@ -51,6 +51,7 @@ function reset() {
     state.users = {}; state.modelUsageById = {}; state.payOrders = [];
     state.userPatches = []; state.upstreamMode = "ok";
     state.lastUpstream = null; state.upstreamModels = []; state.lastMapiBody = null; state.pending = [];
+    state.upstreamRequests = 0;
 }
 function setModelCount(modelId, count) {
     const rec = { id: "mu" + Object.keys(state.modelUsageById).length + 1, usage_date: TODAY, model_id: modelId, count };
@@ -76,10 +77,26 @@ globalThis.fetch = async (url, options = {}) => {
 
     // AI 上游
     const body = JSON.parse(options.body || "{}");
-    state.lastUpstream = { model: body.model, url: u.href };
+    state.upstreamRequests = (state.upstreamRequests || 0) + 1;
+    state.lastUpstream = { model: body.model, url: u.href, body };
     state.upstreamModels.push(body.model);
     if (state.upstreamMode === "all-500") return new Response("boom", { status: 500 });
-    const payload = { id: "x", model: body.model, choices: [{ message: { role: "assistant", content: "ok" } }] };
+    if (state.upstreamMode === "bad-json-once") {
+        state.upstreamMode = "ok";
+        const bad = { id: "x", model: body.model, choices: [{ message: { role: "assistant", content: "抱歉,这不是JSON" } }] };
+        return new Response(JSON.stringify(bad), { status: 200 });
+    }
+    if (state.upstreamMode === "bad-json-always") {
+        const bad = { id: "x", model: body.model, choices: [{ message: { role: "assistant", content: "坏内容" } }] };
+        return new Response(JSON.stringify(bad), { status: 200 });
+    }
+    // 带强制 JSON 指令的重试请求 → 返回合法 JSON
+    const retryForced = (body.messages || []).some(m => /合法 JSON/.test(String(m.content || "")));
+    if (retryForced) {
+        const good = { id: "x", model: body.model, choices: [{ message: { role: "assistant", content: JSON.stringify({ story: "重试成功", options: ["a"] }) } }] };
+        return new Response(JSON.stringify(good), { status: 200 });
+    }
+    const payload = { id: "x", model: body.model, choices: [{ message: { role: "assistant", content: JSON.stringify({ story: "ok", options: [] }) } }] };
     return new Response(JSON.stringify(payload), { status: 200 });
 };
 
@@ -188,7 +205,10 @@ await t("T2 非会员计数", async () => {
     reset(); newUser("user1", { usage_count: 5 });
     const res = await chat();
     const body = await res.json();
-    if (res.status !== 200 || body.choices?.[0]?.message?.content !== "ok") throw new Error(`got ${res.status}`);
+    if (res.status !== 200) throw new Error(`got ${res.status}`);
+    const t2c = body.choices?.[0]?.message?.content;
+    try { if (JSON.parse(t2c).story !== "ok") throw new Error("story 异常"); }
+    catch (e) { throw new Error("content 非合法 JSON: " + t2c); }
     if (state.users.user1.usage_count !== 6) throw new Error(`usage_count=${state.users.user1.usage_count}`);
     if (modelCount("ca-gpt-4o-mini") !== 1) throw new Error(`modelUsage=${modelCount("ca-gpt-4o-mini")}`);
     if (state.lastUpstream.model !== "gpt-4o-mini") throw new Error(`upstream model=${state.lastUpstream.model}`);
@@ -365,6 +385,44 @@ await t("T17 回调GET变体", async () => {
     params.sign = buildSign(params, env.PAY_APP_SECRET);
     const res = await notify(params, true);
     if (await res.text() !== "success") throw new Error("GET 回调应 success");
+});
+
+// T18 非流式坏 JSON 一次 → 同模型重试 → 返回合法 JSON
+await t("T18 非流式JSON重试", async () => {
+    reset(); newUser("user1");
+    state.upstreamMode = "bad-json-once";
+    const res = await chat("user1", { stream: false });
+    const body = await res.json();
+    if (res.status !== 200) throw new Error(`got ${res.status}`);
+    const content = body.choices?.[0]?.message?.content;
+    try { JSON.parse(content); } catch (e) { throw new Error("重试后 content 仍非 JSON: " + content); }
+    if (state.upstreamRequests !== 2) throw new Error(`应上游请求 2 次(1 坏+1 重试),实际 ${state.upstreamRequests}`);
+    const retryMsgs = state.lastUpstream.body.messages || [];
+    const forced = retryMsgs.some(m => /合法 JSON/.test(String(m.content || "")));
+    if (!forced) throw new Error("重试请求未带强制 JSON 指令");
+});
+
+// T19 非流式永远坏 JSON → 重试 2 次后返回原始坏内容（前端降级兜底）
+await t("T19 JSON重试上限", async () => {
+    reset(); newUser("user1");
+    state.upstreamMode = "bad-json-always";
+    const res = await chat("user1", { stream: false });
+    const body = await res.json();
+    if (res.status !== 200) throw new Error(`got ${res.status}`);
+    if (state.upstreamRequests !== 3) throw new Error(`应 3 次(1+2 重试),实际 ${state.upstreamRequests}`);
+    const content = body.choices?.[0]?.message?.content;
+    let parsed = false;
+    try { JSON.parse(content); parsed = true; } catch (e) {}
+    if (parsed) throw new Error("全败场景不应得到合法 JSON");
+});
+
+// T20 流式不触发 JSON 重试
+await t("T20 流式不重试", async () => {
+    reset(); newUser("user1");
+    state.upstreamMode = "bad-json-always";
+    const res = await chat("user1", { stream: true });
+    if (res.status !== 200) throw new Error(`got ${res.status}`);
+    if (state.upstreamRequests !== 1) throw new Error(`流式应只 1 次请求,实际 ${state.upstreamRequests}`);
 });
 
 // ---------- 汇总 ----------

@@ -437,8 +437,36 @@ export default {
                         headers: { ...corsHeaders(), "Content-Type": "text/event-stream", "Cache-Control": "no-cache" }
                     });
                 }
-                const resJson = await aiResponse.json();
-                return new Response(JSON.stringify(resJson), {
+                // 非流式：校验 choices[0].message.content 为合法 JSON，失败则同模型重试 ≤2 次（前端有降级兜底）
+                let resJson = null;
+                try { resJson = await aiResponse.json(); } catch (e) { resJson = null; }
+                const isGoodJson = () => {
+                    const c = resJson?.choices?.[0]?.message?.content;
+                    if (typeof c !== "string") return false;
+                    try { JSON.parse(c); return true; } catch (e) { return false; }
+                };
+                for (let i = 0; i < 2 && !isGoodJson(); i++) {
+                    const retryPayload = { ...requestJson, model: usedModel.model };
+                    retryPayload.messages = [
+                        ...(requestJson.messages || []),
+                        { role: "user", content: "你上一次的回复内容不是合法 JSON。请仅输出一个合法 JSON 对象，不要任何解释、围栏或多余字符。" }
+                    ];
+                    const ctrl = new AbortController();
+                    const to = setTimeout(() => ctrl.abort(), 120000);
+                    try {
+                        const resp = await fetch(`${usedModel.url.replace(/\/$/, "")}/chat/completions`, {
+                            method: "POST",
+                            headers: { "Authorization": `Bearer ${env[usedModel.apiKeyEnv]}`, "Content-Type": "application/json" },
+                            body: JSON.stringify(retryPayload),
+                            signal: ctrl.signal
+                        });
+                        if (resp.ok) resJson = await resp.json();
+                    } catch (e) {
+                        console.warn(`non-stream JSON retry error: ${e.message}`);
+                    }
+                    clearTimeout(to);
+                }
+                return new Response(JSON.stringify(resJson ?? { error: "AI 响应解析失败" }), {
                     headers: { ...corsHeaders(), "Content-Type": "application/json" }
                 });
             }
