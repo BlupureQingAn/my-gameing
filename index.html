@@ -1912,6 +1912,34 @@
             letter-spacing: 1px;
         }
 
+        .scenario-filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 8px 0 2px;
+        }
+        .scenario-filter-chip {
+            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: var(--card-soft);
+            color: var(--text-dark);
+            cursor: pointer;
+        }
+        .scenario-filter-chip.active {
+            background: var(--accent-dark);
+            color: #fff;
+            border-color: var(--accent-dark);
+        }
+        .scenario-group-arrow {
+            display: inline-block;
+            width: 14px;
+            margin-right: 2px;
+            color: var(--accent-dark);
+            transition: transform 0.15s;
+        }
+
         /* ==================== 结构化剧本表单 ==================== */
         .sf-section {
             border: 1px solid var(--line);
@@ -2451,17 +2479,11 @@
             <section class="card">
                 <div class="list-title">🧩 文游设定卡片列表</div>
                 <input id="scenario-search-input" type="text" placeholder="搜索卡片（标题/分组/主题/设定内容）">
+                <div id="scenario-filter-bar" class="scenario-filter-bar"></div>
                 <div class="setting-actions" style="margin:6px 0 2px;">
                     <button class="mini-btn primary" onclick="createScenarioCard()">＋ 新建卡片</button>
-                    <button class="mini-btn ghost" onclick="restoreOfficialScenarioCards()">↺ 恢复官方剧本库</button>
                 </div>
                 <div id="scenario-card-list" style="margin-top:8px;"></div>
-                <div class="list-title" style="margin-top:8px;">📚 官方预设模板（可一键套用）</div>
-                <div class="list-sub">模板资源来自网络，如有侵权请联系删除</div>
-                <div id="preset-template-list" style="margin-top:8px;"></div>
-                <div class="setting-actions">
-                    
-                </div>
                 <input id="scenario-file-input" type="file" accept=".txt,.md,.text" style="display:none;">
             </section>
         </section>
@@ -5792,10 +5814,17 @@ function rebuildChoicesBlock(body, labels = []) {
             const cards = ScenarioCardService.loadCards();
             const selectedId = ScenarioCardService.getSelectedId();
             const keyword = ScenarioCardViewService.getSearchKeyword();
+            const category = ScenarioCardViewService.getCategory();
             box.innerHTML = "";
-            const filteredCards = cards.filter((card) => ScenarioCardViewService.matchesSearch(card, keyword));
+            ScenarioCardViewService.renderFilter();
+            // 分类筛选 + 关键词筛选
+            const filteredCards = cards.filter((card) => {
+                const catKey = card.sourceType === "official" ? String(card.category || "其他") : "自定义";
+                if (category !== "全部" && catKey !== category) return false;
+                return ScenarioCardViewService.matchesSearch(card, keyword);
+            });
             if (!filteredCards.length) {
-                box.innerHTML = `<div class="list-sub">未找到匹配卡片：${keyword}</div>`;
+                box.innerHTML = `<div class="list-sub">未找到匹配卡片：${keyword || category}</div>`;
                 return;
             }
             // 按分类分组渲染（官方卡按 category，自定义卡单独一组排最前）
@@ -5809,13 +5838,23 @@ function rebuildChoicesBlock(body, labels = []) {
                 }
                 byGroup.get(key).push(card);
             });
+            // 搜索时展开所有组，便于直接看到命中结果
+            if (keyword) ScenarioCardViewService.expandAllGroups();
             groups.forEach((groupKey) => {
-                const head = document.createElement("div");
-                head.className = "scenario-group-title";
                 const groupCards = byGroup.get(groupKey);
                 const catCount = groupKey === "自定义" ? "" : `（${groupCards.length} 个）`;
-                head.textContent = `${groupKey}${catCount}`;
+                const collapsed = ScenarioCardViewService.isCollapsed(groupKey);
+                const head = document.createElement("div");
+                head.className = "scenario-group-title";
+                head.style.cursor = "pointer";
+                head.style.userSelect = "none";
+                head.innerHTML = `<span class="scenario-group-arrow">${collapsed ? "▸" : "▾"}</span>${groupKey}${catCount}`;
+                head.onclick = () => {
+                    ScenarioCardViewService.toggleCollapsed(groupKey);
+                    renderScenarioCards();
+                };
                 box.appendChild(head);
+                if (collapsed) return;
                 groupCards.forEach((card) => {
                     const row = document.createElement("div");
                     row.className = `scenario-card ${card.id === selectedId ? "active" : ""}`;
@@ -5853,40 +5892,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 });
             });
         }
-        function renderPresetTemplates(presets = []) {
-            const box = document.getElementById("preset-template-list");
-            if (!box) return;
-            const keyword = ScenarioCardViewService.getSearchKeyword();
-            box.innerHTML = "";
-            const filtered = (presets || []).filter((p) => ScenarioCardViewService.matchesSearch({
-                title: p.title,
-                theme: p.theme,
-                text: p.text || "",
-                sourceType: "official"
-            }, keyword));
-            if (!filtered.length) {
-                box.innerHTML = `<div class="list-sub">未找到匹配模板：${keyword}</div>`;
-                return;
-            }
-            filtered.forEach((p) => {
-                const row = document.createElement("div");
-                row.className = "list-row";
-                row.innerHTML = `
-                    <div>
-                        <div class="list-title">${p.title}</div>
-                        <div class="list-sub">主题：${p.theme}</div>
-                    </div>
-                    <div style="display:flex; gap:6px;">
-                        <button class="tiny-btn" data-op="play">游玩</button>
-                        <button class="tiny-btn" data-op="edit">设置</button>
-                    </div>
-                `;
-                row.querySelector('[data-op="play"]').onclick = () => Controller.playPresetTemplate(p);
-                row.querySelector('[data-op="edit"]').onclick = () => Controller.editPresetTemplate(p);
-                box.appendChild(row);
-            });
-        }
-        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, renderPresetTemplates, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, clearFancyStatus };
+        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, clearFancyStatus };
     })();
 
     const VisualEffects = (() => {
@@ -6631,6 +6637,18 @@ function rebuildChoicesBlock(body, labels = []) {
                 StorageService.writeJson(AppConfig.storageKeys.scenarioCards, initial);
                 return initial;
             }
+            // 官方剧本库始终内置:localStorage 中缺失的官方卡自动补齐(删除=临时移除,下次加载即恢复)
+            const official = (Array.isArray(window.SCENARIO_LIBRARY) ? window.SCENARIO_LIBRARY : []);
+            if (official.length) {
+                const existingIds = new Set(cards.map((c) => String(c.id || "")));
+                const missing = official.filter((c) => !existingIds.has(String(c.id || "")));
+                if (missing.length) {
+                    const merged = [...cards, ...Utils.deepClone(missing)];
+                    const replenished = normalizeCards(merged);
+                    StorageService.writeJson(AppConfig.storageKeys.scenarioCards, replenished);
+                    return replenished;
+                }
+            }
             const normalized = normalizeCards(cards);
             StorageService.writeJson(AppConfig.storageKeys.scenarioCards, normalized);
             return normalized;
@@ -6791,112 +6809,6 @@ function rebuildChoicesBlock(body, labels = []) {
         return { getChatPolicyConfig, setChatPolicyConfig };
     })();
 
-    const PresetResourceService = (() => {
-        let cachedManifest = null;
-        function titleToFilename(title) {
-            return `${String(title || "").trim()}.txt`;
-        }
-        async function loadManifest() {
-            if (cachedManifest) return cachedManifest;
-            try {
-                const resp = await fetch("./presets/manifest.json");
-                if (resp.ok) {
-                    const raw = await resp.json();
-                    cachedManifest = (Array.isArray(raw) ? raw : []).map((item, idx) => ({
-                        id: item.id || `preset_${idx + 1}`,
-                        title: item.title || `模板${idx + 1}`,
-                        theme: item.theme || "网络模板",
-                        source: item.source || "资源来自网络如有侵权请联系删除",
-                        file: titleToFilename(item.title)
-                    }));
-                    return cachedManifest;
-                }
-            } catch (e) {
-            }
-            cachedManifest = [];
-            return cachedManifest;
-        }
-        async function loadPresetText(fileName) {
-            const safeFile = encodeURIComponent(fileName).replace(/%2F/g, "/");
-            const resp = await fetch(`./presets/${safeFile}`);
-            if (!resp.ok) throw new Error(`模板文件不存在: ${fileName}`);
-            return await resp.text();
-        }
-        return { loadManifest, loadPresetText, titleToFilename };
-    })();
-
-    const ScenarioTemplateService = (() => {
-function buildPresetCardId(preset) {
-    // 优先使用标题作为 ID 的核心，因为标题在 manifest 中是稳定的
-    const raw = String(preset?.title || preset?.id || "unknown");
-    return `scenario_preset_${raw}`.replace(/[^\w-]/g, "_");
-}
-        async function generateThemeWithAI({ title, text }) {
-            const config = SettingsService.getApiConfig();
-            if (config.blocked || !config.model) {
-                throw new Error("请先在设置页选择云卡，无法生成美化卡片模板。");
-            }
-            try {
-                const fetchUrl = AIRequestService.buildFetchUrl();
-                const headers = AIRequestService.buildHeaders(config);
-                const content = await AIRequestService.requestCompletionWithFallback({
-                    config,
-                    fetchUrl,
-                    headers,
-                    model: config.model,
-                    messages: [
-                        {
-                            role: "system",
-                            content: [
-                                "你是文游美化设定生成器。",
-                                "任务：根据设定文本输出一行中文“HTML卡片美化设定提示词”，用于指导后续卡片视觉设计。",
-                                "输出必须具体且丰富，至少覆盖以下维度：时代/题材气质、主配色与点缀色、背景材质、装饰元素、字体气质、整体氛围。",
-                                "必须出现可执行的视觉关键词（例如：鎏金边框、玻璃雾面、霓虹描边、卷轴纹理、徽章角标、颗粒光晕）。",
-                                "禁止空泛词（如：好看、高级、精美）单独出现，必须给出可落地的视觉细节。",
-                                "只输出一行提示词，不要解释，不要换行，不要加引号。建议长度 45-100 字。"
-                            ].join("\n")
-                        },
-                        {
-                            role: "user",
-                            content: [
-                                `标题：${title || "未命名模板"}`,
-                                "请生成适配该设定风格的 HTML 卡片美化提示词。",
-                                "要求：突出视觉层次与装饰丰富度，避免通用默认风格。",
-                                "建议采用“风格基调 + 配色方案 + 背景材质 + 装饰细节 + 字体气质 + 氛围光效”的短句串联。",
-                                `设定文本：\n${String(text || "").slice(0, 2500)}`
-                            ].join("\n")
-                        }
-                    ],
-                    temperature: 0.4
-                });
-                const result = String(content || "").trim();
-                if (!result) throw new Error("AI 返回为空");
-                return result;
-            } catch (e) {
-                throw new Error(`AI 生成美化设定失败：${e.message || e}`);
-            }
-        }
-        async function buildTemplateCardPayload(preset) {
-            if (!preset) throw new Error("模板不存在");
-            let text = String(preset.text || "").trim();
-            if (!text && preset.file) {
-                text = String(await PresetResourceService.loadPresetText(preset.file)).trim();
-            }
-            if (!text) throw new Error("模板文本为空");
-            let theme = String(preset.theme || "").trim();
-            if (!theme || theme === "网络模板" || theme === "默认") {
-                theme = await generateThemeWithAI({ title: preset.title, text });
-            }
-            return {
-                id: buildPresetCardId(preset),
-                title: preset.title || "模板卡片",
-                text,
-                theme
-            };
-        }
-        return { buildTemplateCardPayload, buildPresetCardId };
-    })();
-
     const ScenarioCardViewService = (() => {
         function groupLabel(card) {
             return card?.sourceType === "official" ? "官方" : "自定义";
@@ -6923,7 +6835,53 @@ function buildPresetCardId(preset) {
             const input = document.getElementById("scenario-search-input");
             return input ? String(input.value || "").trim() : "";
         }
-        return { groupLabel, groupClass, pinLabel, matchesSearch, getSearchKeyword };
+        // 分类筛选：默认"全部"；collapsed 记录当前折叠的组（首次渲染时官方组全部加入=默认折叠，自定义组默认展开）
+        const filterState = { category: "全部", collapsed: new Set(), inited: false };
+        function getCategories() {
+            const cats = [];
+            (Array.isArray(window.SCENARIO_LIBRARY) ? window.SCENARIO_LIBRARY : []).forEach((c) => {
+                const k = String(c.category || "其他");
+                if (!cats.includes(k)) cats.push(k);
+            });
+            return cats;
+        }
+        function ensureInit() {
+            if (filterState.inited) return;
+            filterState.inited = true;
+            getCategories().forEach((k) => filterState.collapsed.add(k));
+        }
+        function getCategory() { return filterState.category; }
+        function setCategory(cat) {
+            ensureInit();
+            filterState.category = cat;
+        }
+        function isCollapsed(groupKey) {
+            ensureInit();
+            // 选中具体分类时直接展开该组；"全部"视图按折叠状态显示
+            if (filterState.category !== "全部") return false;
+            return filterState.collapsed.has(groupKey);
+        }
+        function toggleCollapsed(groupKey) {
+            ensureInit();
+            if (filterState.collapsed.has(groupKey)) filterState.collapsed.delete(groupKey);
+            else filterState.collapsed.add(groupKey);
+        }
+        function expandAllGroups() { ensureInit(); filterState.collapsed.clear(); }
+        function renderFilter() {
+            const bar = document.getElementById("scenario-filter-bar");
+            if (!bar) return;
+            const current = getCategory();
+            bar.innerHTML = "";
+            ["全部", "自定义", ...getCategories()].forEach((cat) => {
+                const chip = document.createElement("button");
+                chip.type = "button";
+                chip.className = `scenario-filter-chip${current === cat ? " active" : ""}`;
+                chip.textContent = cat;
+                chip.onclick = () => { setCategory(cat); renderScenarioCards(); };
+                bar.appendChild(chip);
+            });
+        }
+        return { groupLabel, groupClass, pinLabel, matchesSearch, getSearchKeyword, getCategories, getCategory, setCategory, isCollapsed, toggleCollapsed, expandAllGroups, renderFilter };
     })();
 
     const ScenarioCardInteractionService = (() => {
@@ -9368,33 +9326,12 @@ const token = delta.content || "";
             SettingsService.loadToUI();
             renderAll();
         }
-        async function applyPresetTemplate({ preset, silent = false, ensurePresetAsIndependentCard, preserveExistingContent = false }) {
-            InitLoadingService.open("正在加载官方模板资源，请稍候...");
-            try {
-                const payload = await ScenarioTemplateService.buildTemplateCardPayload(preset);
-                ensurePresetAsIndependentCard(payload, { preserveExistingContent });
-            } catch (e) {
-                InitLoadingService.close();
-                NoticeModalService.showInfo({ title: "模板加载失败", descHtml: MarkdownService.escapeHtml(String(e?.message || e || "未知错误")) });
-                return false;
-            }
-            InitLoadingService.close();
-            if (!silent) NoticeModalService.showInfo({ title: "模板已更新", descHtml: "已自动将此卡添加到游玩卡列表" });
-            return true;
-        }
-        async function editPresetTemplate({ preset, applyPresetTemplate, switchView }) {
-            const ok = await applyPresetTemplate(preset, { preserveExistingContent: true });
-            if (!ok) return;
-            switchView("view-scenario-editor");
-        }
-        return { saveScenarioCard, createScenarioCard, openScenarioCardSettings, deleteScenarioCard, applyPresetTemplate, editPresetTemplate };
+        return { saveScenarioCard, createScenarioCard, openScenarioCardSettings, deleteScenarioCard };
     })();
 
     const Controller = (() => {
         let activeView = "view-home";
-        let presetManifest = [];
         let pendingInitPlan = null;
-        let lastAutoCreatedCardId = null;
         function renderAll() {
             const state = StateService.get();
             UIRenderer.renderTop(state);
@@ -9403,14 +9340,12 @@ const token = delta.content || "";
             UIRenderer.renderSocialList(state);
             UIRenderer.renderSaveSlots(state);
             UIRenderer.renderScenarioCards();
-            UIRenderer.renderPresetTemplates(presetManifest);
             switchView(activeView, true);
         }
         async function init() {
             ThemeService.applyStored();
             StateService.init();
             SettingsService.loadToUI();
-            presetManifest = await PresetResourceService.loadManifest();
             renderAll();
             VisualEffects.createBears();
             bindEvents();
@@ -9460,7 +9395,6 @@ const token = delta.content || "";
             if (searchInput) {
                 searchInput.addEventListener("input", () => {
                     UIRenderer.renderScenarioCards();
-                    UIRenderer.renderPresetTemplates(presetManifest);
                 });
             }
         }
@@ -9518,7 +9452,6 @@ const token = delta.content || "";
                 // 从卡片/游玩页回到主页时，强制刷新主页列表，避免看到旧缓存视图
                 if (prevView && prevView !== "view-home") {
                     UIRenderer.renderScenarioCards();
-                    UIRenderer.renderPresetTemplates(presetManifest);
                 }
                 const content = document.getElementById("main-content");
                 if (content) content.scrollTop = 0;
@@ -9836,15 +9769,6 @@ function openNpcProfile(npcId) {
         function createScenarioCard() {
             ScenarioCardControllerService.createScenarioCard({ renderAll, switchView });
         }
-        function restoreOfficialScenarioCards() {
-            // 官方剧本库来自 scenarios/scenarios.js，删除后可一键恢复（保留自定义卡与用户改动）
-            const official = (Array.isArray(window.SCENARIO_LIBRARY) ? window.SCENARIO_LIBRARY : []);
-            if (!official.length) return;
-            const cards = ScenarioCardService.loadCards().filter((c) => c.sourceType !== "official");
-            const merged = [...cards, ...Utils.deepClone(official)];
-            ScenarioCardService.saveCards(merged);
-            renderAll();
-        }
         function openScenarioCardSettings(cardId) {
             ScenarioCardControllerService.openScenarioCardSettings({ cardId, selectScenarioCard, switchView });
         }
@@ -9866,54 +9790,15 @@ function openNpcProfile(npcId) {
 
 
         
-function ensurePresetAsIndependentCard(payload, options = {}) {
-    const forceCreateNew = options?.forceCreateNew === true;
-    const allCards = ScenarioCardService.loadCards();
-    
-    // 查找是否已存在
-    const existingCard = allCards.find((c) => c.id === payload.id || c.title === payload.title);
-    
-    let card;
-    if (existingCard && !forceCreateNew) {
-        card = existingCard;
-        lastAutoCreatedCardId = null; // 已存在，不需要记录
-    } else {
-        card = ScenarioCardService.upsertCard({
-            id: forceCreateNew ? `${payload.id}_${Date.now()}` : payload.id,
-            title: payload.title || "模板卡片",
-            theme: payload.theme || "",
-            text: String(payload.text || "").trim() || AppConfig.defaultScenario
-        });
-        lastAutoCreatedCardId = card.id; // 新建的，记录下来
-    }
-
-    if (!card) throw new Error("模板卡片写入失败");
-    
-    ScenarioCardService.setSelectedId(card.id);
-    StateService.init();
-    SettingsService.loadToUI();
-    renderAll();
-    return card;
-}
-
-function buildPresetCardId(preset) {
-    // 移除 Date.now()，改用 title 兜底。只要标题不变，ID 就不变。
-    const raw = String(preset?.id || preset?.title || "unknown"); 
-    return `scenario_preset_${raw}`.replace(/[^\w-]/g, "_");
-}
-function findOfficialPresetByCardId(cardId) {
-    const id = String(cardId || "");
-    if (!id || !Array.isArray(presetManifest)) return null;
-    // 这里应该调用 ScenarioTemplateService 里的函数
-    return presetManifest.find((p) => ScenarioTemplateService.buildPresetCardId(p) === id) || null;
-}
         async function retryInitByReimportOfficialTemplate(cardId, missingFields = [], defaultGender = "女") {
-            const preset = findOfficialPresetByCardId(cardId);
+            // 官方剧本库内置(SCENARIO_LIBRARY)：删除本地副本后 loadCards 自动补齐，等同"重导"
+            const official = (Array.isArray(window.SCENARIO_LIBRARY) ? window.SCENARIO_LIBRARY : []);
+            const preset = official.find((c) => String(c.id || "") === String(cardId || ""));
             if (!preset) return false;
-            InitLoadingService.open("重试中：正在重导官方模板...");
+            InitLoadingService.open("重试中：正在重置官方剧本...");
             try {
                 ScenarioCardService.deleteCard(cardId);
-                await applyPresetTemplate(preset, { silent: true, forceCreateNew: true });
+                ScenarioCardService.setSelectedId(cardId);
                 const reminder = missingFields.length
                     ? `请重点补全以下缺失项：${missingFields.join("；")}`
                     : "请补全上次失败时缺失的关键字段。";
@@ -9922,66 +9807,13 @@ function findOfficialPresetByCardId(cardId) {
             } catch (e) {
                 InitLoadingService.close();
                 NoticeModalService.showInfo({
-                    title: "重导官方模板失败",
+                    title: "重置官方剧本失败",
                     descHtml: MarkdownService.escapeHtml(String(e?.message || e || "未知错误"))
                 });
                 return false;
             }
         }
-        async function applyPresetTemplate(preset, options = {}) {
-            const { silent = false, forceCreateNew = false, preserveExistingContent = false } = options;
-            return await ScenarioCardControllerService.applyPresetTemplate({
-                preset,
-                silent,
-                preserveExistingContent,
-                ensurePresetAsIndependentCard: (payload, extraOptions = {}) => ensurePresetAsIndependentCard(payload, {
-                    forceCreateNew,
-                    preserveExistingContent: extraOptions?.preserveExistingContent ?? preserveExistingContent
-                })
-            });
-        }
-        async function editPresetTemplate(preset) {
-            await ScenarioCardControllerService.editPresetTemplate({
-                preset,
-                applyPresetTemplate,
-                switchView
-            });
-        }
 
-async function playPresetTemplate(preset) {
-    // 1. 获取稳定 ID
-    const targetId = ScenarioTemplateService.buildPresetCardId(preset);
-    const allCards = ScenarioCardService.loadCards();
-    
-    // 2. 检查列表里是否已经有这张官方卡
-    const existingCard = allCards.find(c => c.id === targetId || (c.sourceType === "official" && c.title === preset.title));
-
-    if (existingCard) {
-        console.log("卡片已存在，直接进入游玩:", existingCard.id);
-        await playScenarioCard(existingCard.id);
-    } else {
-        console.log("准备加载新模板...");
-        // 移除多余的 open 提示，让 applyPresetTemplate 自己处理
-        try {
-            // 注意：applyPresetTemplate 内部会调用 ensurePresetAsIndependentCard
-            const ok = await applyPresetTemplate(preset, { 
-                silent: true, 
-                forceCreateNew: false 
-            });
-
-            if (ok) {
-                // 成功后，获取最新的选中 ID 并开始游玩
-                const newId = ScenarioCardService.getSelectedId();
-                await playScenarioCard(newId);
-            }
-        } catch (err) {
-            InitLoadingService.close();
-            console.error("加载模板失败:", err);
-            NoticeModalService.showInfo({ title: "加载失败", descHtml: err.message });
-        }
-    }
-}
-        
         function startFromPlay() {
             saveScenarioCard();
             const selectedId = ScenarioCardService.getSelectedId();
@@ -10093,11 +9925,7 @@ async function playPresetTemplate(preset) {
                         }
                     }
                 } else {
-                    // 返回：退回主页并删除刚刚自动新建的卡片（若有）
-                    if (lastAutoCreatedCardId && String(lastAutoCreatedCardId) === String(ScenarioCardService.getSelectedId())) {
-                        ScenarioCardService.deleteCard(lastAutoCreatedCardId);
-                        lastAutoCreatedCardId = null;
-                    }
+                    // 返回：退回主页
                     PlayViewStateService.leavePlay();
                     switchView("view-home");
                     renderAll();
@@ -10132,7 +9960,7 @@ async function playPresetTemplate(preset) {
                 openingChoices: merged.openingChoices || []
             });
         }
-        return { init, onSendClick, sendUserText, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, restoreOfficialScenarioCards, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, applyPresetTemplate, editPresetTemplate, playPresetTemplate, startFromPlay, importScenarioTxt, openInitPreviewModal, closeInitPreviewModal, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
+        return { init, onSendClick, sendUserText, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, openInitPreviewModal, closeInitPreviewModal, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
@@ -10143,11 +9971,7 @@ async function playPresetTemplate(preset) {
     function saveUserApiSettings() { Controller.saveUserApiSettings(); }
     function saveScenarioCard() { Controller.saveScenarioCard(); }
     function createScenarioCard() { Controller.createScenarioCard(); }
-    function restoreOfficialScenarioCards() { Controller.restoreOfficialScenarioCards(); }
     function selectScenarioCard(id) { Controller.selectScenarioCard(id); }
-    function applyPresetTemplate(id) { Controller.applyPresetTemplate(id); }
-    function editPresetTemplate(id) { Controller.editPresetTemplate(id); }
-    function playPresetTemplate(id) { Controller.playPresetTemplate(id); }
     function startFromPlay() { Controller.startFromPlay(); }
     function importScenarioTxt() { Controller.importScenarioTxt(); }
     function openInitPreviewModal() { Controller.openInitPreviewModal(); }
