@@ -1400,6 +1400,24 @@
             --ct-glow: rgba(0, 0, 0, 0.4);
         }
 
+        /* AI 原生按钮/旧模板按钮主题化兜底:无 .card-option-btn class 也吃 --ct-*(修复暗夜白底) */
+        .ai-beauty-card button,
+        .ai-beauty-card .wy-option-btn {
+            background: color-mix(in srgb, var(--ct-primary, var(--accent)) 8%, transparent);
+            border: 1px solid color-mix(in srgb, var(--ct-primary, var(--accent)) 45%, transparent);
+            color: var(--ct-primary, var(--accent-dark));
+            border-radius: 12px;
+            padding: 11px 14px;
+            cursor: pointer;
+            font: inherit;
+            text-align: left;
+        }
+        .ai-beauty-card button:hover,
+        .ai-beauty-card .wy-option-btn:hover {
+            background: color-mix(in srgb, var(--ct-primary, var(--accent)) 14%, transparent);
+            border-color: color-mix(in srgb, var(--ct-primary, var(--accent)) 65%, transparent);
+        }
+
 
         .ai-card-warning {
             margin-bottom: 8px;
@@ -2068,16 +2086,6 @@
             pointer-events: auto;
         }
 
-        /* 剧本列表卡消费卡片主题样式（--ct-* 变量来自 .card.card-theme-* / .scenario-card.card-theme-* 变量集） */
-        .scenario-card[class*="card-theme-"] {
-            border-color: var(--ct-border, var(--line));
-            background: var(--ct-bg, var(--card-soft));
-            box-shadow: 0 12px 28px var(--ct-glow, rgba(88, 57, 22, 0.08));
-        }
-        .scenario-card[class*="card-theme-"] .list-title { color: var(--ct-primary, var(--text-main)); }
-        .scenario-card[class*="card-theme-"] .list-sub { color: var(--ct-muted, var(--sub)); }
-        .scenario-card[class*="card-theme-"] .scenario-badge { border-color: color-mix(in srgb, var(--ct-primary, var(--accent)) 35%, transparent); }
-
         .scenario-action-btn {
             flex: 1;
             border: 0;
@@ -2611,7 +2619,7 @@
                     <input type="checkbox" id="ui-dark-mode-enabled">
                 </label>
                 <div class="setting-actions">
-                    <button class="mini-btn ghost" onclick="saveUserApiSettings()">保存样式</button>
+                    <button class="mini-btn ghost" onclick="saveUserApiSettings()">保存设置</button>
                 </div>
             </section>
             <section class="card">
@@ -5692,6 +5700,7 @@ function rebuildChoicesBlock(body, labels = []) {
                     ? '<div class="ai-card-warning">⚠️ 检测到设定冲突，已自动纠偏重试一次。</div>'
                     : "";
                 currentStreamingTarget.innerHTML = `${warningHtml}${AiResponseLayoutService.renderAiMessage(normalizedText, false)}`;
+                AiResponseLayoutService.applyCardTheme(currentStreamingTarget);
                 HtmlCardService.applyReadableTextColors(currentStreamingTarget);
                 AiResponseLayoutService.bindHtmlChoiceEvents(currentStreamingTarget);
                 AiResponseLayoutService.injectStatsIntoCard(currentStreamingTarget);
@@ -5739,6 +5748,7 @@ function rebuildChoicesBlock(body, labels = []) {
                     ? '<div class="ai-card-warning">⚠️ 检测到设定冲突，已自动纠偏重试一次。</div>'
                     : "";
                 bubble.innerHTML = `${warningHtml}${AiResponseLayoutService.renderAiMessage(normalizedText, false)}`;
+                AiResponseLayoutService.applyCardTheme(bubble);
                 AiResponseLayoutService.bindHtmlChoiceEvents(bubble);
                 AiResponseLayoutService.injectStatsIntoCard(bubble);
                 VisualEffects.decorateAiCardBears(bubble);
@@ -5946,7 +5956,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const renderRow = (card) => {
                 const row = document.createElement("div");
                 const themeKey = String(card.theme || "").replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase();
-                row.className = `scenario-card ${themeKey ? `card-theme-${themeKey}` : ""} ${card.id === selectedId ? "active" : ""}`;
+                row.className = `scenario-card ${card.id === selectedId ? "active" : ""}`;
                 row.dataset.cardId = card.id;
                 const customPinned = card.id === ScenarioCardService.CUSTOM_CARD_ID;
                 row.innerHTML = `
@@ -5956,7 +5966,7 @@ function rebuildChoicesBlock(body, labels = []) {
                             <span class="scenario-badge ${ScenarioCardViewService.groupClass(card)}">${ScenarioCardViewService.groupLabel(card)}</span>
                             ${card.pinned ? '<span class="scenario-badge">置顶</span>' : ""}
                         </div>
-                        <div class="list-sub">样式：${card.theme || "未设置"}｜设定长度：${(card.text || "").length}</div>
+                        <div class="list-sub">卡片样式：${ScenarioCardService.themeNameOf(card.theme)}｜设定长度：${(card.text || "").length}</div>
                         <div style="margin-top:6px;">
                             <button class="tiny-btn" data-op="play">游玩</button>
                             <button class="tiny-btn" data-op="edit">设置</button>
@@ -6215,20 +6225,20 @@ function rebuildChoicesBlock(body, labels = []) {
         return { buildQuickRef };
     })();
 
+    const BUILTIN_THEMES = [
+        { key: "default", name: "默认卡片样式", swatch: "#8a7a63" },
+        { key: "retro-paper", name: "复古纸卷", swatch: "#b89a6a" },
+        { key: "cyber-neon", name: "赛博霓虹", swatch: "#00e5ff" },
+        { key: "ink-wash", name: "水墨丹青", swatch: "#4a4a4a" },
+        { key: "glass", name: "玻璃雾面", swatch: "#7ec8e3" },
+        { key: "liquid", name: "流体渐变", swatch: "#8e7cc3" },
+        { key: "gothic", name: "哥特暗夜", swatch: "#3b2f4a" },
+        { key: "minimal", name: "极简留白", swatch: "#c9c9c9" },
+        { key: "fantasy", name: "奇幻魔法", swatch: "#9c6ade" },
+        { key: "sci-fi-hud", name: "科幻 HUD", swatch: "#39ff88" },
+        { key: "cottage", name: "田园小屋", swatch: "#7cb87c" }
+    ];
     const ScenarioEditorService = (() => {
-        const BUILTIN_THEMES = [
-            { key: "default", name: "默认样式", swatch: "#8a7a63" },
-            { key: "retro-paper", name: "复古纸卷", swatch: "#b89a6a" },
-            { key: "cyber-neon", name: "赛博霓虹", swatch: "#00e5ff" },
-            { key: "ink-wash", name: "水墨丹青", swatch: "#4a4a4a" },
-            { key: "glass", name: "玻璃雾面", swatch: "#7ec8e3" },
-            { key: "liquid", name: "流体渐变", swatch: "#8e7cc3" },
-            { key: "gothic", name: "哥特暗夜", swatch: "#3b2f4a" },
-            { key: "minimal", name: "极简留白", swatch: "#c9c9c9" },
-            { key: "fantasy", name: "奇幻魔法", swatch: "#9c6ade" },
-            { key: "sci-fi-hud", name: "科幻 HUD", swatch: "#39ff88" },
-            { key: "cottage", name: "田园小屋", swatch: "#7cb87c" }
-        ];
         function renderThemePicker() {
             const box = el("scenario-theme-picker");
             if (!box) return;
@@ -6992,7 +7002,13 @@ function rebuildChoicesBlock(body, labels = []) {
             cards.forEach((c, idx) => { c.order = idx + 1; });
             saveCards(cards);
         }
-        return { CUSTOM_CARD_ID, loadCards, saveCards, getSelectedId, setSelectedId, getSelectedCard, updateSelectedCard, deleteCard, createCard, upsertCard, togglePin, reorderCards };
+        // 样式 key → 中文名(主页卡标识用;未知 key 回退原值)
+        function themeNameOf(themeKey) {
+            const key = String(themeKey || "").replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase();
+            const found = (Array.isArray(BUILTIN_THEMES) ? BUILTIN_THEMES : []).find((t) => String(t.key) === key);
+            return found ? found.name : (themeKey || "未设置");
+        }
+        return { CUSTOM_CARD_ID, loadCards, saveCards, getSelectedId, setSelectedId, getSelectedCard, updateSelectedCard, deleteCard, createCard, upsertCard, togglePin, reorderCards, themeNameOf };
     })();
 
     const CardScopedConfigService = (() => {
