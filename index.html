@@ -8052,6 +8052,7 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
     const AIRequestService = (() => {
         const REQUEST_TIMEOUT_MS = 10000;  // 连接超时 10s，快速失败触发重试
         const READ_TIMEOUT_MS = 90000;     // 流式读取超时 90s，允许长文本生成
+        const STREAM_IDLE_TIMEOUT_MS = 30000; // 流式空闲超时:30s 无数据块(模型卡死/思考中)则中断,由 fetchWithRetry 重试换模型
         const INIT_REQUEST_TIMEOUT_MS = 20000; // 初始化各子请求超时(仅 AI 回退防御链使用,M1 后常规开局零请求)
         function createHttpError(status, message, extra = {}) {
             const err = new Error(message || `HTTP ${status}`);
@@ -8164,10 +8165,17 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             let lastChar = "";
             let repeatCount = 0;
             const MAX_REPETITION = 30;
+            let lastDataAt = Date.now();
+            const idleGuard = setInterval(() => {
+                if (!stopRequested && Date.now() - lastDataAt > STREAM_IDLE_TIMEOUT_MS) {
+                    controller.abort(`stream idle timeout ${STREAM_IDLE_TIMEOUT_MS}ms`);
+                }
+            }, 5000);
             try {
                 while (true) {
                     const { done, value } = await reader.read();
                     if (done) break;
+                    if (value && value.length) lastDataAt = Date.now();
                     tail += decoder.decode(value, { stream: true });
                     const lines = tail.split("\n");
                     tail = lines.pop() || "";
@@ -8210,6 +8218,7 @@ const token = delta.content || "";
                     }
                 }
             } finally {
+                clearInterval(idleGuard);
                 try { reader.cancel(); } catch (e) {}
             }
             return EndMarkerService.trimToMarker(fullText);
@@ -9363,6 +9372,8 @@ const token = delta.content || "";
                         const retrySkeletonHint = PromptTemplateService.buildSkeletonHintFromLocked(lockedSkeleton, StateService.get())
                             || HtmlCardTemplateService.getSkeletonHtml(isDark ? "dark" : "light", StateService.get());
                         try {
+                            // 重试早停:AI 迟迟不输出 HTML 卡前缀(<article)则提前终止,避免白等一整次生成
+                            let retryEarlyStopped = false;
                             const retryText = (await AIRequestService.streamCompletionWithFallback({
                                 config,
                                 fetchUrl,
@@ -9374,6 +9385,10 @@ const token = delta.content || "";
                                 ],
                                 temperature: policyConfig.temperature,
                                 onToken: (text) => {
+                                    if (!retryEarlyStopped && text.length > 150 && !text.includes("<article")) {
+                                        retryEarlyStopped = true;
+                                        return false;
+                                    }
                                     const visibleText = StatePatchService.extractPatch(EndMarkerService.trimToMarker(text)).cleaned;
                                     UIRenderer.updateStreaming(visibleText);
                                     return !EndMarkerService.hasMarker(text);
