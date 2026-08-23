@@ -5945,20 +5945,23 @@ function rebuildChoicesBlock(body, labels = []) {
             });
             // 搜索时展开所有组，便于直接看到命中结果
             if (keyword) ScenarioCardViewService.expandAllGroups();
-            // 最近游玩置顶组：无筛选时取最近 5 张（lastPlayedAt 倒序），分类组内跳过已展示卡
+            // 置顶组（无筛选时）：最近游玩 5 张自动置顶（lastPlayedAt 倒序）+ 无分类（原"其他"组）卡合并，分类组内跳过已展示卡
             const filterActive = Boolean(keyword) || category !== "全部";
-            const recentCards = [];
+            const pinnedCards = [];
             if (!filterActive) {
                 const metas = ScenarioPlayMetaService.loadMap();
-                recentCards.push(...cards
+                const recent = cards
                     .map((c) => ({ card: c, t: Number(metas[String(c.id)]?.lastPlayedAt) || 0 }))
                     .filter((x) => x.t > 0)
                     .sort((a, b) => b.t - a.t)
                     .slice(0, 5)
                     .map((x) => x.card)
-                    .filter((c) => filteredCards.includes(c)));
+                    .filter((c) => filteredCards.includes(c));
+                pinnedCards.push(...recent);
+                pinnedCards.push(...filteredCards
+                    .filter((c) => !String(c.category || "").trim() && !recent.some((r) => r.id === c.id)));
             }
-            const recentIds = new Set(recentCards.map((c) => c.id));
+            const pinnedIds = new Set(pinnedCards.map((c) => c.id));
             const renderRow = (card) => {
                 const row = document.createElement("div");
                 const themeKey = String(card.theme || "").replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase();
@@ -5995,22 +5998,22 @@ function rebuildChoicesBlock(body, labels = []) {
                 });
                 box.appendChild(row);
             };
-            if (recentCards.length) {
-                const collapsed = ScenarioCardViewService.isCollapsed("最近游玩");
+            if (pinnedCards.length) {
+                const collapsed = ScenarioCardViewService.isCollapsed("置顶");
                 const head = document.createElement("div");
                 head.className = "scenario-group-title";
                 head.style.cursor = "pointer";
                 head.style.userSelect = "none";
-                head.innerHTML = `<span class="scenario-group-arrow">${collapsed ? "▸" : "▾"}</span>最近游玩（${recentCards.length} 张）`;
+                head.innerHTML = `<span class="scenario-group-arrow">${collapsed ? "▸" : "▾"}</span>置顶（${pinnedCards.length} 张）`;
                 head.onclick = () => {
-                    ScenarioCardViewService.toggleCollapsed("最近游玩");
+                    ScenarioCardViewService.toggleCollapsed("置顶");
                     renderScenarioCards();
                 };
                 box.appendChild(head);
-                if (!collapsed) recentCards.forEach(renderRow);
+                if (!collapsed) pinnedCards.forEach(renderRow);
             }
             groups.forEach((groupKey) => {
-                const groupCards = byGroup.get(groupKey).filter((c) => !recentIds.has(c.id));
+                const groupCards = byGroup.get(groupKey).filter((c) => !pinnedIds.has(c.id));
                 if (!groupCards.length) return;
                 const catCount = `（${groupCards.length} 个）`;
                 const collapsed = ScenarioCardViewService.isCollapsed(groupKey);
