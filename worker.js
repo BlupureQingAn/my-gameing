@@ -32,7 +32,8 @@ const MODEL_POOL = [
     { id: "ds-deepseek-chat",     url: "https://api.deepseek.com/v1", apiKeyEnv: "DEEPSEEK_KEY",     model: "deepseek-chat",     dailyCap: Infinity, tier: 40, enabled: false },
     { id: "ds-deepseek-reasoner", url: "https://api.deepseek.com/v1", apiKeyEnv: "DEEPSEEK_KEY",     model: "deepseek-reasoner", dailyCap: Infinity, tier: 40, enabled: false },
     // ---- NVIDIA（原 free 卡 primary，免费额度）----
-    { id: "nv-qwen3.5-122b",  url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY",  model: "qwen/qwen3.5-122b-a10b", dailyCap: Infinity, tier: 90, enabled: true },
+    // NVIDIA:原 qwen3.5-122b-a10b 已于 2026-07-20 EOL(HTTP 410),换 llama-3.3-70b-instruct(实测 TTFB 27ms)
+    { id: "nv-llama-3.3-70b", url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY",  model: "meta/llama-3.3-70b-instruct", dailyCap: Infinity, tier: 90, enabled: true },
     // ---- SiliconFlow Qwen3-8B（免费，最后兜底）----
     { id: "sf-qwen3-8b",      url: "https://api.siliconflow.cn/v1",      apiKeyEnv: "SILICONFLOW_KEY", model: "Qwen/Qwen3-8B",     dailyCap: Infinity, tier: 99, enabled: true },
 ];
@@ -410,6 +411,8 @@ export default {
                     const timeout = setTimeout(() => controller.abort(), timeoutMs);
                     try {
                         const payload = { ...requestJson, model: target.model };
+                        // Qwen3-8B 默认开启思考模式(reasoning 占 87% token,耗时 28-37s),强制关闭提速 ~20 倍
+                        if (target.id === "sf-qwen3-8b") payload.enable_thinking = false;
                         const resp = await fetch(`${base}/chat/completions`, {
                             method: "POST",
                             headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
