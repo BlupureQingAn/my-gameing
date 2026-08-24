@@ -2639,8 +2639,8 @@
         <div class="boot-card"><div class="boot-bar w"></div><div class="boot-bar s"></div><div class="boot-bar m"></div><div class="boot-row"><div class="boot-opt"></div><div class="boot-opt"></div><div class="boot-opt"></div></div></div>
     </div>
 </div>
-<script>/* 兜底:主逻辑接管前强制淡出,避免 JS 异常时永久遮挡 */
-setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.classList.contains("boot-done"))b.classList.add("boot-done");},20000);</script>
+<script>/* 兜底:主逻辑接管前强制淡出,避免 JS 异常时永久遮挡;90s 防慢网下"加载页消失但页面未就绪"(CF 到国内带宽实测 1-3KB/s,HTML 需 40s+) */
+setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.classList.contains("boot-done"))b.classList.add("boot-done");},90000);</script>
 
 <!-- ==================== 登录/注册覆盖层 ==================== -->
 <div id="auth-overlay" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--bg-page,#efe3cf);align-items:center;justify-content:center;padding:20px;">
@@ -2968,8 +2968,9 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
     </div>
 </div>
 
-<script src="scenarios/scenarios.js" defer></script>
-<script src="lib/qrcode.min.js" defer></script>
+<!-- scenarios.js(142KB)与 qrcode(20KB)改 async:load 事件不再等它们,慢网下 boot 提前淡出;场景卡由 init 挂载 load 监听延迟渲染 -->
+<script src="scenarios/scenarios.js" async id="scenario-lib-script"></script>
+<script src="lib/qrcode.min.js" async></script>
 <script>
     const AppConfig = {
         storageKeys: {
@@ -9842,6 +9843,13 @@ const token = delta.content || "";
             renderAll();
             VisualEffects.createBears();
             bindEvents();
+            // scenarios.js 已 async 化(load 不等 142KB):库可能晚到,脚本就绪后补渲染官方场景卡
+            if (!Array.isArray(window.SCENARIO_LIBRARY)) {
+                const s = document.getElementById("scenario-lib-script");
+                if (s) s.addEventListener("load", () => {
+                    try { UIRenderer.renderScenarioCards(); } catch (e) { console.error("场景库延迟渲染失败", e); }
+                });
+            }
         }
         function bindEvents() {
             // 暗夜模式勾选即时生效并持久化(无需再点保存主题)
