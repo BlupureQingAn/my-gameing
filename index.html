@@ -10538,19 +10538,31 @@ function openNpcProfile(npcId) {
             selectedPayType = type;
             document.querySelectorAll(".pay-method-btn").forEach(b => b.classList.toggle("active", b.dataset.pay === type));
         }
-        function renderOrder(order) {
+        function renderOrder(order, autoRedirect) {
             const payArea = document.getElementById("membership-pay-area");
             if (!payArea) return;
             const payMethodName = order.payType === "alipay" ? "支付宝" : "微信";
-            let html = `<div class="list-sub" style="margin:8px 0;">订单号：${order.orderNo}，请用${payMethodName}扫码或跳转收银台完成支付。</div>`;
-            if (order.qrcode && /^https?:/.test(order.qrcode)) {
-                html += `<img src="${order.qrcode}" alt="支付二维码" style="width:180px;height:180px;border-radius:12px;display:block;margin:8px auto;">`;
+            const hasQr = order.qrcode && /^https?:/.test(order.qrcode);
+            const hasUrl = /^https?:/.test(order.payUrl);
+            // 有收银台链接(支付宝):显示跳转状态并自动跳转;微信 PC 扫码仅 qrcode,只能展示二维码
+            if (hasUrl) {
+                if (autoRedirect) {
+                    payArea.innerHTML = `<div class="list-sub" style="margin:8px 0;color:var(--accent-dark);font-weight:700;">✅ 订单创建成功，正在跳转${payMethodName}收银台…</div>
+                        <div class="list-sub" style="margin-top:6px;">订单号：${order.orderNo}</div>
+                        <a class="mini-btn primary" style="display:inline-block;text-decoration:none;text-align:center;margin-top:10px;" href="${order.payUrl}" target="_blank" rel="noopener">若未自动跳转，点击前往收银台</a>`;
+                    setTimeout(() => { window.location.href = order.payUrl; }, 1200);
+                } else {
+                    payArea.innerHTML = `<div class="list-sub" style="margin:8px 0;">订单号：${order.orderNo}，请用${payMethodName}扫码或跳转收银台完成支付。</div>
+                        <a class="mini-btn primary" style="display:inline-block;text-decoration:none;text-align:center;margin-top:8px;" href="${order.payUrl}" target="_blank" rel="noopener">前往收银台支付</a>
+                        <div class="list-sub" style="margin-top:8px;">支付完成后将自动开通会员（1-2 分钟内生效）</div>`;
+                }
+                return;
             }
-            if (/^https?:/.test(order.payUrl)) {
-                html += `<a class="mini-btn primary" style="display:inline-block;text-decoration:none;text-align:center;margin-top:8px;" href="${order.payUrl}" target="_blank" rel="noopener">前往收银台支付</a>`;
+            if (hasQr) {
+                payArea.innerHTML = `<div class="list-sub" style="margin:8px 0;">订单号：${order.orderNo}，请用${payMethodName}扫码支付（PC 端扫码后手机确认）。</div>
+                    <img src="${order.qrcode}" alt="支付二维码" style="width:180px;height:180px;border-radius:12px;display:block;margin:8px auto;">
+                    <div class="list-sub" style="margin-top:8px;">支付完成后将自动开通会员（1-2 分钟内生效）</div>`;
             }
-            html += '<div class="list-sub" style="margin-top:8px;">支付完成后将自动开通会员（1-2 分钟内生效）</div>';
-            payArea.innerHTML = html;
         }
         async function startPay() {
             const user = AuthService.getUserData();
@@ -10558,7 +10570,7 @@ function openNpcProfile(npcId) {
             const payArea = document.getElementById("membership-pay-area");
             // 已有同套餐同支付方式的未完成订单:直接复用,不重复创建
             if (_currentOrder && _currentOrder.payType === selectedPayType && _currentOrder.planId === selectedPlan) {
-                renderOrder(_currentOrder);
+                renderOrder(_currentOrder, true);
                 startPoll(_currentOrder.orderNo);
                 return;
             }
@@ -10575,7 +10587,7 @@ function openNpcProfile(npcId) {
                 // 微信支付走扫码:易支付只返回 qrcode、payurl 为空,payUrl/qrcode 任一存在即成功
                 if (!res.ok || (!data.payUrl && !data.qrcode)) throw new Error(data.error || "创建订单失败");
                 _currentOrder = { orderNo: data.orderNo, qrcode: data.qrcode || "", payUrl: data.payUrl || "", payType: selectedPayType, planId: selectedPlan };
-                renderOrder(_currentOrder);
+                renderOrder(_currentOrder, true);
                 startPoll(data.orderNo);
             } catch (e) {
                 if (payArea) payArea.innerHTML = `<div class="list-sub" style="color:#c0392b;">${MarkdownService.escapeHtml(e.message)}</div>`;
