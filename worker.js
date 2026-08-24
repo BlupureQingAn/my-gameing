@@ -420,10 +420,12 @@ export default {
                 // 逐候选转发：非 2xx / 网络异常 → 换下一个
                 let aiResponse = null;
                 let usedModel = null;
+                const attempts = []; // 诊断:记录每个候选的尝试结果(模型:状态:耗时ms)
                 for (const target of candidates) {
-                    if (isModelInCooldown(target.id)) continue; // 熔断期内跳过,不重走失败链
+                    const attemptStart = Date.now();
+                    if (isModelInCooldown(target.id)) { attempts.push(`${target.id}:cooldown`); continue; } // 熔断期内跳过,不重走失败链
                     const apiKey = env[target.apiKeyEnv];
-                    if (!apiKey) continue;
+                    if (!apiKey) { attempts.push(`${target.id}:nokey`); continue; }
                     const base = target.url.replace(/\/$/, "");
                     const controller = new AbortController();
                     const timeoutMs = isStream ? 15000 : 120000; // 流式仅等响应头(15s),body 透传由前端控制;慢模型快速 fallback
@@ -439,6 +441,7 @@ export default {
                             signal: controller.signal
                         });
                         clearTimeout(timeout);
+                        attempts.push(`${target.id}:${resp.status}:${Date.now() - attemptStart}ms`);
                         if (resp.ok) {
                             modelFailTimes.delete(target.id); // 成功即解除熔断
                             aiResponse = resp;
@@ -450,6 +453,7 @@ export default {
                     } catch (e) {
                         clearTimeout(timeout);
                         modelFailTimes.set(target.id, Date.now());
+                        attempts.push(`${target.id}:err:${Date.now() - attemptStart}ms`);
                         console.warn(`model ${target.id} error: ${e.message}, fallback next`);
                     }
                 }
@@ -467,9 +471,13 @@ export default {
                     }
                 })());
 
+                const diagHeaders = {
+                    "X-Model-Used": usedModel.id,
+                    "X-Model-Attempts": attempts.join("|")
+                };
                 if (isStream) {
                     return new Response(aiResponse.body, {
-                        headers: { ...corsHeaders(), "Content-Type": "text/event-stream", "Cache-Control": "no-cache" }
+                        headers: { ...corsHeaders(), ...diagHeaders, "Content-Type": "text/event-stream", "Cache-Control": "no-cache" }
                     });
                 }
                 // 非流式：校验 choices[0].message.content 为合法 JSON，失败则同模型重试 ≤2 次（前端有降级兜底）
