@@ -10562,6 +10562,13 @@ function openNpcProfile(npcId) {
                 payArea.innerHTML = `<div class="list-sub" style="margin:8px 0;">订单号：${order.orderNo}，请用${payMethodName}扫码支付（PC 端扫码后手机确认）。</div>
                     <img src="${order.qrcode}" alt="支付二维码" style="width:180px;height:180px;border-radius:12px;display:block;margin:8px auto;">
                     <div class="list-sub" style="margin-top:8px;">支付完成后将自动开通会员（1-2 分钟内生效）</div>`;
+                return;
+            }
+            // 微信小程序支付:urlscheme(weixin://dl/business/?ticket=xxx)需 JS 拉起,按钮点击后跳转
+            if (order.urlscheme) {
+                payArea.innerHTML = `<div class="list-sub" style="margin:8px 0;">订单号：${order.orderNo}，请点击下方按钮拉起微信完成支付。</div>
+                    <button class="mini-btn primary" style="width:100%;margin-top:10px;" onclick="MembershipService.launchUrlScheme()">拉起微信支付</button>
+                    <div class="list-sub" style="margin-top:8px;">支付完成后将自动开通会员（1-2 分钟内生效）</div>`;
             }
         }
         async function startPay() {
@@ -10577,23 +10584,33 @@ function openNpcProfile(npcId) {
             if (_creatingOrder) return; // 创建中,防双击重复下单
             _creatingOrder = true;
             if (payArea) payArea.innerHTML = '<div class="list-sub">正在创建订单...</div>';
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 20000);
             try {
                 const res = await fetch(`${AppConfig.proxy.baseUrl}/api/pay/create`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json", "X-Auth-Token": AuthService.getToken() },
-                    body: JSON.stringify({ planId: selectedPlan, payType: selectedPayType })
+                    body: JSON.stringify({ planId: selectedPlan, payType: selectedPayType }),
+                    signal: controller.signal
                 });
                 const data = await res.json();
-                // 微信支付走扫码:易支付只返回 qrcode、payurl 为空,payUrl/qrcode 任一存在即成功
-                if (!res.ok || (!data.payUrl && !data.qrcode)) throw new Error(data.error || "创建订单失败");
-                _currentOrder = { orderNo: data.orderNo, qrcode: data.qrcode || "", payUrl: data.payUrl || "", payType: selectedPayType, planId: selectedPlan };
+                // 易支付 mapi.php 返回 payurl/qrcode/urlscheme 三选一,任一存在即成功
+                if (!res.ok || (!data.payUrl && !data.qrcode && !data.urlscheme)) throw new Error(data.error || "创建订单失败");
+                _currentOrder = { orderNo: data.orderNo, qrcode: data.qrcode || "", payUrl: data.payUrl || "", urlscheme: data.urlscheme || "", payType: selectedPayType, planId: selectedPlan };
                 renderOrder(_currentOrder, true);
                 startPoll(data.orderNo);
             } catch (e) {
-                if (payArea) payArea.innerHTML = `<div class="list-sub" style="color:#c0392b;">${MarkdownService.escapeHtml(e.message)}</div>`;
+                const msg = e.name === "AbortError" ? "订单创建超时，请稍后重试（支付网关繁忙）" : (e.message || "创建订单失败");
+                if (payArea) payArea.innerHTML = `<div class="list-sub" style="color:#c0392b;">${MarkdownService.escapeHtml(msg)}</div>`;
             } finally {
+                clearTimeout(timer);
                 _creatingOrder = false;
             }
+        }
+        function launchUrlScheme() {
+            if (!_currentOrder || !_currentOrder.urlscheme) return;
+            // 微信小程序支付:JS 跳转 weixin://dl/business/?ticket=xxx,须由用户手势触发
+            window.location.href = _currentOrder.urlscheme;
         }
         function startPoll(orderNo) {
             stopPoll();
@@ -10619,7 +10636,7 @@ function openNpcProfile(npcId) {
             await AuthService.refreshBalance();
             AuthService.updateUsageStatusUI();
         }
-        return { openPanel, closePanel, selectPlan, selectPayType, startPay, pollPayStatus: startPoll, hasMembership, refreshStatus };
+        return { openPanel, closePanel, selectPlan, selectPayType, startPay, pollPayStatus: startPoll, launchUrlScheme, hasMembership, refreshStatus };
     })();
 
     // ==================== AuthService ====================

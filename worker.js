@@ -245,7 +245,7 @@ function verifyPaySign(params, secret) {
     return buildPaySign(params, secret) === sign;
 }
 
-// 创建订单：本地落库 pay_orders → 调易支付 mapi.php → 返回 { orderNo, payUrl, qrcode }
+// 创建订单：本地落库 pay_orders → 调易支付 mapi.php → 返回 { orderNo, payUrl, qrcode, urlscheme }
 async function createPayOrder(env, userId, planId, payType) {
     const plan = PAY_PLANS[planId];
     if (!plan) throw new Error("无效的会员套餐");
@@ -276,15 +276,23 @@ async function createPayOrder(env, userId, planId, payType) {
     params.sign = buildPaySign(params, env.PAY_APP_SECRET);
     params.sign_type = "MD5";
 
-    const payRes = await fetch(env.PAY_MAPI_URL || "https://ezfp.cn/mapi.php", {
-        method: "POST",
-        // 易支付按 Referer 域名校验支付授权白名单;Worker 默认不带 Referer 会被判"域名没过白"
-        headers: { "Content-Type": "application/x-www-form-urlencoded", Referer: "https://bitlife.blupure.cn/" },
-        body: new URLSearchParams(params)
-    });
+    let payRes;
+    try {
+        payRes = await fetch(env.PAY_MAPI_URL || "https://ezfp.cn/mapi.php", {
+            method: "POST",
+            // 易支付按 Referer 域名校验支付授权白名单;Worker 默认不带 Referer 会被判"域名没过白"
+            headers: { "Content-Type": "application/x-www-form-urlencoded", Referer: "https://bitlife.blupure.cn/" },
+            body: new URLSearchParams(params),
+            // 微信渠道在易支付侧偶发慢响应:15s 超时,避免 Worker 与前端无限挂起
+            signal: AbortSignal.timeout(15000)
+        });
+    } catch (e) {
+        throw new Error(e.name === "TimeoutError" ? "支付网关响应超时，请稍后重试" : "支付网关连接失败");
+    }
     const payJson = await payRes.json().catch(() => ({}));
     if (payRes.ok && payJson.code === 1) {
-        return { orderNo, payUrl: payJson.payurl || "", qrcode: payJson.qrcode || "" };
+        // 易支付 mapi.php 返回 payurl/qrcode/urlscheme 三选一;urlscheme 为微信小程序支付 JS 跳转链接
+        return { orderNo, payUrl: payJson.payurl || "", qrcode: payJson.qrcode || "", urlscheme: payJson.urlscheme || "" };
     }
     throw new Error(payJson.msg || "支付网关返回异常");
 }
@@ -502,8 +510,8 @@ export default {
                 const payType = ["alipay", "wxpay"].includes(body.payType) ? body.payType : "alipay";
                 if (!PAY_PLANS[planId]) return errorResponse("无效的会员套餐", 400, null, "INVALID_PLAN");
                 try {
-                    const { orderNo, payUrl, qrcode } = await createPayOrder(env, auth.record.id, planId, payType);
-                    return new Response(JSON.stringify({ orderNo, payUrl, qrcode }), {
+                    const { orderNo, payUrl, qrcode, urlscheme } = await createPayOrder(env, auth.record.id, planId, payType);
+                    return new Response(JSON.stringify({ orderNo, payUrl, qrcode, urlscheme }), {
                         headers: { ...corsHeaders(), "Content-Type": "application/json" }
                     });
                 } catch (e) {
