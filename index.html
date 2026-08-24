@@ -9843,13 +9843,57 @@ const token = delta.content || "";
             renderAll();
             VisualEffects.createBears();
             bindEvents();
-            // scenarios.js 已 async 化(load 不等 142KB):库可能晚到,脚本就绪后补渲染官方场景卡
+            // scenarios.js 已 async 化(load 不等场景库):库可能晚到,脚本就绪后补渲染官方场景卡
             if (!Array.isArray(window.SCENARIO_LIBRARY)) {
                 const s = document.getElementById("scenario-lib-script");
                 if (s) s.addEventListener("load", () => {
                     try { UIRenderer.renderScenarioCards(); } catch (e) { console.error("场景库延迟渲染失败", e); }
                 });
             }
+            // 场景库滚动懒加载:首片 12 张(scenarios.js)先渲染,下滑到底动态注入 partN.js 补全
+            bindScenarioChunkScroll();
+            scenarioMaybeAutoFill();
+        }
+        // ---- 场景库分片懒加载(2026-08-25:首屏只下 ~20KB,滚动到底加载下一片) ----
+        let scenarioChunkLoaded = 1;
+        let scenarioChunkLoading = false;
+        function scenarioChunkLeft() {
+            return ((window.SCENARIO_CHUNK_TOTAL || 1) - scenarioChunkLoaded) > 0;
+        }
+        function loadNextScenarioChunk() {
+            if (scenarioChunkLoading || !scenarioChunkLeft()) return;
+            scenarioChunkLoading = true;
+            const n = scenarioChunkLoaded + 1;
+            const s = document.createElement("script");
+            s.src = `scenarios/scenarios.part${n}.js`;
+            s.onload = () => {
+                scenarioChunkLoaded = n;
+                scenarioChunkLoading = false;
+                try { UIRenderer.renderScenarioCards(); } catch (e) { console.error("场景库分片渲染失败", e); }
+                scenarioMaybeAutoFill();
+            };
+            s.onerror = () => { scenarioChunkLoading = false; }; // 404=无更多分片,停止
+            document.head.appendChild(s);
+        }
+        function scenarioMaybeAutoFill() {
+            // 渲染后列表未满一屏 → 继续加载下一片(否则列表无滚动可触发,永远加载不完)
+            const box = document.getElementById("scenario-card-list");
+            if (!box || !scenarioChunkLeft()) return;
+            const rect = box.getBoundingClientRect();
+            if (rect.bottom <= window.innerHeight + 100) loadNextScenarioChunk();
+        }
+        function bindScenarioChunkScroll() {
+            const box = document.getElementById("scenario-card-list");
+            if (!box || !scenarioChunkLeft()) return;
+            // 哨兵 + IntersectionObserver:滚动容器(main-content)任意滚动/视图切换均可靠触发,临近底部 200px 提前加载
+            const sentinel = document.createElement("div");
+            sentinel.id = "scenario-chunk-sentinel";
+            sentinel.style.height = "1px";
+            box.parentNode.insertBefore(sentinel, box.nextSibling);
+            const io = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) loadNextScenarioChunk();
+            }, { rootMargin: "200px 0px" });
+            io.observe(sentinel);
         }
         function bindEvents() {
             // 暗夜模式勾选即时生效并持久化(无需再点保存主题)
