@@ -41,6 +41,21 @@ const MODEL_POOL = [
     { id: "sf-qwen3-8b",      url: "https://api.siliconflow.cn/v1",      apiKeyEnv: "SILICONFLOW_KEY", model: "Qwen/Qwen3-8B",     dailyCap: Infinity, tier: 99, enabled: true },
 ];
 
+// 失败熔断:候选模型调用失败后 5 分钟内直接跳过,避免每次请求都重走失败链
+// (实测:key 过期的 ChatAnywhere 每次 ~0.5s 失败 × 11 个候选 = 每请求固定浪费 ~6.5s)
+const MODEL_FAIL_COOLDOWN_MS = 5 * 60 * 1000;
+const modelFailTimes = new Map(); // modelId -> lastFailTime
+
+function isModelInCooldown(modelId) {
+    const t = modelFailTimes.get(modelId);
+    if (!t) return false;
+    if (Date.now() - t > MODEL_FAIL_COOLDOWN_MS) {
+        modelFailTimes.delete(modelId);
+        return false;
+    }
+    return true;
+}
+
 // 会员套餐（金额与 worker 校验共用，前端仅展示）
 const PAY_PLANS = {
     monthly:   { id: "monthly",   name: "月度会员", price: "9.9",  days: 30 },
@@ -406,6 +421,7 @@ export default {
                 let aiResponse = null;
                 let usedModel = null;
                 for (const target of candidates) {
+                    if (isModelInCooldown(target.id)) continue; // 熔断期内跳过,不重走失败链
                     const apiKey = env[target.apiKeyEnv];
                     if (!apiKey) continue;
                     const base = target.url.replace(/\/$/, "");
@@ -424,13 +440,16 @@ export default {
                         });
                         clearTimeout(timeout);
                         if (resp.ok) {
+                            modelFailTimes.delete(target.id); // 成功即解除熔断
                             aiResponse = resp;
                             usedModel = target;
                             break;
                         }
+                        modelFailTimes.set(target.id, Date.now());
                         console.warn(`model ${target.id} failed (${resp.status}), fallback next`);
                     } catch (e) {
                         clearTimeout(timeout);
+                        modelFailTimes.set(target.id, Date.now());
                         console.warn(`model ${target.id} error: ${e.message}, fallback next`);
                     }
                 }
