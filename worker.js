@@ -410,7 +410,7 @@ export default {
                     if (!apiKey) continue;
                     const base = target.url.replace(/\/$/, "");
                     const controller = new AbortController();
-                    const timeoutMs = isStream ? 60000 : 120000;
+                    const timeoutMs = isStream ? 15000 : 120000; // 流式仅等响应头(15s),body 透传由前端控制;慢模型快速 fallback
                     const timeout = setTimeout(() => controller.abort(), timeoutMs);
                     try {
                         const payload = { ...requestJson, model: target.model };
