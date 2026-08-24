@@ -2622,6 +2622,35 @@
 </head>
 <body>
 
+<!-- ==================== 启动加载页(内联,不依赖 JS,HTML 解析即显示) ==================== -->
+<style>
+    #boot-screen{position:fixed;inset:0;z-index:99998;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;background:linear-gradient(160deg,#11152b,#1a2140 55%,#101a38);transition:opacity .35s ease;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
+    #boot-screen.boot-done{opacity:0;pointer-events:none}
+    .boot-logo{font-size:1.65rem;font-weight:800;letter-spacing:3px;color:#ffd66b;text-shadow:0 0 20px rgba(255,214,107,.45);animation:bootPulse 1.6s ease-in-out infinite}
+    .boot-sub{font-size:.85rem;color:rgba(255,255,255,.55);letter-spacing:2px;animation:bootPulse 1.6s ease-in-out infinite;animation-delay:.2s}
+    .boot-cards{width:min(620px,86vw);display:flex;flex-direction:column;gap:14px;margin-top:6px}
+    .boot-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden}
+    .boot-card::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.09),transparent);animation:bootShimmer 1.4s ease-in-out infinite}
+    .boot-bar{height:12px;border-radius:6px;background:rgba(255,255,255,.08)}
+    .boot-bar.w{width:36%}.boot-bar.l{width:86%}.boot-bar.m{width:62%}.boot-bar.s{width:44%}
+    .boot-row{display:flex;gap:8px;margin-top:4px}
+    .boot-opt{flex:1;height:26px;border-radius:8px;background:rgba(255,255,255,.07)}
+    @keyframes bootShimmer{100%{transform:translateX(100%)}}
+    @keyframes bootPulse{0%,100%{opacity:1}50%{opacity:.5}}
+    @media (prefers-reduced-motion: reduce){#boot-screen .boot-logo,#boot-screen .boot-sub{animation:none}#boot-screen .boot-card::after{animation:none}}
+</style>
+<div id="boot-screen" role="status" aria-label="页面加载中">
+    <div class="boot-logo">云吞吞文游模拟器</div>
+    <div class="boot-sub">正在加载云吞吞世界…</div>
+    <div class="boot-cards" aria-hidden="true">
+        <div class="boot-card"><div class="boot-bar w"></div><div class="boot-bar l"></div><div class="boot-row"><div class="boot-opt"></div><div class="boot-opt"></div><div class="boot-opt"></div></div></div>
+        <div class="boot-card"><div class="boot-bar w"></div><div class="boot-bar m"></div><div class="boot-bar l"></div><div class="boot-row"><div class="boot-opt"></div><div class="boot-opt"></div></div></div>
+        <div class="boot-card"><div class="boot-bar w"></div><div class="boot-bar s"></div><div class="boot-bar m"></div><div class="boot-row"><div class="boot-opt"></div><div class="boot-opt"></div><div class="boot-opt"></div></div></div>
+    </div>
+</div>
+<script>/* 兜底:主逻辑接管前强制淡出,避免 JS 异常时永久遮挡 */
+setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.classList.contains("boot-done"))b.classList.add("boot-done");},20000);</script>
+
 <!-- ==================== 登录/注册覆盖层 ==================== -->
 <div id="auth-overlay" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--bg-page,#efe3cf);align-items:center;justify-content:center;padding:20px;">
     <div style="width:100%;max-width:380px;background:var(--card,#fff7ea);border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.18);padding:32px 28px;border:1px solid var(--line,#e2ccb0);">
@@ -2886,7 +2915,6 @@
                     <button class="nav-btn" data-view="view-inventory" data-nav-scope="play" onclick="switchView('view-inventory')">🎒 背包</button>
                     <button class="nav-btn" data-view="view-social" data-nav-scope="play" onclick="switchView('view-social')">💬 社交</button>
                     <button class="nav-btn" data-view="view-saves" data-nav-scope="play" onclick="switchView('view-saves')">💾 存档</button>
-                    <button class="nav-btn" data-view="view-home" data-nav-scope="play" onclick="switchView('view-home')">🏠 主页</button>
                 </div>
             </div>
         </div>
@@ -2952,7 +2980,7 @@
     </div>
 </div>
 
-<script src="scenarios/scenarios.js"></script>
+<script src="scenarios/scenarios.js" defer></script>
 <script>
     const AppConfig = {
         storageKeys: {
@@ -10557,7 +10585,8 @@ function openNpcProfile(npcId) {
                     body: JSON.stringify({ planId: selectedPlan, payType: selectedPayType })
                 });
                 const data = await res.json();
-                if (!res.ok || !data.payUrl) throw new Error(data.error || "创建订单失败");
+                // 微信支付走扫码:易支付只返回 qrcode、payurl 为空,payUrl/qrcode 任一存在即成功
+                if (!res.ok || (!data.payUrl && !data.qrcode)) throw new Error(data.error || "创建订单失败");
                 const payMethodName = selectedPayType === "alipay" ? "支付宝" : "微信";
                 let html = `<div class="list-sub" style="margin:8px 0;">订单号：${data.orderNo}，请用${payMethodName}扫码或跳转收银台完成支付。</div>`;
                 if (data.qrcode && /^https?:/.test(data.qrcode)) {
@@ -10857,20 +10886,11 @@ function openNpcProfile(npcId) {
         }
 
         async function init() {
-            // 先隐藏 app，避免未登录时闪现
-            const app = document.getElementById("app");
-            if (app) app.style.visibility = "hidden";
-
             const token = getToken();
             if (token) {
                 const valid = await verifyToken();
-                if (valid) {
-                    if (app) app.style.visibility = "";
-                    onLoginSuccess(getEmail());
-                    return true;
-                }
+                if (valid) { onLoginSuccess(getEmail()); return true; }
             }
-            if (app) app.style.visibility = "";
             showOverlay();
             return false;
         }
@@ -10885,9 +10905,18 @@ function openNpcProfile(npcId) {
         return { init, handleSubmit, toggleMode, logout, getToken, getEmail, getUserData, refreshBalance, updateUsageStatusUI, hasMembership };
     })();
 
-    window.onload = async () => {
-        await AuthService.init();
-        Controller.init();
+    function hideBootScreen() {
+        const b = document.getElementById("boot-screen");
+        if (!b || b.classList.contains("boot-done")) return;
+        b.classList.add("boot-done");
+        setTimeout(() => b.remove(), 400);
+    }
+
+    window.onload = () => {
+        // 先渲染本地数据(秒开),登录验证后台进行——慢网下不再白屏等待 auth
+        try { Controller.init(); } catch (e) { console.error("初始化失败", e); }
+        hideBootScreen();
+        AuthService.init();
     };
 </script>
 </body>
