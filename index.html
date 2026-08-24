@@ -593,28 +593,32 @@
             color: color-mix(in srgb, var(--sub) 78%, transparent);
         }
 
-        #story-board {
+        /* 卡片直接平铺在 view-main(原 story-board 容器已删除) */
+        #view-main {
             background: var(--story-board-bg);
-            border-color: var(--story-board-line);
+            border: 1px solid var(--story-board-line);
+            border-radius: var(--radius);
             box-shadow: var(--glow);
+            padding: 12px;
+            backdrop-filter: blur(10px);
             position: relative;
             overflow: hidden;
         }
 
-        #story-board > * {
+        #view-main > * {
             position: relative;
             z-index: 1;
         }
 
-        body[data-theme="dark"] #story-board::before,
-        body[data-theme="dark"] #story-board::after {
+        body[data-theme="dark"] #view-main::before,
+        body[data-theme="dark"] #view-main::after {
             content: "";
             position: absolute;
             inset: 0;
             pointer-events: none;
         }
 
-        body[data-theme="dark"] #story-board::before {
+        body[data-theme="dark"] #view-main::before {
             z-index: 0;
             background:
                 radial-gradient(circle at 12% 18%, rgba(255,255,255,0.95) 0 1px, transparent 1.8px),
@@ -627,7 +631,7 @@
             opacity: 0.9;
         }
 
-        body[data-theme="dark"] #story-board::after {
+        body[data-theme="dark"] #view-main::after {
             z-index: 0;
             background:
                 radial-gradient(circle at 50% -18%, rgba(141,124,255,0.26), transparent 46%),
@@ -780,9 +784,9 @@
         }
 
         /* ---- 聊天组件（Chat Components） ---- */
-        /* 消息直接平铺在 story-board,无外层容器;AI 卡片(article)与气泡同层级 */
+        /* 消息直接平铺在 view-main,无外层容器;AI 卡片(article)与气泡同层级 */
         .bubble,
-        #story-board > .ai-beauty-card {
+        #view-main > .ai-beauty-card {
             margin-bottom: 10px;
             position: relative;
             max-width: 100%;
@@ -1522,7 +1526,7 @@
 
         /* ============ M4 轻量动效:入场浮现 + 悬停微亮(尊重系统减少动效) ============ */
         .bubble,
-        #story-board > .ai-beauty-card {
+        #view-main > .ai-beauty-card {
             animation: storyLogIn 0.32s ease-out both;
         }
         @keyframes storyLogIn {
@@ -1535,7 +1539,7 @@
         }
         @media (prefers-reduced-motion: reduce) {
             .bubble,
-            #story-board > .ai-beauty-card { animation: none; }
+            #view-main > .ai-beauty-card { animation: none; }
             .card:hover,
             .ai-beauty-card:hover { filter: none; }
         }
@@ -2825,9 +2829,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
         </section>
         <!-- 保持 settings 视图正常闭合即可 -->
 
-        <section id="view-main" class="view-section active">
-        <section class="card" id="story-board"></section>
-        </section>
+        <section id="view-main" class="view-section active"></section>
 
         <section id="view-inventory" class="view-section">
             <section class="card" id="game-stats-card"></section>
@@ -5869,7 +5871,7 @@ function rebuildChoicesBlock(body, labels = []) {
             if (top < lastScrollTop - 2) autoFollowBottom = false;
             lastScrollTop = top;
         }
-        // 卡片(article)直接平铺到 story-board,无 bubble 容器
+        // 卡片(article)直接平铺到 view-main,无 bubble 容器
         function mountCardNode(board, html) {
             const temp = document.createElement("div");
             temp.innerHTML = html;
@@ -5879,7 +5881,7 @@ function rebuildChoicesBlock(body, labels = []) {
         }
         function appendMessage(role, text, dateStr, streaming) {
             const state = StateService.get();
-            const board = document.getElementById("story-board");
+            const board = document.getElementById("view-main");
             const normalizedText = role === "ai" ? HtmlCardService.normalizeHtmlCard(text) : text;
             const fillFields = role === "ai" && !streaming ? FillProtocolService.parse(normalizedText) : null;
             const canUseHtmlCard = !fillFields && role === "ai" && !streaming && HtmlCardService.isRenderableHtmlCard(normalizedText);
@@ -5932,7 +5934,7 @@ function rebuildChoicesBlock(body, labels = []) {
             let node = oldNode;
             if (fillFields) {
                 // 卡片直接平铺:新 article 替换流式期间的 bubble
-                node = mountCardNode(document.getElementById("story-board"), FillProtocolService.fillCardTemplate(FillProtocolService.getCardTheme(), fillFields));
+                node = mountCardNode(document.getElementById("view-main"), FillProtocolService.fillCardTemplate(FillProtocolService.getCardTheme(), fillFields));
                 if (node) oldNode.replaceWith(node);
                 if (node) {
                     HtmlCardService.applyReadableTextColors(node);
@@ -5944,7 +5946,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 const warningHtml = options.conflictDetected
                     ? '<div class="ai-card-warning">⚠️ 检测到设定冲突，已自动纠偏重试一次。</div>'
                     : "";
-                node = mountCardNode(document.getElementById("story-board"), `${warningHtml}${AiResponseLayoutService.renderAiMessage(normalizedText, false)}`);
+                node = mountCardNode(document.getElementById("view-main"), `${warningHtml}${AiResponseLayoutService.renderAiMessage(normalizedText, false)}`);
                 if (node) oldNode.replaceWith(node);
                 if (node) {
                     AiResponseLayoutService.applyCardTheme(node);
@@ -5968,13 +5970,13 @@ function rebuildChoicesBlock(body, labels = []) {
             scrollToBottom();
         }
         function renderHistory(history) {
-            const board = document.getElementById("story-board");
+            const board = document.getElementById("view-main");
             board.innerHTML = "";
             history.forEach((msg) => appendMessage(msg.role || "ai", msg.text, msg.date, false));
             scrollToBottom();
         }
         function patchLastAiMessage(text, options = {}) {
-            const board = document.getElementById("story-board");
+            const board = document.getElementById("view-main");
             if (!board) return false;
             // 最后一条 AI 消息:可能是平铺卡片(article)或纯文本气泡
             const aiRows = board.querySelectorAll(":scope > .ai-beauty-card, :scope > .bubble.ai");
@@ -6778,7 +6780,7 @@ function rebuildChoicesBlock(body, labels = []) {
         function maybeTriggerAnimation(text) {
             if (!text) return;
             if (!/(事件|触发|突发|获得|损失|变化)/.test(text)) return;
-            const board = document.getElementById("story-board");
+            const board = document.getElementById("view-main");
             board.classList.remove("event-flash");
             void board.offsetWidth;
             board.classList.add("event-flash");
