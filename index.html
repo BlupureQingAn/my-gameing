@@ -780,8 +780,9 @@
         }
 
         /* ---- 聊天组件（Chat Components） ---- */
-        /* 消息直接平铺在 story-board,无外层容器 */
-        .bubble {
+        /* 消息直接平铺在 story-board,无外层容器;AI 卡片(article)与气泡同层级 */
+        .bubble,
+        #story-board > .ai-beauty-card {
             margin-bottom: 10px;
             position: relative;
             max-width: 100%;
@@ -1520,7 +1521,8 @@
         }
 
         /* ============ M4 轻量动效:入场浮现 + 悬停微亮(尊重系统减少动效) ============ */
-        .bubble {
+        .bubble,
+        #story-board > .ai-beauty-card {
             animation: storyLogIn 0.32s ease-out both;
         }
         @keyframes storyLogIn {
@@ -1532,7 +1534,8 @@
             filter: brightness(1.045);
         }
         @media (prefers-reduced-motion: reduce) {
-            .bubble { animation: none; }
+            .bubble,
+            #story-board > .ai-beauty-card { animation: none; }
             .card:hover,
             .ai-beauty-card:hover { filter: none; }
         }
@@ -4386,7 +4389,8 @@ function rebuildChoicesBlock(body, labels = []) {
         }
         function bindHtmlChoiceEvents(container) {
             if (!container) return;
-            const card = container.querySelector(".ai-beauty-card");
+            // 兼容两种形态:卡片被 bubble 包裹(旧)或直接平铺(自身即卡片)
+            const card = container.querySelector(".ai-beauty-card") || (container.classList.contains("ai-beauty-card") ? container : null);
             if (!(card instanceof HTMLElement)) return;
             HtmlCardService.applyReadableTextColors(card);
             const isTrueChoiceNode = (el) => {
@@ -4472,7 +4476,7 @@ function rebuildChoicesBlock(body, labels = []) {
         // AI 直接输出 HTML 的卡片注入主题 class(JSON 填空路径 fillCardTemplate 已自带,此处补主路径)
         function applyCardTheme(container) {
             if (!(container instanceof HTMLElement)) return;
-            const card = container.querySelector(".ai-beauty-card");
+            const card = container.querySelector(".ai-beauty-card") || (container.classList.contains("ai-beauty-card") ? container : null);
             if (!(card instanceof HTMLElement)) return;
             let themeKey = "";
             try { themeKey = String(FillProtocolService.getCardTheme() || "").replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase(); } catch { }
@@ -5865,28 +5869,38 @@ function rebuildChoicesBlock(body, labels = []) {
             if (top < lastScrollTop - 2) autoFollowBottom = false;
             lastScrollTop = top;
         }
+        // 卡片(article)直接平铺到 story-board,无 bubble 容器
+        function mountCardNode(board, html) {
+            const temp = document.createElement("div");
+            temp.innerHTML = html;
+            const node = temp.firstElementChild;
+            if (node) board.appendChild(node);
+            return node;
+        }
         function appendMessage(role, text, dateStr, streaming) {
             const state = StateService.get();
             const board = document.getElementById("story-board");
-            const bubble = document.createElement("div");
-            bubble.className = `bubble ${role === "user" ? "user" : "ai"}`;
             const normalizedText = role === "ai" ? HtmlCardService.normalizeHtmlCard(text) : text;
             const fillFields = role === "ai" && !streaming ? FillProtocolService.parse(normalizedText) : null;
             const canUseHtmlCard = !fillFields && role === "ai" && !streaming && HtmlCardService.isRenderableHtmlCard(normalizedText);
-            if (fillFields || canUseHtmlCard) bubble.classList.add("html-host");
-            bubble.innerHTML = fillFields
-                ? FillProtocolService.fillCardTemplate(FillProtocolService.getCardTheme(), fillFields)
-                : canUseHtmlCard
-                    ? AiResponseLayoutService.renderAiMessage(normalizedText, false)
-                    : MarkdownService.render(text) + (streaming ? '<span class="streaming-cursor"></span>' : "");
             if (fillFields || canUseHtmlCard) {
-                if (canUseHtmlCard) AiResponseLayoutService.applyCardTheme(bubble);
-                HtmlCardService.applyReadableTextColors(bubble);
-                AiResponseLayoutService.bindHtmlChoiceEvents(bubble);
-                AiResponseLayoutService.injectStatsIntoCard(bubble);
-                VisualEffects.decorateAiCardBears(bubble);
+                const cardHtml = fillFields
+                    ? FillProtocolService.fillCardTemplate(FillProtocolService.getCardTheme(), fillFields)
+                    : AiResponseLayoutService.renderAiMessage(normalizedText, false);
+                const node = mountCardNode(board, cardHtml);
+                if (node) {
+                    if (canUseHtmlCard) AiResponseLayoutService.applyCardTheme(node);
+                    HtmlCardService.applyReadableTextColors(node);
+                    AiResponseLayoutService.bindHtmlChoiceEvents(node);
+                    AiResponseLayoutService.injectStatsIntoCard(node);
+                    VisualEffects.decorateAiCardBears(node);
+                }
+                scrollToBottom();
+                return;
             }
-
+            const bubble = document.createElement("div");
+            bubble.className = `bubble ${role === "user" ? "user" : "ai"}`;
+            bubble.innerHTML = MarkdownService.render(text) + (streaming ? '<span class="streaming-cursor"></span>' : "");
             board.appendChild(bubble);
             if (streaming) {
                 currentStreamingTarget = bubble;
@@ -5914,29 +5928,36 @@ function rebuildChoicesBlock(body, labels = []) {
             const normalizedText = HtmlCardService.normalizeHtmlCard(text);
             const fillFields = FillProtocolService.parse(normalizedText);
             const hasHtmlCard = !fillFields && HtmlCardService.isRenderableHtmlCard(normalizedText);
+            const oldNode = currentStreamingTarget;
+            let node = oldNode;
             if (fillFields) {
-                currentStreamingTarget.classList.add("html-host");
-                currentStreamingTarget.innerHTML = FillProtocolService.fillCardTemplate(FillProtocolService.getCardTheme(), fillFields);
-                HtmlCardService.applyReadableTextColors(currentStreamingTarget);
-                AiResponseLayoutService.bindHtmlChoiceEvents(currentStreamingTarget);
-                AiResponseLayoutService.injectStatsIntoCard(currentStreamingTarget);
-                VisualEffects.decorateAiCardBears(currentStreamingTarget);
+                // 卡片直接平铺:新 article 替换流式期间的 bubble
+                node = mountCardNode(document.getElementById("story-board"), FillProtocolService.fillCardTemplate(FillProtocolService.getCardTheme(), fillFields));
+                if (node) oldNode.replaceWith(node);
+                if (node) {
+                    HtmlCardService.applyReadableTextColors(node);
+                    AiResponseLayoutService.bindHtmlChoiceEvents(node);
+                    AiResponseLayoutService.injectStatsIntoCard(node);
+                    VisualEffects.decorateAiCardBears(node);
+                }
             } else if (hasHtmlCard) {
-                currentStreamingTarget.classList.add("html-host");
                 const warningHtml = options.conflictDetected
                     ? '<div class="ai-card-warning">⚠️ 检测到设定冲突，已自动纠偏重试一次。</div>'
                     : "";
-                currentStreamingTarget.innerHTML = `${warningHtml}${AiResponseLayoutService.renderAiMessage(normalizedText, false)}`;
-                AiResponseLayoutService.applyCardTheme(currentStreamingTarget);
-                HtmlCardService.applyReadableTextColors(currentStreamingTarget);
-                AiResponseLayoutService.bindHtmlChoiceEvents(currentStreamingTarget);
-                AiResponseLayoutService.injectStatsIntoCard(currentStreamingTarget);
-                VisualEffects.decorateAiCardBears(currentStreamingTarget);
+                node = mountCardNode(document.getElementById("story-board"), `${warningHtml}${AiResponseLayoutService.renderAiMessage(normalizedText, false)}`);
+                if (node) oldNode.replaceWith(node);
+                if (node) {
+                    AiResponseLayoutService.applyCardTheme(node);
+                    HtmlCardService.applyReadableTextColors(node);
+                    AiResponseLayoutService.bindHtmlChoiceEvents(node);
+                    AiResponseLayoutService.injectStatsIntoCard(node);
+                    VisualEffects.decorateAiCardBears(node);
+                }
             } else {
-                currentStreamingTarget.classList.remove("html-host");
-                currentStreamingTarget.innerHTML = AiResponseLayoutService.renderAiMessage(`${prefix}${text}`, false);
+                oldNode.classList.remove("html-host");
+                oldNode.innerHTML = AiResponseLayoutService.renderAiMessage(`${prefix}${text}`, false);
             }
-            if (currentStreamingTarget && options.conflictDetected) currentStreamingTarget.classList.add("conflict");
+            if (options.conflictDetected) node.classList.add("conflict");
             currentStreamingTarget = null;
             streamPendingText = null;
             streamLastRenderAt = 0;
@@ -5955,32 +5976,36 @@ function rebuildChoicesBlock(body, labels = []) {
         function patchLastAiMessage(text, options = {}) {
             const board = document.getElementById("story-board");
             if (!board) return false;
-            const aiRows = board.querySelectorAll(".bubble.ai");
-            const bubble = aiRows.length ? aiRows[aiRows.length - 1] : null;
-            if (!(bubble instanceof HTMLElement)) return false;
+            // 最后一条 AI 消息:可能是平铺卡片(article)或纯文本气泡
+            const aiRows = board.querySelectorAll(":scope > .ai-beauty-card, :scope > .bubble.ai");
+            const node = aiRows.length ? aiRows[aiRows.length - 1] : null;
+            if (!(node instanceof HTMLElement)) return false;
             const normalizedText = HtmlCardService.normalizeHtmlCard(text);
             const fillFields = FillProtocolService.parse(normalizedText);
             const hasHtmlCard = !fillFields && HtmlCardService.isRenderableHtmlCard(normalizedText);
             if (fillFields) {
-                bubble.classList.add("html-host");
-                bubble.innerHTML = FillProtocolService.fillCardTemplate(FillProtocolService.getCardTheme(), fillFields);
-                HtmlCardService.applyReadableTextColors(bubble);
-                AiResponseLayoutService.bindHtmlChoiceEvents(bubble);
-                AiResponseLayoutService.injectStatsIntoCard(bubble);
-                VisualEffects.decorateAiCardBears(bubble);
+                const next = mountCardNode(board, FillProtocolService.fillCardTemplate(FillProtocolService.getCardTheme(), fillFields));
+                if (next) node.replaceWith(next);
+                const target = next || node;
+                HtmlCardService.applyReadableTextColors(target);
+                AiResponseLayoutService.bindHtmlChoiceEvents(target);
+                AiResponseLayoutService.injectStatsIntoCard(target);
+                VisualEffects.decorateAiCardBears(target);
             } else if (hasHtmlCard) {
-                bubble.classList.add("html-host");
                 const warningHtml = options.conflictDetected
                     ? '<div class="ai-card-warning">⚠️ 检测到设定冲突，已自动纠偏重试一次。</div>'
                     : "";
-                bubble.innerHTML = `${warningHtml}${AiResponseLayoutService.renderAiMessage(normalizedText, false)}`;
-                AiResponseLayoutService.applyCardTheme(bubble);
-                AiResponseLayoutService.bindHtmlChoiceEvents(bubble);
-                AiResponseLayoutService.injectStatsIntoCard(bubble);
-                VisualEffects.decorateAiCardBears(bubble);
+                const next = mountCardNode(board, `${warningHtml}${AiResponseLayoutService.renderAiMessage(normalizedText, false)}`);
+                if (next) node.replaceWith(next);
+                const target = next || node;
+                AiResponseLayoutService.applyCardTheme(target);
+                HtmlCardService.applyReadableTextColors(target);
+                AiResponseLayoutService.bindHtmlChoiceEvents(target);
+                AiResponseLayoutService.injectStatsIntoCard(target);
+                VisualEffects.decorateAiCardBears(target);
             } else {
-                bubble.classList.remove("html-host");
-                bubble.innerHTML = AiResponseLayoutService.renderAiMessage(String(text || ""), false);
+                node.classList.remove("html-host");
+                node.innerHTML = AiResponseLayoutService.renderAiMessage(String(text || ""), false);
             }
             scrollToBottom();
             return true;
@@ -8285,7 +8310,7 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
     })();
 
     const AIRequestService = (() => {
-        const REQUEST_TIMEOUT_MS = 10000;  // 连接超时 10s，快速失败触发重试
+        const REQUEST_TIMEOUT_MS = 20000;  // 连接超时 20s（上游慢模型首响应可能 >10s，过短会误杀）
         const READ_TIMEOUT_MS = 90000;     // 流式读取超时 90s，允许长文本生成
         const STREAM_IDLE_TIMEOUT_MS = 30000; // 流式空闲超时:30s 无数据块(模型卡死/思考中)则中断,由 fetchWithRetry 重试换模型
         const INIT_REQUEST_TIMEOUT_MS = 20000; // 初始化各子请求超时(仅 AI 回退防御链使用,M1 后常规开局零请求)
@@ -8377,7 +8402,8 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
                 });
             } catch (e) {
                 clearTimeout(timer);
-                if (e?.name === "AbortError") {
+                // Chrome 对 abort 统一 reject TypeError，不能靠 e.name 判断超时；signal.aborted 才是可靠信号
+                if (controller.signal.aborted) {
                     throw createHttpError(408, `连接超时（>${REQUEST_TIMEOUT_MS / 1000}s）`, { endpoint: fetchUrl });
                 }
                 throw e;
@@ -8484,7 +8510,7 @@ const token = delta.content || "";
                     signal: controller.signal
                 });
             } catch (e) {
-                if (e?.name === "AbortError") {
+                if (controller.signal.aborted) {
                     throw createHttpError(408, `请求超时（>${Math.round(timeoutMs / 1000)}s）`, { endpoint: fetchUrl });
                 }
                 throw e;
@@ -9728,9 +9754,11 @@ const token = delta.content || "";
                     UIRenderer.setSendingDisabled(false);
                     uiUnlocked = true;
                     let extraHint = "";
-                    if (error.workerCode === "QUOTA_EXCEEDED") extraHint = "\n\n点击右上角「当前会员类型」可开通会员，立即不限量。";
-                    else if (error.workerCode === "MEMBERSHIP_EXPIRED") extraHint = "\n\n会员已到期，点击右上角「当前会员类型」可立即续费。";
-                    UIRenderer.finishStreaming(`⚠️ 连接失败：${error.message}${extraHint}\n\n请检查网络后重试。`, { conflictDetected: false });
+                    if (error?.workerCode === "QUOTA_EXCEEDED") extraHint = "\n\n点击右上角「当前会员类型」可开通会员，立即不限量。";
+                    else if (error?.workerCode === "MEMBERSHIP_EXPIRED") extraHint = "\n\n会员已到期，点击右上角「当前会员类型」可立即续费。";
+                    // 网络层 reject 可能是裸对象/字符串/无 message，兜底显示可读文案,杜绝 "undefined"
+                    const errText = error?.message || (typeof error === "string" ? error : "网络连接中断，请稍后重试");
+                    UIRenderer.finishStreaming(`⚠️ 连接失败：${errText}${extraHint}\n\n请检查网络后重试。`, { conflictDetected: false });
                 }
             } finally {
                 if (!uiUnlocked) {
