@@ -22,6 +22,9 @@ const MODEL_POOL = [
     { id: "ca-deepseek-v3.2",          url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "deepseek-v3.2",        dailyCap: 30, tier: 20, enabled: true },
     { id: "ca-deepseek-v4-flash",      url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "deepseek-v4-flash",    dailyCap: 30, tier: 20, enabled: true },
     { id: "ca-deepseek-v4-pro",        url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "deepseek-v4-pro",      dailyCap: 30, tier: 20, enabled: true },
+    // ---- 智谱（实测 glm-4-air TTFB 1ms/139字/s,池内最快;与 ca-deepseek 同档交替）----
+    { id: "zp-glm-4-air",   url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY", model: "glm-4-air",   dailyCap: 100, tier: 20, enabled: true },
+    { id: "zp-glm-4-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY", model: "glm-4-flash", dailyCap: 500, tier: 25, enabled: true },
     // 思考模型 TTFT 10-20s,文游快节奏交互禁用(2026-08-24 性能优化)
     { id: "ca-deepseek-v3.2-thinking", url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "deepseek-v3.2-thinking", dailyCap: 30, tier: 95, enabled: false },
     // ---- ChatAnywhere 5次/天档 ----
@@ -47,7 +50,7 @@ const PAY_PLANS = {
 };
 
 // 环境变量（Cloudflare Secrets，勿写入代码）：
-//   CHATANYWHERE_KEY / SILICONFLOW_KEY / NVIDIA_KEY / DEEPSEEK_KEY / PB_URL / PB_ADMIN_EMAIL / PB_ADMIN_PASSWORD
+//   CHATANYWHERE_KEY / SILICONFLOW_KEY / NVIDIA_KEY / DEEPSEEK_KEY / ZHIPU_KEY / PB_URL / PB_ADMIN_EMAIL / PB_ADMIN_PASSWORD
 //   PAY_APP_ID=5435 / PAY_APP_SECRET / PAY_MAPI_URL=https://ezfp.cn/mapi.php / PAY_QUERY_URL=https://ezfp.cn/api.php
 //   PAY_NOTIFY_URL=https://ai.blupure.cn/api/pay/notify
 
