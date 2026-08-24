@@ -10469,6 +10469,8 @@ function openNpcProfile(npcId) {
         let selectedPlan = "monthly";
         let selectedPayType = "alipay";
         let _pollTimer = null;
+        let _currentOrder = null;   // 当前进行中的订单:重复点击立即支付时复用,不重复创建
+        let _creatingOrder = false; // 创建中锁,防双击产生两个订单
 
         function openPanel() {
             const modal = document.getElementById("membership-modal");
@@ -10488,6 +10490,7 @@ function openNpcProfile(npcId) {
             if (modal) modal.style.display = "none";
             stopPoll();
             stopCountdown();
+            _currentOrder = null; // 关闭面板视为放弃当前订单,下次支付重新创建
         }
         function renderPlans() {
             const grid = document.getElementById("membership-plan-grid");
@@ -10526,17 +10529,41 @@ function openNpcProfile(npcId) {
         }
         function stopCountdown() { if (_cdTimer) { clearInterval(_cdTimer); _cdTimer = null; } }
         function selectPlan(id) {
+            if (id !== selectedPlan) _currentOrder = null; // 套餐变了,旧订单作废
             selectedPlan = id;
             renderPlans();
         }
         function selectPayType(type) {
+            if (type !== selectedPayType) _currentOrder = null; // 支付方式变了,旧订单作废
             selectedPayType = type;
             document.querySelectorAll(".pay-method-btn").forEach(b => b.classList.toggle("active", b.dataset.pay === type));
+        }
+        function renderOrder(order) {
+            const payArea = document.getElementById("membership-pay-area");
+            if (!payArea) return;
+            const payMethodName = order.payType === "alipay" ? "支付宝" : "微信";
+            let html = `<div class="list-sub" style="margin:8px 0;">订单号：${order.orderNo}，请用${payMethodName}扫码或跳转收银台完成支付。</div>`;
+            if (order.qrcode && /^https?:/.test(order.qrcode)) {
+                html += `<img src="${order.qrcode}" alt="支付二维码" style="width:180px;height:180px;border-radius:12px;display:block;margin:8px auto;">`;
+            }
+            if (/^https?:/.test(order.payUrl)) {
+                html += `<a class="mini-btn primary" style="display:inline-block;text-decoration:none;text-align:center;margin-top:8px;" href="${order.payUrl}" target="_blank" rel="noopener">前往收银台支付</a>`;
+            }
+            html += '<div class="list-sub" style="margin-top:8px;">支付完成后将自动开通会员（1-2 分钟内生效）</div>';
+            payArea.innerHTML = html;
         }
         async function startPay() {
             const user = AuthService.getUserData();
             if (!user) { NoticeModalService.showInfo({ title: "提示", descHtml: "请先登录" }); return; }
             const payArea = document.getElementById("membership-pay-area");
+            // 已有同套餐同支付方式的未完成订单:直接复用,不重复创建
+            if (_currentOrder && _currentOrder.payType === selectedPayType && _currentOrder.planId === selectedPlan) {
+                renderOrder(_currentOrder);
+                startPoll(_currentOrder.orderNo);
+                return;
+            }
+            if (_creatingOrder) return; // 创建中,防双击重复下单
+            _creatingOrder = true;
             if (payArea) payArea.innerHTML = '<div class="list-sub">正在创建订单...</div>';
             try {
                 const res = await fetch(`${AppConfig.proxy.baseUrl}/api/pay/create`, {
@@ -10547,19 +10574,13 @@ function openNpcProfile(npcId) {
                 const data = await res.json();
                 // 微信支付走扫码:易支付只返回 qrcode、payurl 为空,payUrl/qrcode 任一存在即成功
                 if (!res.ok || (!data.payUrl && !data.qrcode)) throw new Error(data.error || "创建订单失败");
-                const payMethodName = selectedPayType === "alipay" ? "支付宝" : "微信";
-                let html = `<div class="list-sub" style="margin:8px 0;">订单号：${data.orderNo}，请用${payMethodName}扫码或跳转收银台完成支付。</div>`;
-                if (data.qrcode && /^https?:/.test(data.qrcode)) {
-                    html += `<img src="${data.qrcode}" alt="支付二维码" style="width:180px;height:180px;border-radius:12px;display:block;margin:8px auto;">`;
-                }
-                if (/^https?:/.test(data.payUrl)) {
-                    html += `<a class="mini-btn primary" style="display:inline-block;text-decoration:none;text-align:center;margin-top:8px;" href="${data.payUrl}" target="_blank" rel="noopener">前往收银台支付</a>`;
-                }
-                html += '<div class="list-sub" style="margin-top:8px;">支付完成后将自动开通会员（1-2 分钟内生效）</div>';
-                if (payArea) payArea.innerHTML = html;
+                _currentOrder = { orderNo: data.orderNo, qrcode: data.qrcode || "", payUrl: data.payUrl || "", payType: selectedPayType, planId: selectedPlan };
+                renderOrder(_currentOrder);
                 startPoll(data.orderNo);
             } catch (e) {
                 if (payArea) payArea.innerHTML = `<div class="list-sub" style="color:#c0392b;">${MarkdownService.escapeHtml(e.message)}</div>`;
+            } finally {
+                _creatingOrder = false;
             }
         }
         function startPoll(orderNo) {
