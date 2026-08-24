@@ -22,9 +22,9 @@ const MODEL_POOL = [
     { id: "ca-deepseek-v3.2",          url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "deepseek-v3.2",        dailyCap: 30, tier: 20, enabled: true },
     { id: "ca-deepseek-v4-flash",      url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "deepseek-v4-flash",    dailyCap: 30, tier: 20, enabled: true },
     { id: "ca-deepseek-v4-pro",        url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "deepseek-v4-pro",      dailyCap: 30, tier: 20, enabled: true },
-    // ---- 智谱（实测 glm-4-air TTFB 1ms/139字/s,池内最快;与 ca-deepseek 同档交替）----
-    { id: "zp-glm-4-air",   url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY", model: "glm-4-air",   dailyCap: 100, tier: 20, enabled: true },
-    { id: "zp-glm-4-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY", model: "glm-4-flash", dailyCap: 500, tier: 25, enabled: true },
+    // ---- 智谱（实测 glm-4-air TTFB 1ms/139字/s,池内最快;免费模型无硬日限,配额大幅提高以防 503）----
+    { id: "zp-glm-4-air",   url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY", model: "glm-4-air",   dailyCap: 1000, tier: 20, enabled: true },
+    { id: "zp-glm-4-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY", model: "glm-4-flash", dailyCap: 5000, tier: 25, enabled: true },
     // 思考模型 TTFT 10-20s,文游快节奏交互禁用(2026-08-24 性能优化)
     { id: "ca-deepseek-v3.2-thinking", url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "deepseek-v3.2-thinking", dailyCap: 30, tier: 95, enabled: false },
     // ---- ChatAnywhere 5次/天档 ----
@@ -34,9 +34,9 @@ const MODEL_POOL = [
     // ---- DeepSeek 官方（池内禁用，等流量大了再启用）----
     { id: "ds-deepseek-chat",     url: "https://api.deepseek.com/v1", apiKeyEnv: "DEEPSEEK_KEY",     model: "deepseek-chat",     dailyCap: Infinity, tier: 40, enabled: false },
     { id: "ds-deepseek-reasoner", url: "https://api.deepseek.com/v1", apiKeyEnv: "DEEPSEEK_KEY",     model: "deepseek-reasoner", dailyCap: Infinity, tier: 40, enabled: false },
-    // ---- NVIDIA（原 free 卡 primary，免费额度）----
+    // ---- NVIDIA（2026-08-24 实测 12s+ 无响应疑似额度耗尽,禁用防拖慢 fallback;key 恢复后启用）----
     // NVIDIA:原 qwen3.5-122b-a10b 已于 2026-07-20 EOL(HTTP 410),换 llama-3.3-70b-instruct(实测 TTFB 27ms)
-    { id: "nv-llama-3.3-70b", url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY",  model: "meta/llama-3.3-70b-instruct", dailyCap: Infinity, tier: 90, enabled: true },
+    { id: "nv-llama-3.3-70b", url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY",  model: "meta/llama-3.3-70b-instruct", dailyCap: Infinity, tier: 90, enabled: false },
     // ---- SiliconFlow Qwen3-8B（免费，最后兜底）----
     { id: "sf-qwen3-8b",      url: "https://api.siliconflow.cn/v1",      apiKeyEnv: "SILICONFLOW_KEY", model: "Qwen/Qwen3-8B",     dailyCap: Infinity, tier: 99, enabled: true },
 ];
