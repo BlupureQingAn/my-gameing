@@ -38,6 +38,45 @@ const MODEL_POOL = [
     { id: "sf-qwen3-8b",      url: "https://api.siliconflow.cn/v1",      apiKeyEnv: "SILICONFLOW_KEY", model: "Qwen/Qwen3-8B",     dailyCap: Infinity, tier: 99, enabled: true },
 ];
 
+// ==================== 上游限流管理(防 429) ====================
+// 智谱按"并发数"限流(免费档并发极低,第三方实测 ~5RPM),会员绕过 dailyCap 后洪峰更需客户端自限速
+// 策略(openai-cookbook 最佳实践):并发信号量 + 滑动窗口,本地近似(CF 多实例叠加后仍留余量)
+const RATE_LIMIT = { concurrency: 2, windowMs: 60 * 1000, maxPerWindow: 12, acquireTimeoutMs: 8000 };
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const upstreamGates = new Map(); // apiKeyEnv -> { active, timestamps }
+function gateFor(envName) {
+    let g = upstreamGates.get(envName);
+    if (!g) { g = { active: 0, timestamps: [] }; upstreamGates.set(envName, g); }
+    return g;
+}
+async function gateAcquire(envName) {
+    const g = gateFor(envName);
+    const start = Date.now();
+    while (true) {
+        const now = Date.now();
+        g.timestamps = g.timestamps.filter(t => now - t < RATE_LIMIT.windowMs);
+        if (g.active < RATE_LIMIT.concurrency && g.timestamps.length < RATE_LIMIT.maxPerWindow) {
+            g.active++;
+            g.timestamps.push(now);
+            return true;
+        }
+        if (Date.now() - start > RATE_LIMIT.acquireTimeoutMs) return false;
+        await sleep(50);
+    }
+}
+function gateRelease(envName) {
+    const g = upstreamGates.get(envName);
+    if (g && g.active > 0) g.active--;
+}
+// Retry-After 解析:优先毫秒(OpenAI 系 retry-after-ms),其次秒(HTTP 标准 retry-after)
+function parseRetryAfterMs(resp) {
+    const ms = resp.headers.get("retry-after-ms") || resp.headers.get("x-ratelimit-reset-requests");
+    if (ms) { const n = parseInt(ms, 10); if (!isNaN(n)) return n; }
+    const s = resp.headers.get("retry-after");
+    if (s) { const n = parseInt(s, 10); if (!isNaN(n)) return n * 1000; }
+    return null;
+}
+
 // 失败熔断:候选模型调用失败后 5 分钟内直接跳过,避免每次请求都重走失败链
 // (实测:key 过期的 ChatAnywhere 每次 ~0.5s 失败 × 11 个候选 = 每请求固定浪费 ~6.5s)
 // CF Workers 多实例内存隔离,仅用 Map 时每实例各自重走失败链;叠加 Cache API(zone 内全局共享)做跨实例熔断
@@ -448,39 +487,70 @@ export default {
                     const apiKey = env[target.apiKeyEnv];
                     if (!apiKey) { attempts.push(`${target.id}:nokey`); continue; }
                     const base = target.url.replace(/\/$/, "");
-                    const controller = new AbortController();
-                    const timeoutMs = isStream ? 15000 : 120000; // 流式仅等响应头(15s),body 透传由前端控制;慢模型快速 fallback
-                    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+                    // 上游限流门控:并发/速率超限拿不到令牌 → 换候选(避免自触发 1302/1305)
+                    if (!(await gateAcquire(target.apiKeyEnv))) { attempts.push(`${target.id}:busy`); continue; }
+                    let resp = null;
+                    let respStatus = 0;
                     try {
-                        const payload = { ...requestJson, model: target.model };
-                        // Qwen3-8B 默认开启思考模式(reasoning 占 87% token,耗时 28-37s),强制关闭提速 ~20 倍
-                        if (target.id === "sf-qwen3-8b") payload.enable_thinking = false;
-                        const resp = await fetch(`${base}/chat/completions`, {
-                            method: "POST",
-                            headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-                            body: JSON.stringify(payload),
-                            signal: controller.signal
-                        });
-                        clearTimeout(timeout);
-                        attempts.push(`${target.id}:${resp.status}:${Date.now() - attemptStart}ms`);
-                        if (resp.status >= 400) {
-                            const bodyPreview = (await resp.text()).slice(0, 80).replace(/\s+/g, " ");
-                            attempts[attempts.length - 1] += ` [${bodyPreview}]`;
+                        // 429(账户/模型限流)可恢复:尊重 Retry-After 短等待后同模型重试 1 次,不触发熔断
+                        // 网络抖动也重试 1 次;超时/其他错误直接换候选
+                        for (let retry = 0; retry <= 1; retry++) {
+                            const controller = new AbortController();
+                            const timeoutMs = isStream ? 15000 : 120000; // 流式仅等响应头(15s),body 透传由前端控制;慢模型快速 fallback
+                            const timeout = setTimeout(() => controller.abort(), timeoutMs);
+                            try {
+                                const payload = { ...requestJson, model: target.model };
+                                // Qwen3-8B 默认开启思考模式(reasoning 占 87% token,耗时 28-37s),强制关闭提速 ~20 倍
+                                if (target.id === "sf-qwen3-8b") payload.enable_thinking = false;
+                                const r = await fetch(`${base}/chat/completions`, {
+                                    method: "POST",
+                                    headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+                                    body: JSON.stringify(payload),
+                                    signal: controller.signal
+                                });
+                                clearTimeout(timeout);
+                                resp = r;
+                                respStatus = r.status;
+                                if (r.status === 429) {
+                                    const bodyPreview = (await r.text()).slice(0, 60).replace(/\s+/g, " ");
+                                    if (retry === 0) {
+                                        const ra = parseRetryAfterMs(r);
+                                        if (ra !== null && ra <= 2000) {
+                                            attempts.push(`${target.id}:429:${Date.now() - attemptStart}ms [${bodyPreview}] → 等 ${ra}ms 重试`);
+                                            await sleep(ra + Math.floor(Math.random() * 100)); // Retry-After + 抖动防惊群
+                                            continue;
+                                        }
+                                    }
+                                    attempts.push(`${target.id}:429:${Date.now() - attemptStart}ms [${bodyPreview}]`); // 限流可恢复,不熔断,换候选
+                                    resp = null;
+                                    break;
+                                }
+                                break;
+                            } catch (e) {
+                                clearTimeout(timeout);
+                                if (retry === 0 && !controller.signal.aborted) continue; // 网络抖动重试 1 次,超时不重试
+                                attempts.push(`${target.id}:err:${Date.now() - attemptStart}ms`);
+                                resp = null;
+                                break;
+                            }
                         }
-                        if (resp.ok) {
-                            await clearModelCooldown(target.id); // 成功即解除熔断
-                            aiResponse = resp;
-                            usedModel = target;
-                            break;
-                        }
-                        await setModelCooldown(target.id);
-                        console.warn(`model ${target.id} failed (${resp.status}), fallback next`);
-                    } catch (e) {
-                        clearTimeout(timeout);
-                        await setModelCooldown(target.id);
-                        attempts.push(`${target.id}:err:${Date.now() - attemptStart}ms`);
-                        console.warn(`model ${target.id} error: ${e.message}, fallback next`);
+                    } finally {
+                        gateRelease(target.apiKeyEnv);
                     }
+                    if (!resp) continue;
+                    attempts.push(`${target.id}:${respStatus}:${Date.now() - attemptStart}ms`);
+                    if (respStatus >= 400) {
+                        const bodyPreview = (await resp.text()).slice(0, 80).replace(/\s+/g, " ");
+                        attempts[attempts.length - 1] += ` [${bodyPreview}]`;
+                    }
+                    if (resp.ok) {
+                        await clearModelCooldown(target.id); // 成功即解除熔断
+                        aiResponse = resp;
+                        usedModel = target;
+                        break;
+                    }
+                    await setModelCooldown(target.id);
+                    console.warn(`model ${target.id} failed (${respStatus}), fallback next`);
                 }
                 if (!aiResponse) {
                     return errorResponse("AI 服务暂时不可用，请稍后重试", 503, null, "POOL_UNAVAILABLE");
