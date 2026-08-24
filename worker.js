@@ -260,11 +260,12 @@ function isMemberExpired(record) {
 }
 
 // 按 tier 升序选当日未超限的第一个 enabled 模型；全无返回 null
-function pickModel(usageMap, today) {
+function pickModel(usageMap, today, isMember) {
+    // 会员不受池配额(dailyCap)限制:付费用户优先命中池内最优质模型,且不占用免费用户配额
     return MODEL_POOL
         .filter(m => m.enabled)
         .sort((a, b) => a.tier - b.tier)
-        .find(m => (usageMap[m.id] || 0) < m.dailyCap) || null;
+        .find(m => isMember || (usageMap[m.id] || 0) < m.dailyCap) || null;
 }
 
 // ==================== 5. 易支付（ezfp.cn） ====================
@@ -427,7 +428,7 @@ export default {
                 // 模型池路由
                 const today = getTodayStr();
                 const usageMap = await readModelUsageMap(env, today);
-                const picked = pickModel(usageMap, today);
+                const picked = pickModel(usageMap, today, isMemberUser);
                 if (!picked) {
                     return errorResponse("今日全部模型配额已用尽，请明天再试", 429, null, "QUOTA_EXCEEDED");
                 }
@@ -485,11 +486,13 @@ export default {
                     return errorResponse("AI 服务暂时不可用，请稍后重试", 503, null, "POOL_UNAVAILABLE");
                 }
 
-                // 成功后才计数（失败不扣次数）；会员不扣用户次数但照记模型级配额
+                // 成功后才计数（失败不扣次数）；会员不扣用户次数也不占模型级配额（绕过 dailyCap 的同时不挤压免费用户）
                 ctx.waitUntil((async () => {
                     try {
-                        await bumpModelUsage(env, usedModel.id, today);
-                        if (!isMemberUser) await bumpUserUsage(env, userId, record.usage_date, record.usage_count);
+                        if (!isMemberUser) {
+                            await bumpModelUsage(env, usedModel.id, today);
+                            await bumpUserUsage(env, userId, record.usage_date, record.usage_count);
+                        }
                     } catch (e) {
                         console.error("usage bump failed:", e.message);
                     }
