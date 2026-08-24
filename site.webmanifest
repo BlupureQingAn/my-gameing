@@ -1,0 +1,1 @@
+{"name":"云吞吞文游模拟器","short_name":"云吞吞","description":"AI 驱动的文字剧情互动游戏","icons":[{"src":"/icons/android-chrome-192x192.png","sizes":"192x192","type":"image/png"},{"src":"/icons/android-chrome-512x512.png","sizes":"512x512","type":"image/png"}],"theme_color":"#b08652","background_color":"#efe3cf","display":"standalone","start_url":"/"}
