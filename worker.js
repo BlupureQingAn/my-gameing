@@ -43,17 +43,40 @@ const MODEL_POOL = [
 
 // 失败熔断:候选模型调用失败后 5 分钟内直接跳过,避免每次请求都重走失败链
 // (实测:key 过期的 ChatAnywhere 每次 ~0.5s 失败 × 11 个候选 = 每请求固定浪费 ~6.5s)
+// CF Workers 多实例内存隔离,仅用 Map 时每实例各自重走失败链;叠加 Cache API(zone 内全局共享)做跨实例熔断
 const MODEL_FAIL_COOLDOWN_MS = 5 * 60 * 1000;
-const modelFailTimes = new Map(); // modelId -> lastFailTime
+const modelFailTimes = new Map(); // modelId -> lastFailTime (本实例内存快路径)
 
-function isModelInCooldown(modelId) {
+const failCacheUrl = (modelId) => `https://ai.blupure.cn/_internal/fail/${encodeURIComponent(modelId)}`;
+
+async function isModelInCooldown(modelId) {
     const t = modelFailTimes.get(modelId);
-    if (!t) return false;
-    if (Date.now() - t > MODEL_FAIL_COOLDOWN_MS) {
-        modelFailTimes.delete(modelId);
-        return false;
+    if (t) {
+        if (Date.now() - t > MODEL_FAIL_COOLDOWN_MS) {
+            modelFailTimes.delete(modelId);
+            return false;
+        }
+        return true;
     }
-    return true;
+    try {
+        const hit = await caches.default.match(failCacheUrl(modelId));
+        if (hit) return true;
+    } catch (e) { /* Cache API 异常时仅靠内存判断 */ }
+    return false;
+}
+
+async function setModelCooldown(modelId) {
+    modelFailTimes.set(modelId, Date.now());
+    try {
+        await caches.default.put(failCacheUrl(modelId), new Response("1", {
+            headers: { "Cache-Control": `max-age=${Math.floor(MODEL_FAIL_COOLDOWN_MS / 1000)}` }
+        }));
+    } catch (e) { /* best-effort */ }
+}
+
+async function clearModelCooldown(modelId) {
+    modelFailTimes.delete(modelId);
+    try { await caches.default.delete(failCacheUrl(modelId)); } catch (e) { /* best-effort */ }
 }
 
 // 会员套餐（金额与 worker 校验共用，前端仅展示）
@@ -423,7 +446,7 @@ export default {
                 const attempts = []; // 诊断:记录每个候选的尝试结果(模型:状态:耗时ms)
                 for (const target of candidates) {
                     const attemptStart = Date.now();
-                    if (isModelInCooldown(target.id)) { attempts.push(`${target.id}:cooldown`); continue; } // 熔断期内跳过,不重走失败链
+                    if (await isModelInCooldown(target.id)) { attempts.push(`${target.id}:cooldown`); continue; } // 熔断期内跳过,不重走失败链
                     const apiKey = env[target.apiKeyEnv];
                     if (!apiKey) { attempts.push(`${target.id}:nokey`); continue; }
                     const base = target.url.replace(/\/$/, "");
@@ -443,16 +466,16 @@ export default {
                         clearTimeout(timeout);
                         attempts.push(`${target.id}:${resp.status}:${Date.now() - attemptStart}ms`);
                         if (resp.ok) {
-                            modelFailTimes.delete(target.id); // 成功即解除熔断
+                            await clearModelCooldown(target.id); // 成功即解除熔断
                             aiResponse = resp;
                             usedModel = target;
                             break;
                         }
-                        modelFailTimes.set(target.id, Date.now());
+                        await setModelCooldown(target.id);
                         console.warn(`model ${target.id} failed (${resp.status}), fallback next`);
                     } catch (e) {
                         clearTimeout(timeout);
-                        modelFailTimes.set(target.id, Date.now());
+                        await setModelCooldown(target.id);
                         attempts.push(`${target.id}:err:${Date.now() - attemptStart}ms`);
                         console.warn(`model ${target.id} error: ${e.message}, fallback next`);
                     }
