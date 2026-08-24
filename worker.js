@@ -465,6 +465,10 @@ export default {
                         });
                         clearTimeout(timeout);
                         attempts.push(`${target.id}:${resp.status}:${Date.now() - attemptStart}ms`);
+                        if (resp.status >= 400) {
+                            const bodyPreview = (await resp.text()).slice(0, 80).replace(/\s+/g, " ");
+                            attempts[attempts.length - 1] += ` [${bodyPreview}]`;
+                        }
                         if (resp.ok) {
                             await clearModelCooldown(target.id); // 成功即解除熔断
                             aiResponse = resp;
@@ -553,6 +557,23 @@ export default {
                     limit: DAILY_FREE_QUOTA,
                     // 会员不限量用 -1 表示（避免 Infinity 序列化为 null）
                     remaining: isMember(r) ? -1 : Math.max(0, DAILY_FREE_QUOTA - used)
+                }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+            }
+
+            // ---- 诊断路由:回显 Secrets key 指纹(sha256 前 12 位),核对 CF Secrets 是否真的生效 ----
+            if (url.pathname === "/api/diag/key" && request.method === "GET") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const fp = async (s) => {
+                    if (!s) return null;
+                    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+                    return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 12);
+                };
+                return new Response(JSON.stringify({
+                    CHATANYWHERE_KEY: await fp(env.CHATANYWHERE_KEY),
+                    CHATANYWHERE_KEY_LEN: env.CHATANYWHERE_KEY ? env.CHATANYWHERE_KEY.length : 0,
+                    ZHIPU_KEY: await fp(env.ZHIPU_KEY),
+                    SILICONFLOW_KEY: await fp(env.SILICONFLOW_KEY)
                 }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
 
