@@ -545,7 +545,7 @@ export default {
                 const data = await q.json();
                 const order = (data.items || [])[0];
                 if (!order || order.user_id !== auth.record.id) return errorResponse("订单不存在", 404, null, "INVALID_ORDER");
-                let status = order.status;
+                let status = Array.isArray(order.status) ? order.status[0] : order.status; // PocketBase JSON 字段可能返回数组
                 if (status !== "paid") {
                     // 兜底：本地未回调时向易支付查一次
                     try {

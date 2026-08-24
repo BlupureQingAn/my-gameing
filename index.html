@@ -2949,6 +2949,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
 </div>
 
 <script src="scenarios/scenarios.js" defer></script>
+<script src="lib/qrcode.min.js" defer></script>
 <script>
     const AppConfig = {
         storageKeys: {
@@ -10542,7 +10543,8 @@ function openNpcProfile(npcId) {
             const payArea = document.getElementById("membership-pay-area");
             if (!payArea) return;
             const payMethodName = order.payType === "alipay" ? "支付宝" : "微信";
-            const hasQr = order.qrcode && /^https?:/.test(order.qrcode);
+            // 易支付微信扫码返回 weixin://wxpay/bizpayurl?pr=xxx(二维码内容)而非 https 图片,两种都要认
+            const hasQr = order.qrcode && (/^https?:/.test(order.qrcode) || /^weixin:\/\//.test(order.qrcode));
             const hasUrl = /^https?:/.test(order.payUrl);
             // 有收银台链接(支付宝):显示跳转状态并自动跳转;微信 PC 扫码仅 qrcode,只能展示二维码
             if (hasUrl) {
@@ -10559,9 +10561,20 @@ function openNpcProfile(npcId) {
                 return;
             }
             if (hasQr) {
-                payArea.innerHTML = `<div class="list-sub" style="margin:8px 0;">订单号：${order.orderNo}，请用${payMethodName}扫码支付（PC 端扫码后手机确认）。</div>
-                    <img src="${order.qrcode}" alt="支付二维码" style="width:180px;height:180px;border-radius:12px;display:block;margin:8px auto;">
-                    <div class="list-sub" style="margin-top:8px;">支付完成后将自动开通会员（1-2 分钟内生效）</div>`;
+                if (/^weixin:\/\//.test(order.qrcode)) {
+                    // weixin:// 协议是二维码内容(微信扫码后解析跳转),须本地生成 QR 图片
+                    payArea.innerHTML = `<div class="list-sub" style="margin:8px 0;">订单号：${order.orderNo}，请用微信扫一扫下方二维码支付。</div>
+                        <div id="pay-qr-code" style="width:180px;height:180px;border-radius:12px;background:#fff;margin:8px auto;overflow:hidden;"></div>
+                        <div class="list-sub" style="margin-top:8px;">支付完成后将自动开通会员（1-2 分钟内生效）</div>`;
+                    setTimeout(() => {
+                        const el = document.getElementById("pay-qr-code");
+                        if (el && window.QRCode) new QRCode(el, { text: order.qrcode, width: 180, height: 180 });
+                    }, 0);
+                } else {
+                    payArea.innerHTML = `<div class="list-sub" style="margin:8px 0;">订单号：${order.orderNo}，请用${payMethodName}扫码支付（PC 端扫码后手机确认）。</div>
+                        <img src="${order.qrcode}" alt="支付二维码" style="width:180px;height:180px;border-radius:12px;display:block;margin:8px auto;">
+                        <div class="list-sub" style="margin-top:8px;">支付完成后将自动开通会员（1-2 分钟内生效）</div>`;
+                }
                 return;
             }
             // 微信小程序支付:urlscheme(weixin://dl/business/?ticket=xxx)需 JS 拉起,按钮点击后跳转
@@ -10620,7 +10633,9 @@ function openNpcProfile(npcId) {
                         headers: { "X-Auth-Token": AuthService.getToken() }
                     });
                     const data = await res.json();
-                    if (data.status === "paid") {
+                    // PocketBase JSON 字段可能返回数组,兼容两种形态
+                    const st = Array.isArray(data.status) ? data.status[0] : data.status;
+                    if (st === "paid") {
                         stopPoll();
                         closePanel();
                         NoticeModalService.showInfo({ title: "🎉 支付成功", descHtml: "会员已开通，不限量畅玩！" });
