@@ -761,7 +761,7 @@
         }
 
         /* ---- 聊天组件（Chat Components） ---- */
-        /* 容器:去外层气泡,AI 消息头像+卡片直接平铺 */
+        /* 容器:去外层气泡,AI 卡片直接平铺 */
         .story-log {
             margin-bottom: 10px;
             position: relative;
@@ -771,26 +771,6 @@
             border: 1px solid #d9534f;
             border-radius: 12px;
             background: #fff1f0;
-        }
-
-        .msg-row {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        .avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: grid;
-            place-items: center;
-            font-size: 18px;
-            flex-shrink: 0;
-            margin-top: 4px;
-            animation: petBlink 2.8s ease-in-out infinite;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.16);
-            border: 2px solid color-mix(in srgb, var(--line-strong) 45%, transparent);
         }
 
         .bubble {
@@ -886,20 +866,7 @@
             max-width: 1000px;
         }
 
-        /* 文本 */
-        .avatar.ai {
-            background: #231f20;
-            color: #ffd7eb;
-            border: 2px solid #ffc4e2;
-        }
-
-        .avatar.user {
-            background: #ffd5ea;
-            color: #2d2126;
-            border: 2px solid #ffb3d8;
-        }
-
-        /* AI 消息不再用气泡:头像+卡片直接平铺(卡片/纯文本统一) */
+        /* AI 消息不再用气泡:卡片直接平铺(卡片/纯文本统一) */
         .bubble.ai {
             background: transparent !important;
             border: none !important;
@@ -925,6 +892,7 @@
             border-radius: 16px;
             padding: 9px 13px;
             max-width: 82%;
+            margin-left: auto;
         }
 
         .bubble h1, .bubble h2, .bubble h3 {
@@ -5888,12 +5856,6 @@ function rebuildChoicesBlock(body, labels = []) {
             const logDiv = document.createElement("div");
             logDiv.className = "story-log";
 
-            const row = document.createElement("div");
-            row.className = `msg-row ${role === "user" ? "user" : "ai"}`;
-            const avatar = document.createElement("div");
-            avatar.className = `avatar ${role === "user" ? "user" : "ai"}`;
-            avatar.innerText = role === "user" ? "🐱🌸" : "🐈‍⬛";
-
             const bubble = document.createElement("div");
             bubble.className = `bubble ${role === "user" ? "user" : "ai"}`;
             const normalizedText = role === "ai" ? HtmlCardService.normalizeHtmlCard(text) : text;
@@ -5913,9 +5875,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 VisualEffects.decorateAiCardBears(bubble);
             }
 
-            if (role === "user") { row.appendChild(bubble); row.appendChild(avatar); }
-            else { row.appendChild(avatar); row.appendChild(bubble); }
-            logDiv.appendChild(row);
+            logDiv.appendChild(bubble);
 
             board.appendChild(logDiv);
             if (streaming) {
@@ -5987,7 +5947,7 @@ function rebuildChoicesBlock(body, labels = []) {
         function patchLastAiMessage(text, options = {}) {
             const board = document.getElementById("story-board");
             if (!board) return false;
-            const aiRows = board.querySelectorAll(".msg-row.ai .bubble.ai");
+            const aiRows = board.querySelectorAll(".story-log .bubble.ai");
             const bubble = aiRows.length ? aiRows[aiRows.length - 1] : null;
             if (!(bubble instanceof HTMLElement)) return false;
             const normalizedText = HtmlCardService.normalizeHtmlCard(text);
