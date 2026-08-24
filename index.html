@@ -6269,6 +6269,8 @@ function rebuildChoicesBlock(body, labels = []) {
                 box.appendChild(head);
                 if (!collapsed) pinnedCards.forEach(renderRow);
             }
+            // 分类组按热度排序（自定义分类排最后）
+            groups.sort((a, b) => ScenarioCardViewService.hotRank(a) - ScenarioCardViewService.hotRank(b));
             groups.forEach((groupKey) => {
                 const groupCards = byGroup.get(groupKey).filter((c) => !pinnedIds.has(c.id));
                 if (!groupCards.length) return;
@@ -7334,12 +7336,19 @@ function rebuildChoicesBlock(body, labels = []) {
         }
         // 分类筛选：默认"全部"且全部展开；collapsed 仅记录用户手动折叠的组
         const filterState = { category: "全部", collapsed: new Set() };
+        // 分类热度排序（按当前热门玩法盘点与网文主流热度；未收录的分类排最后，保持相对顺序）
+        const HOT_CATEGORY_ORDER = ["恋爱", "职场", "修仙", "穿越", "都市", "无限流", "末世", "经营", "科幻", "悬疑", "跑团", "奇幻", "历史", "宫斗", "种田", "女尊", "校园", "娱乐圈"];
+        function hotRank(cat) {
+            const i = HOT_CATEGORY_ORDER.indexOf(cat);
+            return i < 0 ? HOT_CATEGORY_ORDER.length : i;
+        }
         function getCategories() {
             const cats = [];
             (Array.isArray(window.SCENARIO_LIBRARY) ? window.SCENARIO_LIBRARY : []).forEach((c) => {
                 const k = String(c.category || "其他");
                 if (!cats.includes(k)) cats.push(k);
             });
+            cats.sort((a, b) => hotRank(a) - hotRank(b));
             return cats;
         }
         function getCategory() { return filterState.category; }
@@ -7368,7 +7377,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 bar.appendChild(chip);
             });
         }
-        return { groupLabel, groupClass, pinLabel, matchesSearch, getSearchKeyword, getCategories, getCategory, setCategory, isCollapsed, toggleCollapsed, expandAllGroups, renderFilter };
+        return { groupLabel, groupClass, pinLabel, matchesSearch, getSearchKeyword, getCategories, getCategory, setCategory, isCollapsed, toggleCollapsed, expandAllGroups, renderFilter, hotRank };
     })();
 
     const ScenarioCardInteractionService = (() => {
