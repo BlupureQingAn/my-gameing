@@ -635,12 +635,6 @@
                 radial-gradient(circle at 84% 96%, rgba(83,193,255,0.14), transparent 40%);
         }
 
-        .story-log {
-            background: var(--card-soft);
-            border-color: color-mix(in srgb, var(--line) 76%, transparent);
-            box-shadow: 0 10px 24px rgba(72, 47, 20, 0.06);
-        }
-
         .settings-toggle {
             display: flex;
             align-items: center;
@@ -786,19 +780,10 @@
         }
 
         /* ---- 聊天组件（Chat Components） ---- */
-        /* 容器:去外层气泡,AI 卡片直接平铺 */
-        .story-log {
+        /* 消息直接平铺在 story-board,无外层容器 */
+        .bubble {
             margin-bottom: 10px;
             position: relative;
-        }
-
-        .story-log.conflict {
-            border: 1px solid #d9534f;
-            border-radius: 12px;
-            background: #fff1f0;
-        }
-
-        .bubble {
             max-width: 100%;
             width: 100%;
             padding: 9px 10px;
@@ -809,6 +794,12 @@
             word-break: break-word;
             white-space: normal;
             overflow-x: hidden;
+        }
+
+        .bubble.conflict {
+            border: 1px solid #d9534f;
+            border-radius: 12px;
+            background: #fff1f0;
         }
 
         .choice-wrap {
@@ -1529,7 +1520,7 @@
         }
 
         /* ============ M4 轻量动效:入场浮现 + 悬停微亮(尊重系统减少动效) ============ */
-        .story-log {
+        .bubble {
             animation: storyLogIn 0.32s ease-out both;
         }
         @keyframes storyLogIn {
@@ -1541,7 +1532,7 @@
             filter: brightness(1.045);
         }
         @media (prefers-reduced-motion: reduce) {
-            .story-log { animation: none; }
+            .bubble { animation: none; }
             .card:hover,
             .ai-beauty-card:hover { filter: none; }
         }
@@ -5744,7 +5735,6 @@ function rebuildChoicesBlock(body, labels = []) {
 
     const UIRenderer = (() => {
         let currentStreamingTarget = null;
-        let currentStreamingLogDiv = null;
         let currentSocialNpcId = null;
         let autoFollowBottom = true;
         let lastScrollTop = 0;
@@ -5878,9 +5868,6 @@ function rebuildChoicesBlock(body, labels = []) {
         function appendMessage(role, text, dateStr, streaming) {
             const state = StateService.get();
             const board = document.getElementById("story-board");
-            const logDiv = document.createElement("div");
-            logDiv.className = "story-log";
-
             const bubble = document.createElement("div");
             bubble.className = `bubble ${role === "user" ? "user" : "ai"}`;
             const normalizedText = role === "ai" ? HtmlCardService.normalizeHtmlCard(text) : text;
@@ -5900,12 +5887,9 @@ function rebuildChoicesBlock(body, labels = []) {
                 VisualEffects.decorateAiCardBears(bubble);
             }
 
-            logDiv.appendChild(bubble);
-
-            board.appendChild(logDiv);
+            board.appendChild(bubble);
             if (streaming) {
                 currentStreamingTarget = bubble;
-                currentStreamingLogDiv = logDiv;
                 streamPendingText = null;
                 streamLastRenderAt = 0;
                 if (streamThrottleTimer) {
@@ -5952,9 +5936,8 @@ function rebuildChoicesBlock(body, labels = []) {
                 currentStreamingTarget.classList.remove("html-host");
                 currentStreamingTarget.innerHTML = AiResponseLayoutService.renderAiMessage(`${prefix}${text}`, false);
             }
-            if (currentStreamingLogDiv && options.conflictDetected) currentStreamingLogDiv.classList.add("conflict");
+            if (currentStreamingTarget && options.conflictDetected) currentStreamingTarget.classList.add("conflict");
             currentStreamingTarget = null;
-            currentStreamingLogDiv = null;
             streamPendingText = null;
             streamLastRenderAt = 0;
             if (streamThrottleTimer) {
@@ -5972,7 +5955,7 @@ function rebuildChoicesBlock(body, labels = []) {
         function patchLastAiMessage(text, options = {}) {
             const board = document.getElementById("story-board");
             if (!board) return false;
-            const aiRows = board.querySelectorAll(".story-log .bubble.ai");
+            const aiRows = board.querySelectorAll(".bubble.ai");
             const bubble = aiRows.length ? aiRows[aiRows.length - 1] : null;
             if (!(bubble instanceof HTMLElement)) return false;
             const normalizedText = HtmlCardService.normalizeHtmlCard(text);
