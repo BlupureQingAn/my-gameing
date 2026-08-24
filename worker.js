@@ -9,7 +9,7 @@ const LIFETIME_EXPIRY = "2226-01-01T00:00:00.000Z";
 // 模型池：Worker 自动路由（tier 越小越优先；dailyCap 为当日全局调用上限；enabled=false 池内禁用）
 // ChatAnywhere 免费版（gpt_api_free）：每日 10000 点平台额度 + 各模型每日次数上限
 const MODEL_POOL = [
-    // ---- 智谱（主模型:实测从 CF 边缘 TTFB 0.3s,免费 1000/天,池内最快）----
+    // ---- 智谱（主模型:实测从 CF 边缘 TTFB 0.3s,池内最快;官方按 RPM/TPM 限流无日次硬限,dailyCap 为自设保险）----
     { id: "zp-glm-4-air",   url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY", model: "glm-4-air",   dailyCap: 1000, tier: 5,  enabled: true },
     { id: "zp-glm-4-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY", model: "glm-4-flash", dailyCap: 5000, tier: 6,  enabled: true },
     // ---- ChatAnywhere（2026-08-25 实测:403 "请求客户端IP不支持访问,请勿使用Cloudflare等反向代理"= 永久拒绝 CF 出口,key 再对也白耗,整池禁用;若换非 CF 出口部署可恢复）----
