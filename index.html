@@ -574,6 +574,7 @@
         input[type="text"],
         input[type="password"],
         input[type="number"],
+        select,
         textarea {
             color: var(--text);
             caret-color: var(--accent);
@@ -581,7 +582,8 @@
 
         input[type="text"],
         input[type="password"],
-        input[type="number"] {
+        input[type="number"],
+        select {
             width: 100%;
             border: 1px solid var(--input-line);
             border-radius: 12px;
@@ -590,6 +592,11 @@
             font-size: 0.86rem;
             margin-top: 8px;
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+        }
+
+        select option {
+            color: #1f2430;
+            background: #ffffff;
         }
 
         input::placeholder,
@@ -2740,13 +2747,13 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <div class="list-title" id="membership-title" style="margin:0;">开通会员</div>
             <button onclick="MembershipService.closePanel()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--sub);">✕</button>
         </div>
-        <div class="list-sub">充值云币解锁剧本卡、抵扣 AI 对话；终身会员 89 元免一切云币消耗。</div>
+        <div class="list-sub" id="membership-intro-text">充值云币解锁剧本卡、抵扣 AI 对话；终身会员 89 元免一切云币消耗。</div>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin:10px 0;padding:10px 12px;border-radius:12px;background:var(--card-bg,#fffdf8);border:1px solid var(--line);">
             <div style="font-size:0.9rem;font-weight:700;">💰 云币余额：<span id="membership-coin-balance" style="color:var(--accent-dark,#c0392b);">--</span></div>
             <button id="membership-checkin-btn" class="mini-btn primary" style="margin:0;padding:6px 14px;" onclick="MembershipService.doCheckin()">每日签到</button>
         </div>
         <div id="membership-checkin-msg" class="list-sub" style="margin:-4px 0 10px;"></div>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:10px 0;padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,#fff3d6,#ffe3b3);border:1px solid #e8b84b;">
+        <div id="membership-offer-banner" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:10px 0;padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,#fff3d6,#ffe3b3);border:1px solid #e8b84b;">
             <div style="font-size:0.9rem;font-weight:700;color:#8a4b00;">🔥 限时优惠进行中</div>
             <div style="font-size:0.9rem;font-weight:700;color:#d63031;">距优惠结束 <span id="membership-countdown" style="font-variant-numeric:tabular-nums;background:#fff;padding:2px 8px;border-radius:6px;border:1px solid #e8b84b;">23:59:59</span></div>
         </div>
@@ -2928,7 +2935,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             </section>
             <section class="card">
                 <div class="list-title">👑 会员服务</div>
-                <div class="list-sub">AI 对话按 token 计费（输入 4 币/千 token、输出 12 币/千 token，普通对话约 10 币），官方剧本卡解锁需 5000 云币（永久拥有）。开通终身会员（限时 ¥89）后免一切云币消耗、全部剧本卡直接游玩。自备 AI 接口（BYOK）不消耗云币。</div>
+                <div class="list-sub" id="membership-settings-text">AI 对话按 token 计费（输入 4 币/千 token、输出 12 币/千 token，普通对话约 10 币），官方剧本卡解锁需 5000 云币（永久拥有）。开通终身会员（限时 ¥89）后免一切云币消耗、全部剧本卡直接游玩。自备 AI 接口（BYOK）不消耗云币。</div>
             </section>
         </section>
         <!-- 保持 settings 视图正常闭合即可 -->
@@ -3019,7 +3026,33 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <div style="margin-top:8px; display:grid; gap:6px;">
                 <input id="init-preview-name" type="text" placeholder="主角姓名">
                 <input id="init-preview-english-name" type="text" placeholder="英文名">
-                <input id="init-preview-gender" type="text" placeholder="性别">
+                <select id="init-preview-gender" onchange="toggleCustomField('init-preview-gender','init-preview-gender-custom')">
+                    <option value="">性别（未指定）</option>
+                    <option value="男">男</option>
+                    <option value="女">女</option>
+                    <option value="__custom__">自定义…</option>
+                </select>
+                <input id="init-preview-gender-custom" type="text" placeholder="自定义性别" style="display:none;">
+                <select id="init-preview-orientation" onchange="toggleCustomField('init-preview-orientation','init-preview-orientation-custom')">
+                    <option value="">性取向（未指定）</option>
+                    <option value="异性恋">异性恋</option>
+                    <option value="同性恋">同性恋</option>
+                    <option value="双性恋">双性恋</option>
+                    <option value="泛性恋">泛性恋</option>
+                    <option value="无性恋">无性恋</option>
+                    <option value="__custom__">自定义…</option>
+                </select>
+                <input id="init-preview-orientation-custom" type="text" placeholder="自定义性取向" style="display:none;">
+                <select id="init-preview-role" onchange="toggleCustomField('init-preview-role','init-preview-role-custom')">
+                    <option value="">开局身份（未指定）</option>
+                    <option value="普通人">普通人</option>
+                    <option value="穿越者">穿越者</option>
+                    <option value="重生者">重生者</option>
+                    <option value="系统宿主">系统宿主</option>
+                    <option value="失忆者">失忆者</option>
+                    <option value="__custom__">自定义…</option>
+                </select>
+                <input id="init-preview-role-custom" type="text" placeholder="自定义身份" style="display:none;">
                 <input id="init-preview-age-years" type="number" min="0" max="120" placeholder="年龄（岁）">
                 <input id="init-preview-nationality" type="text" placeholder="国籍">
                 <input id="init-preview-location" type="text" placeholder="地点">
@@ -3523,6 +3556,8 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             const next = Utils.deepClone(baseState);
             const identity = IdentityService.generateIdentity();
             next.gender = gender || preset.gender || next.gender;
+            next.orientation = String(preset.orientation || "").trim().slice(0, 12);
+            next.role = String(preset.role || "").trim().slice(0, 20);
             next.name = preset.name || identity.name;
             next.englishName = preset.englishName || identity.englishName;
             next.nationality = preset.nationality || identity.nationality;
@@ -3547,6 +3582,8 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 name: next.name,
                 englishName: next.englishName,
                 gender: next.gender,
+                orientation: next.orientation,
+                role: next.role,
                 nationality: next.nationality,
                 location: next.location,
                 ageYears
@@ -3574,10 +3611,12 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             gameState.panelStatusTags = normalizeStatusTagList(gameState.panelStatusTags);
         }
 
-        function resetWithPreset({ selectedGender, forcedGender, name, englishName, ageYears, nationality, location, currentYear, currentMonth, currentDay, timeEra, weekIndex, weekdayIndex, inventory, npcs, stats, panelStatusTags, rebornReason }) {
+        function resetWithPreset({ selectedGender, forcedGender, forcedOrientation, forcedRole, name, englishName, ageYears, nationality, location, currentYear, currentMonth, currentDay, timeEra, weekIndex, weekdayIndex, inventory, npcs, stats, panelStatusTags, rebornReason }) {
             const finalGender = forcedGender || selectedGender || baseState.gender;
             gameState = buildInitialState(finalGender, {
                 gender: forcedGender,
+                orientation: forcedOrientation,
+                role: forcedRole,
                 name,
                 englishName,
                 ageYears,
@@ -4858,7 +4897,7 @@ function rebuildChoicesBlock(body, labels = []) {
         function buildRuntimeSummary(state) {
             return [
                 "【运行时上下文】",
-                `主角基础：姓名${state.name}，性别${state.gender}，年龄${Math.floor((state.age || 0) / 12)}岁，时间${Utils.nowDateStr(state) || "未设定"}。`,
+                `主角基础：姓名${state.name}，性别${state.gender}${state.orientation ? `，性取向${state.orientation}` : ""}${state.role ? `，开局身份${state.role}` : ""}，年龄${Math.floor((state.age || 0) / 12)}岁，时间${Utils.nowDateStr(state) || "未设定"}。`,
                 `主角状态栏：${serializeStats(state)}。`,
                 `背包：${serializeInventory(state)}。`,
                 `关键NPC：${serializeNpcs(state, false)}。`,
@@ -6584,6 +6623,11 @@ function rebuildChoicesBlock(body, labels = []) {
 
             const policy = ChatPolicyConfigService.load();
             const selectedCardId2 = ScenarioCardService.getSelectedId();
+
+            // 会员限时价格文案(89 限时 ↔ 249 永久)随状态刷新
+            if (typeof MembershipService !== "undefined" && typeof MembershipService.updateLifetimePriceTexts === "function") {
+                MembershipService.updateLifetimePriceTexts();
+            }
         }
         function saveFromUI() {
             const selectedScenario = ScenarioCardService.getSelectedCard();
@@ -7955,6 +7999,11 @@ function rebuildChoicesBlock(body, labels = []) {
                     })
                     .filter(Boolean)
                 : [];
+            const forcedFacts = [
+                state.gender ? `性别：${state.gender}` : "",
+                state.orientation ? `性取向：${state.orientation}` : "",
+                state.role ? `开局身份：${state.role}` : ""
+            ].filter(Boolean);
             const systemPrompt = [
                 "【最高优先级：设定文本约束】",
                 "你必须严格以设定文本为唯一世界规则源，不得引入与设定冲突的时代/地域/身份元素。",
@@ -7962,6 +8011,9 @@ function rebuildChoicesBlock(body, labels = []) {
                 scenarioText,
                 "",
                 ...PromptRulesRegistry.getIntroCoreRules(),
+                forcedFacts.length
+                    ? `【角色强制设定（最高优先级，开局必须严格遵守，不得更改或矛盾）】\n${forcedFacts.join("\n")}`
+                    : "",
                 isDark
                     ? "当前是暗夜模式：输出的开局 HTML 卡片必须是透明/半透明深色背景，且文本高对比。"
                     : "当前是亮色模式：保持清晰可读并与主题一致。",
@@ -8541,6 +8593,8 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
                 `角色：${plan.name}（${plan.englishName}）`,
                 `年龄：${plan.ageYears} 岁`,
                 `角色性别：${plan.forcedGender || plan.selectedGender || "未指定"}`,
+                `角色性取向：${plan.forcedOrientation || "未指定"}`,
+                `开局身份：${plan.forcedRole || "未指定"}`,
                 `角色国籍：${plan.nationality || "按随机"}`,
                 `角色地点：${plan.location || "按随机"}`,
                 `时间：${plan.timeEra || (plan.currentYear ? `${plan.currentYear}年${plan.currentMonth ? `${plan.currentMonth}月` : ""}` : "未设定")}`,
@@ -9206,6 +9260,8 @@ const token = delta.content || "";
                 englishName: String(ensured.englishName || "").trim(),
                 ageYears: sanitizeAgeYears(ensured.ageYears),
                 forcedGender: String(ensured.forcedGender || "").trim(),
+                forcedOrientation: String(ensured.forcedOrientation || "").trim(),
+                forcedRole: String(ensured.forcedRole || "").trim(),
                 selectedGender: String(selectedGender || ""),
                 nationality: String(ensured.nationality || "").trim(),
                 location: String(ensured.location || "").trim(),
@@ -9707,6 +9763,8 @@ const token = delta.content || "";
                 name,
                 englishName: String(fallbackIdentity.englishName || "PendingName").trim().slice(0, 32),
                 forcedGender: String(identity.gender || "").trim() || selectedGender || "女",
+                forcedOrientation: "",
+                forcedRole: "",
                 ageYears: Number.isFinite(ageRaw) && ageRaw >= 0 ? ageRaw : 18,
                 nationality: nationMatch ? nationMatch[1] : "",
                 location: locationRaw || "",
@@ -10881,10 +10939,38 @@ function openNpcProfile(npcId) {
             document.getElementById("init-preview-modal").style.display = "none";
             pendingInitPlan = null;
         }
+        function bindSelectOrCustom(selectId, customId, value) {
+            const sel = document.getElementById(selectId);
+            const cus = document.getElementById(customId);
+            const v = String(value || "").trim();
+            const known = [...sel.options].some((o) => o.value === v);
+            if (v && !known) {
+                sel.value = "__custom__";
+                cus.value = v;
+                cus.style.display = "block";
+            } else {
+                sel.value = v;
+                cus.value = "";
+                cus.style.display = "none";
+            }
+        }
+        function readSelectOrCustom(selectId, customId) {
+            const sel = document.getElementById(selectId);
+            if (sel.value === "__custom__") return document.getElementById(customId).value.trim();
+            return sel.value.trim();
+        }
+        function toggleCustomField(selectId, customId) {
+            const sel = document.getElementById(selectId);
+            const cus = document.getElementById(customId);
+            cus.style.display = sel.value === "__custom__" ? "block" : "none";
+            if (sel.value !== "__custom__") cus.value = "";
+        }
         function bindInitPreviewForm(plan) {
             document.getElementById("init-preview-name").value = plan.name || "";
             document.getElementById("init-preview-english-name").value = plan.englishName || "";
-            document.getElementById("init-preview-gender").value = plan.forcedGender || plan.selectedGender || "";
+            bindSelectOrCustom("init-preview-gender", "init-preview-gender-custom", plan.forcedGender || plan.selectedGender || "");
+            bindSelectOrCustom("init-preview-orientation", "init-preview-orientation-custom", plan.forcedOrientation || "");
+            bindSelectOrCustom("init-preview-role", "init-preview-role-custom", plan.forcedRole || "");
             document.getElementById("init-preview-age-years").value = String(plan.ageYears ?? 18);
             document.getElementById("init-preview-nationality").value = plan.nationality || "";
             document.getElementById("init-preview-location").value = plan.location || "";
@@ -10893,7 +10979,9 @@ function openNpcProfile(npcId) {
             return {
                 name: document.getElementById("init-preview-name").value.trim(),
                 englishName: document.getElementById("init-preview-english-name").value.trim(),
-                forcedGender: document.getElementById("init-preview-gender").value.trim(),
+                forcedGender: readSelectOrCustom("init-preview-gender", "init-preview-gender-custom"),
+                forcedOrientation: readSelectOrCustom("init-preview-orientation", "init-preview-orientation-custom"),
+                forcedRole: readSelectOrCustom("init-preview-role", "init-preview-role-custom"),
                 ageYears: Number(document.getElementById("init-preview-age-years").value || 0),
                 nationality: document.getElementById("init-preview-nationality").value.trim(),
                 location: document.getElementById("init-preview-location").value.trim()
@@ -11036,7 +11124,7 @@ function openNpcProfile(npcId) {
                 openingChoices: merged.openingChoices || []
             });
         }
-        return { init, onSendClick, sendUserText, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, openInitPreviewModal, closeInitPreviewModal, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
+        return { init, onSendClick, sendUserText, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
@@ -11054,6 +11142,9 @@ function openNpcProfile(npcId) {
     function loadMyCommunityCards() { Controller.loadMyCommunityCards(); }
     function openInitPreviewModal() { Controller.openInitPreviewModal(); }
     function closeInitPreviewModal() { Controller.closeInitPreviewModal(); }
+    function bindInitPreviewForm(plan) { Controller.bindInitPreviewForm(plan); }
+    function collectInitPreviewForm() { return Controller.collectInitPreviewForm(); }
+    function toggleCustomField(selectId, customId) { Controller.toggleCustomField(selectId, customId); }
     function applyInitPreviewAndStart() { Controller.applyInitPreviewAndStart(); }
     function sendNpcMessage() { Controller.sendNpcMessage(); }
     function backToSocialList() { Controller.backToSocialList(); }
@@ -11075,6 +11166,7 @@ function openNpcProfile(npcId) {
             const titleEl = document.getElementById("membership-title");
             if (titleEl) titleEl.innerText = isMember ? "会员续费 / 升级" : "开通会员";
             modal.style.display = "flex";
+            ensureCountdownStart(); // 一次性限时:仅首次打开充值面板开始 24h 倒计时
             renderPlans();
             renderCoinBalance();
             startCountdown();
@@ -11172,6 +11264,7 @@ function openNpcProfile(npcId) {
             if (!grid) return;
             const current = AuthService.getUserData()?.membership_type || "";
             const lp = AppConfig.lifetimePlan;
+            const cdActive = countdownActive();
             let planCards = Object.values(AppConfig.chargePlans).map(p =>
                 `<div class="recharge-item ${selectedPlan === p.id ? "active" : ""}" onclick="MembershipService.selectPlan('${p.id}')">
                     <div class="recharge-coins">${p.tag ? `<span style="font-size:0.65rem;color:#fff;background:linear-gradient(135deg,#f39c12,#e67e22);padding:1px 6px;border-radius:8px;margin-right:4px;vertical-align:2px;">${p.tag}</span>` : ""}¥${p.price}<span style="font-size:0.7rem;color:#a89580;margin-left:4px;">=${p.coins} 云币</span></div>
@@ -11181,25 +11274,32 @@ function openNpcProfile(npcId) {
             ).join("");
             planCards += `
                 <div class="recharge-item ${selectedPlan === lp.id ? "active" : ""}" onclick="MembershipService.selectPlan('${lp.id}')">
-                    <div class="recharge-coins"><span style="font-size:0.75rem;color:#a89580;text-decoration:line-through;margin-right:4px;">¥${lp.originalPrice}</span>¥${lp.price}<span style="font-size:0.65rem;color:#fff;background:linear-gradient(135deg,#e74c3c,#c0392b);padding:1px 6px;border-radius:8px;margin-left:4px;vertical-align:2px;">限时</span></div>
+                    <div class="recharge-coins">${cdActive ? `<span style="font-size:0.75rem;color:#a89580;text-decoration:line-through;margin-right:4px;">¥${lp.originalPrice}</span>¥${lp.price}<span style="font-size:0.65rem;color:#fff;background:linear-gradient(135deg,#e74c3c,#c0392b);padding:1px 6px;border-radius:8px;margin-left:4px;vertical-align:2px;">限时</span>` : `<span style="font-size:0.95rem;color:#c0392b;font-weight:800;">¥${lp.originalPrice}</span>`}</div>
                     <div class="recharge-price">${lp.name}${current === lp.id ? "（当前）" : ""}</div>
                     <div class="recharge-price">${lp.desc}</div>
                 </div>`;
             grid.innerHTML = planCards;
+            updateLifetimePriceTexts();
         }
-        // 限时优惠倒计时：用户首次打开面板开始计时，24h 到期自动无缝续期（用户随时可买）
+        // 终身会员一次性限时:仅首次打开充值面板触发 24h 优惠,过期后永久恢复 ¥249(不再自动续期)
         const COUNTDOWN_KEY = "bitlife_membership_countdown_v1";
         const COUNTDOWN_MS = 24 * 3600 * 1000;
         let _cdTimer = null;
+        function countdownStart() {
+            return Number(localStorage.getItem(COUNTDOWN_KEY) || 0);
+        }
+        function ensureCountdownStart() {
+            if (!countdownStart()) localStorage.setItem(COUNTDOWN_KEY, String(Date.now()));
+        }
+        function countdownActive() {
+            const start = countdownStart();
+            return !start || Date.now() - start < COUNTDOWN_MS;
+        }
         function renderCountdown() {
             const el = document.getElementById("membership-countdown");
             if (!el) return;
-            let start = Number(localStorage.getItem(COUNTDOWN_KEY) || 0);
-            if (!start || Date.now() - start >= COUNTDOWN_MS) {
-                start = Date.now();
-                localStorage.setItem(COUNTDOWN_KEY, String(start));
-            }
-            const remain = Math.max(0, start + COUNTDOWN_MS - Date.now());
+            if (!countdownActive()) { el.textContent = "已结束"; return; }
+            const remain = countdownStart() + COUNTDOWN_MS - Date.now();
             const h = String(Math.floor(remain / 3600000)).padStart(2, "0");
             const m = String(Math.floor((remain % 3600000) / 60000)).padStart(2, "0");
             const s = String(Math.floor((remain % 60000) / 1000)).padStart(2, "0");
@@ -11208,9 +11308,23 @@ function openNpcProfile(npcId) {
         function startCountdown() {
             stopCountdown();
             renderCountdown();
-            _cdTimer = setInterval(renderCountdown, 1000);
+            if (countdownActive()) _cdTimer = setInterval(renderCountdown, 1000);
         }
         function stopCountdown() { if (_cdTimer) { clearInterval(_cdTimer); _cdTimer = null; } }
+        // 弹窗/设置页价格文案随限时状态切换(89 限时 ↔ 249 永久)
+        function updateLifetimePriceTexts() {
+            const active = countdownActive();
+            const intro = document.getElementById("membership-intro-text");
+            if (intro) intro.textContent = `充值云币解锁剧本卡、抵扣 AI 对话；终身会员 ${active ? "¥89 限时" : "¥249"} 免一切云币消耗。`;
+            const banner = document.getElementById("membership-offer-banner");
+            if (banner) {
+                banner.innerHTML = active
+                    ? `<div style="font-size:0.9rem;font-weight:700;color:#8a4b00;">🔥 限时优惠进行中</div><div style="font-size:0.9rem;font-weight:700;color:#d63031;">距优惠结束 <span id="membership-countdown" style="font-variant-numeric:tabular-nums;background:#fff;padding:2px 8px;border-radius:6px;border:1px solid #e8b84b;">23:59:59</span></div>`
+                    : `<div style="font-size:0.9rem;font-weight:700;color:#8a4b00;">⏰ 限时优惠已结束，终身会员恢复原价 ¥249</div>`;
+            }
+            const st = document.getElementById("membership-settings-text");
+            if (st) st.textContent = `AI 对话按 token 计费（输入 4 币/千 token、输出 12 币/千 token，普通对话约 10 币），官方剧本卡解锁需 5000 云币（永久拥有）。开通终身会员${active ? "（限时 ¥89）" : "（¥249）"}后免一切云币消耗、全部剧本卡直接游玩。自备 AI 接口（BYOK）不消耗云币。`;
+        }
         function selectPlan(id) {
             if (id !== selectedPlan) _currentOrder = null; // 套餐变了,旧订单作废
             selectedPlan = id;
@@ -11307,7 +11421,7 @@ function openNpcProfile(npcId) {
             await AuthService.refreshBalance();
             AuthService.updateUsageStatusUI();
         }
-        return { openPanel, closePanel, selectPlan, selectPayType, startPay, pollPayStatus: startPoll, hasMembership, refreshStatus, doCheckin, renderCoinBalance };
+        return { openPanel, closePanel, selectPlan, selectPayType, startPay, pollPayStatus: startPoll, hasMembership, refreshStatus, doCheckin, renderCoinBalance, updateLifetimePriceTexts };
     })();
 
     // ==================== ScenarioUnlockService (云币解锁剧本卡) ====================
