@@ -746,9 +746,9 @@ export default {
                 const appid = env.MAPAY_APPID || "";
                 const appkey = env.MAPAY_APPKEY || "";
                 if (!appid || !appkey) return errorResponse("第三方登录暂未开通", 503, null, "SOCIAL_NOT_CONFIGURED");
-                // redirect_uri 使用请求自身 host(防 open redirect),http 仅限本机调试
-                const proto = (url.protocol === "https:" || url.hostname === "localhost" || url.hostname === "127.0.0.1") ? url.protocol : "https:";
-                const redirectUri = `${proto}//${url.host}/?social_cb=1`;
+                // 页面托管在 GitHub Pages(bitlife.blupure.cn),API worker 在 ai.blupure.cn:
+                // redirect_uri 必须固定为页面域名(mapay 回调白名单只认它),不能用请求自身 host
+                const redirectUri = "https://bitlife.blupure.cn/?social_cb=1";
                 const q = new URLSearchParams({ act: "login", appid, appkey, type, redirect_uri: redirectUri });
                 const res = await fetch(`${env.MAPAY_API_URL || "https://login.mapay.cn"}/connect.php?${q}`);
                 const data = await res.json().catch(() => null);
