@@ -2211,6 +2211,27 @@
             padding-top: 0;
         }
 
+        .scenario-loading-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 0 18px;
+            color: var(--text-dim);
+            font-size: 13px;
+        }
+        .scenario-loading-indicator .scenario-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--line);
+            border-top-color: var(--accent, #b08652);
+            border-radius: 50%;
+            animation: scenario-spin 0.8s linear infinite;
+        }
+        @keyframes scenario-spin {
+            to { transform: rotate(360deg); }
+        }
+
         .scenario-card {
             border: 1px solid var(--line);
             border-radius: 12px;
@@ -7348,6 +7369,17 @@ function rebuildChoicesBlock(body, labels = []) {
                 const k = String(c.category || "其他");
                 if (!cats.includes(k)) cats.push(k);
             });
+            // 懒加载分片未加载时分类标签也要全部展示(标签栏一次性渲染全部) → 并入全量分片分类
+            (Array.isArray(window.SCENARIO_CHUNK_CATS) ? window.SCENARIO_CHUNK_CATS : []).forEach((chunkCats) => {
+                (Array.isArray(chunkCats) ? chunkCats : []).forEach((k) => { if (k && !cats.includes(k)) cats.push(k); });
+            });
+            // 本地自定义卡的分类(可能不在官方分类清单)
+            try {
+                (JSON.parse(localStorage.getItem("bitlife_scenario_cards_v1") || "[]")).forEach((c) => {
+                    const k = String(c.category || "");
+                    if (k && !cats.includes(k)) cats.push(k);
+                });
+            } catch (e) { /* 忽略损坏的本地卡 */ }
             cats.sort((a, b) => hotRank(a) - hotRank(b));
             return cats;
         }
@@ -7373,7 +7405,14 @@ function rebuildChoicesBlock(body, labels = []) {
                 chip.type = "button";
                 chip.className = `scenario-filter-chip${current === cat ? " active" : ""}`;
                 chip.textContent = cat;
-                chip.onclick = () => { setCategory(cat); UIRenderer.renderScenarioCards(); };
+                chip.onclick = async () => {
+                    if (current === cat) return;
+                    setCategory(cat);
+                    UIRenderer.renderScenarioCards();
+                    // 对应分类的分片未加载完 → 转圈加载,完成后补渲染(避免切标签后卡片缺失)
+                    await window.ensureChunksFor(cat);
+                    if (getCategory() === cat) UIRenderer.renderScenarioCards();
+                };
                 bar.appendChild(chip);
             });
         }
@@ -9863,26 +9902,72 @@ const token = delta.content || "";
             bindScenarioChunkScroll();
             scenarioMaybeAutoFill();
         }
-        // ---- 场景库分片懒加载(2026-08-25:首屏只下 ~20KB,滚动到底加载下一片) ----
+        // ---- 场景库分页懒加载(2026-08-25:首屏只下 ~20KB,滚动到底加载下一片;底部加载转圈指示器) ----
         let scenarioChunkLoaded = 1;
         let scenarioChunkLoading = false;
         function scenarioChunkLeft() {
             return ((window.SCENARIO_CHUNK_TOTAL || 1) - scenarioChunkLoaded) > 0;
         }
+        // 覆盖指定分类所需的已加载分片数(1-based):同分类卡可能跨多片,取最后包含该分类的分片
+        // "全部"→ 全部分片;未知分类(自定义/其他)→ 0(不加载)
+        function scenarioChunkNeededFor(cat) {
+            if (!cat || cat === "全部" || cat === "自定义" || cat === "其他") return 0;
+            const cats = window.SCENARIO_CHUNK_CATS || [];
+            for (let i = cats.length - 1; i >= 0; i--) {
+                if ((cats[i] || []).includes(cat)) return i + 1;
+            }
+            return 0;
+        }
+        function scenarioLoadingIndicator() {
+            return document.getElementById("scenario-loading-indicator");
+        }
+        // 转圈指示器状态:有剩余分片或加载中 → 显示;全部加载完(没有更多数据) → 隐藏
+        function updateScenarioLoadingUI() {
+            const ind = scenarioLoadingIndicator();
+            if (!ind) return;
+            const busy = scenarioChunkLeft() || scenarioChunkLoading;
+            ind.style.display = busy ? "" : "none";
+            const txt = ind.querySelector(".scenario-loading-text");
+            if (txt) txt.textContent = scenarioChunkLoading ? "加载中…" : "下滑加载更多";
+        }
         function loadNextScenarioChunk() {
             if (scenarioChunkLoading || !scenarioChunkLeft()) return;
             scenarioChunkLoading = true;
+            updateScenarioLoadingUI();
             const n = scenarioChunkLoaded + 1;
             const s = document.createElement("script");
             s.src = `scenarios/scenarios.part${n}.js`;
             s.onload = () => {
                 scenarioChunkLoaded = n;
                 scenarioChunkLoading = false;
+                updateScenarioLoadingUI();
                 try { UIRenderer.renderScenarioCards(); } catch (e) { console.error("场景库分片渲染失败", e); }
                 scenarioMaybeAutoFill();
             };
-            s.onerror = () => { scenarioChunkLoading = false; }; // 404=无更多分片,停止
+            s.onerror = () => { scenarioChunkLoading = false; updateScenarioLoadingUI(); }; // 404=无更多分片,停止
             document.head.appendChild(s);
+        }
+        // 确保指定分类的分片已加载完成(切换筛选标签时:未加载完先转圈,加载完再渲染)
+        async function ensureChunksFor(cat) {
+            const need = scenarioChunkNeededFor(cat);
+            while (scenarioChunkLoaded < need) {
+                if (scenarioChunkLoading) {
+                    updateScenarioLoadingUI();
+                    await new Promise(r => setTimeout(r, 120));
+                    continue;
+                }
+                scenarioChunkLoading = true;
+                updateScenarioLoadingUI();
+                await new Promise((resolve) => {
+                    const n = scenarioChunkLoaded + 1;
+                    const s = document.createElement("script");
+                    s.src = `scenarios/scenarios.part${n}.js`;
+                    s.onload = () => { scenarioChunkLoaded = n; scenarioChunkLoading = false; updateScenarioLoadingUI(); resolve(); };
+                    s.onerror = () => { scenarioChunkLoading = false; updateScenarioLoadingUI(); resolve(); };
+                    document.head.appendChild(s);
+                });
+            }
+            updateScenarioLoadingUI();
         }
         function scenarioMaybeAutoFill() {
             // 渲染后列表未满一屏 → 继续加载下一片(否则列表无滚动可触发,永远加载不完)
@@ -9891,18 +9976,26 @@ const token = delta.content || "";
             const rect = box.getBoundingClientRect();
             if (rect.bottom <= window.innerHeight + 100) loadNextScenarioChunk();
         }
+        // 供筛选标签(兄弟 IIFE)切换分类时按需加载分片
+        window.ensureChunksFor = ensureChunksFor;
         function bindScenarioChunkScroll() {
             const box = document.getElementById("scenario-card-list");
-            if (!box || !scenarioChunkLeft()) return;
-            // 哨兵 + IntersectionObserver:滚动容器(main-content)任意滚动/视图切换均可靠触发,临近底部 200px 提前加载
-            const sentinel = document.createElement("div");
-            sentinel.id = "scenario-chunk-sentinel";
-            sentinel.style.height = "1px";
-            box.parentNode.insertBefore(sentinel, box.nextSibling);
+            if (!box) return;
+            // 可见的加载转圈指示器(兼作触底哨兵):有剩余分片时显示,全部加载完隐藏
+            let ind = scenarioLoadingIndicator();
+            if (!ind) {
+                ind = document.createElement("div");
+                ind.id = "scenario-loading-indicator";
+                ind.className = "scenario-loading-indicator";
+                ind.innerHTML = `<span class="scenario-spinner"></span><span class="scenario-loading-text">加载中…</span>`;
+                box.parentNode.insertBefore(ind, box.nextSibling);
+            }
+            updateScenarioLoadingUI();
+            // IntersectionObserver:滚动容器(main-content)任意滚动/视图切换均可靠触发,临近底部 200px 提前加载
             const io = new IntersectionObserver((entries) => {
                 if (entries[0].isIntersecting) loadNextScenarioChunk();
             }, { rootMargin: "200px 0px" });
-            io.observe(sentinel);
+            io.observe(ind);
         }
         function bindEvents() {
             // 暗夜模式勾选即时生效并持久化(无需再点保存主题)

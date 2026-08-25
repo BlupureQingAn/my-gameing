@@ -44,6 +44,7 @@ const header = `// 剧本库：由 scripts/build-scenarios.mjs 自动生成，�
 `;
 const js = `${header}window.SCENARIO_LIBRARY = ${JSON.stringify(chunks[0], null, 2)};
 window.SCENARIO_CHUNK_TOTAL = ${chunks.length};
+window.SCENARIO_CHUNK_CATS = ${JSON.stringify(chunks.map(c => [...new Set(c.map(x => x.category))]))};
 `;
 fs.writeFileSync(path.join(dir, "scenarios.js"), js, "utf8");
 
