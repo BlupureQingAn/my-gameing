@@ -15,6 +15,7 @@ const COMMUNITY_UNLOCK_REWARD = 1000;
 // 社区动态流防刷：发帖 30 秒间隔/点赞 5 秒间隔（内存 Map，Worker 单实例即可控）
 const POST_RATE_LIMIT_MS = 30000;
 const LIKE_RATE_LIMIT_MS = 5000;
+const DONATE_RATE_LIMIT_MS = 5000;
 const postRateMap = new Map();
 // Cloudflare Worker 环境是 UTC，固定用 UTC+8 计算"今天"
 const TIMEZONE_OFFSET_MS = 8 * 3600 * 1000;
@@ -1107,6 +1108,169 @@ export default {
                     };
                 }));
                 return new Response(JSON.stringify({ items, total: d.totalItems || 0 }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+
+            // ---- 路由：作品详情聚合（热度/作者/打赏榜/角色人气，GET /api/game/detail?id=）----
+            if (url.pathname === "/api/game/detail" && request.method === "GET") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const cardId = url.searchParams.get("id") || "";
+                if (!cardId) return errorResponse("缺少 id", 400, null, "INVALID_CARD");
+                const q = await pbAdminFetch(env, `/api/collections/community_cards/records/${encodeURIComponent(cardId)}`);
+                if (!q.ok) return errorResponse("作品不存在", 404, null, "CARD_NOT_FOUND");
+                const card = await q.json().catch(() => ({}));
+                const status = Array.isArray(card.status) ? card.status[0] : card.status;
+                if (status !== "approved" && card.author_id !== auth.record.id) {
+                    return errorResponse("作品不可见", 404, null, "CARD_NOT_FOUND");
+                }
+                let author = { id: card.author_id || "" };
+                if (card.author_id) {
+                    const aQ = await pbAdminFetch(env, `/api/collections/users/records/${encodeURIComponent(card.author_id)}`);
+                    const aD = await aQ.json().catch(() => ({}));
+                    if (aD && aD.id) author = { id: aD.id, nickname: aD.nickname || "", faceimg: aD.faceimg || "" };
+                }
+                const cardFilter = `card_id='${escapePocketBaseFilterValue(cardId)}'`;
+                // 点赞/收藏计数（perPage=1 + totalItems 拿总数，不落卡字段，PB schema 无需改动）
+                const lQ = await pbAdminFetch(env, `/api/collections/card_likes/records?perPage=1&filter=${encodeURIComponent(cardFilter)}`);
+                const lD = await lQ.json().catch(() => ({}));
+                const likesCount = Number(lD.totalItems || 0);
+                const lMy = await pbAdminFetch(env, `/api/collections/card_likes/records?perPage=1&skipTotal=true&filter=${encodeURIComponent(`${cardFilter}&&user_id='${escapePocketBaseFilterValue(auth.record.id)}'`)}`);
+                const lMyD = await lMy.json().catch(() => ({}));
+                const likedByMe = (lMyD.items || []).length > 0;
+                const cQ = await pbAdminFetch(env, `/api/collections/card_collects/records?perPage=1&filter=${encodeURIComponent(cardFilter)}`);
+                const cD = await cQ.json().catch(() => ({}));
+                const collectsCount = Number(cD.totalItems || 0);
+                const cMy = await pbAdminFetch(env, `/api/collections/card_collects/records?perPage=1&skipTotal=true&filter=${encodeURIComponent(`${cardFilter}&&user_id='${escapePocketBaseFilterValue(auth.record.id)}'`)}`);
+                const cMyD = await cMy.json().catch(() => ({}));
+                const collectedByMe = (cMyD.items || []).length > 0;
+                // 打赏榜（按用户聚合 sum(amount)，role_id 为空的是打赏）/ 角色人气（role_id 非空=送笔芯，计数）
+                const dQ = await pbAdminFetch(env, `/api/collections/donations/records?perPage=200&sort=-created&filter=${encodeURIComponent(cardFilter)}`);
+                const dD = await dQ.json().catch(() => ({}));
+                const dItems = dD.items || [];
+                const byUser = new Map();
+                const roleHot = {};
+                for (const d of dItems) {
+                    const amt = Number(d.amount || 0);
+                    if (d.role_id) {
+                        roleHot[d.role_id] = Number(roleHot[d.role_id] || 0) + 1;
+                    } else {
+                        const u = byUser.get(d.user_id) || { user_id: d.user_id, amount: 0 };
+                        u.amount += amt;
+                        byUser.set(d.user_id, u);
+                    }
+                }
+                const topDonors = [...byUser.values()].sort((a, b) => b.amount - a.amount).slice(0, 20);
+                const donors = await Promise.all(topDonors.map(async (u) => {
+                    let userInfo = { id: u.user_id || "" };
+                    if (u.user_id) {
+                        const uQ = await pbAdminFetch(env, `/api/collections/users/records/${encodeURIComponent(u.user_id)}`);
+                        const uD = await uQ.json().catch(() => ({}));
+                        if (uD && uD.id) userInfo = { id: uD.id, nickname: uD.nickname || "", faceimg: uD.faceimg || "" };
+                    }
+                    return { amount: u.amount, user: userInfo };
+                }));
+                return new Response(JSON.stringify({
+                    id: card.id, title: card.title, category: card.category || "", theme: card.theme || "",
+                    play_count: Number(card.play_count || 0), created_at: card.created_at || "",
+                    author, likes_count: likesCount, liked_by_me: likedByMe,
+                    collects_count: collectsCount, collected_by_me: collectedByMe,
+                    donors, role_hot: roleHot,
+                    data: card.data || null
+                }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+
+            // ---- 路由：作品点赞/收藏（POST /api/game/like | /api/game/collect，5 秒限 1 次）----
+            async function toggleCardMark(env, auth, body, collection) {
+                const cardId = String(body.card_id || "").trim();
+                const on = body.value !== false;
+                if (!cardId) return errorResponse("缺少 card_id", 400, null, "INVALID_CARD");
+                const now = Date.now();
+                if (now - (postRateMap.get(collection + ":" + auth.record.id) || 0) < LIKE_RATE_LIMIT_MS) {
+                    return errorResponse("操作太频繁，请稍后再试", 429, null, "TOO_FREQUENT");
+                }
+                postRateMap.set(collection + ":" + auth.record.id, now);
+                const cQ = await pbAdminFetch(env, `/api/collections/community_cards/records/${encodeURIComponent(cardId)}`);
+                if (!cQ.ok) return errorResponse("作品不存在", 404, null, "CARD_NOT_FOUND");
+                const filter = encodeURIComponent(`card_id='${escapePocketBaseFilterValue(cardId)}'&&user_id='${escapePocketBaseFilterValue(auth.record.id)}'`);
+                const fQ = await pbAdminFetch(env, `/api/collections/${collection}/records?perPage=1&skipTotal=true&filter=${filter}`);
+                const fD = await fQ.json().catch(() => ({}));
+                const existing = (fD.items || [])[0];
+                if (on && !existing) {
+                    await pbAdminFetch(env, `/api/collections/${collection}/records`, {
+                        method: "POST",
+                        body: JSON.stringify({ card_id: cardId, user_id: auth.record.id, created_at: new Date().toISOString() })
+                    });
+                } else if (!on && existing) {
+                    await pbAdminFetch(env, `/api/collections/${collection}/records/${existing.id}`, { method: "DELETE" });
+                }
+                const tQ = await pbAdminFetch(env, `/api/collections/${collection}/records?perPage=1&filter=${encodeURIComponent(`card_id='${escapePocketBaseFilterValue(cardId)}'`)}`);
+                const tD = await tQ.json().catch(() => ({}));
+                return new Response(JSON.stringify({ ok: true, count: Number(tD.totalItems || 0) }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+            if (url.pathname === "/api/game/like" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                let body = {};
+                try { body = await request.json(); } catch (e) {}
+                return toggleCardMark(env, auth, body, "card_likes");
+            }
+            if (url.pathname === "/api/game/collect" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                let body = {};
+                try { body = await request.json(); } catch (e) {}
+                return toggleCardMark(env, auth, body, "card_collects");
+            }
+
+            // ---- 路由：打赏作者/送笔芯（POST /api/game/donate；role_id 非空=送笔芯固定 1 币；打赏 10/50/100）----
+            if (url.pathname === "/api/game/donate" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                let body = {};
+                try { body = await request.json(); } catch (e) {}
+                const cardId = String(body.card_id || "").trim();
+                const roleId = String(body.role_id || "").trim();
+                let amount = Number(body.amount || 0);
+                if (!cardId) return errorResponse("缺少 card_id", 400, null, "INVALID_CARD");
+                if (roleId) amount = 1;
+                if (!Number.isFinite(amount) || amount <= 0 || amount > 500) {
+                    return errorResponse("金额无效", 400, null, "INVALID_AMOUNT");
+                }
+                const now = Date.now();
+                if (now - (postRateMap.get("donate:" + auth.record.id) || 0) < DONATE_RATE_LIMIT_MS) {
+                    return errorResponse("操作太频繁，请稍后再试", 429, null, "TOO_FREQUENT");
+                }
+                postRateMap.set("donate:" + auth.record.id, now);
+                const cQ = await pbAdminFetch(env, `/api/collections/community_cards/records/${encodeURIComponent(cardId)}`);
+                if (!cQ.ok) return errorResponse("作品不存在", 404, null, "CARD_NOT_FOUND");
+                const card = await cQ.json().catch(() => ({}));
+                if (card.author_id === auth.record.id) return errorResponse("不能给自己的作品打赏", 400, null, "SELF_DONATE");
+                const myCoins = Number(auth.record.coins || 0);
+                if (myCoins < amount) return errorResponse("云币不足，请先充值", 402, null, "INSUFFICIENT_COINS");
+                await pbAdminFetch(env, `/api/collections/users/records/${auth.record.id}`, {
+                    method: "PATCH", body: JSON.stringify({ coins: myCoins - amount })
+                });
+                const aQ = await pbAdminFetch(env, `/api/collections/users/records/${encodeURIComponent(card.author_id)}`);
+                const aD = await aQ.json().catch(() => ({}));
+                if (aD && aD.id) {
+                    await pbAdminFetch(env, `/api/collections/users/records/${aD.id}`, {
+                        method: "PATCH", body: JSON.stringify({ coins: Number(aD.coins || 0) + amount })
+                    });
+                }
+                await pbAdminFetch(env, `/api/collections/donations/records`, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        card_id: cardId, user_id: auth.record.id, author_id: card.author_id,
+                        amount, role_id: roleId || "", created_at: new Date().toISOString()
+                    })
+                });
+                return new Response(JSON.stringify({ ok: true, coins: myCoins - amount }), {
                     headers: { ...corsHeaders(), "Content-Type": "application/json" }
                 });
             }
