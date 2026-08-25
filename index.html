@@ -3271,6 +3271,22 @@
     body[data-theme="light"][data-skin="neon"]{--bg-main:#f0f3ff;--bg-soft:#f6f8ff;--card:#ffffff;--line:#ccd6f2;--text:#232a52;--sub:#5c6694;--accent:#4a6ee0;--accent-dark:#334bb0;--bg-page:radial-gradient(circle at top,rgba(228,235,255,.95) 0%,rgba(214,224,252,.9) 45%,#cdd9f5 100%)}
     body[data-skin="snow"]{--bg-main:#f5f7f9;--bg-soft:#fbfcfd;--card:#ffffff;--line:#d9e2ea;--text:#33414f;--sub:#73828f;--accent:#7ba3c4;--accent-dark:#4f7ea6;--input-bg:rgba(255,255,255,.97);--bg-page:radial-gradient(circle at top,rgba(240,246,251,.95) 0%,rgba(228,238,246,.92) 45%,#dbe7f0 100%);--panel-tint:rgba(236,244,250,.72)}
     body[data-theme="dark"][data-skin="snow"]{--bg-main:#151c24;--bg-soft:#1c2631;--card:#24303d;--line:#3a4a5b;--text:#e4edf5;--sub:#93a6b8;--accent:#8fb6d8;--accent-dark:#bcd8f0;--bg-page:radial-gradient(circle at top,rgba(24,36,48,.92) 0%,rgba(13,20,28,.97) 55%,#0a1016 100%)}
+    /* ===== 创建角色:头像三通道 + 属性重掷 ===== */
+    .init-avatar-row{display:flex;align-items:center;gap:10px}
+    .init-avatar-preview{width:56px;height:56px;border-radius:50%;background:var(--card-soft);border:2px dashed var(--line);display:flex;align-items:center;justify-content:center;font-size:1.7rem;overflow:hidden;flex-shrink:0}
+    .init-avatar-preview img{width:100%;height:100%;object-fit:cover}
+    .init-avatar-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+    .init-avatar-emoji-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:var(--input-bg);font-size:1.15rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+    .init-avatar-emoji-btn:hover{border-color:var(--accent);transform:scale(1.12)}
+    #init-avatar-emoji-panel{display:flex;flex-wrap:wrap;gap:5px;padding:8px;border:1px dashed var(--line);border-radius:10px;background:var(--panel-tint)}
+    .stat-roll-line{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px dashed var(--line)}
+    .stat-roll-line:last-child{border-bottom:none}
+    .stat-roll-name{width:64px;font-size:.85rem;font-weight:700;color:var(--text);flex-shrink:0}
+    .stat-roll-val{width:34px;text-align:center;font-weight:800;color:var(--accent-dark);font-size:.9rem;flex-shrink:0}
+    .stat-roll-bar{flex:1;height:8px;border-radius:4px;background:rgba(128,106,85,.18);overflow:hidden}
+    .stat-roll-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent-dark));transition:width .25s ease}
+    .stat-roll-btn{width:22px;height:22px;border-radius:6px;border:1px solid var(--line);background:var(--input-bg);color:var(--text);font-weight:800;cursor:pointer;line-height:1;flex-shrink:0}
+    .stat-roll-btn:hover{border-color:var(--accent)}
 </style>
 <div id="boot-screen" role="status" aria-label="页面加载中">
     <div class="boot-logo"><img src="icons/android-chrome-192x192.png" alt="" style="width:36px;height:36px;vertical-align:-7px;margin-right:10px;border-radius:8px;filter:drop-shadow(0 0 10px rgba(255,214,107,.45))">云吞吞文游</div>
@@ -3797,12 +3813,23 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <input id="init-preview-name" type="text" placeholder="主角姓名">
                 <input id="init-preview-english-name" type="text" placeholder="英文名">
                 <select id="init-preview-gender" onchange="toggleCustomField('init-preview-gender','init-preview-gender-custom')">
-                    <option value="">性别（未指定）</option>
+                    <option value="">生理性别（未指定）</option>
                     <option value="男">男</option>
                     <option value="女">女</option>
+                    <option value="双性">双性</option>
+                    <option value="性别流动">性别流动</option>
                     <option value="__custom__">自定义…</option>
                 </select>
                 <input id="init-preview-gender-custom" type="text" placeholder="自定义性别" style="display:none;">
+                <select id="init-preview-gender-identity" onchange="toggleCustomField('init-preview-gender-identity','init-preview-gender-identity-custom')">
+                    <option value="">心理性别（自我认同，未指定）</option>
+                    <option value="男性">男性</option>
+                    <option value="女性">女性</option>
+                    <option value="非二元">非二元</option>
+                    <option value="中性">中性</option>
+                    <option value="__custom__">自定义…</option>
+                </select>
+                <input id="init-preview-gender-identity-custom" type="text" placeholder="自定义心理性别" style="display:none;">
                 <select id="init-preview-orientation" onchange="toggleCustomField('init-preview-orientation','init-preview-orientation-custom')">
                     <option value="">性取向（未指定）</option>
                     <option value="异性恋">异性恋</option>
@@ -3826,6 +3853,29 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <input id="init-preview-age-years" type="number" min="0" max="120" placeholder="年龄（岁）">
                 <input id="init-preview-nationality" type="text" placeholder="国籍">
                 <input id="init-preview-location" type="text" placeholder="地点">
+            </div>
+            <div style="margin-top:8px; display:grid; gap:6px;">
+                <input id="init-preview-avatar" type="hidden" value="😀">
+                <div class="init-avatar-row">
+                    <div class="init-avatar-preview" id="init-preview-avatar-show">😀</div>
+                    <div class="init-avatar-actions">
+                        <button type="button" class="mini-btn" onclick="toggleAvatarEmojiPanel()">😀 表情</button>
+                        <button type="button" class="mini-btn" onclick="avatarUpload()">🖼️ 上传</button>
+                        <button type="button" class="mini-btn" onclick="avatarAiSuggest()">✨ AI 推荐</button>
+                        <input type="file" id="init-avatar-file" accept="image/*" style="display:none;">
+                    </div>
+                </div>
+                <div id="init-avatar-emoji-panel" style="display:none;"></div>
+                <div id="init-preview-stats-panel" style="margin-top:2px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span class="list-sub" style="margin:0;flex:1;">🎲 初始属性（可重掷微调）</span>
+                        <button type="button" class="mini-btn" onclick="rollStats()">🎲 随机重掷</button>
+                    </div>
+                    <div id="init-preview-stats-list" style="margin-top:4px;"></div>
+                </div>
+                <input id="init-preview-appearance" type="text" maxlength="40" placeholder="外貌自设（如：黑发及腰，眉目清冷）">
+                <input id="init-preview-personality" type="text" maxlength="40" placeholder="性格自设（如：外冷内热，嘴硬心软）">
+                <input id="init-preview-family" type="text" maxlength="40" placeholder="家庭背景（如：书香门第独女）">
             </div>
             <div class="gender-actions">
                 <button class="mini-btn ghost" onclick="closeInitPreviewModal()">取消</button>
@@ -4396,6 +4446,11 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 ? Utils.deepClone(preset.npcs)
                 : createDefaultNpcs();
             next.stats = Array.isArray(preset.stats) ? Utils.deepClone(preset.stats) : [];
+            next.avatar = String(preset.avatar || "").slice(0, 40);
+            next.appearance = String(preset.appearance || "").trim().slice(0, 60);
+            next.personality = String(preset.personality || "").trim().slice(0, 60);
+            next.family = String(preset.family || "").trim().slice(0, 60);
+            next.genderIdentity = String(preset.genderIdentity || "").trim().slice(0, 20);
             next.panelStatusTags = normalizeStatusTagList(preset.panelStatusTags);
             next.npcMemoryMap = {};
             next.protagonistProfile = {
@@ -4435,7 +4490,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             }
         }
 
-        function resetWithPreset({ selectedGender, forcedGender, forcedOrientation, forcedRole, name, englishName, ageYears, nationality, location, currentYear, currentMonth, currentDay, timeEra, weekIndex, weekdayIndex, inventory, npcs, stats, panelStatusTags, rebornReason }) {
+        function resetWithPreset({ selectedGender, forcedGender, forcedOrientation, forcedRole, name, englishName, ageYears, nationality, location, currentYear, currentMonth, currentDay, timeEra, weekIndex, weekdayIndex, inventory, npcs, stats, panelStatusTags, rebornReason, avatar, appearance, personality, family, genderIdentity }) {
             const finalGender = forcedGender || selectedGender || baseState.gender;
             gameState = buildInitialState(finalGender, {
                 gender: forcedGender,
@@ -4455,7 +4510,12 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 inventory,
                 npcs,
                 stats,
-                panelStatusTags
+                panelStatusTags,
+                avatar,
+                appearance,
+                personality,
+                family,
+                genderIdentity
             });
             gameState.history = [];
             save();
@@ -5650,10 +5710,13 @@ function rebuildChoicesBlock(body, labels = []) {
             return [
                 `姓名:${state.name}`,
                 state.englishName ? `英文名:${state.englishName}` : "",
-                `性别:${state.gender}`,
+                `性别:${state.gender}${state.genderIdentity ? `（心理认同${state.genderIdentity}）` : ""}`,
                 state.nationality ? `国籍:${state.nationality}` : "",
                 state.location ? `地点:${state.location}` : "",
-                `年龄:${Math.floor((state.age || 0) / 12)}岁`
+                `年龄:${Math.floor((state.age || 0) / 12)}岁`,
+                state.appearance ? `外貌:${state.appearance}` : "",
+                state.personality ? `性格:${state.personality}` : "",
+                state.family ? `家庭背景:${state.family}` : ""
             ].filter(Boolean).join("，");
         }
         function serializeTime(state) {
@@ -6880,8 +6943,12 @@ function rebuildChoicesBlock(body, labels = []) {
                 ? `<div class="psb-stats">${coreStats.map(statBarHtml).join("")}</div>`
                 : "";
             const roleHtml = state.role ? `<span class="psb-role">${MarkdownService.escapeHtml(state.role)}</span>` : "";
+            const avatarText = (state.avatar && !state.avatar.startsWith("data:")) ? state.avatar : MarkdownService.escapeHtml(name.slice(0, 1));
+            const avatarImg = state.avatar && (state.avatar.startsWith("data:") || state.avatar.startsWith("http"))
+                ? `<img src="${String(state.avatar).replace(/"/g, "%22")}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+                : MarkdownService.escapeHtml(avatarText);
             box.innerHTML = `
-                <div class="psb-avatar" style="background:${avatarColor(name)}">${MarkdownService.escapeHtml(name.slice(0, 1))}</div>
+                <div class="psb-avatar" style="background:${avatarColor(name)}">${avatarImg}</div>
                 <div class="psb-id">
                     <div class="psb-name">${MarkdownService.escapeHtml(name)}</div>
                     ${roleHtml}
@@ -7585,7 +7652,16 @@ function rebuildChoicesBlock(body, labels = []) {
             const name = state.name || "旅人";
             const av = document.getElementById("phone-avatar");
             const nm = document.getElementById("phone-user-name");
-            if (av) { av.textContent = name.slice(0, 1); av.style.background = avatarColor(name); }
+            if (av) {
+                av.style.background = avatarColor(name);
+                if (state.avatar && (state.avatar.startsWith("data:") || state.avatar.startsWith("http"))) {
+                    av.innerHTML = `<img src="${String(state.avatar).replace(/"/g, "%22")}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+                } else if (state.avatar && !state.avatar.startsWith("data:")) {
+                    av.textContent = state.avatar;
+                } else {
+                    av.textContent = name.slice(0, 1);
+                }
+            }
             if (nm) nm.textContent = name;
             const clk = document.getElementById("phone-clock");
             if (clk) {
@@ -12792,26 +12868,143 @@ function openNpcProfile(npcId) {
             cus.style.display = sel.value === "__custom__" ? "block" : "none";
             if (sel.value !== "__custom__") cus.value = "";
         }
+        // ---- 创建角色增强：属性重掷/微调 + 头像三通道 ----
+        const INIT_STAT_DEFS = [
+            { label: "容貌", icon: "💪" },
+            { label: "体质", icon: "❤️" },
+            { label: "智力", icon: "🧠" },
+            { label: "魅力", icon: "✨" },
+            { label: "道德", icon: "⚖️" }
+        ];
+        let _initStatValues = {};
+        let _statsEdited = false; // 用户主动重掷/微调后才覆盖卡片协议属性
+        function renderInitStats() {
+            const list = document.getElementById("init-preview-stats-list");
+            if (!list) return;
+            list.innerHTML = INIT_STAT_DEFS.map((d) => {
+                const v = Math.max(0, Math.min(100, Number(_initStatValues[d.label]) || 50));
+                return `<div class="stat-roll-line">
+                    <span class="stat-roll-name">${d.icon} ${d.label}</span>
+                    <span class="stat-roll-val" id="stat-val-${d.label}">${v}</span>
+                    <div class="stat-roll-bar"><div class="stat-roll-fill" style="width:${v}%;"></div></div>
+                    <button type="button" class="stat-roll-btn" onclick="statAdjust('${d.label}',-5)">−</button>
+                    <button type="button" class="stat-roll-btn" onclick="statAdjust('${d.label}',5)">＋</button>
+                </div>`;
+            }).join("");
+        }
+        function rollStats() {
+            const base = { 容貌: 60, 体质: 60, 智力: 60, 魅力: 60, 道德: 60 };
+            let used = 0;
+            const vals = {};
+            INIT_STAT_DEFS.forEach((d, i) => {
+                let v = i === INIT_STAT_DEFS.length - 1 ? (300 - used) : Math.round(40 + Math.random() * 50);
+                v = Math.max(20, Math.min(95, v));
+                vals[d.label] = v;
+                used += v;
+            });
+            _initStatValues = vals;
+            _statsEdited = true;
+            renderInitStats();
+        }
+        function statAdjust(label, delta) {
+            _statsEdited = true;
+            const v = Math.max(0, Math.min(100, Number(_initStatValues[label] || 0) + delta));
+            _initStatValues[label] = v;
+            const valEl = document.getElementById("stat-val-" + label);
+            if (valEl) valEl.textContent = v;
+            const fill = document.querySelector(`#stat-val-${label}`)?.parentElement?.querySelector(".stat-roll-fill");
+            if (fill) fill.style.width = v + "%";
+        }
+        const AVATAR_EMOJI_POOL = ["😀", "😎", "🥳", "🤠", "😇", "🦊", "🐯", "🐰", "🐻", "🐼", "🦁", "🐺", "🦉", "🐱", "🐶", "🌸", "🌙", "⭐", "🔥", "🍀", "🎩", "🧣", "👑", "💫"];
+        function toggleAvatarEmojiPanel() {
+            const panel = document.getElementById("init-avatar-emoji-panel");
+            if (!panel) return;
+            if (panel.style.display !== "none") { panel.style.display = "none"; return; }
+            panel.innerHTML = AVATAR_EMOJI_POOL.map((e) => `<button type="button" class="init-avatar-emoji-btn" onclick="avatarPick('${e}')">${e}</button>`).join("");
+            panel.style.display = "flex";
+        }
+        function setInitAvatar(val) {
+            const hidden = document.getElementById("init-preview-avatar");
+            const show = document.getElementById("init-preview-avatar-show");
+            if (!hidden || !show) return;
+            const v = String(val || "");
+            hidden.value = v;
+            if (v.startsWith("data:") || v.startsWith("http")) {
+                show.innerHTML = `<img src="${v.replace(/"/g, "%22")}" alt="头像">`;
+            } else {
+                show.textContent = v || "😀";
+            }
+            const panel = document.getElementById("init-avatar-emoji-panel");
+            if (panel) panel.style.display = "none";
+        }
+        function avatarPick(emoji) { setInitAvatar(emoji); }
+        function avatarUpload() {
+            const input = document.getElementById("init-avatar-file");
+            input.onchange = () => {
+                const f = input.files && input.files[0];
+                input.value = "";
+                if (!f) return;
+                if (f.size > 2 * 1024 * 1024) { NoticeModalService.showInfo({ title: "头像过大", descHtml: "请上传 2MB 以内的图片" }); return; }
+                const reader = new FileReader();
+                reader.onload = () => setInitAvatar(String(reader.result || ""));
+                reader.readAsDataURL(f);
+            };
+            input.click();
+        }
+        function avatarAiSuggest() {
+            const name = String(document.getElementById("init-preview-name")?.value || "云吞").trim();
+            let h = 0;
+            for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+            const emoji = AVATAR_EMOJI_POOL[h % AVATAR_EMOJI_POOL.length];
+            setInitAvatar(emoji);
+            NoticeModalService.showInfo({ title: "✨ AI 推荐", descHtml: `根据名字「${MarkdownService.escapeHtml(name)}」为你推荐头像：<span style="font-size:2rem;">${emoji}</span><div class="list-sub">可再点几次换一个，或打开表情面板自选。</div>` });
+        }
         function bindInitPreviewForm(plan) {
             document.getElementById("init-preview-name").value = plan.name || "";
             document.getElementById("init-preview-english-name").value = plan.englishName || "";
             bindSelectOrCustom("init-preview-gender", "init-preview-gender-custom", plan.forcedGender || plan.selectedGender || "");
+            bindSelectOrCustom("init-preview-gender-identity", "init-preview-gender-identity-custom", plan.genderIdentity || "");
             bindSelectOrCustom("init-preview-orientation", "init-preview-orientation-custom", plan.forcedOrientation || "");
             bindSelectOrCustom("init-preview-role", "init-preview-role-custom", plan.forcedRole || "");
             document.getElementById("init-preview-age-years").value = String(plan.ageYears ?? 18);
             document.getElementById("init-preview-nationality").value = plan.nationality || "";
             document.getElementById("init-preview-location").value = plan.location || "";
+            setInitAvatar(plan.avatar || "😀");
+            const statList = Array.isArray(plan.stats) ? plan.stats : [];
+            if (statList.length) {
+                _initStatValues = {};
+                INIT_STAT_DEFS.forEach((d) => {
+                    const found = statList.find((s) => String(s.label).includes(d.label));
+                    _initStatValues[d.label] = Math.max(0, Math.min(100, Number(found ? found.value : 60)));
+                });
+                _statsEdited = false; // 未主动改动:沿用卡片协议属性
+            } else {
+                rollStats();
+            }
+            renderInitStats();
+            document.getElementById("init-preview-appearance").value = plan.appearance || "";
+            document.getElementById("init-preview-personality").value = plan.personality || "";
+            document.getElementById("init-preview-family").value = plan.family || "";
         }
         function collectInitPreviewForm() {
+            const stats = _statsEdited
+                ? INIT_STAT_DEFS.map((d) => ({ icon: d.icon, label: d.label, value: String(Math.max(0, Math.min(100, Number(_initStatValues[d.label]) || 50))) }))
+                : undefined;
             return {
                 name: document.getElementById("init-preview-name").value.trim(),
                 englishName: document.getElementById("init-preview-english-name").value.trim(),
                 forcedGender: readSelectOrCustom("init-preview-gender", "init-preview-gender-custom"),
+                genderIdentity: readSelectOrCustom("init-preview-gender-identity", "init-preview-gender-identity-custom"),
                 forcedOrientation: readSelectOrCustom("init-preview-orientation", "init-preview-orientation-custom"),
                 forcedRole: readSelectOrCustom("init-preview-role", "init-preview-role-custom"),
                 ageYears: Number(document.getElementById("init-preview-age-years").value || 0),
                 nationality: document.getElementById("init-preview-nationality").value.trim(),
-                location: document.getElementById("init-preview-location").value.trim()
+                location: document.getElementById("init-preview-location").value.trim(),
+                avatar: document.getElementById("init-preview-avatar").value || "😀",
+                appearance: document.getElementById("init-preview-appearance").value.trim(),
+                personality: document.getElementById("init-preview-personality").value.trim(),
+                family: document.getElementById("init-preview-family").value.trim(),
+                stats
             };
         }
         async function playScenarioCard(cardId) {
@@ -12926,6 +13119,8 @@ function openNpcProfile(npcId) {
             if (!pendingInitPlan) return;
             const edited = collectInitPreviewForm();
             const merged = { ...pendingInitPlan, ...edited };
+            // collect 未编辑时返回 stats:undefined，spread 会覆盖计划属性 → 用计划值兜底
+            if (merged.stats === undefined) merged.stats = pendingInitPlan.stats;
             if (!merged.name) {
                 NoticeModalService.showInfo({ title: "信息不完整", descHtml: "请填写主角姓名。" });
                 return;
@@ -12951,7 +13146,7 @@ function openNpcProfile(npcId) {
                 openingChoices: merged.openingChoices || []
             });
         }
-        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, advanceStory, openPhoneDiary, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc };
+        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, avatarPick, avatarUpload, avatarAiSuggest, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, advanceStory, openPhoneDiary, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
@@ -12992,6 +13187,13 @@ function openNpcProfile(npcId) {
     function collectInitPreviewForm() { return Controller.collectInitPreviewForm(); }
     function toggleCustomField(selectId, customId) { Controller.toggleCustomField(selectId, customId); }
     function applyInitPreviewAndStart() { Controller.applyInitPreviewAndStart(); }
+    function rollStats() { Controller.rollStats(); }
+    function statAdjust(label, delta) { Controller.statAdjust(label, delta); }
+    function toggleAvatarEmojiPanel() { Controller.toggleAvatarEmojiPanel(); }
+    function avatarPick(emoji) { Controller.avatarPick(emoji); }
+    function avatarUpload() { Controller.avatarUpload(); }
+    function avatarAiSuggest() { Controller.avatarAiSuggest(); }
+    function setInitAvatar(val) { Controller.setInitAvatar(val); }
     function sendNpcMessage() { Controller.sendNpcMessage(); }
     function backToSocialList() { Controller.backToSocialList(); }
     function closeInfoModal() { Controller.closeInfoModal(); }
