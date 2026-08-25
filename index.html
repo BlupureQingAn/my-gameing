@@ -2397,6 +2397,8 @@
             align-items: center;
             padding: 14px;
         }
+        /* 提示弹窗:固定视口并置顶,不被充值窗口(z-index:999)等覆盖 */
+        #info-modal { position: fixed; z-index: 10000; }
 
         .modal-card {
             width: 100%;
@@ -10935,8 +10937,10 @@ function openNpcProfile(npcId) {
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || "签到失败");
-                await AuthService.refreshBalance();
+                await AuthService.refreshBalance().catch(() => {});
+                AuthService.applyCheckin(Number(data.coin), Number(data.streak), new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10));
                 renderCoinBalance();
+                closePanel();
                 NoticeModalService.showInfo({
                     title: "🎁 签到成功",
                     descHtml: `+${data.reward} 云币（连续 ${data.streak} 天）！当前余额 ${data.coin}，去解锁剧本卡吧～`
@@ -11284,6 +11288,14 @@ function openNpcProfile(npcId) {
                 console.error("刷新使用状态失败", e);
             }
         }
+        // 签到接口已返回权威余额,直接本地写入立即刷新(不依赖 PB 直读是否放行)
+        function applyCheckin(coin, streak, checkinDate) {
+            if (!_userData) return;
+            _userData.coin = coin;
+            _userData.checkin_streak = streak;
+            _userData.last_checkin_date = checkinDate;
+            updateUsageStatusUI();
+        }
 
         function showOverlay() {
             const el = document.getElementById("auth-overlay");
@@ -11472,7 +11484,7 @@ function openNpcProfile(npcId) {
             if (e.key === "Enter") handleSubmit();
         });
 
-        return { init, handleSubmit, toggleMode, logout, getToken, getEmail, getUserData, refreshBalance, updateUsageStatusUI, hasMembership };
+        return { init, handleSubmit, toggleMode, logout, getToken, getEmail, getUserData, refreshBalance, applyCheckin, updateUsageStatusUI, hasMembership };
     })();
 
     function hideBootScreen() {
