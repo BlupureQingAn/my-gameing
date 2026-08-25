@@ -2406,6 +2406,46 @@
         #info-modal { position: fixed; z-index: 100000; }
         #social-qq-btn:hover { filter: brightness(.95); }
         #social-wx-btn:hover { filter: brightness(.95); }
+        /* 顶部加载动画:最顶层,下滑出现/丝滑缩回 */
+        #top-loader {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 2147483647;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px 12px;
+            background: linear-gradient(180deg, color-mix(in srgb, var(--accent, #b8860b) 92%, #fff), color-mix(in srgb, var(--accent, #b8860b) 76%, #fff));
+            color: #fff;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0,0,0,.25);
+            border-radius: 0 0 14px 14px;
+            box-shadow: 0 4px 16px rgba(0,0,0,.22);
+            transform: translateY(-130%);
+            transition: transform .38s cubic-bezier(.22, 1, .36, 1);
+            pointer-events: none;
+        }
+        #top-loader.show { transform: translateY(0); }
+        .top-loader-track {
+            position: relative;
+            flex: 1;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255,255,255,.35);
+            overflow: hidden;
+        }
+        .top-loader-fill {
+            position: absolute;
+            top: 0; left: 0;
+            height: 100%;
+            width: 35%;
+            border-radius: 2px;
+            background: rgba(255,255,255,.95);
+            animation: topLoaderSlide 1s ease-in-out infinite;
+        }
+        @keyframes topLoaderSlide { 0% { transform: translateX(-110%); } 100% { transform: translateX(320%); } }
+        @media (prefers-reduced-motion: reduce) { #top-loader { transition: none; } .top-loader-fill { animation: none; } }
 
         .modal-card {
             width: 100%;
@@ -2675,6 +2715,12 @@
 </div>
 <script>/* 兜底:主逻辑接管前强制淡出,避免 JS 异常时永久遮挡;90s 防慢网下"加载页消失但页面未就绪"(CF 到国内带宽实测 1-3KB/s,HTML 需 40s+) */
 setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.classList.contains("boot-done"))b.classList.add("boot-done");},90000);</script>
+
+<!-- 顶部加载动画:按钮请求的全局等待指示(最顶层,从顶部下滑/丝滑缩回) -->
+<div id="top-loader" aria-live="polite">
+    <div class="top-loader-track"><div class="top-loader-fill"></div></div>
+    <span id="top-loader-text">加载中...</span>
+</div>
 
 <!-- ==================== 登录/注册覆盖层 ==================== -->
 <div id="auth-overlay" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--bg-page,#efe3cf);align-items:center;justify-content:center;padding:20px;">
@@ -3242,6 +3288,31 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             });
         }
         return { show, close };
+    })();
+
+    // ==================== TopLoader (顶部加载动画,最顶层) ====================
+    const TopLoader = (() => {
+        let counter = 0;
+        let hideTimer = null;
+        function show(label) {
+            counter++;
+            const el = document.getElementById("top-loader");
+            if (el) el.classList.add("show");
+            if (label) {
+                const text = document.getElementById("top-loader-text");
+                if (text) text.textContent = label;
+            }
+            clearTimeout(hideTimer);
+        }
+        function hide() {
+            if (counter > 0) counter--;
+            if (counter > 0) return; // 仍有外层请求未结束
+            hideTimer = setTimeout(() => {
+                const el = document.getElementById("top-loader");
+                if (el) el.classList.remove("show");
+            }, 160); // 短暂停留让用户感知"完成",随后丝滑缩回
+        }
+        return { show, hide };
     })();
 
     const NoticeModalService = (() => {
@@ -10659,6 +10730,7 @@ function openNpcProfile(npcId) {
                 theme: String(selected.theme || "").trim(),
                 data
             };
+            TopLoader.show("上传中...");
             try {
                 const res = await fetch(`${AppConfig.proxy.baseUrl}/api/cards/community`, {
                     method: "POST",
@@ -10670,6 +10742,8 @@ function openNpcProfile(npcId) {
                 NoticeModalService.showInfo({ title: "已提交审核", descHtml: `《${MarkdownService.escapeHtml(selected.title || "未命名剧本")}》已上传，审核通过后他人可游玩。` });
             } catch (e) {
                 NoticeModalService.showInfo({ title: "上传失败", descHtml: MarkdownService.escapeHtml(String(e.message || e).slice(0, 100)) });
+            } finally {
+                TopLoader.hide();
             }
         }
         // M5：我的剧本区（播放量 + 收益累计）
@@ -10681,6 +10755,7 @@ function openNpcProfile(npcId) {
                 return;
             }
             container.innerHTML = '<span class="list-sub">加载中...</span>';
+            TopLoader.show("加载剧本中...");
             try {
                 const res = await fetch(`${AppConfig.proxy.baseUrl}/api/cards/community?mine=1`, {
                     headers: { "X-Auth-Token": "Bearer " + AuthService.getToken() }
@@ -10708,6 +10783,8 @@ function openNpcProfile(npcId) {
                 container.innerHTML = rows;
             } catch (e) {
                 container.innerHTML = '<span class="list-sub">加载失败，请稍后重试。</span>';
+            } finally {
+                TopLoader.hide();
             }
         }
         function openInitPreviewModal() {
@@ -10922,7 +10999,7 @@ function openNpcProfile(npcId) {
         function renderCoinBalance() {
             const u = AuthService.getUserData();
             const balanceEl = document.getElementById("membership-coin-balance");
-            if (balanceEl) balanceEl.textContent = u ? String(Number(u.coin || 0)) : "--";
+            if (balanceEl) balanceEl.textContent = u ? String(Number(u.coins || 0)) : "--";
             const btn = document.getElementById("membership-checkin-btn");
             const msg = document.getElementById("membership-checkin-msg");
             if (!btn) return;
@@ -10946,6 +11023,7 @@ function openNpcProfile(npcId) {
             }
             const btn = document.getElementById("membership-checkin-btn");
             if (btn) btn.disabled = true;
+            TopLoader.show("签到中...");
             try {
                 const res = await fetch(`${AppConfig.proxy.baseUrl}/api/checkin`, {
                     method: "POST",
@@ -10954,12 +11032,12 @@ function openNpcProfile(npcId) {
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || "签到失败");
                 await AuthService.refreshBalance().catch(() => {});
-                AuthService.applyCheckin(Number(data.coin), Number(data.streak), new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10));
+                AuthService.applyCheckin(Number(data.coins), Number(data.streak), new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10));
                 renderCoinBalance();
                 closePanel();
                 NoticeModalService.showInfo({
                     title: "🎁 签到成功",
-                    descHtml: `+${data.reward} 云币（连续 ${data.streak} 天）！当前余额 ${data.coin}，去解锁剧本卡吧～`
+                    descHtml: `+${data.reward} 云币（连续 ${data.streak} 天）！当前余额 ${data.coins}，去解锁剧本卡吧～`
                 });
             } catch (e) {
                 const msg = e.message || "签到失败";
@@ -10971,6 +11049,8 @@ function openNpcProfile(npcId) {
                     NoticeModalService.showInfo({ title: "签到失败", descHtml: msg });
                 }
                 if (btn) btn.disabled = false;
+            } finally {
+                TopLoader.hide();
             }
         }
         function closePanel() {
@@ -11083,6 +11163,7 @@ function openNpcProfile(npcId) {
             }
             if (_creatingOrder) return; // 创建中,防双击重复下单
             _creatingOrder = true;
+            TopLoader.show("创建订单中...");
             if (payArea) payArea.innerHTML = '<div class="list-sub">正在创建订单...</div>';
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(), 20000);
@@ -11107,6 +11188,7 @@ function openNpcProfile(npcId) {
             } finally {
                 clearTimeout(timer);
                 _creatingOrder = false;
+                TopLoader.hide();
             }
         }
         function startPoll(orderNo) {
@@ -11177,16 +11259,21 @@ function openNpcProfile(npcId) {
         }
         // 解锁：服务端扣 5000 币 → 本地标记 → 刷新余额
         async function unlock(cardId) {
-            const res = await fetch(`${AppConfig.proxy.baseUrl}/api/cards/unlock`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "X-Auth-Token": AuthService.getToken() },
-                body: JSON.stringify({ card_id: cardId })
-            });
-            const d = await res.json().catch(() => ({}));
-            if (!res.ok) throw new Error(d.error || "解锁失败");
-            _unlocked.add(cardId);
-            saveLocal();
-            return d;
+            TopLoader.show("解锁中...");
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/cards/unlock`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "X-Auth-Token": AuthService.getToken() },
+                    body: JSON.stringify({ card_id: cardId })
+                });
+                const d = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(d.error || "解锁失败");
+                _unlocked.add(cardId);
+                saveLocal();
+                return d;
+            } finally {
+                TopLoader.hide();
+            }
         }
         // 点击被锁卡引导：未登录 → 去登录；已登录 → 确认解锁
         async function promptUnlock(card) {
@@ -11240,7 +11327,7 @@ function openNpcProfile(npcId) {
                 if (!u) return;
                 localStorage.setItem(USER_CACHE_KEY, JSON.stringify({
                     id: u.id, email: getEmail(),
-                    coin: u.coin, membership_type: u.membership_type || "",
+                    coins: u.coins, membership_type: u.membership_type || "",
                     membership_expires_at: u.membership_expires_at || "",
                     checkin_streak: u.checkin_streak || 0, last_checkin_date: u.last_checkin_date || "",
                     ts: Date.now()
@@ -11255,7 +11342,7 @@ function openNpcProfile(npcId) {
                 if (!c || !c.id || c.email !== getEmail()) return;
                 _userData = {
                     id: c.id, email: c.email,
-                    coin: c.coin, membership_type: c.membership_type || "",
+                    coins: Number(c.coins ?? c.coin ?? 0), membership_type: c.membership_type || "",
                     membership_expires_at: c.membership_expires_at || "",
                     checkin_streak: c.checkin_streak || 0, last_checkin_date: c.last_checkin_date || ""
                 };
@@ -11292,7 +11379,7 @@ function openNpcProfile(npcId) {
             const isMember = hasMembership();
 
             const countEl = document.getElementById("display-remaining-count");
-            if (countEl) countEl.textContent = u ? String(Number(u.coin || 0)) : "--";
+            if (countEl) countEl.textContent = u ? String(Number(u.coins || 0)) : "--";
 
             const badgeEl = document.getElementById("display-membership-badge");
             if (badgeEl) {
@@ -11315,7 +11402,7 @@ function openNpcProfile(npcId) {
             const usageBadge = document.getElementById("usage-badge");
             if (usageBadge) {
                 const memberName = (u && MEMBER_NAMES[u.membership_type]) || "会员";
-                usageBadge.textContent = isMember ? memberName : (u ? `${Number(u.coin || 0)} 云币` : "开通会员");
+                usageBadge.textContent = isMember ? memberName : (u ? `${Number(u.coins || 0)} 云币` : "开通会员");
                 usageBadge.style.display = "inline-flex";
             }
         }
@@ -11341,7 +11428,7 @@ function openNpcProfile(npcId) {
         // 签到接口已返回权威余额,直接本地写入立即刷新(不依赖 PB 直读是否放行)
         function applyCheckin(coin, streak, checkinDate) {
             if (!_userData) return;
-            _userData.coin = coin;
+            _userData.coins = coin;
             _userData.checkin_streak = streak;
             _userData.last_checkin_date = checkinDate;
             cacheUser();
@@ -11369,6 +11456,7 @@ function openNpcProfile(npcId) {
         function setLoading(on) {
             const btn = document.getElementById("auth-submit-btn");
             if (btn) { btn.disabled = on; btn.textContent = on ? "请稍候..." : (_isRegisterMode ? "注册" : "登录"); }
+            if (on) TopLoader.show("登录中..."); else TopLoader.hide();
         }
 
         function toggleMode() {
@@ -11449,6 +11537,7 @@ function openNpcProfile(npcId) {
 
         // 聚合登录:①获取跳转地址并跳转（appkey 在服务端,前端仅拿 url）
         async function socialLogin(type) {
+            TopLoader.show("跳转中...");
             try {
                 const res = await fetch(`${AppConfig.proxy.baseUrl}/api/social/login?type=${encodeURIComponent(type)}`);
                 const data = await res.json().catch(() => ({}));
@@ -11459,6 +11548,8 @@ function openNpcProfile(npcId) {
                 window.location.href = data.url;
             } catch (e) {
                 NoticeModalService.showInfo({ title: "提示", descHtml: "网络异常，请稍后重试" });
+            } finally {
+                TopLoader.hide();
             }
         }
         // 聚合登录:②平台回跳(?social_cb=1&type=&code=)换 token 并登录
@@ -11471,6 +11562,7 @@ function openNpcProfile(npcId) {
                 // 先清 URL,避免 code 滞留地址栏/刷新重复登录
                 window.history.replaceState({}, "", window.location.pathname + window.location.hash);
                 if (!type || !code) return false;
+                TopLoader.show("登录中...");
                 const res = await fetch(`${AppConfig.proxy.baseUrl}/api/social/login`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -11489,6 +11581,8 @@ function openNpcProfile(npcId) {
                 return true;
             } catch (e) {
                 return false;
+            } finally {
+                TopLoader.hide();
             }
         }
 
