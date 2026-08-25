@@ -12,6 +12,7 @@
     <style>
         /* ==================== 变量层（Design Tokens） ==================== */
         :root {
+            --base-font-size: 16px;
             --bg-main: #efe3cf;
             --bg-soft: #f7eedf;
             --card: #fff7ea;
@@ -99,6 +100,9 @@
         }
 
         /* ==================== 布局层（Base / Layout） ==================== */
+        html {
+            font-size: var(--base-font-size, 16px);
+        }
         * {
             margin: 0;
             padding: 0;
@@ -2849,8 +2853,30 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 </div>
             </section>
             <section class="card">
+                <div class="list-title">🖥️ 显示设置</div>
+                <div style="display:flex;align-items:center;gap:10px;margin:10px 0;">
+                    <span class="list-sub" style="margin:0;">字体大小</span>
+                    <input type="range" id="ui-font-size-range" min="12" max="20" step="1" style="flex:1;" oninput="SettingsService.onFontSizeInput(this.value)">
+                    <span id="ui-font-size-val" style="font-weight:700;min-width:40px;text-align:right;">16px</span>
+                </div>
+                <div class="list-sub">调整后全局字号即时生效，自动保存。</div>
+            </section>
+            <section class="card">
+                <div class="list-title">🔑 自备 AI 接口（BYOK）</div>
+                <div class="list-sub">填入你自己的 OpenAI 兼容 API（任意 base_url 端口、Key、模型），聊天将直连你的端点，不消耗云币。</div>
+                <div style="margin-top:10px;">
+                    <div><label class="sf-label">Base URL（含端口，如 https://api.openai.com/v1）</label><input id="ui-byok-url" type="text" placeholder="https://api.openai.com/v1"></div>
+                    <div style="margin-top:8px;"><label class="sf-label">API Key</label><input id="ui-byok-key" type="password" placeholder="sk-..."></div>
+                    <div style="margin-top:8px;"><label class="sf-label">模型名</label><input id="ui-byok-model" type="text" placeholder="如 gpt-4o-mini / glm-4-flash"></div>
+                    <div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
+                        <button class="mini-btn primary" onclick="SettingsService.testByokConnection()">测试连接</button>
+                        <span id="ui-byok-test-result" class="list-sub" style="margin:0;"></span>
+                    </div>
+                </div>
+            </section>
+            <section class="card">
                 <div class="list-title">👑 会员服务</div>
-                <div class="list-sub">非会员每天可免费体验 20 次 AI 生成；开通会员后不限量畅玩。模型由系统自动路由，无需手动选择。</div>
+                <div class="list-sub">每轮 AI 对话消耗 100 云币，官方剧本卡解锁需 5000 云币（永久拥有）。开通终身会员（限时 ¥89）后免一切云币消耗、全部剧本卡直接游玩。自备 AI 接口（BYOK）不消耗云币。</div>
             </section>
         </section>
         <!-- 保持 settings 视图正常闭合即可 -->
@@ -6374,6 +6400,57 @@ function rebuildChoicesBlock(body, labels = []) {
     })();
 
     const SettingsService = (() => {
+        const FONT_KEY = "bitlife_font_size_v1";
+        const BYOK_KEY = "bitlife_byok_v1";
+        const DEFAULT_FONT_SIZE = 16;
+
+        function getByok() {
+            try { return JSON.parse(localStorage.getItem(BYOK_KEY) || "null"); } catch (e) { return null; }
+        }
+        function saveByok(cfg) {
+            if (cfg && cfg.url && cfg.key && cfg.model) localStorage.setItem(BYOK_KEY, JSON.stringify(cfg));
+            else localStorage.removeItem(BYOK_KEY);
+        }
+        function applyFontSize(size) {
+            const px = Math.min(20, Math.max(12, Math.round(Number(size) || DEFAULT_FONT_SIZE)));
+            document.documentElement.style.setProperty("--base-font-size", px + "px");
+            localStorage.setItem(FONT_KEY, String(px));
+            return px;
+        }
+        function loadFontSize() {
+            const saved = Number(localStorage.getItem(FONT_KEY));
+            if (saved >= 12 && saved <= 20) applyFontSize(saved);
+            return saved >= 12 && saved <= 20 ? saved : DEFAULT_FONT_SIZE;
+        }
+        function onFontSizeInput(value) {
+            const px = applyFontSize(value);
+            const valEl = document.getElementById("ui-font-size-val");
+            if (valEl) valEl.textContent = px + "px";
+        }
+        async function testByokConnection() {
+            const resultEl = document.getElementById("ui-byok-test-result");
+            const url = String(document.getElementById("ui-byok-url")?.value || "").trim().replace(/\/+$/, "");
+            const key = String(document.getElementById("ui-byok-key")?.value || "").trim();
+            const model = String(document.getElementById("ui-byok-model")?.value || "").trim();
+            if (!url || !key || !model) {
+                if (resultEl) { resultEl.textContent = "请先填写 Base URL / Key / 模型"; resultEl.style.color = "var(--accent-dark)"; }
+                return;
+            }
+            if (resultEl) { resultEl.textContent = "测试中..."; resultEl.style.color = "var(--sub)"; }
+            try {
+                const res = await fetch(url + "/chat/completions", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + key },
+                    body: JSON.stringify({ model, messages: [{ role: "user", content: "ping" }], max_tokens: 8, stream: false })
+                });
+                const body = await res.text().catch(() => "");
+                if (!res.ok) throw new Error(body ? body.slice(0, 160) : `HTTP ${res.status}`);
+                if (resultEl) { resultEl.textContent = "连接成功 ✓ 模型可用（保存后生效）"; resultEl.style.color = "#2e8b57"; }
+            } catch (e) {
+                if (resultEl) { resultEl.textContent = "连接失败：" + String(e.message || e).slice(0, 80); resultEl.style.color = "#c0392b"; }
+            }
+        }
+
         function loadToUI() {
             const selectedScenario = ScenarioCardService.getSelectedCard();
             const titleInput = document.getElementById("scenario-title-input");
@@ -6386,6 +6463,21 @@ function rebuildChoicesBlock(body, labels = []) {
 
             const darkModeInput = document.getElementById("ui-dark-mode-enabled");
             if (darkModeInput) darkModeInput.checked = ThemeService.getMode() === "dark";
+
+            const sizeInput = document.getElementById("ui-font-size-range");
+            if (sizeInput) {
+                const current = Number(localStorage.getItem(FONT_KEY)) || DEFAULT_FONT_SIZE;
+                sizeInput.value = current;
+                const valEl = document.getElementById("ui-font-size-val");
+                if (valEl) valEl.textContent = current + "px";
+            }
+            const byok = getByok();
+            const urlInput = document.getElementById("ui-byok-url");
+            const keyInput = document.getElementById("ui-byok-key");
+            const modelInput = document.getElementById("ui-byok-model");
+            if (urlInput) urlInput.value = byok?.url || "";
+            if (keyInput) keyInput.value = byok?.key || "";
+            if (modelInput) modelInput.value = byok?.model || "";
 
             // 更新账户信息
             const user = AuthService.getUserData();
@@ -6404,11 +6496,24 @@ function rebuildChoicesBlock(body, labels = []) {
         }
         function saveUserApiFromUI() {
             ThemeService.setMode(document.getElementById("ui-dark-mode-enabled")?.checked ? "dark" : "light");
+            const sizeVal = document.getElementById("ui-font-size-range")?.value;
+            if (sizeVal) applyFontSize(sizeVal);
+            const byok = {
+                url: String(document.getElementById("ui-byok-url")?.value || "").trim().replace(/\/+$/, ""),
+                key: String(document.getElementById("ui-byok-key")?.value || "").trim(),
+                model: String(document.getElementById("ui-byok-model")?.value || "").trim()
+            };
+            saveByok(byok);
             loadToUI();
         }
         function getApiConfig() {
+            const byok = getByok();
+            if (byok && byok.url && byok.key && byok.model) {
+                // BYOK：直连用户自己的 OpenAI 兼容端点，不耗云币（不带 X-Auth-Token 走 Worker）
+                return { upstreamUrl: byok.url, key: byok.key, model: byok.model, byok: true };
+            }
             // 模型由 Worker 端模型池自动路由，前端只传占位 model
-            return { upstreamUrl: AppConfig.proxy.baseUrl, key: "", model: "pool" };
+            return { upstreamUrl: AppConfig.proxy.baseUrl, key: "", model: "pool", byok: false };
         }
         function getScenarioText() {
             const selected = ScenarioCardService.getSelectedCard();
@@ -6452,8 +6557,9 @@ function rebuildChoicesBlock(body, labels = []) {
             };
             input.click();
         }
-        return { loadToUI, saveFromUI, saveUserApiFromUI, getApiConfig, getScenarioText, getScenarioTextForModel, getBeautyCardSetting, getChatPolicyConfig, getThinkingPayloadForCard, importScenarioFromFile };
+        return { loadToUI, saveFromUI, saveUserApiFromUI, getApiConfig, getByok, applyFontSize, loadFontSize, onFontSizeInput, testByokConnection, getScenarioText, getScenarioTextForModel, getBeautyCardSetting, getChatPolicyConfig, getThinkingPayloadForCard, importScenarioFromFile };
     })();
+    SettingsService.loadFontSize();
 
     const ScenarioSpecSanitizerService = (() => {
         const IGNORE_PATTERNS = [
@@ -8394,13 +8500,22 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             return value.endsWith("/") ? value.slice(0, -1) : value;
         }
         function buildFetchUrl() {
+            const byok = SettingsService.getByok();
+            if (byok && byok.url && byok.key && byok.model) {
+                return `${normalizeUrl(byok.url)}/chat/completions`;
+            }
             const proxyBase = normalizeUrl(AppConfig.proxy.baseUrl);
             return `${proxyBase}/chat/completions`;
         }
         function buildHeaders(config) {
+            const headers = { "Content-Type": "application/json" };
+            // BYOK：直连用户端点，用用户自己的 Key，不经过 Worker（不耗云币）
+            if (config?.key) {
+                headers["Authorization"] = "Bearer " + config.key;
+                return headers;
+            }
             // 模型池模式：key 由 Worker 注入，前端只传用户 token
             const token = AuthService.getToken();
-            const headers = { "Content-Type": "application/json" };
             if (token) {
                 headers["X-Auth-Token"] = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
             }
