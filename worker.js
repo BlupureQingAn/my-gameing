@@ -406,7 +406,7 @@ async function handlePayNotify(env, params) {
             const pq = await pbAdminFetch(env, `/api/collections/pay_orders/records?perPage=1&skipTotal=true&filter=${paidFilter}`);
             const pd = await pq.json().catch(() => ({}));
             const isFirst = !(pd.items || []).length;
-            patch.coin = Number(user.coin || 0) + (isFirst ? plan.base * 2 : plan.base + plan.bonus);
+            patch.coins = Number(user.coins || 0) + (isFirst ? plan.base * 2 : plan.base + plan.bonus);
         }
         const patchRes = await pbAdminFetch(env, `/api/collections/users/records/${order.user_id}`, {
             method: "PATCH",
@@ -461,17 +461,17 @@ export default {
                 const isMemberUser = isMember(record);
                 // 云币扣费：请求开始扣 100 币/轮，流式失败不退款（文案注明）；终身会员免扣
                 if (!isMemberUser) {
-                    const coin = Number(record.coin || 0);
+                    const coin = Number(record.coins || 0);
                     if (coin < COIN_COST_PER_ROUND) {
                         return errorResponse(`云币不足（每轮对话消耗 ${COIN_COST_PER_ROUND} 云币），请充值或开通终身会员`, 402,
-                            { coin, cost: COIN_COST_PER_ROUND }, "INSUFFICIENT_COIN");
+                            { coins: coin, cost: COIN_COST_PER_ROUND }, "INSUFFICIENT_COIN");
                     }
                     const dedRes = await pbAdminFetch(env, `/api/collections/users/records/${userId}`, {
                         method: "PATCH",
-                        body: JSON.stringify({ coin: coin - COIN_COST_PER_ROUND })
+                        body: JSON.stringify({ coins: coin - COIN_COST_PER_ROUND })
                     });
                     if (!dedRes.ok) return errorResponse("云币扣费失败，请重试", 500, null, "COIN_DEDUCT_FAILED");
-                    record.coin = coin - COIN_COST_PER_ROUND; // 同步内存副本,后续响应引用
+                    record.coins = coin - COIN_COST_PER_ROUND; // 同步内存副本,后续响应引用
                 }
 
                 // 解析请求
@@ -632,13 +632,13 @@ export default {
                     isMember: isMember(r),
                     membershipType: r.membership_type || "",
                     membershipExpiresAt: r.membership_expires_at || "",
-                    coin: Number(r.coin || 0),
+                    coins: Number(r.coins || 0),
                     checkinStreak: Number(r.checkin_streak || 0),
                     checkinDate: r.last_checkin_date || "",
                     costPerRound: COIN_COST_PER_ROUND,
                     unlockCost: UNLOCK_COST,
                     // 会员不限量用 -1 表示（避免 Infinity 序列化为 null）
-                    remaining: isMember(r) ? -1 : Math.floor(Number(r.coin || 0) / COIN_COST_PER_ROUND)
+                    remaining: isMember(r) ? -1 : Math.floor(Number(r.coins || 0) / COIN_COST_PER_ROUND)
                 }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
 
@@ -649,18 +649,18 @@ export default {
                 const r = auth.record;
                 const today = getTodayStr();
                 if (r.last_checkin_date === today) {
-                    return errorResponse("今日已签到", 400, { coin: Number(r.coin || 0) }, "ALREADY_CHECKED_IN");
+                    return errorResponse("今日已签到", 400, { coins: Number(r.coins || 0) }, "ALREADY_CHECKED_IN");
                 }
                 const yesterday = new Date(Date.now() + TIMEZONE_OFFSET_MS - 86400000).toISOString().slice(0, 10);
                 const streak = r.last_checkin_date === yesterday ? Number(r.checkin_streak || 0) + 1 : 1;
                 const reward = CHECKIN_BASE + (streak >= 7 ? CHECKIN_STREAK_BONUS : 0);
-                const coin = Number(r.coin || 0) + reward;
+                const coin = Number(r.coins || 0) + reward;
                 const patchRes = await pbAdminFetch(env, `/api/collections/users/records/${r.id}`, {
                     method: "PATCH",
-                    body: JSON.stringify({ coin, last_checkin_date: today, checkin_streak: streak })
+                    body: JSON.stringify({ coins: coin, last_checkin_date: today, checkin_streak: streak })
                 });
                 if (!patchRes.ok) return errorResponse("签到失败，请重试", 500, null, "CHECKIN_FAILED");
-                return new Response(JSON.stringify({ coin, streak, reward }), {
+                return new Response(JSON.stringify({ coins: coin, streak, reward }), {
                     headers: { ...corsHeaders(), "Content-Type": "application/json" }
                 });
             }
@@ -679,19 +679,19 @@ export default {
                 const exQ = await pbAdminFetch(env, `/api/collections/unlocks/records?perPage=1&skipTotal=true&filter=${exFilter}`);
                 const exD = await exQ.json().catch(() => ({}));
                 if ((exD.items || []).length) {
-                    return new Response(JSON.stringify({ unlocked: true, already: true, coin: Number(r.coin || 0) }), {
+                    return new Response(JSON.stringify({ unlocked: true, already: true, coins: Number(r.coins || 0) }), {
                         headers: { ...corsHeaders(), "Content-Type": "application/json" }
                     });
                 }
-                let coin = Number(r.coin || 0);
+                let coin = Number(r.coins || 0);
                 if (!isMember(r)) {
                     if (coin < UNLOCK_COST) {
-                        return errorResponse(`云币不足（解锁需 ${UNLOCK_COST} 云币）`, 402, { coin, cost: UNLOCK_COST }, "INSUFFICIENT_COIN");
+                        return errorResponse(`云币不足（解锁需 ${UNLOCK_COST} 云币）`, 402, { coins: coin, cost: UNLOCK_COST }, "INSUFFICIENT_COIN");
                     }
                     coin -= UNLOCK_COST;
                     const dedRes = await pbAdminFetch(env, `/api/collections/users/records/${r.id}`, {
                         method: "PATCH",
-                        body: JSON.stringify({ coin })
+                        body: JSON.stringify({ coins: coin })
                     });
                     if (!dedRes.ok) return errorResponse("扣费失败，请重试", 500, null, "COIN_DEDUCT_FAILED");
                 }
@@ -714,7 +714,7 @@ export default {
                         if (author) {
                             const reward = COMMUNITY_UNLOCK_REWARD;
                             await pbAdminFetch(env, `/api/collections/users/records/${author.id}`, {
-                                method: "PATCH", body: JSON.stringify({ coin: Number(author.coin || 0) + reward })
+                                method: "PATCH", body: JSON.stringify({ coins: Number(author.coins || 0) + reward })
                             });
                             await pbAdminFetch(env, `/api/collections/community_cards/records/${commCard.id}`, {
                                 method: "PATCH", body: JSON.stringify({ unlock_count: Number(commCard.unlock_count || 0) + 1 })
@@ -722,7 +722,7 @@ export default {
                         }
                     }
                 }
-                return new Response(JSON.stringify({ unlocked: true, coin }), {
+                return new Response(JSON.stringify({ unlocked: true, coins: coin }), {
                     headers: { ...corsHeaders(), "Content-Type": "application/json" }
                 });
             }
@@ -935,7 +935,7 @@ export default {
                     const author = (aD.items || [])[0];
                     if (author) {
                         await pbAdminFetch(env, `/api/collections/users/records/${author.id}`, {
-                            method: "PATCH", body: JSON.stringify({ coin: Number(author.coin || 0) + COMMUNITY_REWARD_PER_PLAY })
+                            method: "PATCH", body: JSON.stringify({ coins: Number(author.coins || 0) + COMMUNITY_REWARD_PER_PLAY })
                         });
                     }
                 }
