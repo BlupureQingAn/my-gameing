@@ -2700,6 +2700,11 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <button onclick="MembershipService.closePanel()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--sub);">✕</button>
         </div>
         <div class="list-sub">充值云币解锁剧本卡、抵扣 AI 对话；终身会员 89 元免一切云币消耗。</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin:10px 0;padding:10px 12px;border-radius:12px;background:var(--card-bg,#fffdf8);border:1px solid var(--line);">
+            <div style="font-size:0.9rem;font-weight:700;">💰 云币余额：<span id="membership-coin-balance" style="color:var(--accent-dark,#c0392b);">--</span></div>
+            <button id="membership-checkin-btn" class="mini-btn primary" style="margin:0;padding:6px 14px;" onclick="MembershipService.doCheckin()">每日签到</button>
+        </div>
+        <div id="membership-checkin-msg" class="list-sub" style="margin:-4px 0 10px;"></div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:10px 0;padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,#fff3d6,#ffe3b3);border:1px solid #e8b84b;">
             <div style="font-size:0.9rem;font-weight:700;color:#8a4b00;">🔥 限时优惠进行中</div>
             <div style="font-size:0.9rem;font-weight:700;color:#d63031;">距优惠结束 <span id="membership-countdown" style="font-variant-numeric:tabular-nums;background:#fff;padding:2px 8px;border-radius:6px;border:1px solid #e8b84b;">23:59:59</span></div>
@@ -2825,10 +2830,10 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <div class="list-title">👤 账户信息</div>
                 <div style="margin: 10px 0; padding: 12px; background: var(--card-soft); border-radius: 12px; border: 1px solid var(--line);">
                     <div style="font-size: 0.9rem;">邮箱：<span id="display-user-email" style="font-weight: 700;">-</span></div>
-                    <div style="font-size: 0.9rem; margin-top: 6px;">今日剩余：<span id="display-remaining-count" style="font-weight: 800; color: var(--accent-dark);">-</span></div>
+                    <div style="font-size: 0.9rem; margin-top: 6px;">云币余额：<span id="display-remaining-count" style="font-weight: 800; color: var(--accent-dark);">--</span>（每轮对话消耗 100 云币）</div>
                     <div style="font-size: 0.9rem; margin-top: 6px;">会员：<span id="display-membership-badge" style="font-weight: 700; color: var(--accent-dark);">未开通</span></div>
                     <div style="margin-top: 10px;">
-                        <button id="open-membership-btn" class="mini-btn primary" onclick="MembershipService.openPanel()">开通会员</button>
+                        <button id="open-membership-btn" class="mini-btn primary" onclick="MembershipService.openPanel()">充值 / 云币</button>
                     </div>
                 </div>
                 <label class="settings-toggle">
@@ -6247,16 +6252,17 @@ function rebuildChoicesBlock(body, labels = []) {
                 row.className = `scenario-card ${card.id === selectedId ? "active" : ""}`;
                 row.dataset.cardId = card.id;
                 const customPinned = card.id === ScenarioCardService.CUSTOM_CARD_ID;
+                const lock = ScenarioUnlockService.getLockInfo(card);
                 row.innerHTML = `
                     <div class="scenario-card-main">
-                        <div class="list-title">${card.title}${customPinned ? "（置顶）" : ""}</div>
+                        <div class="list-title">${lock.locked ? '<span style="color:#e67e22;margin-right:4px;">🔒</span>' : ""}${card.title}${customPinned ? "（置顶）" : ""}</div>
                         <div class="scenario-badges">
                             <span class="scenario-badge ${ScenarioCardViewService.groupClass(card)}">${ScenarioCardViewService.groupLabel(card)}</span>
                             ${card.pinned ? '<span class="scenario-badge">置顶</span>' : ""}
                         </div>
                         <div class="list-sub">卡片样式：${ScenarioCardService.themeNameOf(card.theme)}｜设定长度：${(card.text || "").length}</div>
                         <div style="margin-top:6px;">
-                            <button class="tiny-btn" data-op="play">游玩</button>
+                            <button class="tiny-btn" data-op="play">${lock.locked ? "🔒 解锁" : "游玩"}</button>
                             <button class="tiny-btn" data-op="edit">设置</button>
                         </div>
                     </div>
@@ -6266,7 +6272,10 @@ function rebuildChoicesBlock(body, labels = []) {
                         <button class="scenario-action-btn delete" data-op="swipe-del">删除</button>
                     </div>
                 `;
-                row.querySelector('[data-op="play"]').onclick = () => Controller.playScenarioCard(card.id);
+                row.querySelector('[data-op="play"]').onclick = () => {
+                    if (lock.locked) { ScenarioUnlockService.promptUnlock(card); return; }
+                    Controller.playScenarioCard(card.id);
+                };
                 row.querySelector('[data-op="edit"]').onclick = () => Controller.openScenarioCardSettings(card.id);
                 row.querySelector('[data-op="swipe-edit"]').onclick = () => Controller.openScenarioCardSettings(card.id);
                 row.querySelector('[data-op="swipe-pin"]').onclick = () => Controller.toggleScenarioCardPin(card.id);
@@ -10514,6 +10523,12 @@ function openNpcProfile(npcId) {
             };
         }
         async function playScenarioCard(cardId) {
+            // 云币解锁拦截：官方卡未解锁时引导解锁（列表按钮已拦截,此处防御直达入口）
+            const card = ScenarioCardService.loadCards().find(c => c.id === cardId);
+            if (card && ScenarioUnlockService.getLockInfo(card).locked) {
+                ScenarioUnlockService.promptUnlock(card);
+                return;
+            }
             selectScenarioCard(cardId);
             ScenarioPlayMetaService.touchPlayed(cardId); // 需求A:记录最近游玩,列表置顶排序
             const meta = ScenarioPlayMetaService.getMeta(cardId);
@@ -10674,10 +10689,64 @@ function openNpcProfile(npcId) {
             if (titleEl) titleEl.innerText = isMember ? "会员续费 / 升级" : "开通会员";
             modal.style.display = "flex";
             renderPlans();
+            renderCoinBalance();
             startCountdown();
             document.querySelectorAll(".pay-method-btn").forEach(b => b.classList.toggle("active", b.dataset.pay === selectedPayType));
             document.getElementById("membership-pay-area").innerHTML = "";
             refreshStatus();
+        }
+        // 余额 + 签到按钮状态（今日已签则置灰；连续天数提示）
+        function renderCoinBalance() {
+            const u = AuthService.getUserData();
+            const balanceEl = document.getElementById("membership-coin-balance");
+            if (balanceEl) balanceEl.textContent = u ? String(Number(u.coin || 0)) : "--";
+            const btn = document.getElementById("membership-checkin-btn");
+            const msg = document.getElementById("membership-checkin-msg");
+            if (!btn) return;
+            const today = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+            const streak = Number(u?.checkin_streak || 0);
+            if (u && u.last_checkin_date === today) {
+                btn.textContent = "今日已签 ✓";
+                btn.disabled = true;
+                if (msg) msg.textContent = streak > 0 ? `已连续签到 ${streak} 天，明天继续领 300 币` : "";
+            } else {
+                btn.textContent = "每日签到 +300 币";
+                btn.disabled = false;
+                if (msg) msg.textContent = !u ? "登录后每日签到领云币" : (streak > 0 ? `已连续签到 ${streak} 天，今日签到领 300 币${streak >= 6 ? "，明天触发 7 天大奖 +700 币" : ""}` : "新用户连续签到 7 天可额外多得 700 币");
+            }
+        }
+        // 每日签到：POST /api/checkin → 加币 → 刷新余额
+        async function doCheckin() {
+            if (!AuthService.getToken()) {
+                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后即可每日签到领取云币" });
+                return;
+            }
+            const btn = document.getElementById("membership-checkin-btn");
+            if (btn) btn.disabled = true;
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/checkin`, {
+                    method: "POST",
+                    headers: { "X-Auth-Token": AuthService.getToken() }
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || "签到失败");
+                await AuthService.refreshBalance();
+                renderCoinBalance();
+                NoticeModalService.showInfo({
+                    title: "🎁 签到成功",
+                    descHtml: `+${data.reward} 云币（连续 ${data.streak} 天）！当前余额 ${data.coin}，去解锁剧本卡吧～`
+                });
+            } catch (e) {
+                const msg = e.message || "签到失败";
+                if (msg.includes("已签到")) {
+                    await AuthService.refreshBalance();
+                    renderCoinBalance();
+                    NoticeModalService.showInfo({ title: "提示", descHtml: "今天已经签到过啦，明天再来吧～" });
+                } else {
+                    NoticeModalService.showInfo({ title: "签到失败", descHtml: msg });
+                }
+                if (btn) btn.disabled = false;
+            }
         }
         function closePanel() {
             const modal = document.getElementById("membership-modal");
@@ -10844,7 +10913,89 @@ function openNpcProfile(npcId) {
             await AuthService.refreshBalance();
             AuthService.updateUsageStatusUI();
         }
-        return { openPanel, closePanel, selectPlan, selectPayType, startPay, pollPayStatus: startPoll, hasMembership, refreshStatus };
+        return { openPanel, closePanel, selectPlan, selectPayType, startPay, pollPayStatus: startPoll, hasMembership, refreshStatus, doCheckin, renderCoinBalance };
+    })();
+
+    // ==================== ScenarioUnlockService (云币解锁剧本卡) ====================
+    const ScenarioUnlockService = (() => {
+        const KEY = "bitlife_unlocked_cards_v1";
+        const UNLOCK_COST = 5000;
+        let _unlocked = new Set();
+        function loadLocal() {
+            try { _unlocked = new Set(JSON.parse(localStorage.getItem(KEY) || "[]")); } catch (e) { _unlocked = new Set(); }
+        }
+        function saveLocal() { localStorage.setItem(KEY, JSON.stringify([..._unlocked])); }
+        loadLocal();
+        // 登录后与服务端同步（合并解锁记录，幂等）
+        async function syncFromServer() {
+            if (!AuthService.getToken()) return;
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/cards/unlocked`, {
+                    headers: { "X-Auth-Token": AuthService.getToken() }
+                });
+                if (res.ok) {
+                    const d = await res.json();
+                    (d.cards || []).forEach(c => _unlocked.add(c));
+                    saveLocal();
+                }
+            } catch (e) {}
+        }
+        function isOfficial(card) { return card?.sourceType === "official"; }
+        function isUnlocked(cardId) { return _unlocked.has(cardId); }
+        // 锁定判定：官方卡未解锁 → 锁；游客一律锁（解锁是账号权益）；终身会员免锁
+        function getLockInfo(card) {
+            if (!isOfficial(card)) return { locked: false };
+            if (!AuthService.getToken()) return { locked: true, needLogin: true };
+            if (AuthService.hasMembership()) return { locked: false };
+            if (isUnlocked(card.id)) return { locked: false };
+            return { locked: true, needLogin: false };
+        }
+        // 解锁：服务端扣 5000 币 → 本地标记 → 刷新余额
+        async function unlock(cardId) {
+            const res = await fetch(`${AppConfig.proxy.baseUrl}/api/cards/unlock`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-Auth-Token": AuthService.getToken() },
+                body: JSON.stringify({ card_id: cardId })
+            });
+            const d = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(d.error || "解锁失败");
+            _unlocked.add(cardId);
+            saveLocal();
+            return d;
+        }
+        // 点击被锁卡引导：未登录 → 去登录；已登录 → 确认解锁
+        async function promptUnlock(card) {
+            const lock = getLockInfo(card);
+            if (!lock.locked) return true;
+            if (lock.needLogin) {
+                const ok = await DecisionModalService.show({
+                    title: "🔒 请先登录",
+                    descHtml: `官方剧本卡需解锁后才能游玩。<br>解锁需 <b>${UNLOCK_COST} 云币</b>（永久拥有）。<br>注册即送 1000 云币，每日签到还能领！`,
+                    okText: "去登录", cancelText: "取消"
+                });
+                if (!ok) return false;
+                const overlay = document.getElementById("auth-overlay");
+                if (overlay) overlay.style.display = "flex";
+                return false;
+            }
+            const ok = await DecisionModalService.show({
+                title: "🔒 未解锁",
+                descHtml: `解锁《${MarkdownService.escapeHtml(card.title)}》需 <b>${UNLOCK_COST} 云币</b>（永久拥有，终身会员免费）。`,
+                okText: "立即解锁", cancelText: "取消"
+            });
+            if (!ok) return false;
+            try {
+                await unlock(card.id);
+                await AuthService.refreshBalance();
+                NoticeModalService.showInfo({ title: "🔓 解锁成功", descHtml: `已解锁《${MarkdownService.escapeHtml(card.title)}》，永久畅玩！` });
+                UIRenderer.renderScenarioCards();
+                return true;
+            } catch (e) {
+                NoticeModalService.showInfo({ title: "解锁失败", descHtml: MarkdownService.escapeHtml(e.message || "请重试") });
+                return false;
+            }
+        }
+        return { loadLocal, syncFromServer, isOfficial, isUnlocked, getLockInfo, unlock, promptUnlock };
     })();
 
     // ==================== AuthService ====================
@@ -10870,7 +11021,6 @@ function openNpcProfile(npcId) {
         }
 
         const MEMBER_NAMES = { monthly: "月度会员", quarterly: "季度会员", yearly: "年度会员", lifetime: "终身会员" };
-        const DAILY_FREE_QUOTA = 20;
 
         function hasMembership() {
             const u = _userData;
@@ -10882,12 +11032,9 @@ function openNpcProfile(npcId) {
         function updateUsageStatusUI() {
             const u = _userData;
             const isMember = hasMembership();
-            const today = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
-            const used = u && u.usage_date === today ? Number(u.usage_count || 0) : 0;
-            const remaining = Math.max(0, DAILY_FREE_QUOTA - used);
 
             const countEl = document.getElementById("display-remaining-count");
-            if (countEl) countEl.textContent = isMember ? "不限量" : `${remaining} / ${DAILY_FREE_QUOTA}`;
+            if (countEl) countEl.textContent = u ? String(Number(u.coin || 0)) : "--";
 
             const badgeEl = document.getElementById("display-membership-badge");
             if (badgeEl) {
@@ -10905,12 +11052,12 @@ function openNpcProfile(npcId) {
             }
 
             const btn = document.getElementById("open-membership-btn");
-            if (btn) btn.textContent = isMember ? "续费 / 升级会员" : "开通会员";
+            if (btn) btn.textContent = isMember ? "会员权益" : "充值 / 云币";
 
             const usageBadge = document.getElementById("usage-badge");
             if (usageBadge) {
                 const memberName = (u && MEMBER_NAMES[u.membership_type]) || "会员";
-                usageBadge.textContent = isMember ? memberName : `免费(${remaining}/${DAILY_FREE_QUOTA})`;
+                usageBadge.textContent = isMember ? memberName : (u ? `${Number(u.coin || 0)} 云币` : "开通会员");
                 usageBadge.style.display = "inline-flex";
             }
         }
@@ -11061,6 +11208,10 @@ function openNpcProfile(npcId) {
             const emailEl = document.getElementById("display-user-email");
             if (emailEl) emailEl.textContent = email;
             updateUsageStatusUI();
+            // 同步服务端解锁记录（合并本地缓存）
+            ScenarioUnlockService.syncFromServer().then(() => {
+                try { UIRenderer.renderScenarioCards(); } catch (e) {}
+            }).catch(() => {});
         }
 
         function logout() {
@@ -11077,6 +11228,8 @@ function openNpcProfile(npcId) {
             if (usageBadge) usageBadge.style.display = "none";
             const emailEl = document.getElementById("display-user-email");
             if (emailEl) emailEl.textContent = "-";
+            // 游客态恢复锁卡展示
+            try { UIRenderer.renderScenarioCards(); } catch (e) {}
             // 重置登录表单及 UI 状态
             _isRegisterMode = false;
             const pw2 = document.getElementById("auth-password2");
