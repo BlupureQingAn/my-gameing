@@ -7,6 +7,12 @@ import { makeCard } from "./scenario-schema.mjs";
 
 const FIRST_CHUNK = 12;   // 首片卡数(首屏可见,~30KB 压缩后)
 const CHUNK_SIZE = 15;    // 后续每片卡数
+// 分类热度顺序:与 index.html HOT_CATEGORY_ORDER(7361)保持一致,分片按热度从高到低排列,热门分类先加载先展示
+const HOT_CATEGORY_ORDER = ["恋爱", "职场", "修仙", "穿越", "都市", "无限流", "末世", "经营", "科幻", "悬疑", "跑团", "奇幻", "历史", "宫斗", "种田", "女尊", "校园", "娱乐圈"];
+function hotRank(cat) {
+    const i = HOT_CATEGORY_ORDER.indexOf(String(cat || ""));
+    return i < 0 ? HOT_CATEGORY_ORDER.length : i;
+}
 
 const dir = path.join(process.cwd(), "scenarios");
 const files = fs.readdirSync(dir)
@@ -32,6 +38,8 @@ for (const f of files) {
         });
     }
 }
+// 按分类热度排序(稳定排序,同分类保持源顺序):热门分类进首片,滚动加载顺序 = 热度从高到低
+library.sort((a, b) => hotRank(a.category) - hotRank(b.category));
 library.forEach((c, i) => { c.order = i + 1; });
 
 // 分片:首片 12 张 → scenarios.js(async 首屏),其余每 15 张 → scenarios.partN.js(滚动懒加载)
