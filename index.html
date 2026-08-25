@@ -2901,7 +2901,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <div class="list-title">👤 账户信息</div>
                 <div style="margin: 10px 0; padding: 12px; background: var(--card-soft); border-radius: 12px; border: 1px solid var(--line);">
                     <div style="font-size: 0.9rem;">邮箱：<span id="display-user-email" style="font-weight: 700;">-</span></div>
-                    <div style="font-size: 0.9rem; margin-top: 6px;">云币余额：<span id="display-remaining-count" style="font-weight: 800; color: var(--accent-dark);">--</span>（AI 对话按 token 计费：输入 1 币/千 token，输出 3 币/千 token）</div>
+                    <div style="font-size: 0.9rem; margin-top: 6px;">云币余额：<span id="display-remaining-count" style="font-weight: 800; color: var(--accent-dark);">--</span>（AI 对话按 token 计费：输入 4 币/千 token，输出 12 币/千 token）</div>
                     <div style="font-size: 0.9rem; margin-top: 6px;">会员：<span id="display-membership-badge" style="font-weight: 700; color: var(--accent-dark);">未开通</span></div>
                     <div style="margin-top: 10px;">
                         <button id="open-membership-btn" class="mini-btn primary" onclick="MembershipService.openPanel()">充值 / 云币</button>
@@ -2948,7 +2948,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             </section>
             <section class="card">
                 <div class="list-title">👑 会员服务</div>
-                <div class="list-sub">AI 对话按 token 计费（输入 1 币/千 token、输出 3 币/千 token，普通对话约 10 币），官方剧本卡解锁需 5000 云币（永久拥有）。开通终身会员（限时 ¥89）后免一切云币消耗、全部剧本卡直接游玩。自备 AI 接口（BYOK）不消耗云币。</div>
+                <div class="list-sub">AI 对话按 token 计费（输入 4 币/千 token、输出 12 币/千 token，普通对话约 10 币），官方剧本卡解锁需 5000 云币（永久拥有）。开通终身会员（限时 ¥89）后免一切云币消耗、全部剧本卡直接游玩。自备 AI 接口（BYOK）不消耗云币。</div>
             </section>
         </section>
         <!-- 保持 settings 视图正常闭合即可 -->
@@ -8640,9 +8640,31 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             const thinkingPayload = SettingsService.getThinkingPayloadForCard(cardId || ScenarioCardService.getSelectedId());
             return { ...base, ...thinkingPayload };
         }
-        // 失败不自动重试：worker 端已有模型池 fallback，前端重试会让同一轮对话重复计费（AI 对话按 token 计费，失败不扣费，玩家手动重发即可）
+        // 自动重试：worker 端失败不扣费（token 计费只在成功时结算一次），重试不会重复扣费；
+        // 流中断/上游抖动时自动重发兜底，避免剧情生成到一半被截断
         async function fetchWithRetry(fetchFn, maxRetries = 3) {
-            return await fetchFn();
+            let lastError;
+            const baseDelay = 5000;
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    return await fetchFn();
+                } catch (e) {
+                    lastError = e;
+                    const retryable = e.status === 429 || e.status === 503 || e.status === 408
+                        || String(e.message || "").toLowerCase().includes("timeout");
+                    if (retryable && i < maxRetries - 1) {
+                        const delay = baseDelay * (i + 1);
+                        console.warn(`[重试 ${i + 1}/${maxRetries}] 服务器繁忙 (${e.status || e.message})，等待 ${delay}ms...`);
+                        if (typeof UIRenderer !== "undefined" && UIRenderer.updateStreaming) {
+                            UIRenderer.updateStreaming(`[系统：当前服务器拥挤，正在排队重试 (${i + 1}/${maxRetries})，请稍候...]`);
+                        }
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        continue;
+                    }
+                    throw e;
+                }
+            }
+            throw lastError;
         }
         async function streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken, extraBody = null, cardId = "" }) {
             return await fetchWithRetry(async () => {
@@ -10990,9 +11012,9 @@ function openNpcProfile(npcId) {
                 btn.disabled = true;
                 if (msg) msg.textContent = streak > 0 ? `已连续签到 ${streak} 天，明天继续领 300 币` : "";
             } else {
-                btn.textContent = u && !u.last_checkin_date ? "首次签到 +6300 币" : "每日签到 +300 币";
+                btn.textContent = u && !u.last_checkin_date ? "首次签到 +5500 币" : "每日签到 +300 币";
                 btn.disabled = false;
-                if (msg) msg.textContent = !u ? "登录后每日签到领云币" : (streak > 0 ? `已连续签到 ${streak} 天，今日签到领 300 币${streak >= 6 ? "，明天触发 7 天大奖 +700 币" : ""}` : "首次签到领 6300 币，之后每天 300，连签 7 天再 +700");
+                if (msg) msg.textContent = !u ? "登录后每日签到领云币" : (streak > 0 ? `已连续签到 ${streak} 天，今日签到领 300 币${streak % 7 === 6 ? "，明天触发 7 天大奖 +700 币" : ""}` : "首次签到领 5500 币，之后每天 300，每满 7 天再 +700");
             }
         }
         // 每日签到：POST /api/checkin → 加币 → 刷新余额

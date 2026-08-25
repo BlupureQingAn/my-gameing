@@ -1,13 +1,13 @@
 // ==================== 1. 配置中心 ====================
 
-// 云币经济：AI 对话按 token 计费（输入 1 币/千 token、输出 3 币/千 token，向上取整，最低 1 币/轮，失败不扣费）、解锁 5000 币/张、签到 300 币/天（连续 7 天额外 +700；首次签到 6300）
-const TOKEN_PRICE_INPUT = 1;   // 云币/千 token（输入）
-const TOKEN_PRICE_OUTPUT = 3;  // 云币/千 token（输出）
+// 云币经济：AI 对话按 token 计费（输入 4 币/千 token、输出 12 币/千 token，向上取整，最低 1 币/轮，失败不扣费；典型对话约 10 币）、解锁 5000 币/张、签到 300 币/天（每连续满 7 天额外 +700，如第 7/14/21 天；首次签到 5500）
+const TOKEN_PRICE_INPUT = 4;   // 云币/千 token（输入）
+const TOKEN_PRICE_OUTPUT = 12; // 云币/千 token（输出）
 const TOKEN_COST_MIN = 1;      // 每轮最低消费
 const UNLOCK_COST = 5000;
 const CHECKIN_BASE = 300;
 const CHECKIN_STREAK_BONUS = 700;
-const CHECKIN_FIRST_BONUS = 6300;
+const CHECKIN_FIRST_BONUS = 5500;
 // 创作者分佣：别人玩你的社区卡 30 币/轮（单卡单用户每日最多计 10 轮），解锁分成 1000 币
 const COMMUNITY_REWARD_PER_PLAY = 30;
 const COMMUNITY_DAILY_PLAY_LIMIT = 10;
@@ -17,12 +17,13 @@ const TIMEZONE_OFFSET_MS = 8 * 3600 * 1000;
 const LIFETIME_EXPIRY = "2226-01-01T00:00:00.000Z";
 
 // ---- token 计费 ----
-// 输入 1 币/千 + 输出 3 币/千，向上取整，最低 1 币/轮
+// 输入 4 币/千 + 输出 12 币/千，向上取整，最低 1 币/轮
 function calcTokenCost(inputTokens, outputTokens) {
     const cost = (Number(inputTokens) * TOKEN_PRICE_INPUT + Number(outputTokens) * TOKEN_PRICE_OUTPUT) / 1000;
     return Math.max(TOKEN_COST_MIN, Math.ceil(cost));
 }
-// 中英混合粗估（上游未返回 usage 时的兜底）：中文 ≈1 token/字，其它 ≈1 token/4 字符
+// 字符估算 token（不修改发给上游的请求体，避免 stream_options 等参数干扰模型输出）：
+// 中文 ≈1 token/字，其它 ≈1 token/4 字符
 function estimateTokens(text) {
     const s = String(text || "");
     const cjk = (s.match(/[一-鿿]/g) || []).length;
@@ -47,9 +48,23 @@ async function settleTokenDeduction(env, userId, record, inputTokens, outputToke
 // 模型池：Worker 自动路由（tier 越小越优先；dailyCap 为当日全局调用上限；enabled=false 池内禁用）
 // ChatAnywhere 免费版（gpt_api_free）：每日 10000 点平台额度 + 各模型每日次数上限
 const MODEL_POOL = [
-    // ---- 智谱（主模型:实测从 CF 边缘 TTFB 0.3s,池内最快;官方按 RPM/TPM 限流无日次硬限,dailyCap 为自设保险）----
-    { id: "zp-glm-4-air",   url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY", model: "glm-4-air",   dailyCap: 1000, tier: 5,  enabled: true },
-    { id: "zp-glm-4-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY", model: "glm-4-flash", dailyCap: 5000, tier: 6,  enabled: true },
+    // ---- 讯飞（2026-08-25 实测通过:均为深度推理模型,先输出 reasoning 再出内容;官方并发 20,无日次硬限,dailyCap 设 Infinity）----
+    // X2 主端点(200k tokens): model 名 "spark-x";X2-Flash agent 端点(2M tokens): model 名 "spark-x"(x1 亦可)
+    { id: "xf-spark-x2-flash", url: "https://spark-api-open.xf-yun.com/agent/v1", apiKeyEnv: "XFSPARK_X2_FLASH_KEY", model: "spark-x", dailyCap: Infinity, tier: 1, enabled: true },
+    { id: "xf-spark-x2",       url: "https://spark-api-open.xf-yun.com/x2",       apiKeyEnv: "XFSPARK_X2_KEY",        model: "spark-x", dailyCap: Infinity, tier: 2, enabled: true },
+    // ---- 智谱（实测从 CF 边缘 TTFB 0.3s 池内最快;官方按 RPM/TPM 限流无日次硬限,dailyCap 为自设保险）----
+    { id: "zp-glm-4-air",   url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY", model: "glm-4-air",   dailyCap: 1000, tier: 3,  enabled: true },
+    // ---- Agnes（免费:apihub.agnes-ai.com,2026-08-25 实测可用）----
+    { id: "agnes-2.0-flash", url: "https://apihub.agnes-ai.com/v1", apiKeyEnv: "AGNES_KEY", model: "agnes-2.0-flash", dailyCap: 500, tier: 4, enabled: true },
+    // ---- OpenRouter 免费模型（2026-08-25 实测:glm-5.2 共享池偶发 429 属正常,自动 fallback;gemma-4 系列因 Google 地区限制从 CF 出口必然失败,不入池）----
+    { id: "or-glm-5.2",            url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "z-ai/glm-5.2:free",                dailyCap: 500, tier: 5, enabled: true },
+    { id: "or-minimax-m3",         url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "minimax/minimax-m3:free",          dailyCap: 500, tier: 6, enabled: true },
+    { id: "or-nemotron-3-super",   url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "nvidia/nemotron-3-super-120b-a12b:free", dailyCap: 500, tier: 6, enabled: true },
+    { id: "zp-glm-4-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY", model: "glm-4-flash", dailyCap: 5000, tier: 7,  enabled: true },
+    { id: "or-minimax-m2.7",       url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "minimax/minimax-m2.7:free",        dailyCap: 500, tier: 8, enabled: true },
+    { id: "or-nemotron-3-ultra",   url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "nvidia/nemotron-3-ultra-550b-a55b:free", dailyCap: 500, tier: 8, enabled: true },
+    { id: "or-ox-alpha",           url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "stealth/ox-alpha",                 dailyCap: 500, tier: 8, enabled: true },
+    { id: "or-lfm-2.5-2.6b",       url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "liquid/lfm-2.5-2.6b:free",          dailyCap: 500, tier: 9, enabled: true },
     // ---- ChatAnywhere（2026-08-25 实测:403 "请求客户端IP不支持访问,请勿使用Cloudflare等反向代理"= 永久拒绝 CF 出口,key 再对也白耗,整池禁用;若换非 CF 出口部署可恢复）----
     { id: "ca-gpt-4o-mini",   url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-4o-mini",    dailyCap: 100, tier: 10, enabled: false },
     { id: "ca-gpt-3.5-turbo", url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-3.5-turbo",  dailyCap: 100, tier: 10, enabled: false },
@@ -167,6 +182,8 @@ const LIFETIME_PLAN = { id: "lifetime", name: "终身会员", price: "89", days:
 //   CHATANYWHERE_KEY / SILICONFLOW_KEY / NVIDIA_KEY / DEEPSEEK_KEY / ZHIPU_KEY / PB_URL / PB_ADMIN_EMAIL / PB_ADMIN_PASSWORD
 //   H5_APP_ID / H5_APP_SECRET / PAY_NOTIFY_URL=https://ai.blupure.cn/api/pay/notify
 //   MAPAY_APPID / MAPAY_APPKEY（聚合登录 QQ/微信,未配置时接口返回"暂未开通"）
+//   XFSPARK_X2_KEY / XFSPARK_X2_FLASH_KEY（讯飞 Spark X2 两个端点,未配置时自动跳过）
+//   OPENROUTER_KEY（OpenRouter 免费模型）/ AGNES_KEY（Agnes 免费模型）
 
 // ==================== 2. 工具函数 ====================
 
@@ -545,8 +562,7 @@ export default {
                                 const payload = { ...requestJson, model: target.model };
                                 // Qwen3-8B 默认开启思考模式(reasoning 占 87% token,耗时 28-37s),强制关闭提速 ~20 倍
                                 if (target.id === "sf-qwen3-8b") payload.enable_thinking = false;
-                                // 流式请求要求上游在最后一个 chunk 返回 usage，用于 token 计费
-                                if (isStream) payload.stream_options = { include_usage: true };
+                                // 注意：不修改请求体其它字段（如 stream_options），部分上游模型不支持会报错或改变输出行为
                                 const r = await fetch(`${base}/chat/completions`, {
                                     method: "POST",
                                     headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -615,21 +631,17 @@ export default {
                     "X-Model-Attempts": attempts.join("|")
                 };
                 if (isStream) {
-                    // token 计费：解析转发 SSE 流收集上游 usage（流结束/客户端断开时结算扣费，失败不扣）
+                    // token 计费：透传转发 SSE 并统计输出字符（不做任何请求体/响应体修改，仅按字符估算 token）；
+                    // 仅流完整结束时结算扣费，客户端中断/上游断流视为失败不扣（玩家重试时不会重复计费）
                     const reader = aiResponse.body.getReader();
                     const decoder = new TextDecoder("utf-8");
                     const encoder = new TextEncoder();
                     let tail = "";
                     let outText = "";
-                    let usageInput = null;
-                    let usageOutput = null;
-                    let settled = false;
                     const settle = () => {
-                        if (settled) return;
-                        settled = true;
                         if (!isMemberUser) {
-                            const inputTokens = usageInput ?? estimateInputTokens(requestJson.messages);
-                            const outputTokens = usageOutput ?? estimateTokens(outText);
+                            const inputTokens = estimateInputTokens(requestJson.messages);
+                            const outputTokens = estimateTokens(outText);
                             ctx.waitUntil(settleTokenDeduction(env, userId, record, inputTokens, outputTokens)
                                 .catch(e => console.error("settle token deduction failed:", e.message)));
                         }
@@ -649,7 +661,6 @@ export default {
                                         if (data !== "[DONE]") {
                                             try {
                                                 const p = JSON.parse(data);
-                                                if (p.usage) { usageInput = p.usage.prompt_tokens; usageOutput = p.usage.completion_tokens; }
                                                 const delta = p.choices?.[0]?.delta || {};
                                                 if (delta.content) outText += delta.content;
                                             } catch (e) { /* 非 JSON 行原样转发 */ }
@@ -662,7 +673,7 @@ export default {
                                 controller.error(e);
                             }
                         },
-                        cancel() { settle(); }
+                        cancel() { /* 客户端中断：视为失败不结算，重试不重复扣费 */ }
                     });
                     return new Response(stream, {
                         headers: { ...corsHeaders(), ...diagHeaders, "Content-Type": "text/event-stream", "Cache-Control": "no-cache" }
@@ -698,10 +709,10 @@ export default {
                     }
                     clearTimeout(to);
                 }
-                // 成功 → 按上游 usage 结算扣费（无 usage 时字符估算兜底）；失败不扣费
+                // 成功 → 按字符估算 token 结算扣费；失败不扣费
                 if (!isMemberUser && resJson) {
-                    const inputTokens = resJson?.usage?.prompt_tokens ?? estimateInputTokens(requestJson.messages);
-                    const outputTokens = resJson?.usage?.completion_tokens ?? estimateTokens(resJson?.choices?.[0]?.message?.content ?? "");
+                    const inputTokens = estimateInputTokens(requestJson.messages);
+                    const outputTokens = estimateTokens(resJson?.choices?.[0]?.message?.content ?? "");
                     await settleTokenDeduction(env, userId, record, inputTokens, outputTokens)
                         .catch(e => console.error("settle token deduction failed:", e.message));
                 }
@@ -729,7 +740,7 @@ export default {
                 }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
 
-            // ---- 路由：每日签到（300 币/天；连续 7 天额外 +700；断签重置）----
+            // ---- 路由：每日签到（300 币/天；每连续满 7 天额外 +700；断签重置；首次 5500）----
             if (url.pathname === "/api/checkin" && request.method === "POST") {
                 const auth = await authenticate(env, request);
                 if (auth.error) return auth.error;
@@ -741,7 +752,7 @@ export default {
                 const yesterday = new Date(Date.now() + TIMEZONE_OFFSET_MS - 86400000).toISOString().slice(0, 10);
                 const streak = r.last_checkin_date === yesterday ? Number(r.checkin_streak || 0) + 1 : 1;
                 const isFirst = !r.last_checkin_date;
-                const reward = isFirst ? CHECKIN_FIRST_BONUS : (CHECKIN_BASE + (streak >= 7 ? CHECKIN_STREAK_BONUS : 0));
+                const reward = isFirst ? CHECKIN_FIRST_BONUS : (CHECKIN_BASE + (streak % 7 === 0 ? CHECKIN_STREAK_BONUS : 0));
                 const coin = Number(r.coins || 0) + reward;
                 const patchRes = await pbAdminFetch(env, `/api/collections/users/records/${r.id}`, {
                     method: "PATCH",
