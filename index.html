@@ -658,6 +658,156 @@
             transition: all .2s;
         }
         .event-rerun-btn:hover { background: rgba(240,147,43,0.22); }
+        /* 游玩页差距补齐：状态栏存档按钮 + 属性彩色进度条 */
+        .psb-save-btn {
+            flex-shrink: 0;
+            margin-left: auto;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 1px solid rgba(123,92,214,0.3);
+            background: rgba(123,92,214,0.10);
+            color: #7b5cd6;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all .2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .psb-save-btn:hover { background: rgba(123,92,214,0.22); }
+        .psb-stat-bar {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            min-width: 118px;
+            padding: 4px 8px;
+            border-radius: 9px;
+            background: rgba(123,92,214,0.08);
+            border: 1px solid var(--line);
+            font-size: 0.74rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+        .psb-stat-bar .stat-val { white-space: nowrap; }
+        .psb-stat-bar .stat-track {
+            flex: 1;
+            min-width: 34px;
+            height: 5px;
+            border-radius: 999px;
+            background: rgba(120,120,120,0.18);
+            overflow: hidden;
+        }
+        .psb-stat-bar .stat-fill {
+            height: 100%;
+            border-radius: 999px;
+            transition: width .4s ease;
+        }
+        /* 大地图横幅 */
+        .play-map-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 10px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, rgba(255,255,255,.92), rgba(246,244,252,.86));
+            border: 1px solid var(--line);
+        }
+        body[data-theme="dark"] .play-map-bar { background: linear-gradient(135deg, rgba(28,24,38,0.92), rgba(36,30,48,0.88)); }
+        .map-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: var(--input-bg);
+            color: var(--text-muted);
+            font-size: 0.76rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .2s;
+        }
+        .map-chip:hover { color: #7b5cd6; border-color: rgba(123,92,214,0.4); }
+        .map-chip.current {
+            background: linear-gradient(135deg, #7b5cd6, #9d7bf0);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 2px 8px rgba(123,92,214,0.35);
+        }
+        .map-open-btn {
+            margin-left: auto;
+            padding: 3px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(74,144,217,0.3);
+            background: rgba(74,144,217,0.10);
+            color: #2d6da8;
+            font-size: 0.76rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        /* 事件卡按钮组 + 往期折叠 + 推进按钮 */
+        .event-card-actions { display: flex; gap: 4px; flex-shrink: 0; }
+        .event-btn {
+            padding: 4px 9px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: var(--input-bg);
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .2s;
+            white-space: nowrap;
+        }
+        .event-btn:hover { color: #7b5cd6; border-color: rgba(123,92,214,0.4); }
+        .event-past {
+            margin-bottom: 8px;
+            border-radius: 12px;
+            border: 1px dashed var(--line);
+            background: rgba(123,92,214,0.05);
+            padding: 8px 10px;
+        }
+        .event-past summary {
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            padding: 2px 0;
+            list-style: none;
+        }
+        .event-past summary::before { content: "▾ "; }
+        .event-past[open] summary::before { content: "▴ "; }
+        .event-past .event-card { margin-top: 8px; margin-bottom: 0; }
+        .play-event-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.84rem;
+            font-weight: 800;
+            color: var(--text-dark);
+        }
+        .advance-btn {
+            display: block;
+            margin: 14px auto 4px;
+            width: 116px;
+            height: 116px;
+            border-radius: 50%;
+            border: none;
+            background: radial-gradient(circle at 32% 28%, #ff9db8, #f06a8e 55%, #e0527c);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(224,82,124,0.45);
+            transition: transform .15s, box-shadow .15s;
+        }
+        .advance-btn:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 12px 30px rgba(224,82,124,0.55); }
+        .advance-btn:active { transform: scale(.97); }
+        .advance-hint { text-align: center; font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px; }
         .npc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
         .npc-card {
             padding: 10px;
@@ -3889,6 +4039,23 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
         return { generateIdentity, generateIdentityBase };
     })();
 
+    // 大地图地点池：地点名由"主城·场景"构成，图标按场景词映射（StateService 与 UIRenderer 共用）
+    const MAP_PLACE_POOL = [
+        { n: "市集", i: "🛒" }, { n: "酒馆", i: "🍺" }, { n: "城郊", i: "🌾" }, { n: "码头", i: "⚓" },
+        { n: "学府", i: "📚" }, { n: "庙宇", i: "🏯" }, { n: "工坊", i: "🔨" }, { n: "茶馆", i: "🍵" },
+        { n: "广场", i: "🏛️" }, { n: "森林", i: "🌲" }, { n: "河畔", i: "🏞️" }, { n: "街巷", i: "🛤️" }
+    ];
+    function mapIconOf(name) {
+        const tail = String(name || "").split("·").pop();
+        const hit = MAP_PLACE_POOL.find((p) => p.n === tail);
+        return hit ? hit.i : "📍";
+    }
+    function generateNearbyLocations(base) {
+        const baseName = String(base || "云吞城");
+        const pool = MAP_PLACE_POOL.slice().sort(() => Math.random() - 0.5);
+        const others = pool.slice(0, 3).map((p) => ({ name: `${baseName}·${p.n}`, icon: p.i }));
+        return [{ name: baseName, icon: "📍" }, ...others];
+    }
     const StateService = (() => {
         // 兼容字符串形态旧数据("标签：值"),统一为 {label,value} 对象数组,否则背包页渲染出空白气泡
         function normalizeStatusTagList(list) {
@@ -3940,6 +4107,9 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             next.englishName = preset.englishName || identity.englishName;
             next.nationality = preset.nationality || identity.nationality;
             next.location = preset.location || identity.location;
+            next.locations = Array.isArray(preset.locations) && preset.locations.length
+                ? Utils.deepClone(preset.locations)
+                : generateNearbyLocations(next.location);
             const ageYears = Math.max(0, Number(preset.ageYears || 0));
             next.age = ageYears * 12;
             if (Number.isFinite(Number(preset.currentYear))) next.currentYear = Number(preset.currentYear);
@@ -3987,6 +4157,10 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             if (typeof gameState.weekdayIndex !== "number") gameState.weekdayIndex = 0;
             // 旧存档防御:坏 panelStatusTags(空对象等)会渲染出空白气泡
             gameState.panelStatusTags = normalizeStatusTagList(gameState.panelStatusTags);
+            // 大地图地点初始化（旧存档无 locations 时按当前地点生成周边）
+            if (!Array.isArray(gameState.locations) || !gameState.locations.length) {
+                gameState.locations = generateNearbyLocations(gameState.location);
+            }
         }
 
         function resetWithPreset({ selectedGender, forcedGender, forcedOrientation, forcedRole, name, englishName, ageYears, nationality, location, currentYear, currentMonth, currentDay, timeEra, weekIndex, weekdayIndex, inventory, npcs, stats, panelStatusTags, rebornReason }) {
@@ -6401,7 +6575,18 @@ function rebuildChoicesBlock(body, labels = []) {
             const hearts = Array.from({ length: 5 }, (_, i) => (i < filled ? "♥" : '<span class="empty">♡</span>'));
             return `<span class="heart-ladder">${hearts.join("")}</span>`;
         }
-        // 游玩页融合：状态栏（头像/名字/身份/体力/时间/地点/属性）
+        // 游玩页融合：状态栏（头像/名字/身份/体力/时间/地点/属性进度条/存档）
+        const STAT_COLORS = { 容貌: "#8B5E3C", 体质: "#E8793C", 智力: "#4CAF50", 魅力: "#9C6ADE", 体能: "#26A69A", 道德: "#E53935", 道德值: "#E53935" };
+        function statBarHtml(s) {
+            const vStr = String(s.value ?? "");
+            const parts = vStr.split("/");
+            const val = parseFloat(parts[0]);
+            const max = parts.length > 1 ? parseFloat(parts[1]) : 100;
+            const pct = Number.isFinite(val) && max > 0 ? Math.min(100, Math.max(0, (val / max) * 100)) : 0;
+            const color = STAT_COLORS[s.label] || avatarColor(s.label || "?");
+            const icon = s.icon || "✨";
+            return `<span class="psb-stat-bar"><span>${icon}${MarkdownService.escapeHtml(s.label || "")}</span><span class="stat-track"><span class="stat-fill" style="width:${pct}%;background:${color};"></span></span><span class="stat-val">${MarkdownService.escapeHtml(vStr)}</span></span>`;
+        }
         function renderPlayStatusBar(state) {
             const box = document.getElementById("play-status-bar");
             if (!box) return;
@@ -6418,10 +6603,7 @@ function rebuildChoicesBlock(body, labels = []) {
             if (timeText) chips.push(`<span class="psb-chip">📅 ${timeText}</span>`);
             if (state.location && state.location !== "待生成") chips.push(`<span class="psb-chip">📍 ${MarkdownService.escapeHtml(state.location)}</span>`);
             const statsHtml = coreStats.length
-                ? `<div class="psb-stats">${coreStats.map((s) => {
-                    const icon = s.icon || "✨";
-                    return `<span class="wy-stat-pill">${icon}${MarkdownService.escapeHtml(s.label || "")} ${MarkdownService.escapeHtml(String(s.value ?? ""))}</span>`;
-                }).join("")}</div>`
+                ? `<div class="psb-stats">${coreStats.map(statBarHtml).join("")}</div>`
                 : "";
             const roleHtml = state.role ? `<span class="psb-role">${MarkdownService.escapeHtml(state.role)}</span>` : "";
             box.innerHTML = `
@@ -6431,7 +6613,8 @@ function rebuildChoicesBlock(body, labels = []) {
                     ${roleHtml}
                 </div>
                 <div class="psb-chips">${chips.join("")}</div>
-                ${statsHtml}`;
+                ${statsHtml}
+                <button type="button" class="psb-save-btn" onclick="switchView('view-saves')" title="存读档">💾</button>`;
         }
         // 事件分轮：按 user 消息切分 history 为"一轮事件 = 指令 + 后续回叙"
         function buildEventRounds(history) {
@@ -6447,24 +6630,52 @@ function rebuildChoicesBlock(body, labels = []) {
             });
             return rounds;
         }
+        function normalizeLocations(state) {
+            if (Array.isArray(state.locations) && state.locations.length) return state.locations;
+            return generateNearbyLocations(state.location);
+        }
+        function renderPlayMapBar(state) {
+            const locs = normalizeLocations(state);
+            const cur = state.location || (locs[0] && locs[0].name) || "";
+            const chips = locs.map((l) => {
+                const active = l.name === cur;
+                return `<button type="button" class="map-chip${active ? " current" : ""}" onclick="moveToLocation('${MarkdownService.escapeHtml(l.name).replace(/'/g, "\\'")}')">${l.icon || mapIconOf(l.name)} ${MarkdownService.escapeHtml(l.name)}</button>`;
+            }).join("");
+            return `<div class="play-map-bar"><span style="font-size:0.76rem;font-weight:800;color:var(--text-muted);">🗺️ 大地图</span>${chips}<button type="button" class="map-open-btn" onclick="showFullMap()">🗺️ 完整地图</button></div>`;
+        }
         function renderPlayEventList() {
             const box = document.getElementById("play-event-area");
             if (!box) return;
-            const rounds = buildEventRounds(StateService.get().history);
+            const state = StateService.get();
+            const rounds = buildEventRounds(state.history);
+            const mapHtml = renderPlayMapBar(state);
             if (!rounds.length) {
-                box.innerHTML = '<div class="list-sub" style="opacity:0.6;padding:6px 2px;">📅 暂无事件记录，先推进一段剧情吧</div>';
+                box.innerHTML = `${mapHtml}<div class="list-sub" style="opacity:0.6;padding:6px 2px;">📅 暂无事件记录，先推进一段剧情吧</div>`;
                 return;
             }
-            box.innerHTML = rounds.map((r, i) => {
+            const latest = rounds[rounds.length - 1];
+            const past = rounds.slice(0, -1);
+            const cardHtml = (r, i) => {
                 const title = (r.texts[0] || r.userText || "（空指令）").replace(/\s+/g, " ").slice(0, 26);
                 return `<div class="event-card">
                     <div class="event-card-main">
                         <div class="event-card-title">📖 ${MarkdownService.escapeHtml(title)}</div>
                         <div class="event-card-meta">${r.date ? `📅 ${MarkdownService.escapeHtml(r.date)}` : ""} · ${r.texts.length} 段回叙</div>
                     </div>
-                    <button type="button" class="event-rerun-btn" onclick="rerunEvent(${i})">🔄 重刷</button>
+                    <div class="event-card-actions">
+                        <button type="button" class="event-btn" onclick="showEventDetail(${i})">📖 详情</button>
+                        <button type="button" class="event-btn" onclick="editEvent(${i})">✏️ 编辑</button>
+                        <button type="button" class="event-btn" onclick="enterEvent(${i})">⏵ 进入</button>
+                        <button type="button" class="event-rerun-btn" onclick="rerunEvent(${i})">🔄 重刷</button>
+                    </div>
                 </div>`;
-            }).join("");
+            };
+            box.innerHTML = `${mapHtml}
+                <div class="play-event-head"><span>📅 当前事件</span><span class="list-sub">探索地图可触发新的事件</span></div>
+                ${cardHtml(latest, rounds.length - 1)}
+                ${past.length ? `<details class="event-past"><summary>往期与已完结（${past.length}）</summary>${past.map((r, j) => cardHtml(r, j)).join("")}</details>` : ""}
+                <button type="button" class="advance-btn" onclick="advanceStory()">推进<br>剧情</button>
+                <div class="advance-hint">进入新的故事发展</div>`;
         }
         // 世界图谱：NPC 登场状态 + 好感 ♥ 阶梯 + 关系/状态/心情
         function renderWorld() {
@@ -6681,6 +6892,13 @@ function rebuildChoicesBlock(body, labels = []) {
             const board = document.getElementById("play-chat-area");
             board.innerHTML = "";
             history.forEach((msg) => appendMessage(msg.role || "ai", msg.text, msg.date, false));
+            // 标记每条消息所属事件轮次（供"进入事件"滚动定位）
+            let rIdx = -1;
+            history.forEach((msg, i) => {
+                if (msg.role === "user") rIdx += 1;
+                const node = board.children[i];
+                if (node) node.setAttribute("data-round", String(Math.max(0, rIdx)));
+            });
             scrollToBottom();
         }
         function patchLastAiMessage(text, options = {}) {
@@ -7007,7 +7225,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 groupCards.forEach(renderRow);
             });
         }
-        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, clearFancyStatus, renderPlayStatusBar, renderPlayEventList, renderWorld, renderDiary, renderEndingModal, buildEventRounds, avatarColor, heartLadder, stripHtml };
+        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, clearFancyStatus, renderPlayStatusBar, renderPlayEventList, renderWorld, renderDiary, renderEndingModal, buildEventRounds, avatarColor, heartLadder, stripHtml, normalizeLocations };
     })();
 
     const VisualEffects = (() => {
@@ -11003,6 +11221,67 @@ const token = delta.content || "";
             UIRenderer.renderPlayStatusBar(state);
             sendUserText(round.userText);
         }
+        // ---- 剧情页差距补齐：事件卡 详情/编辑/进入 + 大地图移动/完整地图 + 推进剧情 ----
+        function guardGenerating(tip) {
+            if (!ChatService.getIsGenerating()) return false;
+            NoticeModalService.showInfo({ title: "生成中", descHtml: tip });
+            return true;
+        }
+        function showEventDetail(idx) {
+            const rounds = UIRenderer.buildEventRounds(StateService.get().history);
+            const r = rounds[idx];
+            if (!r) return;
+            const body = (r.texts || []).map((t) => UIRenderer.stripHtml(t)).join("\n\n");
+            NoticeModalService.showInfo({
+                title: `📖 ${r.userText.slice(0, 18)}`,
+                descHtml: `<div class="list-sub">${MarkdownService.escapeHtml(r.date || "某日")} · ${r.texts.length} 段回叙</div><div style="white-space:pre-wrap;margin-top:6px;">${MarkdownService.escapeHtml(body || "（该事件暂无正文）")}</div>`
+            });
+        }
+        function editEvent(idx) {
+            if (guardGenerating("AI 正在推进剧情，稍后再编辑该事件。")) return;
+            const rounds = UIRenderer.buildEventRounds(StateService.get().history);
+            const r = rounds[idx];
+            if (!r) return;
+            switchPlayTab("chat");
+            const input = document.getElementById("chat-input");
+            if (input) { input.value = r.userText; input.focus(); }
+        }
+        function enterEvent(idx) {
+            switchPlayTab("chat");
+            const el = document.querySelector(`#play-chat-area [data-round="${idx}"]`);
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+        function moveToLocation(locName) {
+            if (guardGenerating("AI 正在推进剧情，稍后再探索新地点。")) return;
+            const state = StateService.get();
+            const name = String(locName || "").slice(0, 30);
+            if (!name || name === state.location) return;
+            state.location = name;
+            StateService.save();
+            UIRenderer.renderTop(state);
+            UIRenderer.renderPlayStatusBar(state);
+            if (activeView === "view-main") UIRenderer.renderPlayEventList();
+            sendUserText(`前往${name}探索，看看有什么新事件发生`);
+        }
+        function showFullMap() {
+            const state = StateService.get();
+            const locs = UIRenderer.normalizeLocations ? UIRenderer.normalizeLocations(state) : [];
+            if (!locs.length) return;
+            const cur = state.location || (locs[0] && locs[0].name) || "";
+            const items = locs.map((l) => {
+                const active = l.name === cur;
+                const desc = l.desc ? `<span class="list-sub"> · ${MarkdownService.escapeHtml(l.desc)}</span>` : "";
+                return `<button type="button" class="map-chip${active ? " current" : ""}" style="margin:3px;" onclick="moveToLocation('${MarkdownService.escapeHtml(l.name).replace(/'/g, "\\'")}');closeInfoModal()">${l.icon || mapIconOf(l.name)} ${MarkdownService.escapeHtml(l.name)}</button>${desc}`;
+            }).join(" ");
+            NoticeModalService.showInfo({
+                title: "🗺️ 完整地图",
+                descHtml: `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;">${items}</div><div class="list-sub" style="margin-top:8px;">点击地点前往探索，可触发新的事件；<button type="button" class="event-btn" onclick="advanceStory();closeInfoModal()">🌏 大世界</button> 可去更远的地方。</div>`
+            });
+        }
+        function advanceStory() {
+            if (guardGenerating("AI 正在推进剧情，请稍候。")) return;
+            sendUserText("继续推进剧情，开启新的故事发展");
+        }
         // ---- 结局评定（uugame"结束这段故事"融合：AI 评定 S~D + 专属结局，失败本地兜底） ----
         async function requestEnding(state, config) {
             const scenarioSpec = SettingsService.getScenarioTextForModel();
@@ -12049,13 +12328,19 @@ function openNpcProfile(npcId) {
                 openingChoices: merged.openingChoices || []
             });
         }
-        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
+        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, advanceStory };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
     function sendUserText(text) { Controller.sendUserText(text); }
     function switchPlayTab(tab) { Controller.switchPlayTab(tab); }
     function rerunEvent(idx) { Controller.rerunEvent(idx); }
+    function showEventDetail(idx) { Controller.showEventDetail(idx); }
+    function editEvent(idx) { Controller.editEvent(idx); }
+    function enterEvent(idx) { Controller.enterEvent(idx); }
+    function moveToLocation(locName) { Controller.moveToLocation(locName); }
+    function showFullMap() { Controller.showFullMap(); }
+    function advanceStory() { Controller.advanceStory(); }
     function endStory() { Controller.endStory(); }
     function closeEndingModal() { Controller.closeEndingModal(); }
     function restartLife() { Controller.restartLife(); }
