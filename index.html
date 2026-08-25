@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>云吞吞文游模拟器</title>
+    <title>云吞吞文游</title>
     <link rel="icon" href="icons/favicon.ico" sizes="any">
     <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
@@ -2656,7 +2656,7 @@
     @media (prefers-reduced-motion: reduce){#boot-screen .boot-logo,#boot-screen .boot-sub{animation:none}#boot-screen .boot-card::after{animation:none}}
 </style>
 <div id="boot-screen" role="status" aria-label="页面加载中">
-    <div class="boot-logo">云吞吞文游模拟器</div>
+    <div class="boot-logo"><img src="icons/android-chrome-192x192.png" alt="" style="width:36px;height:36px;vertical-align:-7px;margin-right:10px;border-radius:8px;filter:drop-shadow(0 0 10px rgba(255,214,107,.45))">云吞吞文游</div>
     <div class="boot-sub">正在加载云吞吞世界…</div>
     <div class="boot-cards" aria-hidden="true">
         <div class="boot-card"><div class="boot-bar w"></div><div class="boot-bar l"></div><div class="boot-row"><div class="boot-opt"></div><div class="boot-opt"></div><div class="boot-opt"></div></div></div>
@@ -2671,8 +2671,10 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
 <div id="auth-overlay" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--bg-page,#efe3cf);align-items:center;justify-content:center;padding:20px;">
     <div style="width:100%;max-width:380px;background:var(--card,#fff7ea);border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.18);padding:32px 28px;border:1px solid var(--line,#e2ccb0);">
         <div style="text-align:center;margin-bottom:24px;">
-            <div style="font-size:2rem;margin-bottom:8px;">🍡</div>
-            <h2 style="font-size:1.2rem;font-weight:800;color:var(--accent-dark,#845f35);margin:0;">云吞吞文游模拟器</h2>
+            <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px;">
+                <img src="icons/android-chrome-192x192.png" alt="" style="width:52px;height:52px;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,0.12);">
+                <h2 style="font-size:1.2rem;font-weight:800;color:var(--accent-dark,#845f35);margin:0;">云吞吞文游</h2>
+            </div>
             <p id="auth-subtitle" style="margin:6px 0 0;font-size:0.82rem;color:var(--sub,#806a55);">登录以继续</p>
         </div>
         <div style="display:flex;flex-direction:column;gap:12px;">
@@ -2729,7 +2731,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
 
     <header class="header">
         <div>
-            <h1 id="site-title">云吞吞文游模拟器</h1>
+            <h1 id="site-title"><img src="icons/android-chrome-192x192.png" alt="" style="width:1.25em;height:1.25em;vertical-align:-0.22em;margin-right:6px;border-radius:6px;">云吞吞文游</h1>
         </div>
         <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
             <div class="top-mini-nav">
@@ -5859,7 +5861,7 @@ function rebuildChoicesBlock(body, labels = []) {
             }, STREAM_RENDER_INTERVAL_MS - elapsed);
         }
         function renderTop(state) {
-            document.getElementById("site-title").innerText = "云吞吞文游模拟器";
+            document.getElementById("site-title").innerHTML = '<img src="icons/android-chrome-192x192.png" alt="" style="width:1.25em;height:1.25em;vertical-align:-0.22em;margin-right:6px;border-radius:6px;">云吞吞文游';
             renderStats(state);
         }
         function renderStats(state) {
