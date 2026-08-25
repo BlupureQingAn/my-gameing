@@ -5,6 +5,10 @@ const COIN_COST_PER_ROUND = 100;
 const UNLOCK_COST = 5000;
 const CHECKIN_BASE = 300;
 const CHECKIN_STREAK_BONUS = 700;
+// 创作者分佣：别人玩你的社区卡 30 币/轮（单卡单用户每日最多计 10 轮），解锁分成 1000 币
+const COMMUNITY_REWARD_PER_PLAY = 30;
+const COMMUNITY_DAILY_PLAY_LIMIT = 10;
+const COMMUNITY_UNLOCK_REWARD = 1000;
 // Cloudflare Worker 环境是 UTC，固定用 UTC+8 计算"今天"
 const TIMEZONE_OFFSET_MS = 8 * 3600 * 1000;
 const LIFETIME_EXPIRY = "2226-01-01T00:00:00.000Z";
@@ -695,6 +699,28 @@ export default {
                     body: JSON.stringify({ user_id: r.id, card_id: cardId, created_at: new Date().toISOString() })
                 });
                 if (!unlockRes.ok) return errorResponse("解锁记录写入失败", 500, null, "UNLOCK_FAILED");
+                // 社区卡解锁分成：作者（非本人）获得 1000 币
+                if (unlockRes.ok) {
+                    const commFilter = encodeURIComponent(`id='${escapePocketBaseFilterValue(cardId)}'`);
+                    const commQ = await pbAdminFetch(env, `/api/collections/community_cards/records?perPage=1&skipTotal=true&filter=${commFilter}`);
+                    const commD = await commQ.json().catch(() => ({}));
+                    const commCard = (commD.items || [])[0];
+                    if (commCard && commCard.author_id && commCard.author_id !== r.id) {
+                        const aFilter = encodeURIComponent(`id='${escapePocketBaseFilterValue(commCard.author_id)}'`);
+                        const aQ = await pbAdminFetch(env, `/api/collections/users/records?perPage=1&skipTotal=true&filter=${aFilter}`);
+                        const aD = await aQ.json().catch(() => ({}));
+                        const author = (aD.items || [])[0];
+                        if (author) {
+                            const reward = COMMUNITY_UNLOCK_REWARD;
+                            await pbAdminFetch(env, `/api/collections/users/records/${author.id}`, {
+                                method: "PATCH", body: JSON.stringify({ coin: Number(author.coin || 0) + reward })
+                            });
+                            await pbAdminFetch(env, `/api/collections/community_cards/records/${commCard.id}`, {
+                                method: "PATCH", body: JSON.stringify({ unlock_count: Number(commCard.unlock_count || 0) + 1 })
+                            });
+                        }
+                    }
+                }
                 return new Response(JSON.stringify({ unlocked: true, coin }), {
                     headers: { ...corsHeaders(), "Content-Type": "application/json" }
                 });
@@ -708,6 +734,131 @@ export default {
                 const q = await pbAdminFetch(env, `/api/collections/unlocks/records?perPage=200&skipTotal=true&filter=${filter}&fields=card_id`);
                 const d = await q.json().catch(() => ({}));
                 return new Response(JSON.stringify({ cards: (d.items || []).map(i => i.card_id) }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+
+            // ---- 路由：社区卡上传（status=pending 待审核）----
+            if (url.pathname === "/api/cards/community" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                let body = {};
+                try { body = await request.json(); } catch (e) {}
+                const title = String(body.title || "").trim();
+                const data = body.data;
+                if (!title || !data || typeof data !== "object") return errorResponse("缺少标题或卡数据", 400, null, "INVALID_COMMUNITY_CARD");
+                const record = {
+                    title: title.slice(0, 60),
+                    category: String(body.category || "").slice(0, 20),
+                    theme: String(body.theme || "").slice(0, 20),
+                    data,
+                    author_id: auth.record.id,
+                    status: "pending",
+                    play_count: 0,
+                    earned_plays: 0,
+                    unlock_count: 0,
+                    daily_plays: {},
+                    created_at: new Date().toISOString()
+                };
+                const createRes = await pbAdminFetch(env, `/api/collections/community_cards/records`, {
+                    method: "POST", body: JSON.stringify(record)
+                });
+                if (!createRes.ok) return errorResponse("上传失败", 500, null, "COMMUNITY_UPLOAD_FAILED");
+                const created = await createRes.json().catch(() => ({}));
+                return new Response(JSON.stringify({ id: created.id, status: "pending" }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+
+            // ---- 路由：社区卡列表/详情/我的（GET）----
+            if (url.pathname === "/api/cards/community" && request.method === "GET") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const cardId = url.searchParams.get("id") || "";
+                const mine = url.searchParams.get("mine") === "1";
+                if (cardId) {
+                    // 详情（下载）：非本人下载计入 play_count
+                    const q = await pbAdminFetch(env, `/api/collections/community_cards/records/${encodeURIComponent(cardId)}`);
+                    if (!q.ok) return errorResponse("社区卡不存在", 404, null, "COMMUNITY_CARD_NOT_FOUND");
+                    const card = await q.json().catch(() => ({}));
+                    const status = Array.isArray(card.status) ? card.status[0] : card.status;
+                    if (status !== "approved" && card.author_id !== auth.record.id) {
+                        return errorResponse("社区卡不可见", 404, null, "COMMUNITY_CARD_NOT_FOUND");
+                    }
+                    if (card.author_id !== auth.record.id) {
+                        await pbAdminFetch(env, `/api/collections/community_cards/records/${card.id}`, {
+                            method: "PATCH", body: JSON.stringify({ play_count: Number(card.play_count || 0) + 1 })
+                        });
+                    }
+                    return new Response(JSON.stringify({ ...card, data: card.data }), {
+                        headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                    });
+                }
+                const filter = mine
+                    ? encodeURIComponent(`author_id='${escapePocketBaseFilterValue(auth.record.id)}'`)
+                    : encodeURIComponent(`status='approved'`);
+                const q = await pbAdminFetch(env, `/api/collections/community_cards/records?perPage=200&sort=-created&filter=${filter}`);
+                const d = await q.json().catch(() => ({}));
+                const items = (d.items || []).map(c => {
+                    const status = Array.isArray(c.status) ? c.status[0] : c.status;
+                    return {
+                        id: c.id, title: c.title, category: c.category, theme: c.theme,
+                        author_id: c.author_id, status,
+                        play_count: Number(c.play_count || 0),
+                        earned_plays: Number(c.earned_plays || 0),
+                        unlock_count: Number(c.unlock_count || 0),
+                        created_at: c.created_at
+                    };
+                });
+                return new Response(JSON.stringify({ items }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+
+            // ---- 路由：游玩计佣（社区卡作者 30 币/轮，防刷单卡单用户每日 10 轮）----
+            if (url.pathname === "/api/play/report" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                let body = {};
+                try { body = await request.json(); } catch (e) {}
+                const cardId = String(body.card_id || "").trim();
+                if (!cardId) return errorResponse("缺少 card_id", 400, null, "INVALID_CARD");
+                const q = await pbAdminFetch(env, `/api/collections/community_cards/records/${encodeURIComponent(cardId)}`);
+                const d = await q.json().catch(() => ({}));
+                if (!q.ok || !d.id) {
+                    // 官方卡/本地未上传卡：不计佣，静默成功
+                    return new Response(JSON.stringify({ ok: true, rewarded: false }), {
+                        headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                    });
+                }
+                if (!d.author_id || d.author_id === auth.record.id) {
+                    return new Response(JSON.stringify({ ok: true, rewarded: false, self: true }), {
+                        headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                    });
+                }
+                const today = new Date(Date.now() + TIMEZONE_OFFSET_MS).toISOString().slice(0, 10);
+                let daily = {};
+                try { daily = (typeof d.daily_plays === "object" && d.daily_plays) ? d.daily_plays : JSON.parse(d.daily_plays || "{}"); } catch (e) { daily = {}; }
+                const todayCount = Number(daily[today] || 0);
+                const patched = { play_count: Number(d.play_count || 0) + 1 };
+                if (todayCount < COMMUNITY_DAILY_PLAY_LIMIT) {
+                    daily[today] = todayCount + 1;
+                    patched.daily_plays = daily;
+                    patched.earned_plays = Number(d.earned_plays || 0) + 1;
+                    const aFilter = encodeURIComponent(`id='${escapePocketBaseFilterValue(d.author_id)}'`);
+                    const aQ = await pbAdminFetch(env, `/api/collections/users/records?perPage=1&skipTotal=true&filter=${aFilter}`);
+                    const aD = await aQ.json().catch(() => ({}));
+                    const author = (aD.items || [])[0];
+                    if (author) {
+                        await pbAdminFetch(env, `/api/collections/users/records/${author.id}`, {
+                            method: "PATCH", body: JSON.stringify({ coin: Number(author.coin || 0) + COMMUNITY_REWARD_PER_PLAY })
+                        });
+                    }
+                }
+                await pbAdminFetch(env, `/api/collections/community_cards/records/${d.id}`, {
+                    method: "PATCH", body: JSON.stringify(patched)
+                });
+                return new Response(JSON.stringify({ ok: true, rewarded: todayCount < COMMUNITY_DAILY_PLAY_LIMIT }), {
                     headers: { ...corsHeaders(), "Content-Type": "application/json" }
                 });
             }

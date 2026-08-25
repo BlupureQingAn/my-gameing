@@ -2823,6 +2823,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <div class="setting-actions">
                     <button class="mini-btn primary" onclick="saveScenarioCard()">保存当前卡片</button>
                     <button class="mini-btn ghost" onclick="importScenarioTxt()">导入设定TXT</button>
+                    <button class="mini-btn ghost" onclick="uploadScenarioCard()">上传到网站</button>
                     <button class="mini-btn ghost" onclick="startFromPlay()">保存并开始游玩</button>
                     <button class="mini-btn ghost" onclick="switchView('view-home')">取消并返回</button>
                 </div>
@@ -2873,6 +2874,11 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                         <span id="ui-byok-test-result" class="list-sub" style="margin:0;"></span>
                     </div>
                 </div>
+            </section>
+            <section class="card">
+                <div class="list-title">📜 我的剧本</div>
+                <div class="list-sub">别人游玩你的卡：每轮 30 币；解锁你的卡：+1000 币（防刷上限 10 轮/卡/天）。</div>
+                <div id="my-community-cards" style="margin-top:8px;"><span class="list-sub">加载中...</span></div>
             </section>
             <section class="card">
                 <div class="list-title">👑 会员服务</div>
@@ -6485,6 +6491,11 @@ function rebuildChoicesBlock(body, labels = []) {
                 const emailEl = document.getElementById("display-user-email");
                 if (emailEl) emailEl.textContent = user.email || AuthService.getEmail();
                 AuthService.updateUsageStatusUI();
+            }
+
+            // M5:我的剧本区（播放量+收益）
+            if (typeof Controller !== "undefined" && typeof Controller.loadMyCommunityCards === "function") {
+                Controller.loadMyCommunityCards();
             }
 
             const policy = ChatPolicyConfigService.load();
@@ -10612,6 +10623,73 @@ function openNpcProfile(npcId) {
         function importScenarioTxt() {
             SettingsService.importScenarioFromFile();
         }
+        // M5：上传当前卡片到网站（审核制，pending 后展示播放量/收益）
+        async function uploadScenarioCard() {
+            const selected = ScenarioCardService.getSelectedCard();
+            if (!selected) { NoticeModalService.showInfo({ title: "上传失败", descHtml: "请先选择一张卡片" }); return; }
+            if (!AuthService.getToken()) {
+                const ok = await DecisionModalService.show({ title: "🔒 请先登录", descHtml: "上传剧本卡需要登录账号。", okText: "去登录", cancelText: "取消" });
+                if (ok) { const overlay = document.getElementById("auth-overlay"); if (overlay) overlay.style.display = "flex"; }
+                return;
+            }
+            const data = { ...selected, text: selected.text, structured: selected.structured || null };
+            const payload = {
+                title: String(selected.title || "未命名剧本").trim(),
+                category: String(selected.category || "").trim(),
+                theme: String(selected.theme || "").trim(),
+                data
+            };
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/cards/community`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + AuthService.getToken() },
+                    body: JSON.stringify(payload)
+                });
+                const d = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(d.error || `HTTP ${res.status}`);
+                NoticeModalService.showInfo({ title: "已提交审核", descHtml: `《${MarkdownService.escapeHtml(selected.title || "未命名剧本")}》已上传，审核通过后他人可游玩。` });
+            } catch (e) {
+                NoticeModalService.showInfo({ title: "上传失败", descHtml: MarkdownService.escapeHtml(String(e.message || e).slice(0, 100)) });
+            }
+        }
+        // M5：我的剧本区（播放量 + 收益累计）
+        async function loadMyCommunityCards() {
+            const container = document.getElementById("my-community-cards");
+            if (!container) return;
+            if (!AuthService.getToken()) {
+                container.innerHTML = '<span class="list-sub">登录后查看你的剧本收益。</span>';
+                return;
+            }
+            container.innerHTML = '<span class="list-sub">加载中...</span>';
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/cards/community?mine=1`, {
+                    headers: { "X-Auth-Token": "Bearer " + AuthService.getToken() }
+                });
+                const d = await res.json().catch(() => ({}));
+                const items = Array.isArray(d.items) ? d.items : [];
+                if (!items.length) {
+                    container.innerHTML = '<span class="list-sub">还没有上传过剧本，去卡片编辑页点"上传到网站"。</span>';
+                    return;
+                }
+                const rows = items.map(c => {
+                    const reward = Number(c.earned_plays || 0) * 30 + Number(c.unlock_count || 0) * 1000;
+                    const status = c.status === "approved" ? '<span style="color:#2e8b57;">已上架</span>' : (c.status === "pending" ? '<span style="color:#e67e22;">审核中</span>' : '<span style="color:#c0392b;">未通过</span>');
+                    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin-top:6px;background:var(--card-soft);">
+                        <div style="min-width:0;">
+                            <div style="font-weight:700;font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${MarkdownService.escapeHtml(c.title || "未命名")}</div>
+                            <div class="list-sub" style="margin-top:2px;">播放 ${Number(c.play_count || 0)} 次｜${status}</div>
+                        </div>
+                        <div style="text-align:right;margin-left:8px;">
+                            <div style="font-weight:800;color:var(--accent-dark);">💰 ${reward} 币</div>
+                            <div class="list-sub">${Number(c.earned_plays || 0)} 轮计佣</div>
+                        </div>
+                    </div>`;
+                }).join("");
+                container.innerHTML = rows;
+            } catch (e) {
+                container.innerHTML = '<span class="list-sub">加载失败，请稍后重试。</span>';
+            }
+        }
         function openInitPreviewModal() {
             document.getElementById("init-preview-modal").style.display = "flex";
         }
@@ -10646,6 +10724,14 @@ function openNpcProfile(npcId) {
             }
             selectScenarioCard(cardId);
             ScenarioPlayMetaService.touchPlayed(cardId); // 需求A:记录最近游玩,列表置顶排序
+            // 社区卡游玩计佣（fire-and-forget，官方卡/本地未上传卡由服务端忽略）
+            if (card && card.sourceType !== "official") {
+                fetch(`${AppConfig.proxy.baseUrl}/api/play/report`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + AuthService.getToken() },
+                    body: JSON.stringify({ card_id: cardId })
+                }).catch(() => {});
+            }
             const meta = ScenarioPlayMetaService.getMeta(cardId);
             if (meta.hasInitialized) {
                 InitLoadingService.close();
@@ -10766,7 +10852,7 @@ function openNpcProfile(npcId) {
                 openingChoices: merged.openingChoices || []
             });
         }
-        return { init, onSendClick, sendUserText, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, openInitPreviewModal, closeInitPreviewModal, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
+        return { init, onSendClick, sendUserText, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, openInitPreviewModal, closeInitPreviewModal, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
@@ -10780,6 +10866,8 @@ function openNpcProfile(npcId) {
     function selectScenarioCard(id) { Controller.selectScenarioCard(id); }
     function startFromPlay() { Controller.startFromPlay(); }
     function importScenarioTxt() { Controller.importScenarioTxt(); }
+    function uploadScenarioCard() { Controller.uploadScenarioCard(); }
+    function loadMyCommunityCards() { Controller.loadMyCommunityCards(); }
     function openInitPreviewModal() { Controller.openInitPreviewModal(); }
     function closeInitPreviewModal() { Controller.closeInitPreviewModal(); }
     function applyInitPreviewAndStart() { Controller.applyInitPreviewAndStart(); }
