@@ -2699,7 +2699,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <div class="list-title" id="membership-title" style="margin:0;">开通会员</div>
             <button onclick="MembershipService.closePanel()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--sub);">✕</button>
         </div>
-        <div class="list-sub">非会员每日免费 20 次；会员期间不限量调用（模型由系统自动路由）。</div>
+        <div class="list-sub">充值云币解锁剧本卡、抵扣 AI 对话；终身会员 89 元免一切云币消耗。</div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:10px 0;padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,#fff3d6,#ffe3b3);border:1px solid #e8b84b;">
             <div style="font-size:0.9rem;font-weight:700;color:#8a4b00;">🔥 限时优惠进行中</div>
             <div style="font-size:0.9rem;font-weight:700;color:#d63031;">距优惠结束 <span id="membership-countdown" style="font-variant-numeric:tabular-nums;background:#fff;padding:2px 8px;border-radius:6px;border:1px solid #e8b84b;">23:59:59</span></div>
@@ -3011,12 +3011,13 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             scenarioDismissedWarningsMap: "bitlife_scenario_dismissed_warnings_map_v1",
             uiThemeMode: "bitlife_ui_theme_mode_v1"
         },
-        membershipPlans: {
-            monthly:   { id: "monthly",   name: "月度会员", price: "9.9",  originalPrice: "25",   days: 30,    desc: "30 天不限量" },
-            quarterly: { id: "quarterly", name: "季度会员", price: "24.9", originalPrice: "69",   days: 90,    desc: "90 天不限量" },
-            yearly:    { id: "yearly",    name: "年度会员", price: "52",   originalPrice: "149",  days: 365,   desc: "365 天不限量" },
-            lifetime:  { id: "lifetime",  name: "终身会员", price: "89",   originalPrice: "249",  days: 73000, desc: "永久不限量" }
+        chargePlans: {
+            c6:  { id: "c6",  name: "6000 云币", price: "6",  coins: 6600,  desc: "首充双倍 · 新用户专属", tag: "首充双倍" },
+            c18: { id: "c18", name: "18000 云币", price: "18", coins: 19800, desc: "加赠 1800 云币", tag: "" },
+            c30: { id: "c30", name: "30000 云币", price: "30", coins: 34500, desc: "加赠 4500 云币", tag: "" },
+            c68: { id: "c68", name: "68000 云币", price: "68", coins: 81600, desc: "加赠 13600 云币", tag: "" }
         },
+        lifetimePlan: { id: "lifetime", name: "终身会员", price: "89", originalPrice: "249", desc: "永久不限量 · 免所有云币消耗" },
         identityPools: {
             cnNames: ["沈知夏", "苏见微", "江望舒", "程以宁", "周晚棠", "宋栖月", "陆听岚", "秦若禾", "林清和", "许映棠", "叶若岚", "顾晚晴", "姜令仪", "白昭宁"],
             enNames: ["Lumi", "Iris", "Mira", "Nora", "Lena", "Sylvia", "Evelyn", "Clara", "Ariel", "Elena", "Selina", "Olivia", "Amelia", "Yuna"],
@@ -10658,11 +10659,12 @@ function openNpcProfile(npcId) {
 
     // ==================== MembershipService (会员开通/续费) ====================
     const MembershipService = (() => {
-        let selectedPlan = "monthly";
+        let selectedPlan = "c6";
         let selectedPayType = "alipay";
         let _pollTimer = null;
         let _currentOrder = null;   // 当前进行中的订单:重复点击立即支付时复用,不重复创建
         let _creatingOrder = false; // 创建中锁,防双击产生两个订单
+        const PENDING_KEY = "bitlife_pending_pay_order_v1"; // 跳转收银台前持久化,返回后自动查单
 
         function openPanel() {
             const modal = document.getElementById("membership-modal");
@@ -10683,18 +10685,46 @@ function openNpcProfile(npcId) {
             stopPoll();
             stopCountdown();
             _currentOrder = null; // 关闭面板视为放弃当前订单,下次支付重新创建
+            localStorage.removeItem(PENDING_KEY);
         }
+        // 支付返回后自动查单：跳转收银台会卸载页面,从收银台返回时(pageshow/重载)恢复未完成订单
+        async function resumePendingPay() {
+            if (_pollTimer) return; // 已有轮询在跑
+            const raw = localStorage.getItem(PENDING_KEY);
+            if (!raw) return;
+            let pending;
+            try { pending = JSON.parse(raw); } catch (e) { localStorage.removeItem(PENDING_KEY); return; }
+            const modal = document.getElementById("membership-modal");
+            if (modal && modal.style.display !== "flex") {
+                selectedPlan = pending.planId || selectedPlan;
+                selectedPayType = pending.payType || selectedPayType;
+                openPanel();
+            }
+            _currentOrder = { orderNo: pending.orderNo, jumpUrl: "", payType: pending.payType, planId: pending.planId };
+            const payArea = document.getElementById("membership-pay-area");
+            if (payArea) payArea.innerHTML = '<div class="list-sub">支付返回，正在确认到账...</div>';
+            startPoll(pending.orderNo);
+        }
+        window.addEventListener("pageshow", () => { resumePendingPay(); });
         function renderPlans() {
             const grid = document.getElementById("membership-plan-grid");
             if (!grid) return;
             const current = AuthService.getUserData()?.membership_type || "";
-            grid.innerHTML = Object.values(AppConfig.membershipPlans).map(p =>
+            const lp = AppConfig.lifetimePlan;
+            let planCards = Object.values(AppConfig.chargePlans).map(p =>
                 `<div class="recharge-item ${selectedPlan === p.id ? "active" : ""}" onclick="MembershipService.selectPlan('${p.id}')">
-                    <div class="recharge-coins"><span style="font-size:0.75rem;color:#a89580;text-decoration:line-through;margin-right:4px;">¥${p.originalPrice}</span>¥${p.price}</div>
-                    <div class="recharge-price">${p.name}${current === p.id ? "（当前）" : ""}</div>
+                    <div class="recharge-coins">${p.tag ? `<span style="font-size:0.65rem;color:#fff;background:linear-gradient(135deg,#f39c12,#e67e22);padding:1px 6px;border-radius:8px;margin-right:4px;vertical-align:2px;">${p.tag}</span>` : ""}¥${p.price}<span style="font-size:0.7rem;color:#a89580;margin-left:4px;">=${p.coins} 云币</span></div>
+                    <div class="recharge-price">${p.name}</div>
                     <div class="recharge-price">${p.desc}</div>
                 </div>`
             ).join("");
+            planCards += `
+                <div class="recharge-item ${selectedPlan === lp.id ? "active" : ""}" onclick="MembershipService.selectPlan('${lp.id}')">
+                    <div class="recharge-coins"><span style="font-size:0.75rem;color:#a89580;text-decoration:line-through;margin-right:4px;">¥${lp.originalPrice}</span>¥${lp.price}<span style="font-size:0.65rem;color:#fff;background:linear-gradient(135deg,#e74c3c,#c0392b);padding:1px 6px;border-radius:8px;margin-left:4px;vertical-align:2px;">限时</span></div>
+                    <div class="recharge-price">${lp.name}${current === lp.id ? "（当前）" : ""}</div>
+                    <div class="recharge-price">${lp.desc}</div>
+                </div>`;
+            grid.innerHTML = planCards;
         }
         // 限时优惠倒计时：用户首次打开面板开始计时，24h 到期自动无缝续期（用户随时可买）
         const COUNTDOWN_KEY = "bitlife_membership_countdown_v1";
@@ -10734,45 +10764,17 @@ function openNpcProfile(npcId) {
             const payArea = document.getElementById("membership-pay-area");
             if (!payArea) return;
             const payMethodName = order.payType === "alipay" ? "支付宝" : "微信";
-            // 易支付微信扫码返回 weixin://wxpay/bizpayurl?pr=xxx(二维码内容)而非 https 图片,两种都要认
-            const hasQr = order.qrcode && (/^https?:/.test(order.qrcode) || /^weixin:\/\//.test(order.qrcode));
-            const hasUrl = /^https?:/.test(order.payUrl);
-            // 有收银台链接(支付宝):显示跳转状态并自动跳转;微信 PC 扫码仅 qrcode,只能展示二维码
-            if (hasUrl) {
-                if (autoRedirect) {
-                    payArea.innerHTML = `<div class="list-sub" style="margin:8px 0;color:var(--accent-dark);font-weight:700;">✅ 订单创建成功，正在跳转${payMethodName}收银台…</div>
-                        <div class="list-sub" style="margin-top:6px;">订单号：${order.orderNo}</div>
-                        <a class="mini-btn primary" style="display:inline-block;text-decoration:none;text-align:center;margin-top:10px;" href="${order.payUrl}" target="_blank" rel="noopener">若未自动跳转，点击前往收银台</a>`;
-                    setTimeout(() => { window.location.href = order.payUrl; }, 1200);
-                } else {
-                    payArea.innerHTML = `<div class="list-sub" style="margin:8px 0;">订单号：${order.orderNo}，请用${payMethodName}扫码或跳转收银台完成支付。</div>
-                        <a class="mini-btn primary" style="display:inline-block;text-decoration:none;text-align:center;margin-top:8px;" href="${order.payUrl}" target="_blank" rel="noopener">前往收银台支付</a>
-                        <div class="list-sub" style="margin-top:8px;">支付完成后将自动开通会员（1-2 分钟内生效）</div>`;
-                }
-                return;
-            }
-            if (hasQr) {
-                if (/^weixin:\/\//.test(order.qrcode)) {
-                    // weixin:// 协议是二维码内容(微信扫码后解析跳转),须本地生成 QR 图片
-                    payArea.innerHTML = `<div class="list-sub" style="margin:8px 0;">订单号：${order.orderNo}，请用微信扫一扫下方二维码支付。</div>
-                        <div id="pay-qr-code" style="width:180px;height:180px;border-radius:12px;background:#fff;margin:8px auto;overflow:hidden;"></div>
-                        <div class="list-sub" style="margin-top:8px;">支付完成后将自动开通会员（1-2 分钟内生效）</div>`;
-                    setTimeout(() => {
-                        const el = document.getElementById("pay-qr-code");
-                        if (el && window.QRCode) new QRCode(el, { text: order.qrcode, width: 180, height: 180 });
-                    }, 0);
-                } else {
-                    payArea.innerHTML = `<div class="list-sub" style="margin:8px 0;">订单号：${order.orderNo}，请用${payMethodName}扫码支付（PC 端扫码后手机确认）。</div>
-                        <img src="${order.qrcode}" alt="支付二维码" style="width:180px;height:180px;border-radius:12px;display:block;margin:8px auto;">
-                        <div class="list-sub" style="margin-top:8px;">支付完成后将自动开通会员（1-2 分钟内生效）</div>`;
-                }
-                return;
-            }
-            // 微信小程序支付:urlscheme(weixin://dl/business/?ticket=xxx)需 JS 拉起,按钮点击后跳转
-            if (order.urlscheme) {
-                payArea.innerHTML = `<div class="list-sub" style="margin:8px 0;">订单号：${order.orderNo}，请点击下方按钮拉起微信完成支付。</div>
-                    <button class="mini-btn primary" style="width:100%;margin-top:10px;" onclick="MembershipService.launchUrlScheme()">拉起微信支付</button>
-                    <div class="list-sub" style="margin-top:8px;">支付完成后将自动开通会员（1-2 分钟内生效）</div>`;
+            const tip = order.planId === "lifetime" ? "支付完成后将自动开通会员（1-2 分钟内生效）" : "支付完成后云币自动到账（1-2 分钟内生效）";
+            // H5 支付：jump_url 收银台跳转
+            if (autoRedirect) {
+                payArea.innerHTML = `<div class="list-sub" style="margin:8px 0;color:var(--accent-dark);font-weight:700;">✅ 订单创建成功，正在跳转${payMethodName}收银台…</div>
+                    <div class="list-sub" style="margin-top:6px;">订单号：${order.orderNo}</div>
+                    <a class="mini-btn primary" style="display:inline-block;text-decoration:none;text-align:center;margin-top:10px;" href="${order.jumpUrl}" target="_blank" rel="noopener">若未自动跳转，点击前往收银台</a>`;
+                setTimeout(() => { window.location.href = order.jumpUrl; }, 800);
+            } else {
+                payArea.innerHTML = `<div class="list-sub" style="margin:8px 0;">订单号：${order.orderNo}，请跳转收银台完成支付。</div>
+                    <a class="mini-btn primary" style="display:inline-block;text-decoration:none;text-align:center;margin-top:8px;" href="${order.jumpUrl}" target="_blank" rel="noopener">前往收银台支付</a>
+                    <div class="list-sub" style="margin-top:8px;">${tip}</div>`;
             }
         }
         async function startPay() {
@@ -10798,9 +10800,11 @@ function openNpcProfile(npcId) {
                     signal: controller.signal
                 });
                 const data = await res.json();
-                // 易支付 mapi.php 返回 payurl/qrcode/urlscheme 三选一,任一存在即成功
-                if (!res.ok || (!data.payUrl && !data.qrcode && !data.urlscheme)) throw new Error(data.error || "创建订单失败");
-                _currentOrder = { orderNo: data.orderNo, qrcode: data.qrcode || "", payUrl: data.payUrl || "", urlscheme: data.urlscheme || "", payType: selectedPayType, planId: selectedPlan };
+                // H5 支付返回 jump_url 收银台跳转链接
+                if (!res.ok || !data.jumpUrl) throw new Error(data.error || "创建订单失败");
+                _currentOrder = { orderNo: data.orderNo, jumpUrl: data.jumpUrl || "", payType: selectedPayType, planId: selectedPlan };
+                // 跳转收银台会离开页面,订单持久化以便返回时自动查单
+                localStorage.setItem(PENDING_KEY, JSON.stringify({ orderNo: data.orderNo, planId: selectedPlan, payType: selectedPayType, ts: Date.now() }));
                 renderOrder(_currentOrder, true);
                 startPoll(data.orderNo);
             } catch (e) {
@@ -10810,11 +10814,6 @@ function openNpcProfile(npcId) {
                 clearTimeout(timer);
                 _creatingOrder = false;
             }
-        }
-        function launchUrlScheme() {
-            if (!_currentOrder || !_currentOrder.urlscheme) return;
-            // 微信小程序支付:JS 跳转 weixin://dl/business/?ticket=xxx,须由用户手势触发
-            window.location.href = _currentOrder.urlscheme;
         }
         function startPoll(orderNo) {
             stopPoll();
@@ -10827,9 +10826,12 @@ function openNpcProfile(npcId) {
                     // PocketBase JSON 字段可能返回数组,兼容两种形态
                     const st = Array.isArray(data.status) ? data.status[0] : data.status;
                     if (st === "paid") {
+                        const paidPlanId = _currentOrder?.planId || "";
                         stopPoll();
+                        localStorage.removeItem(PENDING_KEY);
                         closePanel();
-                        NoticeModalService.showInfo({ title: "🎉 支付成功", descHtml: "会员已开通，不限量畅玩！" });
+                        const isCharge = !!AppConfig.chargePlans[paidPlanId];
+                        NoticeModalService.showInfo({ title: "🎉 支付成功", descHtml: isCharge ? "云币已到账，快去解锁剧本卡吧！" : "会员已开通，不限量畅玩！" });
                         await AuthService.refreshBalance();
                         AuthService.updateUsageStatusUI();
                     }
@@ -10842,7 +10844,7 @@ function openNpcProfile(npcId) {
             await AuthService.refreshBalance();
             AuthService.updateUsageStatusUI();
         }
-        return { openPanel, closePanel, selectPlan, selectPayType, startPay, pollPayStatus: startPoll, launchUrlScheme, hasMembership, refreshStatus };
+        return { openPanel, closePanel, selectPlan, selectPayType, startPay, pollPayStatus: startPoll, hasMembership, refreshStatus };
     })();
 
     // ==================== AuthService ====================

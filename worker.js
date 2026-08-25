@@ -115,18 +115,19 @@ async function clearModelCooldown(modelId) {
     try { await caches.default.delete(failCacheUrl(modelId)); } catch (e) { /* best-effort */ }
 }
 
-// 会员套餐（金额与 worker 校验共用，前端仅展示）
-const PAY_PLANS = {
-    monthly:   { id: "monthly",   name: "月度会员", price: "9.9",  days: 30 },
-    quarterly: { id: "quarterly", name: "季度会员", price: "24.9", days: 90 },
-    yearly:    { id: "yearly",    name: "年度会员", price: "52",   days: 365 },
-    lifetime:  { id: "lifetime",  name: "终身会员", price: "89",   days: 73000 },
+// 充值档位（金额与 worker 校验共用，前端仅展示）：币值 = 基础 + 赠送；首充 = 基础 ×2
+const CHARGE_PLANS = {
+    c6:  { id: "c6",  name: "6000 云币", price: "6",  base: 6000,  bonus: 600 },
+    c18: { id: "c18", name: "18000 云币", price: "18", base: 18000, bonus: 1800 },
+    c30: { id: "c30", name: "30000 云币", price: "30", base: 30000, bonus: 4500 },
+    c68: { id: "c68", name: "68000 云币", price: "68", base: 68000, bonus: 13600 },
 };
+// 终身会员（会员改革后唯一保留的会员档，非充值档）
+const LIFETIME_PLAN = { id: "lifetime", name: "终身会员", price: "89", days: 73000 };
 
 // 环境变量（Cloudflare Secrets，勿写入代码）：
 //   CHATANYWHERE_KEY / SILICONFLOW_KEY / NVIDIA_KEY / DEEPSEEK_KEY / ZHIPU_KEY / PB_URL / PB_ADMIN_EMAIL / PB_ADMIN_PASSWORD
-//   PAY_APP_ID=5435 / PAY_APP_SECRET / PAY_MAPI_URL=https://ezfp.cn/mapi.php / PAY_QUERY_URL=https://ezfp.cn/api.php
-//   PAY_NOTIFY_URL=https://ai.blupure.cn/api/pay/notify
+//   H5_APP_ID / H5_APP_SECRET / PAY_NOTIFY_URL=https://ai.blupure.cn/api/pay/notify
 
 // ==================== 2. 工具函数 ====================
 
@@ -307,27 +308,27 @@ function pickModel(usageMap, today, isMember) {
         .find(m => isMember || (usageMap[m.id] || 0) < m.dailyCap) || null;
 }
 
-// ==================== 5. 易支付（ezfp.cn） ====================
+// ==================== 5. H5 支付（h5zhifu.com） ====================
 
-// 签名：参数（除 sign/sign_type/空值）按参数名 ASCII 升序拼接 a=b&c=d，md5(串+KEY) 小写
-function buildPaySign(params, secret) {
+// 签名：非空参数（除 sign）按参数名 ASCII 升序拼接 a=b&c=d，追加 &key=密钥，md5 转大写（微信 APIv2 风格）
+function h5BuildSign(params, secret) {
     const keys = Object.keys(params)
-        .filter(k => k !== "sign" && k !== "sign_type" && params[k] !== "" && params[k] != null)
+        .filter(k => k !== "sign" && params[k] !== "" && params[k] != null)
         .sort();
     const str = keys.map(k => `${k}=${params[k]}`).join("&");
-    return md5(str + secret);
+    return md5(str + "&key=" + secret).toUpperCase();
 }
 
-function verifyPaySign(params, secret) {
-    const sign = params.sign;
+function verifyH5Sign(params, secret) {
+    const sign = String(params.sign || "");
     if (!sign) return false;
-    return buildPaySign(params, secret) === sign;
+    return h5BuildSign(params, secret) === sign.toUpperCase();
 }
 
-// 创建订单：本地落库 pay_orders → 调易支付 mapi.php → 返回 { orderNo, payUrl, qrcode, urlscheme }
+// 创建订单：本地落库 pay_orders → 调 H5 支付 open.h5zhifu.com/api/h5 → 返回 { orderNo, jumpUrl }
 async function createPayOrder(env, userId, planId, payType) {
-    const plan = PAY_PLANS[planId];
-    if (!plan) throw new Error("无效的会员套餐");
+    const plan = CHARGE_PLANS[planId] || (planId === "lifetime" ? LIFETIME_PLAN : null);
+    if (!plan) throw new Error("无效的充值档位");
     const orderNo = "MP" + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 8).toUpperCase();
     const timestamp = new Date().toISOString();
 
@@ -342,45 +343,39 @@ async function createPayOrder(env, userId, planId, payType) {
     if (!orderRes.ok) throw new Error("订单创建失败");
 
     const params = {
-        pid: env.PAY_APP_ID,
-        type: payType,
+        app_id: Number(env.H5_APP_ID),
         out_trade_no: orderNo,
+        description: plan.name,
+        pay_type: payType === "wxpay" ? "wechat" : "alipay",
+        amount: Math.round(parseFloat(plan.price) * 100), // 单位：分（整数）
+        attach: userId,
         notify_url: env.PAY_NOTIFY_URL,
-        name: plan.name,
-        money: plan.price,
-        clientip: requestClientIp(),
-        device: "pc",
-        param: userId,
     };
-    params.sign = buildPaySign(params, env.PAY_APP_SECRET);
-    params.sign_type = "MD5";
+    params.sign = h5BuildSign(params, env.H5_APP_SECRET);
 
     let payRes;
     try {
-        payRes = await fetch(env.PAY_MAPI_URL || "https://ezfp.cn/mapi.php", {
+        payRes = await fetch("https://open.h5zhifu.com/api/h5", {
             method: "POST",
-            // 易支付按 Referer 域名校验支付授权白名单;Worker 默认不带 Referer 会被判"域名没过白"
-            headers: { "Content-Type": "application/x-www-form-urlencoded", Referer: "https://bitlife.blupure.cn/" },
-            body: new URLSearchParams(params),
-            // 微信渠道在易支付侧偶发慢响应:15s 超时,避免 Worker 与前端无限挂起
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(params),
             signal: AbortSignal.timeout(15000)
         });
     } catch (e) {
         throw new Error(e.name === "TimeoutError" ? "支付网关响应超时，请稍后重试" : "支付网关连接失败");
     }
     const payJson = await payRes.json().catch(() => ({}));
-    if (payRes.ok && payJson.code === 1) {
-        // 易支付 mapi.php 返回 payurl/qrcode/urlscheme 三选一;urlscheme 为微信小程序支付 JS 跳转链接
-        return { orderNo, payUrl: payJson.payurl || "", qrcode: payJson.qrcode || "", urlscheme: payJson.urlscheme || "" };
+    if (payJson.code === 200 && payJson.data && payJson.data.jump_url) {
+        return { orderNo, jumpUrl: payJson.data.jump_url, tradeNo: payJson.data.trade_no || "" };
     }
     throw new Error(payJson.msg || "支付网关返回异常");
 }
 
-// 回调处理：验签 → TRADE_SUCCESS → 订单/金额校验 → 幂等 → 开通会员
+// 回调处理：验签 → paid/success → 订单/金额校验 → 幂等 → 充值档发云币(首充双倍)/lifetime 开通会员
 async function handlePayNotify(env, params) {
     try {
-        if (!verifyPaySign(params, env.PAY_APP_SECRET)) return "fail";
-        if (params.trade_status !== "TRADE_SUCCESS") return "fail";
+        if (!verifyH5Sign(params, env.H5_APP_SECRET)) return "fail";
+        if (!["paid", "success"].includes(params.trade_status)) return "fail";
 
         const filter = encodeURIComponent(`order_no='${escapePocketBaseFilterValue(params.out_trade_no || "")}'`);
         const q = await pbAdminFetch(env, `/api/collections/pay_orders/records?perPage=1&skipTotal=true&filter=${filter}`);
@@ -388,20 +383,38 @@ async function handlePayNotify(env, params) {
         const data = await q.json();
         const order = (data.items || [])[0];
         if (!order) return "fail";
-        if (order.status === "paid") return "success"; // 幂等：重复回调不重复开通
+        if (order.status === "paid") return "success"; // 幂等：重复回调不重复发放
 
-        const plan = PAY_PLANS[order.plan_id];
-        if (!plan || String(params.money) !== plan.price) return "fail"; // 金额校验防伪造
+        const expectAmount = Math.round(parseFloat(order.amount) * 100);
+        if (String(params.amount) !== String(expectAmount)) return "fail"; // 金额(分)校验防伪造
 
-        const expiresAt = plan.id === "lifetime" ? LIFETIME_EXPIRY
-            : new Date(Date.now() + plan.days * 86400000).toISOString();
         const now = new Date().toISOString();
+        const isLifetime = order.plan_id === "lifetime";
+        const plan = isLifetime ? LIFETIME_PLAN : CHARGE_PLANS[order.plan_id];
+        if (!plan) return "fail";
 
-        const userRes = await pbAdminFetch(env, `/api/collections/users/records/${order.user_id}`, {
-            method: "PATCH",
-            body: JSON.stringify({ membership_type: plan.id, membership_expires_at: expiresAt })
-        });
+        // 读当前余额（PocketBase 无原子自增，先读后写）
+        const userRes = await pbAdminFetch(env, `/api/collections/users/records/${order.user_id}`);
         if (!userRes.ok) return "fail";
+        const user = await userRes.json();
+
+        const patch = {};
+        if (isLifetime) {
+            patch.membership_type = "lifetime";
+            patch.membership_expires_at = LIFETIME_EXPIRY;
+        } else {
+            // 首充判定：该用户除本订单外无已支付记录 → 双倍(基础×2)；否则 基础+赠送
+            const paidFilter = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(order.user_id)}'&&status='paid'&&id!='${order.id}'`);
+            const pq = await pbAdminFetch(env, `/api/collections/pay_orders/records?perPage=1&skipTotal=true&filter=${paidFilter}`);
+            const pd = await pq.json().catch(() => ({}));
+            const isFirst = !(pd.items || []).length;
+            patch.coin = Number(user.coin || 0) + (isFirst ? plan.base * 2 : plan.base + plan.bonus);
+        }
+        const patchRes = await pbAdminFetch(env, `/api/collections/users/records/${order.user_id}`, {
+            method: "PATCH",
+            body: JSON.stringify(patch)
+        });
+        if (!patchRes.ok) return "fail";
 
         await pbAdminFetch(env, `/api/collections/pay_orders/records/${order.id}`, {
             method: "PATCH",
@@ -413,10 +426,6 @@ async function handlePayNotify(env, params) {
         return "fail";
     }
 }
-
-let _clientIp = "";
-function setClientIp(ip) { _clientIp = ip || ""; }
-function requestClientIp() { return _clientIp || "127.0.0.1"; }
 
 // ==================== 6. 核心逻辑控制 ====================
 
@@ -438,7 +447,6 @@ export default {
         if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders() });
 
         const url = new URL(request.url);
-        setClientIp(request.headers.get("CF-Connecting-IP") || "");
 
         try {
             // ---- 路由：AI 对话（模型池自动路由 + 每日限额/会员校验）----
@@ -655,10 +663,10 @@ export default {
                 try { body = await request.json(); } catch (e) {}
                 const planId = String(body.planId || "");
                 const payType = ["alipay", "wxpay"].includes(body.payType) ? body.payType : "alipay";
-                if (!PAY_PLANS[planId]) return errorResponse("无效的会员套餐", 400, null, "INVALID_PLAN");
+                if (!CHARGE_PLANS[planId] && planId !== "lifetime") return errorResponse("无效的充值档位", 400, null, "INVALID_PLAN");
                 try {
-                    const { orderNo, payUrl, qrcode, urlscheme } = await createPayOrder(env, auth.record.id, planId, payType);
-                    return new Response(JSON.stringify({ orderNo, payUrl, qrcode, urlscheme }), {
+                    const { orderNo, jumpUrl } = await createPayOrder(env, auth.record.id, planId, payType);
+                    return new Response(JSON.stringify({ orderNo, jumpUrl }), {
                         headers: { ...corsHeaders(), "Content-Type": "application/json" }
                     });
                 } catch (e) {
@@ -693,23 +701,7 @@ export default {
                 const order = (data.items || [])[0];
                 if (!order || order.user_id !== auth.record.id) return errorResponse("订单不存在", 404, null, "INVALID_ORDER");
                 let status = Array.isArray(order.status) ? order.status[0] : order.status; // PocketBase JSON 字段可能返回数组
-                if (status !== "paid") {
-                    // 兜底：本地未回调时向易支付查一次
-                    try {
-                        const queryUrl = `${env.PAY_QUERY_URL || "https://ezfp.cn/api.php"}?act=order&pid=${env.PAY_APP_ID}&key=${env.PAY_APP_SECRET}&out_trade_no=${encodeURIComponent(orderNo)}`;
-                        const qr = await fetch(queryUrl);
-                        const qj = await qr.json();
-                        if (qj.code === 1 && Number(qj.status) === 1) {
-                            await pbAdminFetch(env, `/api/collections/pay_orders/records/${order.id}`, {
-                                method: "PATCH",
-                                body: JSON.stringify({ status: "paid", trade_no: qj.trade_no || "", paid_at: new Date().toISOString() })
-                            });
-                            status = "paid";
-                        }
-                    } catch (e) {
-                        console.error("pay status query failed:", e.message);
-                    }
-                }
+                // 只查本地订单状态（H5 网关查询接口严禁轮询，500 次/天黑名单）
                 return new Response(JSON.stringify({ status, outTradeNo: orderNo }), {
                     headers: { ...corsHeaders(), "Content-Type": "application/json" }
                 });
