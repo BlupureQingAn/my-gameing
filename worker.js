@@ -1,7 +1,9 @@
 // ==================== 1. 配置中心 ====================
 
-// 云币经济：游玩消耗 100 币/轮、解锁 5000 币/张、签到 300 币/天（连续 7 天额外 +700；首次签到 6300）
-const COIN_COST_PER_ROUND = 100;
+// 云币经济：AI 对话按 token 计费（输入 1 币/千 token、输出 3 币/千 token，向上取整，最低 1 币/轮，失败不扣费）、解锁 5000 币/张、签到 300 币/天（连续 7 天额外 +700；首次签到 6300）
+const TOKEN_PRICE_INPUT = 1;   // 云币/千 token（输入）
+const TOKEN_PRICE_OUTPUT = 3;  // 云币/千 token（输出）
+const TOKEN_COST_MIN = 1;      // 每轮最低消费
 const UNLOCK_COST = 5000;
 const CHECKIN_BASE = 300;
 const CHECKIN_STREAK_BONUS = 700;
@@ -13,6 +15,34 @@ const COMMUNITY_UNLOCK_REWARD = 1000;
 // Cloudflare Worker 环境是 UTC，固定用 UTC+8 计算"今天"
 const TIMEZONE_OFFSET_MS = 8 * 3600 * 1000;
 const LIFETIME_EXPIRY = "2226-01-01T00:00:00.000Z";
+
+// ---- token 计费 ----
+// 输入 1 币/千 + 输出 3 币/千，向上取整，最低 1 币/轮
+function calcTokenCost(inputTokens, outputTokens) {
+    const cost = (Number(inputTokens) * TOKEN_PRICE_INPUT + Number(outputTokens) * TOKEN_PRICE_OUTPUT) / 1000;
+    return Math.max(TOKEN_COST_MIN, Math.ceil(cost));
+}
+// 中英混合粗估（上游未返回 usage 时的兜底）：中文 ≈1 token/字，其它 ≈1 token/4 字符
+function estimateTokens(text) {
+    const s = String(text || "");
+    const cjk = (s.match(/[一-鿿]/g) || []).length;
+    return Math.ceil(cjk + (s.length - cjk) / 4);
+}
+function estimateInputTokens(messages) {
+    try { return estimateTokens(JSON.stringify(messages || [])); } catch (e) { return 0; }
+}
+// 成功对话后按实际 token 结算扣费；余额不足扣到 0（下次请求余额 < 最低消费会被拒）
+async function settleTokenDeduction(env, userId, record, inputTokens, outputTokens) {
+    const cost = calcTokenCost(inputTokens, outputTokens);
+    const cur = Number(record.coins || 0);
+    const after = Math.max(0, cur - cost);
+    if (after === cur) return cost; // 余额已为 0，无需写库
+    const res = await pbAdminFetch(env, `/api/collections/users/records/${userId}`, {
+        method: "PATCH", body: JSON.stringify({ coins: after })
+    });
+    if (res.ok) record.coins = after; // 同步内存副本，后续响应引用
+    return cost;
+}
 
 // 模型池：Worker 自动路由（tier 越小越优先；dailyCap 为当日全局调用上限；enabled=false 池内禁用）
 // ChatAnywhere 免费版（gpt_api_free）：每日 10000 点平台额度 + 各模型每日次数上限
@@ -450,6 +480,9 @@ export default {
         try {
             // ---- 路由：AI 对话（模型池自动路由 + 每日限额/会员校验）----
             if (url.pathname === "/chat/completions") {
+                // 测试后门：MODEL_URL_OVERRIDE 为 JSON {"模型id":"http://mock"}，仅探针把模型指向本地 mock，生产不配置
+                let modelUrlOverrides = null;
+                try { modelUrlOverrides = env.MODEL_URL_OVERRIDE ? JSON.parse(env.MODEL_URL_OVERRIDE) : null; } catch (e) { modelUrlOverrides = null; }
                 const auth = await authenticate(env, request);
                 if (auth.error) return auth.error;
                 const record = auth.record;
@@ -460,19 +493,13 @@ export default {
                     return errorResponse("会员已到期，请续费", 402, { expiresAt: record.membership_expires_at }, "MEMBERSHIP_EXPIRED");
                 }
                 const isMemberUser = isMember(record);
-                // 云币扣费：请求开始扣 100 币/轮，流式失败不退款（文案注明）；终身会员免扣
+                // 云币计费：成功后按实际 token 结算（输入 1 币/千、输出 3 币/千）；请求开始仅校验最低余额，失败不扣费；终身会员免扣
                 if (!isMemberUser) {
                     const coin = Number(record.coins || 0);
-                    if (coin < COIN_COST_PER_ROUND) {
-                        return errorResponse(`云币不足（每轮对话消耗 ${COIN_COST_PER_ROUND} 云币），请充值或开通终身会员`, 402,
-                            { coins: coin, cost: COIN_COST_PER_ROUND }, "INSUFFICIENT_COIN");
+                    if (coin < TOKEN_COST_MIN) {
+                        return errorResponse(`云币不足（AI 对话按 token 计费，余额至少需 ${TOKEN_COST_MIN} 云币），请充值或开通终身会员`, 402,
+                            { coins: coin, minCost: TOKEN_COST_MIN }, "INSUFFICIENT_COIN");
                     }
-                    const dedRes = await pbAdminFetch(env, `/api/collections/users/records/${userId}`, {
-                        method: "PATCH",
-                        body: JSON.stringify({ coins: coin - COIN_COST_PER_ROUND })
-                    });
-                    if (!dedRes.ok) return errorResponse("云币扣费失败，请重试", 500, null, "COIN_DEDUCT_FAILED");
-                    record.coins = coin - COIN_COST_PER_ROUND; // 同步内存副本,后续响应引用
                 }
 
                 // 解析请求
@@ -502,7 +529,7 @@ export default {
                     if (await isModelInCooldown(target.id)) { attempts.push(`${target.id}:cooldown`); continue; } // 熔断期内跳过,不重走失败链
                     const apiKey = env[target.apiKeyEnv];
                     if (!apiKey) { attempts.push(`${target.id}:nokey`); continue; }
-                    const base = target.url.replace(/\/$/, "");
+                    const base = (modelUrlOverrides?.[target.id] || target.url).replace(/\/$/, "");
                     // 上游限流门控:并发/速率超限拿不到令牌 → 换候选(避免自触发 1302/1305)
                     if (!(await gateAcquire(target.apiKeyEnv))) { attempts.push(`${target.id}:busy`); continue; }
                     let resp = null;
@@ -518,6 +545,8 @@ export default {
                                 const payload = { ...requestJson, model: target.model };
                                 // Qwen3-8B 默认开启思考模式(reasoning 占 87% token,耗时 28-37s),强制关闭提速 ~20 倍
                                 if (target.id === "sf-qwen3-8b") payload.enable_thinking = false;
+                                // 流式请求要求上游在最后一个 chunk 返回 usage，用于 token 计费
+                                if (isStream) payload.stream_options = { include_usage: true };
                                 const r = await fetch(`${base}/chat/completions`, {
                                     method: "POST",
                                     headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
@@ -572,7 +601,7 @@ export default {
                     return errorResponse("AI 服务暂时不可用，请稍后重试", 503, null, "POOL_UNAVAILABLE");
                 }
 
-                // 成功后才计模型级配额（会员绕过 dailyCap 不挤压免费用户；云币已在请求开始扣除，失败不退款）
+                // 成功后才计模型级配额（会员绕过 dailyCap 不挤压免费用户；云币在成功后按 token 结算，失败不扣费）
                 ctx.waitUntil((async () => {
                     try {
                         if (!isMemberUser) await bumpModelUsage(env, usedModel.id, today);
@@ -586,7 +615,56 @@ export default {
                     "X-Model-Attempts": attempts.join("|")
                 };
                 if (isStream) {
-                    return new Response(aiResponse.body, {
+                    // token 计费：解析转发 SSE 流收集上游 usage（流结束/客户端断开时结算扣费，失败不扣）
+                    const reader = aiResponse.body.getReader();
+                    const decoder = new TextDecoder("utf-8");
+                    const encoder = new TextEncoder();
+                    let tail = "";
+                    let outText = "";
+                    let usageInput = null;
+                    let usageOutput = null;
+                    let settled = false;
+                    const settle = () => {
+                        if (settled) return;
+                        settled = true;
+                        if (!isMemberUser) {
+                            const inputTokens = usageInput ?? estimateInputTokens(requestJson.messages);
+                            const outputTokens = usageOutput ?? estimateTokens(outText);
+                            ctx.waitUntil(settleTokenDeduction(env, userId, record, inputTokens, outputTokens)
+                                .catch(e => console.error("settle token deduction failed:", e.message)));
+                        }
+                    };
+                    const stream = new ReadableStream({
+                        async pull(controller) {
+                            try {
+                                const { done, value } = await reader.read();
+                                if (done) { settle(); controller.close(); return; }
+                                tail += decoder.decode(value, { stream: true });
+                                const lines = tail.split("\n");
+                                tail = lines.pop() || "";
+                                let out = "";
+                                for (const line of lines) {
+                                    if (line.startsWith("data: ")) {
+                                        const data = line.slice(6);
+                                        if (data !== "[DONE]") {
+                                            try {
+                                                const p = JSON.parse(data);
+                                                if (p.usage) { usageInput = p.usage.prompt_tokens; usageOutput = p.usage.completion_tokens; }
+                                                const delta = p.choices?.[0]?.delta || {};
+                                                if (delta.content) outText += delta.content;
+                                            } catch (e) { /* 非 JSON 行原样转发 */ }
+                                        }
+                                    }
+                                    out += line + "\n";
+                                }
+                                if (out) controller.enqueue(encoder.encode(out));
+                            } catch (e) {
+                                controller.error(e);
+                            }
+                        },
+                        cancel() { settle(); }
+                    });
+                    return new Response(stream, {
                         headers: { ...corsHeaders(), ...diagHeaders, "Content-Type": "text/event-stream", "Cache-Control": "no-cache" }
                     });
                 }
@@ -604,10 +682,11 @@ export default {
                         ...(requestJson.messages || []),
                         { role: "user", content: "你上一次的回复内容不是合法 JSON。请仅输出一个合法 JSON 对象，不要任何解释、围栏或多余字符。" }
                     ];
+                    const retryBase = (modelUrlOverrides?.[usedModel.id] || usedModel.url).replace(/\/$/, "");
                     const ctrl = new AbortController();
                     const to = setTimeout(() => ctrl.abort(), 120000);
                     try {
-                        const resp = await fetch(`${usedModel.url.replace(/\/$/, "")}/chat/completions`, {
+                        const resp = await fetch(`${retryBase}/chat/completions`, {
                             method: "POST",
                             headers: { "Authorization": `Bearer ${env[usedModel.apiKeyEnv]}`, "Content-Type": "application/json" },
                             body: JSON.stringify(retryPayload),
@@ -618,6 +697,13 @@ export default {
                         console.warn(`non-stream JSON retry error: ${e.message}`);
                     }
                     clearTimeout(to);
+                }
+                // 成功 → 按上游 usage 结算扣费（无 usage 时字符估算兜底）；失败不扣费
+                if (!isMemberUser && resJson) {
+                    const inputTokens = resJson?.usage?.prompt_tokens ?? estimateInputTokens(requestJson.messages);
+                    const outputTokens = resJson?.usage?.completion_tokens ?? estimateTokens(resJson?.choices?.[0]?.message?.content ?? "");
+                    await settleTokenDeduction(env, userId, record, inputTokens, outputTokens)
+                        .catch(e => console.error("settle token deduction failed:", e.message));
                 }
                 return new Response(JSON.stringify(resJson ?? { error: "AI 响应解析失败" }), {
                     headers: { ...corsHeaders(), "Content-Type": "application/json" }
@@ -636,10 +722,10 @@ export default {
                     coins: Number(r.coins || 0),
                     checkinStreak: Number(r.checkin_streak || 0),
                     checkinDate: r.last_checkin_date || "",
-                    costPerRound: COIN_COST_PER_ROUND,
+                    pricing: { inputPerK: TOKEN_PRICE_INPUT, outputPerK: TOKEN_PRICE_OUTPUT, minCost: TOKEN_COST_MIN },
                     unlockCost: UNLOCK_COST,
-                    // 会员不限量用 -1 表示（避免 Infinity 序列化为 null）
-                    remaining: isMember(r) ? -1 : Math.floor(Number(r.coins || 0) / COIN_COST_PER_ROUND)
+                    // 会员不限量用 -1 表示（避免 Infinity 序列化为 null）；remaining 按普通对话约 10 币/轮粗估
+                    remaining: isMember(r) ? -1 : Math.floor(Number(r.coins || 0) / 10)
                 }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
 
