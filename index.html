@@ -11213,8 +11213,41 @@ function openNpcProfile(npcId) {
         const COLLECTION = "users";
         const TOKEN_KEY = "pb_auth_token";
         const EMAIL_KEY = "pb_auth_email";
+        const USER_CACHE_KEY = "bitlife_user_cache_v1";
         let _isRegisterMode = false;
         let _userData = null;
+
+        // 用户数据本地缓存:页面加载时先显示缓存(不依赖网络),后台再刷新纠正
+        function cacheUser() {
+            try {
+                const u = _userData;
+                if (!u) return;
+                localStorage.setItem(USER_CACHE_KEY, JSON.stringify({
+                    id: u.id, email: getEmail(),
+                    coin: u.coin, membership_type: u.membership_type || "",
+                    membership_expires_at: u.membership_expires_at || "",
+                    checkin_streak: u.checkin_streak || 0, last_checkin_date: u.last_checkin_date || "",
+                    ts: Date.now()
+                }));
+            } catch (e) {}
+        }
+        function restoreCachedUser() {
+            try {
+                const raw = localStorage.getItem(USER_CACHE_KEY);
+                if (!raw) return;
+                const c = JSON.parse(raw);
+                if (!c || !c.id || c.email !== getEmail()) return;
+                _userData = {
+                    id: c.id, email: c.email,
+                    coin: c.coin, membership_type: c.membership_type || "",
+                    membership_expires_at: c.membership_expires_at || "",
+                    checkin_streak: c.checkin_streak || 0, last_checkin_date: c.last_checkin_date || ""
+                };
+            } catch (e) {}
+        }
+        function clearCachedUser() {
+            try { localStorage.removeItem(USER_CACHE_KEY); } catch (e) {}
+        }
 
         function getToken() { return localStorage.getItem(TOKEN_KEY) || ""; }
         function getEmail() { return localStorage.getItem(EMAIL_KEY) || ""; }
@@ -11282,6 +11315,7 @@ function openNpcProfile(npcId) {
                 if (res.ok) {
                     const data = await res.json();
                     _userData = data;
+                    cacheUser();
                     updateUsageStatusUI();
                 }
             } catch (e) {
@@ -11294,6 +11328,7 @@ function openNpcProfile(npcId) {
             _userData.coin = coin;
             _userData.checkin_streak = streak;
             _userData.last_checkin_date = checkinDate;
+            cacheUser();
             updateUsageStatusUI();
         }
 
@@ -11418,6 +11453,7 @@ function openNpcProfile(npcId) {
         function onLoginSuccess(email) {
             // 重置注册/登录模式为登录态，避免下次登出后状态残留
             _isRegisterMode = false;
+            cacheUser();
             hideOverlay();
             const logoutBtn = document.getElementById("auth-logout-btn");
             if (logoutBtn) logoutBtn.style.display = "inline-flex";
@@ -11433,6 +11469,7 @@ function openNpcProfile(npcId) {
 
         function logout() {
             clearSession();
+            clearCachedUser();
             _userData = null;
             const logoutBtn = document.getElementById("auth-logout-btn");
             if (logoutBtn) logoutBtn.style.display = "none";
@@ -11470,8 +11507,23 @@ function openNpcProfile(npcId) {
         async function init() {
             const token = getToken();
             if (token) {
-                const valid = await verifyToken();
+                // 登录态恢复不依赖网络:先显示本地缓存,后台并行验证+刷新
+                restoreCachedUser();
+                updateUsageStatusUI();
+                if (!_userData) {
+                    const b = document.getElementById("usage-badge");
+                    if (b) { b.textContent = "加载中…"; b.style.display = "inline-flex"; }
+                }
+                hideOverlay();
+                const [valid] = await Promise.all([
+                    verifyToken().catch(() => false),
+                    refreshBalance().catch(() => {})
+                ]);
                 if (valid) { onLoginSuccess(getEmail()); return true; }
+                clearSession();
+                clearCachedUser();
+                showOverlay();
+                return false;
             }
             showOverlay();
             return false;
