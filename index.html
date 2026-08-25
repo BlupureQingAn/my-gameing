@@ -597,50 +597,17 @@
             color: color-mix(in srgb, var(--sub) 78%, transparent);
         }
 
-        /* 卡片直接平铺在 view-main(原 story-board 容器已删除) */
+        /* 卡片直接平铺在 view-main(原 story-board 容器已删除;去外层气泡容器视觉,卡片与页面同底) */
         #view-main {
-            background: var(--story-board-bg);
-            border: 1px solid var(--story-board-line);
-            border-radius: var(--radius);
-            box-shadow: var(--glow);
-            padding: 12px;
-            backdrop-filter: blur(10px);
             position: relative;
-            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
         #view-main > * {
             position: relative;
             z-index: 1;
-        }
-
-        body[data-theme="dark"] #view-main::before,
-        body[data-theme="dark"] #view-main::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-        }
-
-        body[data-theme="dark"] #view-main::before {
-            z-index: 0;
-            background:
-                radial-gradient(circle at 12% 18%, rgba(255,255,255,0.95) 0 1px, transparent 1.8px),
-                radial-gradient(circle at 28% 42%, rgba(166,200,255,0.88) 0 1px, transparent 1.8px),
-                radial-gradient(circle at 44% 14%, rgba(255,255,255,0.9) 0 1.2px, transparent 2px),
-                radial-gradient(circle at 66% 36%, rgba(160,179,255,0.85) 0 1px, transparent 1.7px),
-                radial-gradient(circle at 82% 22%, rgba(255,255,255,0.92) 0 1.1px, transparent 1.8px),
-                radial-gradient(circle at 90% 66%, rgba(201,226,255,0.8) 0 1px, transparent 1.6px),
-                linear-gradient(180deg, rgba(9, 16, 30, 0.88), rgba(6, 12, 24, 0.94));
-            opacity: 0.9;
-        }
-
-        body[data-theme="dark"] #view-main::after {
-            z-index: 0;
-            background:
-                radial-gradient(circle at 50% -18%, rgba(141,124,255,0.26), transparent 46%),
-                radial-gradient(circle at 18% 118%, rgba(74,128,255,0.18), transparent 44%),
-                radial-gradient(circle at 84% 96%, rgba(83,193,255,0.14), transparent 40%);
         }
 
         .settings-toggle {
@@ -2759,6 +2726,10 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     没有账号？点击注册
                 </button>
             </div>
+            <label style="display:flex;align-items:flex-start;gap:6px;font-size:0.74rem;color:var(--sub,#806a55);cursor:pointer;justify-content:center;margin-top:10px;">
+                <input id="auth-agree" type="checkbox" style="margin-top:2px;accent-color:#845f35;">
+                <span>我已阅读并同意 <a href="javascript:void(0)" onclick="AuthService.showDoc('terms')" style="color:#0d84e0;text-decoration:underline;">《使用须知》</a> 和 <a href="javascript:void(0)" onclick="AuthService.showDoc('rules')" style="color:#0d84e0;text-decoration:underline;">《平台公约》</a>，承诺不利用本平台制作、传播违法违规内容</span>
+            </label>
         </div>
     </div>
 </div>
@@ -2801,7 +2772,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <div class="top-mini-nav">
                 <span id="usage-badge" onclick="MembershipService.openPanel()" style="display:none;font-size:0.85rem;font-weight:700;color:#6b3f00;padding:6px 12px;border-radius:999px;background:linear-gradient(135deg,#ffe9a8,#ffd66b);border:1px solid #e0a93a;cursor:pointer;box-shadow:0 2px 8px rgba(224,169,58,.4);" title="点击开通/续费会员"></span>
                 <button class="top-nav-btn active" data-view="view-home" onclick="switchView('view-home')">首页</button>
-                <button class="top-nav-btn" data-view="view-settings" onclick="switchView('view-settings')">设置</button>
+                <button class="top-nav-btn" data-view="view-settings" onclick="switchView('view-settings')">我的</button>
                 <button class="top-nav-btn" id="auth-logout-btn" style="display:none;" onclick="AuthService.logout()">登出</button>
             </div>
         </div>
@@ -2898,9 +2869,19 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
 
         <section id="view-settings" class="view-section">
             <section class="card">
-                <div class="list-title">👤 账户信息</div>
+                <div class="list-title">👤 我的信息</div>
                 <div style="margin: 10px 0; padding: 12px; background: var(--card-soft); border-radius: 12px; border: 1px solid var(--line);">
-                    <div style="font-size: 0.9rem;">邮箱：<span id="display-user-email" style="font-weight: 700;">-</span></div>
+                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                        <label style="position:relative;cursor:pointer;" title="点击更换头像">
+                            <img id="display-user-avatar" src="icons/android-chrome-192x192.png" style="width:58px;height:58px;border-radius:50%;object-fit:cover;border:2px solid var(--line,#e2ccb0);background:#fff;">
+                            <input id="avatar-upload" type="file" accept="image/*" style="display:none;">
+                        </label>
+                        <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+                            <input id="display-user-nickname" type="text" maxlength="16" placeholder="设置昵称（修改后自动保存）" style="width:100%;border:1px solid var(--line,#e2ccb0);border-radius:10px;background:var(--input-bg,#fffbf5);padding:8px 10px;font-size:0.9rem;font-weight:700;color:var(--text,#4b3a2a);box-sizing:border-box;">
+                            <input id="display-user-signature" type="text" maxlength="30" placeholder="写一句签名吧～" style="width:100%;border:1px solid var(--line,#e2ccb0);border-radius:10px;background:var(--input-bg,#fffbf5);padding:7px 10px;font-size:0.82rem;color:var(--text,#4b3a2a);box-sizing:border-box;">
+                        </div>
+                    </div>
+                    <div id="display-user-email-row" style="font-size: 0.9rem;">邮箱：<span id="display-user-email" style="font-weight: 700;">-</span></div>
                     <div style="font-size: 0.9rem; margin-top: 6px;">云币余额：<span id="display-remaining-count" style="font-weight: 800; color: var(--accent-dark);">--</span>（AI 对话按 token 计费：输入 4 币/千 token，输出 12 币/千 token）</div>
                     <div style="font-size: 0.9rem; margin-top: 6px;">会员：<span id="display-membership-badge" style="font-weight: 700; color: var(--accent-dark);">未开通</span></div>
                     <div style="margin-top: 10px;">
@@ -2915,7 +2896,6 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <input type="checkbox" id="ui-dark-mode-enabled">
                 </label>
                 <div class="setting-actions">
-                    <button class="mini-btn ghost" onclick="saveUserApiSettings()">保存设置</button>
                     <button class="mini-btn ghost" onclick="switchView('view-home')">← 返回首页</button>
                 </div>
             </section>
@@ -6352,21 +6332,26 @@ function rebuildChoicesBlock(body, labels = []) {
             });
             // 搜索时展开所有组，便于直接看到命中结果
             if (keyword) ScenarioCardViewService.expandAllGroups();
-            // 置顶组（无筛选时）：最近游玩 5 张自动置顶（lastPlayedAt 倒序）+ 无分类（原"其他"组）卡合并，分类组内跳过已展示卡
+            // 置顶组（无筛选时）：手动置顶卡（按 pinnedAt 降序,后置顶在最上,不限数量）+ 最近游玩 5 张自动置顶（lastPlayedAt 倒序）+ 无分类（原"其他"组）卡合并，分类组内跳过已展示卡
             const filterActive = Boolean(keyword) || category !== "全部";
             const pinnedCards = [];
             if (!filterActive) {
                 const metas = ScenarioPlayMetaService.loadMap();
+                const manualPinned = filteredCards
+                    // 内置"自定义剧本"卡 pinned 默认 true(库排序已强制首位),不占手动置顶位
+                    .filter((c) => c.pinned && c.id !== ScenarioCardService.CUSTOM_CARD_ID)
+                    .sort((a, b) => (Number(b.pinnedAt) || 0) - (Number(a.pinnedAt) || 0));
+                pinnedCards.push(...manualPinned);
                 const recent = cards
                     .map((c) => ({ card: c, t: Number(metas[String(c.id)]?.lastPlayedAt) || 0 }))
-                    .filter((x) => x.t > 0)
+                    .filter((x) => x.t > 0 && !pinnedCards.some((m) => m.id === x.card.id))
                     .sort((a, b) => b.t - a.t)
                     .slice(0, 5)
                     .map((x) => x.card)
                     .filter((c) => filteredCards.includes(c));
                 pinnedCards.push(...recent);
                 pinnedCards.push(...filteredCards
-                    .filter((c) => !String(c.category || "").trim() && !recent.some((r) => r.id === c.id)));
+                    .filter((c) => !String(c.category || "").trim() && !pinnedCards.some((r) => r.id === c.id)));
             }
             const pinnedIds = new Set(pinnedCards.map((c) => c.id));
             const renderRow = (card) => {
@@ -6581,6 +6566,14 @@ function rebuildChoicesBlock(body, labels = []) {
             if (user) {
                 const emailEl = document.getElementById("display-user-email");
                 if (emailEl) emailEl.textContent = user.email || AuthService.getEmail();
+                const emailRow = document.getElementById("display-user-email-row");
+                if (emailRow) emailRow.style.display = user.social_uid ? "none" : "";
+                const nickEl = document.getElementById("display-user-nickname");
+                if (nickEl) nickEl.value = user.nickname || "";
+                const sigEl = document.getElementById("display-user-signature");
+                if (sigEl) sigEl.value = user.signature || "";
+                const avatarEl = document.getElementById("display-user-avatar");
+                if (avatarEl && user.faceimg) avatarEl.src = user.faceimg;
                 AuthService.updateUsageStatusUI();
             }
 
@@ -6600,13 +6593,66 @@ function rebuildChoicesBlock(body, labels = []) {
             ThemeService.setMode(document.getElementById("ui-dark-mode-enabled")?.checked ? "dark" : "light");
             const sizeVal = document.getElementById("ui-font-size-range")?.value;
             if (sizeVal) applyFontSize(sizeVal);
+            saveByokFromUI();
+            loadToUI();
+        }
+        // 即时保存 BYOK（输入即存，无需"保存设置"按钮）
+        let _byokTimer = null;
+        function saveByokFromUI() {
             const byok = {
                 url: String(document.getElementById("ui-byok-url")?.value || "").trim().replace(/\/+$/, ""),
                 key: String(document.getElementById("ui-byok-key")?.value || "").trim(),
                 model: String(document.getElementById("ui-byok-model")?.value || "").trim()
             };
             saveByok(byok);
-            loadToUI();
+        }
+        function bindByokAutoSave() {
+            ["ui-byok-url", "ui-byok-key", "ui-byok-model"].forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.addEventListener("input", () => {
+                    clearTimeout(_byokTimer);
+                    _byokTimer = setTimeout(saveByokFromUI, 400);
+                });
+            });
+        }
+        // 我的页:昵称/签名/头像 即时保存（PATCH 直连 PocketBase，PB users 集合默认允许用户改自己的记录）
+        async function saveProfile(patch) {
+            const user = AuthService.getUserData();
+            const token = AuthService.getToken();
+            if (!user?.id || !token) return;
+            try {
+                const res = await fetch(`${PB_URL}/api/collections/${COLLECTION}/records/${user.id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json", "Authorization": token.startsWith("Bearer ") ? token : `Bearer ${token}` },
+                    body: JSON.stringify(patch)
+                });
+                if (res.ok) {
+                    const updated = await res.json().catch(() => null);
+                    if (updated) Object.assign(user, updated); // getUserData 返回内存引用,直接生效
+                }
+            } catch (e) { /* 网络失败静默,下次编辑重试 */ }
+        }
+        function bindProfileAutoSave() {
+            const nickEl = document.getElementById("display-user-nickname");
+            if (nickEl) nickEl.addEventListener("change", () => saveProfile({ nickname: nickEl.value.trim() }));
+            const sigEl = document.getElementById("display-user-signature");
+            if (sigEl) sigEl.addEventListener("change", () => saveProfile({ signature: sigEl.value.trim() }));
+            const fileEl = document.getElementById("avatar-upload");
+            const avatarEl = document.getElementById("display-user-avatar");
+            if (fileEl) fileEl.addEventListener("change", () => {
+                const f = fileEl.files?.[0];
+                if (!f) return;
+                if (f.size > 2 * 1024 * 1024) { NoticeModalService.showInfo({ title: "头像过大", descHtml: "请上传 2MB 以内的图片" }); return; }
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const url = String(reader.result || "");
+                    saveProfile({ faceimg: url });
+                    if (avatarEl) avatarEl.src = url;
+                };
+                reader.readAsDataURL(f);
+                fileEl.value = "";
+            });
         }
         function getApiConfig() {
             const byok = getByok();
@@ -7333,6 +7379,12 @@ function rebuildChoicesBlock(body, labels = []) {
         function sortCards(cards = []) {
             return [...cards].sort((a, b) => {
                 if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+                // 手动置顶的卡按置顶时间降序（后置顶的排最上），不限数量
+                if (a.pinned && b.pinned) {
+                    const pa = Number(a.pinnedAt) || 0;
+                    const pb = Number(b.pinnedAt) || 0;
+                    if (pa !== pb) return pb - pa;
+                }
                 const oa = Number(a.order) || 0;
                 const ob = Number(b.order) || 0;
                 if (oa !== ob) return oa - ob;
@@ -7497,6 +7549,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const idx = cards.findIndex((c) => c.id === cardId);
             if (idx < 0) return;
             cards[idx].pinned = !cards[idx].pinned;
+            cards[idx].pinnedAt = cards[idx].pinned ? Date.now() : 0;
             saveCards(cards);
         }
         function reorderCards(fromId, toId) {
@@ -10234,6 +10287,8 @@ const token = delta.content || "";
                     ThemeService.setMode(darkModeInput.checked ? "dark" : "light");
                 });
             }
+            // 我的页:昵称/签名/头像即时保存;BYOK 输入即存
+            try { SettingsService.bindProfileAutoSave(); SettingsService.bindByokAutoSave(); } catch (e) {}
             const input = document.getElementById("chat-input");
             input.addEventListener("keydown", (e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
@@ -10717,9 +10772,39 @@ function openNpcProfile(npcId) {
             SettingsService.importScenarioFromFile();
         }
         // M5：上传当前卡片到网站（审核制，pending 后展示播放量/收益）
+        // 官方模板上传限制:结构化叶子字段值逐项比对,改动 < MIN_TEMPLATE_CHANGE_RATIO(30%) 拒绝上传
+        const TEMPLATE_MIN_CHANGE_RATIO = 0.3;
+        function flattenStructuredValues(obj, out = []) {
+            if (Array.isArray(obj)) { obj.forEach((v) => flattenStructuredValues(v, out)); return out; }
+            if (obj && typeof obj === "object") { Object.values(obj).forEach((v) => flattenStructuredValues(v, out)); return out; }
+            const s = String(obj ?? "").replace(/\s+/g, "");
+            if (s) out.push(s);
+            return out;
+        }
+        function structuredDiffRatio(cur, base) {
+            const a = flattenStructuredValues(cur || {});
+            const b = new Map();
+            flattenStructuredValues(base || {}).forEach((v) => b.set(v, (b.get(v) || 0) + 1));
+            let same = 0, total = 0;
+            a.forEach((v) => {
+                total += v.length;
+                const left = b.get(v) || 0;
+                if (left > 0) { same += v.length; b.set(v, left - 1); }
+            });
+            return total === 0 ? 1 : 1 - same / total;
+        }
         async function uploadScenarioCard() {
             const selected = ScenarioCardService.getSelectedCard();
             if (!selected) { NoticeModalService.showInfo({ title: "上传失败", descHtml: "请先选择一张卡片" }); return; }
+            // 官方模板限制:与原版结构化比对,改动不足 30% 视为"原样搬运",拒绝上传
+            if (selected.sourceType === "official" || String(selected.id || "").startsWith("scenario_preset_")) {
+                const base = (Array.isArray(window.SCENARIO_LIBRARY) ? window.SCENARIO_LIBRARY : [])
+                    .find((c) => String(c.id || "") === String(selected.id || ""));
+                if (base && structuredDiffRatio(selected.structured, base.structured) < TEMPLATE_MIN_CHANGE_RATIO) {
+                    NoticeModalService.showInfo({ title: "上传被拦截", descHtml: "官方模板需做出实质修改（结构化内容改动 ≥ 30%）后才能上传，请基于模板创作自己的剧本。" });
+                    return;
+                }
+            }
             if (!AuthService.getToken()) {
                 const ok = await DecisionModalService.show({ title: "🔒 请先登录", descHtml: "上传剧本卡需要登录账号。", okText: "去登录", cancelText: "取消" });
                 if (ok) { const overlay = document.getElementById("auth-overlay"); if (overlay) overlay.style.display = "flex"; }
@@ -11481,8 +11566,27 @@ function openNpcProfile(npcId) {
             }
         }
 
+        // 平台须知/公约:勾选后登录(注册/登录共用),未勾选提示
+        const TERMS_DOC = {
+            terms: { title: "使用须知", lines: ["本平台提供 AI 文字互动游戏服务", "请勿滥用、刷取云币或干扰正常运营", "内容由 AI 生成，仅供娱乐，不代表平台立场", "如有问题可在设置页反馈"] },
+            rules: { title: "平台公约", lines: ["禁止制作、传播违法违规内容", "禁止色情、暴力、赌博等不良信息", "禁止侵犯他人权益或发布虚假信息", "遵守网络文明公约，友善交流"] }
+        };
+        function showDoc(which) {
+            const doc = TERMS_DOC[which];
+            if (!doc) return;
+            NoticeModalService.showInfo({
+                title: doc.title,
+                descHtml: `<div style="text-align:left;line-height:1.9;">${doc.lines.map(l => `<div>· ${MarkdownService.escapeHtml(l)}</div>`).join("")}</div>`,
+                actionText: "我知道了"
+            });
+        }
+
         async function handleSubmit() {
             clearError();
+            if (!document.getElementById("auth-agree")?.checked) {
+                showError("请先阅读并同意《使用须知》和《平台公约》");
+                return;
+            }
             const email = (document.getElementById("auth-email")?.value || "").trim();
             const password = document.getElementById("auth-password")?.value || "";
             const password2 = document.getElementById("auth-password2")?.value || "";
@@ -11607,11 +11711,23 @@ function openNpcProfile(npcId) {
             }
         }
 
+        // 登录公告:每次成功登录弹一次(同会话不重复,切账号/重新登录会再弹)
+        const ANNOUNCE_KEY = "bitlife_announce_v1";
+        function showAnnounce() {
+            if (sessionStorage.getItem(ANNOUNCE_KEY)) return;
+            sessionStorage.setItem(ANNOUNCE_KEY, "1");
+            NoticeModalService.showInfo({
+                title: "公告",
+                descHtml: "<div style='font-size:1.05rem;font-weight:700;color:#845f35;text-align:center;padding:6px 0;'>欢迎来到云吞吞文游!!</div><div style='text-align:center;color:var(--sub,#806a55);font-size:0.85rem;margin-top:6px;'>愿你在每个故事里，遇见另一个自己</div>"
+            });
+        }
+
         function onLoginSuccess(email) {
             // 重置注册/登录模式为登录态，避免下次登出后状态残留
             _isRegisterMode = false;
             cacheUser();
             hideOverlay();
+            showAnnounce();
             const logoutBtn = document.getElementById("auth-logout-btn");
             if (logoutBtn) logoutBtn.style.display = "inline-flex";
             // 更新设置页账户信息
