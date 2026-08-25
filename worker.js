@@ -12,6 +12,10 @@ const CHECKIN_FIRST_BONUS = 5500;
 const COMMUNITY_REWARD_PER_PLAY = 30;
 const COMMUNITY_DAILY_PLAY_LIMIT = 10;
 const COMMUNITY_UNLOCK_REWARD = 1000;
+// 社区动态流防刷：发帖 30 秒间隔/点赞 5 秒间隔（内存 Map，Worker 单实例即可控）
+const POST_RATE_LIMIT_MS = 30000;
+const LIKE_RATE_LIMIT_MS = 5000;
+const postRateMap = new Map();
 // Cloudflare Worker 环境是 UTC，固定用 UTC+8 计算"今天"
 const TIMEZONE_OFFSET_MS = 8 * 3600 * 1000;
 const LIFETIME_EXPIRY = "2226-01-01T00:00:00.000Z";
@@ -1042,6 +1046,193 @@ export default {
                     method: "PATCH", body: JSON.stringify(patched)
                 });
                 return new Response(JSON.stringify({ ok: true, rewarded: todayCount < COMMUNITY_DAILY_PLAY_LIMIT }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+
+            // ---- 路由：社区动态流 feed（GET，含作者/引用卡/点赞状态/前2条评论）----
+            if (url.pathname === "/api/feed" && request.method === "GET") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const perPage = Math.min(Math.max(Number(url.searchParams.get("perPage") || 20), 1), 50);
+                const page = Math.max(1, Number(url.searchParams.get("page") || 1));
+                const q = await pbAdminFetch(env, `/api/collections/posts/records?perPage=${perPage}&page=${page}&sort=-created`);
+                const d = await q.json().catch(() => ({}));
+                const items = await Promise.all((d.items || []).map(async (p) => {
+                    let author = { id: p.author_id };
+                    if (p.author_id) {
+                        const aQ = await pbAdminFetch(env, `/api/collections/users/records/${encodeURIComponent(p.author_id)}`);
+                        const aD = await aQ.json().catch(() => ({}));
+                        if (aD && aD.id) author = { id: aD.id, nickname: aD.nickname || "", faceimg: aD.faceimg || "" };
+                    }
+                    let following = false;
+                    if (author.id && author.id !== auth.record.id) {
+                        const fQ = await pbAdminFetch(env, `/api/collections/follows/records?perPage=1&skipTotal=true&filter=${encodeURIComponent(`follower_id='${escapePocketBaseFilterValue(auth.record.id)}'&&user_id='${escapePocketBaseFilterValue(author.id)}'`)}`);
+                        const fD = await fQ.json().catch(() => ({}));
+                        following = (fD.items || []).length > 0;
+                    }
+                    let cardTitle = "";
+                    if (p.card_id) {
+                        const cQ = await pbAdminFetch(env, `/api/collections/community_cards/records/${encodeURIComponent(p.card_id)}`);
+                        const cD = await cQ.json().catch(() => ({}));
+                        if (cD && cD.id) cardTitle = String(cD.title || "");
+                    }
+                    let likedByMe = false;
+                    const lQ = await pbAdminFetch(env, `/api/collections/post_likes/records?perPage=1&skipTotal=true&filter=${encodeURIComponent(`post_id='${escapePocketBaseFilterValue(p.id)}'&&user_id='${escapePocketBaseFilterValue(auth.record.id)}'`)}`);
+                    const lD = await lQ.json().catch(() => ({}));
+                    likedByMe = (lD.items || []).length > 0;
+                    const cQ = await pbAdminFetch(env, `/api/collections/post_comments/records?perPage=2&sort=created&filter=${encodeURIComponent(`post_id='${escapePocketBaseFilterValue(p.id)}'`)}`);
+                    const cD = await cQ.json().catch(() => ({}));
+                    const comments = await Promise.all((cD.items || []).map(async (cm) => {
+                        let cAuthor = { id: cm.user_id };
+                        if (cm.user_id) {
+                            const aQ = await pbAdminFetch(env, `/api/collections/users/records/${encodeURIComponent(cm.user_id)}`);
+                            const aD = await aQ.json().catch(() => ({}));
+                            if (aD && aD.id) cAuthor = { id: aD.id, nickname: aD.nickname || "", faceimg: aD.faceimg || "" };
+                        }
+                        return { id: cm.id, content: cm.content, created_at: cm.created_at, author: cAuthor };
+                    }));
+                    return {
+                        id: p.id,
+                        content: String(p.content || ""),
+                        card_id: p.card_id || "",
+                        card_title: cardTitle,
+                        author,
+                        following,
+                        likes_count: Number(p.likes_count || 0),
+                        comments_count: Number(p.comments_count || 0),
+                        liked_by_me: likedByMe,
+                        comments: comments.slice(0, 2),
+                        created_at: p.created_at
+                    };
+                }));
+                return new Response(JSON.stringify({ items, total: d.totalItems || 0 }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+
+            // ---- 路由：发帖（POST /api/posts，30 秒限 1 帖）----
+            if (url.pathname === "/api/posts" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                let body = {};
+                try { body = await request.json(); } catch (e) {}
+                const content = String(body.content || "").trim().slice(0, 500);
+                if (!content) return errorResponse("内容不能为空", 400, null, "EMPTY_POST");
+                const now = Date.now();
+                if (now - (postRateMap.get(auth.record.id) || 0) < POST_RATE_LIMIT_MS) {
+                    return errorResponse("发帖太频繁，请稍后再试", 429, null, "POST_TOO_FREQUENT");
+                }
+                postRateMap.set(auth.record.id, now);
+                const record = {
+                    content,
+                    author_id: auth.record.id,
+                    card_id: String(body.card_id || "").trim().slice(0, 64),
+                    likes_count: 0,
+                    comments_count: 0,
+                    created_at: new Date().toISOString()
+                };
+                const res = await pbAdminFetch(env, `/api/collections/posts/records`, { method: "POST", body: JSON.stringify(record) });
+                if (!res.ok) return errorResponse("发帖失败", 500, null, "POST_CREATE_FAILED");
+                const created = await res.json().catch(() => ({}));
+                return new Response(JSON.stringify({ id: created.id }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+
+            // ---- 路由：点赞/取消点赞（POST /api/posts/like，5 秒限 1 次）----
+            if (url.pathname === "/api/posts/like" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                let body = {};
+                try { body = await request.json(); } catch (e) {}
+                const postId = String(body.post_id || "");
+                const like = body.like !== false;
+                if (!postId) return errorResponse("缺少 post_id", 400, null, "INVALID_POST");
+                const now = Date.now();
+                if (now - (postRateMap.get("like:" + auth.record.id) || 0) < LIKE_RATE_LIMIT_MS) {
+                    return errorResponse("操作太频繁，请稍后再试", 429, null, "LIKE_TOO_FREQUENT");
+                }
+                postRateMap.set("like:" + auth.record.id, now);
+                const pQ = await pbAdminFetch(env, `/api/collections/posts/records/${encodeURIComponent(postId)}`);
+                const pD = await pQ.json().catch(() => ({}));
+                if (!pD || !pD.id) return errorResponse("帖子不存在", 404, null, "POST_NOT_FOUND");
+                const filter = encodeURIComponent(`post_id='${escapePocketBaseFilterValue(postId)}'&&user_id='${escapePocketBaseFilterValue(auth.record.id)}'`);
+                const lQ = await pbAdminFetch(env, `/api/collections/post_likes/records?perPage=1&skipTotal=true&filter=${filter}`);
+                const lD = await lQ.json().catch(() => ({}));
+                const existing = (lD.items || [])[0];
+                if (like && !existing) {
+                    await pbAdminFetch(env, `/api/collections/post_likes/records`, { method: "POST", body: JSON.stringify({ post_id: postId, user_id: auth.record.id, created_at: new Date().toISOString() }) });
+                    await pbAdminFetch(env, `/api/collections/posts/records/${postId}`, { method: "PATCH", body: JSON.stringify({ likes_count: Number(pD.likes_count || 0) + 1 }) });
+                } else if (!like && existing) {
+                    await pbAdminFetch(env, `/api/collections/post_likes/records/${existing.id}`, { method: "DELETE" });
+                    await pbAdminFetch(env, `/api/collections/posts/records/${postId}`, { method: "PATCH", body: JSON.stringify({ likes_count: Math.max(0, Number(pD.likes_count || 0) - 1) }) });
+                }
+                return new Response(JSON.stringify({ ok: true, liked: like }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+
+            // ---- 路由：评论（POST 发表 / GET 列表 /api/posts/comments）----
+            if (url.pathname === "/api/posts/comments" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                let body = {};
+                try { body = await request.json(); } catch (e) {}
+                const postId = String(body.post_id || "");
+                const content = String(body.content || "").trim().slice(0, 200);
+                if (!postId || !content) return errorResponse("参数不完整", 400, null, "INVALID_COMMENT");
+                const pQ = await pbAdminFetch(env, `/api/collections/posts/records/${encodeURIComponent(postId)}`);
+                const pD = await pQ.json().catch(() => ({}));
+                if (!pD || !pD.id) return errorResponse("帖子不存在", 404, null, "POST_NOT_FOUND");
+                await pbAdminFetch(env, `/api/collections/post_comments/records`, { method: "POST", body: JSON.stringify({ post_id: postId, user_id: auth.record.id, content, created_at: new Date().toISOString() }) });
+                await pbAdminFetch(env, `/api/collections/posts/records/${postId}`, { method: "PATCH", body: JSON.stringify({ comments_count: Number(pD.comments_count || 0) + 1 }) });
+                return new Response(JSON.stringify({ ok: true }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+            if (url.pathname === "/api/posts/comments" && request.method === "GET") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const postId = String(url.searchParams.get("post_id") || "");
+                if (!postId) return errorResponse("缺少 post_id", 400, null, "INVALID_POST");
+                const q = await pbAdminFetch(env, `/api/collections/post_comments/records?perPage=100&sort=created&filter=${encodeURIComponent(`post_id='${escapePocketBaseFilterValue(postId)}'`)}`);
+                const d = await q.json().catch(() => ({}));
+                const items = await Promise.all((d.items || []).map(async (cm) => {
+                    let author = { id: cm.user_id };
+                    if (cm.user_id) {
+                        const aQ = await pbAdminFetch(env, `/api/collections/users/records/${encodeURIComponent(cm.user_id)}`);
+                        const aD = await aQ.json().catch(() => ({}));
+                        if (aD && aD.id) author = { id: aD.id, nickname: aD.nickname || "", faceimg: aD.faceimg || "" };
+                    }
+                    return { id: cm.id, content: cm.content, created_at: cm.created_at, author };
+                }));
+                return new Response(JSON.stringify({ items }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+
+            // ---- 路由：关注/取关（POST /api/follows，切换）----
+            if (url.pathname === "/api/follows" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                let body = {};
+                try { body = await request.json(); } catch (e) {}
+                const userId = String(body.user_id || "");
+                if (!userId) return errorResponse("缺少 user_id", 400, null, "INVALID_USER");
+                if (userId === auth.record.id) return errorResponse("不能关注自己", 400, null, "SELF_FOLLOW");
+                const filter = encodeURIComponent(`follower_id='${escapePocketBaseFilterValue(auth.record.id)}'&&user_id='${escapePocketBaseFilterValue(userId)}'`);
+                const fQ = await pbAdminFetch(env, `/api/collections/follows/records?perPage=1&skipTotal=true&filter=${filter}`);
+                const fD = await fQ.json().catch(() => ({}));
+                const existing = (fD.items || [])[0];
+                if (existing) {
+                    await pbAdminFetch(env, `/api/collections/follows/records/${existing.id}`, { method: "DELETE" });
+                    return new Response(JSON.stringify({ ok: true, following: false }), {
+                        headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                    });
+                }
+                await pbAdminFetch(env, `/api/collections/follows/records`, { method: "POST", body: JSON.stringify({ follower_id: auth.record.id, user_id: userId, created_at: new Date().toISOString() }) });
+                return new Response(JSON.stringify({ ok: true, following: true }), {
                     headers: { ...corsHeaders(), "Content-Type": "application/json" }
                 });
             }

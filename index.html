@@ -2084,6 +2084,46 @@
             color: var(--text-dark);
             cursor: pointer;
         }
+        .feed-card {
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 10px 12px;
+            margin-top: 8px;
+            background: var(--card-soft);
+        }
+        .feed-head { display: flex; align-items: center; gap: 8px; }
+        .feed-avatar {
+            width: 30px; height: 30px; border-radius: 50%;
+            background: var(--card-soft); border: 1px solid var(--line);
+            object-fit: cover; flex-shrink: 0;
+        }
+        .feed-name { font-weight: 700; font-size: 0.85rem; }
+        .feed-time { font-size: 0.72rem; color: var(--sub); }
+        .feed-content { font-size: 0.88rem; margin-top: 6px; white-space: pre-wrap; word-break: break-word; }
+        .feed-ref {
+            display: inline-flex; align-items: center; gap: 6px;
+            margin-top: 6px; padding: 4px 10px;
+            border: 1px dashed var(--line); border-radius: 8px;
+            font-size: 0.78rem; color: var(--accent-dark); background: var(--card-bg);
+            cursor: pointer; max-width: 100%;
+        }
+        .feed-actions { display: flex; gap: 14px; margin-top: 8px; }
+        .feed-act {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: none; border: none; cursor: pointer;
+            font-size: 0.8rem; color: var(--sub); padding: 2px 4px; border-radius: 6px;
+        }
+        .feed-act:hover { color: var(--text); background: var(--card-soft); }
+        .feed-act.liked { color: #e74c3c; font-weight: 700; }
+        .feed-act img { width: 15px; height: 15px; }
+        .feed-comment-row { margin-top: 6px; padding: 4px 8px; background: var(--card-bg); border-radius: 8px; font-size: 0.8rem; }
+        .feed-comment-author { font-weight: 700; }
+        .follow-btn {
+            margin-left: auto; font-size: 0.72rem; padding: 3px 10px;
+            border: 1px solid var(--accent); border-radius: 999px;
+            color: var(--accent-dark); background: none; cursor: pointer; flex-shrink: 0;
+        }
+        .follow-btn.following { color: var(--sub); border-color: var(--line); }
         .scenario-filter-chip.active {
             background: var(--accent-dark);
             color: #fff;
@@ -2779,6 +2819,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <div class="top-mini-nav">
                 <span id="usage-badge" onclick="MembershipService.openPanel()" style="display:none;font-size:0.85rem;font-weight:700;color:#6b3f00;padding:6px 12px;border-radius:999px;background:linear-gradient(135deg,#ffe9a8,#ffd66b);border:1px solid #e0a93a;cursor:pointer;box-shadow:0 2px 8px rgba(224,169,58,.4);" title="点击开通/续费会员"></span>
                 <button class="top-nav-btn active" data-view="view-home" onclick="switchView('view-home')">首页</button>
+                <button class="top-nav-btn" data-view="view-community" onclick="switchView('view-community')">社区</button>
                 <button class="top-nav-btn" data-view="view-settings" onclick="switchView('view-settings')">我的</button>
                 <button class="top-nav-btn" id="auth-logout-btn" style="display:none;" onclick="AuthService.logout()">登出</button>
             </div>
@@ -2796,6 +2837,21 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 </div>
                 <div id="scenario-card-list" style="margin-top:8px;"></div>
                 <input id="scenario-file-input" type="file" accept=".txt,.md,.text" style="display:none;">
+            </section>
+        </section>
+
+        <section id="view-community" class="view-section">
+            <section class="card">
+                <div class="list-title">🌐 社区广场</div>
+                <div class="scenario-filter-bar" id="community-tab-bar">
+                    <button class="scenario-filter-chip active" id="community-tab-feed" onclick="Controller.switchCommunityTab('feed')">📣 动态</button>
+                    <button class="scenario-filter-chip" id="community-tab-cards" onclick="Controller.switchCommunityTab('cards')">🃏 剧本库</button>
+                </div>
+                <div class="setting-actions" style="margin:6px 0 2px;">
+                    <button class="mini-btn primary" onclick="Controller.openPostModal()">✍️ 发动态</button>
+                </div>
+                <div id="community-feed-list" style="margin-top:8px;"><span class="list-sub">加载中...</span></div>
+                <div id="community-cards-browse" style="display:none;margin-top:8px;"><span class="list-sub">加载中...</span></div>
             </section>
         </section>
 
@@ -3060,6 +3116,31 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <div class="gender-actions">
                 <button class="mini-btn ghost" onclick="closeInitPreviewModal()">取消</button>
                 <button class="mini-btn primary" id="init-preview-confirm-btn">确认角色信息并开始游玩</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="post-modal">
+        <div class="modal-card">
+            <div class="modal-title">发动态</div>
+            <div class="modal-desc" style="margin-bottom:4px;">分享你的游玩故事，可引用当前选中的剧本</div>
+            <textarea id="post-content-input" class="scenario-editor" style="min-height:90px;" placeholder="说点什么…（500字以内）"></textarea>
+            <div class="list-sub" id="post-card-ref" style="margin-top:4px;"></div>
+            <div class="gender-actions">
+                <button class="mini-btn ghost" onclick="Controller.closePostModal()">取消</button>
+                <button class="mini-btn primary" onclick="Controller.submitPost()">发布</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="comments-modal">
+        <div class="modal-card">
+            <div class="modal-title">评论</div>
+            <div class="modal-desc" id="comments-list" style="max-height:260px;overflow-y:auto;"></div>
+            <input id="comment-input" type="text" placeholder="写下你的评论…（200字以内）" style="margin-top:8px;">
+            <div class="gender-actions">
+                <button class="mini-btn ghost" onclick="Controller.closeCommentsModal()">关闭</button>
+                <button class="mini-btn primary" onclick="Controller.sendPostComment()">发送</button>
             </div>
         </div>
     </div>
@@ -10443,6 +10524,9 @@ const token = delta.content || "";
                 const content = document.getElementById("main-content");
                 content.scrollTop = content.scrollHeight;
             }
+            if (viewId === "view-community" && !silent) {
+                loadCommunityFeed();
+            }
             if (viewId === "view-home") {
                 // 从卡片/游玩页回到主页时，强制刷新主页列表，避免看到旧缓存视图
                 if (prevView && prevView !== "view-home") {
@@ -10932,6 +11016,249 @@ function openNpcProfile(npcId) {
                 TopLoader.hide();
             }
         }
+        // ==================== 社区广场：动态流 ====================
+        let _feedItems = [];
+        let _commentsTargetPostId = "";
+        function escapeForHtml(s) { return MarkdownService.escapeHtml(String(s ?? "")); }
+        function feedTime(iso) {
+            const d = new Date(iso || Date.now());
+            const diff = Date.now() - d.getTime();
+            if (diff < 60000) return "刚刚";
+            if (diff < 3600000) return Math.floor(diff / 60000) + " 分钟前";
+            if (diff < 86400000) return Math.floor(diff / 3600000) + " 小时前";
+            const pad = (n) => String(n).padStart(2, "0");
+            return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())}`;
+        }
+        function feedAvatar(author) {
+            const name = escapeForHtml(author?.nickname || "玩家");
+            if (author?.faceimg) return `<img class="feed-avatar" src="${escapeForHtml(author.faceimg)}" alt="">`;
+            return `<span class="feed-avatar" style="display:inline-flex;align-items:center;justify-content:center;font-size:0.8rem;">${name.slice(0, 1)}</span>`;
+        }
+        function renderFeedPost(p) {
+            const liked = !!p.liked_by_me;
+            const heartIcon = liked ? "icons/heart-fill.svg" : "icons/heart.svg";
+            const followBtn = (p.author && p.author.id !== AuthService.getUserData()?.id)
+                ? `<button class="follow-btn${p.following ? " following" : ""}" onclick="Controller.toggleFollow('${escapeForHtml(p.author.id)}', this)">${p.following ? "已关注" : "关注"}</button>`
+                : "";
+            const ref = p.card_id
+                ? `<div class="feed-ref" onclick="Controller.openFeedCard('${escapeForHtml(p.card_id)}')">🃏 ${escapeForHtml(p.card_title || p.card_id)}</div>`
+                : "";
+            const comments = (Array.isArray(p.comments) ? p.comments : []).map(c => {
+                const cn = escapeForHtml(c.author?.nickname || "玩家");
+                return `<div class="feed-comment-row"><span class="feed-comment-author">${cn}：</span>${escapeForHtml(c.content)}</div>`;
+            }).join("");
+            return `<div class="feed-card" data-post-id="${escapeForHtml(p.id)}">
+                <div class="feed-head">
+                    ${feedAvatar(p.author)}
+                    <div style="min-width:0;">
+                        <div class="feed-name">${escapeForHtml(p.author?.nickname || "玩家")}</div>
+                        <div class="feed-time">${feedTime(p.created_at)}</div>
+                    </div>
+                    ${followBtn}
+                </div>
+                <div class="feed-content">${escapeForHtml(p.content)}</div>
+                ${ref}
+                <div class="feed-actions">
+                    <button class="feed-act${liked ? " liked" : ""}" onclick="Controller.togglePostLike('${escapeForHtml(p.id)}', this)">
+                        <img src="${heartIcon}"><span>${Number(p.likes_count || 0)}</span>
+                    </button>
+                    <button class="feed-act" onclick="Controller.openPostComments('${escapeForHtml(p.id)}')">
+                        <img src="icons/chat.svg"><span>${Number(p.comments_count || 0)}</span>
+                    </button>
+                </div>
+                ${comments}
+            </div>`;
+        }
+        async function loadCommunityFeed() {
+            const container = document.getElementById("community-feed-list");
+            if (!container) return;
+            if (!AuthService.getToken()) {
+                container.innerHTML = '<span class="list-sub">登录后查看社区动态。</span>';
+                return;
+            }
+            container.innerHTML = '<span class="list-sub">加载中...</span>';
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/feed`, {
+                    headers: { "X-Auth-Token": "Bearer " + AuthService.getToken() }
+                });
+                const d = await res.json().catch(() => ({}));
+                const items = Array.isArray(d.items) ? d.items : [];
+                _feedItems = items;
+                if (!items.length) {
+                    container.innerHTML = '<span class="list-sub">还没有动态，来发第一条吧！</span>';
+                    return;
+                }
+                container.innerHTML = items.map(renderFeedPost).join("");
+            } catch (e) {
+                container.innerHTML = '<span class="list-sub">加载失败，请稍后重试。</span>';
+            }
+        }
+        function switchCommunityTab(tab) {
+            const feedTab = document.getElementById("community-tab-feed");
+            const cardsTab = document.getElementById("community-tab-cards");
+            feedTab.classList.toggle("active", tab === "feed");
+            cardsTab.classList.toggle("active", tab === "cards");
+            document.getElementById("community-feed-list").style.display = tab === "feed" ? "" : "none";
+            document.getElementById("community-cards-browse").style.display = tab === "cards" ? "" : "none";
+            if (tab === "feed") loadCommunityFeed();
+            else loadCommunityCardsBrowse();
+        }
+        function openPostModal() {
+            if (!AuthService.getToken()) {
+                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后才能发布动态。" });
+                return;
+            }
+            const card = ScenarioCardService.getSelectedCard();
+            document.getElementById("post-card-ref").textContent = card ? `将引用剧本：${card.title || card.id}` : "";
+            document.getElementById("post-content-input").value = "";
+            document.getElementById("post-modal").style.display = "flex";
+        }
+        function closePostModal() {
+            document.getElementById("post-modal").style.display = "none";
+        }
+        async function submitPost() {
+            const content = document.getElementById("post-content-input").value.trim();
+            if (!content) {
+                NoticeModalService.showInfo({ title: "内容为空", descHtml: "写点什么再发布吧。" });
+                return;
+            }
+            const card = ScenarioCardService.getSelectedCard();
+            const body = { content };
+            if (card) body.card_id = card.id;
+            const res = await fetch(`${AppConfig.proxy.baseUrl}/api/posts`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + AuthService.getToken() },
+                body: JSON.stringify(body)
+            });
+            const d = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                NoticeModalService.showInfo({ title: "发布失败", descHtml: d.error || "请稍后再试" });
+                return;
+            }
+            closePostModal();
+            loadCommunityFeed();
+        }
+        async function togglePostLike(postId, btn) {
+            const card = _feedItems.find(p => p.id === postId);
+            if (!card) return;
+            const willLike = !card.liked_by_me;
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/posts/like`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + AuthService.getToken() },
+                    body: JSON.stringify({ post_id: postId, like: willLike })
+                });
+                if (!res.ok) return;
+            } catch (e) { return; }
+            card.liked_by_me = willLike;
+            card.likes_count = Math.max(0, Number(card.likes_count || 0) + (willLike ? 1 : -1));
+            btn.classList.toggle("liked", willLike);
+            btn.innerHTML = `<img src="${willLike ? "icons/heart-fill.svg" : "icons/heart.svg"}"><span>${card.likes_count}</span>`;
+        }
+        async function openPostComments(postId) {
+            _commentsTargetPostId = postId;
+            const list = document.getElementById("comments-list");
+            list.innerHTML = '<span class="list-sub">加载中...</span>';
+            document.getElementById("comment-input").value = "";
+            document.getElementById("comments-modal").style.display = "flex";
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/posts/comments?post_id=${encodeURIComponent(postId)}`, {
+                    headers: { "X-Auth-Token": "Bearer " + AuthService.getToken() }
+                });
+                const d = await res.json().catch(() => ({}));
+                const items = Array.isArray(d.items) ? d.items : [];
+                list.innerHTML = items.length
+                    ? items.map(c => `<div class="feed-comment-row"><span class="feed-comment-author">${escapeForHtml(c.author?.nickname || "玩家")}：</span>${escapeForHtml(c.content)}</div>`).join("")
+                    : '<span class="list-sub">还没有评论，来抢沙发～</span>';
+            } catch (e) {
+                list.innerHTML = '<span class="list-sub">加载失败。</span>';
+            }
+        }
+        function closeCommentsModal() {
+            document.getElementById("comments-modal").style.display = "none";
+        }
+        async function sendPostComment() {
+            const content = document.getElementById("comment-input").value.trim();
+            if (!content || !_commentsTargetPostId) return;
+            const res = await fetch(`${AppConfig.proxy.baseUrl}/api/posts/comments`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + AuthService.getToken() },
+                body: JSON.stringify({ post_id: _commentsTargetPostId, content })
+            });
+            const d = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                NoticeModalService.showInfo({ title: "评论失败", descHtml: d.error || "请稍后再试" });
+                return;
+            }
+            document.getElementById("comment-input").value = "";
+            openPostComments(_commentsTargetPostId);
+            loadCommunityFeed();
+        }
+        async function toggleFollow(authorId, btn) {
+            const res = await fetch(`${AppConfig.proxy.baseUrl}/api/follows`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + AuthService.getToken() },
+                body: JSON.stringify({ user_id: authorId })
+            });
+            const d = await res.json().catch(() => ({}));
+            if (!res.ok) return;
+            btn.classList.toggle("following", d.following === false ? false : !btn.classList.contains("following"));
+            btn.textContent = d.following ? "已关注" : "关注";
+        }
+        function openFeedCard(cardId) {
+            const list = _feedItems.find(p => p.card_id === cardId);
+            NoticeModalService.showInfo({ title: "剧本引用", descHtml: `该动态引用了剧本「${escapeForHtml(list?.card_title || cardId)}」，可在剧本库查找后游玩。` });
+        }
+        async function loadCommunityCardsBrowse() {
+            const container = document.getElementById("community-cards-browse");
+            if (!container) return;
+            if (!AuthService.getToken()) {
+                container.innerHTML = '<span class="list-sub">登录后浏览社区剧本。</span>';
+                return;
+            }
+            container.innerHTML = '<span class="list-sub">加载中...</span>';
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/cards/community`, {
+                    headers: { "X-Auth-Token": "Bearer " + AuthService.getToken() }
+                });
+                const d = await res.json().catch(() => ({}));
+                const items = Array.isArray(d.items) ? d.items : [];
+                if (!items.length) {
+                    container.innerHTML = '<span class="list-sub">暂无已上架剧本。</span>';
+                    return;
+                }
+                container.innerHTML = items.map(c => `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin-top:6px;background:var(--card-soft);">
+                    <div style="min-width:0;">
+                        <div style="font-weight:700;font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeForHtml(c.title || "未命名")}</div>
+                        <div class="list-sub" style="margin-top:2px;">播放 ${Number(c.play_count || 0)} 次</div>
+                    </div>
+                    <button class="mini-btn primary" style="flex-shrink:0;" onclick="Controller.useCommunityCard('${escapeForHtml(c.id)}')">下载游玩</button>
+                </div>`).join("");
+            } catch (e) {
+                container.innerHTML = '<span class="list-sub">加载失败，请稍后重试。</span>';
+            }
+        }
+        async function useCommunityCard(cardId) {
+            try {
+                TopLoader.show("下载剧本中...");
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/cards/community?id=${encodeURIComponent(cardId)}`, {
+                    headers: { "X-Auth-Token": "Bearer " + AuthService.getToken() }
+                });
+                const d = await res.json().catch(() => ({}));
+                if (!res.ok || !d.data) {
+                    NoticeModalService.showInfo({ title: "下载失败", descHtml: d.error || "剧本不存在" });
+                    return;
+                }
+                const card = { id: d.id, title: d.title, sourceType: "community", category: d.category || "", theme: d.theme || "", text: String(d.data.text || ""), structured: d.data.structured };
+                ScenarioCardService.saveCards([card, ...ScenarioCardService.loadCards().filter(c => c.id !== d.id)]);
+                ScenarioCardService.setSelectedId(d.id);
+                NoticeModalService.showInfo({ title: "已添加", descHtml: `「${escapeForHtml(d.title)}」已加入你的卡片列表，可前往首页游玩。` });
+            } catch (e) {
+                NoticeModalService.showInfo({ title: "下载失败", descHtml: "网络异常，请稍后重试。" });
+            } finally {
+                TopLoader.hide();
+            }
+        }
         function openInitPreviewModal() {
             document.getElementById("init-preview-modal").style.display = "flex";
         }
@@ -11124,7 +11451,7 @@ function openNpcProfile(npcId) {
                 openingChoices: merged.openingChoices || []
             });
         }
-        return { init, onSendClick, sendUserText, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
+        return { init, onSendClick, sendUserText, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
