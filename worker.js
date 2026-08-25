@@ -1,10 +1,11 @@
 // ==================== 1. 配置中心 ====================
 
-// 云币经济：游玩消耗 100 币/轮、解锁 5000 币/张、签到 300 币/天（连续 7 天额外 +700）
+// 云币经济：游玩消耗 100 币/轮、解锁 5000 币/张、签到 300 币/天（连续 7 天额外 +700；首次签到 6300）
 const COIN_COST_PER_ROUND = 100;
 const UNLOCK_COST = 5000;
 const CHECKIN_BASE = 300;
 const CHECKIN_STREAK_BONUS = 700;
+const CHECKIN_FIRST_BONUS = 6300;
 // 创作者分佣：别人玩你的社区卡 30 币/轮（单卡单用户每日最多计 10 轮），解锁分成 1000 币
 const COMMUNITY_REWARD_PER_PLAY = 30;
 const COMMUNITY_DAILY_PLAY_LIMIT = 10;
@@ -653,7 +654,8 @@ export default {
                 }
                 const yesterday = new Date(Date.now() + TIMEZONE_OFFSET_MS - 86400000).toISOString().slice(0, 10);
                 const streak = r.last_checkin_date === yesterday ? Number(r.checkin_streak || 0) + 1 : 1;
-                const reward = CHECKIN_BASE + (streak >= 7 ? CHECKIN_STREAK_BONUS : 0);
+                const isFirst = !r.last_checkin_date;
+                const reward = isFirst ? CHECKIN_FIRST_BONUS : (CHECKIN_BASE + (streak >= 7 ? CHECKIN_STREAK_BONUS : 0));
                 const coin = Number(r.coins || 0) + reward;
                 const patchRes = await pbAdminFetch(env, `/api/collections/users/records/${r.id}`, {
                     method: "PATCH",

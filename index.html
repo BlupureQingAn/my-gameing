@@ -11010,9 +11010,9 @@ function openNpcProfile(npcId) {
                 btn.disabled = true;
                 if (msg) msg.textContent = streak > 0 ? `已连续签到 ${streak} 天，明天继续领 300 币` : "";
             } else {
-                btn.textContent = "每日签到 +300 币";
+                btn.textContent = u && !u.last_checkin_date ? "首次签到 +6300 币" : "每日签到 +300 币";
                 btn.disabled = false;
-                if (msg) msg.textContent = !u ? "登录后每日签到领云币" : (streak > 0 ? `已连续签到 ${streak} 天，今日签到领 300 币${streak >= 6 ? "，明天触发 7 天大奖 +700 币" : ""}` : "新用户连续签到 7 天可额外多得 700 币");
+                if (msg) msg.textContent = !u ? "登录后每日签到领云币" : (streak > 0 ? `已连续签到 ${streak} 天，今日签到领 300 币${streak >= 6 ? "，明天触发 7 天大奖 +700 币" : ""}` : "首次签到领 6300 币，之后每天 300，连签 7 天再 +700");
             }
         }
         // 每日签到：POST /api/checkin → 加币 → 刷新余额
