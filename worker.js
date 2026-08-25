@@ -135,6 +135,7 @@ const LIFETIME_PLAN = { id: "lifetime", name: "终身会员", price: "89", days:
 // 环境变量（Cloudflare Secrets，勿写入代码）：
 //   CHATANYWHERE_KEY / SILICONFLOW_KEY / NVIDIA_KEY / DEEPSEEK_KEY / ZHIPU_KEY / PB_URL / PB_ADMIN_EMAIL / PB_ADMIN_PASSWORD
 //   H5_APP_ID / H5_APP_SECRET / PAY_NOTIFY_URL=https://ai.blupure.cn/api/pay/notify
+//   MAPAY_APPID / MAPAY_APPKEY（聚合登录 QQ/微信,未配置时接口返回"暂未开通"）
 
 // ==================== 2. 工具函数 ====================
 
@@ -734,6 +735,89 @@ export default {
                 const q = await pbAdminFetch(env, `/api/collections/unlocks/records?perPage=200&skipTotal=true&filter=${filter}&fields=card_id`);
                 const d = await q.json().catch(() => ({}));
                 return new Response(JSON.stringify({ cards: (d.items || []).map(i => i.card_id) }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+
+            // ---- 路由：聚合登录(QQ/微信) ①获取跳转地址 ----
+            if (url.pathname === "/api/social/login" && request.method === "GET") {
+                const type = String(url.searchParams.get("type") || "").toLowerCase();
+                if (!["qq", "wx"].includes(type)) return errorResponse("不支持的登录方式", 400, null, "INVALID_SOCIAL_TYPE");
+                const appid = env.MAPAY_APPID || "";
+                const appkey = env.MAPAY_APPKEY || "";
+                if (!appid || !appkey) return errorResponse("第三方登录暂未开通", 503, null, "SOCIAL_NOT_CONFIGURED");
+                // redirect_uri 使用请求自身 host(防 open redirect),http 仅限本机调试
+                const proto = (url.protocol === "https:" || url.hostname === "localhost" || url.hostname === "127.0.0.1") ? url.protocol : "https:";
+                const redirectUri = `${proto}//${url.host}/?social_cb=1`;
+                const q = new URLSearchParams({ act: "login", appid, appkey, type, redirect_uri: redirectUri });
+                const res = await fetch(`${env.MAPAY_API_URL || "https://login.mapay.cn"}/connect.php?${q}`);
+                const data = await res.json().catch(() => null);
+                if (!data || data.code !== 0) return errorResponse(data?.msg || "获取登录地址失败", 502, null, "SOCIAL_LOGIN_FAILED");
+                return new Response(JSON.stringify({ url: data.url }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+            }
+
+            // ---- 路由：聚合登录 ②授权回调换 token（appkey 仅服务端使用）----
+            if (url.pathname === "/api/social/login" && request.method === "POST") {
+                const appid = env.MAPAY_APPID || "";
+                const appkey = env.MAPAY_APPKEY || "";
+                if (!appid || !appkey) return errorResponse("第三方登录暂未开通", 503, null, "SOCIAL_NOT_CONFIGURED");
+                let body = {};
+                try { body = await request.json(); } catch (e) {}
+                const type = String(body.type || "").toLowerCase();
+                const code = String(body.code || "").trim();
+                if (!["qq", "wx"].includes(type)) return errorResponse("不支持的登录方式", 400, null, "INVALID_SOCIAL_TYPE");
+                if (!code) return errorResponse("缺少授权码", 400, null, "INVALID_SOCIAL_CODE");
+                const q = new URLSearchParams({ act: "callback", appid, appkey, type, code });
+                const res = await fetch(`${env.MAPAY_API_URL || "https://login.mapay.cn"}/connect.php?${q}`);
+                const data = await res.json().catch(() => null);
+                if (!data || data.code !== 0) return errorResponse(data?.msg || "登录失败，请重试", 502, null, "SOCIAL_CALLBACK_FAILED");
+                const uid = String(data.social_uid || "").trim();
+                if (!uid) return errorResponse("未获取到第三方身份", 502, null, "SOCIAL_UID_MISSING");
+                const pbUrl = (env.PB_URL || "").replace(/\/$/, "");
+                // 查已有绑定(自动建号账号,首登后复用)
+                const filter = encodeURIComponent(`social_uid='${escapePocketBaseFilterValue(uid)}'`);
+                const q2 = await pbAdminFetch(env, `/api/collections/users/records?perPage=1&skipTotal=true&filter=${filter}`);
+                const d2 = await q2.json().catch(() => ({}));
+                let user = (d2.items || [])[0];
+                let password = "";
+                if (!user) {
+                    // 自动建号:内部邮箱+随机密码(存 social_pwd 供后续 auth-with-password 签发 token)
+                    const email = `social_${uid.toLowerCase().replace(/[^a-z0-9]/g, "")}@social.mapay`;
+                    let s = "";
+                    for (let i = 0; i < 16; i++) s += "abcdefghijklmnopqrstuvwxyz0123456789"[Math.floor(Math.random() * 36)];
+                    password = s;
+                    const createRes = await pbAdminFetch(env, `/api/collections/users/records`, {
+                        method: "POST",
+                        body: JSON.stringify({
+                            email, password, passwordConfirm: password, emailVisibility: false,
+                            social_uid: uid, social_pwd: password,
+                            nickname: String(data.nickname || "").slice(0, 30),
+                            faceimg: String(data.faceimg || "").slice(0, 500)
+                        })
+                    });
+                    if (!createRes.ok) return errorResponse("账号创建失败，请重试", 500, null, "SOCIAL_CREATE_FAILED");
+                    const created = await createRes.json().catch(() => ({}));
+                    user = created;
+                } else {
+                    password = String(user.social_pwd || "");
+                    if (data.nickname || data.faceimg) {
+                        await pbAdminFetch(env, `/api/collections/users/records/${user.id}`, {
+                            method: "PATCH",
+                            body: JSON.stringify({
+                                nickname: String(data.nickname || "").slice(0, 30),
+                                faceimg: String(data.faceimg || "").slice(0, 500)
+                            })
+                        }).catch(() => {});
+                    }
+                }
+                if (!password) return errorResponse("账号异常，请联系管理员", 500, null, "SOCIAL_ACCOUNT_BROKEN");
+                const loginRes = await fetch(`${pbUrl}/api/collections/users/auth-with-password`, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ identity: user.email, password })
+                });
+                const loginData = await loginRes.json().catch(() => ({}));
+                if (!loginRes.ok || !loginData.token) return errorResponse("登录失败，请重试", 502, null, "SOCIAL_TOKEN_FAILED");
+                return new Response(JSON.stringify({ token: loginData.token, record: loginData.record }), {
                     headers: { ...corsHeaders(), "Content-Type": "application/json" }
                 });
             }

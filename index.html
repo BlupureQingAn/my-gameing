@@ -2399,6 +2399,8 @@
         }
         /* 提示弹窗:固定视口并置顶,不被充值窗口(z-index:999)等覆盖 */
         #info-modal { position: fixed; z-index: 10000; }
+        #social-qq-btn:hover { filter: brightness(.95); }
+        #social-wx-btn:hover { filter: brightness(.95); }
 
         .modal-card {
             width: 100%;
@@ -2691,6 +2693,15 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 style="width:100%;padding:12px;border-radius:12px;border:none;background:linear-gradient(135deg,#b08652,#845f35);color:#fffaf4;font-size:0.95rem;font-weight:700;cursor:pointer;transition:filter .18s;">
                 登录
             </button>
+            <div style="display:flex;align-items:center;gap:10px;margin:14px 0 0;color:var(--sub,#806a55);font-size:0.78rem;">
+                <div style="flex:1;height:1px;background:var(--line,#e2ccb0);"></div>其他方式登录<div style="flex:1;height:1px;background:var(--line,#e2ccb0);"></div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:10px;">
+                <button id="social-qq-btn" onclick="AuthService.socialLogin('qq')"
+                    style="flex:1;padding:10px;border-radius:12px;border:1px solid var(--line,#e2ccb0);background:var(--input-bg,#fffbf5);font-size:0.9rem;font-weight:600;color:#0d84e0;cursor:pointer;transition:filter .18s;">💬 QQ 登录</button>
+                <button id="social-wx-btn" onclick="AuthService.socialLogin('wx')"
+                    style="flex:1;padding:10px;border-radius:12px;border:1px solid var(--line,#e2ccb0);background:var(--input-bg,#fffbf5);font-size:0.9rem;font-weight:600;color:#07a23b;cursor:pointer;transition:filter .18s;">💚 微信登录</button>
+            </div>
             <div style="text-align:center;">
                 <button id="auth-toggle-btn" onclick="AuthService.toggleMode()"
                     style="background:none;border:none;color:var(--sub,#806a55);font-size:0.82rem;cursor:pointer;text-decoration:underline;">
@@ -11431,6 +11442,51 @@ function openNpcProfile(npcId) {
             onLoginSuccess(email);
         }
 
+        // 聚合登录:①获取跳转地址并跳转（appkey 在服务端,前端仅拿 url）
+        async function socialLogin(type) {
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/social/login?type=${encodeURIComponent(type)}`);
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || !data.url) {
+                    NoticeModalService.showInfo({ title: "提示", descHtml: data.error || "第三方登录暂未开通" });
+                    return;
+                }
+                window.location.href = data.url;
+            } catch (e) {
+                NoticeModalService.showInfo({ title: "提示", descHtml: "网络异常，请稍后重试" });
+            }
+        }
+        // 聚合登录:②平台回跳(?social_cb=1&type=&code=)换 token 并登录
+        async function handleSocialCallback() {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                if (params.get("social_cb") !== "1") return false;
+                const type = params.get("type");
+                const code = params.get("code");
+                // 先清 URL,避免 code 滞留地址栏/刷新重复登录
+                window.history.replaceState({}, "", window.location.pathname + window.location.hash);
+                if (!type || !code) return false;
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/social/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ type, code })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || !data.token) {
+                    NoticeModalService.showInfo({ title: "登录失败", descHtml: data.error || "第三方登录失败，请重试" });
+                    showOverlay();
+                    return true;
+                }
+                saveSession(data.token, data.record?.email || "");
+                _userData = data.record || null;
+                cacheUser();
+                onLoginSuccess(getEmail());
+                return true;
+            } catch (e) {
+                return false;
+            }
+        }
+
         async function verifyToken() {
             const token = getToken();
             if (!token) return false;
@@ -11505,6 +11561,8 @@ function openNpcProfile(npcId) {
         }
 
         async function init() {
+            // 第三方登录回跳优先处理(此时本地无 token)
+            if (await handleSocialCallback()) return true;
             const token = getToken();
             if (token) {
                 // 登录态恢复不依赖网络:先显示本地缓存,后台并行验证+刷新
@@ -11536,7 +11594,7 @@ function openNpcProfile(npcId) {
             if (e.key === "Enter") handleSubmit();
         });
 
-        return { init, handleSubmit, toggleMode, logout, getToken, getEmail, getUserData, refreshBalance, applyCheckin, updateUsageStatusUI, hasMembership };
+        return { init, handleSubmit, toggleMode, logout, getToken, getEmail, getUserData, refreshBalance, applyCheckin, updateUsageStatusUI, hasMembership, socialLogin };
     })();
 
     function hideBootScreen() {
