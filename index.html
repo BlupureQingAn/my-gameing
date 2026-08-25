@@ -2397,8 +2397,8 @@
             align-items: center;
             padding: 14px;
         }
-        /* 提示弹窗:固定视口并置顶,不被充值窗口(z-index:999)等覆盖 */
-        #info-modal { position: fixed; z-index: 10000; }
+        /* 提示弹窗:固定视口并置顶,不被充值窗口(z-index:999)/登录窗口(z-index:99999)覆盖 */
+        #info-modal { position: fixed; z-index: 100000; }
         #social-qq-btn:hover { filter: brightness(.95); }
         #social-wx-btn:hover { filter: brightness(.95); }
 
