@@ -808,6 +808,112 @@
         .advance-btn:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 12px 30px rgba(224,82,124,0.55); }
         .advance-btn:active { transform: scale(.97); }
         .advance-hint { text-align: center; font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px; }
+        /* 手机页模拟器 */
+        .phone-shell {
+            border-radius: 22px;
+            padding: 14px 14px 16px;
+            background: linear-gradient(160deg, rgba(255,255,255,.96), rgba(246,244,252,.9));
+            border: 1px solid var(--line);
+            box-shadow: 0 10px 30px rgba(0,0,0,.10);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        body[data-theme="dark"] .phone-shell { background: linear-gradient(160deg, rgba(30,26,40,.97), rgba(38,32,50,.93)); }
+        .phone-statusbar { display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: 700; color: var(--text-muted); }
+        .phone-status-icons { letter-spacing: 3px; }
+        .phone-user-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: rgba(123,92,214,.08);
+            border: 1px solid rgba(123,92,214,.2);
+        }
+        .phone-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 800;
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(123,92,214,.35);
+            flex-shrink: 0;
+        }
+        .phone-user-name { font-size: 0.95rem; font-weight: 800; color: var(--text-dark); }
+        .phone-user-sig { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+        .phone-bgm {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: 14px;
+            background: rgba(255,255,255,.65);
+            border: 1px solid var(--line);
+        }
+        body[data-theme="dark"] .phone-bgm { background: rgba(30,26,40,.6); }
+        .phone-bgm-icon { font-size: 1.1rem; }
+        .phone-bgm-main { flex: 1; min-width: 0; }
+        .phone-bgm-title { font-size: 0.78rem; font-weight: 800; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .phone-bgm-track { height: 5px; border-radius: 999px; background: rgba(120,120,120,.2); margin-top: 5px; overflow: hidden; }
+        .phone-bgm-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #7b5cd6, #9d7bf0); transition: width .3s linear; }
+        .phone-bgm-btns { display: flex; gap: 4px; }
+        .phone-bgm-btns button {
+            width: 30px; height: 30px;
+            border-radius: 50%;
+            border: 1px solid var(--line);
+            background: var(--input-bg);
+            color: var(--text-dark);
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: all .2s;
+        }
+        .phone-bgm-btns button:hover { color: #7b5cd6; border-color: rgba(123,92,214,.4); }
+        .phone-bgm-btns button:disabled { opacity: .35; cursor: default; }
+        .phone-apps-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .phone-apps-row.wide { grid-template-columns: repeat(3, 1fr); }
+        .phone-app-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            padding: 11px 4px;
+            border-radius: 14px;
+            border: 1px solid var(--line);
+            background: var(--input-bg);
+            color: var(--text-dark);
+            font-size: 0.76rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .2s;
+        }
+        .phone-app-btn .app-icon { font-size: 1.35rem; }
+        .phone-app-btn:hover { border-color: rgba(123,92,214,.45); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(123,92,214,.18); }
+        .phone-dock {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            padding-top: 10px;
+            border-top: 1px dashed var(--line);
+        }
+        .phone-dock-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 2px;
+            border: none;
+            background: transparent;
+            color: var(--text-dark);
+            font-size: 1.05rem;
+            cursor: pointer;
+        }
+        .phone-dock-btn span { font-size: 0.68rem; font-weight: 700; color: var(--text-muted); }
+        .phone-dock-btn:hover span { color: #7b5cd6; }
         .npc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
         .npc-card {
             padding: 10px;
@@ -3492,6 +3598,42 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <div class="slot-grid" id="save-slots" style="margin-top:8px;"></div>
             </section>
         </section>
+
+        <section id="view-phone" class="view-section">
+            <div class="phone-shell">
+                <div class="phone-statusbar">
+                    <span id="phone-clock">00:00</span>
+                    <span class="phone-status-icons">📶 🛜 🔋</span>
+                </div>
+                <div class="phone-user-card">
+                    <div class="phone-avatar" id="phone-avatar"></div>
+                    <div class="phone-user-info">
+                        <div class="phone-user-name" id="phone-user-name"></div>
+                        <div class="phone-user-sig">点击这里编辑你的个性签名</div>
+                    </div>
+                </div>
+                <div class="phone-bgm">
+                    <div class="phone-bgm-icon">🎵</div>
+                    <div class="phone-bgm-main">
+                        <div class="phone-bgm-title" id="phone-bgm-title">背景音乐 · 游戏原声</div>
+                        <div class="phone-bgm-track"><div class="phone-bgm-fill" id="phone-bgm-fill" style="width:0%"></div></div>
+                    </div>
+                    <div class="phone-bgm-btns">
+                        <button type="button" onclick="bgmPrev()" title="上一曲">⏮</button>
+                        <button type="button" onclick="bgmToggle()" id="phone-bgm-play" title="播放/暂停">▶</button>
+                        <button type="button" onclick="bgmNext()" title="下一曲">⏭</button>
+                    </div>
+                </div>
+                <div class="phone-apps-row" id="phone-apps-func"></div>
+                <div class="phone-apps-row wide" id="phone-apps-more"></div>
+                <div class="phone-dock">
+                    <button type="button" class="phone-dock-btn" onclick="phoneAppTap('backpack')">🎒<span>你的背包</span></button>
+                    <button type="button" class="phone-dock-btn" onclick="phoneAppTap('memories')">📖<span>你的回忆</span></button>
+                    <button type="button" class="phone-dock-btn" onclick="phoneAppTap('jobs')">🔨<span>找点活干</span></button>
+                    <button type="button" class="phone-dock-btn" onclick="phoneAppTap('settings')">⚙️<span>设置</span></button>
+                </div>
+            </div>
+        </section>
     </main>
 
     <footer class="chat-footer">
@@ -3508,6 +3650,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <div class="footer-nav-toggle" onclick="togglePlayDockNav()" title="收起/展开导航"></div>
                 <div class="nav-actions">
                     <button class="nav-btn" data-view="view-main" data-nav-scope="play" onclick="switchView('view-main')">📖 剧情</button>
+                    <button class="nav-btn" data-view="view-phone" data-nav-scope="play" onclick="switchView('view-phone')">📱 手机</button>
                     <button class="nav-btn" data-view="view-world" data-nav-scope="play" onclick="switchView('view-world')">🌍 世界</button>
                     <button class="nav-btn" data-view="view-inventory" data-nav-scope="play" onclick="switchView('view-inventory')">🎒 背包</button>
                     <button class="nav-btn" data-view="view-social" data-nav-scope="play" onclick="switchView('view-social')">💬 社交</button>
@@ -7225,7 +7368,112 @@ function rebuildChoicesBlock(body, labels = []) {
                 groupCards.forEach(renderRow);
             });
         }
-        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, clearFancyStatus, renderPlayStatusBar, renderPlayEventList, renderWorld, renderDiary, renderEndingModal, buildEventRounds, avatarColor, heartLadder, stripHtml, normalizeLocations };
+        // 手机页模拟器：默认 App 生态（卡片可配置 apps.func/more 覆盖）
+        const DEFAULT_PHONE_APPS = {
+            func: [
+                { icon: "💬", label: "通讯", action: "chat" },
+                { icon: "📣", label: "论坛", action: "forum" },
+                { icon: "📔", label: "查看日记", action: "diary" },
+                { icon: "🛒", label: "商店", action: "shop" }
+            ],
+            more: [
+                { icon: "📦", label: "应用商店", action: "store" },
+                { icon: "🎭", label: "平行小剧场", action: "play" },
+                { icon: "💘", label: "姻缘一线牵", action: "date" }
+            ]
+        };
+        let _bgmState = { list: [], idx: -1, playing: false, audio: null };
+        function _bgmRenderTitle() {
+            const s = _bgmState;
+            const titleEl = document.getElementById("phone-bgm-title");
+            const btn = document.getElementById("phone-bgm-play");
+            if (titleEl && s.list.length && s.idx >= 0) titleEl.textContent = `🎵 ${s.list[s.idx]?.title || "背景音乐"}`;
+            if (btn) btn.textContent = s.playing ? "⏸" : "▶";
+        }
+        function bgmToggle() {
+            const s = _bgmState;
+            if (!s.list.length || s.idx < 0) return;
+            const src = s.list[s.idx]?.url;
+            const btn = document.getElementById("phone-bgm-play");
+            if (!src) {
+                s.playing = !s.playing;
+                if (btn) btn.textContent = s.playing ? "⏸" : "▶";
+                return;
+            }
+            if (!s.audio) {
+                s.audio = new Audio();
+                s.audio.addEventListener("timeupdate", () => {
+                    const fill = document.getElementById("phone-bgm-fill");
+                    if (fill && s.audio && s.audio.duration) fill.style.width = `${(s.audio.currentTime / s.audio.duration) * 100}%`;
+                });
+                s.audio.addEventListener("ended", () => { s.playing = false; bgmNext(); });
+            }
+            if (s.playing) {
+                s.audio.pause();
+                s.playing = false;
+            } else {
+                if (s.audio.src !== src) { s.audio.src = src; s.audio.load(); }
+                s.audio.play().catch(() => {});
+                s.playing = true;
+            }
+            _bgmRenderTitle();
+        }
+        function bgmNext() {
+            const s = _bgmState;
+            if (!s.list.length) return;
+            s.idx = (s.idx + 1) % s.list.length;
+            const was = s.playing;
+            if (s.audio) { s.audio.pause(); }
+            s.playing = false;
+            _bgmRenderTitle();
+            if (was) bgmToggle();
+        }
+        function bgmPrev() {
+            const s = _bgmState;
+            if (!s.list.length) return;
+            s.idx = s.idx <= 0 ? s.list.length - 1 : s.idx - 1;
+            const was = s.playing;
+            if (s.audio) { s.audio.pause(); }
+            s.playing = false;
+            _bgmRenderTitle();
+            if (was) bgmToggle();
+        }
+        function renderPhone(state) {
+            const shell = document.getElementById("view-phone");
+            if (!shell) return;
+            const name = state.name || "旅人";
+            const av = document.getElementById("phone-avatar");
+            const nm = document.getElementById("phone-user-name");
+            if (av) { av.textContent = name.slice(0, 1); av.style.background = avatarColor(name); }
+            if (nm) nm.textContent = name;
+            const clk = document.getElementById("phone-clock");
+            if (clk) {
+                const d = new Date();
+                clk.textContent = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+            }
+            const apps = state.apps && typeof state.apps === "object" ? state.apps : null;
+            const fillApps = (list, fallback, el) => {
+                if (!el) return;
+                const arr = list && list.length ? list : fallback;
+                el.innerHTML = arr.map((a) => `<button type="button" class="phone-app-btn" onclick="phoneAppTap('${String(a.action || "").replace(/'/g, "\\'")}')"><span class="app-icon">${a.icon || "📱"}</span>${MarkdownService.escapeHtml(a.label || "")}</button>`).join("");
+            };
+            fillApps(apps && apps.func, DEFAULT_PHONE_APPS.func, document.getElementById("phone-apps-func"));
+            fillApps(apps && apps.more, DEFAULT_PHONE_APPS.more, document.getElementById("phone-apps-more"));
+            const bgmList = Array.isArray(state.bgms) ? state.bgms : [];
+            _bgmState.list = bgmList;
+            if (_bgmState.idx >= bgmList.length) _bgmState.idx = -1;
+            const titleEl = document.getElementById("phone-bgm-title");
+            const btns = document.querySelectorAll(".phone-bgm-btns button");
+            if (!bgmList.length) {
+                if (titleEl) titleEl.textContent = "背景音乐 · 暂无（剧本未配置）";
+                btns.forEach((b) => { b.disabled = true; });
+            } else {
+                btns.forEach((b) => { b.disabled = false; });
+                if (_bgmState.idx < 0) _bgmState.idx = 0;
+                _bgmRenderTitle();
+            }
+        }
+        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, clearFancyStatus, renderPlayStatusBar, renderPlayEventList, renderWorld, renderDiary, renderEndingModal, renderPhone, buildEventRounds, avatarColor, heartLadder, stripHtml, normalizeLocations, bgmToggle, bgmNext, bgmPrev };
     })();
 
     const VisualEffects = (() => {
@@ -10980,6 +11228,7 @@ const token = delta.content || "";
             UIRenderer.renderSocialList(state);
             UIRenderer.renderSaveSlots(state);
             UIRenderer.renderScenarioCards();
+            UIRenderer.renderPhone(state);
             switchView(activeView, true);
         }
         async function init() {
@@ -11282,6 +11531,31 @@ const token = delta.content || "";
             if (guardGenerating("AI 正在推进剧情，请稍候。")) return;
             sendUserText("继续推进剧情，开启新的故事发展");
         }
+        // ---- 手机页模拟器：App 动作分发 + 回忆日记弹窗 ----
+        function openPhoneDiary() {
+            const state = StateService.get();
+            const rounds = UIRenderer.buildEventRounds(state.history);
+            const items = rounds.length
+                ? rounds.map((r) => `<details class="diary-entry"><summary>📅 ${MarkdownService.escapeHtml(r.date || "某日")} · ${MarkdownService.escapeHtml(r.userText.slice(0, 14))}${r.userText.length > 14 ? "…" : ""}</summary><div class="diary-body">${MarkdownService.escapeHtml(UIRenderer.stripHtml(r.texts[0] || "").slice(0, 120))}</div></details>`).join("")
+                : '<div class="list-sub">还没有日记内容，剧情推进后自动记录。</div>';
+            NoticeModalService.showInfo({ title: "📖 你的回忆", descHtml: `<div style="max-height:320px;overflow-y:auto;">${items}</div>` });
+        }
+        function phoneAppTap(action) {
+            switch (action) {
+                case "chat": switchView("view-social"); break;
+                case "forum": switchView("view-community"); break;
+                case "diary":
+                case "memories": openPhoneDiary(); break;
+                case "shop": startPay(); break;
+                case "backpack": switchView("view-inventory"); break;
+                case "jobs":
+                    if (guardGenerating("AI 正在推进剧情，稍后再找活干。")) break;
+                    sendUserText("找点活干，看看有没有什么任务或活计可做");
+                    break;
+                case "settings": switchView("view-settings"); break;
+                default: NoticeModalService.showInfo({ title: "敬请期待", descHtml: "这个 App 还在开发中，先去主世界逛逛吧～" });
+            }
+        }
         // ---- 结局评定（uugame"结束这段故事"融合：AI 评定 S~D + 专属结局，失败本地兜底） ----
         async function requestEnding(state, config) {
             const scenarioSpec = SettingsService.getScenarioTextForModel();
@@ -11403,6 +11677,9 @@ ${recent || "（无）"}
             }
             if (viewId === "view-world" && !silent) {
                 UIRenderer.renderWorld();
+            }
+            if (viewId === "view-phone" && !silent) {
+                UIRenderer.renderPhone(StateService.get());
             }
             if (viewId === "view-home") {
                 // 从卡片/游玩页回到主页时，强制刷新主页列表，避免看到旧缓存视图
@@ -12328,7 +12605,7 @@ function openNpcProfile(npcId) {
                 openingChoices: merged.openingChoices || []
             });
         }
-        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, advanceStory };
+        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, advanceStory, openPhoneDiary, phoneAppTap };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
@@ -12341,6 +12618,10 @@ function openNpcProfile(npcId) {
     function moveToLocation(locName) { Controller.moveToLocation(locName); }
     function showFullMap() { Controller.showFullMap(); }
     function advanceStory() { Controller.advanceStory(); }
+    function phoneAppTap(action) { Controller.phoneAppTap(action); }
+    function bgmToggle() { UIRenderer.bgmToggle(); }
+    function bgmNext() { UIRenderer.bgmNext(); }
+    function bgmPrev() { UIRenderer.bgmPrev(); }
     function endStory() { Controller.endStory(); }
     function closeEndingModal() { Controller.closeEndingModal(); }
     function restartLife() { Controller.restartLife(); }
