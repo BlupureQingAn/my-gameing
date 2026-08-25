@@ -3252,6 +3252,25 @@
     @keyframes bootShimmer{100%{transform:translateX(100%)}}
     @keyframes bootPulse{0%,100%{opacity:1}50%{opacity:.5}}
     @media (prefers-reduced-motion: reduce){#boot-screen .boot-logo,#boot-screen .boot-sub{animation:none}#boot-screen .boot-card::after{animation:none}}
+    /* ===== 设置页:叙事控制 ===== */
+    .nc-row{display:flex;align-items:center;gap:8px;font-size:.85rem}
+    .nc-row .nc-label{min-width:74px;color:var(--sub);flex-shrink:0}
+    .nc-row select,.nc-row input[type="text"],.nc-row input[type="number"]{flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;background:var(--input-bg);color:var(--text);padding:6px 8px;font-size:.85rem;box-sizing:border-box}
+    .nc-row input[type="number"]{width:74px;flex:none}
+    .inline-chk{display:inline-flex;align-items:center;gap:4px;font-size:.82rem;color:var(--text);cursor:pointer}
+    /* 卡片透明度(color-mix 现代浏览器) */
+    .card,.npc-card,.event-card,.diary-entry{background:color-mix(in srgb,var(--card) calc(var(--card-alpha,1)*100%),transparent)}
+    /* ===== 6 套主题皮肤(覆盖核心变量,置于暗色规则之后) ===== */
+    body[data-skin="deepblue"]{--bg-main:#eaf2fc;--bg-soft:#f2f7ff;--card:#ffffff;--line:#c3d6ee;--text:#1f3a5f;--sub:#5c7ba3;--accent:#4a86d8;--accent-dark:#2c62b0;--input-bg:rgba(255,255,255,.95);--bg-page:radial-gradient(circle at top,rgba(222,236,252,.95) 0%,rgba(208,228,248,.9) 40%,#c9ddf3 100%);--panel-tint:rgba(226,238,252,.72)}
+    body[data-theme="dark"][data-skin="deepblue"]{--bg-main:#101b2c;--bg-soft:#15243c;--card:#1a2c47;--line:#2e4a6e;--text:#dbe7f7;--sub:#8fa9c9;--accent:#6fa8ff;--accent-dark:#a8c8ff;--bg-page:radial-gradient(circle at top,rgba(20,40,70,.9) 0%,rgba(10,18,32,.97) 50%,#080f1c 100%)}
+    body[data-skin="violet"]{--bg-main:#f6ecf7;--bg-soft:#faf2fb;--card:#fff7fd;--line:#e2c8e8;--text:#54325e;--sub:#8d6a97;--accent:#a962c4;--accent-dark:#7e43a0;--input-bg:rgba(255,249,253,.95);--bg-page:radial-gradient(circle at top,rgba(247,232,250,.95) 0%,rgba(240,221,246,.9) 40%,#e6cdec 100%);--panel-tint:rgba(243,227,248,.72)}
+    body[data-theme="dark"][data-skin="violet"]{--bg-main:#221028;--bg-soft:#2d1636;--card:#3a1f45;--line:#55326b;--text:#f0ddf7;--sub:#b89ac6;--accent:#c07fe0;--accent-dark:#e0b2f5;--bg-page:radial-gradient(circle at top,rgba(40,18,52,.92) 0%,rgba(22,10,30,.97) 55%,#14081c 100%)}
+    body[data-skin="forest"]{--bg-main:#eaf3e6;--bg-soft:#f3f9ef;--card:#ffffff;--line:#c4dcc0;--text:#2c4a2a;--sub:#64825f;--accent:#4e8a3f;--accent-dark:#37652c;--input-bg:rgba(250,255,247,.95);--bg-page:radial-gradient(circle at top,rgba(230,244,224,.95) 0%,rgba(216,236,210,.9) 40%,#cfe3c8 100%);--panel-tint:rgba(232,243,226,.72)}
+    body[data-theme="dark"][data-skin="forest"]{--bg-main:#101c12;--bg-soft:#162a1a;--card:#1e3523;--line:#33503b;--text:#ddf0dc;--sub:#96b392;--accent:#67b456;--accent-dark:#9fe08e;--bg-page:radial-gradient(circle at top,rgba(16,32,22,.92) 0%,rgba(9,18,12,.97) 55%,#060d08 100%)}
+    body[data-skin="neon"]{--bg-main:#171a2e;--bg-soft:#1d2140;--card:#232755;--line:#3c4190;--text:#e6e8ff;--sub:#9ba2e8;--accent:#5b8cff;--accent-dark:#9db6ff;--input-bg:rgba(28,32,64,.95);--bg-page:radial-gradient(circle at top,rgba(30,35,80,.9) 0%,rgba(16,18,40,.96) 55%,#0a0c1e 100%);--panel-tint:rgba(30,34,72,.7)}
+    body[data-theme="light"][data-skin="neon"]{--bg-main:#f0f3ff;--bg-soft:#f6f8ff;--card:#ffffff;--line:#ccd6f2;--text:#232a52;--sub:#5c6694;--accent:#4a6ee0;--accent-dark:#334bb0;--bg-page:radial-gradient(circle at top,rgba(228,235,255,.95) 0%,rgba(214,224,252,.9) 45%,#cdd9f5 100%)}
+    body[data-skin="snow"]{--bg-main:#f5f7f9;--bg-soft:#fbfcfd;--card:#ffffff;--line:#d9e2ea;--text:#33414f;--sub:#73828f;--accent:#7ba3c4;--accent-dark:#4f7ea6;--input-bg:rgba(255,255,255,.97);--bg-page:radial-gradient(circle at top,rgba(240,246,251,.95) 0%,rgba(228,238,246,.92) 45%,#dbe7f0 100%);--panel-tint:rgba(236,244,250,.72)}
+    body[data-theme="dark"][data-skin="snow"]{--bg-main:#151c24;--bg-soft:#1c2631;--card:#24303d;--line:#3a4a5b;--text:#e4edf5;--sub:#93a6b8;--accent:#8fb6d8;--accent-dark:#bcd8f0;--bg-page:radial-gradient(circle at top,rgba(24,36,48,.92) 0%,rgba(13,20,28,.97) 55%,#0a1016 100%)}
 </style>
 <div id="boot-screen" role="status" aria-label="页面加载中">
     <div class="boot-logo"><img src="icons/android-chrome-192x192.png" alt="" style="width:36px;height:36px;vertical-align:-7px;margin-right:10px;border-radius:8px;filter:drop-shadow(0 0 10px rgba(255,214,107,.45))">云吞吞文游</div>
@@ -3495,6 +3514,97 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 </label>
                 <div class="setting-actions">
                     <button class="mini-btn ghost" onclick="switchView('view-home')">← 返回首页</button>
+                </div>
+            </section>
+            <section class="card">
+                <div class="list-title">📖 叙事控制</div>
+                <div class="list-sub">以下设置即时生效并注入 AI 提示词，无需保存按钮。</div>
+                <div style="margin-top:10px;display:flex;flex-direction:column;gap:10px;">
+                    <div class="nc-row"><span class="nc-label">叙事模式</span>
+                        <select id="nc-mode">
+                            <option value="game">🎮 游戏式（事件 + 选项）</option>
+                            <option value="novel">📖 小说式（连续叙述）</option>
+                        </select>
+                    </div>
+                    <label class="settings-toggle">
+                        <span><strong style="display:block;color:var(--text);">仅手动完结事件</strong><span class="list-sub" style="display:block;">AI 不自行开启新事件，由你点击"推进剧情"驱动</span></span>
+                        <input type="checkbox" id="nc-manual-end">
+                    </label>
+                    <div class="nc-row"><span class="nc-label">文风</span>
+                        <select id="nc-style-track">
+                            <option value="card">跟随卡片设定</option>
+                            <option value="free">自由设定</option>
+                        </select>
+                        <input id="nc-style-free" type="text" maxlength="40" placeholder="如：轻喜剧、古风诗意、悬疑紧张">
+                    </div>
+                    <div class="nc-row"><span class="nc-label">叙事节奏</span>
+                        <select id="nc-pace">
+                            <option value="balanced">⚖️ 适中</option>
+                            <option value="fast">⚡ 明快</option>
+                            <option value="slow">🌿 舒缓</option>
+                        </select>
+                    </div>
+                    <div class="nc-row"><span class="nc-label">单轮字数</span>
+                        <input id="nc-word-min" type="number" min="40" max="500" step="10" value="80">
+                        <span style="color:var(--sub);">~</span>
+                        <input id="nc-word-max" type="number" min="60" max="800" step="10" value="250">
+                        <span style="color:var(--sub);flex:none;">字</span>
+                    </div>
+                    <div class="nc-row"><span class="nc-label">文字展示</span>
+                        <select id="nc-text-display">
+                            <option value="sentence">分句渐显</option>
+                            <option value="paragraph">整段展示</option>
+                        </select>
+                        <span style="color:var(--sub);flex:none;font-size:.8rem;">阅读</span>
+                        <input type="range" id="nc-read-speed" min="1" max="5" step="1" style="flex:1;">
+                        <span id="nc-read-speed-val" style="min-width:44px;font-weight:700;text-align:right;font-size:.8rem;">适中</span>
+                    </div>
+                    <div class="nc-row"><span class="nc-label">记忆方式</span>
+                        <select id="nc-memory-mode">
+                            <option value="auto">🧠 自动记忆（推荐）</option>
+                            <option value="off">🚫 关闭记忆</option>
+                        </select>
+                        <button type="button" class="mini-btn" style="flex:none;" onclick="SettingsService.openMemoryManager()">🧠 记忆管理</button>
+                    </div>
+                </div>
+            </section>
+            <section class="card">
+                <div class="list-title">🎨 主题与展示</div>
+                <div style="margin-top:10px;display:flex;flex-direction:column;gap:10px;">
+                    <div class="nc-row"><span class="nc-label">主题皮肤</span>
+                        <select id="nc-skin">
+                            <option value="default">☁️ 云吞暖纸</option>
+                            <option value="deepblue">🌊 深海墨蓝</option>
+                            <option value="violet">🍇 暮色紫檀</option>
+                            <option value="forest">🌲 森林晨雾</option>
+                            <option value="neon">🌃 暗夜霓虹</option>
+                            <option value="snow">❄️ 初雪纯白</option>
+                        </select>
+                    </div>
+                    <div class="nc-row"><span class="nc-label">壁纸</span>
+                        <input id="nc-wallpaper" type="text" maxlength="200" placeholder="图片 URL（留空用默认背景）">
+                    </div>
+                    <div class="nc-row"><span class="nc-label">透明度</span>
+                        <input type="range" id="nc-opacity" min="50" max="100" step="5" style="flex:1;">
+                        <span id="nc-opacity-val" style="min-width:40px;font-weight:700;text-align:right;font-size:.8rem;">100%</span>
+                    </div>
+                    <div class="nc-row"><span class="nc-label">显示开关</span>
+                        <label class="inline-chk"><input type="checkbox" id="nc-show-status"> 状态栏</label>
+                        <label class="inline-chk"><input type="checkbox" id="nc-show-map"> 大地图</label>
+                        <label class="inline-chk"><input type="checkbox" id="nc-show-events"> 事件列表</label>
+                    </div>
+                </div>
+            </section>
+            <section class="card">
+                <div class="list-title">🛤️ 访问线路</div>
+                <div style="margin-top:10px;display:flex;flex-direction:column;gap:10px;">
+                    <div class="nc-row"><span class="nc-label">AI 线路</span>
+                        <select id="nc-route">
+                            <option value="auto">🔀 自动（优先 BYOK，否则云吞模型池）</option>
+                            <option value="byok">🔑 仅 BYOK（未配置则提示）</option>
+                        </select>
+                    </div>
+                    <div class="list-sub">BYOK 直连你的端点不耗云币；云吞池由服务端模型池自动路由。</div>
                 </div>
             </section>
             <section class="card">
@@ -6752,6 +6862,8 @@ function rebuildChoicesBlock(body, labels = []) {
         function renderPlayStatusBar(state) {
             const box = document.getElementById("play-status-bar");
             if (!box) return;
+            const narr = (typeof SettingsService !== "undefined" && typeof SettingsService.getNarrative === "function") ? SettingsService.getNarrative() : null;
+            if (narr && narr.showStatus === false) { box.innerHTML = ""; return; }
             const stats = Array.isArray(state.stats) ? state.stats : [];
             const isEnergy = (s) => /体力|精力|能量/.test(s.label || "");
             const energy = stats.find(isEnergy);
@@ -6797,6 +6909,8 @@ function rebuildChoicesBlock(body, labels = []) {
             return generateNearbyLocations(state.location);
         }
         function renderPlayMapBar(state) {
+            const narr = (typeof SettingsService !== "undefined" && typeof SettingsService.getNarrative === "function") ? SettingsService.getNarrative() : null;
+            if (narr && narr.showMap === false) return "";
             const locs = normalizeLocations(state);
             const cur = state.location || (locs[0] && locs[0].name) || "";
             const chips = locs.map((l) => {
@@ -6809,6 +6923,8 @@ function rebuildChoicesBlock(body, labels = []) {
             const box = document.getElementById("play-event-area");
             if (!box) return;
             const state = StateService.get();
+            const narr = (typeof SettingsService !== "undefined" && typeof SettingsService.getNarrative === "function") ? SettingsService.getNarrative() : null;
+            if (narr && narr.showEvents === false) { box.innerHTML = ""; return; }
             const rounds = buildEventRounds(state.history);
             const mapHtml = renderPlayMapBar(state);
             if (!rounds.length) {
@@ -7615,6 +7731,10 @@ function rebuildChoicesBlock(body, labels = []) {
             const darkModeInput = document.getElementById("ui-dark-mode-enabled");
             if (darkModeInput) darkModeInput.checked = ThemeService.getMode() === "dark";
 
+            // 叙事控制 + 皮肤/壁纸/透明度即时应用
+            applyNarrativeUI();
+            loadNarrativeToUI();
+
             const sizeInput = document.getElementById("ui-font-size-range");
             if (sizeInput) {
                 const current = Number(localStorage.getItem(FONT_KEY)) || DEFAULT_FONT_SIZE;
@@ -7730,6 +7850,11 @@ function rebuildChoicesBlock(body, labels = []) {
         }
         function getApiConfig() {
             const byok = getByok();
+            const narr = getNarrative();
+            if (narr.route === "byok" && byok && byok.url && byok.key && byok.model) {
+                // 访问线路=仅 BYOK：直连用户自己的 OpenAI 兼容端点，不耗云币
+                return { upstreamUrl: byok.url, key: byok.key, model: byok.model, byok: true };
+            }
             if (byok && byok.url && byok.key && byok.model) {
                 // BYOK：直连用户自己的 OpenAI 兼容端点，不耗云币（不带 X-Auth-Token 走 Worker）
                 return { upstreamUrl: byok.url, key: byok.key, model: byok.model, byok: true };
@@ -7779,7 +7904,133 @@ function rebuildChoicesBlock(body, labels = []) {
             };
             input.click();
         }
-        return { loadToUI, saveFromUI, saveUserApiFromUI, getApiConfig, getByok, applyFontSize, loadFontSize, onFontSizeInput, testByokConnection, getScenarioText, getScenarioTextForModel, getBeautyCardSetting, getChatPolicyConfig, getThinkingPayloadForCard, importScenarioFromFile };
+        // ==================== 叙事控制设置（NARRATIVE） ====================
+        const NARR_KEY = "bitlife_narrative_v1";
+        const DEFAULT_NARRATIVE = {
+            mode: "game", manualEnd: false, styleTrack: "card", styleFree: "",
+            pace: "balanced", wordMin: 80, wordMax: 250,
+            textDisplay: "sentence", readSpeed: 3,
+            memoryMode: "auto",
+            skin: "default", wallpaper: "", opacity: 100,
+            showStatus: true, showMap: true, showEvents: true,
+            route: "auto",
+        };
+        function getNarrative() {
+            try {
+                const s = JSON.parse(localStorage.getItem(NARR_KEY) || "null");
+                return s && typeof s === "object" ? { ...DEFAULT_NARRATIVE, ...s } : { ...DEFAULT_NARRATIVE };
+            } catch (e) { return { ...DEFAULT_NARRATIVE }; }
+        }
+        function saveNarrative(patch) {
+            const next = { ...getNarrative(), ...patch };
+            localStorage.setItem(NARR_KEY, JSON.stringify(next));
+            return next;
+        }
+        function applyNarrativeUI() {
+            const n = getNarrative();
+            document.body.dataset.skin = n.skin === "default" ? "" : n.skin;
+            document.documentElement.style.setProperty("--card-alpha", String(Math.max(50, Math.min(100, Number(n.opacity) || 100)) / 100));
+            if (String(n.wallpaper || "").trim()) {
+                document.documentElement.style.setProperty("--bg-page", `url("${String(n.wallpaper).trim().replace(/"/g, "%22")}") center/cover fixed`);
+            } else {
+                document.documentElement.style.removeProperty("--bg-page");
+            }
+            return n;
+        }
+        function buildNarrativePrompt() {
+            const n = getNarrative();
+            const lines = [];
+            if (n.mode === "novel") lines.push("叙事模式：小说式连续叙述，输出连贯的章节化文本，事件自然衔接；玩家主动决策时才给出分岔选项。");
+            else if (n.mode === "game") lines.push("叙事模式：游戏式互动叙述，当前事件收尾后给出 1-3 个明确选项供玩家决策。");
+            if (n.manualEnd) lines.push("事件推进：常规回复只延续当前场景细节，不自行开启新事件；只有玩家明确要求推进时才开启新事件。");
+            if (n.styleTrack === "free" && String(n.styleFree || "").trim()) lines.push(`文风设定（最高优先级，优先于卡片自带文风描述）：${String(n.styleFree).trim()}`);
+            const paceMap = { fast: "节奏紧凑明快，快速推进剧情，避免冗长铺垫", balanced: "节奏适中，张弛有度，情节自然展开", slow: "节奏舒缓，重视氛围、环境与心理细节描写" };
+            if (paceMap[n.pace]) lines.push(`叙事节奏：${paceMap[n.pace]}。`);
+            const wmin = Math.max(40, Math.min(500, Number(n.wordMin) || 80));
+            const wmax = Math.max(60, Math.min(800, Number(n.wordMax) || 250));
+            if (wmax > wmin) lines.push(`单轮剧情正文字数控制在 ${wmin}-${wmax} 字之间。`);
+            if (n.memoryMode === "off") lines.push("记忆系统：本会话内不要更新 NPC 长期记忆标签与摘要。");
+            return lines.length ? `\n\n【玩家叙事控制设置】\n${lines.join("\n")}` : "";
+        }
+        function openMemoryManager() {
+            const state = StateService.get();
+            const memory = state.npcMemoryMap || {};
+            const npcs = Array.isArray(state.npcs) ? state.npcs : [];
+            const ids = Object.keys(memory);
+            if (!ids.length) {
+                NoticeModalService.showInfo({ title: "🧠 记忆管理", descHtml: "暂无 NPC 记忆。角色登场并交谈后会自动记录长期记忆。" });
+                return;
+            }
+            const items = ids.map((id) => {
+                const npc = npcs.find((n) => n.id === id);
+                const name = npc ? npc.name : id;
+                const mem = memory[id] || {};
+                const tags = mem.tags || {};
+                const tagCount = Object.keys(tags).reduce((s, k) => s + (Array.isArray(tags[k]) ? tags[k].length : 0), 0);
+                const summary = String(mem.summary || "").slice(0, 60);
+                return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line);">
+                    <span style="flex:1;min-width:0;"><strong>${MarkdownService.escapeHtml(name)}</strong><span class="list-sub"> · ${tagCount} 条标签</span><br><span class="list-sub">${MarkdownService.escapeHtml(summary || "（无摘要）")}</span></span>
+                    <button type="button" class="mini-btn ghost" style="flex:none;" onclick="SettingsService.clearNpcMemory('${String(id).replace(/'/g, "")}')">清空</button>
+                </div>`;
+            }).join("");
+            NoticeModalService.showInfo({ title: "🧠 记忆管理", descHtml: `<div style="max-height:300px;overflow-y:auto;">${items}</div><div class="list-sub" style="margin-top:6px;">清空后该角色的长期记忆将重新累积。</div>` });
+        }
+        function clearNpcMemory(npcId) {
+            const state = StateService.get();
+            if (!state.npcMemoryMap) return;
+            delete state.npcMemoryMap[npcId];
+            StateService.save();
+            UIRenderer.renderWorld();
+            NoticeModalService.showInfo({ title: "已清空", descHtml: "该角色的长期记忆已清空。" });
+        }
+        function loadNarrativeToUI() {
+            const n = getNarrative();
+            const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+            const setChk = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
+            set("nc-mode", n.mode); setChk("nc-manual-end", n.manualEnd);
+            set("nc-style-track", n.styleTrack); set("nc-style-free", n.styleFree);
+            set("nc-pace", n.pace); set("nc-word-min", n.wordMin); set("nc-word-max", n.wordMax);
+            set("nc-text-display", n.textDisplay); set("nc-read-speed", n.readSpeed); set("nc-memory-mode", n.memoryMode);
+            set("nc-skin", n.skin); set("nc-wallpaper", n.wallpaper); set("nc-opacity", n.opacity);
+            setChk("nc-show-status", n.showStatus); setChk("nc-show-map", n.showMap); setChk("nc-show-events", n.showEvents);
+            set("nc-route", n.route);
+            const speedNames = { 1: "很慢", 2: "偏慢", 3: "适中", 4: "偏快", 5: "很快" };
+            const sv = document.getElementById("nc-read-speed-val"); if (sv) sv.textContent = speedNames[Math.round(n.readSpeed)] || "适中";
+            const ov = document.getElementById("nc-opacity-val"); if (ov) ov.textContent = Math.round(Number(n.opacity) || 100) + "%";
+        }
+        function bindNarrativeAutoSave() {
+            const map = {
+                "nc-mode": "mode", "nc-manual-end": "manualEnd", "nc-style-track": "styleTrack", "nc-style-free": "styleFree",
+                "nc-pace": "pace", "nc-word-min": "wordMin", "nc-word-max": "wordMax",
+                "nc-text-display": "textDisplay", "nc-read-speed": "readSpeed", "nc-memory-mode": "memoryMode",
+                "nc-skin": "skin", "nc-wallpaper": "wallpaper", "nc-opacity": "opacity",
+                "nc-show-status": "showStatus", "nc-show-map": "showMap", "nc-show-events": "showEvents",
+                "nc-route": "route",
+            };
+            const speedNames = { 1: "很慢", 2: "偏慢", 3: "适中", 4: "偏快", 5: "很快" };
+            Object.keys(map).forEach((id) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const key = map[id];
+                const fn = () => {
+                    let val;
+                    if (el.type === "checkbox") val = el.checked;
+                    else if (el.type === "number" || el.type === "range") val = Number(el.value);
+                    else val = el.value;
+                    const n = saveNarrative({ [key]: val });
+                    applyNarrativeUI();
+                    if (key === "opacity") { const v = document.getElementById("nc-opacity-val"); if (v) v.textContent = Math.round(val) + "%"; }
+                    if (key === "readSpeed") { const v = document.getElementById("nc-read-speed-val"); if (v) v.textContent = speedNames[Math.round(val)] || "适中"; }
+                    if (key.startsWith("show") && typeof activeView !== "undefined" && activeView === "view-main") {
+                        if (key === "showStatus") UIRenderer.renderPlayStatusBar(StateService.get());
+                        else UIRenderer.renderPlayEventList();
+                    }
+                };
+                el.addEventListener("change", fn);
+                el.addEventListener("input", fn);
+            });
+        }
+        return { loadToUI, saveFromUI, saveUserApiFromUI, getApiConfig, getByok, applyFontSize, loadFontSize, onFontSizeInput, testByokConnection, getScenarioText, getScenarioTextForModel, getBeautyCardSetting, getChatPolicyConfig, getThinkingPayloadForCard, importScenarioFromFile, bindProfileAutoSave, bindByokAutoSave, getNarrative, saveNarrative, applyNarrativeUI, buildNarrativePrompt, openMemoryManager, clearNpcMemory, loadNarrativeToUI, bindNarrativeAutoSave };
     })();
     SettingsService.loadFontSize();
 
@@ -9468,7 +9719,10 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
                 "设定文本优先级高于任何默认现代背景、常见校园模板或现实年份。",
                 "当设定与常识冲突时，以设定为准。不得引入不符合设定年代/地域/身份的元素。"
             ].join("\n");
-            return `${highestPriorityScenarioRules}\n\n【设定文本】\n${scenarioSpec}${beautyRules ? `\n\n${beautyRules}` : ""}\n\n${builtinRules}\n\n${stateFactLock}\n\n${runtimeContext}`;
+            const narrativeRules = (typeof SettingsService !== "undefined" && typeof SettingsService.buildNarrativePrompt === "function")
+                ? SettingsService.buildNarrativePrompt()
+                : "";
+            return `${highestPriorityScenarioRules}\n\n【设定文本】\n${scenarioSpec}${beautyRules ? `\n\n${beautyRules}` : ""}\n\n${builtinRules}\n\n${stateFactLock}\n\n${runtimeContext}${narrativeRules}`;
         }
         // C2:上一张 HTML 卡只保留结构骨架(清空正文),降低 TTFT 输入体积;样式与 data-block 结构完整保留
         function slimLatestHtmlCard(latestHtmlCard) {
@@ -11378,7 +11632,9 @@ const token = delta.content || "";
                 });
             }
             // 我的页:昵称/签名/头像即时保存;BYOK 输入即存
-            try { SettingsService.bindProfileAutoSave(); SettingsService.bindByokAutoSave(); } catch (e) {}
+            try { SettingsService.bindProfileAutoSave(); } catch (e) {}
+            try { SettingsService.bindByokAutoSave(); } catch (e) {}
+            try { SettingsService.bindNarrativeAutoSave(); } catch (e) {}
             const input = document.getElementById("chat-input");
             input.addEventListener("keydown", (e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
