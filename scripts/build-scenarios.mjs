@@ -5,8 +5,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { makeCard } from "./scenario-schema.mjs";
 
-const FIRST_CHUNK = 12;   // 首片卡数(首屏可见,~30KB 压缩后)
-const CHUNK_SIZE = 15;    // 后续每片卡数
 // 分类热度顺序:与 index.html HOT_CATEGORY_ORDER(7361)保持一致,分片按热度从高到低排列,热门分类先加载先展示
 const HOT_CATEGORY_ORDER = ["恋爱", "职场", "修仙", "穿越", "都市", "无限流", "末世", "经营", "科幻", "悬疑", "跑团", "奇幻", "历史", "宫斗", "种田", "女尊", "校园", "娱乐圈"];
 function hotRank(cat) {
@@ -42,10 +40,19 @@ for (const f of files) {
 library.sort((a, b) => hotRank(a.category) - hotRank(b.category));
 library.forEach((c, i) => { c.order = i + 1; });
 
-// 分片:首片 12 张 → scenarios.js(async 首屏),其余每 15 张 → scenarios.partN.js(滚动懒加载)
-const chunks = [library.slice(0, FIRST_CHUNK)];
-for (let i = FIRST_CHUNK; i < library.length; i += CHUNK_SIZE) {
-    chunks.push(library.slice(i, i + CHUNK_SIZE));
+// 分片:一个分类一片。首片 = 热度前 2 个分类 → scenarios.js(async 首屏,默认只加载两片),其余每分类一片 → scenarios.partN.js(滚动懒加载)
+const FIRST_CHUNK_CATS = 2;
+const chunks = [];
+const catGroups = new Map();
+library.forEach((c) => {
+    const k = String(c.category || "其他");
+    if (!catGroups.has(k)) catGroups.set(k, []);
+    catGroups.get(k).push(c);
+});
+const catOrder = [...catGroups.keys()]; // 已按热度排序
+catOrder.slice(0, FIRST_CHUNK_CATS).forEach((k) => { (chunks[0] = chunks[0] || []).push(...catGroups.get(k)); });
+for (let i = FIRST_CHUNK_CATS; i < catOrder.length; i++) {
+    chunks.push(catGroups.get(catOrder[i]));
 }
 const header = `// 剧本库：由 scripts/build-scenarios.mjs 自动生成，请勿手改
 // 源文件：scenarios/category_*.json（node scripts/build-scenarios.mjs 重新生成）
