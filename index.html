@@ -772,6 +772,10 @@
         .pay-method-btn {
             flex: 1;
             min-width: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
             padding: 8px 10px;
             border-radius: 10px;
             border: 1.5px solid var(--line);
@@ -781,6 +785,7 @@
             cursor: pointer;
             transition: all 0.18s;
         }
+        .pay-method-btn img { width: 16px; height: 16px; }
         .pay-method-btn.active {
             border-color: var(--accent);
             background: color-mix(in srgb, var(--accent) 12%, var(--card-soft));
@@ -2698,9 +2703,9 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             </div>
             <div style="display:flex;gap:10px;margin-top:10px;">
                 <button id="social-qq-btn" onclick="AuthService.socialLogin('qq')"
-                    style="flex:1;padding:10px;border-radius:12px;border:1px solid var(--line,#e2ccb0);background:var(--input-bg,#fffbf5);font-size:0.9rem;font-weight:600;color:#0d84e0;cursor:pointer;transition:filter .18s;">💬 QQ 登录</button>
+                    style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:12px;border:1px solid var(--line,#e2ccb0);background:var(--input-bg,#fffbf5);font-size:0.9rem;font-weight:600;color:#0d84e0;cursor:pointer;transition:filter .18s;"><img src="icons/qq.svg" alt="QQ" style="width:18px;height:18px;">QQ 登录</button>
                 <button id="social-wx-btn" onclick="AuthService.socialLogin('wx')"
-                    style="flex:1;padding:10px;border-radius:12px;border:1px solid var(--line,#e2ccb0);background:var(--input-bg,#fffbf5);font-size:0.9rem;font-weight:600;color:#07a23b;cursor:pointer;transition:filter .18s;">💚 微信登录</button>
+                    style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:12px;border:1px solid var(--line,#e2ccb0);background:var(--input-bg,#fffbf5);font-size:0.9rem;font-weight:600;color:#07a23b;cursor:pointer;transition:filter .18s;"><img src="icons/wechat.svg" alt="微信" style="width:18px;height:18px;">微信登录</button>
             </div>
             <div style="text-align:center;">
                 <button id="auth-toggle-btn" onclick="AuthService.toggleMode()"
@@ -2731,8 +2736,8 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
         <div class="recharge-grid" id="membership-plan-grid"></div>
         <div class="list-title" style="font-size:0.9rem;margin-top:10px;">支付方式</div>
         <div class="pay-method-grid">
-            <button class="pay-method-btn active" data-pay="alipay" onclick="MembershipService.selectPayType('alipay')">💙 支付宝</button>
-            <button class="pay-method-btn" data-pay="wxpay" onclick="MembershipService.selectPayType('wxpay')">💚 微信支付</button>
+            <button class="pay-method-btn active" data-pay="alipay" onclick="MembershipService.selectPayType('alipay')"><img src="icons/alipay.svg" alt="支付宝">支付宝</button>
+            <button class="pay-method-btn" data-pay="wxpay" onclick="MembershipService.selectPayType('wxpay')"><img src="icons/wechat-pay.svg" alt="微信支付">微信支付</button>
         </div>
         <div id="membership-pay-area" style="margin-top:10px;text-align:center;"></div>
         <button id="membership-pay-btn" class="mini-btn primary" style="width:100%;margin-top:10px;" onclick="MembershipService.startPay()">立即支付</button>
