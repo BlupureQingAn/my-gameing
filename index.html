@@ -914,6 +914,21 @@
         }
         .phone-dock-btn span { font-size: 0.68rem; font-weight: 700; color: var(--text-muted); }
         .phone-dock-btn:hover span { color: #7b5cd6; }
+        /* 世界页增强：工具栏 + NPC 分组 + 简介 */
+        .world-toolbar { display: flex; gap: 8px; margin-top: 6px; }
+        .npc-group { margin-top: 8px; }
+        .npc-group summary {
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            list-style: none;
+            padding: 2px 0;
+        }
+        .npc-group summary::before { content: "▸ "; }
+        .npc-group[open] summary::before { content: "▾ "; }
+        .npc-group .npc-grid { margin-top: 6px; }
+        .npc-intro { font-size: 0.72rem; color: var(--text-muted); line-height: 1.45; margin-top: 2px; }
         .npc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
         .npc-card {
             padding: 10px;
@@ -3537,6 +3552,10 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <section class="card">
                 <div class="list-title">🌍 世界图谱</div>
                 <div class="list-sub" id="world-summary" style="margin-top:4px;"></div>
+                <div class="world-toolbar">
+                    <button type="button" class="mini-btn" onclick="openNpcImport()">⭐ 从收藏引入</button>
+                    <button type="button" class="mini-btn primary" onclick="openNewNpcModal()">➕ 新建 NPC</button>
+                </div>
                 <div id="npc-grid" style="margin-top:8px;"></div>
             </section>
         </section>
@@ -6820,7 +6839,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 <button type="button" class="advance-btn" onclick="advanceStory()">推进<br>剧情</button>
                 <div class="advance-hint">进入新的故事发展</div>`;
         }
-        // 世界图谱：NPC 登场状态 + 好感 ♥ 阶梯 + 关系/状态/心情
+        // 世界图谱：已登场/未登场分组 + NPC 好感 ♥ 阶梯 + 关系/同地点/外貌性格简介
         function renderWorld() {
             const grid = document.getElementById("npc-grid");
             const summary = document.getElementById("world-summary");
@@ -6830,12 +6849,14 @@ function rebuildChoicesBlock(body, labels = []) {
             const memory = state.npcMemoryMap || {};
             const now = state.currentYear ? `第${state.currentYear}年·${state.currentMonth || 1}月` : "当前";
             const isOn = (n) => Boolean(memory[n.id] && Object.keys(memory[n.id]).length) || Boolean(String(n.status || "").trim());
-            const on = npcs.filter(isOn).length;
-            const off = npcs.length - on;
-            if (summary) summary.innerHTML = `${now} · 已登场 ${on} 人 · 未登场 ${off} 人`;
+            const on = npcs.filter(isOn);
+            const off = npcs.filter((n) => !isOn(n));
+            if (summary) summary.innerHTML = `${now} · 已登场 ${on.length} 人 · 未登场 ${off.length} 人`;
             const card = (n) => {
                 const appeared = isOn(n);
                 const favor = Math.max(0, Number(n.favor) || 0);
+                const introRaw = (memory[n.id] && memory[n.id].summary) ? stripHtml(memory[n.id].summary) : stripHtml(n.description || "");
+                const intro = introRaw.slice(0, 60);
                 return `<div class="npc-card">
                     <div class="npc-card-head">
                         <div class="npc-avatar" style="background:${avatarColor(n.name || "?")}">${MarkdownService.escapeHtml(String(n.name || "?").slice(0, 1))}</div>
@@ -6843,11 +6864,15 @@ function rebuildChoicesBlock(body, labels = []) {
                         <span class="npc-badge ${appeared ? "on" : "off"}">${appeared ? "已登场" : "未登场"}</span>
                     </div>
                     <div class="npc-favor">${heartLadder(favor)} ${favor}</div>
-                    <div class="npc-meta">${MarkdownService.escapeHtml(n.relation || "关系未明")}${n.status ? ` · ${MarkdownService.escapeHtml(n.status)}` : ""}${n.mood ? ` · ${MarkdownService.escapeHtml(n.mood)}` : ""}</div>
+                    <div class="npc-meta">${MarkdownService.escapeHtml(n.relation || "关系未明")} · 同地点 ${MarkdownService.escapeHtml(state.location || "未知")}${n.status ? ` · ${MarkdownService.escapeHtml(n.status)}` : ""}${n.mood ? ` · ${MarkdownService.escapeHtml(n.mood)}` : ""}</div>
+                    ${intro ? `<div class="npc-intro">${MarkdownService.escapeHtml(intro)}${introRaw.length > 60 ? "…" : ""}</div>` : ""}
                 </div>`;
             };
+            const groupHtml = (opened, title, list) => list.length
+                ? `<details class="npc-group ${opened ? "on" : "off"}"${opened ? " open" : ""}><summary>${opened ? "✅" : "🔒"} ${title}（${list.length}）</summary><div class="npc-group-grid">${list.map(card).join("")}</div></details>`
+                : "";
             grid.innerHTML = npcs.length
-                ? npcs.map(card).join("")
+                ? groupHtml(true, "已登场人物", on) + groupHtml(false, "未登场人物", off)
                 : '<div class="list-sub" style="opacity:0.6;">🌍 还没有可互动的角色</div>';
         }
         // 手机轻量 App：日记时间线（事件分轮 → 📅 日期 + 摘要，可点击展开正文）
@@ -11556,6 +11581,71 @@ const token = delta.content || "";
                 default: NoticeModalService.showInfo({ title: "敬请期待", descHtml: "这个 App 还在开发中，先去主世界逛逛吧～" });
             }
         }
+        // ---- 世界页：从收藏引入 NPC + 新建 NPC ----
+        function openNpcImport() {
+            const state = StateService.get();
+            const known = new Set((state.npcs || []).map((n) => n.id));
+            const profiles = Array.isArray(state.npcProfiles) ? state.npcProfiles : [];
+            const candidates = profiles.filter((p) => p && !known.has(p.id));
+            if (!candidates.length) {
+                NoticeModalService.showInfo({ title: "⭐ 从收藏引入", descHtml: "收藏夹里没有可引入的新角色。角色在剧情中登场后会自动进入收藏。" });
+                return;
+            }
+            const items = candidates.map((p, i) =>
+                `<button type="button" class="event-btn" style="margin:3px;text-align:left;" onclick="importNpcFromCollection(${i})">${MarkdownService.escapeHtml(String(p.name || "?").slice(0, 1))} ${MarkdownService.escapeHtml(p.name || "未命名")} · ${MarkdownService.escapeHtml(p.relation || "关系未明")}（好感 ${Number(p.favor) || 0}）</button>`
+            ).join("");
+            NoticeModalService.showInfo({
+                title: "⭐ 从收藏引入",
+                descHtml: `<div class="list-sub" style="margin-bottom:6px;">收藏夹中尚未登场的角色，点击引入：</div><div style="display:flex;flex-direction:column;gap:4px;">${items}</div>`
+            });
+        }
+        function importNpcFromCollection(idx) {
+            const state = StateService.get();
+            const profiles = Array.isArray(state.npcProfiles) ? state.npcProfiles : [];
+            const p = profiles[idx];
+            if (!p) return;
+            if (!Array.isArray(state.npcs)) state.npcs = [];
+            if (state.npcs.some((n) => n.id === p.id)) { closeInfoModal(); return; }
+            const id = `npc_col_${Date.now()}`;
+            state.npcs.push({
+                id, name: p.name || "未命名", gender: p.gender || "", relation: p.relation || "关系未明",
+                favor: Math.max(0, Number(p.favor) || 0) || 50, status: "收藏引入", mood: p.mood || "",
+            });
+            if (!state.npcMemoryMap) state.npcMemoryMap = {};
+            const summary = UIRenderer.stripHtml(p.description || p.summary || "").slice(0, 200);
+            state.npcMemoryMap[id] = { summary, tags: { promises: [], conflicts: [], secrets: [], notes: [] }, updatedAt: Date.now() };
+            StateService.save();
+            UIRenderer.renderWorld();
+            closeInfoModal();
+            NoticeModalService.showInfo({ title: "✅ 引入成功", descHtml: `${MarkdownService.escapeHtml(p.name || "这位角色")} 已登场，快去世界页看看吧～` });
+        }
+        function openNewNpcModal() {
+            NoticeModalService.showInfo({
+                title: "➕ 新建 NPC",
+                descHtml: `<div style="display:flex;flex-direction:column;gap:8px;">
+                    <input id="new-npc-name" type="text" placeholder="角色名字（必填）" maxlength="12">
+                    <input id="new-npc-relation" type="text" placeholder="与主角的关系，如：江湖故友" maxlength="10">
+                    <input id="new-npc-desc" type="text" placeholder="外貌与性格简介（一句话）" maxlength="40">
+                </div>`,
+                actionText: "创建",
+                onAction: () => { if (createNewNpc()) closeInfoModal(); }
+            });
+        }
+        function createNewNpc() {
+            const state = StateService.get();
+            const name = String(document.getElementById("new-npc-name")?.value || "").trim().slice(0, 12);
+            if (!name) return false;
+            const relation = String(document.getElementById("new-npc-relation")?.value || "").trim().slice(0, 10);
+            const desc = String(document.getElementById("new-npc-desc")?.value || "").trim().slice(0, 40);
+            if (!Array.isArray(state.npcs)) state.npcs = [];
+            const id = `npc_new_${Date.now()}`;
+            state.npcs.push({ id, name, relation: relation || "关系未明", favor: 30, status: "", mood: "" });
+            if (!state.npcMemoryMap) state.npcMemoryMap = {};
+            state.npcMemoryMap[id] = { summary: desc, tags: { promises: [], conflicts: [], secrets: [], notes: [] }, updatedAt: Date.now() };
+            StateService.save();
+            UIRenderer.renderWorld();
+            return true;
+        }
         // ---- 结局评定（uugame"结束这段故事"融合：AI 评定 S~D + 专属结局，失败本地兜底） ----
         async function requestEnding(state, config) {
             const scenarioSpec = SettingsService.getScenarioTextForModel();
@@ -12605,7 +12695,7 @@ function openNpcProfile(npcId) {
                 openingChoices: merged.openingChoices || []
             });
         }
-        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, advanceStory, openPhoneDiary, phoneAppTap };
+        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, advanceStory, openPhoneDiary, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
@@ -12619,6 +12709,10 @@ function openNpcProfile(npcId) {
     function showFullMap() { Controller.showFullMap(); }
     function advanceStory() { Controller.advanceStory(); }
     function phoneAppTap(action) { Controller.phoneAppTap(action); }
+    function openNpcImport() { Controller.openNpcImport(); }
+    function importNpcFromCollection(idx) { Controller.importNpcFromCollection(idx); }
+    function openNewNpcModal() { Controller.openNewNpcModal(); }
+    function createNewNpc() { Controller.createNewNpc(); }
     function bgmToggle() { UIRenderer.bgmToggle(); }
     function bgmNext() { UIRenderer.bgmNext(); }
     function bgmPrev() { UIRenderer.bgmPrev(); }
