@@ -221,6 +221,19 @@ function escapePocketBaseFilterValue(value) {
         .replace(/'/g, "\\'");
 }
 
+async function pbGetUser(env, userId) {
+    if (!userId) return { id: "" };
+    const q = await pbAdminFetch(env, `/api/collections/users/records/${encodeURIComponent(userId)}`);
+    const d = await q.json().catch(() => ({}));
+    if (d && d.id) return { id: d.id, nickname: d.nickname || "", faceimg: d.faceimg || "" };
+    return { id: userId };
+}
+
+function npcOfCard(cardData, characterId) {
+    const npcs = (cardData && cardData.structured && Array.isArray(cardData.structured.npcs)) ? cardData.structured.npcs : [];
+    return npcs.find((n) => String(n.id || n.name) === String(characterId)) || null;
+}
+
 function errorResponse(msg, status = 500, detail = null, code = "") {
     return new Response(JSON.stringify({ error: msg, detail, code }), {
         status,
@@ -1098,6 +1111,7 @@ export default {
                         content: String(p.content || ""),
                         card_id: p.card_id || "",
                         card_title: cardTitle,
+                        image_data: String(p.image_data || ""),
                         author,
                         following,
                         likes_count: Number(p.likes_count || 0),
@@ -1288,10 +1302,12 @@ export default {
                     return errorResponse("发帖太频繁，请稍后再试", 429, null, "POST_TOO_FREQUENT");
                 }
                 postRateMap.set(auth.record.id, now);
+                const imageData = String(body.image_data || "").slice(0, 400000); // 帖图 base64，前端已压到 ~640px/JPEG
                 const record = {
                     content,
                     author_id: auth.record.id,
                     card_id: String(body.card_id || "").trim().slice(0, 64),
+                    image_data: imageData,
                     likes_count: 0,
                     comments_count: 0,
                     created_at: new Date().toISOString()
@@ -1397,6 +1413,178 @@ export default {
                 }
                 await pbAdminFetch(env, `/api/collections/follows/records`, { method: "POST", body: JSON.stringify({ follower_id: auth.record.id, user_id: userId, created_at: new Date().toISOString() }) });
                 return new Response(JSON.stringify({ ok: true, following: true }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+
+            // ---- 路由：作品讨论区发评论/回复（POST /api/game/reviews，5 秒限 1 次）----
+            if (url.pathname === "/api/game/reviews" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                let body = {};
+                try { body = await request.json(); } catch (e) {}
+                const cardId = String(body.card_id || "").trim();
+                const content = String(body.content || "").trim().slice(0, 200);
+                if (!cardId || !content) return errorResponse("参数不完整", 400, null, "INVALID_REVIEW");
+                const now = Date.now();
+                if (now - (postRateMap.get("review:" + auth.record.id) || 0) < DONATE_RATE_LIMIT_MS) {
+                    return errorResponse("评论太频繁，请稍后再试", 429, null, "REVIEW_TOO_FREQUENT");
+                }
+                postRateMap.set("review:" + auth.record.id, now);
+                const cQ = await pbAdminFetch(env, `/api/collections/community_cards/records/${encodeURIComponent(cardId)}`);
+                if (!cQ.ok) return errorResponse("作品不存在", 404, null, "CARD_NOT_FOUND");
+                const res = await pbAdminFetch(env, `/api/collections/reviews/records`, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        card_id: cardId,
+                        user_id: auth.record.id,
+                        content,
+                        parent_id: String(body.parent_id || "").slice(0, 64),
+                        created_at: new Date().toISOString()
+                    })
+                });
+                if (!res.ok) return errorResponse("评论失败", 500, null, "REVIEW_CREATE_FAILED");
+                const created = await res.json().catch(() => ({}));
+                return new Response(JSON.stringify({ ok: true, id: created.id }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+
+            // ---- 路由：讨论区列表（GET /api/game/reviews?card_id=xx 嵌套回复 | ?recent=1 全站论坛流）----
+            if (url.pathname === "/api/game/reviews" && request.method === "GET") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                if (url.searchParams.get("recent") === "1") {
+                    const q = await pbAdminFetch(env, `/api/collections/reviews/records?perPage=30&sort=-created`);
+                    const d = await q.json().catch(() => ({}));
+                    const items = await Promise.all((d.items || []).map(async (r) => {
+                        let cardTitle = "";
+                        if (r.card_id) {
+                            const cQ = await pbAdminFetch(env, `/api/collections/community_cards/records/${encodeURIComponent(r.card_id)}`);
+                            const cD = await cQ.json().catch(() => ({}));
+                            if (cD && cD.id) cardTitle = String(cD.title || "");
+                        }
+                        return { id: r.id, card_id: r.card_id || "", card_title: cardTitle, content: String(r.content || ""), created_at: r.created_at, author: await pbGetUser(env, r.user_id) };
+                    }));
+                    return new Response(JSON.stringify({ items }), {
+                        headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                    });
+                }
+                const cardId = String(url.searchParams.get("card_id") || "");
+                if (!cardId) return errorResponse("缺少 card_id", 400, null, "INVALID_CARD");
+                const offset = Math.max(0, Number(url.searchParams.get("offset") || 0));
+                const limit = Math.min(Math.max(Number(url.searchParams.get("limit") || 20), 1), 50);
+                const q = await pbAdminFetch(env, `/api/collections/reviews/records?perPage=${limit}&page=${Math.floor(offset / limit) + 1}&sort=created&filter=${encodeURIComponent(`card_id='${escapePocketBaseFilterValue(cardId)}'`)}`);
+                const d = await q.json().catch(() => ({}));
+                const all = await Promise.all((d.items || []).map(async (r) => ({
+                    id: r.id, parent_id: r.parent_id || "", content: String(r.content || ""), created_at: r.created_at, author: await pbGetUser(env, r.user_id)
+                })));
+                const tops = all.filter((r) => !r.parent_id);
+                const repliesOf = (pid) => all.filter((r) => r.parent_id === pid);
+                const items = tops.map((t) => {
+                    const reps = repliesOf(t.id);
+                    return { ...t, replies: reps, extra_replies: Math.max(0, reps.length - 3) };
+                });
+                return new Response(JSON.stringify({ items, total: d.totalItems || 0 }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+
+            // ---- 路由：收藏/取消收藏人物卡（POST /api/characters/favorite，5 秒限 1 次）----
+            if (url.pathname === "/api/characters/favorite" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                let body = {};
+                try { body = await request.json(); } catch (e) {}
+                const cardId = String(body.card_id || "").trim();
+                const characterId = String(body.character_id || "").trim();
+                const on = body.value !== false;
+                if (!cardId || !characterId) return errorResponse("参数不完整", 400, null, "INVALID_CHARACTER");
+                const now = Date.now();
+                if (now - (postRateMap.get("charfav:" + auth.record.id) || 0) < LIKE_RATE_LIMIT_MS) {
+                    return errorResponse("操作太频繁，请稍后再试", 429, null, "TOO_FREQUENT");
+                }
+                postRateMap.set("charfav:" + auth.record.id, now);
+                const cQ = await pbAdminFetch(env, `/api/collections/community_cards/records/${encodeURIComponent(cardId)}`);
+                if (!cQ.ok) return errorResponse("作品不存在", 404, null, "CARD_NOT_FOUND");
+                const filter = encodeURIComponent(`card_id='${escapePocketBaseFilterValue(cardId)}'&&character_id='${escapePocketBaseFilterValue(characterId)}'&&user_id='${escapePocketBaseFilterValue(auth.record.id)}'`);
+                const fQ = await pbAdminFetch(env, `/api/collections/character_favorites/records?perPage=1&skipTotal=true&filter=${filter}`);
+                const fD = await fQ.json().catch(() => ({}));
+                const existing = (fD.items || [])[0];
+                if (on && !existing) {
+                    await pbAdminFetch(env, `/api/collections/character_favorites/records`, { method: "POST", body: JSON.stringify({ card_id: cardId, character_id: characterId, user_id: auth.record.id, created_at: new Date().toISOString() }) });
+                    return new Response(JSON.stringify({ ok: true, favorited: true }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+                }
+                if (!on && existing) {
+                    await pbAdminFetch(env, `/api/collections/character_favorites/records/${existing.id}`, { method: "DELETE" });
+                }
+                return new Response(JSON.stringify({ ok: true, favorited: false }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+            }
+
+            // ---- 路由：我的收藏人物卡（GET /api/characters/favorites）----
+            if (url.pathname === "/api/characters/favorites" && request.method === "GET") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const q = await pbAdminFetch(env, `/api/collections/character_favorites/records?perPage=200&sort=-created&filter=${encodeURIComponent(`user_id='${escapePocketBaseFilterValue(auth.record.id)}'`)}`);
+                const d = await q.json().catch(() => ({}));
+                const items = await Promise.all((d.items || []).map(async (f) => {
+                    const cQ = await pbAdminFetch(env, `/api/collections/community_cards/records/${encodeURIComponent(f.card_id)}`);
+                    const cD = await cQ.json().catch(() => ({}));
+                    const npc = cD && cD.id ? npcOfCard(cD.data, f.character_id) : null;
+                    return {
+                        card_id: f.card_id, card_title: (cD && cD.id) ? String(cD.title || "") : "", character_id: f.character_id,
+                        name: npc ? String(npc.name || "") : "", role: npc ? String(npc.role || npc.relation || "") : "",
+                        created_at: f.created_at
+                    };
+                }));
+                return new Response(JSON.stringify({ items }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+
+            // ---- 路由：热聊人物卡榜（GET /api/characters/hot，送笔芯人气 + 收藏数聚合）----
+            if (url.pathname === "/api/characters/hot" && request.method === "GET") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const dQ = await pbAdminFetch(env, `/api/collections/donations/records?perPage=200&sort=-created&filter=${encodeURIComponent(`role_id!=''`)}`);
+                const dD = await dQ.json().catch(() => ({}));
+                const roleHot = new Map();
+                for (const d of dD.items || []) {
+                    if (!d.role_id) continue;
+                    const k = (d.card_id || "") + "::" + d.role_id;
+                    roleHot.set(k, (roleHot.get(k) || 0) + 1);
+                }
+                const fQ = await pbAdminFetch(env, `/api/collections/character_favorites/records?perPage=200&sort=-created`);
+                const fD = await fQ.json().catch(() => ({}));
+                const favCount = new Map();
+                for (const f of fD.items || []) {
+                    const k = (f.card_id || "") + "::" + (f.character_id || "");
+                    favCount.set(k, (favCount.get(k) || 0) + 1);
+                }
+                const keys = new Set([...roleHot.keys(), ...favCount.keys()]);
+                const cardCache = new Map();
+                const hotList = [];
+                for (const k of keys) {
+                    const [cardId, characterId] = k.split("::");
+                    let card = cardCache.get(cardId);
+                    if (!card && cardId) {
+                        const cQ = await pbAdminFetch(env, `/api/collections/community_cards/records/${encodeURIComponent(cardId)}`);
+                        const cD = await cQ.json().catch(() => ({}));
+                        card = (cD && cD.id) ? cD : null;
+                        cardCache.set(cardId, card);
+                    }
+                    const npc = card ? npcOfCard(card.data, characterId) : null;
+                    hotList.push({
+                        card_id: cardId, character_id: characterId,
+                        card_title: card ? String(card.title || "") : "",
+                        name: npc ? String(npc.name || characterId) : characterId,
+                        role: npc ? String(npc.role || npc.relation || "") : "",
+                        pens: roleHot.get(k) || 0,
+                        favs: favCount.get(k) || 0
+                    });
+                }
+                const top = hotList.sort((a, b) => (b.pens * 2 + b.favs) - (a.pens * 2 + a.favs)).slice(0, 20);
+                return new Response(JSON.stringify({ items: top }), {
                     headers: { ...corsHeaders(), "Content-Type": "application/json" }
                 });
             }

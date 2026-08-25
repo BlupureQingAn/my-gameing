@@ -3030,6 +3030,20 @@
         .gd-donor-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: var(--card); border: 1px solid var(--line); flex-shrink: 0; }
         .gd-donor-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
         .gd-donor-amt { font-weight: 800; color: #c0392b; }
+        .gd-role-fav.on { border-color: #d4a017; background: #fff3d6; color: #8a4b00; }
+        .gd-rev-row { padding: 7px 2px; border-bottom: 1px dashed var(--line); font-size: 0.82rem; }
+        .gd-rev-row:last-child { border-bottom: none; }
+        .gd-rev-author { font-weight: 700; color: var(--accent-dark); }
+        .gd-rev-time { font-size: 0.7rem; color: var(--sub); margin-left: 6px; }
+        .gd-rev-reply { margin: 5px 0 0 18px; padding-left: 10px; border-left: 2px solid var(--line); font-size: 0.78rem; }
+        .gd-rev-fold { color: var(--accent); font-size: 0.74rem; cursor: pointer; margin: 4px 0 0 18px; }
+        .gd-rev-input { display: flex; gap: 6px; margin-top: 8px; }
+        .gd-rev-input input { flex: 1; min-width: 0; }
+        .feed-img { margin-top: 8px; max-width: 100%; max-height: 320px; border-radius: 12px; border: 1px solid var(--line); display: block; }
+        .char-card { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--card-soft); margin-bottom: 6px; }
+        .char-avatar { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; background: var(--card); border: 1px solid var(--line); flex-shrink: 0; }
+        .char-name { font-weight: 700; font-size: 0.9rem; }
+        .char-sub { font-size: 0.74rem; color: var(--sub); }
         .gd-donate-row { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
         .gd-donate-btn { flex: 1; min-width: 70px; padding: 8px 6px; border-radius: 10px; border: 1px solid var(--line); background: linear-gradient(135deg,#ffe3b3,#ffd27d); color: #7a4a00; font-weight: 700; font-size: 0.82rem; cursor: pointer; }
         .gd-donate-btn:disabled { opacity: 0.55; cursor: not-allowed; }
@@ -3460,12 +3474,16 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <div class="scenario-filter-bar" id="community-tab-bar">
                     <button class="scenario-filter-chip active" id="community-tab-feed" onclick="Controller.switchCommunityTab('feed')">📣 动态</button>
                     <button class="scenario-filter-chip" id="community-tab-cards" onclick="Controller.switchCommunityTab('cards')">🃏 剧本库</button>
+                    <button class="scenario-filter-chip" id="community-tab-forum" onclick="Controller.switchCommunityTab('forum')">💬 论坛</button>
+                    <button class="scenario-filter-chip" id="community-tab-chars" onclick="Controller.switchCommunityTab('chars')">👤 人物卡</button>
                 </div>
                 <div class="setting-actions" style="margin:6px 0 2px;">
                     <button class="mini-btn primary" onclick="Controller.openPostModal()">✍️ 发动态</button>
                 </div>
                 <div id="community-feed-list" style="margin-top:8px;"><span class="list-sub">加载中...</span></div>
                 <div id="community-cards-browse" style="display:none;margin-top:8px;"><span class="list-sub">加载中...</span></div>
+                <div id="community-forum-list" style="display:none;margin-top:8px;"><span class="list-sub">加载中...</span></div>
+                <div id="community-chars-list" style="display:none;margin-top:8px;"><span class="list-sub">加载中...</span></div>
             </section>
         </section>
 
@@ -3944,6 +3962,13 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <div class="modal-desc" style="margin-bottom:4px;">分享你的游玩故事，可引用当前选中的剧本</div>
             <textarea id="post-content-input" class="scenario-editor" style="min-height:90px;" placeholder="说点什么…（500字以内）"></textarea>
             <div class="list-sub" id="post-card-ref" style="margin-top:4px;"></div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+                <input type="file" id="post-image-input" accept="image/*" style="display:none;" onchange="Controller.handlePostImage(this)">
+                <button class="mini-btn ghost" onclick="document.getElementById('post-image-input').click()">🖼️ 添加图片</button>
+                <span class="list-sub" id="post-image-name"></span>
+                <button class="mini-btn ghost" id="post-image-clear" style="display:none;" onclick="Controller.clearPostImage()">✕ 移除</button>
+            </div>
+            <img id="post-image-preview" style="display:none;margin-top:6px;max-width:100%;max-height:200px;border-radius:10px;border:1px solid var(--line);">
             <div class="gender-actions">
                 <button class="mini-btn ghost" onclick="Controller.closePostModal()">取消</button>
                 <button class="mini-btn primary" onclick="Controller.submitPost()">发布</button>
@@ -11631,6 +11656,17 @@ const token = delta.content || "";
     const GameDetailService = (() => {
         const HOT_KEY = "bitlife_game_hot_v1";
         const DONATE_AMOUNTS = [10, 50, 100];
+        const _charFavs = new Set();
+        let _revTargetId = "";
+        function gdTime(iso) {
+            const d = new Date(iso || Date.now());
+            const diff = Date.now() - d.getTime();
+            if (diff < 60000) return "刚刚";
+            if (diff < 3600000) return Math.floor(diff / 60000) + " 分钟前";
+            if (diff < 86400000) return Math.floor(diff / 3600000) + " 小时前";
+            const pad = (n) => String(n).padStart(2, "0");
+            return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())}`;
+        }
         function readHot() { try { return JSON.parse(localStorage.getItem(HOT_KEY) || "{}"); } catch (e) { return {}; } }
         function writeHot(h) { try { localStorage.setItem(HOT_KEY, JSON.stringify(h)); } catch (e) {} }
         function hotOf(cardId) {
@@ -11672,6 +11708,7 @@ const token = delta.content || "";
         function roleIdOf(n) { return String(n.id || n.name || "role").replace(/[^\w-]/g, "_"); }
         async function openGameDetail(cardId) {
             let card = cardOf(cardId);
+            _currentDetailCardId = cardId;
             const modal = document.getElementById("game-detail-modal");
             if (!modal) return;
             modal.style.display = "flex";
@@ -11753,6 +11790,7 @@ const token = delta.content || "";
                         <div style="text-align:center;flex-shrink:0;">
                             <div class="gd-role-hot">❤️ ${hotCount}</div>
                             <button class="mini-btn" style="margin:4px 0 0;" onclick="Controller.gameRoleHot('${card.id}','${rid}')">🖊️ 送笔芯</button>
+                            <button class="mini-btn gd-role-fav${_charFavs.has(card.id + "::" + rid) ? " on" : ""}" data-card="${card.id}" data-rid="${rid}" style="margin:4px 0 0;" onclick="Controller.toggleRoleFavorite('${card.id}','${rid}',this)">${_charFavs.has(card.id + "::" + rid) ? "⭐ 已收藏" : "⭐ 收藏"}</button>
                         </div>
                     </div>`;
                 });
@@ -11778,7 +11816,16 @@ const token = delta.content || "";
             } else {
                 html += `<div class="list-sub">还没有打赏，成为第一个支持 TA 的人吧～</div>`;
             }
+            if (!d.local) {
+                html += `<div class="gd-sec-title">💬 讨论区</div>
+                <div id="gd-reviews-box" style="margin-bottom:6px;"><span class="list-sub">加载中...</span></div>
+                <div class="gd-rev-input">
+                    <input id="gd-rev-input" maxlength="200" placeholder="写下你的评论…（200字以内）" onkeydown="if(event.key==='Enter')Controller.postGameReview()">
+                    <button class="mini-btn primary" onclick="Controller.postGameReview()">评论</button>
+                </div>`;
+            }
             content.innerHTML = html;
+            if (!d.local) { loadReviews(card.id); loadCharFavs(); }
         }
         function closeGameDetail() {
             document.getElementById("game-detail-modal").style.display = "none";
@@ -11877,7 +11924,118 @@ const token = delta.content || "";
             NoticeModalService.showInfo({ title: "🖊️ 已送笔芯", descHtml: "角色人气 +1，感谢你的支持！" });
             openGameDetail(cardId);
         }
-        return { openGameDetail, closeGameDetail, toggleLike, toggleCollect, donate, roleHot, bumpPlay };
+        async function loadCharFavs() {
+            if (!AuthService.getToken()) return;
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/characters/favorites`, {
+                    headers: { "X-Auth-Token": "Bearer " + AuthService.getToken() }
+                });
+                const d = await res.json().catch(() => ({}));
+                _charFavs.clear();
+                (Array.isArray(d.items) ? d.items : []).forEach((f) => _charFavs.add((f.card_id || "") + "::" + (f.character_id || "")));
+                document.querySelectorAll(".gd-role-fav").forEach((b) => {
+                    const on = _charFavs.has((b.dataset.card || "") + "::" + (b.dataset.rid || ""));
+                    b.classList.toggle("on", on);
+                    b.textContent = on ? "⭐ 已收藏" : "⭐ 收藏";
+                });
+            } catch (e) {}
+        }
+        async function toggleRoleFavorite(cardId, roleId, btn) {
+            if (!AuthService.getToken()) {
+                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后可以收藏人物卡。" });
+                return;
+            }
+            const key = cardId + "::" + roleId;
+            const willFav = !_charFavs.has(key);
+            const prev = _charFavs.has(key);
+            _charFavs.has(key) ? _charFavs.delete(key) : _charFavs.add(key);
+            if (btn) { btn.classList.toggle("on", willFav); btn.textContent = willFav ? "⭐ 已收藏" : "⭐ 收藏"; }
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/characters/favorite`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + AuthService.getToken() },
+                    body: JSON.stringify({ card_id: cardId, character_id: roleId, value: willFav })
+                });
+                const d = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(d.error || "操作失败");
+                NoticeModalService.showInfo({ title: willFav ? "⭐ 已收藏" : "取消收藏", descHtml: willFav ? "该人物卡已加入你的收藏。" : "已从收藏移除。" });
+            } catch (e) {
+                // 回滚本地状态
+                prev ? _charFavs.add(key) : _charFavs.delete(key);
+                if (btn) { btn.classList.toggle("on", prev); btn.textContent = prev ? "⭐ 已收藏" : "⭐ 收藏"; }
+                NoticeModalService.showInfo({ title: "操作失败", descHtml: e.message || "请稍后重试" });
+            }
+        }
+        async function loadReviews(cardId) {
+            const box = document.getElementById("gd-reviews-box");
+            if (!box || !AuthService.getToken()) { if (box) box.innerHTML = '<span class="list-sub">登录后参与讨论。</span>'; return; }
+            box.innerHTML = '<span class="list-sub">加载中...</span>';
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/game/reviews?card_id=${encodeURIComponent(cardId)}&limit=50`, {
+                    headers: { "X-Auth-Token": "Bearer " + AuthService.getToken() }
+                });
+                const d = await res.json().catch(() => ({}));
+                const items = Array.isArray(d.items) ? d.items : [];
+                if (!items.length) { box.innerHTML = '<span class="list-sub">还没有评论，来抢沙发～</span>'; return; }
+                const revRow = (r) => `<div class="gd-rev-row">
+                    <span class="gd-rev-author">${MarkdownService.escapeHtml(r.author?.nickname || "玩家")}</span>
+                    <span class="gd-rev-time">${gdTime(r.created_at)}</span>
+                    <div style="margin-top:2px;">${MarkdownService.escapeHtml(r.content)}</div>
+                    <button class="mini-btn ghost" style="margin-top:4px;" onclick="Controller.replyGameReview('${r.id}','${MarkdownService.escapeHtml(r.author?.nickname || "玩家")}')">回复</button>
+                </div>`;
+                box.innerHTML = items.map((t) => {
+                    const reps = Array.isArray(t.replies) ? t.replies : [];
+                    const shown = reps.slice(0, 3);
+                    const extra = Math.max(0, Number(t.extra_replies || 0));
+                    return revRow(t) +
+                        shown.map((rp) => `<div class="gd-rev-reply">
+                            <span class="gd-rev-author">${MarkdownService.escapeHtml(rp.author?.nickname || "玩家")}</span>
+                            <span class="gd-rev-time">${gdTime(rp.created_at)}</span>
+                            <div style="margin-top:1px;">${MarkdownService.escapeHtml(rp.content)}</div>
+                        </div>`).join("") +
+                        (extra > 0 ? `<div class="gd-rev-fold" onclick="this.nextElementSibling.style.display='block';this.style.display='none';">展开更多回复（${extra}）</div>
+                        <div style="display:none;">${reps.slice(3).map((rp) => `<div class="gd-rev-reply">
+                            <span class="gd-rev-author">${MarkdownService.escapeHtml(rp.author?.nickname || "玩家")}</span>
+                            <span class="gd-rev-time">${gdTime(rp.created_at)}</span>
+                            <div style="margin-top:1px;">${MarkdownService.escapeHtml(rp.content)}</div>
+                        </div>`).join("")}</div>` : "");
+                }).join("");
+            } catch (e) {
+                box.innerHTML = '<span class="list-sub">加载失败，请稍后重试。</span>';
+            }
+        }
+        function replyGameReview(commentId, authorName) {
+            const input = document.getElementById("gd-rev-input");
+            _revTargetId = commentId;
+            input.placeholder = `回复 ${authorName}：`;
+            input.focus();
+        }
+        async function postGameReview() {
+            const input = document.getElementById("gd-rev-input");
+            const content = String(input?.value || "").trim();
+            if (!content) return;
+            const card = currentDetailCard();
+            if (!card) return;
+            if (!AuthService.getToken()) { NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后参与讨论。" }); return; }
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/game/reviews`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + AuthService.getToken() },
+                    body: JSON.stringify({ card_id: card, content, parent_id: _revTargetId || "" })
+                });
+                const d = await res.json().catch(() => ({}));
+                if (!res.ok) { NoticeModalService.showInfo({ title: "评论失败", descHtml: d.error || "请稍后再试" }); return; }
+                input.value = "";
+                _revTargetId = "";
+                input.placeholder = "写下你的评论…（200字以内）";
+                loadReviews(card);
+            } catch (e) {
+                NoticeModalService.showInfo({ title: "评论失败", descHtml: "请稍后再试" });
+            }
+        }
+        let _currentDetailCardId = "";
+        function currentDetailCard() { return _currentDetailCardId; }
+        return { openGameDetail, closeGameDetail, toggleLike, toggleCollect, donate, roleHot, bumpPlay, loadReviews, toggleRoleFavorite, postGameReview, replyGameReview };
     })();
 
     // ---- 官方模板市场：分组浏览 + 一键复制到工作区 ----
@@ -13006,6 +13164,9 @@ function openNpcProfile(npcId) {
             const ref = p.card_id
                 ? `<div class="feed-ref" onclick="Controller.openFeedCard('${escapeForHtml(p.card_id)}')">🃏 ${escapeForHtml(p.card_title || p.card_id)}</div>`
                 : "";
+            const img = p.image_data
+                ? `<img class="feed-img" src="${escapeForHtml(p.image_data)}" alt="帖子图片">`
+                : "";
             const comments = (Array.isArray(p.comments) ? p.comments : []).map(c => {
                 const cn = escapeForHtml(c.author?.nickname || "玩家");
                 return `<div class="feed-comment-row"><span class="feed-comment-author">${cn}：</span>${escapeForHtml(c.content)}</div>`;
@@ -13021,6 +13182,7 @@ function openNpcProfile(npcId) {
                 </div>
                 <div class="feed-content">${escapeForHtml(p.content)}</div>
                 ${ref}
+                ${img}
                 <div class="feed-actions">
                     <button class="feed-act${liked ? " liked" : ""}" onclick="Controller.togglePostLike('${escapeForHtml(p.id)}', this)">
                         <img src="${heartIcon}"><span>${Number(p.likes_count || 0)}</span>
@@ -13057,14 +13219,74 @@ function openNpcProfile(npcId) {
             }
         }
         function switchCommunityTab(tab) {
-            const feedTab = document.getElementById("community-tab-feed");
-            const cardsTab = document.getElementById("community-tab-cards");
-            feedTab.classList.toggle("active", tab === "feed");
-            cardsTab.classList.toggle("active", tab === "cards");
-            document.getElementById("community-feed-list").style.display = tab === "feed" ? "" : "none";
-            document.getElementById("community-cards-browse").style.display = tab === "cards" ? "" : "none";
+            const tabs = { feed: "community-tab-feed", cards: "community-tab-cards", forum: "community-tab-forum", chars: "community-tab-chars" };
+            const divs = { feed: "community-feed-list", cards: "community-cards-browse", forum: "community-forum-list", chars: "community-chars-list" };
+            Object.entries(tabs).forEach(([k, id]) => document.getElementById(id)?.classList.toggle("active", k === tab));
+            Object.entries(divs).forEach(([k, id]) => { const el = document.getElementById(id); if (el) el.style.display = k === tab ? "" : "none"; });
             if (tab === "feed") loadCommunityFeed();
-            else loadCommunityCardsBrowse();
+            else if (tab === "cards") loadCommunityCardsBrowse();
+            else if (tab === "forum") loadCommunityForum();
+            else if (tab === "chars") loadCommunityChars();
+        }
+        async function loadCommunityForum() {
+            const container = document.getElementById("community-forum-list");
+            if (!container) return;
+            if (!AuthService.getToken()) { container.innerHTML = '<span class="list-sub">登录后查看论坛讨论。</span>'; return; }
+            container.innerHTML = '<span class="list-sub">加载中...</span>';
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/game/reviews?recent=1`, {
+                    headers: { "X-Auth-Token": "Bearer " + AuthService.getToken() }
+                });
+                const d = await res.json().catch(() => ({}));
+                const items = Array.isArray(d.items) ? d.items : [];
+                if (!items.length) { container.innerHTML = '<span class="list-sub">暂无讨论，去作品详情页评论区发言吧～</span>'; return; }
+                container.innerHTML = items.map((r) => `<div class="gd-rev-row">
+                    <span class="gd-rev-author">${escapeForHtml(r.author?.nickname || "玩家")}</span>
+                    <span style="color:var(--sub);font-size:0.78rem;">评论了</span>
+                    <span class="gd-rev-title" style="font-weight:700;color:var(--accent);cursor:pointer;" onclick="Controller.openGameDetail('${escapeForHtml(r.card_id)}')">「${escapeForHtml(r.card_title || r.card_id)}」</span>
+                    <div style="margin-top:2px;">${escapeForHtml(r.content)}</div>
+                    <span class="gd-rev-time">${feedTime(r.created_at)}</span>
+                </div>`).join("");
+            } catch (e) {
+                container.innerHTML = '<span class="list-sub">加载失败，请稍后重试。</span>';
+            }
+        }
+        async function loadCommunityChars() {
+            const container = document.getElementById("community-chars-list");
+            if (!container) return;
+            if (!AuthService.getToken()) { container.innerHTML = '<span class="list-sub">登录后查看人物卡。</span>'; return; }
+            container.innerHTML = '<span class="list-sub">加载中...</span>';
+            const charCard = (c, favBtn) => `<div class="char-card">
+                <div class="char-avatar">🧑‍🎤</div>
+                <div style="flex:1;min-width:0;">
+                    <div class="char-name">${escapeForHtml(c.name || "角色")} <span class="list-sub">${escapeForHtml(c.role || "")}</span></div>
+                    <div class="char-sub">来自「${escapeForHtml(c.card_title || "")}」 · 🖊️ ${Number(c.pens || 0)} · ⭐ ${Number(c.favs || 0)}</div>
+                </div>
+                ${favBtn}
+            </div>`;
+            try {
+                const [hotRes, favRes] = await Promise.all([
+                    fetch(`${AppConfig.proxy.baseUrl}/api/characters/hot`, { headers: { "X-Auth-Token": "Bearer " + AuthService.getToken() } }),
+                    fetch(`${AppConfig.proxy.baseUrl}/api/characters/favorites`, { headers: { "X-Auth-Token": "Bearer " + AuthService.getToken() } })
+                ]);
+                const hot = (await hotRes.json().catch(() => ({}))).items || [];
+                const favs = (await favRes.json().catch(() => ({}))).items || [];
+                let html = `<div class="gd-sec-title">🔥 热聊人物卡榜</div>`;
+                if (hot.length) {
+                    html += hot.slice(0, 10).map((c, i) => charCard(c, `<button class="mini-btn" onclick="Controller.toggleCharacterFav('${escapeForHtml(c.card_id)}','${escapeForHtml(c.character_id)}',this)">${favs.some(f => f.card_id === c.card_id && f.character_id === c.character_id) ? "已收藏" : "⭐ 收藏"}</button>`)).join("");
+                } else {
+                    html += '<span class="list-sub">暂无热聊角色，给喜欢的角色送支笔芯吧～</span>';
+                }
+                html += `<div class="gd-sec-title">⭐ 我的收藏</div>`;
+                if (favs.length) {
+                    html += favs.map((c) => charCard({ name: c.name, role: c.role, card_title: c.card_title, pens: 0, favs: 1 }, `<button class="mini-btn" onclick="Controller.toggleCharacterFav('${escapeForHtml(c.card_id)}','${escapeForHtml(c.character_id)}',this)">✕ 取消</button>`)).join("");
+                } else {
+                    html += '<span class="list-sub">还没有收藏人物卡，在作品详情页角色榜点 ⭐ 收藏。</span>';
+                }
+                container.innerHTML = html;
+            } catch (e) {
+                container.innerHTML = '<span class="list-sub">加载失败，请稍后重试。</span>';
+            }
         }
         function openPostModal() {
             if (!AuthService.getToken()) {
@@ -13074,10 +13296,49 @@ function openNpcProfile(npcId) {
             const card = ScenarioCardService.getSelectedCard();
             document.getElementById("post-card-ref").textContent = card ? `将引用剧本：${card.title || card.id}` : "";
             document.getElementById("post-content-input").value = "";
+            document.getElementById("post-image-name").textContent = "";
+            document.getElementById("post-image-preview").style.display = "none";
+            document.getElementById("post-image-clear").style.display = "none";
+            window._postImageData = "";
             document.getElementById("post-modal").style.display = "flex";
         }
         function closePostModal() {
             document.getElementById("post-modal").style.display = "none";
+        }
+        async function handlePostImage(input) {
+            const file = input.files && input.files[0];
+            if (!file) return;
+            if (!/^image\//.test(file.type)) { NoticeModalService.showInfo({ title: "格式不支持", descHtml: "请选择图片文件。" }); input.value = ""; return; }
+            const reader = new FileReader();
+            reader.onload = async () => {
+                try {
+                    const img = new Image();
+                    img.onload = () => {
+                        // 压缩到最长边 640px / JPEG 0.8，控制 base64 体积
+                        const scale = Math.min(1, 640 / Math.max(img.width, img.height));
+                        const canvas = document.createElement("canvas");
+                        canvas.width = Math.max(1, Math.round(img.width * scale));
+                        canvas.height = Math.max(1, Math.round(img.height * scale));
+                        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+                        const data = canvas.toDataURL("image/jpeg", 0.8);
+                        window._postImageData = data;
+                        document.getElementById("post-image-preview").src = data;
+                        document.getElementById("post-image-preview").style.display = "block";
+                        document.getElementById("post-image-clear").style.display = "";
+                        document.getElementById("post-image-name").textContent = file.name;
+                    };
+                    img.onerror = () => { NoticeModalService.showInfo({ title: "图片读取失败", descHtml: "无法解析该图片。" }); };
+                    img.src = reader.result;
+                } catch (e) { NoticeModalService.showInfo({ title: "图片读取失败", descHtml: "请换一张图片重试。" }); }
+            };
+            reader.readAsDataURL(file);
+            input.value = "";
+        }
+        function clearPostImage() {
+            window._postImageData = "";
+            document.getElementById("post-image-preview").style.display = "none";
+            document.getElementById("post-image-clear").style.display = "none";
+            document.getElementById("post-image-name").textContent = "";
         }
         async function submitPost() {
             const content = document.getElementById("post-content-input").value.trim();
@@ -13086,7 +13347,7 @@ function openNpcProfile(npcId) {
                 return;
             }
             const card = ScenarioCardService.getSelectedCard();
-            const body = { content };
+            const body = { content, image_data: window._postImageData || "" };
             if (card) body.card_id = card.id;
             const res = await fetch(`${AppConfig.proxy.baseUrl}/api/posts`, {
                 method: "POST",
@@ -13543,9 +13804,13 @@ function openNpcProfile(npcId) {
         function toggleGameCollect(cardId) { GameDetailService.toggleCollect(cardId); }
         function gameDonate(cardId, amount) { GameDetailService.donate(cardId, amount); }
         function gameRoleHot(cardId, roleId) { GameDetailService.roleHot(cardId, roleId); }
+        function toggleRoleFavorite(cardId, roleId, btn) { GameDetailService.toggleRoleFavorite(cardId, roleId, btn); }
+        function postGameReview() { GameDetailService.postGameReview(); }
+        function replyGameReview(commentId, authorName) { GameDetailService.replyGameReview(commentId, authorName); }
+        async function toggleCharacterFav(cardId, roleId) { await GameDetailService.toggleRoleFavorite(cardId, roleId, null); loadCommunityChars(); }
         function renderTemplateMarket() { TemplateMarketService.render(); }
         function cloneTemplateToWorkspace(cardId, openEditor) { TemplateMarketService.cloneToWorkspace(cardId, openEditor); }
-        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, avatarPick, avatarUpload, avatarAiSuggest, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, advanceStory, openPhoneDiary, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, renderTemplateMarket, cloneTemplateToWorkspace };
+        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, avatarPick, avatarUpload, avatarAiSuggest, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, advanceStory, openPhoneDiary, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, cloneTemplateToWorkspace };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
@@ -13569,6 +13834,12 @@ function openNpcProfile(npcId) {
     function toggleGameCollect(cardId) { Controller.toggleGameCollect(cardId); }
     function gameDonate(cardId, amount) { Controller.gameDonate(cardId, amount); }
     function gameRoleHot(cardId, roleId) { Controller.gameRoleHot(cardId, roleId); }
+    function toggleRoleFavorite(cardId, roleId, btn) { Controller.toggleRoleFavorite(cardId, roleId, btn); }
+    function postGameReview() { Controller.postGameReview(); }
+    function replyGameReview(commentId, authorName) { Controller.replyGameReview(commentId, authorName); }
+    function toggleCharacterFav(cardId, roleId) { Controller.toggleCharacterFav(cardId, roleId); }
+    function handlePostImage(input) { Controller.handlePostImage(input); }
+    function clearPostImage() { Controller.clearPostImage(); }
     function renderTemplateMarket() { Controller.renderTemplateMarket(); }
     function cloneTemplateToWorkspace(cardId, openEditor) { Controller.cloneTemplateToWorkspace(cardId, openEditor); }
     function bgmToggle() { UIRenderer.bgmToggle(); }
