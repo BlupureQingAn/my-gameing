@@ -721,6 +721,77 @@
             color: var(--text-muted);
             line-height: 1.55;
         }
+        /* 结局评级 modal（uugame"结束这段故事"融合） */
+        .ending-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100000;
+            background: rgba(20,10,30,.65);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .ending-overlay.show { display: flex; }
+        .ending-card {
+            max-width: 460px;
+            width: 100%;
+            max-height: 82vh;
+            overflow-y: auto;
+            border-radius: 18px;
+            padding: 22px;
+            background: linear-gradient(160deg, #fff, #faf6ff);
+            border: 1px solid rgba(123,92,214,.25);
+            box-shadow: 0 20px 60px rgba(40,20,80,.35);
+        }
+        body[data-theme="dark"] .ending-card { background: linear-gradient(160deg, #241f33, #2e2745); }
+        .ending-grade { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .ending-badge {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            font-weight: 900;
+            color: #fff;
+            flex-shrink: 0;
+            box-shadow: 0 6px 18px rgba(0,0,0,.25);
+        }
+        .ending-badge.gS { background: linear-gradient(135deg, #f2b53c, #e07a1f); }
+        .ending-badge.gA { background: linear-gradient(135deg, #9d6cf5, #7b5cd6); }
+        .ending-badge.gB { background: linear-gradient(135deg, #5aa8f2, #3b7fdd); }
+        .ending-badge.gC { background: linear-gradient(135deg, #63c98a, #3fa36a); }
+        .ending-badge.gD { background: linear-gradient(135deg, #9aa3ad, #6e7681); }
+        .ending-title { font-size: 1.15rem; font-weight: 900; color: var(--text-dark); }
+        .ending-sub { font-size: 0.78rem; color: var(--text-muted); }
+        .ending-body {
+            margin-top: 12px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: rgba(123,92,214,.08);
+            border-left: 4px solid #7b5cd6;
+            font-size: 0.92rem;
+            line-height: 1.75;
+            color: var(--text);
+            white-space: pre-wrap;
+        }
+        .ending-stats { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+        .ending-stat {
+            flex: 1;
+            min-width: 90px;
+            text-align: center;
+            padding: 8px 6px;
+            border-radius: 10px;
+            background: rgba(123,92,214,.07);
+            border: 1px solid rgba(123,92,214,.18);
+        }
+        .ending-stat b { display: block; font-size: 1.05rem; color: #7b5cd6; }
+        .ending-stat span { font-size: 0.7rem; color: var(--text-muted); }
+        .ending-actions { display: flex; gap: 8px; margin-top: 16px; }
+        .ending-actions .mini-btn { flex: 1; }
 
         /* ---- 设置组件（Settings Components） ---- */
         /* 容器 */
@@ -3183,6 +3254,13 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <div id="my-community-cards" style="margin-top:8px;"><span class="list-sub">加载中...</span></div>
             </section>
             <section class="card">
+                <div class="list-title">🎬 这段故事</div>
+                <div class="list-sub">用 AI 为当前人生撰写结局评定（S~D 五级 + 专属结局正文 + 人生统计）。需已开始游玩且剧情有进展。</div>
+                <div style="margin-top:10px;">
+                    <button class="mini-btn primary" onclick="endStory()">🎬 结束这段故事（AI 评定）</button>
+                </div>
+            </section>
+            <section class="card">
                 <div class="list-title">👑 会员服务</div>
                 <div class="list-sub" id="membership-settings-text">AI 对话按 token 计费（输入 4 币/千 token、输出 12 币/千 token，普通对话约 10 币），官方剧本卡解锁需 5000 云币（永久拥有）。开通终身会员（限时 ¥89）后免一切云币消耗、全部剧本卡直接游玩。自备 AI 接口（BYOK）不消耗云币。</div>
             </section>
@@ -3386,6 +3464,11 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <button class="mini-btn primary" id="info-modal-action" style="display:none;">确认</button>
             </div>
         </div>
+    </div>
+
+    <div class="ending-overlay" id="ending-modal">
+        <div class="ending-card" id="ending-card-content"></div>
+    </div>
     </div>
 
     <div class="modal-overlay" id="decision-modal">
@@ -6436,6 +6519,37 @@ function rebuildChoicesBlock(body, labels = []) {
                 </details>`;
             }).join("");
         }
+        // 结局评定 modal（uugame"结束这段故事"融合：评级徽章 + 专属结局正文 + 人生统计）
+        function renderEndingModal(result, state) {
+            const modal = document.getElementById("ending-modal");
+            const card = document.getElementById("ending-card-content");
+            if (!modal || !card) return;
+            const g = "SABCD".includes(String(result.grade || "").toUpperCase()) ? String(result.grade).toUpperCase() : "C";
+            const gradeNames = { S: "传奇人生", A: "灿烂光辉", B: "温暖平凡", C: "留有遗憾", D: "悲凉收场" };
+            const rounds = (state.history || []).filter((h) => h.role === "user").length;
+            const years = Number(state.currentYear) || 0;
+            const confidants = (state.npcs || []).filter((n) => (Number(n.favor) || 0) >= 60).length;
+            const stats = [
+                { v: `${years} 年`, l: "历经岁月" },
+                { v: `${rounds} 轮`, l: "抉择次数" },
+                { v: `${confidants} 位`, l: "知己好友" }
+            ];
+            card.innerHTML = `
+                <div class="ending-grade">
+                    <div class="ending-badge g${g}">${g}</div>
+                    <div>
+                        <div class="ending-title">${MarkdownService.escapeHtml(result.title || "命运回响")}</div>
+                        <div class="ending-sub">${gradeNames[g]} · ${MarkdownService.escapeHtml(state.name || "主角")}的一生</div>
+                    </div>
+                </div>
+                <div class="ending-body">${MarkdownService.escapeHtml(result.body || "……")}</div>
+                <div class="ending-stats">${stats.map((s) => `<div class="ending-stat"><b>${s.v}</b><span>${s.l}</span></div>`).join("")}</div>
+                <div class="ending-actions">
+                    <button class="mini-btn ghost" onclick="closeEndingModal()">💬 继续回溯</button>
+                    <button class="mini-btn primary" onclick="restartLife()">🔁 开启新人生</button>
+                </div>`;
+            modal.classList.add("show");
+        }
         function clearFancyStatus() {
             const box = document.getElementById("game-stats-card");
             if (box) delete box.dataset.isFancy;
@@ -6893,7 +7007,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 groupCards.forEach(renderRow);
             });
         }
-        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, clearFancyStatus, renderPlayStatusBar, renderPlayEventList, renderWorld, renderDiary, buildEventRounds, avatarColor, heartLadder };
+        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, clearFancyStatus, renderPlayStatusBar, renderPlayEventList, renderWorld, renderDiary, renderEndingModal, buildEventRounds, avatarColor, heartLadder, stripHtml };
     })();
 
     const VisualEffects = (() => {
@@ -10889,6 +11003,104 @@ const token = delta.content || "";
             UIRenderer.renderPlayStatusBar(state);
             sendUserText(round.userText);
         }
+        // ---- 结局评定（uugame"结束这段故事"融合：AI 评定 S~D + 专属结局，失败本地兜底） ----
+        async function requestEnding(state, config) {
+            const scenarioSpec = SettingsService.getScenarioTextForModel();
+            const userMsgs = (state.history || []).filter((h) => h.role === "user").slice(-6);
+            const recent = userMsgs.map((r, i) => {
+                const idx = state.history.indexOf(r);
+                const aiText = state.history[idx + 1]?.text ? UIRenderer.stripHtml(state.history[idx + 1].text).slice(0, 60) : "";
+                return `轮次${i + 1}（${r.date || ""}）指令：${String(r.text || "").slice(0, 30)}\n经历：${aiText}`;
+            }).join("\n");
+            const npcs = (state.npcs || []).slice(0, 6).map((n) => `${n.name}（${n.relation}，好感 ${n.favor ?? 0}）`).join("、");
+            const systemPrompt = `你是命运书写者「云吞吞结局之书」。根据玩家主角的完整人生历程撰写结局评定。
+要求：
+1. grade 只允许 S/A/B/C/D 五档：S=传奇圆满的一生；A=灿烂耀眼的一生；B=平凡而温暖的一生；C=留有遗憾的一生；D=潦倒或惨烈收场。
+2. title 结局标题，8 字以内，要有意境，如"长安月下客"。
+3. body 专属结局正文，200-350 字，须呼应主角的开局与关键经历，有画面感，用中文。
+4. statistics 一行中文概述人生统计（历经几年、几次抉择、几位知己）。
+只输出一个 JSON 对象，禁止输出任何其他文字：{"grade":"S","title":"...","body":"...","statistics":"..."}`;
+            const userPrompt = `主角档案：
+姓名：${state.name || "未知"}（${state.gender || "未知"}${state.role ? "，" + state.role : ""}）当前：${state.location || "未知地点"}，第 ${state.currentYear || 0} 年 ${state.currentMonth || 0} 月
+属性：${(state.stats || []).map((s) => `${s.label} ${s.value}`).join("、") || "暂无"}
+
+关键经历（最近 ${recent.split("\n").filter((l) => l.trim()).length} 轮）：
+${recent || "（无）"}
+
+人物关系：${npcs || "暂无"}
+
+请输出结局评定 JSON。`;
+            const raw = String((await AIRequestService.streamCompletionWithFallback({
+                config,
+                fetchUrl: AIRequestService.buildFetchUrl(),
+                headers: AIRequestService.buildHeaders(config),
+                model: config.model,
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userPrompt }
+                ],
+                temperature: 0.7,
+                onToken: () => true
+            })) || "").trim();
+            const m = raw.match(/\{[\s\S]*\}/);
+            if (m) {
+                try {
+                    const obj = JSON.parse(m[0]);
+                    if (obj && (obj.grade || obj.body)) {
+                        return {
+                            grade: String(obj.grade || "C").toUpperCase().slice(0, 1),
+                            title: String(obj.title || "").slice(0, 12),
+                            body: String(obj.body || "").slice(0, 2000),
+                            statistics: String(obj.statistics || "").slice(0, 60)
+                        };
+                    }
+                } catch (e) { console.warn("[EndStory] 结局 JSON 解析失败", e); }
+            }
+            return null;
+        }
+        function fallbackEnding(state) {
+            const rounds = (state.history || []).filter((h) => h.role === "user").length;
+            const favors = (state.npcs || []).map((n) => Number(n.favor) || 0);
+            const avgFavor = favors.length ? favors.reduce((a, b) => a + b, 0) / favors.length : 0;
+            let grade = "D";
+            if (rounds >= 8 && avgFavor >= 70) grade = "S";
+            else if (rounds >= 5 && avgFavor >= 55) grade = "A";
+            else if (rounds >= 3) grade = "B";
+            else if (rounds >= 1) grade = "C";
+            return { grade, title: "未完待续", body: `${state.name || "主角"}的故事在此刻暂告一段落。经历了 ${rounds} 轮抉择，与 ${(state.npcs || []).length} 位人物相遇，人生仍在继续。（AI 暂不可用，本次为本地评定）`, statistics: "" };
+        }
+        async function endStory() {
+            const state = StateService.get();
+            if (!(state.history || []).some((h) => h.role === "user")) {
+                NoticeModalService.showInfo({ title: "还没有故事", descHtml: "先开始游玩、推进几轮剧情，再让 AI 评定结局吧。" });
+                return;
+            }
+            const ok = await NoticeModalService.confirm({
+                title: "结束这段故事？",
+                descHtml: `AI 将依据 <strong>${MarkdownService.escapeHtml(state.name || "主角")}</strong> 的一生撰写结局评定（S~D 级）与专属结局正文。评定不会清除存档，之后仍可继续回溯。`,
+                okText: "🎬 开始评定",
+                cancelText: "再想想"
+            });
+            if (!ok) return;
+            const config = SettingsService.getApiConfig();
+            let result = null;
+            if (!config.blocked && config.model) {
+                try { result = await requestEnding(state, config); }
+                catch (e) { console.warn("[EndStory] AI 评定失败,走本地兜底", e); }
+            }
+            if (!result) result = fallbackEnding(state);
+            UIRenderer.renderEndingModal(result, state);
+        }
+        function closeEndingModal() {
+            document.getElementById("ending-modal")?.classList.remove("show");
+        }
+        function restartLife() {
+            StateService.resetWithPreset({});
+            closeEndingModal();
+            renderAll();
+            switchView("view-home");
+            NoticeModalService.showInfo({ title: "新的人生", descHtml: "旧存档已归档，为你重置了全新人生。去挑选一张卡片，开始新的故事吧！" });
+        }
         function togglePlayDockNav() {
             PlayDockService.toggleNav();
         }
@@ -11837,13 +12049,16 @@ function openNpcProfile(npcId) {
                 openingChoices: merged.openingChoices || []
             });
         }
-        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
+        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
     function sendUserText(text) { Controller.sendUserText(text); }
     function switchPlayTab(tab) { Controller.switchPlayTab(tab); }
     function rerunEvent(idx) { Controller.rerunEvent(idx); }
+    function endStory() { Controller.endStory(); }
+    function closeEndingModal() { Controller.closeEndingModal(); }
+    function restartLife() { Controller.restartLife(); }
     function togglePlayDockNav() { Controller.togglePlayDockNav(); }
     function switchView(viewId) { Controller.switchView(viewId); }
     function saveSettings() { Controller.saveSettings(); }
