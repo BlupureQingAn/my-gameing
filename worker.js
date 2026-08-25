@@ -1,7 +1,10 @@
 // ==================== 1. 配置中心 ====================
 
-// 非会员每日免费次数
-const DAILY_FREE_QUOTA = 20;
+// 云币经济：游玩消耗 100 币/轮、解锁 5000 币/张、签到 300 币/天（连续 7 天额外 +700）
+const COIN_COST_PER_ROUND = 100;
+const UNLOCK_COST = 5000;
+const CHECKIN_BASE = 300;
+const CHECKIN_STREAK_BONUS = 700;
 // Cloudflare Worker 环境是 UTC，固定用 UTC+8 计算"今天"
 const TIMEZONE_OFFSET_MS = 8 * 3600 * 1000;
 const LIFETIME_EXPIRY = "2226-01-01T00:00:00.000Z";
@@ -274,16 +277,6 @@ async function bumpModelUsage(env, modelId, today) {
     }
 }
 
-// 用户每日计数（仅非会员；跨天重置）
-async function bumpUserUsage(env, userId, usageDate, usageCount) {
-    const today = getTodayStr();
-    const next = (usageDate === today ? Number(usageCount || 0) : 0) + 1;
-    await pbAdminFetch(env, `/api/collections/users/records/${userId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ usage_date: today, usage_count: next })
-    });
-}
-
 // ==================== 4. 会员与配额 ====================
 
 function isMember(record) {
@@ -461,10 +454,19 @@ export default {
                     return errorResponse("会员已到期，请续费", 402, { expiresAt: record.membership_expires_at }, "MEMBERSHIP_EXPIRED");
                 }
                 const isMemberUser = isMember(record);
-                if (!isMemberUser && Number(record.usage_count || 0) >= DAILY_FREE_QUOTA
-                    && record.usage_date === getTodayStr()) {
-                    return errorResponse("今日免费次数已用完（20/20），开通会员后不限量", 402,
-                        { used: Number(record.usage_count || 0), limit: DAILY_FREE_QUOTA }, "QUOTA_EXCEEDED");
+                // 云币扣费：请求开始扣 100 币/轮，流式失败不退款（文案注明）；终身会员免扣
+                if (!isMemberUser) {
+                    const coin = Number(record.coin || 0);
+                    if (coin < COIN_COST_PER_ROUND) {
+                        return errorResponse(`云币不足（每轮对话消耗 ${COIN_COST_PER_ROUND} 云币），请充值或开通终身会员`, 402,
+                            { coin, cost: COIN_COST_PER_ROUND }, "INSUFFICIENT_COIN");
+                    }
+                    const dedRes = await pbAdminFetch(env, `/api/collections/users/records/${userId}`, {
+                        method: "PATCH",
+                        body: JSON.stringify({ coin: coin - COIN_COST_PER_ROUND })
+                    });
+                    if (!dedRes.ok) return errorResponse("云币扣费失败，请重试", 500, null, "COIN_DEDUCT_FAILED");
+                    record.coin = coin - COIN_COST_PER_ROUND; // 同步内存副本,后续响应引用
                 }
 
                 // 解析请求
@@ -564,13 +566,10 @@ export default {
                     return errorResponse("AI 服务暂时不可用，请稍后重试", 503, null, "POOL_UNAVAILABLE");
                 }
 
-                // 成功后才计数（失败不扣次数）；会员不扣用户次数也不占模型级配额（绕过 dailyCap 的同时不挤压免费用户）
+                // 成功后才计模型级配额（会员绕过 dailyCap 不挤压免费用户；云币已在请求开始扣除，失败不退款）
                 ctx.waitUntil((async () => {
                     try {
-                        if (!isMemberUser) {
-                            await bumpModelUsage(env, usedModel.id, today);
-                            await bumpUserUsage(env, userId, record.usage_date, record.usage_count);
-                        }
+                        if (!isMemberUser) await bumpModelUsage(env, usedModel.id, today);
                     } catch (e) {
                         console.error("usage bump failed:", e.message);
                     }
@@ -619,23 +618,98 @@ export default {
                 });
             }
 
-            // ---- 路由：今日使用状态 ----
+            // ---- 路由：云币余额与会员状态 ----
             if (url.pathname === "/api/usage" && request.method === "GET") {
                 const auth = await authenticate(env, request);
                 if (auth.error) return auth.error;
                 const r = auth.record;
-                const today = getTodayStr();
-                const used = r.usage_date === today ? Number(r.usage_count || 0) : 0;
                 return new Response(JSON.stringify({
                     isMember: isMember(r),
                     membershipType: r.membership_type || "",
                     membershipExpiresAt: r.membership_expires_at || "",
-                    usageDate: today,
-                    used,
-                    limit: DAILY_FREE_QUOTA,
+                    coin: Number(r.coin || 0),
+                    checkinStreak: Number(r.checkin_streak || 0),
+                    checkinDate: r.last_checkin_date || "",
+                    costPerRound: COIN_COST_PER_ROUND,
+                    unlockCost: UNLOCK_COST,
                     // 会员不限量用 -1 表示（避免 Infinity 序列化为 null）
-                    remaining: isMember(r) ? -1 : Math.max(0, DAILY_FREE_QUOTA - used)
+                    remaining: isMember(r) ? -1 : Math.floor(Number(r.coin || 0) / COIN_COST_PER_ROUND)
                 }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+            }
+
+            // ---- 路由：每日签到（300 币/天；连续 7 天额外 +700；断签重置）----
+            if (url.pathname === "/api/checkin" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const r = auth.record;
+                const today = getTodayStr();
+                if (r.last_checkin_date === today) {
+                    return errorResponse("今日已签到", 400, { coin: Number(r.coin || 0) }, "ALREADY_CHECKED_IN");
+                }
+                const yesterday = new Date(Date.now() + TIMEZONE_OFFSET_MS - 86400000).toISOString().slice(0, 10);
+                const streak = r.last_checkin_date === yesterday ? Number(r.checkin_streak || 0) + 1 : 1;
+                const reward = CHECKIN_BASE + (streak >= 7 ? CHECKIN_STREAK_BONUS : 0);
+                const coin = Number(r.coin || 0) + reward;
+                const patchRes = await pbAdminFetch(env, `/api/collections/users/records/${r.id}`, {
+                    method: "PATCH",
+                    body: JSON.stringify({ coin, last_checkin_date: today, checkin_streak: streak })
+                });
+                if (!patchRes.ok) return errorResponse("签到失败，请重试", 500, null, "CHECKIN_FAILED");
+                return new Response(JSON.stringify({ coin, streak, reward }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+
+            // ---- 路由：解锁剧本卡（5000 云币永久；终身会员免费；幂等）----
+            if (url.pathname === "/api/cards/unlock" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const r = auth.record;
+                let body = {};
+                try { body = await request.json(); } catch (e) {}
+                const cardId = String(body.card_id || "").trim();
+                if (!cardId) return errorResponse("缺少 card_id", 400, null, "INVALID_CARD");
+                // 幂等：已解锁直接返回成功
+                const exFilter = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(r.id)}'&&card_id='${escapePocketBaseFilterValue(cardId)}'`);
+                const exQ = await pbAdminFetch(env, `/api/collections/unlocks/records?perPage=1&skipTotal=true&filter=${exFilter}`);
+                const exD = await exQ.json().catch(() => ({}));
+                if ((exD.items || []).length) {
+                    return new Response(JSON.stringify({ unlocked: true, already: true, coin: Number(r.coin || 0) }), {
+                        headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                    });
+                }
+                let coin = Number(r.coin || 0);
+                if (!isMember(r)) {
+                    if (coin < UNLOCK_COST) {
+                        return errorResponse(`云币不足（解锁需 ${UNLOCK_COST} 云币）`, 402, { coin, cost: UNLOCK_COST }, "INSUFFICIENT_COIN");
+                    }
+                    coin -= UNLOCK_COST;
+                    const dedRes = await pbAdminFetch(env, `/api/collections/users/records/${r.id}`, {
+                        method: "PATCH",
+                        body: JSON.stringify({ coin })
+                    });
+                    if (!dedRes.ok) return errorResponse("扣费失败，请重试", 500, null, "COIN_DEDUCT_FAILED");
+                }
+                const unlockRes = await pbAdminFetch(env, `/api/collections/unlocks/records`, {
+                    method: "POST",
+                    body: JSON.stringify({ user_id: r.id, card_id: cardId, created_at: new Date().toISOString() })
+                });
+                if (!unlockRes.ok) return errorResponse("解锁记录写入失败", 500, null, "UNLOCK_FAILED");
+                return new Response(JSON.stringify({ unlocked: true, coin }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+
+            // ---- 路由：用户已解锁卡列表 ----
+            if (url.pathname === "/api/cards/unlocked" && request.method === "GET") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const filter = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(auth.record.id)}'`);
+                const q = await pbAdminFetch(env, `/api/collections/unlocks/records?perPage=200&skipTotal=true&filter=${filter}&fields=card_id`);
+                const d = await q.json().catch(() => ({}));
+                return new Response(JSON.stringify({ cards: (d.items || []).map(i => i.card_id) }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
             }
 
             // ---- 诊断路由:回显 Secrets key 指纹(sha256 前 12 位),核对 CF Secrets 是否真的生效 ----
