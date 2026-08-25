@@ -696,6 +696,31 @@
         .npc-badge.off { background: rgba(120,120,120,0.1); color: var(--text-muted); border: 1px solid rgba(120,120,120,0.22); }
         .npc-meta { font-size: 0.72rem; color: var(--text-muted); line-height: 1.45; }
         .npc-favor { font-size: 0.74rem; font-weight: 700; }
+        .diary-entry {
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+            background: rgba(255,255,255,.6);
+            margin-bottom: 6px;
+            font-size: 0.82rem;
+        }
+        body[data-theme="dark"] .diary-entry { background: rgba(30,26,40,.5); }
+        .diary-entry summary {
+            cursor: pointer;
+            font-weight: 700;
+            color: var(--text-dark);
+            list-style: none;
+        }
+        .diary-entry summary::-webkit-details-marker { display: none; }
+        .diary-entry summary::before { content: "▸ "; color: #7b5cd6; }
+        .diary-entry[open] summary::before { content: "▾ "; }
+        .diary-body {
+            margin-top: 6px;
+            padding: 6px 8px;
+            border-left: 3px solid rgba(123,92,214,.35);
+            color: var(--text-muted);
+            line-height: 1.55;
+        }
 
         /* ---- 设置组件（Settings Components） ---- */
         /* 容器 */
@@ -3187,6 +3212,10 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <section class="card">
                 <div class="list-title">🎒 背包物品</div>
                 <div id="inventory-list" style="margin-top:8px;"></div>
+            </section>
+            <section class="card">
+                <div class="list-title">📔 我的日记</div>
+                <div id="diary-list" style="margin-top:8px;"></div>
             </section>
         </section>
 
@@ -6384,6 +6413,29 @@ function rebuildChoicesBlock(body, labels = []) {
                 ? npcs.map(card).join("")
                 : '<div class="list-sub" style="opacity:0.6;">🌍 还没有可互动的角色</div>';
         }
+        // 手机轻量 App：日记时间线（事件分轮 → 📅 日期 + 摘要，可点击展开正文）
+        function stripHtml(html) {
+            const div = document.createElement("div");
+            div.innerHTML = String(html || "");
+            return (div.textContent || "").replace(/\s+/g, " ").trim();
+        }
+        function renderDiary(state) {
+            const list = document.getElementById("diary-list");
+            if (!list) return;
+            const rounds = buildEventRounds(state.history);
+            if (!rounds.length) {
+                list.innerHTML = '<div class="list-sub" style="opacity:0.6;">📔 还没有日记内容，剧情推进后自动记录。</div>';
+                return;
+            }
+            list.innerHTML = rounds.map((r, i) => {
+                const summary = stripHtml(r.texts[0] || r.userText || "").slice(0, 60);
+                const date = r.date || "某日";
+                return `<details class="diary-entry" data-round="${i}">
+                    <summary>📅 ${MarkdownService.escapeHtml(date)} · ${MarkdownService.escapeHtml(r.userText.slice(0, 14))}${r.userText.length > 14 ? "…" : ""}</summary>
+                    <div class="diary-body">${MarkdownService.escapeHtml(summary)}</div>
+                </details>`;
+            }).join("");
+        }
         function clearFancyStatus() {
             const box = document.getElementById("game-stats-card");
             if (box) delete box.dataset.isFancy;
@@ -6587,6 +6639,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 });
                 list.appendChild(row);
             });
+            renderDiary(state);
         }
         function renderSocialList(state) {
             const list = document.getElementById("social-list");
@@ -6840,7 +6893,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 groupCards.forEach(renderRow);
             });
         }
-        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, clearFancyStatus, renderPlayStatusBar, renderPlayEventList, renderWorld, buildEventRounds, avatarColor, heartLadder };
+        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, clearFancyStatus, renderPlayStatusBar, renderPlayEventList, renderWorld, renderDiary, buildEventRounds, avatarColor, heartLadder };
     })();
 
     const VisualEffects = (() => {
