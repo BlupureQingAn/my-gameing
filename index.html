@@ -3443,6 +3443,14 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 style="width:100%;border:1px solid var(--line,#e2ccb0);border-radius:12px;background:var(--input-bg,#fffbf5);padding:11px 14px;font-size:0.9rem;color:var(--text,#4b3a2a);box-sizing:border-box;">
             <input id="auth-username" type="text" placeholder="用户名（可选，字母/数字/下划线）" autocomplete="username" maxlength="30"
                 style="width:100%;border:1px solid var(--line,#e2ccb0);border-radius:12px;background:var(--input-bg,#fffbf5);padding:11px 14px;font-size:0.9rem;color:var(--text,#4b3a2a);box-sizing:border-box;display:none;">
+            <div id="auth-code-row" style="display:none;gap:8px;">
+                <input id="auth-code" type="text" inputmode="numeric" maxlength="6" placeholder="邮箱验证码（6位数字）" autocomplete="one-time-code"
+                    style="flex:1;min-width:0;border:1px solid var(--line,#e2ccb0);border-radius:12px;background:var(--input-bg,#fffbf5);padding:11px 14px;font-size:0.9rem;color:var(--text,#4b3a2a);box-sizing:border-box;">
+                <button id="auth-send-code-btn" onclick="AuthService.sendCode()"
+                    style="flex-shrink:0;width:104px;padding:11px 6px;border-radius:12px;border:1px solid var(--line,#e2ccb0);background:var(--input-bg,#fffbf5);color:var(--accent-dark,#845f35);font-size:0.8rem;font-weight:700;cursor:pointer;transition:filter .18s;">
+                    发送验证码
+                </button>
+            </div>
             <input id="auth-password" type="password" placeholder="密码（至少8位）" autocomplete="current-password"
                 style="width:100%;border:1px solid var(--line,#e2ccb0);border-radius:12px;background:var(--input-bg,#fffbf5);padding:11px 14px;font-size:0.9rem;color:var(--text,#4b3a2a);box-sizing:border-box;">
             <input id="auth-password2" type="password" placeholder="再次输入密码（首次注册）" autocomplete="new-password"
@@ -3461,10 +3469,14 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <button id="social-wx-btn" onclick="AuthService.socialLogin('wx')"
                     style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:12px;border:1px solid var(--line,#e2ccb0);background:var(--input-bg,#fffbf5);font-size:0.9rem;font-weight:600;color:#07a23b;cursor:pointer;transition:filter .18s;"><img src="icons/wechat.svg" alt="微信" style="width:18px;height:18px;">微信登录</button>
             </div>
-            <div style="text-align:center;">
+            <div style="text-align:center;display:flex;justify-content:center;gap:16px;">
                 <button id="auth-toggle-btn" onclick="AuthService.toggleMode()"
                     style="background:none;border:none;color:var(--sub,#806a55);font-size:0.82rem;cursor:pointer;text-decoration:underline;">
                     没有账号？点击注册
+                </button>
+                <button id="auth-forgot-btn" onclick="AuthService.enterResetMode()"
+                    style="background:none;border:none;color:var(--sub,#806a55);font-size:0.82rem;cursor:pointer;text-decoration:underline;">
+                    忘记密码？
                 </button>
             </div>
             <label style="display:flex;align-items:flex-start;gap:6px;font-size:0.74rem;color:var(--sub,#806a55);cursor:pointer;justify-content:center;margin-top:10px;">
@@ -14713,6 +14725,7 @@ function openNpcProfile(npcId) {
         const EMAIL_KEY = "pb_auth_email";
         const USER_CACHE_KEY = "bitlife_user_cache_v1";
         let _isRegisterMode = false;
+        let _isResetMode = false;
         let _userData = null;
 
         // 用户数据本地缓存:页面加载时先显示缓存(不依赖网络),后台再刷新纠正
@@ -14850,31 +14863,64 @@ function openNpcProfile(npcId) {
         }
         function setLoading(on) {
             const btn = document.getElementById("auth-submit-btn");
-            if (btn) { btn.disabled = on; btn.textContent = on ? "请稍候..." : (_isRegisterMode ? "注册" : "登录"); }
+            if (btn) { btn.disabled = on; btn.textContent = on ? "请稍候..." : (_isResetMode ? "重置密码" : _isRegisterMode ? "注册" : "登录"); }
             if (on) TopLoader.show("登录中..."); else TopLoader.hide();
         }
 
-        function toggleMode() {
-            _isRegisterMode = !_isRegisterMode;
+        // 三态登录窗口: login / register / reset(忘记密码)
+        function renderAuthUI() {
             clearError();
             const pw2 = document.getElementById("auth-password2");
             const uname = document.getElementById("auth-username");
+            const codeRow = document.getElementById("auth-code-row");
+            const codeInput = document.getElementById("auth-code");
             const subtitle = document.getElementById("auth-subtitle");
             const toggleBtn = document.getElementById("auth-toggle-btn");
+            const forgotBtn = document.getElementById("auth-forgot-btn");
             const submitBtn = document.getElementById("auth-submit-btn");
-            if (_isRegisterMode) {
+            if (_isResetMode) {
+                if (pw2) pw2.style.display = "none";
+                if (uname) { uname.style.display = "none"; uname.value = ""; }
+                if (codeRow) { codeRow.style.display = "flex"; if (codeInput) codeInput.value = ""; }
+                if (subtitle) subtitle.textContent = "找回密码";
+                if (toggleBtn) toggleBtn.textContent = "← 返回登录";
+                if (forgotBtn) forgotBtn.style.display = "none";
+                if (submitBtn) submitBtn.textContent = "重置密码";
+            } else if (_isRegisterMode) {
                 if (pw2) pw2.style.display = "block";
                 if (uname) uname.style.display = "block";
+                if (codeRow) { codeRow.style.display = "flex"; if (codeInput) codeInput.value = ""; }
                 if (subtitle) subtitle.textContent = "创建新账号";
                 if (toggleBtn) toggleBtn.textContent = "已有账号？点击登录";
+                if (forgotBtn) forgotBtn.style.display = "none";
                 if (submitBtn) submitBtn.textContent = "注册";
             } else {
                 if (pw2) pw2.style.display = "none";
                 if (uname) { uname.style.display = "none"; uname.value = ""; }
+                if (codeRow) { codeRow.style.display = "none"; if (codeInput) codeInput.value = ""; }
                 if (subtitle) subtitle.textContent = "登录以继续";
                 if (toggleBtn) toggleBtn.textContent = "没有账号？点击注册";
+                if (forgotBtn) forgotBtn.style.display = "";
                 if (submitBtn) submitBtn.textContent = "登录";
             }
+            // 复位验证码按钮(切模式时终止倒计时)
+            const sendBtn = document.getElementById("auth-send-code-btn");
+            if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = "发送验证码"; }
+            if (_codeTimer) { clearInterval(_codeTimer); _codeTimer = null; }
+            _codeCountdown = 0;
+        }
+
+        function toggleMode() {
+            if (_isResetMode) { _isResetMode = false; _isRegisterMode = false; return renderAuthUI(); }
+            _isRegisterMode = !_isRegisterMode;
+            _isResetMode = false;
+            renderAuthUI();
+        }
+
+        function enterResetMode() {
+            _isResetMode = true;
+            _isRegisterMode = false;
+            renderAuthUI();
         }
 
         // 平台须知/公约:勾选后登录(注册/登录共用),未勾选提示
@@ -14902,20 +14948,29 @@ function openNpcProfile(npcId) {
             const username = (document.getElementById("auth-username")?.value || "").trim();
             const password = document.getElementById("auth-password")?.value || "";
             const password2 = document.getElementById("auth-password2")?.value || "";
+            const code = (document.getElementById("auth-code")?.value || "").trim();
 
             if (!account || !password) { showError("请填写账号和密码"); return; }
             if (_isRegisterMode) {
-                // 注册必须邮箱, 用户名可选
+                // 注册必须邮箱 + 验证码, 用户名可选
                 if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(account)) { showError("邮箱格式不正确"); return; }
                 if (username && !/^[a-zA-Z0-9_-]{3,30}$/.test(username)) { showError("用户名需为3-30位字母/数字/下划线"); return; }
+                if (!/^\d{6}$/.test(code)) { showError("请输入6位邮箱验证码"); return; }
+            }
+            if (_isResetMode) {
+                // 找回密码: 邮箱 + 验证码 + 新密码
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(account)) { showError("邮箱格式不正确"); return; }
+                if (!/^\d{6}$/.test(code)) { showError("请输入6位邮箱验证码"); return; }
             }
             if (password.length < 8) { showError("密码至少需要8位"); return; }
             if (_isRegisterMode && password !== password2) { showError("两次密码不一致"); return; }
 
             setLoading(true);
             try {
-                if (_isRegisterMode) {
-                    await register(account, password, password2, username || undefined);
+                if (_isResetMode) {
+                    await resetPassword(account, password, code);
+                } else if (_isRegisterMode) {
+                    await register(account, password, password2, username || undefined, code);
                 } else {
                     await login(account, password);
                 }
@@ -14926,22 +14981,75 @@ function openNpcProfile(npcId) {
             }
         }
 
-        async function register(email, password, passwordConfirm, username) {
-            const body = { email, password, passwordConfirm, emailVisibility: true };
-            if (username) body.username = username;
-            const res = await fetch(`${PB_URL}/api/collections/${COLLECTION}/records`, {
+        async function register(email, password, passwordConfirm, username, code) {
+            // 注册走 worker(验证码服务端校验; PB users 已收紧为仅管理员建号)
+            const res = await fetch(`${AppConfig.proxy.baseUrl}/api/auth/register`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body)
+                body: JSON.stringify({ email, password, passwordConfirm, ...(username ? { username } : {}), code })
             });
             const data = await res.json();
             if (!res.ok) {
-                const msg = data?.message || "注册失败";
-                const detail = Object.values(data?.data || {}).map((v) => v?.message).filter(Boolean).join("；");
-                throw new Error(detail || msg);
+                throw new Error(data?.error || "注册失败，请重试");
             }
-            // 注册成功后自动登录
-            await login(email, password);
+            if (data.token) {
+                saveSession(data.token, data.record?.username || email);
+                _userData = data.record || null;
+                onLoginSuccess(data.record?.username || email);
+            } else {
+                // 理论不可达(worker 注册必签发 token), 兜底引导登录
+                await login(email, password);
+            }
+        }
+
+        let _codeCountdown = 0;
+        let _codeTimer = null;
+        async function sendCode() {
+            if (_codeCountdown > 0) return;
+            const email = (document.getElementById("auth-email")?.value || "").trim();
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError("请先填写正确的邮箱"); return; }
+            const btn = document.getElementById("auth-send-code-btn");
+            if (btn) { btn.disabled = true; btn.textContent = "发送中..."; }
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/auth/send-code`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, purpose: _isResetMode ? "reset" : "register" })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) { showError(data?.error || "发送失败，请稍后再试"); return; }
+                _codeCountdown = 60;
+                showError(""); clearError();
+                // 倒计时
+                _codeTimer = setInterval(() => {
+                    _codeCountdown--;
+                    if (btn) btn.textContent = _codeCountdown > 0 ? `重新发送(${_codeCountdown}s)` : "发送验证码";
+                    if (_codeCountdown <= 0) { clearInterval(_codeTimer); if (btn) btn.disabled = false; }
+                }, 1000);
+            } catch (e) {
+                showError("网络异常，请稍后重试");
+            } finally {
+                if (_codeCountdown <= 0 && btn) { btn.disabled = false; btn.textContent = "发送验证码"; }
+            }
+        }
+
+        async function resetPassword(email, password, code) {
+            const res = await fetch(`${AppConfig.proxy.baseUrl}/api/auth/reset-password`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password, code })
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data?.error || "重置失败，请重试");
+            }
+            if (data.token) {
+                saveSession(data.token, data.record?.username || email);
+                _userData = data.record || null;
+                onLoginSuccess(data.record?.username || email);
+            } else {
+                await login(email, password);
+            }
         }
 
         async function login(identity, password) {
@@ -15044,6 +15152,7 @@ function openNpcProfile(npcId) {
         function onLoginSuccess(email) {
             // 重置注册/登录模式为登录态，避免下次登出后状态残留
             _isRegisterMode = false;
+            _isResetMode = false;
             cacheUser();
             hideOverlay();
             showAnnounce();
@@ -15078,15 +15187,9 @@ function openNpcProfile(npcId) {
             try { UIRenderer.renderScenarioCards(); } catch (e) {}
             // 重置登录表单及 UI 状态
             _isRegisterMode = false;
-            const pw2 = document.getElementById("auth-password2");
-            const uname = document.getElementById("auth-username");
-            const subtitle = document.getElementById("auth-subtitle");
-            const toggleBtn = document.getElementById("auth-toggle-btn");
+            _isResetMode = false;
+            renderAuthUI();
             const submitBtn = document.getElementById("auth-submit-btn");
-            if (pw2) pw2.style.display = "none";
-            if (uname) { uname.style.display = "none"; uname.value = ""; }
-            if (subtitle) subtitle.textContent = "登录以继续";
-            if (toggleBtn) toggleBtn.textContent = "没有账号？点击注册";
             if (submitBtn) { submitBtn.textContent = "登录"; submitBtn.disabled = false; }
             const emailInput = document.getElementById("auth-email");
             const pwInput = document.getElementById("auth-password");
@@ -15094,7 +15197,6 @@ function openNpcProfile(npcId) {
             if (emailInput) emailInput.value = "";
             if (pwInput) pwInput.value = "";
             if (pw2Input) pw2Input.value = "";
-            clearError();
             showOverlay();
         }
 
@@ -15132,7 +15234,7 @@ function openNpcProfile(npcId) {
             if (e.key === "Enter") handleSubmit();
         });
 
-        return { init, handleSubmit, toggleMode, logout, getToken, getEmail, getUserData, refreshBalance, applyCheckin, updateUsageStatusUI, hasMembership, socialLogin };
+        return { init, handleSubmit, toggleMode, enterResetMode, sendCode, register, resetPassword, logout, getToken, getEmail, getUserData, refreshBalance, applyCheckin, updateUsageStatusUI, hasMembership, socialLogin };
     })();
 
     function hideBootScreen() {
