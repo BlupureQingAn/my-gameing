@@ -1,3 +1,7 @@
 # wrangler 本地缓存（部署状态/token 缓存，勿提交）
 .wrangler/
 worker.js
+scripts/
+docs/
+presets/
+pay/
