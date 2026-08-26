@@ -3020,6 +3020,7 @@
         .gd-hot-btn.on { border-color: #e0a63c; background: #fff3d6; color: #8a4b00; }
         .gd-hot-btn .gd-hot-num { display: block; font-size: 1.02rem; font-weight: 800; color: var(--text); }
         .gd-sec-title { font-size: 0.88rem; font-weight: 700; color: var(--accent-dark); margin: 12px 0 6px; }
+        .ic { width: 1em; height: 1em; vertical-align: -0.125em; display: inline-block; flex: none; }
         .gd-role-card { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--card-soft); margin-bottom: 6px; }
         .gd-role-avatar { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; background: var(--card); border: 1px solid var(--line); flex-shrink: 0; }
         .gd-role-main { flex: 1; min-width: 0; }
@@ -3437,7 +3438,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <div class="top-mini-nav">
                 <span id="usage-badge" onclick="MembershipService.openPanel()" style="display:none;font-size:0.85rem;font-weight:700;color:#6b3f00;padding:6px 12px;border-radius:999px;background:linear-gradient(135deg,#ffe9a8,#ffd66b);border:1px solid #e0a93a;cursor:pointer;box-shadow:0 2px 8px rgba(224,169,58,.4);" title="点击开通/续费会员"></span>
                 <button class="top-nav-btn active" data-view="view-home" onclick="switchView('view-home')">首页</button>
-                <button class="top-nav-btn" data-view="view-template-market" onclick="switchView('view-template-market')">🧩 模板</button>
+                <button class="top-nav-btn" data-view="view-template-market" onclick="switchView('view-template-market')"><img class="ic" src="icons/grid.svg" alt=""> 模板</button>
                 <button class="top-nav-btn" data-view="view-community" onclick="switchView('view-community')">社区</button>
                 <button class="top-nav-btn" data-view="view-settings" onclick="switchView('view-settings')">我的</button>
                 <button class="top-nav-btn" id="auth-logout-btn" style="display:none;" onclick="AuthService.logout()">登出</button>
@@ -3448,7 +3449,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
     <main class="content" id="main-content">
         <section id="view-home" class="view-section active">
             <section class="card">
-                <div class="list-title">🧩 文游设定卡片列表</div>
+                <div class="list-title"><img class="ic" src="icons/grid.svg" alt=""> 文游设定卡片列表</div>
                 <input id="scenario-search-input" type="text" placeholder="搜索卡片（标题/分组/样式/设定内容）">
                 <div id="scenario-filter-bar" class="scenario-filter-bar"></div>
                 <div class="setting-actions" style="margin:6px 0 2px;">
@@ -3474,11 +3475,11 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <div class="scenario-filter-bar" id="community-tab-bar">
                     <button class="scenario-filter-chip active" id="community-tab-feed" onclick="Controller.switchCommunityTab('feed')">📣 动态</button>
                     <button class="scenario-filter-chip" id="community-tab-cards" onclick="Controller.switchCommunityTab('cards')">🃏 剧本库</button>
-                    <button class="scenario-filter-chip" id="community-tab-forum" onclick="Controller.switchCommunityTab('forum')">💬 论坛</button>
+                    <button class="scenario-filter-chip" id="community-tab-forum" onclick="Controller.switchCommunityTab('forum')"><img class="ic" src="icons/chat.svg" alt=""> 论坛</button>
                     <button class="scenario-filter-chip" id="community-tab-chars" onclick="Controller.switchCommunityTab('chars')">👤 人物卡</button>
                 </div>
                 <div class="setting-actions" style="margin:6px 0 2px;">
-                    <button class="mini-btn primary" onclick="Controller.openPostModal()">✍️ 发动态</button>
+                    <button class="mini-btn primary" onclick="Controller.openPostModal()"><img class="ic" src="icons/pen.svg" alt=""> 发动态</button>
                 </div>
                 <div id="community-feed-list" style="margin-top:8px;"><span class="list-sub">加载中...</span></div>
                 <div id="community-cards-browse" style="display:none;margin-top:8px;"><span class="list-sub">加载中...</span></div>
@@ -9111,7 +9112,7 @@ function rebuildChoicesBlock(body, labels = []) {
         // 分类筛选：默认"全部"且全部展开；collapsed 仅记录用户手动折叠的组
         const filterState = { category: "全部", collapsed: new Set() };
         // 分类热度排序（按当前热门玩法盘点与网文主流热度；未收录的分类排最后，保持相对顺序）
-        const HOT_CATEGORY_ORDER = ["恋爱", "职场", "修仙", "穿越", "都市", "无限流", "末世", "经营", "科幻", "悬疑", "跑团", "奇幻", "历史", "宫斗", "种田", "女尊", "校园", "娱乐圈"];
+        const HOT_CATEGORY_ORDER = ["恋爱", "ABO", "乙女", "职场", "修仙", "穿越", "都市", "无限流", "末世", "经营", "科幻", "悬疑", "跑团", "奇幻", "历史", "宫斗", "种田", "女尊", "校园", "娱乐圈", "人外", "同人", "主播"];
         function hotRank(cat) {
             const i = HOT_CATEGORY_ORDER.indexOf(cat);
             return i < 0 ? HOT_CATEGORY_ORDER.length : i;
@@ -11771,12 +11772,12 @@ const token = delta.content || "";
                 </div>`;
             }
             html += `<div class="gd-hot-bar">
-                <div class="gd-hot-btn"><span class="gd-hot-num">${fmtNum(d.plays)}</span>👁 游玩</div>
-                <div class="gd-hot-btn ${d.liked ? "on" : ""}" onclick="Controller.toggleGameLike('${card.id}')"><span class="gd-hot-num">${fmtNum(d.likes)}</span>❤️ 点赞</div>
-                <div class="gd-hot-btn ${d.collected ? "on" : ""}" onclick="Controller.toggleGameCollect('${card.id}')"><span class="gd-hot-num">${fmtNum(d.collects)}</span>⭐ 收藏</div>
+                <div class="gd-hot-btn"><span class="gd-hot-num">${fmtNum(d.plays)}</span><img class="ic" src="icons/eye.svg" alt=""> 游玩</div>
+                <div class="gd-hot-btn ${d.liked ? "on" : ""}" onclick="Controller.toggleGameLike('${card.id}')"><span class="gd-hot-num">${fmtNum(d.likes)}</span><img class="ic" src="icons/heart.svg" alt=""> 点赞</div>
+                <div class="gd-hot-btn ${d.collected ? "on" : ""}" onclick="Controller.toggleGameCollect('${card.id}')"><span class="gd-hot-num">${fmtNum(d.collects)}</span><img class="ic" src="icons/star.svg" alt=""> 收藏</div>
             </div>`;
             if (npcs.length) {
-                html += `<div class="gd-sec-title">🏆 本作品角色榜</div>`;
+                html += `<div class="gd-sec-title"><img class="ic" src="icons/trophy.svg" alt=""> 本作品角色榜</div>`;
                 npcs.forEach((n) => {
                     const rid = roleIdOf(n);
                     const hotCount = 100 + Number(d.roles[rid] || 0);
@@ -11788,24 +11789,24 @@ const token = delta.content || "";
                             <div class="gd-role-sub">${MarkdownService.escapeHtml(desc)}</div>
                         </div>
                         <div style="text-align:center;flex-shrink:0;">
-                            <div class="gd-role-hot">❤️ ${hotCount}</div>
-                            <button class="mini-btn" style="margin:4px 0 0;" onclick="Controller.gameRoleHot('${card.id}','${rid}')">🖊️ 送笔芯</button>
-                            <button class="mini-btn gd-role-fav${_charFavs.has(card.id + "::" + rid) ? " on" : ""}" data-card="${card.id}" data-rid="${rid}" style="margin:4px 0 0;" onclick="Controller.toggleRoleFavorite('${card.id}','${rid}',this)">${_charFavs.has(card.id + "::" + rid) ? "⭐ 已收藏" : "⭐ 收藏"}</button>
+                            <div class="gd-role-hot"><img class="ic" src="icons/heart.svg" alt=""> ${hotCount}</div>
+                            <button class="mini-btn" style="margin:4px 0 0;" onclick="Controller.gameRoleHot('${card.id}','${rid}')"><img class="ic" src="icons/pen.svg" alt=""> 送笔芯</button>
+                            <button class="mini-btn gd-role-fav${_charFavs.has(card.id + "::" + rid) ? " on" : ""}" data-card="${card.id}" data-rid="${rid}" style="margin:4px 0 0;" onclick="Controller.toggleRoleFavorite('${card.id}','${rid}',this)">${_charFavs.has(card.id + "::" + rid) ? '<img class="ic" src="icons/star.svg" alt=""> 已收藏' : '<img class="ic" src="icons/star.svg" alt=""> 收藏'}</button>
                         </div>
                     </div>`;
                 });
             }
             if (d.local) {
-                html += `<div class="gd-sec-title">🎁 支持</div>
+                html += `<div class="gd-sec-title"><img class="ic" src="icons/gift.svg" alt=""> 支持</div>
                 <div class="gd-tip">官方模板由平台维护，点赞收藏即支持。基于模板创作你的版本并上传后，即可获得社区打赏。</div>`;
             } else {
-                html += `<div class="gd-sec-title">🎁 打赏作者</div>
+                html += `<div class="gd-sec-title"><img class="ic" src="icons/gift.svg" alt=""> 打赏作者</div>
                 <div class="gd-donate-row">
                     ${DONATE_AMOUNTS.map((a) => `<button class="gd-donate-btn" onclick="Controller.gameDonate('${card.id}',${a})">💰 ${a} 币</button>`).join("")}
                 </div>
                 <div class="gd-tip">打赏云币将直接送给作者（从你的余额扣除），支持 TA 继续创作。送笔芯 1 币/次，累计角色人气。</div>`;
             }
-            html += `<div class="gd-sec-title">🏅 打赏榜</div>`;
+            html += `<div class="gd-sec-title"><img class="ic" src="icons/gift.svg" alt=""> 打赏榜</div>`;
             if (d.donors && d.donors.length) {
                 html += d.donors.slice(0, 10).map((u, i) => `<div class="gd-donor-row">
                     <span style="width:18px;color:${i < 3 ? "#d4a017" : "var(--sub)"};font-weight:800;">${i + 1}</span>
@@ -11817,7 +11818,7 @@ const token = delta.content || "";
                 html += `<div class="list-sub">还没有打赏，成为第一个支持 TA 的人吧～</div>`;
             }
             if (!d.local) {
-                html += `<div class="gd-sec-title">💬 讨论区</div>
+                html += `<div class="gd-sec-title"><img class="ic" src="icons/chat.svg" alt=""> 讨论区</div>
                 <div id="gd-reviews-box" style="margin-bottom:6px;"><span class="list-sub">加载中...</span></div>
                 <div class="gd-rev-input">
                     <input id="gd-rev-input" maxlength="200" placeholder="写下你的评论…（200字以内）" onkeydown="if(event.key==='Enter')Controller.postGameReview()">
@@ -11936,7 +11937,7 @@ const token = delta.content || "";
                 document.querySelectorAll(".gd-role-fav").forEach((b) => {
                     const on = _charFavs.has((b.dataset.card || "") + "::" + (b.dataset.rid || ""));
                     b.classList.toggle("on", on);
-                    b.textContent = on ? "⭐ 已收藏" : "⭐ 收藏";
+                    b.innerHTML = on ? '<img class="ic" src="icons/star.svg" alt=""> 已收藏' : '<img class="ic" src="icons/star.svg" alt=""> 收藏';
                 });
             } catch (e) {}
         }
@@ -11949,7 +11950,7 @@ const token = delta.content || "";
             const willFav = !_charFavs.has(key);
             const prev = _charFavs.has(key);
             _charFavs.has(key) ? _charFavs.delete(key) : _charFavs.add(key);
-            if (btn) { btn.classList.toggle("on", willFav); btn.textContent = willFav ? "⭐ 已收藏" : "⭐ 收藏"; }
+            if (btn) { btn.classList.toggle("on", willFav); btn.innerHTML = willFav ? '<img class="ic" src="icons/star.svg" alt=""> 已收藏' : '<img class="ic" src="icons/star.svg" alt=""> 收藏'; }
             try {
                 const res = await fetch(`${AppConfig.proxy.baseUrl}/api/characters/favorite`, {
                     method: "POST",
@@ -11962,7 +11963,7 @@ const token = delta.content || "";
             } catch (e) {
                 // 回滚本地状态
                 prev ? _charFavs.add(key) : _charFavs.delete(key);
-                if (btn) { btn.classList.toggle("on", prev); btn.textContent = prev ? "⭐ 已收藏" : "⭐ 收藏"; }
+                if (btn) { btn.classList.toggle("on", prev); btn.innerHTML = prev ? '<img class="ic" src="icons/star.svg" alt=""> 已收藏' : '<img class="ic" src="icons/star.svg" alt=""> 收藏'; }
                 NoticeModalService.showInfo({ title: "操作失败", descHtml: e.message || "请稍后重试" });
             }
         }
@@ -12043,7 +12044,8 @@ const token = delta.content || "";
         const CAT_EMOJI = {
             "恋爱": "💘", "职场": "💼", "修仙": "⛰️", "穿越": "🕰️", "都市": "🏙️", "无限流": "♾️",
             "末世": "🧟", "经营": "🏪", "科幻": "🚀", "悬疑": "🕵️", "跑团": "🎲", "奇幻": "🔮",
-            "历史": "🏯", "宫斗": "👑", "种田": "🌾", "女尊": "👸", "校园": "🏫", "娱乐圈": "🎬", "其他": "📖"
+            "历史": "🏯", "宫斗": "👑", "种田": "🌾", "女尊": "👸", "校园": "🏫", "娱乐圈": "🎬",
+            "ABO": "🅰️", "乙女": "💗", "人外": "🐺", "同人": "🪄", "主播": "🎤", "其他": "📖"
         };
         function render() {
             const box = document.getElementById("template-market-groups");
@@ -13260,7 +13262,7 @@ function openNpcProfile(npcId) {
                 <div class="char-avatar">🧑‍🎤</div>
                 <div style="flex:1;min-width:0;">
                     <div class="char-name">${escapeForHtml(c.name || "角色")} <span class="list-sub">${escapeForHtml(c.role || "")}</span></div>
-                    <div class="char-sub">来自「${escapeForHtml(c.card_title || "")}」 · 🖊️ ${Number(c.pens || 0)} · ⭐ ${Number(c.favs || 0)}</div>
+                    <div class="char-sub">来自「${escapeForHtml(c.card_title || "")}」 · <img class="ic" src="icons/pen.svg" alt=""> ${Number(c.pens || 0)} · <img class="ic" src="icons/star.svg" alt=""> ${Number(c.favs || 0)}</div>
                 </div>
                 ${favBtn}
             </div>`;
@@ -13273,15 +13275,15 @@ function openNpcProfile(npcId) {
                 const favs = (await favRes.json().catch(() => ({}))).items || [];
                 let html = `<div class="gd-sec-title">🔥 热聊人物卡榜</div>`;
                 if (hot.length) {
-                    html += hot.slice(0, 10).map((c, i) => charCard(c, `<button class="mini-btn" onclick="Controller.toggleCharacterFav('${escapeForHtml(c.card_id)}','${escapeForHtml(c.character_id)}',this)">${favs.some(f => f.card_id === c.card_id && f.character_id === c.character_id) ? "已收藏" : "⭐ 收藏"}</button>`)).join("");
+                    html += hot.slice(0, 10).map((c, i) => charCard(c, `<button class="mini-btn" onclick="Controller.toggleCharacterFav('${escapeForHtml(c.card_id)}','${escapeForHtml(c.character_id)}',this)">${favs.some(f => f.card_id === c.card_id && f.character_id === c.character_id) ? '<img class="ic" src="icons/star.svg" alt=""> 已收藏' : '<img class="ic" src="icons/star.svg" alt=""> 收藏'}</button>`)).join("");
                 } else {
                     html += '<span class="list-sub">暂无热聊角色，给喜欢的角色送支笔芯吧～</span>';
                 }
-                html += `<div class="gd-sec-title">⭐ 我的收藏</div>`;
+                html += `<div class="gd-sec-title"><img class="ic" src="icons/star.svg" alt=""> 我的收藏</div>`;
                 if (favs.length) {
                     html += favs.map((c) => charCard({ name: c.name, role: c.role, card_title: c.card_title, pens: 0, favs: 1 }, `<button class="mini-btn" onclick="Controller.toggleCharacterFav('${escapeForHtml(c.card_id)}','${escapeForHtml(c.character_id)}',this)">✕ 取消</button>`)).join("");
                 } else {
-                    html += '<span class="list-sub">还没有收藏人物卡，在作品详情页角色榜点 ⭐ 收藏。</span>';
+                    html += '<span class="list-sub">还没有收藏人物卡，在作品详情页角色榜点 <img class="ic" src="icons/star.svg" alt=""> 收藏。</span>';
                 }
                 container.innerHTML = html;
             } catch (e) {

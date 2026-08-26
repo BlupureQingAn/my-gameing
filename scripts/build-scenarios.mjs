@@ -6,7 +6,7 @@ import path from "node:path";
 import { makeCard } from "./scenario-schema.mjs";
 
 // 分类热度顺序:与 index.html HOT_CATEGORY_ORDER(7361)保持一致,分片按热度从高到低排列,热门分类先加载先展示
-const HOT_CATEGORY_ORDER = ["恋爱", "职场", "修仙", "穿越", "都市", "无限流", "末世", "经营", "科幻", "悬疑", "跑团", "奇幻", "历史", "宫斗", "种田", "女尊", "校园", "娱乐圈"];
+const HOT_CATEGORY_ORDER = ["恋爱", "ABO", "乙女", "职场", "修仙", "穿越", "都市", "无限流", "末世", "经营", "科幻", "悬疑", "跑团", "奇幻", "历史", "宫斗", "种田", "女尊", "校园", "娱乐圈", "人外", "同人", "主播"];
 function hotRank(cat) {
     const i = HOT_CATEGORY_ORDER.indexOf(String(cat || ""));
     return i < 0 ? HOT_CATEGORY_ORDER.length : i;
