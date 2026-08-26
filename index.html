@@ -2775,7 +2775,7 @@
             font-weight: 700;
             white-space: nowrap;
         }
-        .home-banner-wrap { position: relative; overflow: hidden; border-radius: 12px; margin-bottom: 8px; }
+        .home-banner-wrap { position: relative; overflow: hidden; border-radius: 12px; margin-bottom: 8px; max-width: 520px; margin-left: auto; margin-right: auto; }
         .home-banner-swiper {
             display: flex;
             transition: transform 0.45s ease;
@@ -3666,7 +3666,7 @@
         /* ---- 批 B4/C3/C5：首页卡片 2 列网格 + 封面动效区 + 左滑仅收藏（2026-08-26） ---- */
         #scenario-card-list {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
             gap: 10px;
             align-items: stretch;
         }
@@ -3703,6 +3703,7 @@
             filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.18));
             animation: scc-breathe 2.6s ease-in-out infinite;
         }
+        .scenario-card-cover.has-cover .scc-emoji { display: none; }
         .scenario-card-cover .scc-shine {
             position: absolute;
             top: -60%;
@@ -8528,7 +8529,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 const collected = ScenarioCardViewService.isCollected(card.id);
                 row.innerHTML = `
                     <div class="scenario-card-main">
-                        <div class="scenario-card-cover theme-${themeKey}">
+                        <div class="scenario-card-cover theme-${themeKey}" id="cc-cover-${CoverService.safeId(card.id)}">
                             <span class="scc-emoji">${ScenarioCardViewService.cardEmoji(card.theme)}</span>
                             <span class="scc-shine"></span>
                         </div>
@@ -8560,8 +8561,27 @@ function rebuildChoicesBlock(body, labels = []) {
                 box.appendChild(row);
             };
             filteredCards.forEach(renderRow);
+            // AI 封面懒加载:进入视口才请求(KV 缓存命中秒回,未命中不提前耗额度)
+            filteredCards.forEach((card) => {
+                const el = document.getElementById("cc-cover-" + CoverService.safeId(card.id));
+                if (!el) return;
+                el._coverCard = card;
+                ensureCoverObserver().observe(el);
+            });
         }
-        // 手机页模拟器：默认 App 生态（卡片可配置 apps.func/more 覆盖）
+        // 首页卡片封面懒加载观察器(模块级复用,重复渲染前先断开旧观察)
+        let coverObserver = null;
+        function ensureCoverObserver() {
+            if (coverObserver) return coverObserver;
+            coverObserver = new IntersectionObserver((entries) => {
+                entries.forEach((en) => {
+                    if (!en.isIntersecting) return;
+                    coverObserver.unobserve(en.target);
+                    CoverService.paint(en.target.id, en.target._coverCard);
+                });
+            }, { rootMargin: "300px" });
+            return coverObserver;
+        }
         const DEFAULT_PHONE_APPS = {
             func: [
                 { icon: "💬", label: "通讯", action: "chat" },
@@ -10750,8 +10770,10 @@ function rebuildChoicesBlock(body, labels = []) {
             const url = await ensure(card);
             const el = document.getElementById(elId);
             if (!el) return;
-            if (url) el.style.backgroundImage = `url("${url}")`;
-            el.classList.add("has-cover");
+            if (url) {
+                el.style.backgroundImage = `url("${url}")`;
+                el.classList.add("has-cover");
+            }
         }
         return { ensure, cached, paint, safeId, promptOf };
     })();
@@ -16798,6 +16820,11 @@ function openNpcProfile(npcId) {
 
         // 聚合登录:①获取跳转地址并跳转（appkey 在服务端,前端仅拿 url）
         async function socialLogin(type) {
+            // 社交登录同样必须先同意使用须知/平台公约
+            if (!document.getElementById("auth-agree")?.checked) {
+                showError("请先阅读并同意《使用须知》和《平台公约》");
+                return;
+            }
             TopLoader.show("跳转中...");
             try {
                 const res = await fetch(`${AppConfig.proxy.baseUrl}/api/social/login?type=${encodeURIComponent(type)}`);
@@ -16963,7 +16990,7 @@ function openNpcProfile(npcId) {
             if (e.key === "Enter") handleSubmit();
         });
 
-        return { init, handleSubmit, toggleMode, enterResetMode, sendCode, register, resetPassword, logout, getToken, getEmail, getUserData, refreshBalance, applyCheckin, updateUsageStatusUI, hasMembership, socialLogin };
+        return { init, handleSubmit, toggleMode, enterResetMode, sendCode, register, resetPassword, logout, getToken, getEmail, getUserData, refreshBalance, applyCheckin, updateUsageStatusUI, hasMembership, socialLogin, showDoc };
     })();
 
     function hideBootScreen() {
