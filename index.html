@@ -2678,6 +2678,18 @@
         .rank-title { font-size: 0.82rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .rank-sub { font-size: 0.7rem; color: var(--sub); }
         .scenario-sort-bar { display: flex; align-items: center; gap: 6px; margin: 4px 0 2px; }
+
+        /* 三步创作向导 */
+        .wizard-style-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 6px; }
+        .wz-style {
+            display: flex; flex-direction: column; align-items: center; gap: 2px;
+            padding: 12px 8px; border-radius: 12px; border: 1px solid var(--line);
+            background: var(--card-soft); cursor: pointer; font-size: 0.85rem;
+            color: var(--text-dark);
+        }
+        .wz-style.active { border-color: var(--accent-dark); background: var(--card); box-shadow: 0 0 0 1px var(--accent-dark); }
+        .wz-emoji { font-size: 1.5rem; }
+        .wz-desc { font-size: 0.68rem; color: var(--sub); }
         .feed-card {
             border: 1px solid var(--line);
             border-radius: 12px;
@@ -3547,6 +3559,50 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <div class="list-sub">无剧情主题、带新手引导的空白骨架。点「使用模板」生成一张自定义卡，再填入你的设定即可开写</div>
                 <input id="template-market-search" type="text" placeholder="搜索骨架（校园/职场/修仙/悬疑...）" oninput="Controller.renderTemplateMarket()">
                 <div id="template-market-groups" style="margin-top:8px;"><span class="list-sub">加载中...</span></div>
+            </section>
+        </section>
+
+        <section id="view-create-wizard" class="view-section">
+            <section class="card">
+                <div class="list-title">✨ 三步创作向导</div>
+                <div class="list-sub" id="wizard-step-title">步骤 1/3 · 选择文风</div>
+                <div id="wizard-step-1">
+                    <div class="wizard-style-grid">
+                        <button type="button" class="wz-style active" data-style="healing" onclick="Controller.wizardPickStyle('healing')"><span class="wz-emoji">🌿</span><span>日常治愈</span><span class="wz-desc">温情细腻</span></button>
+                        <button type="button" class="wz-style" data-style="adventure" onclick="Controller.wizardPickStyle('adventure')"><span class="wz-emoji">⚔️</span><span>热血冒险</span><span class="wz-desc">燃向节奏</span></button>
+                        <button type="button" class="wz-style" data-style="jinjiang" onclick="Controller.wizardPickStyle('jinjiang')"><span class="wz-emoji">💗</span><span>晋江文风</span><span class="wz-desc">细腻氛围</span></button>
+                        <button type="button" class="wz-style" data-style="suspense" onclick="Controller.wizardPickStyle('suspense')"><span class="wz-emoji">🕯️</span><span>悬疑惊悚</span><span class="wz-desc">反转张力</span></button>
+                        <button type="button" class="wz-style" data-style="lightnovel" onclick="Controller.wizardPickStyle('lightnovel')"><span class="wz-emoji">🌟</span><span>轻小说</span><span class="wz-desc">轻松吐槽</span></button>
+                    </div>
+                </div>
+                <div id="wizard-step-2" style="display:none;">
+                    <div class="sf-label" style="margin-top:4px;">标题（≤20 字）</div>
+                    <input id="wizard-title-input" type="text" maxlength="20" placeholder="给你的文游起个名字" oninput="Controller.wizardTitleCount()">
+                    <div class="list-sub" style="text-align:right;" id="wizard-title-count">0/20</div>
+                    <div class="sf-label">指令描述（≤5000 字）</div>
+                    <textarea id="wizard-prompt-input" class="scenario-editor" maxlength="5000" style="min-height:120px;" placeholder="描述世界观 / 玩法 / 登场角色，越具体 AI 生成越贴合你的想法" oninput="Controller.wizardPromptCount()"></textarea>
+                    <div class="list-sub" style="text-align:right;" id="wizard-prompt-count">0/5000</div>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:0.8rem;margin-top:4px;">
+                        <input type="checkbox" id="wizard-polish" style="width:auto;"> 允许 AI 润色（语言更文学化、氛围感更强）
+                    </label>
+                </div>
+                <div id="wizard-step-3" style="display:none;">
+                    <div class="sf-label" style="margin-top:4px;">引擎选择</div>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:0.8rem;margin-top:4px;"><input type="radio" name="wz-engine" value="auto" checked style="width:auto;"> 自动（云端模型池）— 免费额度内推荐</label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:0.8rem;margin-top:4px;"><input type="radio" name="wz-engine" value="byok" style="width:auto;"> 手动（BYOK）— 使用自己的模型配置</label>
+                    <div class="sf-label" style="margin-top:10px;">AI 生成项（勾选的由 AI 生成，全部不勾则直接创建空白卡）</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:4px;font-size:0.8rem;">
+                        <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" id="wz-gen-summary" checked style="width:auto;"> 游戏简介</label>
+                        <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" id="wz-gen-rules" checked style="width:auto;"> 叙事规则</label>
+                        <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" id="wz-gen-stats" checked style="width:auto;"> 角色属性</label>
+                        <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" id="wz-gen-opening" checked style="width:auto;"> 开场白</label>
+                    </div>
+                </div>
+                <div class="setting-actions" style="margin-top:10px;">
+                    <button class="mini-btn" id="wizard-prev-btn" onclick="Controller.wizardPrev()" style="display:none;">上一步</button>
+                    <button class="mini-btn primary" id="wizard-next-btn" onclick="Controller.wizardNext()">下一步</button>
+                    <button class="mini-btn primary" id="wizard-go-btn" onclick="Controller.wizardConfirm()" style="display:none;">确认生成</button>
+                </div>
             </section>
         </section>
 
@@ -11444,7 +11500,10 @@ const token = delta.content || "";
                     secret: String(n.secret || "").slice(0, 80)
                 }
             })).slice(0, 12);
-            const stats = StatsService.normalizeStats(buildFallbackStatsFromScenario(card.text || "", { ageYears: Number.isFinite(ageRaw) ? ageRaw : 18 }));
+            // 创作向导可写入 structured.stats(数组[{key,label,value}]),有则优先;否则从设定文本兜底提取
+            const stats = Array.isArray(st.stats) && st.stats.length
+                ? StatsService.normalizeStats(st.stats.map((s) => ({ ...s, value: Number(s.value) || 0 })))
+                : StatsService.normalizeStats(buildFallbackStatsFromScenario(card.text || "", { ageYears: Number.isFinite(ageRaw) ? ageRaw : 18 }));
             return {
                 name,
                 englishName: String(fallbackIdentity.englishName || "PendingName").trim().slice(0, 32),
@@ -11472,7 +11531,48 @@ const token = delta.content || "";
                 ].filter(Boolean)
             };
         }
-        return { buildInitPlan, buildLocalInitPlan };
+        // 创作向导：按 genFlags 一次性生成设定 JSON（简介/规则/属性/开场白），失败返回 null 由调用方兜底
+        async function wizardGenerateContent({ title, prompt, styleMeta, polish, flags }) {
+            const apiConfig = SettingsService.getApiConfig();
+            if (apiConfig.blocked || !apiConfig.model) return null;
+            const wanted = [];
+            if (flags.summary) wanted.push("summary");
+            if (flags.rules) wanted.push("rules");
+            if (flags.stats) wanted.push("stats");
+            if (flags.opening) wanted.push("opening");
+            if (!wanted.length) return null;
+            const systemPrompt = [
+                "你是文游设定生成器。根据用户的游戏描述生成设定 JSON，不要解释，不要 Markdown 代码块，只输出 JSON。",
+                `只输出这些字段：${wanted.join(", ")}`,
+                "  summary: string，60-150 字游戏简介",
+                "  rules: array[string]，6-8 条世界规则/叙事规则，每条约 12-30 字",
+                "  stats: array[{key,label,value}]，4-6 项角色属性，key 英文标识、label 中文名、value 为 0-100 数字",
+                "  opening: object{story: string 200-300 字开场白, options: array[string] 2-3 个开场选项}"
+            ].join("\n");
+            const userPrompt = [
+                `标题：${title || "未命名"}`,
+                styleMeta ? `文风：${styleMeta}` : "",
+                polish ? "要求：用文学化语言润色，语言优美、氛围感强" : "",
+                `游戏描述：\n${prompt || "（无具体描述，请基于标题与文风自由发挥一个完整世界观）"}`
+            ].filter(Boolean).join("\n\n");
+            try {
+                const fetchUrl = AIRequestService.buildFetchUrl();
+                const headers = AIRequestService.buildHeaders(apiConfig);
+                const content = await AIRequestService.requestCompletionWithFallback({
+                    config: apiConfig, fetchUrl, headers,
+                    model: apiConfig.model,
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: userPrompt }
+                    ],
+                    temperature: 0.7,
+                    timeoutMs: AIRequestService.INIT_REQUEST_TIMEOUT_MS
+                });
+                const parsed = parseFirstJsonObject(content);
+                return parsed && typeof parsed === "object" ? parsed : null;
+            } catch (e) { return null; }
+        }
+        return { buildInitPlan, buildLocalInitPlan, wizardGenerateContent };
     })();
 
     const StateAuditorService = (() => {
@@ -14056,9 +14156,117 @@ function openNpcProfile(npcId) {
             DiscoverService.renderSortBar();
             UIRenderer.renderScenarioCards();
         }
-        // 创作向导入口（批 D 替换为三步向导；当前先走新建卡片）
-        function openCreationWizard() { createScenarioCard(); }
-        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, avatarPick, avatarUpload, avatarAiSuggest, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, advanceStory, openPhoneDiary, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate, renderHomeDiscovery, switchRankTab, switchSortMode, openCreationWizard };
+        // ---- 三步创作向导（对齐 uugame 创作向导，简化版）----
+        const WIZARD_STYLES = {
+            healing: { label: "日常治愈", option: "温和治愈、日常感强，注重生活细节与小确幸，避免激烈冲突" },
+            adventure: { label: "热血冒险", option: "热血燃向、节奏明快，目标感与危机感强，抉择果断" },
+            jinjiang: { label: "晋江文风", option: "晋江言情文风：细腻心理描写、氛围感、情绪张力，暧昧与拉扯并存" },
+            suspense: { label: "悬疑惊悚", option: "悬疑惊悚：信息差与反转，紧张氛围，逻辑自洽" },
+            lightnovel: { label: "轻小说", option: "轻小说风：轻松吐槽、反差萌、口语化对白" }
+        };
+        let wizardStep = 1;
+        let wizardStyle = "healing";
+        function renderWizardStep() {
+            const titles = { 1: "步骤 1/3 · 选择文风", 2: "步骤 2/3 · 描述游戏", 3: "步骤 3/3 · 确认生成" };
+            document.getElementById("wizard-step-title").textContent = titles[wizardStep];
+            document.getElementById("wizard-step-1").style.display = wizardStep === 1 ? "" : "none";
+            document.getElementById("wizard-step-2").style.display = wizardStep === 2 ? "" : "none";
+            document.getElementById("wizard-step-3").style.display = wizardStep === 3 ? "" : "none";
+            document.getElementById("wizard-prev-btn").style.display = wizardStep > 1 ? "" : "none";
+            document.getElementById("wizard-next-btn").style.display = wizardStep < 3 ? "" : "none";
+            document.getElementById("wizard-go-btn").style.display = wizardStep === 3 ? "" : "none";
+        }
+        function openCreationWizard() {
+            wizardStep = 1;
+            wizardStyle = "healing";
+            const titleInput = document.getElementById("wizard-title-input");
+            const promptInput = document.getElementById("wizard-prompt-input");
+            if (titleInput) { titleInput.value = ""; wizardTitleCount(); }
+            if (promptInput) { promptInput.value = ""; wizardPromptCount(); }
+            const polishEl = document.getElementById("wizard-polish");
+            if (polishEl) polishEl.checked = false;
+            const auto = document.querySelector('input[name="wz-engine"][value="auto"]');
+            if (auto) auto.checked = true;
+            ["summary", "rules", "stats", "opening"].forEach((k) => {
+                const el = document.getElementById("wz-gen-" + k);
+                if (el) el.checked = true;
+            });
+            document.querySelectorAll(".wz-style").forEach((b) => b.classList.toggle("active", b.dataset.style === wizardStyle));
+            renderWizardStep();
+            switchView("view-create-wizard");
+        }
+        function wizardPickStyle(s) {
+            if (!WIZARD_STYLES[s]) return;
+            wizardStyle = s;
+            document.querySelectorAll(".wz-style").forEach((b) => b.classList.toggle("active", b.dataset.style === s));
+        }
+        function wizardTitleCount() {
+            const el = document.getElementById("wizard-title-input");
+            const c = document.getElementById("wizard-title-count");
+            if (el && c) c.textContent = `${el.value.length}/20`;
+        }
+        function wizardPromptCount() {
+            const el = document.getElementById("wizard-prompt-input");
+            const c = document.getElementById("wizard-prompt-count");
+            if (el && c) c.textContent = `${el.value.length}/5000`;
+        }
+        function wizardNext() { if (wizardStep < 3) { wizardStep++; renderWizardStep(); } }
+        function wizardPrev() { if (wizardStep > 1) { wizardStep--; renderWizardStep(); } }
+        async function wizardConfirm() {
+            const title = String(document.getElementById("wizard-title-input")?.value || "").trim().slice(0, 20);
+            const prompt = String(document.getElementById("wizard-prompt-input")?.value || "").trim().slice(0, 5000);
+            const polish = !!document.getElementById("wizard-polish")?.checked;
+            const engine = document.querySelector('input[name="wz-engine"]:checked')?.value || "auto";
+            const flags = {
+                summary: !!document.getElementById("wz-gen-summary")?.checked,
+                rules: !!document.getElementById("wz-gen-rules")?.checked,
+                stats: !!document.getElementById("wz-gen-stats")?.checked,
+                opening: !!document.getElementById("wz-gen-opening")?.checked
+            };
+            const styleMeta = WIZARD_STYLES[wizardStyle];
+            const card = {
+                id: `wz_${Date.now().toString(36)}`,
+                title: title || "未命名新卡",
+                category: "",
+                theme: "minimal",
+                sourceType: "custom",
+                pinned: false, pinnedAt: 0, lastPlayedAt: 0, order: Date.now(),
+                text: prompt,
+                structured: {
+                    theme: "minimal",
+                    world: { era: "", genre: styleMeta.label, summary: "", rules: [], atmosphere: "" },
+                    identity: { name: "", gender: "", age: "", background: "" },
+                    npcs: [],
+                    timeline: { start: { year: null, month: 1, day: 1 }, note: "" },
+                    scene_style: { env_templates: [], option_style: styleMeta.option },
+                    first_scene: { story: "", options: [] }
+                }
+            };
+            let gen = null;
+            if (flags.summary || flags.rules || flags.stats || flags.opening) {
+                const goBtn = document.getElementById("wizard-go-btn");
+                if (goBtn) { goBtn.disabled = true; goBtn.textContent = "AI 生成中…"; }
+                gen = await ScenarioInitPlanService.wizardGenerateContent({ title, prompt, styleMeta: styleMeta.option, polish, flags });
+                if (goBtn) { goBtn.disabled = false; goBtn.textContent = "确认生成"; }
+            }
+            if (gen) {
+                if (flags.summary && typeof gen.summary === "string" && gen.summary.trim()) card.structured.world.summary = gen.summary.trim();
+                if (flags.rules && Array.isArray(gen.rules)) card.structured.world.rules = gen.rules.map((s) => String(s).trim()).filter(Boolean).slice(0, 12);
+                if (flags.stats && Array.isArray(gen.stats)) card.structured.stats = gen.stats.map((s) => ({ key: String(s.key || "stat"), label: String(s.label || s.key || "属性"), value: Number(s.value) || 0 })).slice(0, 10);
+                if (flags.opening && gen.opening && typeof gen.opening === "object") {
+                    card.structured.first_scene.story = String(gen.opening.story || "").trim();
+                    card.structured.first_scene.options = Array.isArray(gen.opening.options) ? gen.opening.options.map((o) => String(o).trim()).filter(Boolean).slice(0, 4) : [];
+                }
+            } else if (flags.summary || flags.rules || flags.stats || flags.opening) {
+                NoticeModalService.showInfo({ title: "AI 生成失败", descHtml: "已创建空白卡，可在编辑器中手动填写设定。" });
+            }
+            const rest = ScenarioCardService.loadCards().filter((c) => c.id !== card.id);
+            ScenarioCardService.saveCards([card, ...rest]);
+            ScenarioCardService.setSelectedId(card.id);
+            switchView("view-scenario-editor");
+            ScenarioEditorService.focusEditor();
+        }
+        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, avatarPick, avatarUpload, avatarAiSuggest, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, advanceStory, openPhoneDiary, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate, renderHomeDiscovery, switchRankTab, switchSortMode, openCreationWizard, wizardPickStyle, wizardTitleCount, wizardPromptCount, wizardNext, wizardPrev, wizardConfirm };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
@@ -14094,6 +14302,12 @@ function openNpcProfile(npcId) {
     function switchRankTab(tab) { Controller.switchRankTab(tab); }
     function switchSortMode(mode) { Controller.switchSortMode(mode); }
     function openCreationWizard() { Controller.openCreationWizard(); }
+    function wizardPickStyle(s) { Controller.wizardPickStyle(s); }
+    function wizardTitleCount() { Controller.wizardTitleCount(); }
+    function wizardPromptCount() { Controller.wizardPromptCount(); }
+    function wizardNext() { Controller.wizardNext(); }
+    function wizardPrev() { Controller.wizardPrev(); }
+    function wizardConfirm() { Controller.wizardConfirm(); }
     function bgmToggle() { UIRenderer.bgmToggle(); }
     function bgmNext() { UIRenderer.bgmNext(); }
     function bgmPrev() { UIRenderer.bgmPrev(); }
