@@ -3439,8 +3439,10 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <p id="auth-subtitle" style="margin:6px 0 0;font-size:0.82rem;color:var(--sub,#806a55);">登录以继续</p>
         </div>
         <div style="display:flex;flex-direction:column;gap:12px;">
-            <input id="auth-email" type="email" placeholder="邮箱地址" autocomplete="email"
+            <input id="auth-email" type="text" placeholder="邮箱或用户名" autocomplete="username"
                 style="width:100%;border:1px solid var(--line,#e2ccb0);border-radius:12px;background:var(--input-bg,#fffbf5);padding:11px 14px;font-size:0.9rem;color:var(--text,#4b3a2a);box-sizing:border-box;">
+            <input id="auth-username" type="text" placeholder="用户名（可选，字母/数字/下划线）" autocomplete="username" maxlength="30"
+                style="width:100%;border:1px solid var(--line,#e2ccb0);border-radius:12px;background:var(--input-bg,#fffbf5);padding:11px 14px;font-size:0.9rem;color:var(--text,#4b3a2a);box-sizing:border-box;display:none;">
             <input id="auth-password" type="password" placeholder="密码（至少8位）" autocomplete="current-password"
                 style="width:100%;border:1px solid var(--line,#e2ccb0);border-radius:12px;background:var(--input-bg,#fffbf5);padding:11px 14px;font-size:0.9rem;color:var(--text,#4b3a2a);box-sizing:border-box;">
             <input id="auth-password2" type="password" placeholder="再次输入密码（首次注册）" autocomplete="new-password"
@@ -14856,16 +14858,19 @@ function openNpcProfile(npcId) {
             _isRegisterMode = !_isRegisterMode;
             clearError();
             const pw2 = document.getElementById("auth-password2");
+            const uname = document.getElementById("auth-username");
             const subtitle = document.getElementById("auth-subtitle");
             const toggleBtn = document.getElementById("auth-toggle-btn");
             const submitBtn = document.getElementById("auth-submit-btn");
             if (_isRegisterMode) {
                 if (pw2) pw2.style.display = "block";
+                if (uname) uname.style.display = "block";
                 if (subtitle) subtitle.textContent = "创建新账号";
                 if (toggleBtn) toggleBtn.textContent = "已有账号？点击登录";
                 if (submitBtn) submitBtn.textContent = "注册";
             } else {
                 if (pw2) pw2.style.display = "none";
+                if (uname) { uname.style.display = "none"; uname.value = ""; }
                 if (subtitle) subtitle.textContent = "登录以继续";
                 if (toggleBtn) toggleBtn.textContent = "没有账号？点击注册";
                 if (submitBtn) submitBtn.textContent = "登录";
@@ -14893,21 +14898,26 @@ function openNpcProfile(npcId) {
                 showError("请先阅读并同意《使用须知》和《平台公约》");
                 return;
             }
-            const email = (document.getElementById("auth-email")?.value || "").trim();
+            const account = (document.getElementById("auth-email")?.value || "").trim();
+            const username = (document.getElementById("auth-username")?.value || "").trim();
             const password = document.getElementById("auth-password")?.value || "";
             const password2 = document.getElementById("auth-password2")?.value || "";
 
-            if (!email || !password) { showError("请填写邮箱和密码"); return; }
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError("邮箱格式不正确"); return; }
+            if (!account || !password) { showError("请填写账号和密码"); return; }
+            if (_isRegisterMode) {
+                // 注册必须邮箱, 用户名可选
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(account)) { showError("邮箱格式不正确"); return; }
+                if (username && !/^[a-zA-Z0-9_-]{3,30}$/.test(username)) { showError("用户名需为3-30位字母/数字/下划线"); return; }
+            }
             if (password.length < 8) { showError("密码至少需要8位"); return; }
             if (_isRegisterMode && password !== password2) { showError("两次密码不一致"); return; }
 
             setLoading(true);
             try {
                 if (_isRegisterMode) {
-                    await register(email, password, password2);
+                    await register(account, password, password2, username || undefined);
                 } else {
-                    await login(email, password);
+                    await login(account, password);
                 }
             } catch (e) {
                 showError(e.message || "操作失败，请重试");
@@ -14916,11 +14926,13 @@ function openNpcProfile(npcId) {
             }
         }
 
-        async function register(email, password, passwordConfirm) {
+        async function register(email, password, passwordConfirm, username) {
+            const body = { email, password, passwordConfirm, emailVisibility: true };
+            if (username) body.username = username;
             const res = await fetch(`${PB_URL}/api/collections/${COLLECTION}/records`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password, passwordConfirm, emailVisibility: true })
+                body: JSON.stringify(body)
             });
             const data = await res.json();
             if (!res.ok) {
@@ -14932,19 +14944,19 @@ function openNpcProfile(npcId) {
             await login(email, password);
         }
 
-        async function login(email, password) {
+        async function login(identity, password) {
             const res = await fetch(`${PB_URL}/api/collections/${COLLECTION}/auth-with-password`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ identity: email, password })
+                body: JSON.stringify({ identity, password })
             });
             const data = await res.json();
             if (!res.ok) {
-                throw new Error("邮箱或密码错误，请检查后重试");
+                throw new Error("账号或密码错误，请检查后重试");
             }
-            saveSession(data.token, email);
+            saveSession(data.token, identity);
             _userData = data.record || null;
-            onLoginSuccess(email);
+            onLoginSuccess(identity);
         }
 
         // 聚合登录:①获取跳转地址并跳转（appkey 在服务端,前端仅拿 url）
@@ -14986,10 +14998,11 @@ function openNpcProfile(npcId) {
                     showOverlay();
                     return true;
                 }
-                saveSession(data.token, data.record?.email || "");
+                const acc = data.record?.username || data.record?.email || "";
+                saveSession(data.token, acc);
                 _userData = data.record || null;
                 cacheUser();
-                onLoginSuccess(getEmail());
+                onLoginSuccess(acc);
                 return true;
             } catch (e) {
                 return false;
@@ -15066,10 +15079,12 @@ function openNpcProfile(npcId) {
             // 重置登录表单及 UI 状态
             _isRegisterMode = false;
             const pw2 = document.getElementById("auth-password2");
+            const uname = document.getElementById("auth-username");
             const subtitle = document.getElementById("auth-subtitle");
             const toggleBtn = document.getElementById("auth-toggle-btn");
             const submitBtn = document.getElementById("auth-submit-btn");
             if (pw2) pw2.style.display = "none";
+            if (uname) { uname.style.display = "none"; uname.value = ""; }
             if (subtitle) subtitle.textContent = "登录以继续";
             if (toggleBtn) toggleBtn.textContent = "没有账号？点击注册";
             if (submitBtn) { submitBtn.textContent = "登录"; submitBtn.disabled = false; }
