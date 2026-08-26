@@ -998,7 +998,9 @@ export default {
                 const filter = mine
                     ? encodeURIComponent(`author_id='${escapePocketBaseFilterValue(auth.record.id)}'`)
                     : encodeURIComponent(`status='approved'`);
-                const q = await pbAdminFetch(env, `/api/collections/community_cards/records?perPage=200&sort=-created&filter=${filter}`);
+                // 发现页最热榜按 play_count 倒序;缺省保持 -created 向后兼容
+                const sort = url.searchParams.get("sort") === "play_count" ? "-play_count" : "-created";
+                const q = await pbAdminFetch(env, `/api/collections/community_cards/records?perPage=200&sort=${sort}&filter=${filter}`);
                 const d = await q.json().catch(() => ({}));
                 const items = (d.items || []).map(c => {
                     const status = Array.isArray(c.status) ? c.status[0] : c.status;

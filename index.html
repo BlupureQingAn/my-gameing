@@ -2619,6 +2619,65 @@
             color: var(--text-dark);
             cursor: pointer;
         }
+        /* 发现页：激励横幅 + 轮播 + 榜单 + 排序 */
+        .home-motivation-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, var(--accent-dark), var(--accent));
+            color: #fff;
+            border-radius: 12px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .home-motivation-banner .hmb-cta {
+            background: rgba(255, 255, 255, 0.22);
+            border-radius: 999px;
+            padding: 3px 10px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .home-banner-wrap { position: relative; overflow: hidden; border-radius: 12px; margin-bottom: 8px; }
+        .home-banner-swiper {
+            display: flex;
+            transition: transform 0.45s ease;
+        }
+        .hb-card {
+            flex: 0 0 100%;
+            min-height: 88px;
+            border-radius: 12px;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--card-soft), var(--card));
+            border: 1px solid var(--line);
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+        .hb-tag { font-size: 11px; color: var(--accent-dark); font-weight: 700; }
+        .hb-title { font-size: 0.95rem; font-weight: 700; margin-top: 2px; }
+        .hb-sub { font-size: 0.74rem; color: var(--sub); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .hb-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+        .hb-plays { font-size: 0.72rem; color: var(--sub); }
+        .hb-play-btn { font-size: 0.74rem; }
+        .home-banner-dots { display: flex; gap: 5px; justify-content: center; margin-top: 6px; }
+        .home-banner-dots .dot { width: 6px; height: 6px; border-radius: 99px; background: var(--line); cursor: pointer; }
+        .home-banner-dots .dot.active { background: var(--accent); width: 14px; }
+        .home-rank-tabs { display: flex; gap: 6px; margin-bottom: 6px; }
+        .home-rank-panel { margin-bottom: 8px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--card-soft); }
+        .rank-row {
+            display: flex; align-items: center; gap: 8px;
+            padding: 7px 0; border-bottom: 1px solid var(--line);
+        }
+        .rank-row:last-child { border-bottom: none; }
+        .rank-no { width: 18px; text-align: center; font-weight: 700; font-size: 0.85rem; color: var(--accent-dark); flex-shrink: 0; }
+        .rank-main { flex: 1; min-width: 0; }
+        .rank-title { font-size: 0.82rem; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .rank-sub { font-size: 0.7rem; color: var(--sub); }
+        .scenario-sort-bar { display: flex; align-items: center; gap: 6px; margin: 4px 0 2px; }
         .feed-card {
             border: 1px solid var(--line);
             border-radius: 12px;
@@ -3451,11 +3510,31 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
     <main class="content" id="main-content">
         <section id="view-home" class="view-section active">
             <section class="card">
+                <div id="home-motivation-banner" class="home-motivation-banner" onclick="Controller.openCreationWizard()">
+                    <span class="hmb-text">产出优质作品，得云币分成！</span>
+                    <span class="hmb-cta">去创作 ›</span>
+                </div>
+                <div class="home-banner-wrap">
+                    <div id="home-banner-swiper" class="home-banner-swiper"></div>
+                    <div id="home-banner-dots" class="home-banner-dots"></div>
+                </div>
+                <div id="home-rank-tabs" class="home-rank-tabs">
+                    <button class="scenario-filter-chip active" data-rank="recommend" onclick="Controller.switchRankTab('recommend')">🔥 推荐</button>
+                    <button class="scenario-filter-chip" data-rank="hot" onclick="Controller.switchRankTab('hot')">🚀 最热</button>
+                    <button class="scenario-filter-chip" data-rank="chars" onclick="Controller.switchRankTab('chars')">👤 角色榜</button>
+                </div>
+                <div id="home-rank-panel" class="home-rank-panel" style="display:none;"></div>
                 <div class="list-title"><img class="ic" src="icons/grid.svg" alt=""> 文游设定卡片列表</div>
                 <input id="scenario-search-input" type="text" placeholder="搜索卡片（标题/分组/样式/设定内容）">
                 <div id="scenario-filter-bar" class="scenario-filter-bar"></div>
+                <div id="scenario-sort-bar" class="scenario-sort-bar">
+                    <span class="list-sub" style="margin-right:6px;">排序</span>
+                    <button class="scenario-filter-chip active" data-sort="recommend" onclick="Controller.switchSortMode('recommend')">推荐</button>
+                    <button class="scenario-filter-chip" data-sort="new" onclick="Controller.switchSortMode('new')">最新</button>
+                    <button class="scenario-filter-chip" data-sort="hot" onclick="Controller.switchSortMode('hot')">最热</button>
+                </div>
                 <div class="setting-actions" style="margin:6px 0 2px;">
-                    <button class="mini-btn primary" onclick="createScenarioCard()">＋ 新建卡片</button>
+                    <button class="mini-btn primary" onclick="Controller.openCreationWizard()">＋ 新建卡片</button>
                 </div>
                 <div id="scenario-card-list" style="margin-top:8px;"></div>
                 <input id="scenario-file-input" type="file" accept=".txt,.md,.text" style="display:none;">
@@ -7545,6 +7624,10 @@ function rebuildChoicesBlock(body, labels = []) {
                 if (category !== "全部" && catKey !== category) return false;
                 return ScenarioCardViewService.matchesSearch(card, keyword);
             });
+            // 排序下拉（推荐=保持默认分组热度序；最新=自定义在前[新卡插入头部]，官方卡无 created_at 不进新作沉底；最热=本地游玩热度降序）与分类 chips 正交
+            const sortMode = ScenarioCardViewService.getSortMode();
+            if (sortMode === "new") filteredCards.sort((a, b) => (a.sourceType === "official" ? 1 : 0) - (b.sourceType === "official" ? 1 : 0));
+            else if (sortMode === "hot") filteredCards.sort((a, b) => ScenarioCardViewService.localPlays(b.id) - ScenarioCardViewService.localPlays(a.id));
             if (!filteredCards.length) {
                 box.innerHTML = `<div class="list-sub">未找到匹配卡片：${keyword || category}</div>`;
                 return;
@@ -9113,7 +9196,13 @@ function rebuildChoicesBlock(body, labels = []) {
             return input ? String(input.value || "").trim() : "";
         }
         // 分类筛选：默认"全部"且全部展开；collapsed 仅记录用户手动折叠的组
-        const filterState = { category: "全部", collapsed: new Set() };
+        // sortMode: recommend=默认热度分组序, new=order 降序(自定义最新在前,官方无 order 沉底), hot=本地游玩热度降序
+        const filterState = { category: "全部", collapsed: new Set(), sortMode: "recommend" };
+        function localPlays(cardId) {
+            try { return Number(JSON.parse(localStorage.getItem("bitlife_game_hot_v1") || "{}")[String(cardId)]?.plays || 0); } catch (e) { return 0; }
+        }
+        function getSortMode() { return filterState.sortMode; }
+        function setSortMode(mode) { filterState.sortMode = ["recommend", "new", "hot"].includes(mode) ? mode : "recommend"; }
         // 分类热度排序（按当前热门玩法盘点与网文主流热度；未收录的分类排最后，保持相对顺序）
         const HOT_CATEGORY_ORDER = ["恋爱", "ABO", "乙女", "职场", "修仙", "穿越", "都市", "无限流", "末世", "经营", "科幻", "悬疑", "跑团", "奇幻", "历史", "宫斗", "种田", "女尊", "校园", "娱乐圈", "人外", "同人", "主播"];
         function hotRank(cat) {
@@ -9173,8 +9262,160 @@ function rebuildChoicesBlock(body, labels = []) {
                 bar.appendChild(chip);
             });
         }
-        return { groupLabel, groupClass, pinLabel, matchesSearch, getSearchKeyword, getCategories, getCategory, setCategory, isCollapsed, toggleCollapsed, expandAllGroups, renderFilter, hotRank };
+        return { groupLabel, groupClass, pinLabel, matchesSearch, getSearchKeyword, getCategories, getCategory, setCategory, isCollapsed, toggleCollapsed, expandAllGroups, renderFilter, hotRank, localPlays, getSortMode, setSortMode };
     })();
+
+    // ---- 发现页：轮播推荐 + 榜单聚合（对齐 uugame 发现页，简化交互） ----
+    const DiscoverService = (() => {
+        let bannerIdx = 0;
+        let bannerTimer = null;
+        let activeRank = "recommend";
+        // 轮播候选：本地热度 plays 降序取 top5；全部 0(新用户)按分类热度兜底
+        function bannerCards() {
+            const lib = Array.isArray(window.SCENARIO_LIBRARY) ? window.SCENARIO_LIBRARY : [];
+            const ranked = lib.map((c) => ({ card: c, plays: ScenarioCardViewService.localPlays(c.id) }));
+            ranked.sort((a, b) => b.plays - a.plays);
+            let top = ranked.slice(0, 5);
+            if (!top.some((x) => x.plays > 0)) {
+                ranked.sort((a, b) => ScenarioCardViewService.hotRank(a.card.category) - ScenarioCardViewService.hotRank(b.card.category));
+                top = ranked.slice(0, 5);
+            }
+            return top.map((x) => x.card);
+        }
+        function renderBanner() {
+            const box = document.getElementById("home-banner-swiper");
+            const dots = document.getElementById("home-banner-dots");
+            if (!box) return;
+            const cards = bannerCards();
+            if (!cards.length) { box.innerHTML = ""; return; }
+            bannerIdx = Math.min(bannerIdx, cards.length - 1);
+            box.innerHTML = cards.map((c) => {
+                const summary = String(c.structured?.world?.summary || c.structured?.world?.atmosphere || "").slice(0, 56);
+                return `<div class="hb-card" onclick="Controller.playScenarioCard('${c.id}')">
+                    <div class="hb-tag">${MarkdownService.escapeHtml(String(c.category || "其他"))}</div>
+                    <div class="hb-title">${MarkdownService.escapeHtml(String(c.title || ""))}</div>
+                    <div class="hb-sub">${MarkdownService.escapeHtml(summary)}</div>
+                    <div class="hb-foot">
+                        <span class="hb-plays">👁 ${ScenarioCardViewService.localPlays(c.id)} 游玩</span>
+                        <span class="hb-play-btn mini-btn primary">立即游玩</span>
+                    </div>
+                </div>`;
+            }).join("");
+            dots.innerHTML = cards.map((_, i) => `<span class="dot${i === bannerIdx ? " active" : ""}" onclick="DiscoverService.gotoBanner(${i})"></span>`).join("");
+            updateBannerOffset();
+        }
+        function updateBannerOffset() {
+            const box = document.getElementById("home-banner-swiper");
+            if (box) box.style.transform = `translateX(-${bannerIdx * 100}%)`;
+            const dots = document.getElementById("home-banner-dots");
+            if (dots) dots.querySelectorAll(".dot").forEach((d, i) => d.classList.toggle("active", i === bannerIdx));
+        }
+        function gotoBanner(i) {
+            const box = document.getElementById("home-banner-swiper");
+            if (!box || !box.children.length) return;
+            bannerIdx = (i + box.children.length) % box.children.length;
+            updateBannerOffset();
+        }
+        function nextBanner() { gotoBanner(bannerIdx + 1); }
+        function startBanner() {
+            clearInterval(bannerTimer);
+            bannerTimer = setInterval(() => nextBanner(), 5000);
+        }
+        function stopBanner() { clearInterval(bannerTimer); bannerTimer = null; }
+        // 榜单数据源
+        function rankRecommend() {
+            const cards = ScenarioCardService.loadCards();
+            const lib = Array.isArray(window.SCENARIO_LIBRARY) ? window.SCENARIO_LIBRARY : [];
+            const all = [...cards, ...lib].filter((c, i, arr) => arr.findIndex((x) => x.id === c.id) === i);
+            return all
+                .map((c) => ({ card: c, plays: ScenarioCardViewService.localPlays(c.id) }))
+                .sort((a, b) => b.plays - a.plays)
+                .slice(0, 10)
+                .filter((x) => x.plays > 0);
+        }
+        async function rankHot() {
+            if (!AuthService.getToken()) return [];
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/cards/community?sort=play_count`, { headers: { "X-Auth-Token": "Bearer " + AuthService.getToken() } });
+                const d = await res.json().catch(() => ({}));
+                return (d.items || []).slice(0, 10);
+            } catch (e) { return []; }
+        }
+        async function rankChars() {
+            if (!AuthService.getToken()) return [];
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/characters/hot`, { headers: { "X-Auth-Token": "Bearer " + AuthService.getToken() } });
+                const d = await res.json().catch(() => ({}));
+                return (d.items || []).slice(0, 10);
+            } catch (e) { return []; }
+        }
+        async function renderRankPanel(tab) {
+            activeRank = tab;
+            const panel = document.getElementById("home-rank-panel");
+            if (!panel) return;
+            document.querySelectorAll("#home-rank-tabs .scenario-filter-chip").forEach((b) => {
+                b.classList.toggle("active", b.dataset.rank === tab);
+            });
+            panel.style.display = "block";
+            panel.innerHTML = '<span class="list-sub">加载中...</span>';
+            if (tab === "recommend") {
+                const rows = rankRecommend();
+                if (!rows.length) { panel.innerHTML = '<span class="list-sub">还没有游玩记录，先去玩几张卡吧～</span>'; return; }
+                panel.innerHTML = rows.map((x, i) => `<div class="rank-row" onclick="Controller.playScenarioCard('${x.card.id}')">
+                    <span class="rank-no">${i + 1}</span>
+                    <div class="rank-main">
+                        <div class="rank-title">${MarkdownService.escapeHtml(String(x.card.title || ""))} <span class="list-sub">${MarkdownService.escapeHtml(String(x.card.category || ""))}</span></div>
+                        <div class="rank-sub">👁 ${x.plays} 次游玩</div>
+                    </div>
+                    <span class="mini-btn primary">游玩</span>
+                </div>`).join("");
+            } else if (tab === "hot") {
+                const items = await rankHot();
+                if (!items.length) { panel.innerHTML = '<span class="list-sub">社区暂无作品，快去创作并上架吧～</span>'; return; }
+                panel.innerHTML = items.map((c, i) => `<div class="rank-row" onclick="Controller.useCommunityCard('${c.id}')">
+                    <span class="rank-no">${i + 1}</span>
+                    <div class="rank-main">
+                        <div class="rank-title">${MarkdownService.escapeHtml(String(c.title || ""))} <span class="list-sub">${MarkdownService.escapeHtml(String(c.category || ""))}</span></div>
+                        <div class="rank-sub">👁 ${c.play_count} 游玩 · 作者 ${MarkdownService.escapeHtml(String(c.author_id || "").slice(0, 6))}</div>
+                    </div>
+                    <span class="mini-btn primary">使用</span>
+                </div>`).join("");
+            } else {
+                const items = await rankChars();
+                if (!items.length) { panel.innerHTML = '<span class="list-sub">暂无热聊角色，给喜欢的角色送支笔芯吧～</span>'; return; }
+                panel.innerHTML = items.map((c, i) => `<div class="rank-row">
+                    <span class="rank-no">${i + 1}</span>
+                    <div class="rank-main">
+                        <div class="rank-title">${MarkdownService.escapeHtml(String(c.name || ""))} <span class="list-sub">${MarkdownService.escapeHtml(String(c.role || ""))}</span></div>
+                        <div class="rank-sub"><img class="ic" src="icons/pen.svg" alt=""> ${Number(c.pens || 0)} 笔芯 · 来自「${MarkdownService.escapeHtml(String(c.card_title || ""))}」</div>
+                    </div>
+                </div>`).join("");
+            }
+        }
+        function toggleRankPanel(tab) {
+            const panel = document.getElementById("home-rank-panel");
+            if (!panel) return;
+            if (activeRank === tab && panel.style.display !== "none") { panel.style.display = "none"; return; }
+            renderRankPanel(tab);
+        }
+        function renderSortBar() {
+            const bar = document.getElementById("scenario-sort-bar");
+            if (!bar) return;
+            bar.querySelectorAll(".scenario-filter-chip").forEach((b) => {
+                b.classList.toggle("active", b.dataset.sort === ScenarioCardViewService.getSortMode());
+            });
+        }
+        function renderHomeDiscovery() {
+            renderBanner();
+            startBanner();
+            renderSortBar();
+            const panel = document.getElementById("home-rank-panel");
+            if (panel && panel.style.display !== "none") renderRankPanel(activeRank);
+        }
+        return { renderHomeDiscovery, renderRankPanel, toggleRankPanel, gotoBanner, nextBanner, bannerCards, renderSortBar };
+    })();
+    // 内联 onclick(轮播圆点)直接引用,故挂全局
+    window.DiscoverService = DiscoverService;
 
     const ScenarioCardInteractionService = (() => {
         function bindSwipeAndSort(row, callbacks) {
@@ -12131,7 +12372,10 @@ const token = delta.content || "";
                 const s = document.getElementById("scenario-lib-script");
                 if (s) s.addEventListener("load", () => {
                     try { UIRenderer.renderScenarioCards(); } catch (e) { console.error("场景库延迟渲染失败", e); }
+                    try { DiscoverService.renderHomeDiscovery(); } catch (e) { console.error("发现页延迟渲染失败", e); }
                 });
+            } else {
+                DiscoverService.renderHomeDiscovery();
             }
             // 场景库滚动懒加载:首片 12 张(scenarios.js)先渲染,下滑到底动态注入 partN.js 补全
             bindScenarioChunkScroll();
@@ -12177,6 +12421,7 @@ const token = delta.content || "";
                 scenarioChunkLoading = false;
                 updateScenarioLoadingUI();
                 try { UIRenderer.renderScenarioCards(); } catch (e) { console.error("场景库分片渲染失败", e); }
+                try { DiscoverService.renderHomeDiscovery(); } catch (e) { console.error("发现页补载重渲失败", e); }
                 scenarioMaybeAutoFill();
             };
             s.onerror = () => { scenarioChunkLoading = false; updateScenarioLoadingUI(); }; // 404=无更多分片,停止
@@ -12648,6 +12893,9 @@ ${recent || "（无）"}
                 if (content) content.scrollTop = 0;
                 if (target) target.scrollTop = 0;
                 if (typeof window.scrollTo === "function") window.scrollTo(0, 0);
+            }
+            if (viewId === "view-home" && !silent) {
+                DiscoverService.renderHomeDiscovery();
             }
         }
         function openInfoModal(title, desc, actionText, onAction) {
@@ -13801,7 +14049,16 @@ function openNpcProfile(npcId) {
         async function toggleCharacterFav(cardId, roleId) { await GameDetailService.toggleRoleFavorite(cardId, roleId, null); loadCommunityChars(); }
         function renderTemplateMarket() { TemplateMarketService.render(); }
         function useSkeletonTemplate(cardId) { TemplateMarketService.useTemplate(cardId); }
-        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, avatarPick, avatarUpload, avatarAiSuggest, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, advanceStory, openPhoneDiary, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate };
+        function renderHomeDiscovery() { DiscoverService.renderHomeDiscovery(); }
+        function switchRankTab(tab) { DiscoverService.toggleRankPanel(tab); }
+        function switchSortMode(mode) {
+            ScenarioCardViewService.setSortMode(mode);
+            DiscoverService.renderSortBar();
+            UIRenderer.renderScenarioCards();
+        }
+        // 创作向导入口（批 D 替换为三步向导；当前先走新建卡片）
+        function openCreationWizard() { createScenarioCard(); }
+        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, avatarPick, avatarUpload, avatarAiSuggest, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, advanceStory, openPhoneDiary, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate, renderHomeDiscovery, switchRankTab, switchSortMode, openCreationWizard };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
@@ -13833,6 +14090,10 @@ function openNpcProfile(npcId) {
     function clearPostImage() { Controller.clearPostImage(); }
     function renderTemplateMarket() { Controller.renderTemplateMarket(); }
     function useSkeletonTemplate(cardId) { Controller.useSkeletonTemplate(cardId); }
+    function renderHomeDiscovery() { Controller.renderHomeDiscovery(); }
+    function switchRankTab(tab) { Controller.switchRankTab(tab); }
+    function switchSortMode(mode) { Controller.switchSortMode(mode); }
+    function openCreationWizard() { Controller.openCreationWizard(); }
     function bgmToggle() { UIRenderer.bgmToggle(); }
     function bgmNext() { UIRenderer.bgmNext(); }
     function bgmPrev() { UIRenderer.bgmPrev(); }
