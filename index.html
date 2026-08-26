@@ -1621,6 +1621,15 @@
             margin-right: 0 !important;
         }
 
+        /* 剧情卡片角色台词 [对白] 蓝色;深夜模式粉色 */
+        .npc-dialogue {
+            color: #2f6fd0;
+            font-weight: 600;
+        }
+        body[data-theme="dark"] .npc-dialogue {
+            color: #f2a6c6;
+        }
+
         .bubble.ai .ai-beauty-card img,
         .bubble.ai .ai-beauty-card video,
         .bubble.ai .ai-beauty-card canvas,
@@ -3748,17 +3757,18 @@
             font-size: 0.62rem;
             padding: 1px 6px;
         }
-        /* 立即游玩按钮右下角 + 全局按钮宽度统一（flex 均分） */
+        /* 立即游玩按钮右下角:详情靠左、立即游玩自适应宽度贴右下角 */
         .scenario-card-btns {
             display: flex;
             gap: 6px;
             margin-top: auto;
             padding-top: 8px;
+            justify-content: space-between;
         }
         .scenario-card-btns .tiny-btn {
-            flex: 1;
+            flex: 0 0 auto;
             min-width: 0;
-            padding: 7px 4px;
+            padding: 7px 10px;
             font-size: 0.74rem;
             text-align: center;
         }
@@ -4153,6 +4163,22 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <div class="sf-section-title" style="margin-top:8px;">🎨 卡片样式</div>
                 <input id="scenario-theme-input" type="hidden">
                 <div id="scenario-theme-picker" class="theme-picker"></div>
+
+                <div class="sf-section" style="margin-top:8px;">
+                    <div class="sf-section-title">🖼️ 封面图（自定义卡可用：上传本地图，或消耗 100 云币 AI 生成）</div>
+                    <div id="scenario-cover-preview" style="width:100%;aspect-ratio:4/3;border-radius:10px;background:var(--card-soft,#f4ead8);background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;color:var(--sub,#806a55);font-size:0.8rem;overflow:hidden;margin-bottom:6px;border:1px solid var(--line,#e2ccb0);">未设置封面</div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
+                        <button type="button" class="mini-btn" onclick="ScenarioEditorService.pickCoverFile()">📤 上传封面</button>
+                        <button type="button" class="mini-btn ghost" onclick="ScenarioEditorService.aiGenCover()">✨ AI 生成（100 云币）</button>
+                        <button type="button" class="mini-btn ghost" id="scenario-cover-remove" onclick="ScenarioEditorService.removeCover()" style="display:none;">🗑 移除封面</button>
+                    </div>
+                    <div class="sf-full">
+                        <label class="sf-label">AI 生成提示词（≤120 字，自绘画面描述）</label>
+                        <textarea id="sf-cover-prompt" class="scenario-editor" style="min-height:50px;" placeholder="如：雨夜霓虹街道，少年撑着伞回望，赛博朋克色调，电影感构图"></textarea>
+                    </div>
+                    <div id="sf-cover-msg" style="font-size:0.75rem;color:var(--sub,#806a55);margin-top:4px;white-space:pre-wrap;"></div>
+                    <input type="file" id="scenario-cover-file" accept="image/*" style="display:none;">
+                </div>
 
                 <div id="scenario-structured-form" style="margin-top:4px;">
                     <div class="sf-section">
@@ -6275,7 +6301,10 @@ function rebuildChoicesBlock(body, labels = []) {
                 return `${normalized}${streaming ? '<span class="streaming-cursor"></span>' : ""}`;
             }
             const dialogueNormalized = formatQuotedDialogueLines(text);
-            return MarkdownService.render(dialogueNormalized) + (streaming ? '<span class="streaming-cursor"></span>' : "");
+            // 角色台词 [对白] 包 span 染色(安全:markdown 已转义 HTML,排除 < > 不触碰标签)
+            return MarkdownService.render(dialogueNormalized)
+                .replace(/\[([^\[\]<>\n]{1,120})\]/g, (m, t) => `<span class="npc-dialogue">[${t}]</span>`)
+                + (streaming ? '<span class="streaming-cursor"></span>' : "");
         }
         function bindHtmlChoiceEvents(container) {
             if (!container) return;
@@ -8808,6 +8837,7 @@ function rebuildChoicesBlock(body, labels = []) {
             // 结构化表单始终展开；旧纯文本卡自动反向解析填充
             ScenarioEditorService.syncFormFromCard(selectedScenario);
             ScenarioEditorService.renderThemePicker();
+            ScenarioEditorService.syncCoverFromCard(selectedScenario);
 
             const darkModeInput = document.getElementById("ui-dark-mode-enabled");
             if (darkModeInput) darkModeInput.checked = ThemeService.getMode() === "dark";
@@ -9938,7 +9968,97 @@ function rebuildChoicesBlock(body, labels = []) {
             };
             return { structured: data, text: renderTextFromData(data) };
         }
-        return { readForm, writeForm, focusEditor, renderThemePicker, parseTextToStructured, emptyStructuredFromText, addNpcRow, removeNpcRow, syncFormFromCard, readStructuredForm, mapBgImage, renderMapBgPicker, selectMapBg, mapFilePicked, currentMapBg, renderMapPreview, addMapPlaceRow, removeMapPlaceRow, pickPlacePos, addWorldbookRow, removeWorldbookRow, addEndingRow, removeEndingRow, addAttrRow, removeAttrRow, addFixedEventRow, removeFixedEventRow, addIncomeRow, removeIncomeRow };
+
+        // ==================== 封面图（自定义卡：上传本地 / 100 云币 AI 生成） ====================
+        let _coverUrl = "";
+        function coverPreviewEl() { return el("scenario-cover-preview"); }
+        function coverMsg(text, isError) {
+            const m = el("sf-cover-msg");
+            if (m) { m.textContent = text || ""; m.style.color = isError ? "#c0392b" : "var(--sub,#806a55)"; }
+        }
+        function syncCoverFromCard(card) {
+            _coverUrl = String(card?.coverUrl || "");
+            const pv = coverPreviewEl();
+            const rmBtn = el("scenario-cover-remove");
+            if (pv) {
+                pv.style.backgroundImage = _coverUrl ? `url("${_coverUrl}")` : "";
+                pv.textContent = _coverUrl ? "" : "未设置封面";
+            }
+            if (rmBtn) rmBtn.style.display = _coverUrl ? "" : "none";
+            coverMsg("");
+        }
+        function getCurrentCover() { return _coverUrl; }
+        // 本地图片压缩:最大 640px 宽 + JPEG 0.8,控制 localStorage 占用
+        function compressImageFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onerror = () => reject(new Error("读取文件失败"));
+                reader.onload = () => {
+                    const img = new Image();
+                    img.onerror = () => reject(new Error("图片解析失败，请换一张"));
+                    img.onload = () => {
+                        const MAX_W = 640;
+                        const scale = img.width > MAX_W ? MAX_W / img.width : 1;
+                        const canvas = document.createElement("canvas");
+                        canvas.width = Math.max(1, Math.round(img.width * scale));
+                        canvas.height = Math.max(1, Math.round(img.height * scale));
+                        const ctx = canvas.getContext("2d");
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL("image/jpeg", 0.8));
+                    };
+                    img.src = reader.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        function pickCoverFile() {
+            const card = ScenarioCardService.getSelectedCard();
+            if (card && !(card.sourceType && card.sourceType !== "official")) { coverMsg("仅自定义卡可设置封面，官方卡已内置封面", true); return; }
+            const input = el("scenario-cover-file");
+            if (!input) return;
+            input.onchange = async () => {
+                const file = input.files && input.files[0];
+                input.value = "";
+                if (!file) return;
+                try {
+                    const url = await compressImageFile(file);
+                    _coverUrl = url;
+                    const pv = coverPreviewEl();
+                    if (pv) { pv.style.backgroundImage = `url("${_coverUrl}")`; pv.textContent = ""; }
+                    if (el("scenario-cover-remove")) el("scenario-cover-remove").style.display = "";
+                    coverMsg("封面已上传，保存后生效");
+                } catch (e) { coverMsg(String(e.message || e), true); }
+            };
+            input.click();
+        }
+        async function aiGenCover() {
+            const card = ScenarioCardService.getSelectedCard();
+            if (!card) return;
+            const isSelf = card.sourceType && card.sourceType !== "official";
+            if (!isSelf) { coverMsg("仅自定义卡可 AI 生成封面，官方卡已内置封面", true); return; }
+            const prompt = (el("sf-cover-prompt")?.value || "").trim().slice(0, 120);
+            if (!prompt) { coverMsg("请先填写 AI 生成提示词", true); return; }
+            if (!AuthService.getToken()) { coverMsg("请先登录后再生成封面", true); return; }
+            coverMsg("⏳ 正在生成封面（约 10-40 秒），请稍候...");
+            try {
+                const r = await CoverService.ensureSelf(card, { prompt, force: true });
+                if (r.error) { coverMsg(r.error, true); return; }
+                if (!r.url) { coverMsg("生成失败，请稍后重试", true); return; }
+                _coverUrl = r.url;
+                const pv = coverPreviewEl();
+                if (pv) { pv.style.backgroundImage = `url("${_coverUrl}")`; pv.textContent = ""; }
+                if (el("scenario-cover-remove")) el("scenario-cover-remove").style.display = "";
+                coverMsg("✅ 封面生成成功，保存后生效（已扣除 100 云币）");
+            } catch (e) { coverMsg("生成失败：" + String(e.message || e), true); }
+        }
+        function removeCover() {
+            _coverUrl = "";
+            const pv = coverPreviewEl();
+            if (pv) { pv.style.backgroundImage = ""; pv.textContent = "未设置封面"; }
+            if (el("scenario-cover-remove")) el("scenario-cover-remove").style.display = "none";
+            coverMsg("");
+        }
+        return { readForm, writeForm, focusEditor, renderThemePicker, parseTextToStructured, emptyStructuredFromText, addNpcRow, removeNpcRow, syncFormFromCard, readStructuredForm, mapBgImage, renderMapBgPicker, selectMapBg, mapFilePicked, currentMapBg, renderMapPreview, addMapPlaceRow, removeMapPlaceRow, pickPlacePos, addWorldbookRow, removeWorldbookRow, addEndingRow, removeEndingRow, addAttrRow, removeAttrRow, addFixedEventRow, removeFixedEventRow, addIncomeRow, removeIncomeRow, syncCoverFromCard, getCurrentCover, pickCoverFile, aiGenCover, removeCover };
     })();
 
     const SaveSlotService = (() => {
@@ -10741,6 +10861,23 @@ function rebuildChoicesBlock(body, labels = []) {
             return parts.join("，");
         }
         function safeId(cardId) { return String(cardId || "x").replace(/[^\w-]/g, "_"); }
+        // cover 请求全局并发队列(最多 2 个 in-flight):视口内多卡并发 paint 不再同时打爆生成接口(Agnes 503 queue full 的直接诱因)
+        const _coverQueue = [];
+        let _coverInflight = 0;
+        const COVER_MAX_CONCURRENT = 2;
+        function enqueueCover(fn) {
+            return new Promise((resolve) => {
+                _coverQueue.push({ fn, resolve });
+                pumpCover();
+            });
+        }
+        function pumpCover() {
+            while (_coverInflight < COVER_MAX_CONCURRENT && _coverQueue.length) {
+                const { fn, resolve } = _coverQueue.shift();
+                _coverInflight++;
+                fn().catch(() => {}).then(resolve, resolve).finally(() => { _coverInflight--; pumpCover(); });
+            }
+        }
         async function ensure(card) {
             const id = String(card?.id || "");
             if (!id) return "";
@@ -10750,11 +10887,11 @@ function rebuildChoicesBlock(body, labels = []) {
             if (hit) return hit;
             if (!AuthService.getToken()) return "";
             try {
-                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/cover/generate`, {
+                const res = await enqueueCover(() => fetch(`${AppConfig.proxy.baseUrl}/api/cover/generate`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + AuthService.getToken() },
                     body: JSON.stringify({ prompt })
-                });
+                }));
                 const d = await res.json().catch(() => ({}));
                 if (!res.ok || !d.image) return "";
                 // 大图 dataURL 不落 localStorage(5MB 限额会爆;worker 侧 KV 7 天缓存已兜底,下次 ensure 接口秒回)
@@ -10766,8 +10903,40 @@ function rebuildChoicesBlock(body, labels = []) {
                 return d.image;
             } catch (e) { return ""; }
         }
+        // 自建卡封面:优先已上传 coverUrl → 本机私有缓存 → 付费 AI 生成(consume, 私有 KV 跨设备复用, 不与其他用户共享)
+        const SELF_KEY = "bitlife_card_cover_self_v1";
+        function readSelf() { try { return JSON.parse(localStorage.getItem(SELF_KEY) || "{}"); } catch (e) { return {}; } }
+        function writeSelf(m) { try { localStorage.setItem(SELF_KEY, JSON.stringify(m)); } catch (e) {} }
+        async function ensureSelf(card, opts = {}) {
+            if (!opts.force && card?.coverUrl) return { url: card.coverUrl };
+            const cid = String(card?.id || "");
+            if (!cid) return { url: "" };
+            const prompt = String(opts.prompt || "").trim().slice(0, 120);
+            const ph = prompt ? hashStr(prompt) : "";
+            const rec = readSelf()[cid];
+            // 缓存 key 记录提示词 hash:改提示词重新生成不命中旧缓存(重新扣费);首页 paint 无提示词直接吃缓存
+            if (rec && rec.url && Date.now() - rec.ts < TTL && (!prompt || rec.ph === ph)) return { url: rec.url };
+            if (!prompt || !AuthService.getToken()) return { url: "" }; // 未提供提示词不自动生成
+            try {
+                const res = await enqueueCover(() => fetch(`${AppConfig.proxy.baseUrl}/api/cover/generate`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + AuthService.getToken() },
+                    body: JSON.stringify({ prompt, consume: true })
+                }));
+                const d = await res.json().catch(() => ({}));
+                if (res.status === 402) return { url: "", error: d.error || "云币不足" };
+                if (!res.ok || !d.image) return { url: "", error: d.error || "生成失败" };
+                if (d.image.length < 300000) {
+                    const m = readSelf();
+                    m[cid] = { url: d.image, ts: Date.now(), ph };
+                    writeSelf(m);
+                }
+                return { url: d.image };
+            } catch (e) { return { url: "", error: "网络异常，请稍后重试" }; }
+        }
         async function paint(elId, card) {
-            const url = await ensure(card);
+            const isSelf = card?.sourceType && card.sourceType !== "official";
+            const url = isSelf ? (await ensureSelf(card, {})).url : await ensure(card);
             const el = document.getElementById(elId);
             if (!el) return;
             if (url) {
@@ -10775,7 +10944,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 el.classList.add("has-cover");
             }
         }
-        return { ensure, cached, paint, safeId, promptOf };
+        return { ensure, cached, paint, safeId, promptOf, ensureSelf };
     })();
 
     // ---- 发现页：轮播推荐 + 榜单聚合（对齐 uugame 发现页，简化交互） ----
@@ -13558,7 +13727,8 @@ const token = delta.content || "";
             const selectedCardId = ScenarioCardService.getSelectedId();
             const payload = {
                 title: form.title || "未命名设定",
-                theme: form.theme
+                theme: form.theme,
+                coverUrl: ScenarioEditorService.getCurrentCover() || undefined
             };
             // 结构化表单永远展开：以分区表单为准，生成结构化数据 + 渲染文本
             const r = ScenarioEditorService.readStructuredForm();
