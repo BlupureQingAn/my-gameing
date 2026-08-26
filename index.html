@@ -10737,9 +10737,12 @@ function rebuildChoicesBlock(body, labels = []) {
                 });
                 const d = await res.json().catch(() => ({}));
                 if (!res.ok || !d.image) return "";
-                const m = read();
-                m[id] = { url: d.image, ts: Date.now(), hash: ph };
-                write(m);
+                // 大图 dataURL 不落 localStorage(5MB 限额会爆;worker 侧 KV 7 天缓存已兜底,下次 ensure 接口秒回)
+                if (d.image.length < 300000) {
+                    const m = read();
+                    m[id] = { url: d.image, ts: Date.now(), hash: ph };
+                    write(m);
+                }
                 return d.image;
             } catch (e) { return ""; }
         }
