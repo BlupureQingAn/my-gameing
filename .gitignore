@@ -5,3 +5,6 @@ scripts/
 docs/
 presets/
 pay/
+.tmp-inline.js
+redo_presets.py
+.vscode/
