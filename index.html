@@ -793,19 +793,24 @@
         .advance-btn {
             display: block;
             margin: 14px auto 4px;
-            width: 116px;
-            height: 116px;
-            border-radius: 50%;
+            width: min(76vw, 320px);
+            height: 64px;
+            border-radius: 22px;
             border: none;
-            background: radial-gradient(circle at 32% 28%, #ff9db8, #f06a8e 55%, #e0527c);
-            color: #fff;
-            font-size: 1rem;
+            background: linear-gradient(135deg, #f7e6c1, #eed19a 55%, #e2bd73);
+            color: #6b4e1f;
+            font-size: 1.05rem;
             font-weight: 900;
             cursor: pointer;
-            box-shadow: 0 8px 24px rgba(224,82,124,0.45);
+            box-shadow: 0 8px 24px rgba(226, 189, 115, 0.45);
             transition: transform .15s, box-shadow .15s;
         }
-        .advance-btn:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 12px 30px rgba(224,82,124,0.55); }
+        .advance-btn:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 12px 30px rgba(226, 189, 115, 0.55); }
+        body[data-theme="dark"] .advance-btn {
+            background: linear-gradient(135deg, #6b5a2f, #57481f 55%, #443817);
+            color: #f3e2bd;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+        }
         .advance-btn:active { transform: scale(.97); }
         .advance-hint { text-align: center; font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px; }
         /* 手机页模拟器 */
@@ -1140,7 +1145,7 @@
         }
 
         /* 卡片直接平铺在 view-main(原 story-board 容器已删除;去外层气泡容器视觉,卡片与页面同底) */
-        #view-main {
+        #view-main.active {
             position: relative;
             display: flex;
             flex-direction: column;
@@ -2663,6 +2668,71 @@
         .hb-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
         .hb-plays { font-size: 0.72rem; color: var(--sub); }
         .hb-play-btn { font-size: 0.74rem; }
+        /* B1：轮播卡封面区（AI 封面按需生成，未生成时渐变+动效占位） */
+        .hb-cover {
+            position: relative;
+            height: 104px;
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #ffe8c0, #f3c98b 55%, #e2b26b);
+            background-size: cover;
+            background-position: center;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+        }
+        body[data-theme="dark"] .hb-cover {
+            background: linear-gradient(135deg, #3a3355, #2c2a4a 55%, #232140);
+        }
+        .hb-cover .scc-emoji {
+            font-size: 2.2rem;
+            filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.18));
+            animation: scc-breathe 2.6s ease-in-out infinite;
+        }
+        .hb-cover.has-cover .scc-emoji { display: none; }
+        .hb-cover .scc-shine {
+            position: absolute;
+            top: -60%;
+            left: -30%;
+            width: 60%;
+            height: 220%;
+            background: linear-gradient(100deg, transparent 40%, rgba(255, 255, 255, 0.5) 50%, transparent 60%);
+            animation: scc-shine 3.2s linear infinite;
+            pointer-events: none;
+        }
+        body[data-theme="dark"] .hb-cover .scc-shine {
+            background: linear-gradient(100deg, transparent 40%, rgba(255, 255, 255, 0.12) 50%, transparent 60%);
+        }
+        /* B1：推荐榜 top3 小封面 */
+        .rank-cover {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            flex: none;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #ffe8c0, #e2b26b);
+            background-size: cover;
+            background-position: center;
+        }
+        body[data-theme="dark"] .rank-cover {
+            background: linear-gradient(135deg, #3a3355, #2c2a4a 55%, #232140);
+        }
+        .rank-cover .scc-shine {
+            position: absolute;
+            top: -60%;
+            left: -30%;
+            width: 60%;
+            height: 220%;
+            background: linear-gradient(100deg, transparent 40%, rgba(255, 255, 255, 0.5) 50%, transparent 60%);
+            animation: scc-shine 3.2s linear infinite;
+            pointer-events: none;
+        }
+        body[data-theme="dark"] .rank-cover .scc-shine {
+            background: linear-gradient(100deg, transparent 40%, rgba(255, 255, 255, 0.12) 50%, transparent 60%);
+        }
         .home-banner-dots { display: flex; gap: 5px; justify-content: center; margin-top: 6px; }
         .home-banner-dots .dot { width: 6px; height: 6px; border-radius: 99px; background: var(--line); cursor: pointer; }
         .home-banner-dots .dot.active { background: var(--accent); width: 14px; }
@@ -3354,6 +3424,222 @@
 
 
 
+        /* ==================== 深夜主题补丁（统一适配，2026-08-26） ==================== */
+        body[data-theme="dark"] .scenario-badge,
+        body[data-theme="dark"] .scenario-badge.official,
+        body[data-theme="dark"] .scenario-badge.custom {
+            border-color: rgba(143, 125, 255, 0.4);
+            color: #c9d4f0;
+            background: rgba(35, 43, 64, 0.9);
+        }
+        body[data-theme="dark"] input[type="range"] {
+            background: transparent;
+            accent-color: var(--accent);
+        }
+        body[data-theme="dark"] .mini-btn {
+            background: var(--btn-ghost-bg);
+            color: var(--btn-ghost-text);
+            border-color: var(--btn-ghost-line);
+        }
+        body[data-theme="dark"] #display-user-avatar {
+            background: rgba(35, 43, 64, 0.9);
+        }
+
+        /* ---- 批 B4/C3/C5：首页卡片 2 列网格 + 封面动效区 + 左滑仅收藏（2026-08-26） ---- */
+        #scenario-card-list {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            align-items: stretch;
+        }
+        #scenario-card-list .scenario-card {
+            margin-bottom: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        #scenario-card-list .scenario-card-main {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            padding: 8px;
+            min-width: 0;
+        }
+        .scenario-card-cover {
+            position: relative;
+            height: 104px;
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #ffe8c0, #f3c98b 55%, #e2b26b);
+            margin-bottom: 8px;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+        }
+        body[data-theme="dark"] .scenario-card-cover {
+            background: linear-gradient(135deg, #3a3355, #2c2a4a 55%, #232140);
+        }
+        .scenario-card-cover .scc-emoji {
+            font-size: 2.4rem;
+            filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.18));
+            animation: scc-breathe 2.6s ease-in-out infinite;
+        }
+        .scenario-card-cover .scc-shine {
+            position: absolute;
+            top: -60%;
+            left: -30%;
+            width: 60%;
+            height: 220%;
+            background: linear-gradient(100deg, transparent 40%, rgba(255, 255, 255, 0.5) 50%, transparent 60%);
+            animation: scc-shine 3.2s linear infinite;
+            pointer-events: none;
+        }
+        body[data-theme="dark"] .scenario-card-cover .scc-shine {
+            background: linear-gradient(100deg, transparent 40%, rgba(255, 255, 255, 0.12) 50%, transparent 60%);
+        }
+        @keyframes scc-breathe {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        @keyframes scc-shine {
+            0% { left: -30%; }
+            60%, 100% { left: 130%; }
+        }
+        #scenario-card-list .list-title {
+            font-size: 0.88rem;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-all;
+        }
+        #scenario-card-list .list-sub {
+            font-size: 0.72rem;
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        #scenario-card-list .scenario-badges {
+            flex-wrap: wrap;
+        }
+        #scenario-card-list .scenario-badge {
+            font-size: 0.62rem;
+            padding: 1px 6px;
+        }
+        /* 立即游玩按钮右下角 + 全局按钮宽度统一（flex 均分） */
+        .scenario-card-btns {
+            display: flex;
+            gap: 6px;
+            margin-top: auto;
+            padding-top: 8px;
+        }
+        .scenario-card-btns .tiny-btn {
+            flex: 1;
+            min-width: 0;
+            padding: 7px 4px;
+            font-size: 0.74rem;
+            text-align: center;
+        }
+        .scenario-card-btns .tiny-btn.primary {
+            background: linear-gradient(135deg, #f7e6c1, #e2bd73);
+            color: #6b4e1f;
+            border-color: #d9ae5f;
+            font-weight: 700;
+        }
+        body[data-theme="dark"] .scenario-card-btns .tiny-btn.primary {
+            background: linear-gradient(135deg, #4a4258, #3a3350);
+            color: #ffe9b0;
+            border-color: #6b5a8a;
+        }
+        /* 左滑只剩黄色收藏按钮 */
+        .scenario-card.swiped .scenario-card-main {
+            transform: translateX(-88px);
+        }
+        .scenario-card-actions {
+            width: 88px;
+        }
+        .scenario-action-btn.collect {
+            background: linear-gradient(180deg, #ffd76b, #f0b429);
+            color: #5d4308;
+            font-size: 0.78rem;
+        }
+        body[data-theme="dark"] .scenario-action-btn.collect {
+            background: linear-gradient(180deg, #8a6d1f, #6b5215);
+            color: #ffe9a8;
+        }
+        .scenario-action-btn.collect.on {
+            background: linear-gradient(180deg, #ffe9a8, #f5d37a);
+        }
+        /* 我的页：最近游玩/收藏行（左滑操作） */
+        .recent-row {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--card-soft);
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+        }
+        .recent-row .recent-main {
+            flex: 1;
+            min-width: 0;
+            padding: 8px 10px;
+            transition: transform 0.2s ease;
+            background: var(--card-soft);
+        }
+        .recent-row.swiped .recent-main {
+            transform: translateX(-88px);
+        }
+        .recent-row .tiny-btn {
+            flex: none;
+            margin-right: 8px;
+        }
+        .recent-row .recent-title {
+            font-weight: 700;
+            font-size: 0.88rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .recent-actions {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 88px;
+            display: flex;
+            align-items: stretch;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+        .recent-row.swiped .recent-actions {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .recent-actions .scenario-action-btn {
+            border-radius: 0;
+        }
+        /* C4：游玩页「这段故事」入口（推进按钮旁） */
+        .story-end-btn {
+            margin-top: 10px;
+            border: 1px solid var(--line);
+            background: var(--btn-ghost-bg);
+            color: var(--btn-ghost-text);
+            border-radius: 12px;
+            padding: 9px 16px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border-color: var(--btn-ghost-line);
+        }
+        .story-end-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent-dark);
+        }
+
     </style>
 </head>
 <body>
@@ -3493,7 +3779,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <div class="list-title" id="membership-title" style="margin:0;">开通会员</div>
             <button onclick="MembershipService.closePanel()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--sub);">✕</button>
         </div>
-        <div class="list-sub" id="membership-intro-text">充值云币解锁剧本卡、抵扣 AI 对话；终身会员 89 元免一切云币消耗。</div>
+        <div class="list-sub" id="membership-intro-text">充值云币解锁剧本卡、抵扣 AI 对话；终身会员 188 元免一切云币消耗。</div>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin:10px 0;padding:10px 12px;border-radius:12px;background:var(--card-bg,#fffdf8);border:1px solid var(--line);">
             <div style="font-size:0.9rem;font-weight:700;">💰 云币余额：<span id="membership-coin-balance" style="color:var(--accent-dark,#c0392b);">--</span></div>
             <button id="membership-checkin-btn" class="mini-btn primary" style="margin:0;padding:6px 14px;" onclick="MembershipService.doCheckin()">每日签到</button>
@@ -3746,6 +4032,18 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <button class="mini-btn ghost" onclick="switchView('view-home')">← 返回首页</button>
                 </div>
             </section>
+            <!-- C1：最近游玩（不限数量，左滑移出列表） -->
+            <section class="card">
+                <div class="list-title">🕘 最近游玩</div>
+                <div class="list-sub">左滑卡片可将其移出最近游玩列表（不影响存档）。</div>
+                <div id="recent-played-list" style="margin-top:8px;"><span class="list-sub">加载中...</span></div>
+            </section>
+            <!-- C2：我的收藏 -->
+            <section class="card">
+                <div class="list-title">⭐ 我的收藏</div>
+                <div class="list-sub">收藏的卡片都在这里，左滑可取消收藏。</div>
+                <div id="my-collect-list" style="margin-top:8px;"><span class="list-sub">加载中...</span></div>
+            </section>
             <section class="card">
                 <div class="list-title">📖 叙事控制</div>
                 <div class="list-sub">以下设置即时生效并注入 AI 提示词，无需保存按钮。</div>
@@ -3865,26 +4163,24 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <div id="my-community-cards" style="margin-top:8px;"><span class="list-sub">加载中...</span></div>
             </section>
             <section class="card">
-                <div class="list-title">🎬 这段故事</div>
-                <div class="list-sub">用 AI 为当前人生撰写结局评定（S~D 五级 + 专属结局正文 + 人生统计）。需已开始游玩且剧情有进展。</div>
-                <div style="margin-top:10px;">
-                    <button class="mini-btn primary" onclick="endStory()">🎬 结束这段故事（AI 评定）</button>
-                </div>
-            </section>
-            <section class="card">
                 <div class="list-title">👑 会员服务</div>
-                <div class="list-sub" id="membership-settings-text">AI 对话按 token 计费（输入 4 币/千 token、输出 12 币/千 token，普通对话约 10 币），官方剧本卡解锁需 5000 云币（永久拥有）。开通终身会员（限时 ¥89）后免一切云币消耗、全部剧本卡直接游玩。自备 AI 接口（BYOK）不消耗云币。</div>
+                <div class="list-sub" id="membership-settings-text">AI 对话按 token 计费（输入 4 币/千 token、输出 12 币/千 token，普通对话约 10 币），官方剧本卡全部免费游玩。开通终身会员（限时 ¥188）后免一切云币消耗（AI 对话）+ 社区付费卡直接游玩。自备 AI 接口（BYOK）不消耗云币，但解锁社区付费卡仍需云币（会员可直接游玩）。</div>
             </section>
         </section>
         <!-- 保持 settings 视图正常闭合即可 -->
 
-        <section id="view-main" class="view-section active">
+        <section id="view-main" class="view-section">
             <div id="play-status-bar"></div>
             <div class="play-tabs" id="play-tabs">
                 <button type="button" class="play-tab-btn active" data-play-tab="chat" onclick="switchPlayTab('chat')">📖 剧情</button>
                 <button type="button" class="play-tab-btn" data-play-tab="events" onclick="switchPlayTab('events')">📅 事件</button>
             </div>
             <div id="play-chat-area"></div>
+            <div id="play-advance-area">
+                <button type="button" class="advance-btn" onclick="advanceStory()">推进<br>剧情</button>
+                <div class="advance-hint">进入新的故事发展</div>
+                <button type="button" class="story-end-btn" onclick="endStory()">🎬 这段故事（AI 结局评定）</button>
+            </div>
             <div id="play-event-area" style="display:none;"></div>
         </section>
 
@@ -4184,6 +4480,20 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             </div>
         </div>
     </div>
+
+    <!-- D2：社区上架定价弹窗（0~500 云币，0=免费） -->
+    <div class="modal-overlay" id="upload-price-modal">
+        <div class="modal-card">
+            <div class="modal-title">定价 · 上传到社区</div>
+            <div class="modal-desc" style="text-align:left;">设置他人解锁这张卡的价格（0~500 云币，0=免费）。<br>付费卡每次被解锁你获得<b>价格一半</b>分成；免费卡无解锁分成。游玩计佣（30 币/轮）照常。</div>
+            <div class="sf-label" style="text-align:left;">解锁价格（云币）</div>
+            <input type="number" id="upload-price-input" min="0" max="500" step="10" value="0" style="width:100%;box-sizing:border-box;">
+            <div class="gender-actions" style="margin-top:12px;">
+                <button class="mini-btn ghost" onclick="closeUploadPriceModal()">取消</button>
+                <button class="mini-btn primary" onclick="confirmUploadWithPrice()">确认上架</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- scenarios.js(142KB)与 qrcode(20KB)改 async:load 事件不再等它们,慢网下 boot 提前淡出;场景卡由 init 挂载 load 监听延迟渲染 -->
@@ -4210,12 +4520,14 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             uiThemeMode: "bitlife_ui_theme_mode_v1"
         },
         chargePlans: {
-            c6:  { id: "c6",  name: "6000 云币", price: "6",  coins: 6600,  desc: "首充双倍 · 新用户专属", tag: "首充双倍" },
+            c6:  { id: "c6",  name: "6000 云币", price: "6",  coins: 12000, desc: "首充双倍 12000 · 新用户专属（复充 6600）", tag: "首充双倍" },
             c18: { id: "c18", name: "18000 云币", price: "18", coins: 19800, desc: "加赠 1800 云币", tag: "" },
             c30: { id: "c30", name: "30000 云币", price: "30", coins: 34500, desc: "加赠 4500 云币", tag: "" },
-            c68: { id: "c68", name: "68000 云币", price: "68", coins: 81600, desc: "加赠 13600 云币", tag: "" }
+            c68: { id: "c68", name: "68000 云币", price: "68", coins: 81600, desc: "加赠 13600 云币", tag: "" },
+            c89: { id: "c89", name: "89000 云币", price: "89", coins: 106800, desc: "加赠 17800 云币", tag: "" },
+            c168: { id: "c168", name: "168000 云币", price: "168", coins: 201600, desc: "加赠 33600 云币", tag: "" }
         },
-        lifetimePlan: { id: "lifetime", name: "终身会员", price: "89", originalPrice: "249", desc: "永久不限量 · 免所有云币消耗" },
+        lifetimePlan: { id: "lifetime", name: "终身会员", price: "188", originalPrice: "249", desc: "永久不限量 · 免所有云币消耗" },
         identityPools: {
             cnNames: ["沈知夏", "苏见微", "江望舒", "程以宁", "周晚棠", "宋栖月", "陆听岚", "秦若禾", "林清和", "许映棠", "叶若岚", "顾晚晴", "姜令仪", "白昭宁"],
             enNames: ["Lumi", "Iris", "Mira", "Nora", "Lena", "Sylvia", "Evelyn", "Clara", "Ariel", "Elena", "Selina", "Olivia", "Amelia", "Yuna"],
@@ -7250,9 +7562,7 @@ function rebuildChoicesBlock(body, labels = []) {
             box.innerHTML = `${mapHtml}
                 <div class="play-event-head"><span>📅 当前事件</span><span class="list-sub">探索地图可触发新的事件</span></div>
                 ${cardHtml(latest, rounds.length - 1)}
-                ${past.length ? `<details class="event-past"><summary>往期与已完结（${past.length}）</summary>${past.map((r, j) => cardHtml(r, j)).join("")}</details>` : ""}
-                <button type="button" class="advance-btn" onclick="advanceStory()">推进<br>剧情</button>
-                <div class="advance-hint">进入新的故事发展</div>`;
+                ${past.length ? `<details class="event-past"><summary>往期与已完结（${past.length}）</summary>${past.map((r, j) => cardHtml(r, j)).join("")}</details>` : ""}`;
         }
         // 世界图谱：已登场/未登场分组 + NPC 好感 ♥ 阶梯 + 关系/同地点/外貌性格简介
         function renderWorld() {
@@ -7694,74 +8004,46 @@ function rebuildChoicesBlock(body, labels = []) {
                 if (category !== "全部" && catKey !== category) return false;
                 return ScenarioCardViewService.matchesSearch(card, keyword);
             });
-            // 排序下拉（推荐=保持默认分组热度序；最新=自定义在前[新卡插入头部]，官方卡无 created_at 不进新作沉底；最热=本地游玩热度降序）与分类 chips 正交
+            // 排序（B4 全部按热度：recommend=本地热度降序[无记录按分类热度兜底]；new=自定义在前+created_at 倒序[官方无 created_at 沉底]；hot=本地热度降序）与分类 chips 正交
             const sortMode = ScenarioCardViewService.getSortMode();
-            if (sortMode === "new") filteredCards.sort((a, b) => (a.sourceType === "official" ? 1 : 0) - (b.sourceType === "official" ? 1 : 0));
-            else if (sortMode === "hot") filteredCards.sort((a, b) => ScenarioCardViewService.localPlays(b.id) - ScenarioCardViewService.localPlays(a.id));
+            filteredCards.sort((a, b) => {
+                if (sortMode === "new") {
+                    const ao = a.sourceType === "official" ? 1 : 0;
+                    const bo = b.sourceType === "official" ? 1 : 0;
+                    if (ao !== bo) return ao - bo;
+                    return (Number(b.created_at) || 0) - (Number(a.created_at) || 0) || (Number(b.order) || 0) - (Number(a.order) || 0);
+                }
+                const diff = ScenarioCardViewService.localPlays(b.id) - ScenarioCardViewService.localPlays(a.id);
+                return diff !== 0 ? diff : (sortMode === "hot" ? 0 : ScenarioCardViewService.hotRank(a.category) - ScenarioCardViewService.hotRank(b.category));
+            });
             if (!filteredCards.length) {
                 box.innerHTML = `<div class="list-sub">未找到匹配卡片：${keyword || category}</div>`;
                 return;
             }
-            // 按分类分组渲染（官方/自定义卡统一按 category 归组，不再有"自定义"组）
-            const groups = [];
-            const byGroup = new Map();
-            filteredCards.forEach((card) => {
-                const key = String(card.category || "其他");
-                if (!byGroup.has(key)) {
-                    byGroup.set(key, []);
-                    groups.push(key);
-                }
-                byGroup.get(key).push(card);
-            });
-            // 搜索时展开所有组，便于直接看到命中结果
-            if (keyword) ScenarioCardViewService.expandAllGroups();
-            // 置顶组（无筛选时）：手动置顶卡（按 pinnedAt 降序,后置顶在最上,不限数量）+ 最近游玩 5 张自动置顶（lastPlayedAt 倒序）+ 无分类（原"其他"组）卡合并，分类组内跳过已展示卡
-            const filterActive = Boolean(keyword) || category !== "全部";
-            const pinnedCards = [];
-            if (!filterActive) {
-                const metas = ScenarioPlayMetaService.loadMap();
-                const manualPinned = filteredCards
-                    // 内置"自定义剧本"卡 pinned 默认 true(库排序已强制首位),不占手动置顶位
-                    .filter((c) => c.pinned && c.id !== ScenarioCardService.CUSTOM_CARD_ID)
-                    .sort((a, b) => (Number(b.pinnedAt) || 0) - (Number(a.pinnedAt) || 0));
-                pinnedCards.push(...manualPinned);
-                const recent = cards
-                    .map((c) => ({ card: c, t: Number(metas[String(c.id)]?.lastPlayedAt) || 0 }))
-                    .filter((x) => x.t > 0 && !pinnedCards.some((m) => m.id === x.card.id))
-                    .sort((a, b) => b.t - a.t)
-                    .slice(0, 5)
-                    .map((x) => x.card)
-                    .filter((c) => filteredCards.includes(c));
-                pinnedCards.push(...recent);
-                pinnedCards.push(...filteredCards
-                    .filter((c) => !String(c.category || "").trim() && !pinnedCards.some((r) => r.id === c.id)));
-            }
-            const pinnedIds = new Set(pinnedCards.map((c) => c.id));
             const renderRow = (card) => {
                 const row = document.createElement("div");
                 const themeKey = String(card.theme || "").replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase();
                 row.className = `scenario-card ${card.id === selectedId ? "active" : ""}`;
                 row.dataset.cardId = card.id;
-                const customPinned = card.id === ScenarioCardService.CUSTOM_CARD_ID;
                 const lock = ScenarioUnlockService.getLockInfo(card);
+                const tags = ScenarioCardViewService.cardTags(card);
+                const collected = ScenarioCardViewService.isCollected(card.id);
                 row.innerHTML = `
                     <div class="scenario-card-main">
-                        <div class="list-title">${lock.locked ? '<span style="color:#e67e22;margin-right:4px;">🔒</span>' : ""}${card.title}${customPinned ? "（置顶）" : ""}</div>
-                        <div class="scenario-badges">
-                            <span class="scenario-badge ${ScenarioCardViewService.groupClass(card)}">${ScenarioCardViewService.groupLabel(card)}</span>
-                            ${card.pinned ? '<span class="scenario-badge">置顶</span>' : ""}
+                        <div class="scenario-card-cover theme-${themeKey}">
+                            <span class="scc-emoji">${ScenarioCardViewService.cardEmoji(card.theme)}</span>
+                            <span class="scc-shine"></span>
                         </div>
-                        <div class="list-sub">卡片样式：${ScenarioCardService.themeNameOf(card.theme)}｜设定长度：${(card.text || "").length}</div>
-                        <div style="margin-top:6px;">
-                            <button class="tiny-btn" data-op="play">${lock.locked ? "🔒 解锁" : "游玩"}</button>
+                        <div class="list-title">${lock.locked ? '<span style="color:#e67e22;margin-right:4px;">🔒</span>' : ""}${card.title}</div>
+                        <div class="scenario-badges">${tags.map((t) => `<span class="scenario-badge ${ScenarioCardViewService.groupClass(card)}">${MarkdownService.escapeHtml(t)}</span>`).join("")}</div>
+                        <div class="list-sub">${ScenarioCardService.themeNameOf(card.theme)}</div>
+                        <div class="scenario-card-btns">
                             <button class="tiny-btn" data-op="detail">详情</button>
-                            <button class="tiny-btn" data-op="edit">设置</button>
+                            <button class="tiny-btn primary" data-op="play">${lock.locked ? "🔒 解锁" : "立即游玩"}</button>
                         </div>
                     </div>
                     <div class="scenario-card-actions">
-                        <button class="scenario-action-btn edit" data-op="swipe-edit">设置</button>
-                        <button class="scenario-action-btn pin" data-op="swipe-pin">${ScenarioCardViewService.pinLabel(card)}</button>
-                        <button class="scenario-action-btn delete" data-op="swipe-del">删除</button>
+                        <button class="scenario-action-btn collect" data-op="swipe-collect">${collected ? "☆ 取消收藏" : "★ 收藏"}</button>
                     </div>
                 `;
                 row.querySelector('[data-op="play"]').onclick = () => {
@@ -7769,50 +8051,17 @@ function rebuildChoicesBlock(body, labels = []) {
                     Controller.playScenarioCard(card.id);
                 };
                 row.querySelector('[data-op="detail"]').onclick = () => Controller.openGameDetail(card.id);
-                row.querySelector('[data-op="edit"]').onclick = () => Controller.openScenarioCardSettings(card.id);
-                row.querySelector('[data-op="swipe-edit"]').onclick = () => Controller.openScenarioCardSettings(card.id);
-                row.querySelector('[data-op="swipe-pin"]').onclick = () => Controller.toggleScenarioCardPin(card.id);
-                const delBtn = row.querySelector('[data-op="swipe-del"]');
-                if (delBtn) delBtn.onclick = () => Controller.deleteScenarioCard(card.id);
+                const collectBtn = row.querySelector('[data-op="swipe-collect"]');
+                if (collectBtn) collectBtn.onclick = () => {
+                    ScenarioCardViewService.toggleCollectLocal(card.id);
+                    UIRenderer.renderScenarioCards();
+                };
                 ScenarioCardInteractionService.bindSwipeAndSort(row, {
                     onReorder: (fromId, toId) => Controller.reorderScenarioCards(fromId, toId)
                 });
                 box.appendChild(row);
             };
-            if (pinnedCards.length) {
-                const collapsed = ScenarioCardViewService.isCollapsed("置顶");
-                const head = document.createElement("div");
-                head.className = "scenario-group-title";
-                head.style.cursor = "pointer";
-                head.style.userSelect = "none";
-                head.innerHTML = `<span class="scenario-group-arrow">${collapsed ? "▸" : "▾"}</span>置顶（${pinnedCards.length} 张）`;
-                head.onclick = () => {
-                    ScenarioCardViewService.toggleCollapsed("置顶");
-                    renderScenarioCards();
-                };
-                box.appendChild(head);
-                if (!collapsed) pinnedCards.forEach(renderRow);
-            }
-            // 分类组按热度排序（自定义分类排最后）
-            groups.sort((a, b) => ScenarioCardViewService.hotRank(a) - ScenarioCardViewService.hotRank(b));
-            groups.forEach((groupKey) => {
-                const groupCards = byGroup.get(groupKey).filter((c) => !pinnedIds.has(c.id));
-                if (!groupCards.length) return;
-                const catCount = `（${groupCards.length} 个）`;
-                const collapsed = ScenarioCardViewService.isCollapsed(groupKey);
-                const head = document.createElement("div");
-                head.className = "scenario-group-title";
-                head.style.cursor = "pointer";
-                head.style.userSelect = "none";
-                head.innerHTML = `<span class="scenario-group-arrow">${collapsed ? "▸" : "▾"}</span>${groupKey}${catCount}`;
-                head.onclick = () => {
-                    ScenarioCardViewService.toggleCollapsed(groupKey);
-                    renderScenarioCards();
-                };
-                box.appendChild(head);
-                if (collapsed) return;
-                groupCards.forEach(renderRow);
-            });
+            filteredCards.forEach(renderRow);
         }
         // 手机页模拟器：默认 App 生态（卡片可配置 apps.func/more 覆盖）
         const DEFAULT_PHONE_APPS = {
@@ -8088,7 +8337,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const policy = ChatPolicyConfigService.load();
             const selectedCardId2 = ScenarioCardService.getSelectedId();
 
-            // 会员限时价格文案(89 限时 ↔ 249 永久)随状态刷新
+            // 会员限时价格文案(188 限时 ↔ 249 永久)随状态刷新
             if (typeof MembershipService !== "undefined" && typeof MembershipService.updateLifetimePriceTexts === "function") {
                 MembershipService.updateLifetimePriceTexts();
             }
@@ -9249,6 +9498,59 @@ function rebuildChoicesBlock(body, labels = []) {
         function pinLabel(card) {
             return card?.pinned ? "取消置顶" : "置顶";
         }
+        // C5：卡片 tag = 官方/自定义标签 + category + genre 拆分（≤4 个，去重）
+        function cardTags(card) {
+            const tags = [];
+            const push = (t) => { const s = String(t || "").trim(); if (s && s !== "其他" && !tags.includes(s) && tags.length < 4) tags.push(s); };
+            push(groupLabel(card));
+            push(card?.category || "");
+            String(card?.structured?.world?.genre || card?.genre || "").split(/[·,，/、|/\s]+/).forEach(push);
+            return tags;
+        }
+        function cardEmoji(themeKey) {
+            const k = String(themeKey || "").toLowerCase();
+            if (k.includes("retro")) return "📜";
+            if (k.includes("cyber") || k.includes("sci-fi")) return "🌃";
+            if (k.includes("ink")) return "🖌️";
+            if (k.includes("glass")) return "🧊";
+            if (k.includes("liquid")) return "🌊";
+            if (k.includes("gothic")) return "🕸️";
+            if (k.includes("minimal")) return "◻️";
+            if (k.includes("fantasy")) return "🔮";
+            if (k.includes("cottage")) return "🏡";
+            return "📖";
+        }
+        // 收藏状态：官方卡记在热度表 _collected；社区卡（已下载）记本地集合
+        function collectSet() {
+            try { const a = JSON.parse(localStorage.getItem("bitlife_card_collects_v1") || "[]"); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+        }
+        function saveCollectSet(arr) { try { localStorage.setItem("bitlife_card_collects_v1", JSON.stringify(arr)); } catch (e) {} }
+        function isCollected(cardId) {
+            const id = String(cardId || "");
+            if (collectSet().includes(id)) return true;
+            try {
+                const rec = JSON.parse(localStorage.getItem("bitlife_game_hot_v1") || "{}")[id];
+                return !!(rec && rec._collected);
+            } catch (e) { return false; }
+        }
+        function toggleCollectLocal(cardId) {
+            const id = String(cardId || "");
+            if (!id) return;
+            const card = ScenarioCardService.loadCards().find((c) => c.id === id);
+            if (card && card.sourceType === "official") {
+                try {
+                    const h = JSON.parse(localStorage.getItem("bitlife_game_hot_v1") || "{}");
+                    const rec = h[id] || (h[id] = { plays: 0, likes: 0, collects: 0, donors: [], roles: {} });
+                    rec._collected = !rec._collected;
+                    rec.collects = Math.max(0, Number(rec.collects || 0) + (rec._collected ? 1 : -1));
+                    localStorage.setItem("bitlife_game_hot_v1", JSON.stringify(h));
+                } catch (e) {}
+                return;
+            }
+            const set = collectSet();
+            const on = !set.includes(id);
+            saveCollectSet(on ? [...set, id] : set.filter((x) => x !== id));
+        }
         function matchesSearch(card, keyword) {
             const q = String(keyword || "").trim().toLowerCase();
             if (!q) return true;
@@ -9332,7 +9634,52 @@ function rebuildChoicesBlock(body, labels = []) {
                 bar.appendChild(chip);
             });
         }
-        return { groupLabel, groupClass, pinLabel, matchesSearch, getSearchKeyword, getCategories, getCategory, setCategory, isCollapsed, toggleCollapsed, expandAllGroups, renderFilter, hotRank, localPlays, getSortMode, setSortMode };
+        return { groupLabel, groupClass, pinLabel, cardTags, cardEmoji, isCollected, toggleCollectLocal, matchesSearch, getSearchKeyword, getCategories, getCategory, setCategory, isCollapsed, toggleCollapsed, expandAllGroups, renderFilter, hotRank, localPlays, getSortMode, setSortMode };
+    })();
+
+    // ---- B1：AI 封面按需生成（仅首页展示位：轮播 + 推荐榜 top3；worker 文生图 → localStorage 缓存 TTL 7 天） ----
+    const CoverService = (() => {
+        const KEY = "bitlife_card_cover_v1";
+        const TTL = 7 * 24 * 3600 * 1000;
+        function read() { try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { return {}; } }
+        function write(m) { try { localStorage.setItem(KEY, JSON.stringify(m)); } catch (e) {} }
+        function cached(cardId) {
+            const rec = read()[String(cardId)];
+            return rec && rec.url && Date.now() - rec.ts < TTL ? rec.url : "";
+        }
+        function promptOf(card) {
+            const genre = String(card?.structured?.world?.genre || "").split(/[·,，/]/)[0] || "";
+            return `${String(card.title || "文游")}，${String(card.category || "")}${genre ? "，" + genre : ""}，手机文字冒险游戏封面插画，唯美氛围光感，竖版构图，无文字无水印`;
+        }
+        function safeId(cardId) { return String(cardId || "x").replace(/[^\w-]/g, "_"); }
+        async function ensure(card) {
+            const id = String(card?.id || "");
+            if (!id) return "";
+            const hit = cached(id);
+            if (hit) return hit;
+            if (!AuthService.getToken()) return "";
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/cover/generate`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + AuthService.getToken() },
+                    body: JSON.stringify({ prompt: promptOf(card) })
+                });
+                const d = await res.json().catch(() => ({}));
+                if (!res.ok || !d.image) return "";
+                const m = read();
+                m[id] = { url: d.image, ts: Date.now() };
+                write(m);
+                return d.image;
+            } catch (e) { return ""; }
+        }
+        async function paint(elId, card) {
+            const url = await ensure(card);
+            const el = document.getElementById(elId);
+            if (!el) return;
+            if (url) el.style.backgroundImage = `url("${url}")`;
+            el.classList.add("has-cover");
+        }
+        return { ensure, cached, paint, safeId, promptOf };
     })();
 
     // ---- 发现页：轮播推荐 + 榜单聚合（对齐 uugame 发现页，简化交互） ----
@@ -9361,7 +9708,12 @@ function rebuildChoicesBlock(body, labels = []) {
             bannerIdx = Math.min(bannerIdx, cards.length - 1);
             box.innerHTML = cards.map((c) => {
                 const summary = String(c.structured?.world?.summary || c.structured?.world?.atmosphere || "").slice(0, 56);
+                const sid = CoverService.safeId(c.id);
                 return `<div class="hb-card" onclick="Controller.playScenarioCard('${c.id}')">
+                    <div class="hb-cover" id="hb-cover-${sid}">
+                        <span class="scc-emoji">${ScenarioCardViewService.cardEmoji(c.theme)}</span>
+                        <span class="scc-shine"></span>
+                    </div>
                     <div class="hb-tag">${MarkdownService.escapeHtml(String(c.category || "其他"))}</div>
                     <div class="hb-title">${MarkdownService.escapeHtml(String(c.title || ""))}</div>
                     <div class="hb-sub">${MarkdownService.escapeHtml(summary)}</div>
@@ -9371,6 +9723,7 @@ function rebuildChoicesBlock(body, labels = []) {
                     </div>
                 </div>`;
             }).join("");
+            cards.forEach((c) => CoverService.paint("hb-cover-" + CoverService.safeId(c.id), c));
             dots.innerHTML = cards.map((_, i) => `<span class="dot${i === bannerIdx ? " active" : ""}" onclick="DiscoverService.gotoBanner(${i})"></span>`).join("");
             updateBannerOffset();
         }
@@ -9431,14 +9784,19 @@ function rebuildChoicesBlock(body, labels = []) {
             if (tab === "recommend") {
                 const rows = rankRecommend();
                 if (!rows.length) { panel.innerHTML = '<span class="list-sub">还没有游玩记录，先去玩几张卡吧～</span>'; return; }
-                panel.innerHTML = rows.map((x, i) => `<div class="rank-row" onclick="Controller.playScenarioCard('${x.card.id}')">
-                    <span class="rank-no">${i + 1}</span>
-                    <div class="rank-main">
-                        <div class="rank-title">${MarkdownService.escapeHtml(String(x.card.title || ""))} <span class="list-sub">${MarkdownService.escapeHtml(String(x.card.category || ""))}</span></div>
-                        <div class="rank-sub">👁 ${x.plays} 次游玩</div>
-                    </div>
-                    <span class="mini-btn primary">游玩</span>
-                </div>`).join("");
+                panel.innerHTML = rows.map((x, i) => {
+                    const cover = i < 3 ? `<div class="rank-cover" id="rk-cover-${CoverService.safeId(x.card.id)}"><span class="scc-shine"></span></div>` : "";
+                    return `<div class="rank-row" onclick="Controller.playScenarioCard('${x.card.id}')">
+                        ${cover}
+                        <span class="rank-no">${i + 1}</span>
+                        <div class="rank-main">
+                            <div class="rank-title">${MarkdownService.escapeHtml(String(x.card.title || ""))} <span class="list-sub">${MarkdownService.escapeHtml(String(x.card.category || ""))}</span></div>
+                            <div class="rank-sub">👁 ${x.plays} 次游玩</div>
+                        </div>
+                        <span class="mini-btn primary">游玩</span>
+                    </div>`;
+                }).join("");
+                rows.slice(0, 3).forEach((x) => CoverService.paint("rk-cover-" + CoverService.safeId(x.card.id), x.card));
             } else if (tab === "hot") {
                 const items = await rankHot();
                 if (!items.length) { panel.innerHTML = '<span class="list-sub">社区暂无作品，快去创作并上架吧～</span>'; return; }
@@ -9551,6 +9909,97 @@ function rebuildChoicesBlock(body, labels = []) {
         return { bindSwipeAndSort };
     })();
 
+    // ---- C1/C2：我的页「最近游玩」+「收藏」（2026-08-26 改版：不限数量/左滑移出或取消收藏） ----
+    function timeAgoText(ts) {
+        const diff = Date.now() - Number(ts || 0);
+        if (diff < 60000) return "刚刚";
+        if (diff < 3600000) return Math.floor(diff / 60000) + " 分钟前";
+        if (diff < 86400000) return Math.floor(diff / 3600000) + " 小时前";
+        const d = new Date(Number(ts));
+        const pad = (n) => String(n).padStart(2, "0");
+        return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())}`;
+    }
+    function renderRecentPlayed() {
+        const box = document.getElementById("recent-played-list");
+        if (!box) return;
+        const metas = ScenarioPlayMetaService.loadMap();
+        const entries = ScenarioCardService.loadCards()
+            .map((card) => ({ card, t: Number(metas[String(card.id)]?.lastPlayedAt) || 0 }))
+            .filter((x) => x.t > 0)
+            .sort((a, b) => b.t - a.t);
+        if (!entries.length) {
+            box.innerHTML = '<span class="list-sub">暂无记录，去首页玩一张卡吧～</span>';
+            return;
+        }
+        box.innerHTML = entries.map(({ card, t }) => {
+            const lock = ScenarioUnlockService.getLockInfo(card);
+            return `<div class="recent-row" data-card-id="${MarkdownService.escapeHtml(String(card.id))}">
+                <div class="recent-main">
+                    <div class="recent-title">${MarkdownService.escapeHtml(String(card.title || ""))}</div>
+                    <div class="list-sub">${MarkdownService.escapeHtml(String(card.category || "其他"))} · ${timeAgoText(t)}</div>
+                </div>
+                <button class="tiny-btn" data-op="play">${lock.locked ? "🔒 解锁" : "游玩"}</button>
+                <div class="recent-actions"><button class="scenario-action-btn delete" data-op="remove-recent">移出</button></div>
+            </div>`;
+        }).join("");
+        box.querySelectorAll(".recent-row").forEach((row) => {
+            row.querySelector('[data-op="play"]').onclick = () => {
+                const card = ScenarioCardService.loadCards().find((c) => c.id === row.dataset.cardId);
+                if (!card) return;
+                const lock = ScenarioUnlockService.getLockInfo(card);
+                if (lock.locked) { ScenarioUnlockService.promptUnlock(card); return; }
+                Controller.playScenarioCard(card.id);
+            };
+            row.querySelector('[data-op="remove-recent"]').onclick = () => {
+                const id = row.dataset.cardId;
+                const map = ScenarioPlayMetaService.loadMap();
+                if (map[id]) { map[id] = { ...map[id], lastPlayedAt: 0 }; ScenarioPlayMetaService.saveMap(map); }
+                renderMyPageLists();
+            };
+            ScenarioCardInteractionService.bindSwipeAndSort(row, {});
+        });
+    }
+    function renderMyCollects() {
+        const box = document.getElementById("my-collect-list");
+        if (!box) return;
+        const cards = ScenarioCardService.loadCards().filter((c) => ScenarioCardViewService.isCollected(c.id));
+        if (!cards.length) {
+            box.innerHTML = '<span class="list-sub">还没有收藏，在首页卡片左滑点「★ 收藏」。</span>';
+            return;
+        }
+        box.innerHTML = cards.map((card) => {
+            const lock = ScenarioUnlockService.getLockInfo(card);
+            const tags = ScenarioCardViewService.cardTags(card);
+            return `<div class="recent-row" data-card-id="${MarkdownService.escapeHtml(String(card.id))}">
+                <div class="recent-main">
+                    <div class="recent-title">${MarkdownService.escapeHtml(String(card.title || ""))}</div>
+                    <div class="list-sub">${tags.map((t) => MarkdownService.escapeHtml(t)).join(" · ")}</div>
+                </div>
+                <button class="tiny-btn" data-op="play">${lock.locked ? "🔒 解锁" : "游玩"}</button>
+                <div class="recent-actions"><button class="scenario-action-btn collect" data-op="uncollect">☆ 取消收藏</button></div>
+            </div>`;
+        }).join("");
+        box.querySelectorAll(".recent-row").forEach((row) => {
+            row.querySelector('[data-op="play"]').onclick = () => {
+                const card = ScenarioCardService.loadCards().find((c) => c.id === row.dataset.cardId);
+                if (!card) return;
+                const lock = ScenarioUnlockService.getLockInfo(card);
+                if (lock.locked) { ScenarioUnlockService.promptUnlock(card); return; }
+                Controller.playScenarioCard(card.id);
+            };
+            row.querySelector('[data-op="uncollect"]').onclick = () => {
+                ScenarioCardViewService.toggleCollectLocal(row.dataset.cardId);
+                renderMyPageLists();
+            };
+            ScenarioCardInteractionService.bindSwipeAndSort(row, {});
+        });
+    }
+    function renderMyPageLists() {
+        renderRecentPlayed();
+        renderMyCollects();
+    }
+    window.renderMyPageLists = renderMyPageLists;
+
     const ScenarioPlayMetaService = (() => {
         function loadMap() {
             return StorageService.readJson(AppConfig.storageKeys.scenarioPlayMetaMap, {});
@@ -9602,7 +10051,7 @@ function rebuildChoicesBlock(body, labels = []) {
             map[id] = { ...prev, updatedAt: Date.now() };
             saveMap(map);
         }
-        return { loadMap, getMeta, setInitialized, touchPlayed, getLockedSkeleton, setLockedSkeleton, clearLockedSkeleton };
+        return { loadMap, saveMap, getMeta, setInitialized, touchPlayed, getLockedSkeleton, setLockedSkeleton, clearLockedSkeleton };
     })();
 
     const HtmlCardRenderPipelineService = (() => {
@@ -12689,6 +13138,8 @@ const token = delta.content || "";
             const isChat = tab === "chat";
             chatArea.style.display = isChat ? "" : "none";
             eventArea.style.display = isChat ? "none" : "";
+            const advanceArea = document.getElementById("play-advance-area");
+            if (advanceArea) advanceArea.style.display = isChat ? "" : "none";
             document.querySelectorAll(".play-tab-btn").forEach((b) => {
                 b.classList.toggle("active", b.dataset.playTab === tab);
             });
@@ -13010,6 +13461,9 @@ ${recent || "（无）"}
             }
             if (viewId === "view-home" && !silent) {
                 DiscoverService.renderHomeDiscovery();
+            }
+            if (viewId === "view-settings" && !silent) {
+                renderMyPageLists();
             }
         }
         function openInfoModal(title, desc, actionText, onAction) {
@@ -13390,6 +13844,7 @@ function openNpcProfile(npcId) {
         // M5：上传当前卡片到网站（审核制，pending 后展示播放量/收益）
         // 官方模板上传限制:结构化叶子字段值逐项比对,改动 < MIN_TEMPLATE_CHANGE_RATIO(30%) 拒绝上传
         const TEMPLATE_MIN_CHANGE_RATIO = 0.3;
+        let _pendingUploadData = null;
         function flattenStructuredValues(obj, out = []) {
             if (Array.isArray(obj)) { obj.forEach((v) => flattenStructuredValues(v, out)); return out; }
             if (obj && typeof obj === "object") { Object.values(obj).forEach((v) => flattenStructuredValues(v, out)); return out; }
@@ -13427,12 +13882,30 @@ function openNpcProfile(npcId) {
                 return;
             }
             const data = { ...selected, text: selected.text, structured: selected.structured || null };
-            const payload = {
+            _pendingUploadData = {
                 title: String(selected.title || "未命名剧本").trim(),
                 category: String(selected.category || "").trim(),
                 theme: String(selected.theme || "").trim(),
                 data
             };
+            const priceInput = document.getElementById("upload-price-input");
+            if (priceInput) priceInput.value = "0";
+            const priceModal = document.getElementById("upload-price-modal");
+            if (priceModal) priceModal.style.display = "flex";
+        }
+        // D2：上架定价确认（0~500 云币，0=免费）
+        function closeUploadPriceModal() {
+            _pendingUploadData = null;
+            const m = document.getElementById("upload-price-modal");
+            if (m) m.style.display = "none";
+        }
+        async function confirmUploadWithPrice() {
+            if (!_pendingUploadData) return;
+            const input = document.getElementById("upload-price-input");
+            const price = Math.max(0, Math.min(500, Math.round(Number(input ? input.value : 0) || 0)));
+            const payload = { ..._pendingUploadData, unlock_price: price };
+            const m = document.getElementById("upload-price-modal");
+            if (m) m.style.display = "none";
             TopLoader.show("上传中...");
             try {
                 const res = await fetch(`${AppConfig.proxy.baseUrl}/api/cards/community`, {
@@ -13442,11 +13915,12 @@ function openNpcProfile(npcId) {
                 });
                 const d = await res.json().catch(() => ({}));
                 if (!res.ok) throw new Error(d.error || `HTTP ${res.status}`);
-                NoticeModalService.showInfo({ title: "已提交审核", descHtml: `《${MarkdownService.escapeHtml(selected.title || "未命名剧本")}》已上传，审核通过后他人可游玩。` });
+                NoticeModalService.showInfo({ title: "已提交审核", descHtml: `《${MarkdownService.escapeHtml(String(payload.title || "未命名剧本"))}》已上传${price > 0 ? `，解锁定价 ${price} 云币` : "（免费）"}。审核通过后他人可游玩。` });
             } catch (e) {
                 NoticeModalService.showInfo({ title: "上传失败", descHtml: MarkdownService.escapeHtml(String(e.message || e).slice(0, 100)) });
             } finally {
                 TopLoader.hide();
+                _pendingUploadData = null;
             }
         }
         // M5：我的剧本区（播放量 + 收益累计）
@@ -13470,7 +13944,9 @@ function openNpcProfile(npcId) {
                     return;
                 }
                 const rows = items.map(c => {
-                    const reward = Number(c.earned_plays || 0) * 30 + Number(c.unlock_count || 0) * 1000;
+                    // 解锁分成 = 价格一半（免费卡无解锁分成），与 worker unlock 路由一致
+                    const unlockReward = Number(c.unlock_price || 0) > 0 ? Math.max(1, Math.floor(Number(c.unlock_price) / 2)) : 0;
+                    const reward = Number(c.earned_plays || 0) * 30 + Number(c.unlock_count || 0) * unlockReward;
                     const status = c.status === "approved" ? '<span style="color:#2e8b57;">已上架</span>' : (c.status === "pending" ? '<span style="color:#e67e22;">审核中</span>' : '<span style="color:#c0392b;">未通过</span>');
                     return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin-top:6px;background:var(--card-soft);">
                         <div style="min-width:0;">
@@ -13479,7 +13955,7 @@ function openNpcProfile(npcId) {
                         </div>
                         <div style="text-align:right;margin-left:8px;">
                             <div style="font-weight:800;color:var(--accent-dark);">💰 ${reward} 币</div>
-                            <div class="list-sub">${Number(c.earned_plays || 0)} 轮计佣</div>
+                            <div class="list-sub">${Number(c.earned_plays || 0)} 轮计佣${Number(c.unlock_count || 0) > 0 ? ` · ${Number(c.unlock_count || 0)} 次解锁 ×${unlockReward}` : ""}${Number(c.unlock_price || 0) > 0 ? ` · 定价 ${c.unlock_price} 币` : " · 免费"}</div>
                         </div>
                     </div>`;
                 }).join("");
@@ -13829,7 +14305,7 @@ function openNpcProfile(npcId) {
                     NoticeModalService.showInfo({ title: "下载失败", descHtml: d.error || "剧本不存在" });
                     return;
                 }
-                const card = { id: d.id, title: d.title, sourceType: "community", category: d.category || "", theme: d.theme || "", text: String(d.data.text || ""), structured: d.data.structured };
+                const card = { id: d.id, title: d.title, sourceType: "community", category: d.category || "", theme: d.theme || "", text: String(d.data.text || ""), structured: d.data.structured, unlock_price: Number(d.unlock_price || 0), halfOff: !!d.halfOff };
                 ScenarioCardService.saveCards([card, ...ScenarioCardService.loadCards().filter(c => c.id !== d.id)]);
                 ScenarioCardService.setSelectedId(d.id);
                 NoticeModalService.showInfo({ title: "已添加", descHtml: `「${escapeForHtml(d.title)}」已加入你的卡片列表，可前往首页游玩。` });
@@ -14280,7 +14756,7 @@ function openNpcProfile(npcId) {
             switchView("view-scenario-editor");
             ScenarioEditorService.focusEditor();
         }
-        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, avatarPick, avatarUpload, avatarAiSuggest, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, advanceStory, openPhoneDiary, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate, renderHomeDiscovery, switchRankTab, switchSortMode, openCreationWizard, wizardPickStyle, wizardTitleCount, wizardPromptCount, wizardNext, wizardPrev, wizardConfirm };
+        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, avatarPick, avatarUpload, avatarAiSuggest, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, advanceStory, openPhoneDiary, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate, renderHomeDiscovery, switchRankTab, switchSortMode, openCreationWizard, wizardPickStyle, wizardTitleCount, wizardPromptCount, wizardNext, wizardPrev, wizardConfirm, closeUploadPriceModal, confirmUploadWithPrice };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
@@ -14338,6 +14814,8 @@ function openNpcProfile(npcId) {
     function startFromPlay() { Controller.startFromPlay(); }
     function importScenarioTxt() { Controller.importScenarioTxt(); }
     function uploadScenarioCard() { Controller.uploadScenarioCard(); }
+    function closeUploadPriceModal() { Controller.closeUploadPriceModal(); }
+    function confirmUploadWithPrice() { Controller.confirmUploadWithPrice(); }
     function loadMyCommunityCards() { Controller.loadMyCommunityCards(); }
     function openInitPreviewModal() { Controller.openInitPreviewModal(); }
     function closeInitPreviewModal() { Controller.closeInitPreviewModal(); }
@@ -14395,9 +14873,9 @@ function openNpcProfile(npcId) {
                 btn.disabled = true;
                 if (msg) msg.textContent = streak > 0 ? `已连续签到 ${streak} 天，明天继续领 300 币` : "";
             } else {
-                btn.textContent = u && !u.last_checkin_date ? "首次签到 +5500 币" : "每日签到 +300 币";
+                btn.textContent = u && !u.last_checkin_date ? "首次签到 +300 币" : "每日签到 +300 币";
                 btn.disabled = false;
-                if (msg) msg.textContent = !u ? "登录后每日签到领云币" : (streak > 0 ? `已连续签到 ${streak} 天，今日签到领 300 币${streak % 7 === 6 ? "，明天触发 7 天大奖 +700 币" : ""}` : "首次签到领 5500 币，之后每天 300，每满 7 天再 +700");
+                if (msg) msg.textContent = !u ? "登录后每日签到领云币" : (streak > 0 ? `已连续签到 ${streak} 天，今日签到领 300 币${streak % 7 === 6 ? "，明天触发 7 天大奖 +700 币" : ""}` : "每天签到领 300 币，每满 7 天再 +700");
             }
         }
         // 每日签到：POST /api/checkin → 加币 → 刷新余额
@@ -14521,7 +14999,7 @@ function openNpcProfile(npcId) {
         function updateLifetimePriceTexts() {
             const active = countdownActive();
             const intro = document.getElementById("membership-intro-text");
-            if (intro) intro.textContent = `充值云币解锁剧本卡、抵扣 AI 对话；终身会员 ${active ? "¥89 限时" : "¥249"} 免一切云币消耗。`;
+            if (intro) intro.textContent = `充值云币解锁剧本卡、抵扣 AI 对话；终身会员 ${active ? "¥188 限时" : "¥249"} 免一切云币消耗。`;
             const banner = document.getElementById("membership-offer-banner");
             if (banner) {
                 banner.innerHTML = active
@@ -14529,7 +15007,7 @@ function openNpcProfile(npcId) {
                     : `<div style="font-size:0.9rem;font-weight:700;color:#8a4b00;">⏰ 限时优惠已结束，终身会员恢复原价 ¥249</div>`;
             }
             const st = document.getElementById("membership-settings-text");
-            if (st) st.textContent = `AI 对话按 token 计费（输入 4 币/千 token、输出 12 币/千 token，普通对话约 10 币），官方剧本卡解锁需 5000 云币（永久拥有）。开通终身会员${active ? "（限时 ¥89）" : "（¥249）"}后免一切云币消耗、全部剧本卡直接游玩。自备 AI 接口（BYOK）不消耗云币。`;
+            if (st) st.textContent = `AI 对话按 token 计费（输入 4 币/千 token、输出 12 币/千 token，普通对话约 10 币），官方剧本卡全部免费游玩。开通终身会员${active ? "（限时 ¥188）" : "（¥249）"}后免一切云币消耗（AI 对话）+ 社区付费卡直接游玩。自备 AI 接口（BYOK）不消耗云币，但解锁社区付费卡仍需云币（会员可直接游玩）。`;
         }
         function selectPlan(id) {
             if (id !== selectedPlan) _currentOrder = null; // 套餐变了,旧订单作废
@@ -14614,7 +15092,7 @@ function openNpcProfile(npcId) {
                         localStorage.removeItem(PENDING_KEY);
                         closePanel();
                         const isCharge = !!AppConfig.chargePlans[paidPlanId];
-                        NoticeModalService.showInfo({ title: "🎉 支付成功", descHtml: isCharge ? "云币已到账，快去解锁剧本卡吧！" : "会员已开通，不限量畅玩！" });
+                        NoticeModalService.showInfo({ title: "🎉 支付成功", descHtml: isCharge ? "云币已到账，快去解锁社区作品或畅玩吧！" : "会员已开通，不限量畅玩！" });
                         await AuthService.refreshBalance();
                         AuthService.updateUsageStatusUI();
                     }
@@ -14656,13 +15134,20 @@ function openNpcProfile(npcId) {
         }
         function isOfficial(card) { return card?.sourceType === "official"; }
         function isUnlocked(cardId) { return _unlocked.has(cardId); }
-        // 锁定判定：官方卡未解锁 → 锁；游客一律锁（解锁是账号权益）；终身会员免锁
+        // 锁定判定 v2：官方卡全部免费；社区卡按作者定价（unlock_price，0=免费）；终身会员免锁
         function getLockInfo(card) {
-            if (!isOfficial(card)) return { locked: false };
-            if (!AuthService.getToken()) return { locked: true, needLogin: true };
+            if (isOfficial(card)) return { locked: false };
+            const price = Math.max(0, Number(card?.unlock_price) || 0);
+            if (!price) return { locked: false };
+            if (!AuthService.getToken()) return { locked: true, needLogin: true, price };
             if (AuthService.hasMembership()) return { locked: false };
             if (isUnlocked(card.id)) return { locked: false };
-            return { locked: true, needLogin: false };
+            return { locked: true, needLogin: false, price };
+        }
+        // 半价卡实付价：限免半价 = ceil(unlock_price / 2)，原免费保持免费
+        function payPrice(card) {
+            const price = Math.max(0, Number(card?.unlock_price) || 0);
+            return card?.halfOff && price > 0 ? Math.ceil(price / 2) : price;
         }
         // 解锁：服务端扣 5000 币 → 本地标记 → 刷新余额
         async function unlock(cardId) {
@@ -14682,14 +15167,15 @@ function openNpcProfile(npcId) {
                 TopLoader.hide();
             }
         }
-        // 点击被锁卡引导：未登录 → 去登录；已登录 → 确认解锁
+        // 点击被锁卡引导：未登录 → 去登录；已登录 → 确认解锁（社区付费卡，含限免半价）
         async function promptUnlock(card) {
             const lock = getLockInfo(card);
             if (!lock.locked) return true;
+            const price = payPrice(card);
             if (lock.needLogin) {
                 const ok = await DecisionModalService.show({
                     title: "🔒 请先登录",
-                    descHtml: `官方剧本卡需解锁后才能游玩。<br>解锁需 <b>${UNLOCK_COST} 云币</b>（永久拥有）。<br>注册即送 1000 云币，每日签到还能领！`,
+                    descHtml: `该作品解锁需 <b>${price} 云币</b>（永久拥有）。<br>登录后即可解锁，每日签到还能领云币！`,
                     okText: "去登录", cancelText: "取消"
                 });
                 if (!ok) return false;
@@ -14697,9 +15183,10 @@ function openNpcProfile(npcId) {
                 if (overlay) overlay.style.display = "flex";
                 return false;
             }
+            const halfTag = card?.halfOff ? `<span style="color:#e67e22;">（限免半价）</span>` : "";
             const ok = await DecisionModalService.show({
                 title: "🔒 未解锁",
-                descHtml: `解锁《${MarkdownService.escapeHtml(card.title)}》需 <b>${UNLOCK_COST} 云币</b>（永久拥有，终身会员免费）。`,
+                descHtml: `解锁《${MarkdownService.escapeHtml(card.title)}》需 <b>${price} 云币</b>（永久拥有，终身会员免费）${halfTag}。`,
                 okText: "立即解锁", cancelText: "取消"
             });
             if (!ok) return false;
@@ -14714,7 +15201,7 @@ function openNpcProfile(npcId) {
                 return false;
             }
         }
-        return { loadLocal, syncFromServer, isOfficial, isUnlocked, getLockInfo, unlock, promptUnlock };
+        return { loadLocal, syncFromServer, isOfficial, isUnlocked, getLockInfo, payPrice, unlock, promptUnlock };
     })();
 
     // ==================== AuthService ====================
