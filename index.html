@@ -748,6 +748,137 @@
             font-weight: 700;
             cursor: pointer;
         }
+        /* 大地图缩略图横幅（游玩页） */
+        .play-map-thumbbar { padding: 6px 8px; }
+        .pmap-thumb {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 1px solid var(--line);
+            background: var(--input-bg);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        .pmap-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .pmap-thumb .pmap-dot {
+            position: absolute;
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: #7b5cd6;
+            border: 2px solid #fff;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.45);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        .pmap-title {
+            position: absolute;
+            left: 8px; bottom: 6px;
+            padding: 2px 10px;
+            border-radius: 999px;
+            background: rgba(0,0,0,0.55);
+            color: #fff;
+            font-size: 0.72rem;
+            font-weight: 700;
+            backdrop-filter: blur(2px);
+        }
+        /* 全屏地图 overlay（z 高于 ending-overlay 100000） */
+        .full-map-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 200000;
+            background: rgba(0,0,0,0.72);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            animation: fadeIn .18s ease;
+        }
+        .full-map-frame {
+            width: min(860px, 100%);
+            max-height: 94vh;
+            display: flex;
+            flex-direction: column;
+            border-radius: 16px;
+            overflow: hidden;
+            background: var(--card-bg, #fff);
+            border: 1px solid var(--line);
+            box-shadow: 0 16px 60px rgba(0,0,0,0.45);
+        }
+        .full-map-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            font-weight: 800;
+            font-size: 1rem;
+            border-bottom: 1px solid var(--line);
+        }
+        .full-map-close {
+            padding: 4px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: var(--input-bg);
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+        .full-map-canvas {
+            position: relative;
+            flex: 1;
+            min-height: 360px;
+            overflow: auto;
+            background: var(--input-bg);
+        }
+        .full-map-canvas img { width: 100%; display: block; }
+        .fullmap-pin {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            transform: translate(-50%, -50%);
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+            background: none;
+            border: none;
+            padding: 0;
+            font: inherit;
+        }
+        .fullmap-pin .pin-icon {
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #7b5cd6, #9d7bf0);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 800;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+        }
+        .fullmap-pin .pin-name {
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            font-size: 0.72rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .fullmap-pin.current .pin-icon {
+            background: linear-gradient(135deg, #e05c9c, #f28bb9);
+            box-shadow: 0 0 0 3px rgba(224,92,156,0.35), 0 2px 8px rgba(0,0,0,0.35);
+        }
+        .fullmap-pin:hover .pin-icon { transform: scale(1.12); }
+        .full-map-foot {
+            padding: 10px 16px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--line);
+        }
         /* 事件卡按钮组 + 往期折叠 + 推进按钮 */
         .event-card-actions { display: flex; gap: 4px; flex-shrink: 0; }
         .event-btn {
@@ -2671,7 +2802,8 @@
         /* B1：轮播卡封面区（AI 封面按需生成，未生成时渐变+动效占位） */
         .hb-cover {
             position: relative;
-            height: 104px;
+            width: 100%;
+            aspect-ratio: 4 / 3;
             border-radius: 10px;
             overflow: hidden;
             display: flex;
@@ -2707,8 +2839,8 @@
         }
         /* B1：推荐榜 top3 小封面 */
         .rank-cover {
-            width: 44px;
-            height: 44px;
+            width: 48px;
+            aspect-ratio: 4 / 3;
             border-radius: 8px;
             flex: none;
             position: relative;
@@ -2901,9 +3033,95 @@
             color: var(--sub);
             margin-top: 4px;
         }
+        .map-bg-picker {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .map-bg-opt {
+            cursor: pointer;
+            border: 2px solid var(--line);
+            border-radius: 8px;
+            overflow: hidden;
+            text-align: center;
+            font-size: 11px;
+            color: var(--sub);
+            padding-bottom: 4px;
+            background: var(--card-soft);
+        }
+        .map-bg-opt img {
+            width: 100%;
+            height: 56px;
+            object-fit: cover;
+            display: block;
+        }
+        .map-bg-opt.active {
+            border-color: var(--accent-dark);
+            color: var(--accent-dark);
+            font-weight: 700;
+        }
+        .map-editor-preview {
+            position: relative;
+            margin: 8px 0;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px dashed var(--line);
+            background: var(--card-soft);
+            min-height: 120px;
+        }
+        .map-editor-preview img {
+            width: 100%;
+            display: block;
+            pointer-events: none;
+        }
+        .map-editor-preview.picking img {
+            pointer-events: auto;
+            cursor: crosshair;
+        }
+        .map-editor-tip {
+            font-size: 12px;
+            color: var(--sub);
+            padding: 40px 12px;
+            text-align: center;
+        }
+        .map-editor-dot {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            margin: -6px 0 0 -6px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 2px solid #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .4);
+            pointer-events: none;
+        }
+        .sf-map-place-row {
+            display: grid;
+            grid-template-columns: 1.2fr .6fr .6fr 1.6fr auto auto;
+            gap: 6px;
+            padding: 8px;
+            border: 1px dashed var(--line);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            position: relative;
+        }
+        .sf-map-place-row .sf-npc-del {
+            position: static;
+        }
+        .sf-map-place-row.picking {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 1px var(--accent);
+        }
         @media (max-width: 520px) {
             .sf-grid, .sf-npc-row {
                 grid-template-columns: 1fr;
+            }
+            .map-bg-picker {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .sf-map-place-row {
+                grid-template-columns: 1fr 1fr;
             }
         }
         .scenario-group-title:first-child {
@@ -3466,7 +3684,8 @@
         }
         .scenario-card-cover {
             position: relative;
-            height: 104px;
+            width: 100%;
+            aspect-ratio: 4 / 3;
             border-radius: 10px;
             overflow: hidden;
             display: flex;
@@ -3963,6 +4182,12 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     </div>
 
                     <div class="sf-section">
+                        <div class="sf-section-title">📊 属性定义（初值/上限，最多 12 项）</div>
+                        <div id="sf-attr-list"></div>
+                        <button class="mini-btn ghost" onclick="ScenarioEditorService.addAttrRow()">＋ 添加属性</button>
+                    </div>
+
+                    <div class="sf-section">
                         <div class="sf-section-title">⏳ 时间线</div>
                         <div class="sf-grid">
                             <div><label class="sf-label">起始年</label><input id="sf-year" type="number" placeholder="如：1985"></div>
@@ -3986,6 +4211,43 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                             <div class="sf-full"><label class="sf-label">开场剧情</label><textarea id="sf-first-story" class="scenario-editor" style="min-height:110px;" placeholder="开局时的剧情正文"></textarea></div>
                             <div class="sf-full"><label class="sf-label">开局选项（每行一条，最多 3 条）</label><textarea id="sf-first-options" class="scenario-editor" style="min-height:60px;" placeholder="如：\n去茶餐厅\n去片场"></textarea></div>
                         </div>
+                    </div>
+
+                    <div class="sf-section">
+                        <div class="sf-section-title">🗺️ 地图与地点</div>
+                        <div id="sf-map-bg-picker" class="map-bg-picker"></div>
+                        <div class="sf-grid">
+                            <div class="sf-full"><label class="sf-label">自定义地图图片 URL（选「自定义」时生效，或用下面的上传按钮）</label><input id="sf-map-url" type="text" placeholder="https://…/map.png"></div>
+                            <div class="sf-full"><label class="sf-label">上传本地地图图片</label><input id="sf-map-file" type="file" accept="image/*" onchange="ScenarioEditorService.mapFilePicked(this)"></div>
+                        </div>
+                        <div class="sf-label" style="margin-top:8px;">地图地点（图钉：名称 + 位置 + 追加文本）</div>
+                        <div id="sf-map-preview" class="map-editor-preview"><img alt=""><div class="map-editor-dots"></div><div class="map-editor-tip">先选择背景图，再点「添加地点」后在地图上点击设置位置</div></div>
+                        <div id="sf-map-places"></div>
+                        <button class="mini-btn ghost" onclick="ScenarioEditorService.addMapPlaceRow()">＋ 添加地点</button>
+                    </div>
+
+                    <div class="sf-section">
+                        <div class="sf-section-title">📖 世界书（关键词命中注入 AI，最多 20 条）</div>
+                        <div id="sf-worldbook-list"></div>
+                        <button class="mini-btn ghost" onclick="ScenarioEditorService.addWorldbookRow()">＋ 添加条目</button>
+                    </div>
+
+                    <div class="sf-section">
+                        <div class="sf-section-title">🏆 结局条件（满足后结局提示可达成）</div>
+                        <div id="sf-endings-list"></div>
+                        <button class="mini-btn ghost" onclick="ScenarioEditorService.addEndingRow()">＋ 添加条件</button>
+                    </div>
+
+                    <div class="sf-section">
+                        <div class="sf-section-title">📅 固定事件（日期或第 N 次推进触发）</div>
+                        <div id="sf-fixed-events-list"></div>
+                        <button class="mini-btn ghost" onclick="ScenarioEditorService.addFixedEventRow()">＋ 添加事件</button>
+                    </div>
+
+                    <div class="sf-section">
+                        <div class="sf-section-title">💰 周期收入（每 N 天自动增加）</div>
+                        <div id="sf-incomes-list"></div>
+                        <button class="mini-btn ghost" onclick="ScenarioEditorService.addIncomeRow()">＋ 添加收入</button>
                     </div>
                     <div class="sf-tip">保存后将生成结构化设定文本，AI 将基于这些分区字段驱动剧情。官方剧本也可在此查看与微调。</div>
                 </div>
@@ -4112,6 +4374,24 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <div class="nc-row"><span class="nc-label">壁纸</span>
                         <input id="nc-wallpaper" type="text" maxlength="200" placeholder="图片 URL（留空用默认背景）">
                     </div>
+                    <div class="nc-row"><span class="nc-label">地图背景</span>
+                        <select id="nc-map-bg">
+                            <option value="">跟随剧本设定</option>
+                            <option value="school">🌸 樱花校园</option>
+                            <option value="palace">🏯 古代皇宫</option>
+                            <option value="city">🏙️ 现代城市</option>
+                            <option value="doomsday">☣️ 末日城市</option>
+                            <option value="magic">🔮 魔法学院</option>
+                            <option value="parchment">📜 通用羊皮</option>
+                            <option value="custom">🖼️ 自定义图片</option>
+                        </select>
+                    </div>
+                    <div class="nc-row"><span class="nc-label">地图图片</span>
+                        <input id="nc-map-url" type="text" maxlength="500" placeholder="自定义地图图片 URL（选「自定义」时生效）">
+                        <input id="nc-map-file" type="file" accept="image/*" style="display:none;">
+                        <button type="button" class="mini-btn" style="flex:none;" onclick="document.getElementById('nc-map-file').click()">📤 上传</button>
+                    </div>
+                    <div class="list-sub">地图背景按当前剧本分别保存，仅替换地图底图，不影响图钉地点。</div>
                     <div class="nc-row"><span class="nc-label">透明度</span>
                         <input type="range" id="nc-opacity" min="50" max="100" step="5" style="flex:1;">
                         <span id="nc-opacity-val" style="min-width:40px;font-weight:700;text-align:right;font-size:.8rem;">100%</span>
@@ -4576,18 +4856,19 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             if (!state) return "";
             const weekName = typeof state.weekdayIndex === "number" ? this.weekdays[(state.weekdayIndex + 7) % 7] : "";
             const weekPart = Number.isFinite(Number(state.weekIndex)) ? `第${Number(state.weekIndex)}周` : "";
-            // 年代/时期容错：允许只显示 XX时期/年代 + 第X周 + 可选星期
+            // 日期优先：完整年月日 > 仅有年份 > 年代/时期兜底
+            if (state.currentYear && state.currentMonth) {
+                return `${state.currentYear}年${state.currentMonth}月${state.currentDay || 1}日${weekName ? ` ${weekName}` : ""}`;
+            }
+            if (state.currentYear) {
+                const base = `${state.currentYear}年${weekPart ? `：${weekPart}` : ""}`;
+                return weekName ? `${base} ${weekName}` : base;
+            }
             if (state.timeEra) {
                 const base = `${state.timeEra}：${weekPart || "第1周"}`;
                 return weekName ? `${base} ${weekName}` : base;
             }
-            // 允许仅有年份（不苛求月日）
-            if (state.currentYear && !state.currentMonth) {
-                const base = `${state.currentYear}年${weekPart ? `：${weekPart}` : ""}`;
-                return weekName ? `${base} ${weekName}` : base;
-            }
-            if (!state.currentYear || !state.currentMonth) return "";
-            return `${state.currentYear}年${state.currentMonth}月${state.currentDay || 1}日${weekName ? ` ${weekName}` : ""}`;
+            return weekPart || weekName || "";
         },
         shiftDays(state, deltaDays) {
             if (!Number.isFinite(deltaDays) || !state) return;
@@ -5026,6 +5307,10 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             if (!Number.isFinite(Number(gameState.weekIndex))) gameState.weekIndex = 1;
             if (!Number.isFinite(Number(gameState.currentDay)) || gameState.currentDay < 1) gameState.currentDay = 1;
             if (typeof gameState.weekdayIndex !== "number") gameState.weekdayIndex = 0;
+            // 固定事件/周期收入状态(旧存档防御)
+            if (!Array.isArray(gameState.triggeredEvents)) gameState.triggeredEvents = [];
+            if (!Array.isArray(gameState.eventQueue)) gameState.eventQueue = [];
+            if (!gameState.lastIncomeAt) gameState.lastIncomeAt = null;
             // 旧存档防御:坏 panelStatusTags(空对象等)会渲染出空白气泡
             gameState.panelStatusTags = normalizeStatusTagList(gameState.panelStatusTags);
             // 大地图地点初始化（旧存档无 locations 时按当前地点生成周边）
@@ -5344,7 +5629,9 @@ function getSkeletonHtml(themeMode = "light", state = null) {
                     const favor = Math.max(0, Math.min(100, Number(n.favor) || 50));
                     const favorColor = favor >= 70 ? "var(--theme-primary)" : favor >= 40 ? "var(--theme-secondary)" : "#e74c3c";
                     const favorBar = `<div style="height:4px;border-radius:2px;background:rgba(0,0,0,.1);margin-top:4px;overflow:hidden;"><div style="height:100%;width:${favor}%;background:${favorColor};border-radius:2px;"></div></div>`;
-                    return `<div style="display:flex;flex-direction:column;padding:8px 10px;border-radius:12px;background:transparent;border:1px solid color-mix(in srgb,var(--theme-secondary) 30%,transparent);min-width:80px;flex:1;"><div style="font-weight:700;font-size:.85rem;color:var(--theme-primary)">${n.name}</div><div style="font-size:.75rem;color:var(--text-muted);margin-top:2px;">${n.relation || ""}${n.gender ? "·" + n.gender : ""}</div>${favorBar}<div style="font-size:.72rem;color:${favorColor};margin-top:2px;text-align:right;">${favor}好感</div></div>`;
+                    const affection = Number(n.affection);
+                    const affTxt = Number.isFinite(affection) && affection !== 0 ? ` · ♥${affection}` : "";
+                    return `<div style="display:flex;flex-direction:column;padding:8px 10px;border-radius:12px;background:transparent;border:1px solid color-mix(in srgb,var(--theme-secondary) 30%,transparent);min-width:80px;flex:1;"><div style="font-weight:700;font-size:.85rem;color:var(--theme-primary)">${n.name}</div><div style="font-size:.75rem;color:var(--text-muted);margin-top:2px;">${n.relation || ""}${n.gender ? "·" + n.gender : ""}</div>${favorBar}<div style="font-size:.72rem;color:${favorColor};margin-top:2px;text-align:right;">${favor}好感${affTxt}</div></div>`;
                 }).join("")
                 : `<div style="font-size:.82rem;color:var(--text-muted);padding:4px 0;">暂无关键人物</div>`;
 
@@ -5617,7 +5904,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 if (el.querySelector("*")) return false;
                 const text = String(el.textContent || "").trim();
                 if (!text) return false;
-                return /(?:好感\s*[:：]?\s*-?\d{1,3}|-?\d{1,3}\s*好感|(?:❤|❤️|💖|🧡|💗|💘|💕|🤍)\s*[:：]?\s*-?\d{1,3})/u.test(text);
+                return /(?:好感\s*[:：]?\s*-?\d{1,3}|-?\d{1,3}\s*好感|(?:❤|❤️|💖|🧡|💗|💘|💕|🤍)\s*[:：]?\s*-?\d{1,3}|(?:爱慕|心动|情愫)\s*[:：]?\s*-?\d{1,3})/u.test(text);
             });
             favorLines.forEach((lineEl) => {
                 if (!(lineEl instanceof HTMLElement)) return;
@@ -5625,17 +5912,19 @@ function rebuildChoicesBlock(body, labels = []) {
                 if (!(parent instanceof HTMLElement)) return;
                 if (parent.querySelector(':scope > [data-favor-visual="1"]')) return;
                 const text = String(lineEl.textContent || "");
-                const m = text.match(/(-?\d{1,3})/);
-                if (!m) return;
-                const favor = Math.max(0, Math.min(100, Number(m[1]) || 0));
-                const favorColor = favor >= 70 ? "var(--theme-primary)" : favor >= 40 ? "var(--theme-secondary)" : "#e74c3c";
-                const filled = Math.max(0, Math.min(5, Math.round(favor / 20)));
+                const favorMatch = text.match(/(?:好感|❤️|💖|🧡|❤)\s*[:：]?\s*(-?\d{1,3})/);
+                const affMatch = text.match(/(?:爱慕|心动|情愫)\s*[:：]?\s*(-?\d{1,3})/);
+                if (!favorMatch && !affMatch) return;
+                const favor = favorMatch ? Math.max(0, Math.min(100, Number(favorMatch[1]) || 0)) : null;
+                const favorColor = favor !== null ? (favor >= 70 ? "var(--theme-primary)" : favor >= 40 ? "var(--theme-secondary)" : "#e74c3c") : "#e74c3c";
+                const filled = favor !== null ? Math.max(0, Math.min(5, Math.round(favor / 20))) : 0;
                 const hearts = `${"❤️".repeat(filled)}${"🤍".repeat(5 - filled)}`;
+                const affection = affMatch ? Math.max(-100, Math.min(100, Number(affMatch[1]) || 0)) : null;
 
                 const visual = document.createElement("div");
                 visual.setAttribute("data-favor-visual", "1");
                 visual.style.cssText = "margin-top:6px;";
-                visual.innerHTML = `<div style="height:5px;border-radius:999px;background:color-mix(in srgb,var(--text-muted) 25%, transparent);overflow:hidden;"><div style="height:100%;width:${favor}%;background:${favorColor};border-radius:999px;"></div></div><div style="margin-top:4px;font-size:.72rem;letter-spacing:1px;color:${favorColor};opacity:.92;">${hearts}</div>`;
+                visual.innerHTML = (favor !== null ? `<div style="height:5px;border-radius:999px;background:color-mix(in srgb,var(--text-muted) 25%, transparent);overflow:hidden;"><div style="height:100%;width:${favor}%;background:${favorColor};border-radius:999px;"></div></div>` : "") + (affection !== null ? `<div style="margin-top:3px;font-size:.72rem;color:#e84393;opacity:.95;">♥ 爱慕 ${affection}</div>` : "") + (favor !== null ? `<div style="margin-top:4px;font-size:.72rem;letter-spacing:1px;color:${favorColor};opacity:.92;">${hearts}</div>` : "");
                 parent.insertBefore(visual, lineEl);
             });
         }
@@ -6127,9 +6416,8 @@ function rebuildChoicesBlock(body, labels = []) {
             if (!name && fields && fields.scene) name = String(fields.scene).trim().slice(0, 30);
             let st = null;
             try { st = StateService.get(); } catch { }
-            const weekName = st && typeof st.weekdayIndex === "number" ? Utils.weekdays[(st.weekdayIndex + 7) % 7] : "";
-            const weekPart = st && Number.isFinite(Number(st.weekIndex)) ? `第${Number(st.weekIndex)}周` : "";
-            const core = weekPart ? (weekName ? `${weekPart} ${weekName}` : weekPart) : weekName;
+            // 优先真实日期(nowDateStr 已日期优先),无日期才回落周数/星期
+            const core = st ? Utils.nowDateStr(st) : "";
             if (name && core) return `${name}：${core}`;
             if (name) return name;
             if (core) return core;
@@ -6291,7 +6579,7 @@ function rebuildChoicesBlock(body, labels = []) {
             if (!npcs.length) return "无";
             if (!full) {
                 return npcs.map((n) =>
-                    `${n.name}(id:${n.id},${n.relation},好感${n.favor},${n.status || "在线"},${n.mood || "平静"}${n.traits ? "," + n.traits : ""})`
+                    `${n.name}(id:${n.id},${n.relation},友善${n.favor},爱慕${n.affection ?? 0},${n.status || "在线"},${n.mood || "平静"}${n.traits ? "," + n.traits : ""})`
                 ).join("；");
             }
             return npcs.map((n) => {
@@ -6304,7 +6592,7 @@ function rebuildChoicesBlock(body, labels = []) {
                     p.goal ? `目标:${p.goal}` : "",
                     p.secret ? `秘密:${p.secret}` : ""
                 ].filter(Boolean).join("，");
-                return `[${n.name}] id:${n.id} 关系:${n.relation} 性别:${n.gender || "未知"} 好感:${n.favor} 状态:${n.status || "在线"} 心情:${n.mood || "平静"} 特质:${n.traits || "无"}${profileStr ? " | " + profileStr : ""}`;
+                return `[${n.name}] id:${n.id} 关系:${n.relation} 性别:${n.gender || "未知"} 友善度:${n.favor} 爱慕值:${n.affection ?? 0} 状态:${n.status || "在线"} 心情:${n.mood || "平静"} 特质:${n.traits || "无"}${profileStr ? " | " + profileStr : ""}`;
             }).join("\n");
         }
         function buildFactLock(state) {
@@ -6326,14 +6614,24 @@ function rebuildChoicesBlock(body, labels = []) {
             ].filter(Boolean).join("\n");
         }
         function buildRuntimeSummary(state) {
+            let boundaryLine = "";
+            try {
+                const card = ScenarioCardService.getSelectedCard();
+                const attrs = (card && card.structured && Array.isArray(card.structured.stats)) ? card.structured.stats : [];
+                if (attrs.length) {
+                    const desc = attrs.map((a) => `${a.label || a.key}（${Number.isFinite(Number(a.min)) ? Number(a.min) : 0}~${Number.isFinite(Number(a.max)) ? Number(a.max) : 100}）`).join("，");
+                    boundaryLine = `属性边界：${desc}。只能维护上述属性，数值不得超过上限，禁止新增其他属性。`;
+                }
+            } catch (e) { }
             return [
                 "【运行时上下文】",
                 `主角基础：姓名${state.name}，性别${state.gender}${state.orientation ? `，性取向${state.orientation}` : ""}${state.role ? `，开局身份${state.role}` : ""}，年龄${Math.floor((state.age || 0) / 12)}岁，时间${Utils.nowDateStr(state) || "未设定"}。`,
                 `主角状态栏：${serializeStats(state)}。`,
                 `背包：${serializeInventory(state)}。`,
                 `关键NPC：${serializeNpcs(state, false)}。`,
+                boundaryLine,
                 "若用户输入与已确认事实冲突，先以礼貌方式说明冲突，再基于事实继续剧情。"
-            ].join("\n");
+            ].filter(Boolean).join("\n");
         }
         return { buildFactLock, buildRuntimeSummary, serializeInventory, serializeNpcs, serializeStats };
     })();
@@ -6628,6 +6926,10 @@ function rebuildChoicesBlock(body, labels = []) {
             if (item.mood !== undefined) npc.mood = String(item.mood).slice(0, 16);
             if (item.traits !== undefined && String(item.traits).trim()) npc.traits = String(item.traits).slice(0, 24);
             if (item.favor !== undefined) npc.favor = Math.max(0, Math.min(100, Number(item.favor) || npc.favor || 60));
+            // 双轴好感:爱慕值 affection(-100~100),仅显式 patch 提供时更新(不随 favor 漂移)
+            if (item.affection !== undefined && Number.isFinite(Number(item.affection))) {
+                npc.affection = Math.max(-100, Math.min(100, Math.round(Number(item.affection))));
+            }
             // 支持 NPC 独立属性面板（与主角 stats 同格式）
             if (Array.isArray(item.stats) && item.stats.length) {
                 npc.stats = item.stats.map((s, i) => ({
@@ -6655,7 +6957,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const seen = new Map();
             const score = (x) => {
                 const fields = [x?.name, x?.gender, x?.relation, x?.status, x?.mood, x?.traits].filter((v) => String(v || "").trim()).length;
-                return fields + (Number.isFinite(Number(x?.favor)) ? 1 : 0);
+                return fields + (Number.isFinite(Number(x?.favor)) ? 1 : 0) + (Number.isFinite(Number(x?.affection)) ? 1 : 0);
             };
             (state.npcs || []).forEach((cur) => {
                 if (isProtagonistLikeNpc(state, cur)) return;
@@ -6680,6 +6982,7 @@ function rebuildChoicesBlock(body, labels = []) {
                     if (!String(keep.profile[k] || "").trim() && String(dropProfile[k] || "").trim()) keep.profile[k] = dropProfile[k];
                 });
                 if (!Number.isFinite(Number(keep.favor)) && Number.isFinite(Number(drop.favor))) keep.favor = drop.favor;
+                if (!Number.isFinite(Number(keep.affection)) && Number.isFinite(Number(drop.affection))) keep.affection = drop.affection;
                 seen.set(key, keep);
             });
             seen.forEach((v) => merged.push(v));
@@ -6740,12 +7043,16 @@ function rebuildChoicesBlock(body, labels = []) {
             if (Array.isArray(patch.stats) && patch.stats.length > 0) {
                 // 增量 merge：只更新/新增本次 patch 中的属性，不全量覆盖
                 if (!Array.isArray(state.stats)) state.stats = [];
+                const { hasBound, map } = StatsService.getStatBoundaries();
                 StatsService.normalizeStats(patch.stats).forEach((item) => {
                     const existing = state.stats.find(s => s.key === item.key || s.label === item.label);
+                    const bound = StatsService.findBound(map, item) || (existing ? { min: existing.min, max: existing.max } : null);
                     if (existing) {
-                        existing.value = item.value;
+                        // 有边界时把数值夹到 [min,max];existing 自身 min/max 兜底
+                        existing.value = hasBound ? StatsService.clampToBound(item.value, bound) : item.value;
                         existing.icon = item.icon || existing.icon;
-                    } else {
+                    } else if (!hasBound || StatsService.findBound(map, item)) {
+                        // 定义了属性表时禁止 AI 新增表外属性(表内新 key 走 findBound 放行)
                         state.stats.push(item);
                     }
                 });
@@ -6791,8 +7098,11 @@ function rebuildChoicesBlock(body, labels = []) {
         function applyWorldPatch(patch, options = {}) {
             if (!patch || typeof patch !== "object") return false;
             const state = StateService.get();
+            const prevKey = StoryEventService.dateKey(state);
             const changed = StatePatchService.applyPatch(state, patch);
             if (!changed) return false;
+            // 时间推进钩子:固定事件(日期) + 周期收入
+            StoryEventService.checkTimeEvents(state, prevKey);
             StateService.save();
             if (options.render !== false) {
                 UIRenderer.renderTop(state);
@@ -6859,6 +7169,7 @@ function rebuildChoicesBlock(body, labels = []) {
         }
         function syncFromAiText(state, text) {
             if (!state) return;
+            const prevKey = StoryEventService.dateKey(state);
             const content = String(text || "");
             const era = extractEraText(content);
             if (era) state.timeEra = era;
@@ -6869,16 +7180,19 @@ function rebuildChoicesBlock(body, labels = []) {
                 state.weekdayIndex = fromText;
             }
             const ymd = extractLatestYmd(content);
-            if (!ymd) return;
-            state.currentYear = ymd.y;
-            state.currentMonth = ymd.mo;
-            state.currentDay = ymd.d;
+            if (ymd) {
+                state.currentYear = ymd.y;
+                state.currentMonth = ymd.mo;
+                state.currentDay = ymd.d;
 
-            // weekdayIndex: 若文本未给出周几，则用日期推导
-            if (typeof fromText !== "number") {
-                const derived = weekdayIndexFromDate(ymd.y, ymd.mo, ymd.d);
-                if (typeof derived === "number") state.weekdayIndex = derived;
+                // weekdayIndex: 若文本未给出周几，则用日期推导
+                if (typeof fromText !== "number") {
+                    const derived = weekdayIndexFromDate(ymd.y, ymd.mo, ymd.d);
+                    if (typeof derived === "number") state.weekdayIndex = derived;
+                }
             }
+            // 时间推进钩子:固定事件(日期) + 周期收入
+            StoryEventService.checkTimeEvents(state, prevKey);
         }
         return { syncFromAiText };
     })();
@@ -7022,14 +7336,16 @@ function rebuildChoicesBlock(body, labels = []) {
                 const name = npcMatch[1];
                 const relation = String(npcMatch[2] || "").trim();
                 const favorMatch = line.match(/好感\s*[:：]?\s*(-?\d{1,3})/);
+                const affectionMatch = line.match(/(?:爱慕|心动|情愫)\s*[:：]?\s*(-?\d{1,3})/);
                 const statusMatch = line.match(/状态\s*[:：]?\s*([^\s｜|，。;；]{1,16})/);
                 const moodMatch = line.match(/心情\s*[:：]?\s*([^\s｜|，。;；]{1,16})/);
                 const traitsMatch = line.match(/特质\s*[:：]?\s*([^\n，。;；]{1,24})/);
-                if (relation || favorMatch || statusMatch || moodMatch || traitsMatch) {
+                if (relation || favorMatch || affectionMatch || statusMatch || moodMatch || traitsMatch) {
                     npcUpdates.push({
                         name,
                         relation: relation || undefined,
                         favor: favorMatch ? Math.max(0, Math.min(100, Number(favorMatch[1]) || 0)) : undefined,
+                        affection: affectionMatch ? Math.max(-100, Math.min(100, Number(affectionMatch[1]) || 0)) : undefined,
                         status: statusMatch ? statusMatch[1] : undefined,
                         mood: moodMatch ? moodMatch[1] : undefined,
                         traits: traitsMatch ? traitsMatch[1] : undefined
@@ -7155,12 +7471,15 @@ function rebuildChoicesBlock(body, labels = []) {
                         name = name.replace(/[\(（].*?[\)）]/g, "").trim();
                         // 增强好感度匹配：支持 "好感: 82"、"❤️ 82"、"❤️82"、"💖82" 等
                         const favorMatch = cleanText.match(/(?:好感|❤️|💖|🧡)\s*[:：]?\s*(\d+)/u);
+                        // 爱慕值匹配（双轴）:"爱慕: -20"、"心动 45" 等
+                        const affectionMatch = cleanText.match(/(?:爱慕|心动|情愫)\s*[:：]?\s*(-?\d{1,3})/u);
                         // 提取状态
                         const statusMatch = cleanText.match(/·\s*([^\s｜|，。;；]+)/) || cleanText.match(/状态[:：]\s*([^\s]+)/);
-                        if (favorMatch || statusMatch) {
+                        if (favorMatch || affectionMatch || statusMatch) {
                             npcUpdates.push({
                                 name,
                                 favor: favorMatch ? Math.min(100, parseInt(favorMatch[1])) : undefined,
+                                affection: affectionMatch ? Math.max(-100, Math.min(100, parseInt(affectionMatch[1]) || 0)) : undefined,
                                 status: statusMatch ? statusMatch[1].trim() : undefined
                             });
                         }
@@ -7195,18 +7514,21 @@ function rebuildChoicesBlock(body, labels = []) {
             const stats = Array.isArray(snapshot.statItems) ? snapshot.statItems : [];
             if (stats.length) {
                 if (!Array.isArray(state.stats)) state.stats = [];
+                const { hasBound, map } = StatsService.getStatBoundaries();
                 stats.forEach((item) => {
                     const idx = state.stats.findIndex((s) => String(s.key || "") === String(item.key || "") || String(s.label || "") === String(item.label || ""));
                     if (idx >= 0) {
                         const prev = state.stats[idx];
-                        const valueChanged = String(prev.value ?? "") !== String(item.value ?? "");
+                        const bound = StatsService.findBound(map, item) || (prev.min !== undefined || prev.max !== undefined ? { min: prev.min, max: prev.max } : null);
+                        const value = hasBound ? StatsService.clampToBound(item.value, bound) : item.value;
+                        const valueChanged = String(prev.value ?? "") !== String(value ?? "");
                         const iconChanged = String(prev.icon || "") !== String(item.icon || "");
                         if (valueChanged || iconChanged) {
-                            state.stats[idx] = { ...prev, value: item.value, icon: item.icon, label: prev.label || item.label, key: prev.key || item.key };
+                            state.stats[idx] = { ...prev, value, icon: item.icon, label: prev.label || item.label, key: prev.key || item.key };
                             changed = true;
                         }
-                    } else {
-                        state.stats.push({ key: item.key, label: item.label, icon: item.icon, value: item.value });
+                    } else if (!hasBound || StatsService.findBound(map, item)) {
+                        state.stats.push({ key: item.key, label: item.label, icon: item.icon, value: hasBound ? StatsService.clampToBound(item.value, StatsService.findBound(map, item)) : item.value });
                         changed = true;
                     }
                 });
@@ -7296,8 +7618,10 @@ function rebuildChoicesBlock(body, labels = []) {
             return STAT_ALIAS_MAP[normalized] || text;
         }
         function normalizeStatItem(it, idx) {
-            const canonical = toCanonicalStatLabel(it?.label || it?.name || it?.key || `stat_${idx}`);
-            const key = String(canonical || it?.key || it?.name || `stat_${idx}`).replace(/[^\w\u4e00-\u9fa5-]/g, "_");
+            // key \u662f\u7ed3\u6784\u5316\u6807\u8bc6\u7b26\u987b\u539f\u6837\u4fdd\u7559\uff0c\u522b\u540d\u6620\u5c04\u4ec5\u7528\u4e8e label \u515c\u5e95
+            const rawKey = String(it?.key || "").trim();
+            const canonical = toCanonicalStatLabel(it?.label || it?.name || rawKey || `stat_${idx}`);
+            const key = (rawKey || String(canonical || it?.name || `stat_${idx}`)).replace(/[^\w\u4e00-\u9fa5-]/g, "_");
             const label = canonical.slice(0, 12);
             const icon = String(it?.icon || "").trim() || "✨";
             // 保留 "85/100" 格式字符串；纯数字则 clamp 后转字符串
@@ -7311,11 +7635,51 @@ function rebuildChoicesBlock(body, labels = []) {
             } else {
                 value = String(Math.max(0, Math.min(999, Number(rawVal) || 0)));
             }
-            return { key, label, icon, value };
+            // 透传 min/max/init（属性表边界，用于运行时 clamp 与开局初值）
+            const out = { key, label, icon, value };
+            if (Number.isFinite(Number(it?.min))) out.min = Number(it.min);
+            if (Number.isFinite(Number(it?.max))) out.max = Number(it.max);
+            if (Number.isFinite(Number(it?.init))) out.init = Number(it.init);
+            return out;
         }
         function normalizeStats(list) {
             const arr = Array.isArray(list) ? list : [];
             return arr.slice(0, 8).map(normalizeStatItem);
+        }
+        // 属性表边界:从当前卡 structured.stats(带 init/min/max)构建 {key|label → {min,max}}
+        function getStatBoundaries() {
+            const card = (typeof ScenarioCardService !== "undefined" && typeof ScenarioCardService.getSelectedCard === "function") ? ScenarioCardService.getSelectedCard() : null;
+            const list = (card && card.structured && Array.isArray(card.structured.stats)) ? card.structured.stats : [];
+            const map = new Map();
+            list.forEach((s) => {
+                if (!s || (s.label == null && s.key == null)) return;
+                const min = Number.isFinite(Number(s.min)) ? Number(s.min) : 0;
+                const max = Number.isFinite(Number(s.max)) ? Number(s.max) : 100;
+                if (s.label) map.set(String(s.label), { min, max });
+                if (s.key) map.set(String(s.key), { min, max });
+            });
+            return { hasBound: list.length > 0, map };
+        }
+        // 把数值夹到边界内(cur/max 格式保留 max 部分);无边界原样返回
+        function clampToBound(raw, bound) {
+            if (!bound) return raw;
+            const str = String(raw ?? "");
+            const min = Number(bound.min) || 0;
+            const max = Number.isFinite(Number(bound.max)) ? Number(bound.max) : Infinity;
+            const mm = str.match(/^(-?\d+(?:\.\d+)?)\s*\/\s*(-?\d+(?:\.\d+)?)$/);
+            if (mm) {
+                const cur = Math.min(Math.max(Number(mm[1]), min), max);
+                return `${cur}/${mm[2]}`;
+            }
+            const n = Number(str);
+            if (!Number.isFinite(n)) return raw;
+            // state.stats.value 约定为字符串(与 normalizeStatItem/applyEffect 一致)
+            return String(Math.min(Math.max(n, min), max));
+        }
+        function findBound(boundaryMap, item) {
+            if (!item || !boundaryMap) return null;
+            const byKey = item.key ? boundaryMap.get(String(item.key)) : null;
+            return byKey || (item.label ? boundaryMap.get(String(item.label)) : null);
         }
         function applyEffect(state, effectStr) {
             const effect = String(effectStr || "").trim();
@@ -7337,7 +7701,106 @@ function rebuildChoicesBlock(body, labels = []) {
                 state.stats[idx].value = String(Math.max(0, Math.min(999, (Number(rawVal) || 0) + delta)));
             }
         }
-        return { normalizeStats, normalizeStatItem, applyEffect };
+        return { normalizeStats, normalizeStatItem, applyEffect, getStatBoundaries, clampToBound, findBound };
+    })();
+
+    const StoryEventService = (() => {
+        // 固定事件/周期收入:挂时间推进钩子 + sendUserText 回合钩子;命中入 eventQueue 由下一次推进消费
+        function cardEvents() {
+            const card = (typeof ScenarioCardService !== "undefined" && typeof ScenarioCardService.getSelectedCard === "function") ? ScenarioCardService.getSelectedCard() : null;
+            const st = card && card.structured;
+            return {
+                fixed: Array.isArray(st && st.fixed_events) ? st.fixed_events : [],
+                incomes: Array.isArray(st && st.incomes) ? st.incomes : []
+            };
+        }
+        function dateKey(state) {
+            return `${state.currentYear}-${state.currentMonth}-${state.currentDay}`;
+        }
+        function daysBetween(aKey, bKey) {
+            const pa = String(aKey || "").split("-").map(Number);
+            const pb = String(bKey || "").split("-").map(Number);
+            if (pa.length < 3 || pb.length < 3 || !pa.every(Number.isFinite) || !pb.every(Number.isFinite)) return 0;
+            return (pb[0] - pa[0]) * 360 + (pb[1] - pa[1]) * 30 + (pb[2] - pa[2]);
+        }
+        // 从 (y,m,d) 往前回溯 days 天(30 天制,支持跨月跨年)
+        function backDays(y, m, d, days) {
+            let day = d - days, month = m, year = y;
+            while (day < 1) { day += 30; month -= 1; if (month < 1) { month = 12; year -= 1; } }
+            return { year, month, day };
+        }
+        function ensureQueues(state) {
+            if (!Array.isArray(state.triggeredEvents)) state.triggeredEvents = [];
+            if (!Array.isArray(state.eventQueue)) state.eventQueue = [];
+        }
+        function applyIncome(state, inc) {
+            if (!Array.isArray(state.stats)) state.stats = [];
+            const target = state.stats.find((s) => s.key === inc.key || String(s.label || "") === inc.key);
+            if (target) {
+                const bound = (Number.isFinite(Number(target.min)) || Number.isFinite(Number(target.max)))
+                    ? { min: target.min, max: target.max } : null;
+                target.value = StatsService.clampToBound((Number(String(target.value).split("/")[0]) || 0) + inc.amount, bound);
+            } else if (inc.key) {
+                state.stats.push({ key: inc.key, label: inc.key, value: String(inc.amount), min: 0, max: 99999 });
+            }
+        }
+        function checkTimeEvents(state, prevKey) {
+            ensureQueues(state);
+            const nowKey = dateKey(state);
+            const changed = prevKey && prevKey !== nowKey;
+            const { fixed, incomes } = cardEvents();
+            if (changed) {
+                // 遍历推进途中每一天(prev 之后 → now),日期事件在其中任意一天命中即触发
+                const dateEvents = fixed.filter((e) => e.trigger === "date" && String(e.date || "").trim());
+                if (dateEvents.length) {
+                    const days = Math.max(0, daysBetween(prevKey, nowKey));
+                    const hit = new Set();
+                    for (let i = 1; i <= days; i++) {
+                        const t = backDays(state.currentYear, state.currentMonth, state.currentDay, i);
+                        const md = `${t.month}-${t.day}`;
+                        dateEvents.forEach((e) => {
+                            const want = String(e.date || "").trim();
+                            if (want === md && !state.triggeredEvents.includes(`fe_${e.name}`) && !hit.has(e.name)) {
+                                hit.add(e.name);
+                                state.triggeredEvents.push(`fe_${e.name}`);
+                                state.eventQueue.push(`📅 固定事件「${e.name}」：${e.desc || ""}`);
+                            }
+                        });
+                    }
+                }
+            }
+            // 周期收入:lastIncomeAt 为空时以当前日期为起算点
+            if (incomes.length) {
+                if (!state.lastIncomeAt) state.lastIncomeAt = prevKey || nowKey;
+                incomes.forEach((inc) => {
+                    if (daysBetween(state.lastIncomeAt, nowKey) >= (Number(inc.every) || 1)) {
+                        state.lastIncomeAt = nowKey;
+                        applyIncome(state, inc);
+                        state.eventQueue.push(`💰 ${inc.name}：${inc.key} +${inc.amount}${inc.desc ? `（${inc.desc}）` : ""}`);
+                    }
+                });
+            }
+            if (state.eventQueue.length) StateService.save();
+        }
+        // 第 userMsgCount 次推进命中 round 事件
+        function checkRoundEvents(state, userMsgCount) {
+            ensureQueues(state);
+            const { fixed } = cardEvents();
+            fixed.filter((e) => e.trigger === "round").forEach((e) => {
+                if ((Number(e.round) || 0) === userMsgCount && !state.triggeredEvents.includes(`fe_${e.name}`)) {
+                    state.triggeredEvents.push(`fe_${e.name}`);
+                    state.eventQueue.push(`📅 固定事件「${e.name}」：${e.desc || ""}`);
+                }
+            });
+            return state.eventQueue;
+        }
+        function drainQueue(state) {
+            const q = Array.isArray(state.eventQueue) ? state.eventQueue : [];
+            const evt = q.shift();
+            if (q.length) StateService.save();
+            return evt;
+        }
+        return { checkTimeEvents, checkRoundEvents, drainQueue, dateKey };
     })();
 
     const UIRenderer = (() => {
@@ -7448,9 +7911,12 @@ function rebuildChoicesBlock(body, labels = []) {
             for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
             return `hsl(${h}, 68%, 55%)`;
         }
-        function heartLadder(value, max = 100) {
-            const v = Math.max(0, Math.min(max, Number(value) || 0));
-            const filled = Math.round((v / max) * 5);
+        function heartLadder(value, max = 100, bipolar = false) {
+            let v = Number(value) || 0;
+            let pct;
+            if (bipolar) { v = Math.max(-max, Math.min(max, v)); pct = ((v + max) / (2 * max)) * 100; }
+            else { v = Math.max(0, Math.min(max, v)); pct = (v / max) * 100; }
+            const filled = Math.round((pct / 100) * 5);
             const hearts = Array.from({ length: 5 }, (_, i) => (i < filled ? "♥" : '<span class="empty">♡</span>'));
             return `<span class="heart-ladder">${hearts.join("")}</span>`;
         }
@@ -7519,9 +7985,38 @@ function rebuildChoicesBlock(body, labels = []) {
             if (Array.isArray(state.locations) && state.locations.length) return state.locations;
             return generateNearbyLocations(state.location);
         }
+        function mapSrcOf(bg, bgUrl) {
+            return bg === "custom" ? (bgUrl || "") : (bg ? `maps/${bg}.webp` : "");
+        }
+        function getActiveMap() {
+            // 玩家 per-card 覆盖 > 剧本 structured.map；无地图返回 null
+            const card = (typeof ScenarioCardService !== "undefined" && typeof ScenarioCardService.getSelectedCard === "function")
+                ? ScenarioCardService.getSelectedCard() : null;
+            const base = card && card.structured && typeof card.structured.map === "object" ? card.structured.map : null;
+            if (!base || (!base.bg && !(base.places || []).length)) return null;
+            let override = null;
+            try {
+                const all = JSON.parse(localStorage.getItem("bitlife_map_override_v1") || "null");
+                override = (all && all[card.id]) || null;
+            } catch (e) { /* 忽略损坏数据 */ }
+            const bg = (override && override.bg) || base.bg || "";
+            const bgUrl = (override && override.bgUrl) || base.bgUrl || "";
+            return { ...base, bg, bgUrl, src: mapSrcOf(bg, bgUrl) };
+        }
         function renderPlayMapBar(state) {
             const narr = (typeof SettingsService !== "undefined" && typeof SettingsService.getNarrative === "function") ? SettingsService.getNarrative() : null;
             if (narr && narr.showMap === false) return "";
+            const map = getActiveMap();
+            if (map) {
+                const places = map.places || [];
+                const dots = places.slice(0, 10).map((p) =>
+                    `<i class="pmap-dot" style="left:${Math.min(100, Math.max(0, Number(p.x) || 0))}%;top:${Math.min(100, Math.max(0, Number(p.y) || 0))}%"></i>`).join("");
+                const img = map.src ? `<img src="${map.src}" alt="地图" loading="lazy">` : "";
+                return `<div class="play-map-bar play-map-thumbbar" onclick="showFullMap()">
+                    <div class="pmap-thumb">${img}${dots}<span class="pmap-title">🗺️ 大地图</span></div>
+                    <div class="list-sub" style="margin-top:4px;">${places.length} 个地点 · 点击地图选择地点</div>
+                </div>`;
+            }
             const locs = normalizeLocations(state);
             const cur = state.location || (locs[0] && locs[0].name) || "";
             const chips = locs.map((l) => {
@@ -7580,6 +8075,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const card = (n) => {
                 const appeared = isOn(n);
                 const favor = Math.max(0, Number(n.favor) || 0);
+                const affection = Number.isFinite(Number(n.affection)) ? Number(n.affection) : 0;
                 const introRaw = (memory[n.id] && memory[n.id].summary) ? stripHtml(memory[n.id].summary) : stripHtml(n.description || "");
                 const intro = introRaw.slice(0, 60);
                 return `<div class="npc-card">
@@ -7588,7 +8084,8 @@ function rebuildChoicesBlock(body, labels = []) {
                         <div class="npc-name">${MarkdownService.escapeHtml(n.name || "未命名")}</div>
                         <span class="npc-badge ${appeared ? "on" : "off"}">${appeared ? "已登场" : "未登场"}</span>
                     </div>
-                    <div class="npc-favor">${heartLadder(favor)} ${favor}</div>
+                    <div class="npc-favor">⭐ 友善 ${favor} ${heartLadder(favor)}</div>
+                    <div class="npc-favor">♥ 爱慕 ${affection > 0 ? "+" : ""}${affection} ${heartLadder(affection, 100, true)}</div>
                     <div class="npc-meta">${MarkdownService.escapeHtml(n.relation || "关系未明")} · 同地点 ${MarkdownService.escapeHtml(state.location || "未知")}${n.status ? ` · ${MarkdownService.escapeHtml(n.status)}` : ""}${n.mood ? ` · ${MarkdownService.escapeHtml(n.mood)}` : ""}</div>
                     ${intro ? `<div class="npc-intro">${MarkdownService.escapeHtml(intro)}${introRaw.length > 60 ? "…" : ""}</div>` : ""}
                 </div>`;
@@ -7890,7 +8387,8 @@ function rebuildChoicesBlock(body, labels = []) {
                             <div class="npc-panel-summary">${npc.status || "在线"} · ${npc.mood || "平静"}${npc.traits ? ` · ${npc.traits}` : ""}</div>
                             <div class="npc-panel-tags">
                                 <span class="npc-tag">性别 ${npc.gender || "未知"}</span>
-                                <span class="npc-tag">好感 ${npc.favor}</span>
+                                <span class="npc-tag">友善 ${npc.favor}</span>
+                                <span class="npc-tag">爱慕 ${npc.affection ?? 0}</span>
                                 <span class="npc-tag">状态 ${npc.status || "未知"}</span>
                                 <span class="npc-tag">心情 ${npc.mood || "平静"}</span>
                                 ${npc.traits ? `<span class="npc-tag">特质 ${npc.traits}</span>` : ""}
@@ -7944,7 +8442,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 delete state.npcChats[npcKey];
             }
             document.getElementById("npc-chat-title").innerText = npc.name || "NPC";
-            document.getElementById("npc-chat-sub").innerText = `${npc.relation || "熟人"}｜好感 ${npc.favor}｜${npc.status || "在线"}${npc.traits ? `｜${npc.traits}` : ""}`;
+            document.getElementById("npc-chat-sub").innerText = `${npc.relation || "熟人"}｜友善 ${npc.favor}｜爱慕 ${npc.affection ?? 0}｜${npc.status || "在线"}${npc.traits ? `｜${npc.traits}` : ""}`;
             document.getElementById("npc-chat-avatar-btn").onclick = () => Controller.openNpcProfile(npc.id || npc.name);
             if (!state.npcChats || typeof state.npcChats !== "object") state.npcChats = {};
             if (!Array.isArray(state.npcChats[chatKey])) state.npcChats[chatKey] = [];
@@ -8177,7 +8675,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 _bgmRenderTitle();
             }
         }
-        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, clearFancyStatus, renderPlayStatusBar, renderPlayEventList, renderWorld, renderDiary, renderEndingModal, renderPhone, buildEventRounds, avatarColor, heartLadder, stripHtml, normalizeLocations, bgmToggle, bgmNext, bgmPrev };
+        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, clearFancyStatus, renderPlayStatusBar, renderPlayEventList, renderWorld, renderDiary, renderEndingModal, renderPhone, buildEventRounds, avatarColor, heartLadder, stripHtml, normalizeLocations, bgmToggle, bgmNext, bgmPrev, mapSrcOf, getActiveMap };
     })();
 
     const VisualEffects = (() => {
@@ -8560,6 +9058,44 @@ function rebuildChoicesBlock(body, labels = []) {
             const speedNames = { 1: "很慢", 2: "偏慢", 3: "适中", 4: "偏快", 5: "很快" };
             const sv = document.getElementById("nc-read-speed-val"); if (sv) sv.textContent = speedNames[Math.round(n.readSpeed)] || "适中";
             const ov = document.getElementById("nc-opacity-val"); if (ov) ov.textContent = Math.round(Number(n.opacity) || 100) + "%";
+            loadMapUI();
+        }
+        const MAP_OVERRIDE_KEY = "bitlife_map_override_v1";
+        function getMapOverride(cardId) {
+            try {
+                const all = JSON.parse(localStorage.getItem(MAP_OVERRIDE_KEY) || "null");
+                return (all && cardId && all[cardId]) || null;
+            } catch (e) { return null; }
+        }
+        function setMapOverride(cardId, patch) {
+            if (!cardId) return;
+            let all = {};
+            try { all = JSON.parse(localStorage.getItem(MAP_OVERRIDE_KEY) || "null") || {}; } catch (e) { all = {}; }
+            all[cardId] = { ...(all[cardId] || {}), ...patch };
+            localStorage.setItem(MAP_OVERRIDE_KEY, JSON.stringify(all));
+        }
+        function loadMapUI() {
+            const card = (typeof ScenarioCardService !== "undefined" && typeof ScenarioCardService.getSelectedCard === "function") ? ScenarioCardService.getSelectedCard() : null;
+            const ov = getMapOverride(card ? card.id : "");
+            const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+            set("nc-map-bg", ov ? ov.bg || "" : "");
+            set("nc-map-url", ov ? ov.bgUrl || "" : "");
+        }
+        function onMapFilePicked() {
+            const card = (typeof ScenarioCardService !== "undefined" && typeof ScenarioCardService.getSelectedCard === "function") ? ScenarioCardService.getSelectedCard() : null;
+            const input = document.getElementById("nc-map-file");
+            const f = input && input.files && input.files[0];
+            if (!f || !card) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                setMapOverride(card.id, { bg: "custom", bgUrl: String(reader.result || "") });
+                const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+                set("nc-map-bg", "custom");
+                set("nc-map-url", String(reader.result || ""));
+                if (typeof activeView !== "undefined" && activeView === "view-main") UIRenderer.renderPlayEventList();
+                NoticeModalService.showInfo({ title: "已更换地图", descHtml: "已为该剧本设置自定义地图背景，游玩页即时生效。" });
+            };
+            reader.readAsDataURL(f);
         }
         function bindNarrativeAutoSave() {
             const map = {
@@ -8592,8 +9128,23 @@ function rebuildChoicesBlock(body, labels = []) {
                 el.addEventListener("change", fn);
                 el.addEventListener("input", fn);
             });
+            const bindMapOverride = (id) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.addEventListener("change", () => {
+                    const card = (typeof ScenarioCardService !== "undefined" && typeof ScenarioCardService.getSelectedCard === "function") ? ScenarioCardService.getSelectedCard() : null;
+                    if (!card) return;
+                    const bg = document.getElementById("nc-map-bg") ? document.getElementById("nc-map-bg").value : "";
+                    const url = document.getElementById("nc-map-url") ? document.getElementById("nc-map-url").value.trim() : "";
+                    if (!bg) setMapOverride(card.id, { bg: "", bgUrl: "" });
+                    else setMapOverride(card.id, bg === "custom" ? { bg: "custom", bgUrl: url } : { bg, bgUrl: "" });
+                    if (typeof activeView !== "undefined" && activeView === "view-main") UIRenderer.renderPlayEventList();
+                });
+            };
+            bindMapOverride("nc-map-bg");
+            bindMapOverride("nc-map-url");
         }
-        return { loadToUI, saveFromUI, saveUserApiFromUI, getApiConfig, getByok, applyFontSize, loadFontSize, onFontSizeInput, testByokConnection, getScenarioText, getScenarioTextForModel, getBeautyCardSetting, getChatPolicyConfig, getThinkingPayloadForCard, importScenarioFromFile, bindProfileAutoSave, bindByokAutoSave, getNarrative, saveNarrative, applyNarrativeUI, buildNarrativePrompt, openMemoryManager, clearNpcMemory, loadNarrativeToUI, bindNarrativeAutoSave };
+        return { loadToUI, saveFromUI, saveUserApiFromUI, getApiConfig, getByok, applyFontSize, loadFontSize, onFontSizeInput, testByokConnection, getScenarioText, getScenarioTextForModel, getBeautyCardSetting, getChatPolicyConfig, getThinkingPayloadForCard, importScenarioFromFile, bindProfileAutoSave, bindByokAutoSave, getNarrative, saveNarrative, applyNarrativeUI, buildNarrativePrompt, openMemoryManager, clearNpcMemory, loadNarrativeToUI, bindNarrativeAutoSave, getMapOverride, setMapOverride, loadMapUI, onMapFilePicked };
     })();
     SettingsService.loadFontSize();
 
@@ -8750,6 +9301,68 @@ function rebuildChoicesBlock(body, labels = []) {
             }).filter(Boolean);
             const timeline = section("时间线");
             const tStart = timeline.match(/(\d{1,4})年(\d{1,2})月(\d{1,2})日/);
+            const mapSec = section("地图");
+            const mapPlaces = lines(mapSec).map((l) => {
+                const m = l.match(/^-?\s*([^（(]+?)[（(](\d+(?:\.\d+)?)\s*[,，]\s*(\d+(?:\.\d+)?)[）)](?:：([\s\S]*))?$/);
+                if (!m) return null;
+                return { name: m[1].trim(), x: Math.min(100, Math.max(0, Number(m[2]))), y: Math.min(100, Math.max(0, Number(m[3]))), desc: String(m[4] || "").trim() };
+            }).filter(Boolean);
+            const worldbook = lines(section("世界书")).map((l) => {
+                const i = l.indexOf("：");
+                if (i <= 0) return null;
+                return { keyword: l.slice(0, i).trim(), content: l.slice(i + 1).trim() };
+            }).filter(Boolean);
+            const endings = lines(section("结局条件")).map((l) => {
+                const m = l.match(/^-?\s*([^（(]+?)[（(]([^）)]+)[）)]\s*$/);
+                if (!m) return null;
+                const parts = String(m[2]).split("：");
+                const type = (parts[0] || "").trim();
+                const isNpcType = type === "favor" || type === "affection";
+                return {
+                    name: m[1].trim(),
+                    type,
+                    npcId: isNpcType ? (parts[1] || "").trim() : "",
+                    target: (isNpcType ? (parts[2] || "") : (parts[1] || "")).trim()
+                };
+            }).filter(Boolean);
+            const attributes = lines(section("属性定义")).map((l) => {
+                const m = l.match(/^-?\s*([^（(]+?)[（(]([^）)]+)[）)]：(\d+)(?:（上限(\d+)）)?\s*(.*)$/);
+                if (!m) return null;
+                return {
+                    label: m[1].trim(),
+                    key: String(m[2] || "").trim(),
+                    init: Math.max(0, Math.min(9999, Number(m[3]))),
+                    max: m[4] ? Math.max(1, Math.min(99999, Number(m[4]))) : 100,
+                    icon: String(m[5] || "").trim()
+                };
+            }).filter(Boolean);
+            const fixedEvents = lines(section("固定事件")).map((l) => {
+                const m = l.match(/^-?\s*([^（(]+?)[（(]([^）)]+)[）)](?:：([\s\S]*))?$/);
+                if (!m) return null;
+                const parts = String(m[2]).split("：");
+                const trigger = (parts[0] || "").trim() === "round" ? "round" : "date";
+                return {
+                    name: m[1].trim(),
+                    trigger,
+                    date: trigger === "date" ? String(parts[1] || "").trim() : "",
+                    round: trigger === "round" ? Math.max(1, Number(parts[1]) || 1) : 0,
+                    desc: String(m[3] || "").trim()
+                };
+            }).filter(Boolean);
+            const incomes = lines(section("周期收入")).map((l) => {
+                const m = l.match(/^-?\s*([^（(]+?)[（(]([^）)]+)[）)](?:：([\s\S]*))?$/);
+                if (!m) return null;
+                const everyM = String(m[2]).match(/^每(\d+)天[：:](.+)$/);
+                if (!everyM) return null;
+                const km = String(everyM[2]).match(/^(.+?)([+-]?\d+)$/);
+                return {
+                    name: m[1].trim(),
+                    every: Math.max(1, Number(everyM[1]) || 1),
+                    key: (km ? km[1] : everyM[2]).trim(),
+                    amount: km ? Number(km[2]) : 0,
+                    desc: String(m[3] || "").trim()
+                };
+            }).filter(Boolean);
             return {
                 world: {
                     era: kv(world, /^时代[：:]\s*(.+)$/m),
@@ -8770,7 +9383,17 @@ function rebuildChoicesBlock(body, labels = []) {
                     note: kv(timeline, /^备注[：:]\s*(.+)$/m)
                 },
                 scene_style: { env_templates: [], option_style: section("选项风格").trim() },
-                first_scene: { story: "", options: [] }
+                first_scene: { story: "", options: [] },
+                map: {
+                    bg: kv(mapSec, /^背景[：:]\s*(.+)$/m) || "",
+                    bgUrl: kv(mapSec, /^自定义[：:]\s*(.+)$/m) || "",
+                    places: mapPlaces
+                },
+                worldbook,
+                endings,
+                stats: attributes.map((a) => ({ key: a.key, label: a.label, icon: a.icon, value: a.init, min: 0, max: a.max })),
+                fixed_events: fixedEvents,
+                incomes
             };
         }
         function emptyStructuredFromText(text) {
@@ -8781,7 +9404,13 @@ function rebuildChoicesBlock(body, labels = []) {
                 npcs: [],
                 timeline: { start: { year: 2026, month: 1, day: 1 }, note: "" },
                 scene_style: { env_templates: [], option_style: "" },
-                first_scene: { story: "", options: [] }
+                first_scene: { story: "", options: [] },
+                map: { bg: "", bgUrl: "", places: [] },
+                worldbook: [],
+                endings: [],
+                stats: [],
+                fixed_events: [],
+                incomes: []
             };
         }
         function addNpcRow(npc = {}) {
@@ -8795,13 +9424,222 @@ function rebuildChoicesBlock(body, labels = []) {
                 ["sf-npc-personality", "性格", npc.personality],
                 ["sf-npc-relationship", "与主角的关系", npc.relationship]
             ];
+            const affection = Number.isFinite(Number(npc.affection)) ? Number(npc.affection) : "";
             row.innerHTML = fields.map(([cls, ph, val]) =>
                 `<input class="${cls}" type="text" placeholder="${ph}" value="${String(val || "").replace(/"/g, "&quot;")}">`
             ).join("") +
+                `<input class="sf-npc-affection" type="number" min="-100" max="100" placeholder="爱慕初值" title="爱慕值 -100~100（留空=0）" value="${affection === "" ? "" : affection}">` +
                 `<button class="sf-npc-del" title="删除" onclick="ScenarioEditorService.removeNpcRow(this)">✕</button>`;
             list.appendChild(row);
         }
         function removeNpcRow(btn) {
+            const row = btn && btn.closest ? btn.closest(".sf-npc-row") : null;
+            if (row) row.remove();
+        }
+        // ==================== 属性定义 / 固定事件 / 周期收入（编辑器行） ====================
+        function addAttrRow(attr = {}) {
+            const list = el("sf-attr-list");
+            if (!list) return;
+            const row = document.createElement("div");
+            row.className = "sf-npc-row";
+            const val = (v) => String(v ?? "").replace(/"/g, "&quot;");
+            const init = Number.isFinite(Number(attr.init)) ? Number(attr.init) : (Number.isFinite(Number(attr.value)) ? Number(attr.value) : "");
+            const max = Number.isFinite(Number(attr.max)) ? Number(attr.max) : "";
+            row.innerHTML =
+                `<input class="sf-attr-name" type="text" placeholder="属性名（如 魅力）" value="${val(attr.label || attr.key)}">` +
+                `<input class="sf-attr-key" type="text" placeholder="key 英文标识" value="${val(attr.key)}">` +
+                `<input class="sf-attr-init" type="number" min="0" placeholder="初值" value="${init === "" ? "" : init}">` +
+                `<input class="sf-attr-max" type="number" min="1" placeholder="上限（留空=100）" value="${max === "" ? "" : max}">` +
+                `<input class="sf-attr-icon" type="text" placeholder="图标 emoji（可选）" value="${val(attr.icon)}">` +
+                `<button class="sf-npc-del" title="删除" onclick="ScenarioEditorService.removeAttrRow(this)">✕</button>`;
+            list.appendChild(row);
+        }
+        function removeAttrRow(btn) {
+            const row = btn && btn.closest ? btn.closest(".sf-npc-row") : null;
+            if (row) row.remove();
+        }
+        function addFixedEventRow(evt = {}) {
+            const list = el("sf-fixed-events-list");
+            if (!list) return;
+            const row = document.createElement("div");
+            row.className = "sf-npc-row";
+            const val = (v) => String(v ?? "").replace(/"/g, "&quot;");
+            const trigger = evt.trigger === "round" ? "round" : "date";
+            const target = trigger === "round" ? (evt.round ?? "") : (evt.date ?? "");
+            row.innerHTML =
+                `<input class="sf-fe-name" type="text" placeholder="事件名" value="${val(evt.name)}">` +
+                `<select class="sf-fe-trigger"><option value="date"${trigger === "date" ? " selected" : ""}>按日期</option><option value="round"${trigger === "round" ? " selected" : ""}>按第N次推进</option></select>` +
+                `<input class="sf-fe-target" type="text" placeholder="日期如 9-1，或回合数如 5" value="${val(target)}">` +
+                `<textarea class="sf-fe-desc" placeholder="事件内容（到点自动触发并推进剧情）" style="min-height:44px;">${val(evt.desc)}</textarea>` +
+                `<button class="sf-npc-del" title="删除" onclick="ScenarioEditorService.removeFixedEventRow(this)">✕</button>`;
+            list.appendChild(row);
+        }
+        function removeFixedEventRow(btn) {
+            const row = btn && btn.closest ? btn.closest(".sf-npc-row") : null;
+            if (row) row.remove();
+        }
+        function addIncomeRow(income = {}) {
+            const list = el("sf-incomes-list");
+            if (!list) return;
+            const row = document.createElement("div");
+            row.className = "sf-npc-row";
+            const val = (v) => String(v ?? "").replace(/"/g, "&quot;");
+            row.innerHTML =
+                `<input class="sf-in-name" type="text" placeholder="收入名（如 工资）" value="${val(income.name)}">` +
+                `<input class="sf-in-every" type="number" min="1" placeholder="每 N 天" value="${Number.isFinite(Number(income.every)) ? Number(income.every) : ""}">` +
+                `<input class="sf-in-key" type="text" placeholder="目标属性名" value="${val(income.key)}">` +
+                `<input class="sf-in-amount" type="number" placeholder="每次增量" value="${Number.isFinite(Number(income.amount)) ? Number(income.amount) : ""}">` +
+                `<input class="sf-in-desc" type="text" placeholder="说明（可选）" value="${val(income.desc)}">` +
+                `<button class="sf-npc-del" title="删除" onclick="ScenarioEditorService.removeIncomeRow(this)">✕</button>`;
+            list.appendChild(row);
+        }
+        function removeIncomeRow(btn) {
+            const row = btn && btn.closest ? btn.closest(".sf-npc-row") : null;
+            if (row) row.remove();
+        }
+        // ==================== 地图与地点（编辑器） ====================
+        function mapBgImage(bg) {
+            if (!bg || bg === "custom") return "";
+            return `maps/${bg}.webp`;
+        }
+        function renderMapBgPicker(selected = "") {
+            const wrap = el("sf-map-bg-picker");
+            if (!wrap) return;
+            const names = [
+                ["school", "樱花校园"], ["palace", "古代皇宫"], ["city", "现代城市"],
+                ["doomsday", "末日城市"], ["magic", "魔法学院"], ["parchment", "通用羊皮"], ["custom", "自定义"]
+            ];
+            wrap.innerHTML = names.map(([k, label]) => {
+                const active = selected === k ? " active" : "";
+                const img = k === "custom" ? "" : `<img src="${mapBgImage(k)}" alt="${label}" loading="lazy">`;
+                return `<div class="map-bg-opt${active}" data-bg="${k}" onclick="ScenarioEditorService.selectMapBg('${k}')">${img}<span>${label}</span></div>`;
+            }).join("");
+        }
+        function selectMapBg(bg) {
+            [...(el("sf-map-bg-picker")?.querySelectorAll(".map-bg-opt") || [])].forEach((o) =>
+                o.classList.toggle("active", o.dataset.bg === bg));
+            renderMapPreview();
+        }
+        function mapFilePicked(input) {
+            const f = input && input.files && input.files[0];
+            if (!f) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                selectMapBg("custom");
+                if (el("sf-map-url")) el("sf-map-url").value = String(reader.result || "");
+                renderMapPreview();
+            };
+            reader.readAsDataURL(f);
+        }
+        function currentMapBg() {
+            const bg = el("sf-map-bg-picker")?.querySelector(".map-bg-opt.active")?.dataset?.bg || "";
+            const bgUrl = el("sf-map-url") ? el("sf-map-url").value.trim() : "";
+            const src = bg === "custom" ? (bgUrl || "") : mapBgImage(bg);
+            return { bg, bgUrl, src };
+        }
+        function renderMapPreview() {
+            const wrap = el("sf-map-preview");
+            if (!wrap) return;
+            const { bg, src } = currentMapBg();
+            const img = wrap.querySelector("img");
+            if (img) {
+                img.style.display = src ? "block" : "none";
+                if (src) img.src = src;
+            }
+            const tip = wrap.querySelector(".map-editor-tip");
+            if (tip) tip.style.display = src ? "none" : "block";
+            const dots = wrap.querySelector(".map-editor-dots");
+            if (dots) dots.innerHTML = "";
+            if (!src || !dots) return;
+            [...(el("sf-map-places")?.querySelectorAll(".sf-map-place-row") || [])].forEach((row) => {
+                const x = Number(row.querySelector(".sf-map-x")?.value) || 0;
+                const y = Number(row.querySelector(".sf-map-y")?.value) || 0;
+                const dot = document.createElement("div");
+                dot.className = "map-editor-dot";
+                dot.style.left = `${x}%`;
+                dot.style.top = `${y}%`;
+                dot.title = row.querySelector(".sf-map-name")?.value || "";
+                dots.appendChild(dot);
+            });
+        }
+        function addMapPlaceRow(place = {}) {
+            const list = el("sf-map-places");
+            if (!list) return;
+            const row = document.createElement("div");
+            row.className = "sf-map-place-row";
+            const x = Number(place.x) || 0, y = Number(place.y) || 0;
+            row.innerHTML =
+                `<input class="sf-map-name" type="text" placeholder="地点名称" value="${String(place.name || "").replace(/"/g, "&quot;")}">` +
+                `<input class="sf-map-x" type="number" min="0" max="100" placeholder="X%" title="横向位置 %" value="${x || ""}">` +
+                `<input class="sf-map-y" type="number" min="0" max="100" placeholder="Y%" title="纵向位置 %" value="${y || ""}">` +
+                `<input class="sf-map-desc" type="text" placeholder="追加文本（可空）" value="${String(place.desc || "").replace(/"/g, "&quot;")}">` +
+                `<button class="mini-btn ghost sf-map-pick" title="在地图上点选位置" onclick="ScenarioEditorService.pickPlacePos(this)">选点</button>` +
+                `<button class="sf-npc-del" title="删除" onclick="ScenarioEditorService.removeMapPlaceRow(this)">✕</button>`;
+            list.appendChild(row);
+            renderMapPreview();
+        }
+        function removeMapPlaceRow(btn) {
+            const row = btn && btn.closest ? btn.closest(".sf-map-place-row") : null;
+            if (row) row.remove();
+            renderMapPreview();
+        }
+        function pickPlacePos(btn) {
+            const row = btn && btn.closest ? btn.closest(".sf-map-place-row") : null;
+            if (!row) return;
+            const wrap = el("sf-map-preview");
+            const img = wrap?.querySelector("img");
+            if (!wrap || !img || img.style.display === "none") { alert("请先选择地图背景图"); return; }
+            [...(wrap?.querySelectorAll(".sf-map-place-row") || []), ...(el("sf-map-places")?.querySelectorAll(".sf-map-place-row") || [])]
+                .forEach((r) => r.classList.remove("picking"));
+            row.classList.add("picking");
+            wrap.classList.add("picking");
+            const onPick = (e) => {
+                const r = img.getBoundingClientRect();
+                const x = Math.min(100, Math.max(0, Math.round(((e.clientX - r.left) / r.width) * 1000) / 10));
+                const y = Math.min(100, Math.max(0, Math.round(((e.clientY - r.top) / r.height) * 1000) / 10));
+                if (row.querySelector(".sf-map-x")) row.querySelector(".sf-map-x").value = x;
+                if (row.querySelector(".sf-map-y")) row.querySelector(".sf-map-y").value = y;
+                wrap.classList.remove("picking");
+                row.classList.remove("picking");
+                wrap.removeEventListener("pointerdown", onPick);
+                renderMapPreview();
+            };
+            wrap.addEventListener("pointerdown", onPick);
+        }
+        // ==================== 世界书（编辑器） ====================
+        function addWorldbookRow(entry = {}) {
+            const list = el("sf-worldbook-list");
+            if (!list) return;
+            const row = document.createElement("div");
+            row.className = "sf-npc-row";
+            row.innerHTML =
+                `<input class="sf-wb-keyword" type="text" placeholder="关键词（命中即注入）" value="${String(entry.keyword || "").replace(/"/g, "&quot;")}">` +
+                `<input class="sf-wb-content" type="text" placeholder="世界书条目内容（≤200字）" value="${String(entry.content || "").replace(/"/g, "&quot;")}">` +
+                `<button class="sf-npc-del" title="删除" onclick="ScenarioEditorService.removeWorldbookRow(this)">✕</button>`;
+            list.appendChild(row);
+        }
+        function removeWorldbookRow(btn) {
+            const row = btn && btn.closest ? btn.closest(".sf-npc-row") : null;
+            if (row) row.remove();
+        }
+        // ==================== 结局条件（编辑器） ====================
+        function addEndingRow(ending = {}) {
+            const list = el("sf-endings-list");
+            if (!list) return;
+            const row = document.createElement("div");
+            row.className = "sf-npc-row";
+            const typeSel = ["favor", "affection", "rounds", "event"]
+                .map((tp) => `<option value="${tp}"${ending.type === tp ? " selected" : ""}>${{ favor: "友善值≥", affection: "爱慕值≥", rounds: "游玩回合≥", event: "触发事件=" }[tp]}</option>`)
+                .join("");
+            row.innerHTML =
+                `<input class="sf-end-name" type="text" placeholder="结局名称" value="${String(ending.name || "").replace(/"/g, "&quot;")}">` +
+                `<select class="sf-end-type">${typeSel}</select>` +
+                `<input class="sf-end-npcid" type="text" placeholder="NPC（favor/affection 用）" value="${String(ending.npcId || "").replace(/"/g, "&quot;")}">` +
+                `<input class="sf-end-target" type="text" placeholder="目标值/事件名" value="${String(ending.target || "").replace(/"/g, "&quot;")}">` +
+                `<button class="sf-npc-del" title="删除" onclick="ScenarioEditorService.removeEndingRow(this)">✕</button>`;
+            list.appendChild(row);
+        }
+        function removeEndingRow(btn) {
             const row = btn && btn.closest ? btn.closest(".sf-npc-row") : null;
             if (row) row.remove();
         }
@@ -8840,6 +9678,47 @@ function rebuildChoicesBlock(body, labels = []) {
                 lines.push("");
                 lines.push(`【选项风格】${d.scene_style.option_style}`);
             }
+            if (d.map && (d.map.bg || (d.map.places || []).length)) {
+                lines.push("");
+                lines.push("【地图】");
+                if (d.map.bg) lines.push(`背景：${d.map.bg}`);
+                if (d.map.bgUrl) lines.push(`自定义：${d.map.bgUrl}`);
+                (d.map.places || []).forEach((p) => {
+                    lines.push(`- ${p.name}（${p.x},${p.y}）${p.desc ? `：${p.desc}` : ""}`);
+                });
+            }
+            if ((d.worldbook || []).length) {
+                lines.push("");
+                lines.push("【世界书】");
+                d.worldbook.forEach((w) => lines.push(`${w.keyword}：${w.content}`));
+            }
+            if ((d.endings || []).length) {
+                lines.push("");
+                lines.push("【结局条件】");
+                d.endings.forEach((e) => lines.push(`- ${e.name}（${[e.type, e.npcId, e.target].filter(Boolean).join("：")}）`));
+            }
+            if ((d.stats || []).length) {
+                lines.push("");
+                lines.push("【属性定义】");
+                d.stats.forEach((s) => {
+                    const max = Number.isFinite(Number(s.max)) ? Number(s.max) : 100;
+                    const init = Number.isFinite(Number(s.init)) ? Number(s.init) : (Number.isFinite(Number(s.value)) ? Number(s.value) : 0);
+                    lines.push(`- ${s.label || s.key}（${s.key}）：${init}${max !== 100 ? `（上限${max}）` : ""}${s.icon ? ` ${s.icon}` : ""}`);
+                });
+            }
+            if ((d.fixed_events || []).length) {
+                lines.push("");
+                lines.push("【固定事件】");
+                d.fixed_events.forEach((e) => {
+                    const t = e.trigger === "round" ? `round：${e.round}` : `date：${e.date || ""}`;
+                    lines.push(`- ${e.name}（${t}）${e.desc ? `：${e.desc}` : ""}`);
+                });
+            }
+            if ((d.incomes || []).length) {
+                lines.push("");
+                lines.push("【周期收入】");
+                d.incomes.forEach((inc) => lines.push(`- ${inc.name}（每${inc.every}天：${inc.key}${inc.amount >= 0 ? "+" : ""}${inc.amount}）${inc.desc ? `：${inc.desc}` : ""}`));
+            }
             return lines.join("\n");
         }
         function syncFormFromCard(card) {
@@ -8864,6 +9743,40 @@ function rebuildChoicesBlock(body, labels = []) {
                 list.innerHTML = "";
                 (d.npcs || []).forEach((n) => addNpcRow(n));
             }
+            const map = d.map || {};
+            renderMapBgPicker(map.bg || "");
+            set("sf-map-url", map.bgUrl);
+            const mapList = el("sf-map-places");
+            if (mapList) {
+                mapList.innerHTML = "";
+                (map.places || []).forEach((p) => addMapPlaceRow(p));
+            }
+            renderMapPreview();
+            const wbList = el("sf-worldbook-list");
+            if (wbList) {
+                wbList.innerHTML = "";
+                (d.worldbook || []).forEach((w) => addWorldbookRow(w));
+            }
+            const endList = el("sf-endings-list");
+            if (endList) {
+                endList.innerHTML = "";
+                (d.endings || []).forEach((e) => addEndingRow(e));
+            }
+            const attrList = el("sf-attr-list");
+            if (attrList) {
+                attrList.innerHTML = "";
+                (d.stats || []).forEach((s) => addAttrRow(s));
+            }
+            const feList = el("sf-fixed-events-list");
+            if (feList) {
+                feList.innerHTML = "";
+                (d.fixed_events || []).forEach((e) => addFixedEventRow(e));
+            }
+            const incList = el("sf-incomes-list");
+            if (incList) {
+                incList.innerHTML = "";
+                (d.incomes || []).forEach((i) => addIncomeRow(i));
+            }
         }
         function readStructuredForm() {
             const val = (id) => String(el(id) ? el(id).value : "").trim();
@@ -8880,11 +9793,13 @@ function rebuildChoicesBlock(body, labels = []) {
                 const q = (cls) => String(row.querySelector(`.${cls}`) ? row.querySelector(`.${cls}`).value : "").trim();
                 const name = q("sf-npc-name");
                 if (!name) return;
+                const affRaw = Number(q("sf-npc-affection"));
                 npcs.push({
                     name,
                     role: q("sf-npc-role"),
                     personality: q("sf-npc-personality"),
-                    relationship: q("sf-npc-relationship")
+                    relationship: q("sf-npc-relationship"),
+                    affection: Number.isFinite(affRaw) ? Math.min(100, Math.max(-100, affRaw)) : 0
                 });
             });
             const data = {
@@ -8911,11 +9826,99 @@ function rebuildChoicesBlock(body, labels = []) {
                 first_scene: {
                     story: val("sf-first-story"),
                     options: lineList(val("sf-first-options")).slice(0, 3)
-                }
+                },
+                map: (() => {
+                    const cur = currentMapBg();
+                    const places = [];
+                    (el("sf-map-places")?.querySelectorAll(".sf-map-place-row") || []).forEach((row) => {
+                        const q = (cls) => String(row.querySelector(`.${cls}`) ? row.querySelector(`.${cls}`).value : "").trim();
+                        const name = q("sf-map-name");
+                        if (!name) return;
+                        places.push({
+                            name,
+                            x: Number(q("sf-map-x")) || 0,
+                            y: Number(q("sf-map-y")) || 0,
+                            desc: q("sf-map-desc")
+                        });
+                    });
+                    return { bg: cur.bg, bgUrl: cur.bgUrl, places: places.slice(0, 30) };
+                })(),
+                worldbook: (() => {
+                    const items = [];
+                    (el("sf-worldbook-list")?.querySelectorAll(".sf-npc-row") || []).forEach((row) => {
+                        const kw = String(row.querySelector(".sf-wb-keyword")?.value || "").trim();
+                        const content = String(row.querySelector(".sf-wb-content")?.value || "").trim();
+                        if (kw) items.push({ keyword: kw, content: content.slice(0, 200) });
+                    });
+                    return items.slice(0, 20);
+                })(),
+                endings: (() => {
+                    const items = [];
+                    (el("sf-endings-list")?.querySelectorAll(".sf-npc-row") || []).forEach((row) => {
+                        const name = String(row.querySelector(".sf-end-name")?.value || "").trim();
+                        if (!name) return;
+                        items.push({
+                            name,
+                            type: String(row.querySelector(".sf-end-type")?.value || "favor"),
+                            npcId: String(row.querySelector(".sf-end-npcid")?.value || "").trim(),
+                            target: String(row.querySelector(".sf-end-target")?.value || "").trim()
+                        });
+                    });
+                    return items.slice(0, 10);
+                })(),
+                stats: (() => {
+                    const items = [];
+                    (el("sf-attr-list")?.querySelectorAll(".sf-npc-row") || []).forEach((row) => {
+                        const q = (cls) => String(row.querySelector(`.${cls}`) ? row.querySelector(`.${cls}`).value : "").trim();
+                        const label = q("sf-attr-name");
+                        if (!label) return;
+                        const key = q("sf-attr-key") || `attr_${items.length + 1}`;
+                        const init = Math.max(0, Number(q("sf-attr-init")) || 0);
+                        const max = Math.max(1, Number(q("sf-attr-max")) || 100);
+                        items.push({ key, label, icon: q("sf-attr-icon"), value: Math.min(init, max), init: Math.min(init, max), min: 0, max });
+                    });
+                    return items.slice(0, 12);
+                })(),
+                fixed_events: (() => {
+                    const items = [];
+                    (el("sf-fixed-events-list")?.querySelectorAll(".sf-npc-row") || []).forEach((row) => {
+                        const q = (cls) => String(row.querySelector(`.${cls}`) ? row.querySelector(`.${cls}`).value : "").trim();
+                        const name = q("sf-fe-name");
+                        if (!name) return;
+                        const trigger = String(row.querySelector(".sf-fe-trigger")?.value || "date");
+                        const target = q("sf-fe-target");
+                        const round = Math.max(1, Number(target) || 1);
+                        items.push({
+                            name,
+                            trigger,
+                            date: trigger === "date" ? target : "",
+                            round: trigger === "round" ? round : 0,
+                            desc: q("sf-fe-desc")
+                        });
+                    });
+                    return items.slice(0, 20);
+                })(),
+                incomes: (() => {
+                    const items = [];
+                    (el("sf-incomes-list")?.querySelectorAll(".sf-npc-row") || []).forEach((row) => {
+                        const q = (cls) => String(row.querySelector(`.${cls}`) ? row.querySelector(`.${cls}`).value : "").trim();
+                        const name = q("sf-in-name");
+                        if (!name) return;
+                        const every = Math.max(1, Number(q("sf-in-every")) || 1);
+                        items.push({
+                            name,
+                            every,
+                            key: q("sf-in-key"),
+                            amount: Number(q("sf-in-amount")) || 0,
+                            desc: q("sf-in-desc")
+                        });
+                    });
+                    return items.slice(0, 10);
+                })()
             };
             return { structured: data, text: renderTextFromData(data) };
         }
-        return { readForm, writeForm, focusEditor, renderThemePicker, parseTextToStructured, emptyStructuredFromText, addNpcRow, removeNpcRow, syncFormFromCard, readStructuredForm };
+        return { readForm, writeForm, focusEditor, renderThemePicker, parseTextToStructured, emptyStructuredFromText, addNpcRow, removeNpcRow, syncFormFromCard, readStructuredForm, mapBgImage, renderMapBgPicker, selectMapBg, mapFilePicked, currentMapBg, renderMapPreview, addMapPlaceRow, removeMapPlaceRow, pickPlacePos, addWorldbookRow, removeWorldbookRow, addEndingRow, removeEndingRow, addAttrRow, removeAttrRow, addFixedEventRow, removeFixedEventRow, addIncomeRow, removeIncomeRow };
     })();
 
     const SaveSlotService = (() => {
@@ -9121,15 +10124,17 @@ function rebuildChoicesBlock(body, labels = []) {
                 const list = ensureNpcChatStore(state, npc.id);
                 const recent = list.slice(-msgLimit).map((m) => `${m.from === "me" ? "玩家" : npc.name}：${String(m.text || "").replace(/\s+/g, " ").slice(0, 80)}`).join(" | ");
                 const memSummary = mem?.summary ? `记忆：${mem.summary}` : "";
-                if (recent || memSummary) lines.push(`${npc.name}（${npc.relation}，好感${npc.favor}）：${[recent, memSummary].filter(Boolean).join(" | ")}`);
+                if (recent || memSummary) lines.push(`${npc.name}（${npc.relation}，友善${npc.favor}·爱慕${npc.affection ?? 0}）：${[recent, memSummary].filter(Boolean).join(" | ")}`);
             });
             return lines.join("\n");
         }
 
+        // 双轴好感兜底:暧昧词→affection(爱慕),礼貌/互动词→favor(友善),负面词双降
         function calcFavorDelta(userText) {
-            if (/谢谢|关心|辛苦|抱歉/.test(userText)) return 2;
-            if (/滚|烦|闭嘴/.test(userText)) return -2;
-            return 1;
+            if (/喜欢你|爱你|想你|抱抱|亲|约会|心动了|情话/.test(userText)) return { favor: 1, affection: 3 };
+            if (/谢谢|关心|辛苦|抱歉|对不起/.test(userText)) return { favor: 2, affection: 0 };
+            if (/滚|烦|闭嘴|讨厌|分手/.test(userText)) return { favor: -2, affection: -2 };
+            return { favor: 1, affection: 0 };
         }
 
         async function applyUserMessage(state, npcId, userText) {
@@ -9159,12 +10164,14 @@ function rebuildChoicesBlock(body, labels = []) {
                 "【角色约束】只能使用该 NPC 的身份、关系、性格视角说话，不可越权代替旁白推进整章剧情。",
                 "【发信人识别】每一轮“玩家本轮发言”都来自主角本人，你必须明确知道是谁在和你说话，并基于你与该主角的关系来回复。",
                 "【状态同步】若本轮导致可变状态变更（NPC属性/主角属性/背包/时间/状态值），必须在末尾追加```state-patch```JSON块。",
+                "【好感双轴】NPC 好感分两轴：favor=友善度（0-100）、affection=爱慕值（-100~100）。哪一轴变化就更新哪一轴，未变化的一轴不要携带。",
                 "回复控制在 1-3 段，口语自然，可包含简短动作描写。"
             ].join("\n");
             const userPrompt = [
                 `【当前卡片设定】\n${scenarioText}`,
                 `【主角档案】\n${JSON.stringify(state.protagonistProfile || {}, null, 2)}`,
                 `【当前与你聊天的人】\n姓名：${playerName}\n身份：主角 / 玩家本人`,
+                ...(WorldbookService.matchForPrompt(state, userText) ? [WorldbookService.matchForPrompt(state, userText)] : []),
                 `【NPC档案】\n${JSON.stringify(npc, null, 2)}`,
                 `【NPC长期记忆标签】\n${NpcMemoryService.formatForPrompt(mem)}`,
                 `【主线最近进度】\n${mainProgress || "（暂无）"}`,
@@ -9190,13 +10197,17 @@ function rebuildChoicesBlock(body, labels = []) {
             if (!visibleReply) throw new Error("NPC 回复为空。");
             chatList.push({ from: "npc", text: visibleReply, ts: Date.now() });
 
-            // 硬编码 favor delta 仅兜底:AI 的 state-patch 已给出该 NPC favor 时不叠加
-            const patchHasFavor = (Array.isArray(patchResult.patch?.npcs) ? patchResult.patch.npcs : []).some(
-                (n) => n?.favor !== undefined && (String(n.id || "") === String(npc.id || "") || String(n.name || "") === String(npc.name || ""))
+            // 硬编码好感 delta 仅兜底:AI 的 state-patch 已给出该 NPC 对应轴时不叠加(只显式 patch 才漂移)
+            const patchHasAxis = (axis) => (Array.isArray(patchResult.patch?.npcs) ? patchResult.patch.npcs : []).some(
+                (n) => n?.[axis] !== undefined && (String(n.id || "") === String(npc.id || "") || String(n.name || "") === String(npc.name || ""))
             );
-            if (!patchHasFavor) {
-                const delta = calcFavorDelta(userText);
-                npc.favor = Math.max(0, Math.min(100, npc.favor + delta));
+            if (!patchHasAxis("favor")) {
+                const d = calcFavorDelta(userText);
+                npc.favor = Math.max(0, Math.min(100, npc.favor + d.favor));
+            }
+            if (!patchHasAxis("affection")) {
+                const d = calcFavorDelta(userText);
+                npc.affection = Math.max(-100, Math.min(100, (Number(npc.affection) || 0) + d.affection));
             }
             // 已故人物保持死亡状态,不复活
             if (npc.status !== "死亡") npc.status = "在线";
@@ -9262,6 +10273,15 @@ function rebuildChoicesBlock(body, labels = []) {
                 next.structured = ScenarioEditorService.parseTextToStructured(next.text)
                     || ScenarioEditorService.emptyStructuredFromText(next.text);
             }
+            // 批 E:补齐新字段默认(map/worldbook/endings/affection),旧卡升级不丢内容
+            const st = next.structured;
+            if (!st.map || typeof st.map !== "object") st.map = { bg: "", bgUrl: "", places: [] };
+            if (!st.map.places) st.map.places = [];
+            if (!Array.isArray(st.worldbook)) st.worldbook = [];
+            if (!Array.isArray(st.endings)) st.endings = [];
+            (st.npcs || []).forEach((n) => {
+                if (!Number.isFinite(Number(n.affection))) n.affection = 0;
+            });
             return next;
         }
         function sortCards(cards = []) {
@@ -9637,37 +10657,88 @@ function rebuildChoicesBlock(body, labels = []) {
         return { groupLabel, groupClass, pinLabel, cardTags, cardEmoji, isCollected, toggleCollectLocal, matchesSearch, getSearchKeyword, getCategories, getCategory, setCategory, isCollapsed, toggleCollapsed, expandAllGroups, renderFilter, hotRank, localPlays, getSortMode, setSortMode };
     })();
 
-    // ---- B1：AI 封面按需生成（仅首页展示位：轮播 + 推荐榜 top3；worker 文生图 → localStorage 缓存 TTL 7 天） ----
+    // ---- B1：AI 封面按需生成（仅首页展示位：轮播 + 推荐榜 top3；worker 文生图 → localStorage 缓存 TTL 7 天 + promptHash 失效） ----
     const CoverService = (() => {
         const KEY = "bitlife_card_cover_v1";
         const TTL = 7 * 24 * 3600 * 1000;
+        // 23 大分类 → 风格/情绪关键词（针对性模板；未命中用兜底风格）
+        const CATEGORY_STYLE_MAP = {
+            "恋爱": "Makoto Shinkai style, dreamy light, romantic",
+            "ABO": "anime romance, sci-fi scent of alpha omega",
+            "乙女": "otome game art, pastel, sweet",
+            "职场": "polished anime, modern office, professional",
+            "修仙": "Chinese ink wash painting, misty mountains, ethereal",
+            "穿越": "period drama, anachronistic fantasy, adventurous",
+            "都市": "modern cityscape, chic neon, contemporary",
+            "无限流": "cinematic, dimensional rifts, thrilling",
+            "末世": "cinematic, desolate ruins, wasteland survival",
+            "经营": "warm illustration, cozy shop, cheerful",
+            "科幻": "cinematic sci-fi, futuristic city, epic",
+            "悬疑": "film noir, shadowy, mysterious, tense",
+            "跑团": "fantasy adventure, dice and tavern, epic",
+            "奇幻": "high fantasy, magical glow, enchanted",
+            "历史": "historical drama, antique, majestic",
+            "宫斗": "Chinese palace drama, elegant, scheming",
+            "种田": "pastoral illustration, cozy countryside",
+            "女尊": "ancient fantasy, elegant matriarchal court",
+            "校园": "Makoto Shinkai style, schoolyard, youthful",
+            "娱乐圈": "glamorous spotlight, celebrity stage",
+            "人外": "dark fantasy, exotic creature, intriguing",
+            "同人": "anime fanart, nostalgic, heartfelt",
+            "主播": "vibrant stage lights, pop idol, energetic"
+        };
+        function hashStr(s) {
+            let h = 0;
+            for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+            return h.toString(36);
+        }
         function read() { try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { return {}; } }
         function write(m) { try { localStorage.setItem(KEY, JSON.stringify(m)); } catch (e) {} }
-        function cached(cardId) {
+        function cached(cardId, promptHash) {
             const rec = read()[String(cardId)];
-            return rec && rec.url && Date.now() - rec.ts < TTL ? rec.url : "";
+            if (!rec || !rec.url) return "";
+            if (promptHash && rec.hash !== promptHash) return "";
+            return Date.now() - rec.ts < TTL ? rec.url : "";
         }
+        // 6 段结构化提示词模板：[主体]+[环境]+[情绪]+[风格]+[构图]+[画质]，整体 ≤120 字防 worker 截断
         function promptOf(card) {
-            const genre = String(card?.structured?.world?.genre || "").split(/[·,，/]/)[0] || "";
-            return `${String(card.title || "文游")}，${String(card.category || "")}${genre ? "，" + genre : ""}，手机文字冒险游戏封面插画，唯美氛围光感，竖版构图，无文字无水印`;
+            const st = card?.structured;
+            const category = String(card?.category || "");
+            const genre = String(st?.world?.genre || "").split(/[·,，/]/)[0] || "";
+            const style = CATEGORY_STYLE_MAP[category] || CATEGORY_STYLE_MAP[genre] || "stylish illustration, beautiful scenery";
+            const era = st?.world?.era || "";
+            const idn = st?.identity || {};
+            const hero = [idn.name, idn.gender, idn.age ? `约${idn.age}岁` : ""].filter(Boolean).join("·");
+            const summary = String(st?.world?.summary || "").replace(/\s+/g, " ").slice(0, 40);
+            const atmosphere = String(st?.world?.atmosphere || "").replace(/\s+/g, " ").slice(0, 20);
+            const parts = [];
+            parts.push(hero ? `主角${hero}，${era || "未知时代"}` : `时代背景：${era || "未知"}`);
+            if (summary) parts.push(`场景：${summary}`);
+            if (atmosphere) parts.push(`氛围：${atmosphere}`);
+            parts.push(style);
+            parts.push("4:3 横版封面构图");
+            parts.push("8k, highly detailed, masterpiece, no text, no watermark");
+            return parts.join("，");
         }
         function safeId(cardId) { return String(cardId || "x").replace(/[^\w-]/g, "_"); }
         async function ensure(card) {
             const id = String(card?.id || "");
             if (!id) return "";
-            const hit = cached(id);
+            const prompt = promptOf(card);
+            const ph = hashStr(prompt);
+            const hit = cached(id, ph);
             if (hit) return hit;
             if (!AuthService.getToken()) return "";
             try {
                 const res = await fetch(`${AppConfig.proxy.baseUrl}/api/cover/generate`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + AuthService.getToken() },
-                    body: JSON.stringify({ prompt: promptOf(card) })
+                    body: JSON.stringify({ prompt })
                 });
                 const d = await res.json().catch(() => ({}));
                 if (!res.ok || !d.image) return "";
                 const m = read();
-                m[id] = { url: d.image, ts: Date.now() };
+                m[id] = { url: d.image, ts: Date.now(), hash: ph };
                 write(m);
                 return d.image;
             } catch (e) { return ""; }
@@ -10454,7 +11525,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const npcs = Array.isArray(state.npcs) ? state.npcs : [];
             if (!npcs.length) return "";
             const lines = npcs.slice(0, 6).map((n) => {
-                const favor = `好感${n.favor ?? "?"}`;
+                const favor = `友善${n.favor ?? "?"}·爱慕${n.affection ?? 0}`;
                 const mood = n.mood ? `/${n.mood}` : "";
                 const traits = n.traits ? `，${n.traits.slice(0, 16)}` : "";
                 return `${n.name}（${n.relation}·${n.gender || "?"}·${favor}${mood}${traits}）`;
@@ -10548,6 +11619,40 @@ function rebuildChoicesBlock(body, labels = []) {
         }
 
         return { build, extractTextFromHtml, extractSkeleton, buildCompressedHistory, buildRelationSnapshot, buildNpcSnapshot, getLatestAiHtmlCard };
+    })();
+
+    const WorldbookService = (() => {
+        // 世界书条目来源:selected card structured.worldbook(编辑器维护),旧卡从 state.worldbook 兜底
+        function getEntries(state) {
+            let card = null;
+            try { card = (typeof ScenarioCardService !== "undefined") ? ScenarioCardService.getSelectedCard() : null; } catch (e) {}
+            const wb = card?.structured?.worldbook || card?.worldbook || state?.worldbook || [];
+            return Array.isArray(wb) ? wb.filter((e) => e && String(e.keyword || "").trim() && String(e.content || "").trim()) : [];
+        }
+        // 匹配源:玩家本轮输入 + 最近 AI 卡正文 + 当前地点;关键词多词用 ,、|/ 空格 拆分,任一命中即注入
+        function matchForPrompt(state, extraText = "") {
+            const entries = getEntries(state);
+            if (!entries.length) return "";
+            let latestCardText = "";
+            try {
+                const html = HistoryCompressorService.getLatestAiHtmlCard(state) || "";
+                latestCardText = (typeof UIRenderer !== "undefined" && UIRenderer.stripHtml)
+                    ? UIRenderer.stripHtml(html).slice(0, 1200)
+                    : String(html).replace(/<[^>]+>/g, " ").slice(0, 1200);
+            } catch (e) {}
+            const haystack = `${extraText || ""}\n${latestCardText}\n${state?.location || ""}`;
+            if (!haystack.trim()) return "";
+            const hits = [];
+            entries.forEach((e) => {
+                const kws = String(e.keyword || "").split(/,|，|、|\||\/|\s+/).map((s) => s.trim()).filter(Boolean);
+                if (!kws.length) return;
+                if (kws.some((k) => k && haystack.includes(k))) hits.push(e);
+            });
+            if (!hits.length) return "";
+            const lines = hits.map((e) => `${e.keyword}：${String(e.content || "").slice(0, 200)}`);
+            return ["【世界书条目（本条命中时以世界书设定为最高优先级，严格遵循，不得与设定冲突）】", ...lines].join("\n");
+        }
+        return { getEntries, matchForPrompt };
     })();
 
     const PromptComposerService = (() => {
@@ -10749,12 +11854,13 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
         function buildLatestAiHtmlCard(state) {
             return PromptComposerService.buildLatestAiHtmlCard(state);
         }
-        function buildSystemPrompt({ state, scenarioSpec, beautyCardSetting, beautyModeEnabled }) {
+        function buildSystemPrompt({ state, scenarioSpec, beautyCardSetting, beautyModeEnabled, extraText = "" }) {
             const builtinRules = BuiltinPromptService.getResponseRules();
             const stateFactLock = BuiltinPromptService.buildStateFactLock(state);
             const runtimeContext = PromptComposerService.buildRuntimeContext(state);
+            const wbText = WorldbookService.matchForPrompt(state, extraText);
             const beautyRules = PromptTemplateService.buildBeautyRules(beautyCardSetting, beautyModeEnabled, state);
-            return PromptTemplateService.buildSystemPrompt({ scenarioSpec, builtinRules, stateFactLock, runtimeContext, beautyRules });
+            return PromptTemplateService.buildSystemPrompt({ scenarioSpec, builtinRules, stateFactLock, runtimeContext: wbText ? `${runtimeContext}\n\n${wbText}` : runtimeContext, beautyRules });
         }
         function buildMainUserPrompt(userText, recentHistory, latestHtmlCard) {
             return PromptTemplateService.buildMainUserPrompt(userText, recentHistory, latestHtmlCard);
@@ -11221,6 +12327,7 @@ const token = delta.content || "";
                     gender: String(n.gender || "未知").slice(0, 6),
                     relation: String(n.relation || "熟人").slice(0, 12),
                     favor: Math.max(0, Math.min(100, Number(n.favor) || 65)),
+                    affection: Math.max(-100, Math.min(100, Number.isFinite(Number(n.affection)) ? Number(n.affection) : 0)),
                     status: String(n.status || "在线").slice(0, 12),
                     mood: String(n.mood || "平静").slice(0, 12),
                     traits: String(n.traits || n.attributes || "").slice(0, 48),
@@ -11666,7 +12773,7 @@ const token = delta.content || "";
                             "【禁止】使用默认的母亲、父亲、青梅竹马等通用套路，除非设定文本中明确出现了这些角色。",
                             "【必须】根据设定文本的主题构建 3 位身份背景完全契合该世界观的关键 NPC。",
                             "只输出 JSON 对象，字段：npcs（数组），每项含：id, name, gender, relation, favor, status, mood, traits, profile（含 age, identity, personality）。",
-                            "favor 为 0-100 整数，status 为字符串，mood 为字符串，traits 为字符串。"
+                            "favor 为 0-100 整数（友善度），可附 affection 为 -100~100 整数（爱慕值，0 表示无特殊感情），status 为字符串，mood 为字符串，traits 为字符串。"
                         ].join("\n") },
                         { role: "user", content: sharedUserContext }
                     ],
@@ -11964,8 +13071,13 @@ const token = delta.content || "";
                 }
             })).slice(0, 12);
             // 创作向导可写入 structured.stats(数组[{key,label,value}]),有则优先;否则从设定文本兜底提取
+            // 属性表(带 init/min/max)开局转 stats 初值,运行时 clamp 用
             const stats = Array.isArray(st.stats) && st.stats.length
-                ? StatsService.normalizeStats(st.stats.map((s) => ({ ...s, value: Number(s.value) || 0 })))
+                ? StatsService.normalizeStats(st.stats.map((s) => {
+                    const init = Number.isFinite(Number(s.init)) ? Number(s.init) : (Number.isFinite(Number(s.value)) ? Number(s.value) : 0);
+                    const max = Math.max(1, Number(s.max) || 100);
+                    return { ...s, init, min: 0, max, value: Math.min(Math.max(init, 0), max) };
+                }))
                 : StatsService.normalizeStats(buildFallbackStatsFromScenario(card.text || "", { ageYears: Number.isFinite(ageRaw) ? ageRaw : 18 }));
             return {
                 name,
@@ -12069,13 +13181,13 @@ const token = delta.content || "";
                 "规则：",
                 "- stats 只列出本轮发生变化的属性，value 为变化后的绝对值（整数）。",
                 "- inventory op 为 upsert（新增或更新）或 remove（移除）。",
-                "- npcs 只列出本轮好感/状态发生变化的 NPC，favor 为变化后的绝对值（0-100整数）。",
+                "- npcs 只列出本轮好感/状态发生变化的 NPC，favor 为变化后的绝对值（0-100整数），affection 为爱慕值（-100~100整数，仅当爱慕值变化时给出）。",
                 "- 若某类无变化，对应数组留空 []，不要省略字段。",
                 "- 严禁编造剧情中未发生的变化。"
             ].join("\n");
 
             const userPrompt = [
-                `【当前状态简报】\n属性：${JSON.stringify((state.stats || []).map(s => ({ key: s.key, label: s.label, value: s.value })))}\n背包：${(state.inventory || []).map(i => i.name).join("，") || "空"}\nNPC：${(state.npcs || []).map(n => `${n.name}(好感${n.favor ?? "?"})`).join("，") || "无"}`,
+                `【当前状态简报】\n属性：${JSON.stringify((state.stats || []).map(s => ({ key: s.key, label: s.label, value: s.value })))}\n背包：${(state.inventory || []).map(i => i.name).join("，") || "空"}\nNPC：${(state.npcs || []).map(n => `${n.name}(友善${n.favor ?? "?"}·爱慕${n.affection ?? 0})`).join("，") || "无"}`,
                 `【玩家行动】\n${userText}`,
                 `【最新剧情】\n${plainResponse}`,
                 "请提取上述剧情带来的数值变动、物品获得/失去、好感度增减："
@@ -12150,7 +13262,8 @@ const token = delta.content || "";
                     if (!npcPatch.name) return;
                     const existing = state.npcs.find(n => n.id === npcPatch.id || n.name === npcPatch.name);
                     if (existing) {
-                        if (npcPatch.favor !== undefined) existing.favor = npcPatch.favor;
+                        if (npcPatch.favor !== undefined) existing.favor = Math.max(0, Math.min(100, Number(npcPatch.favor) || existing.favor || 0));
+                        if (npcPatch.affection !== undefined && Number.isFinite(Number(npcPatch.affection))) existing.affection = Math.max(-100, Math.min(100, Math.round(Number(npcPatch.affection))));
                         if (npcPatch.status) existing.status = npcPatch.status;
                         if (npcPatch.mood) existing.mood = npcPatch.mood;
                         if (npcPatch.relation) existing.relation = npcPatch.relation;
@@ -12229,7 +13342,7 @@ const token = delta.content || "";
                 const beautyCardSetting = SettingsService.getBeautyCardSetting();
                 const beautyModeEnabled = HtmlCardService.isBeautyModeEnabled(beautyCardSetting);
                 const policyConfig = SettingsService.getChatPolicyConfig();
-                const systemPrompt = PromptPolicyService.buildSystemPrompt({ state, scenarioSpec, beautyCardSetting, beautyModeEnabled });
+                const systemPrompt = PromptPolicyService.buildSystemPrompt({ state, scenarioSpec, beautyCardSetting, beautyModeEnabled, extraText: userText });
                 const mainUserPrompt = PromptPolicyService.buildMainUserPrompt(userText, recentHistory, latestAiHtmlCard);
                 const rawText = (await AIRequestService.streamCompletionWithFallback({
                     config,
@@ -12369,6 +13482,7 @@ const token = delta.content || "";
                 UIRenderer.renderTop(currentState);
                 UIRenderer.renderInventory(currentState);
                 UIRenderer.renderSocialList(currentState);
+                refreshEndingBadge(currentState);
 
                 // 第二阶段：辅路审计仅在协议缺失且卡片也未携带任何面板数据时触发（节省 AI 调用）
                 if (!rawPatchChanged && !panelHasData) {
@@ -13119,16 +14233,21 @@ const token = delta.content || "";
             if (ChatService.getIsGenerating()) return;
             UIRenderer.clearFancyStatus(); // 发送新指令时清除美化标记，等待下一次 HTML 卡片注入
             const state = StateService.get();
+            // 固定事件(回合触发)检查 + 事件队列消费:命中事件拼入指令头部,AI 必然演绎
+            const userMsgCount = (state.history || []).filter((h) => h.role === "user").length + 1;
+            StoryEventService.checkRoundEvents(state, userMsgCount);
+            const evt = StoryEventService.drainQueue(state);
+            const finalText = evt ? `【事件】${evt}。\n${text}` : text;
             UIRenderer.setAutoFollowBottom(true);
-            UIRenderer.appendMessage("user", text, Utils.nowDateStr(state), false);
-            StateService.pushHistory({ role: "user", date: Utils.nowDateStr(state), text });
-            StateService.advanceMonthIfNeeded(text);
+            UIRenderer.appendMessage("user", finalText, Utils.nowDateStr(state), false);
+            StateService.pushHistory({ role: "user", date: Utils.nowDateStr(state), text: finalText });
+            StateService.advanceMonthIfNeeded(finalText);
             StateService.save();
             // 发送后避免全量重渲染（会重建整个历史DOM，拖慢体感），仅刷新当前必要面板
             UIRenderer.renderTop(state);
             if (activeView === "view-inventory") UIRenderer.renderInventory(state);
             if (activeView === "view-social") UIRenderer.renderSocialList(state);
-            ChatService.requestAI(text);
+            ChatService.requestAI(finalText);
         }
         // 游玩页融合：剧情/事件 tab 切换（事件 tab 每次激活时实时渲染）
         function switchPlayTab(tab) {
@@ -13213,6 +14332,8 @@ const token = delta.content || "";
             sendUserText(`前往${name}探索，看看有什么新事件发生`);
         }
         function showFullMap() {
+            const map = UIRenderer.getActiveMap();
+            if (map) { openFullMapOverlay(map); return; }
             const state = StateService.get();
             const locs = UIRenderer.normalizeLocations ? UIRenderer.normalizeLocations(state) : [];
             if (!locs.length) return;
@@ -13226,6 +14347,50 @@ const token = delta.content || "";
                 title: "🗺️ 完整地图",
                 descHtml: `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;">${items}</div><div class="list-sub" style="margin-top:8px;">点击地点前往探索，可触发新的事件；<button type="button" class="event-btn" onclick="advanceStory();closeInfoModal()">🌏 大世界</button> 可去更远的地方。</div>`
             });
+        }
+        function openFullMapOverlay(map) {
+            closeFullMap();
+            const state = StateService.get();
+            const cur = state.location || "";
+            const pins = (map.places || []).map((p) => {
+                const active = p.name === cur;
+                const name = MarkdownService.escapeHtml(String(p.name || ""));
+                return `<button type="button" class="fullmap-pin${active ? " current" : ""}" style="left:${Math.min(100, Math.max(0, Number(p.x) || 0))}%;top:${Math.min(100, Math.max(0, Number(p.y) || 0))}%" onclick="placeClick('${name.replace(/'/g, "\\'")}')"><span class="pin-icon">📍</span><span class="pin-name">${name}</span></button>`;
+            }).join("");
+            const img = map.src ? `<img src="${map.src}" alt="地图">` : "";
+            const overlay = document.createElement("div");
+            overlay.id = "full-map-overlay";
+            overlay.className = "full-map-overlay";
+            overlay.onclick = closeFullMap;
+            overlay.innerHTML = `<div class="full-map-frame" onclick="event.stopPropagation()">
+                <div class="full-map-head"><span style="font-weight:800;">🗺️ 大地图</span><span class="list-sub">当前：${MarkdownService.escapeHtml(cur || "未知")}</span><button type="button" class="mini-btn ghost" onclick="closeFullMap()">✕ 关闭</button></div>
+                <div class="full-map-canvas">${img}<div class="fullmap-pins">${pins}</div></div>
+                <div class="full-map-foot list-sub">${(map.places || []).length ? "点击图钉前往对应地点，可触发新的事件" : "这张地图还没有地点，去编辑器添加图钉吧"}</div>
+            </div>`;
+            document.body.appendChild(overlay);
+        }
+        function closeFullMap() {
+            const el = document.getElementById("full-map-overlay");
+            if (el) el.remove();
+        }
+        function placeClick(name) {
+            const map = UIRenderer.getActiveMap();
+            const loc = (map && map.places || []).find((p) => p.name === name);
+            const safe = String(name || "").replace(/'/g, "\\'");
+            if (loc && loc.desc) {
+                NoticeModalService.showInfo({
+                    title: `📍 ${loc.name}`,
+                    descHtml: `${MarkdownService.escapeHtml(String(loc.desc).slice(0, 300))}<div style="margin-top:12px;"><button type="button" class="mini-btn primary" onclick="placeGo('${safe}')">🚶 前往</button></div>`
+                });
+                return;
+            }
+            closeFullMap();
+            moveToLocation(name);
+        }
+        function placeGo(name) {
+            closeFullMap();
+            closeInfoModal();
+            moveToLocation(name);
         }
         function advanceStory() {
             if (guardGenerating("AI 正在推进剧情，请稍候。")) return;
@@ -13267,7 +14432,7 @@ const token = delta.content || "";
                 return;
             }
             const items = candidates.map((p, i) =>
-                `<button type="button" class="event-btn" style="margin:3px;text-align:left;" onclick="importNpcFromCollection(${i})">${MarkdownService.escapeHtml(String(p.name || "?").slice(0, 1))} ${MarkdownService.escapeHtml(p.name || "未命名")} · ${MarkdownService.escapeHtml(p.relation || "关系未明")}（好感 ${Number(p.favor) || 0}）</button>`
+                `<button type="button" class="event-btn" style="margin:3px;text-align:left;" onclick="importNpcFromCollection(${i})">${MarkdownService.escapeHtml(String(p.name || "?").slice(0, 1))} ${MarkdownService.escapeHtml(p.name || "未命名")} · ${MarkdownService.escapeHtml(p.relation || "关系未明")}（友善 ${Number(p.favor) || 0}）</button>`
             ).join("");
             NoticeModalService.showInfo({
                 title: "⭐ 从收藏引入",
@@ -13322,7 +14487,7 @@ const token = delta.content || "";
             return true;
         }
         // ---- 结局评定（uugame"结束这段故事"融合：AI 评定 S~D + 专属结局，失败本地兜底） ----
-        async function requestEnding(state, config) {
+        async function requestEnding(state, config, checks = null) {
             const scenarioSpec = SettingsService.getScenarioTextForModel();
             const userMsgs = (state.history || []).filter((h) => h.role === "user").slice(-6);
             const recent = userMsgs.map((r, i) => {
@@ -13330,14 +14495,16 @@ const token = delta.content || "";
                 const aiText = state.history[idx + 1]?.text ? UIRenderer.stripHtml(state.history[idx + 1].text).slice(0, 60) : "";
                 return `轮次${i + 1}（${r.date || ""}）指令：${String(r.text || "").slice(0, 30)}\n经历：${aiText}`;
             }).join("\n");
-            const npcs = (state.npcs || []).slice(0, 6).map((n) => `${n.name}（${n.relation}，好感 ${n.favor ?? 0}）`).join("、");
+            const npcs = (state.npcs || []).slice(0, 6).map((n) => `${n.name}（${n.relation}，友善 ${n.favor ?? 0}·爱慕 ${n.affection ?? 0}）`).join("、");
             const systemPrompt = `你是命运书写者「云吞吞结局之书」。根据玩家主角的完整人生历程撰写结局评定。
 要求：
 1. grade 只允许 S/A/B/C/D 五档：S=传奇圆满的一生；A=灿烂耀眼的一生；B=平凡而温暖的一生；C=留有遗憾的一生；D=潦倒或惨烈收场。
 2. title 结局标题，8 字以内，要有意境，如"长安月下客"。
 3. body 专属结局正文，200-350 字，须呼应主角的开局与关键经历，有画面感，用中文。
 4. statistics 一行中文概述人生统计（历经几年、几次抉择、几位知己）。
-只输出一个 JSON 对象，禁止输出任何其他文字：{"grade":"S","title":"...","body":"...","statistics":"..."}`;
+5. 若【已满足的结局条件】非空，grade 不得低于已满足条件所对应的等级（全部满足 ≥A，满足 2 条及以上 ≥B）。
+只输出一个 JSON 对象，禁止输出任何其他文字：{"grade":"S","title":"...","body":"...","statistics":"..."}` +
+                (checks && checks.met.length ? `\n\n【已满足的结局条件】\n${checks.met.map((c) => `- ${c.name}：${c.desc}`).join("\n")}` : "");
             const userPrompt = `主角档案：
 姓名：${state.name || "未知"}（${state.gender || "未知"}${state.role ? "，" + state.role : ""}）当前：${state.location || "未知地点"}，第 ${state.currentYear || 0} 年 ${state.currentMonth || 0} 月
 属性：${(state.stats || []).map((s) => `${s.label} ${s.value}`).join("、") || "暂无"}
@@ -13376,6 +14543,61 @@ ${recent || "（无）"}
             }
             return null;
         }
+        // 结局条件来源:selected card structured.endings(编辑器维护),旧卡从 state.endings 兜底
+        function getEndingDefs(state) {
+            let card = null;
+            try { card = (typeof ScenarioCardService !== "undefined") ? ScenarioCardService.getSelectedCard() : null; } catch (e) {}
+            const endings = card?.structured?.endings || card?.endings || state?.endings || [];
+            return Array.isArray(endings) ? endings.filter((e) => e && String(e.name || "").trim()) : [];
+        }
+        // 判定结局条件:返回 { met:[{name,desc}], unmet:[...], allMet }
+        function buildEndingChecks(state, endings = null) {
+            const list = endings !== null && endings !== undefined ? endings : getEndingDefs(state);
+            if (!list.length) return { met: [], unmet: [], allMet: false };
+            const rounds = (state.history || []).filter((h) => h.role === "user").length;
+            const npcOf = (id) => (state.npcs || []).find((n) => String(n.id || "") === String(id || "") || String(n.name || "") === String(id || ""));
+            const met = [], unmet = [];
+            list.forEach((e) => {
+                const name = String(e.name || "").trim();
+                const target = Number(e.target);
+                let ok = false, desc = "";
+                if (e.type === "favor") {
+                    const n = npcOf(e.npcId);
+                    const v = n ? (Number(n.favor) || 0) : Math.max(...(state.npcs || []).map((x) => Number(x.favor) || 0), -1);
+                    ok = v >= (target || 0);
+                    desc = `友善值 ≥ ${target || 0}（当前 ${v}）`;
+                } else if (e.type === "affection") {
+                    const n = npcOf(e.npcId);
+                    const v = n ? (Number(n.affection) || 0) : Math.max(...(state.npcs || []).map((x) => Number(x.affection) || 0), -1);
+                    ok = v >= (target || 0);
+                    desc = `爱慕值 ≥ ${target || 0}（当前 ${v}）`;
+                } else if (e.type === "rounds") {
+                    ok = rounds >= (target || 0);
+                    desc = `游玩回合 ≥ ${target || 0}（当前 ${rounds}）`;
+                } else if (e.type === "event") {
+                    const kw = String(e.target || "").trim();
+                    const texts = (state.history || []).map((h) => String(h.text || "")).join("\n");
+                    ok = !!kw && texts.includes(kw);
+                    desc = `触发事件「${kw}」${ok ? "（已触发）" : ""}`;
+                }
+                (ok ? met : unmet).push({ name, desc });
+            });
+            return { met, unmet, allMet: met.length === list.length && list.length > 0 };
+        }
+        // 结局按钮徽章:有已满足条件时按钮显示 ✅可达成
+        function refreshEndingBadge(state) {
+            const btn = document.querySelector(".story-end-btn");
+            if (!btn) return;
+            const checks = buildEndingChecks(state);
+            const base = "🎬 这段故事（AI 结局评定）";
+            if (checks.met.length) {
+                btn.textContent = `${base} ✅可达成`;
+                btn.title = `已满足 ${checks.met.length} 个结局条件：${checks.met.map((c) => c.name).join("、")}`;
+            } else {
+                btn.textContent = base;
+                btn.title = "";
+            }
+        }
         function fallbackEnding(state) {
             const rounds = (state.history || []).filter((h) => h.role === "user").length;
             const favors = (state.npcs || []).map((n) => Number(n.favor) || 0);
@@ -13385,6 +14607,11 @@ ${recent || "（无）"}
             else if (rounds >= 5 && avgFavor >= 55) grade = "A";
             else if (rounds >= 3) grade = "B";
             else if (rounds >= 1) grade = "C";
+            // 结局条件命中提级:全部满足 → 保底 A(rounds≥8 时 S);满足≥2 → B;满足 1 → C 保底
+            const checks = buildEndingChecks(state);
+            if (checks.allMet) grade = rounds >= 8 ? "S" : "A";
+            else if (checks.met.length >= 2) grade = grade === "D" ? "B" : grade;
+            else if (checks.met.length >= 1) grade = grade === "D" ? "C" : grade;
             return { grade, title: "未完待续", body: `${state.name || "主角"}的故事在此刻暂告一段落。经历了 ${rounds} 轮抉择，与 ${(state.npcs || []).length} 位人物相遇，人生仍在继续。（AI 暂不可用，本次为本地评定）`, statistics: "" };
         }
         async function endStory() {
@@ -13393,9 +14620,13 @@ ${recent || "（无）"}
                 NoticeModalService.showInfo({ title: "还没有故事", descHtml: "先开始游玩、推进几轮剧情，再让 AI 评定结局吧。" });
                 return;
             }
+            const checks = buildEndingChecks(state);
+            const metHtml = checks.met.length
+                ? `<div style="margin-top:10px;padding:8px 10px;border-radius:10px;background:color-mix(in srgb,var(--theme-primary) 12%,transparent);font-size:.82rem;"><b>✅ 已满足结局条件</b><ul style="margin:6px 0 0 14px;padding:0;">${checks.met.map((c) => `<li>${MarkdownService.escapeHtml(c.name)}（${MarkdownService.escapeHtml(c.desc)}）</li>`).join("")}</ul></div>`
+                : "";
             const ok = await NoticeModalService.confirm({
                 title: "结束这段故事？",
-                descHtml: `AI 将依据 <strong>${MarkdownService.escapeHtml(state.name || "主角")}</strong> 的一生撰写结局评定（S~D 级）与专属结局正文。评定不会清除存档，之后仍可继续回溯。`,
+                descHtml: `AI 将依据 <strong>${MarkdownService.escapeHtml(state.name || "主角")}</strong> 的一生撰写结局评定（S~D 级）与专属结局正文。评定不会清除存档，之后仍可继续回溯。${metHtml}`,
                 okText: "🎬 开始评定",
                 cancelText: "再想想"
             });
@@ -13403,7 +14634,7 @@ ${recent || "（无）"}
             const config = SettingsService.getApiConfig();
             let result = null;
             if (!config.blocked && config.model) {
-                try { result = await requestEnding(state, config); }
+                try { result = await requestEnding(state, config, checks); }
                 catch (e) { console.warn("[EndStory] AI 评定失败,走本地兜底", e); }
             }
             if (!result) result = fallbackEnding(state);
@@ -14756,7 +15987,7 @@ function openNpcProfile(npcId) {
             switchView("view-scenario-editor");
             ScenarioEditorService.focusEditor();
         }
-        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, avatarPick, avatarUpload, avatarAiSuggest, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, advanceStory, openPhoneDiary, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate, renderHomeDiscovery, switchRankTab, switchSortMode, openCreationWizard, wizardPickStyle, wizardTitleCount, wizardPromptCount, wizardNext, wizardPrev, wizardConfirm, closeUploadPriceModal, confirmUploadWithPrice };
+        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, getEndingDefs, buildEndingChecks, refreshEndingBadge, fallbackEnding, requestEnding, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, avatarPick, avatarUpload, avatarAiSuggest, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, closeFullMap, placeClick, placeGo, advanceStory, openPhoneDiary, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate, renderHomeDiscovery, switchRankTab, switchSortMode, openCreationWizard, wizardPickStyle, wizardTitleCount, wizardPromptCount, wizardNext, wizardPrev, wizardConfirm, closeUploadPriceModal, confirmUploadWithPrice };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
@@ -14768,6 +15999,9 @@ function openNpcProfile(npcId) {
     function enterEvent(idx) { Controller.enterEvent(idx); }
     function moveToLocation(locName) { Controller.moveToLocation(locName); }
     function showFullMap() { Controller.showFullMap(); }
+    function closeFullMap() { Controller.closeFullMap(); }
+    function placeClick(name) { Controller.placeClick(name); }
+    function placeGo(name) { Controller.placeGo(name); }
     function advanceStory() { Controller.advanceStory(); }
     function phoneAppTap(action) { Controller.phoneAppTap(action); }
     function openNpcImport() { Controller.openNpcImport(); }
@@ -14802,6 +16036,11 @@ function openNpcProfile(npcId) {
     function bgmNext() { UIRenderer.bgmNext(); }
     function bgmPrev() { UIRenderer.bgmPrev(); }
     function endStory() { Controller.endStory(); }
+    function getEndingDefs(state) { return Controller.getEndingDefs(state); }
+    function buildEndingChecks(state, endings) { return Controller.buildEndingChecks(state, endings); }
+    function refreshEndingBadge(state) { Controller.refreshEndingBadge(state); }
+    function fallbackEnding(state) { return Controller.fallbackEnding(state); }
+    function requestEnding(state, config, checks) { return Controller.requestEnding(state, config, checks); }
     function closeEndingModal() { Controller.closeEndingModal(); }
     function restartLife() { Controller.restartLife(); }
     function togglePlayDockNav() { Controller.togglePlayDockNav(); }
