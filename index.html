@@ -4536,6 +4536,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <div style="font-size: 0.9rem; margin-top: 6px;">云币余额：<span id="display-remaining-count" style="font-weight: 800; color: var(--accent-dark);">--</span>（AI 对话按 token 计费：输入 4 币/千 token，输出 12 币/千 token）</div>
                     <div style="font-size: 0.9rem; margin-top: 6px;">会员：<span id="display-membership-badge" style="font-weight: 700; color: var(--accent-dark);">未开通</span></div>
                     <div style="margin-top: 10px; display:flex; gap:8px; flex-wrap:wrap;">
+                        <button class="mini-btn primary" onclick="openEditProfileModal()">✏️ 编辑资料</button>
                         <button id="open-membership-btn" class="mini-btn primary" onclick="MembershipService.openPanel()">充值 / 云币</button>
                         <button class="mini-btn ghost" onclick="clearLocalCache()" title="只清除本地存档进度，不动登录/会员/云币">🧹 清除本地缓存</button>
                     </div>
@@ -5049,6 +5050,27 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <button class="mini-btn ghost" onclick="closeAvatarPickerModal()">取消</button>
                 <label class="mini-btn ghost" style="position:relative;overflow:hidden;">上传<input type="file" accept="image/*" id="avatar-picker-upload" style="position:absolute;inset:0;opacity:0;cursor:pointer;"></label>
                 <button class="mini-btn primary" id="avatar-picker-ok-btn">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑资料弹窗: 头像+昵称+签名 一键保存到服务器 -->
+    <div class="modal-overlay" id="edit-profile-modal" style="display:none;">
+        <div class="modal-card" style="width:min(92vw,400px);">
+            <div class="modal-title">✏️ 编辑资料</div>
+            <div style="display:flex;align-items:center;gap:14px;margin:14px 0;">
+                <img id="edit-profile-avatar" src="icons/android-chrome-192x192.png" style="width:64px;height:64px;border-radius:12px;object-fit:cover;border:2px solid var(--line,#e2ccb0);background:#fff;">
+                <div style="flex:1;">
+                    <button class="mini-btn ghost" onclick="openAvatarPickerModalForEdit()">🖼 更换头像</button>
+                    <div class="list-sub" style="margin-top:6px;">支持上传图片，自动压缩为 webp 保存</div>
+                </div>
+            </div>
+            <input id="edit-profile-nickname" type="text" maxlength="16" placeholder="昵称（16字内）" style="width:100%;border:1px solid var(--line,#e2ccb0);border-radius:10px;background:var(--input-bg,#fffbf5);padding:8px 10px;font-size:0.9rem;font-weight:700;color:var(--text,#4b3a2a);box-sizing:border-box;margin-bottom:10px;">
+            <input id="edit-profile-signature" type="text" maxlength="30" placeholder="写一句签名吧～（30字内）" style="width:100%;border:1px solid var(--line,#e2ccb0);border-radius:10px;background:var(--input-bg,#fffbf5);padding:7px 10px;font-size:0.82rem;color:var(--text,#4b3a2a);box-sizing:border-box;">
+            <div id="edit-profile-msg" style="display:none;margin-top:8px;font-size:0.82rem;color:#b24a2a;"></div>
+            <div class="gender-actions" style="margin-top:14px;">
+                <button class="mini-btn ghost" onclick="closeEditProfileModal()">取消</button>
+                <button class="mini-btn primary" id="edit-profile-save-btn" onclick="saveEditProfile()">保存</button>
             </div>
         </div>
     </div>
@@ -9604,7 +9626,7 @@ function rebuildChoicesBlock(body, labels = []) {
         async function saveProfile(patch) {
             const user = AuthService.getUserData();
             const token = AuthService.getToken();
-            if (!user?.id || !token) return;
+            if (!user?.id || !token) return { ok: false, error: "未登录" };
             try {
                 const res = await fetch(`${PB_URL}/api/collections/${COLLECTION}/records/${user.id}`, {
                     method: "PATCH",
@@ -9617,8 +9639,13 @@ function rebuildChoicesBlock(body, labels = []) {
                         Object.assign(user, updated); // getUserData 返回内存引用,直接生效
                         AuthService.refreshCache(); // 立即落盘本地缓存,刷新/重开不丢
                     }
+                    return { ok: true };
                 }
-            } catch (e) { /* 网络失败静默,下次编辑重试 */ }
+                // 失败不再静默:编辑弹窗等调用方根据返回值提示用户
+                return { ok: false, error: `服务器拒绝保存（${res.status}）` };
+            } catch (e) {
+                return { ok: false, error: "网络异常，请稍后重试" };
+            }
         }
         // 我的页点头像 → 头像库弹窗(内含上传),选中即保存账号头像
         function openAvatarPickerForProfile() {
@@ -9634,6 +9661,69 @@ function rebuildChoicesBlock(body, labels = []) {
             });
         }
         window.openAvatarPickerForProfile = openAvatarPickerForProfile;
+        // 编辑资料弹窗:头像+昵称+签名 一键保存到服务器(PB users 集合),成功/失败都有明确提示
+        let _editProfileAvatar = "";
+        function openEditProfileModal() {
+            const user = AuthService.getUserData();
+            if (!user?.id) { NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后即可编辑并保存资料。" }); return; }
+            _editProfileAvatar = user.faceimg || "";
+            const avEl = document.getElementById("edit-profile-avatar");
+            if (avEl) avEl.src = _editProfileAvatar || "icons/android-chrome-192x192.png";
+            const nickEl = document.getElementById("edit-profile-nickname");
+            if (nickEl) nickEl.value = user.nickname || "";
+            const sigEl = document.getElementById("edit-profile-signature");
+            if (sigEl) sigEl.value = user.signature || "";
+            const msgEl = document.getElementById("edit-profile-msg");
+            if (msgEl) { msgEl.style.display = "none"; msgEl.textContent = ""; }
+            const modal = document.getElementById("edit-profile-modal");
+            if (modal) modal.style.display = "flex";
+        }
+        window.openEditProfileModal = openEditProfileModal;
+        function openAvatarPickerModalForEdit() {
+            openAvatarPickerModal(_editProfileAvatar, (val) => {
+                _editProfileAvatar = val;
+                const avEl = document.getElementById("edit-profile-avatar");
+                if (avEl) avEl.src = val;
+            });
+        }
+        window.openAvatarPickerModalForEdit = openAvatarPickerModalForEdit;
+        async function saveEditProfile() {
+            const saveBtn = document.getElementById("edit-profile-save-btn");
+            if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = "保存中..."; }
+            const msgEl = document.getElementById("edit-profile-msg");
+            try {
+                const nickname = String(document.getElementById("edit-profile-nickname")?.value || "").trim().slice(0, 16);
+                const signature = String(document.getElementById("edit-profile-signature")?.value || "").trim().slice(0, 30);
+                if (!nickname) {
+                    if (msgEl) { msgEl.textContent = "昵称不能为空"; msgEl.style.display = "block"; }
+                    return;
+                }
+                const r = await saveProfile({ nickname, signature, faceimg: _editProfileAvatar });
+                if (r && r.ok) {
+                    closeEditProfileModal();
+                    NoticeModalService.showInfo({ title: "✅ 资料已保存", descHtml: "昵称/签名/头像已保存到服务器，重新登录不会丢失。" });
+                    const u = AuthService.getUserData();
+                    if (u) {
+                        const nickEl = document.getElementById("display-user-nickname");
+                        if (nickEl) nickEl.value = u.nickname || "";
+                        const sigEl = document.getElementById("display-user-signature");
+                        if (sigEl) sigEl.value = u.signature || "";
+                        const avatarEl = document.getElementById("display-user-avatar");
+                        if (avatarEl && u.faceimg) avatarEl.src = u.faceimg;
+                    }
+                } else {
+                    if (msgEl) { msgEl.textContent = (r && r.error) ? r.error : "保存失败，请检查网络后重试"; msgEl.style.display = "block"; }
+                }
+            } finally {
+                if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "保存"; }
+            }
+        }
+        window.saveEditProfile = saveEditProfile;
+        function closeEditProfileModal() {
+            const modal = document.getElementById("edit-profile-modal");
+            if (modal) modal.style.display = "none";
+        }
+        window.closeEditProfileModal = closeEditProfileModal;
         // 小手机:点击签名就地编辑(登录态同步账号资料,未登录仅改当前角色卡)
         async function phoneEditSignature() {
             const el = document.getElementById("phone-user-sig");
