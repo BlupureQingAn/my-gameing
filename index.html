@@ -15230,6 +15230,7 @@ const token = delta.content || "";
                 const aiEntry = { role: "ai", date: Utils.nowDateStr(StateService.get()), text: displayText };
                 StateService.pushHistory(aiEntry);
                 StateService.save();
+                maybePushNpcStoryWechat(StateService.get(), displayText);
                 isGenerating = false;
                 UIRenderer.setSendingDisabled(false);
                 uiUnlocked = true;
@@ -15282,6 +15283,68 @@ const token = delta.content || "";
         }
         return { requestAI, getIsGenerating };
     })();
+
+    // ---- NPC 随剧情主动发微信（低频、不当面才发） ----
+    // 触发条件（全部满足才发一条）：
+    // 1) 本轮剧情文本提到了某个已知 NPC 名字
+    // 2) 该 NPC 不在"当面对话"状态：优先命中分离/远程信号（离开/别处/捎信/独自/挂念…），
+    //    其次名字后不紧邻说话动词（说/道/问/喊/笑…）——两人当面交谈时发微信不合理
+    // 3) 低频闸门：全局 ≥4 轮剧情、同一 NPC ≥8 轮剧情才可能触发一次
+    function maybePushNpcStoryWechat(state, displayText) {
+        if (!state || !displayText) return;
+        const npcs = Array.isArray(state.npcs) ? state.npcs.filter((n) => n && String(n.name || "").trim()) : [];
+        if (!npcs.length) return;
+        const text = String(UIRenderer.stripHtml(displayText) || "").replace(/[#*`>]/g, " ").replace(/\s+/g, " ").trim();
+        if (!text) return;
+        const rounds = (state.history || []).filter((h) => h.role === "ai").length;
+        const REMOTE_SIGNALS = /(离开|离去|别处|远方|远处|传来|传信|捎|来信|书信|独自|告别|相别|分离|分别|远行|北上|南下|在外|挂念|惦记|想念|盼|归来|等你|回来|回家)/;
+        const SPEAK_VERBS = /(说|道|问|喊|叫|答|叹|笑|嘀咕|开口|提醒|告诉|招呼|点头|瞪|看着|看向)/;
+        let pick = null;
+        for (const n of npcs) {
+            const name = String(n.name).trim();
+            let idx = -1;
+            while ((idx = text.indexOf(name, idx + 1)) >= 0) {
+                const after = text.slice(idx + name.length, idx + name.length + 16);
+                if (REMOTE_SIGNALS.test(after)) { pick = n; break; }
+                if (!SPEAK_VERBS.test(after)) { pick = pick || n; }
+            }
+            if (pick) break;
+        }
+        if (!pick) return;
+        const key = String(pick.id || pick.name || "");
+        const lastGlobal = Number(state.wxStoryMsgRound || -99);
+        const lastNpc = Number((state.wxStoryMsgRounds && state.wxStoryMsgRounds[key]) || -99);
+        if (rounds - lastGlobal < 4 || rounds - lastNpc < 8) return;
+        const name = String(pick.name).trim();
+        const i = text.indexOf(name);
+        const seg = text.slice(i + name.length, i + name.length + 80);
+        const q = seg.match(/[「『"“]([^」』"”]{1,40})[」』"”]/);
+        let msg = q ? q[1].trim() : seg.replace(/([。！？.!?]).*$/, "$1").trim();
+        msg = msg.slice(0, 40).trim();
+        if (!msg) return;
+        if (!state.npcChats || typeof state.npcChats !== "object") state.npcChats = {};
+        if (!Array.isArray(state.npcChats[key])) state.npcChats[key] = [];
+        const chats = state.npcChats[key];
+        if (chats.length > 100) chats.splice(0, chats.length - 100);
+        chats.push({ from: "npc", text: msg, ts: Date.now() });
+        state.wxStoryMsgRound = rounds;
+        if (!state.wxStoryMsgRounds || typeof state.wxStoryMsgRounds !== "object") state.wxStoryMsgRounds = {};
+        state.wxStoryMsgRounds[key] = rounds;
+        StateService.save();
+        // 微信屏开着则即时刷新；聊天页正开着该 NPC 则标记已读
+        const screen = document.getElementById("wx-screen");
+        const chatPage = document.getElementById("wx-chat");
+        const titleEl = document.getElementById("wx-chat-title");
+        const chatOpen = !!(chatPage && chatPage.style.display !== "none" && titleEl && titleEl.textContent.indexOf(name) >= 0);
+        if (chatOpen) {
+            if (!state.wechatRead || typeof state.wechatRead !== "object") state.wechatRead = {};
+            state.wechatRead[key] = Date.now();
+        }
+        if (screen && screen.style.display !== "none") {
+            UIRenderer.renderWechatSessions(state);
+            if (chatOpen) UIRenderer.renderWechatChat(state, key);
+        }
+    }
 
     const ScenarioCardControllerService = (() => {
         function saveScenarioCard({ renderAll }) {
