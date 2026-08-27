@@ -25,17 +25,50 @@
         "background": "霜脊小镇猎户之子，从小丧父，与母亲相依为命，靠打猎为生，力大无穷但温和木讷，被全镇人称为「傻大个」"
       },
       "npcs": [
-        { "name": "母亲·石氏", "role": "猎户遗孀", "personality": "坚韧慈爱，藏着一桩秘密", "relationship": "她似乎早知你的身世，一直瞒着你" },
-        { "name": "小龙崽·烬儿", "role": "你救下的幼龙", "personality": "黏人贪吃，通晓人心", "relationship": "与你血脉相连，是你在全世界的依靠" },
-        { "name": "圣殿骑士·罗恩", "role": "猎龙骑士", "personality": "虔诚冷峻，奉命而来", "relationship": "他的剑已经出鞘，态度却有一丝犹疑" },
-        { "name": "龙裔遗民·霜语", "role": "霜脊山脉的使者", "personality": "神秘从容，知晓古老历史", "relationship": "她自称是你的「同族」，来带你离开" }
+        {
+          "name": "母亲·石氏",
+          "role": "猎户遗孀",
+          "personality": "坚韧慈爱，藏着一桩秘密",
+          "relationship": "她似乎早知你的身世，一直瞒着你",
+          "gender": "女"
+        },
+        {
+          "name": "小龙崽·烬儿",
+          "role": "你救下的幼龙",
+          "personality": "黏人贪吃，通晓人心",
+          "relationship": "与你血脉相连，是你在全世界的依靠",
+          "gender": "未知"
+        },
+        {
+          "name": "圣殿骑士·罗恩",
+          "role": "猎龙骑士",
+          "personality": "虔诚冷峻，奉命而来",
+          "relationship": "他的剑已经出鞘，态度却有一丝犹疑",
+          "gender": "男"
+        },
+        {
+          "name": "龙裔遗民·霜语",
+          "role": "霜脊山脉的使者",
+          "personality": "神秘从容，知晓古老历史",
+          "relationship": "她自称是你的「同族」，来带你离开",
+          "gender": "女"
+        }
       ],
       "timeline": {
-        "start": { "year": 1304, "month": 1, "day": 18 },
+        "start": {
+          "year": 1304,
+          "month": 1,
+          "day": 18
+        },
         "note": "你救下小龙崽的第三天，镇口响起了圣殿猎龙骑士的马蹄声，猎龙令的红布条已挂上镇长家的门楣"
       },
       "scene_style": {
-        "env_templates": ["边境小镇", "霜脊山脉", "圣殿营帐", "山间龙穴"],
+        "env_templates": [
+          "边境小镇",
+          "霜脊山脉",
+          "圣殿营帐",
+          "山间龙穴"
+        ],
         "option_style": "选项要带龙血的野性与守护（如：护龙抗骑士/随遗民上山/藏身小镇/觉醒龙血）"
       },
       "first_scene": {
@@ -74,17 +107,50 @@
         "background": "瘟疫村庄的孤儿，死而复生后被骨之贤者收为学徒，不记得生前之事，只会用左手写自己的名字——那名字被法师涂掉了"
       },
       "npcs": [
-        { "name": "骨之贤者·塔洛斯", "role": "骨城亡灵法师", "personality": "冰冷寡言，深藏不露", "relationship": "你的师父，他把你从死亡里捞回，也在你身上藏着谜" },
-        { "name": "骸骨仆从·老骨", "role": "塔里的管家", "personality": "唠叨慈祥，记性极好", "relationship": "从你复活那天起就照顾你，像是认识你" },
-        { "name": "幽灵书吏·灰羽", "role": "塔中图书馆管理员", "personality": "博学冷漠，守口如瓶", "relationship": "她知道每本书的秘密，也知道你的" },
-        { "name": "守门人·狼面", "role": "骨城城门守卫", "personality": "沉默凶悍，刀不离手", "relationship": "他盯着你时的眼神，像盯着一个「逃犯」" }
+        {
+          "name": "骨之贤者·塔洛斯",
+          "role": "骨城亡灵法师",
+          "personality": "冰冷寡言，深藏不露",
+          "relationship": "你的师父，他把你从死亡里捞回，也在你身上藏着谜",
+          "gender": "男"
+        },
+        {
+          "name": "骸骨仆从·老骨",
+          "role": "塔里的管家",
+          "personality": "唠叨慈祥，记性极好",
+          "relationship": "从你复活那天起就照顾你，像是认识你",
+          "gender": "男"
+        },
+        {
+          "name": "幽灵书吏·灰羽",
+          "role": "塔中图书馆管理员",
+          "personality": "博学冷漠，守口如瓶",
+          "relationship": "她知道每本书的秘密，也知道你的",
+          "gender": "女"
+        },
+        {
+          "name": "守门人·狼面",
+          "role": "骨城城门守卫",
+          "personality": "沉默凶悍，刀不离手",
+          "relationship": "他盯着你时的眼神，像盯着一个「逃犯」",
+          "gender": "男"
+        }
       ],
       "timeline": {
-        "start": { "year": 1789, "month": 6, "day": 21 },
+        "start": {
+          "year": 1789,
+          "month": 6,
+          "day": 21
+        },
         "note": "夏至夜的午夜，塔底密室的门在你面前无声洞开，冰棺里的你正「看着」你"
       },
       "scene_style": {
-        "env_templates": ["骨城街道", "法师塔密室", "图书馆", "塔顶露台"],
+        "env_templates": [
+          "骨城街道",
+          "法师塔密室",
+          "图书馆",
+          "塔顶露台"
+        ],
         "option_style": "选项要带生死之间的沉重抉择（如：触碰冰棺/询问法师/查古籍/试探守门人）"
       },
       "first_scene": {
@@ -123,17 +189,50 @@
         "background": "银叶森林最年轻的游侠，箭术通神，性格安静坚定，违背族规离开森林，踏进人类世界调查矿脉之事"
       },
       "npcs": [
-        { "name": "长老·树语", "role": "精灵族大长老", "personality": "智慧温和，崇尚和平", "relationship": "她阻止你离开，却也默许你带走圣树之弓" },
-        { "name": "人类矿主·铁手", "role": "矿脉承包商", "personality": "贪婪精明，心狠手辣", "relationship": "矿脉的真正主人，背后是王室" },
-        { "name": "人类游侠·约翰", "role": "王室猎手", "personality": "豪爽直率，重信守诺", "relationship": "他奉命猎杀你，却在第一次见面时放走了你" },
-        { "name": "小精灵·露露", "role": "圣树上的小精灵", "personality": "顽皮胆小，黏人", "relationship": "偷偷跟着你出了森林，是你与圣树之间最后的联系" }
+        {
+          "name": "长老·树语",
+          "role": "精灵族大长老",
+          "personality": "智慧温和，崇尚和平",
+          "relationship": "她阻止你离开，却也默许你带走圣树之弓",
+          "gender": "未知"
+        },
+        {
+          "name": "人类矿主·铁手",
+          "role": "矿脉承包商",
+          "personality": "贪婪精明，心狠手辣",
+          "relationship": "矿脉的真正主人，背后是王室",
+          "gender": "男"
+        },
+        {
+          "name": "人类游侠·约翰",
+          "role": "王室猎手",
+          "personality": "豪爽直率，重信守诺",
+          "relationship": "他奉命猎杀你，却在第一次见面时放走了你",
+          "gender": "男"
+        },
+        {
+          "name": "小精灵·露露",
+          "role": "圣树上的小精灵",
+          "personality": "顽皮胆小，黏人",
+          "relationship": "偷偷跟着你出了森林，是你与圣树之间最后的联系",
+          "gender": "女"
+        }
       ],
       "timeline": {
-        "start": { "year": 992, "month": 5, "day": 10 },
+        "start": {
+          "year": 992,
+          "month": 5,
+          "day": 10
+        },
         "note": "圣树被缠铁链的第七天，你背着圣树之弓走出森林，身后是族人们的叹息，前方是人类的边境关卡"
       },
       "scene_style": {
-        "env_templates": ["银叶森林", "人类边境关卡", "矿脉营地", "王室猎场"],
+        "env_templates": [
+          "银叶森林",
+          "人类边境关卡",
+          "矿脉营地",
+          "王室猎场"
+        ],
         "option_style": "选项要带精灵的优雅与决绝（如：潜行绕过/与约翰结盟/夜探矿营/谈判换林）"
       },
       "first_scene": {
@@ -172,17 +271,50 @@
         "background": "矮人铁匠，祖父伯恩是铸造大师，封锤后退隐。你从小在铁砧边长大，技艺娴熟但从未铸造过「真正的兵器」"
       },
       "npcs": [
-        { "name": "祖父·伯恩", "role": "封锤的铸造大师", "personality": "沉默固执，藏着一身本事", "relationship": "他让你替铁炉镇打农具，从不让你碰兵器" },
-        { "name": "落魄骑士·兰斯", "role": "断剑的主人", "personality": "正直落魄，背负旧仇", "relationship": "他带着祖父锻造的断剑上门，带来一桩旧案" },
-        { "name": "镇长·铜须", "role": "铁炉镇镇长", "personality": "精明圆滑，见风使舵", "relationship": "他压着祖父的旧案，不希望有人重提" },
-        { "name": "精灵附魔师·薇拉", "role": "来访的精灵工匠", "personality": "冷静骄傲，手艺卓绝", "relationship": "她看得出断剑的蓝光，也看得出你的天赋" }
+        {
+          "name": "祖父·伯恩",
+          "role": "封锤的铸造大师",
+          "personality": "沉默固执，藏着一身本事",
+          "relationship": "他让你替铁炉镇打农具，从不让你碰兵器",
+          "gender": "男"
+        },
+        {
+          "name": "落魄骑士·兰斯",
+          "role": "断剑的主人",
+          "personality": "正直落魄，背负旧仇",
+          "relationship": "他带着祖父锻造的断剑上门，带来一桩旧案",
+          "gender": "男"
+        },
+        {
+          "name": "镇长·铜须",
+          "role": "铁炉镇镇长",
+          "personality": "精明圆滑，见风使舵",
+          "relationship": "他压着祖父的旧案，不希望有人重提",
+          "gender": "男"
+        },
+        {
+          "name": "精灵附魔师·薇拉",
+          "role": "来访的精灵工匠",
+          "personality": "冷静骄傲，手艺卓绝",
+          "relationship": "她看得出断剑的蓝光，也看得出你的天赋",
+          "gender": "女"
+        }
       ],
       "timeline": {
-        "start": { "year": 1120, "month": 8, "day": 3 },
+        "start": {
+          "year": 1120,
+          "month": 8,
+          "day": 3
+        },
         "note": "骑士兰斯带着断剑进店的第二天，镇长铜须登门「拜访」，话里话外都是警告"
       },
       "scene_style": {
-        "env_templates": ["铁匠铺", "熔炉间", "镇长会客厅", "山岭矿区"],
+        "env_templates": [
+          "铁匠铺",
+          "熔炉间",
+          "镇长会客厅",
+          "山岭矿区"
+        ],
         "option_style": "选项要带铁匠的硬气与匠心（如：接下重铸断剑/追问祖父旧案/探访精灵附魔师/拒绝镇长）"
       },
       "first_scene": {
@@ -221,17 +353,50 @@
         "background": "渔村长大的平民少年，从未接触过魔法，因在入学测试中意外唤醒元素之核而被破格录取，戴上了命运手环"
       },
       "npcs": [
-        { "name": "学院长·梅林", "role": "赫利翁学院长", "personality": "慈祥深邃，知晓一切", "relationship": "他亲自录取你，也第一个回避你的问题" },
-        { "name": "室友·阿尔文", "role": "贵族魔法生", "personality": "傲慢好胜，心直口快", "relationship": "看不起你的出身，却总在暗处帮你" },
-        { "name": "图书管理员·安格斯", "role": "禁书区管理员", "personality": "古怪健忘，知识渊博", "relationship": "他认得海渊之院的图案" },
-        { "name": "神秘黑猫·墨", "role": "学院里的黑猫", "personality": "高傲机敏，能通人语", "relationship": "它总在你手环发热时出现，像在等什么" }
+        {
+          "name": "学院长·梅林",
+          "role": "赫利翁学院长",
+          "personality": "慈祥深邃，知晓一切",
+          "relationship": "他亲自录取你，也第一个回避你的问题",
+          "gender": "男"
+        },
+        {
+          "name": "室友·阿尔文",
+          "role": "贵族魔法生",
+          "personality": "傲慢好胜，心直口快",
+          "relationship": "看不起你的出身，却总在暗处帮你",
+          "gender": "男"
+        },
+        {
+          "name": "图书管理员·安格斯",
+          "role": "禁书区管理员",
+          "personality": "古怪健忘，知识渊博",
+          "relationship": "他认得海渊之院的图案",
+          "gender": "男"
+        },
+        {
+          "name": "神秘黑猫·墨",
+          "role": "学院里的黑猫",
+          "personality": "高傲机敏，能通人语",
+          "relationship": "它总在你手环发热时出现，像在等什么",
+          "gender": "未知"
+        }
       ],
       "timeline": {
-        "start": { "year": 776, "month": 9, "day": 1 },
+        "start": {
+          "year": 776,
+          "month": 9,
+          "day": 1
+        },
         "note": "入学第一周的午夜，手环第一次发热，你梦见了沉入海底的学院——它的大门，正缓缓打开"
       },
       "scene_style": {
-        "env_templates": ["赫利翁主塔", "元素教室", "禁书区", "海渊之院"],
+        "env_templates": [
+          "赫利翁主塔",
+          "元素教室",
+          "禁书区",
+          "海渊之院"
+        ],
         "option_style": "选项要带学院生活的成长与魔法世界的奇妙（如：钻研元素课/夜探禁书区/追问学院长/追黑猫）"
       },
       "first_scene": {

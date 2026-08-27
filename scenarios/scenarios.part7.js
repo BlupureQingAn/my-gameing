@@ -31,24 +31,28 @@
       "npcs": [
         {
           "name": "新娘·你",
+          "gender": "女",
           "role": "婚礼中的自己",
           "personality": "微笑温柔，眼神空洞",
           "relationship": "她在婚礼上的每个举动，都是给你的提示"
         },
         {
           "name": "新郎·模糊",
+          "gender": "男",
           "role": "婚礼新郎",
           "personality": "越轮回越清晰",
           "relationship": "他是轮回的核心，也是你遗忘的关键"
         },
         {
           "name": "宾客·红衣女人",
+          "gender": "女",
           "role": "婚礼宾客",
           "personality": "警觉孤僻，从不敬酒",
           "relationship": "她是唯一会和你说话的宾客，但她的话不能全信"
         },
         {
           "name": "实验员·白大褂",
+          "gender": "未知",
           "role": "记忆移植实验员",
           "personality": "冷静专业，程序化",
           "relationship": "他在轮回里反复出现，每次都问同一句话"
@@ -115,24 +119,28 @@
       "npcs": [
         {
           "name": "系统·竞技场",
+          "gender": "未知",
           "role": "竞技场AI",
           "personality": "冷漠公正，字里行间带刺",
           "relationship": "规则的化身，也是唯一的「裁判」"
         },
         {
           "name": "将军·拓跋",
+          "gender": "男",
           "role": "古代将领",
           "personality": "刚烈直率，重情义",
           "relationship": "他把你当小辈照顾，也教了你战场生存之道"
         },
         {
           "name": "学者·白教授",
+          "gender": "男",
           "role": "近代学者",
           "personality": "睿智温厚，洞察人心",
           "relationship": "他是竞技场的「活图书馆」，知道每轮关卡的规律"
         },
         {
           "name": "猎杀者·零",
+          "gender": "未知",
           "role": "系统标记的猎杀者",
           "personality": "冷酷高效，来去无踪",
           "relationship": "系统派来「清理」威胁的，他的目标正是你",
@@ -201,24 +209,28 @@
       "npcs": [
         {
           "name": "管理员·老馆长",
+          "gender": "男",
           "role": "副本管理员",
           "personality": "温和守旧，守口如瓶",
           "relationship": "他认识每一本书，也认识「你」"
         },
         {
           "name": "读者·穿花裙的女孩",
+          "gender": "女",
           "role": "另一名被困者",
           "personality": "活泼好奇，记性奇差",
           "relationship": "她已经找了七年出口，线索集了二十条"
         },
         {
           "name": "藏书·灰皮书",
+          "gender": "未知",
           "role": "无人敢碰的书",
           "personality": "（书）自我意识强",
           "relationship": "它说：借我的人，都成了书"
         },
         {
           "name": "写作者·无名的笔",
+          "gender": "男",
           "role": "图书馆深处的书写者",
           "personality": "神秘执拗，不停书写",
           "relationship": "他书写的速度，比你阅读的速度快"
@@ -285,24 +297,28 @@
       "npcs": [
         {
           "name": "梦疗师·白医生",
+          "gender": "男",
           "role": "梦疗中心医师",
           "personality": "温和专业，滴水不漏",
           "relationship": "他为你开的第一支药剂，剂量「稍微」超了标"
         },
         {
           "name": "镜中的你·笑面",
+          "gender": "未知",
           "role": "快乐的自己",
           "personality": "开朗外向，话多",
           "relationship": "她总在引你往迷宫深处走"
         },
         {
           "name": "镜中的你·哭脸",
+          "gender": "未知",
           "role": "胆小的自己",
           "personality": "瑟缩迟疑，总在示警",
           "relationship": "她会在你接近真相时尖叫"
         },
         {
           "name": "背对着的你",
+          "gender": "未知",
           "role": "遗失的恐惧",
           "personality": "沉默，始终背对",
           "relationship": "它一转身，迷宫就会坍缩"
@@ -369,24 +385,28 @@
       "npcs": [
         {
           "name": "收银员·无脸",
+          "gender": "未知",
           "role": "收银台店员",
           "personality": "面无表情，动作机械",
           "relationship": "他的找零是时间，他的微笑是警告"
         },
         {
           "name": "理货员·老周",
+          "gender": "男",
           "role": "货架理货员",
           "personality": "疲惫世故，话里有话",
           "relationship": "他推着货车上夜班，知道货架的「规矩」"
         },
         {
           "name": "顾客·西装男",
+          "gender": "男",
           "role": "另一名被困者",
           "personality": "冷静精明，经验丰富",
           "relationship": "他已经被困了三晚，知道怎么「活下去」"
         },
         {
           "name": "高价值商品·红盒子",
+          "gender": "未知",
           "role": "货架顶层的神秘商品",
           "personality": "（商品）会发光",
           "relationship": "它的标价是一串零，它盯上你了"

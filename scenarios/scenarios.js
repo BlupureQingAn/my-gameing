@@ -30,6 +30,7 @@ window.SCENARIO_LIBRARY = [
       "npcs": [
         {
           "name": "陆烬川",
+          "gender": "男",
           "role": "顶流偶像",
           "personality": "台上光芒万丈，台下疲惫孤独，占有欲强却极度缺乏安全感",
           "relationship": "你的地下男友，用情至深但随时可能被事业压垮",
@@ -38,18 +39,21 @@ window.SCENARIO_LIBRARY = [
         },
         {
           "name": "顾姐",
+          "gender": "女",
           "role": "陆烬川经纪人",
           "personality": "雷厉风行，利益至上，嗅觉极灵敏",
           "relationship": "已经开始怀疑陆烬川的状态，正在调查他身边的所有人"
         },
         {
           "name": "狗仔·阿豪",
+          "gender": "男",
           "role": "娱乐记者",
           "personality": "死缠烂打，专挖顶流隐私",
           "relationship": "已经连续三晚蹲在你打工的奶茶店门口"
         },
         {
           "name": "闺蜜·小周",
+          "gender": "女",
           "role": "你的同事兼闺蜜",
           "personality": "嘴巴严，脑子活，是你在娱乐圈的唯一同伙",
           "relationship": "知道全部秘密，负责帮你打掩护",
@@ -119,12 +123,14 @@ window.SCENARIO_LIBRARY = [
       "npcs": [
         {
           "name": "夏川凌",
+          "gender": "男",
           "role": "学生会会长",
           "personality": "完美主义，温柔面具下藏着对家族旧案的执念",
           "relationship": "原作好感度最高男主，主动接近你"
         },
         {
           "name": "艾略特·克莱因",
+          "gender": "男",
           "role": "天才炼金师",
           "personality": "毒舌、天才、不信命运，喜欢实验一切",
           "relationship": "注意到你'知道太多'，正在试探你",
@@ -133,12 +139,14 @@ window.SCENARIO_LIBRARY = [
         },
         {
           "name": "洛恩",
+          "gender": "男",
           "role": "骑士团团长",
           "personality": "沉默寡言，忠犬属性，战斗能力超群",
           "relationship": "你穿越第一天他救了你一命"
         },
         {
           "name": "米莉亚",
+          "gender": "女",
           "role": "你的室友",
           "personality": "活泼八卦，原作里是推动剧情的工具人",
           "relationship": "剧情偏离后她似乎也开始说原作没说过的话"
@@ -206,6 +214,7 @@ window.SCENARIO_LIBRARY = [
       "npcs": [
         {
           "name": "祁川",
+          "gender": "男",
           "role": "顶流男主",
           "personality": "表面高冷营业机器，私下细心到可怕，演技与真心难辨",
           "relationship": "你的假CP对象，合约期快到了",
@@ -214,18 +223,21 @@ window.SCENARIO_LIBRARY = [
         },
         {
           "name": "制片人·方姐",
+          "gender": "女",
           "role": "古偶制片人",
           "personality": "精明圆滑，唯数据论",
           "relationship": "营业协议的主导者，时刻盯着CP热度数据"
         },
         {
           "name": "经纪人·阿哲",
+          "gender": "男",
           "role": "你的经纪人",
           "personality": "谨慎务实，反对你动真感情",
           "relationship": "反复提醒你'戏是戏，人是人'"
         },
         {
           "name": "黑粉头子·夜未央",
+          "gender": "未知",
           "role": "对家脂粉",
           "personality": "手段阴毒，擅长造谣带节奏",
           "relationship": "已经盯上你们关系的破绽"
@@ -293,18 +305,21 @@ window.SCENARIO_LIBRARY = [
       "npcs": [
         {
           "name": "艾薇拉",
+          "gender": "女",
           "role": "精灵公主",
           "personality": "骄傲又天真，笑起来像洒落的星光，认定的事九头龙都拉不回",
           "relationship": "你的护送对象，逐渐把你写进了她的童话里"
         },
         {
           "name": "瑟兰迪尔",
+          "gender": "女",
           "role": "精灵王庭禁卫长",
           "personality": "冷峻刻板，对王室血统近乎偏执",
           "relationship": "奉命暗中监视公主的行程，已经发现了端倪"
         },
         {
           "name": "老酒鬼·卡图",
+          "gender": "男",
           "role": "前冒险者",
           "personality": "见多识广，毒舌但心善",
           "relationship": "唯一知道勇者往事的老朋友，半路加入队伍",
@@ -313,6 +328,7 @@ window.SCENARIO_LIBRARY = [
         },
         {
           "name": "魔王使者·墨",
+          "gender": "女",
           "role": "魔族外交官",
           "personality": "优雅从容，说话半真半假，最爱看戏",
           "relationship": "在酒馆与你们'偶遇'，对公主表现出异常兴趣"
@@ -380,6 +396,7 @@ window.SCENARIO_LIBRARY = [
       "npcs": [
         {
           "name": "陆之遥",
+          "gender": "男",
           "role": "金融海归",
           "personality": "表面温润从容，实则紧张到把车票捏皱了，一紧张就说冷笑话",
           "relationship": "你的青梅竹马，带着十年的约定回来找你",
@@ -388,18 +405,21 @@ window.SCENARIO_LIBRARY = [
         },
         {
           "name": "赵阿姨",
+          "gender": "女",
           "role": "你的邻居",
           "personality": "热心肠，两家旧怨的见证者",
           "relationship": "当年两家的矛盾她最清楚，总念叨'可惜了'"
         },
         {
           "name": "林晚",
+          "gender": "女",
           "role": "你的同事",
           "personality": "急诊科搭子，直爽八卦",
           "relationship": "第一个发现你在诊室门口愣住的人"
         },
         {
           "name": "陆家管家·老周",
+          "gender": "男",
           "role": "陆家老人",
           "personality": "老派忠仆，藏着两家的旧事真相",
           "relationship": "知道当年两家翻脸不为人知的内情"
@@ -467,12 +487,14 @@ window.SCENARIO_LIBRARY = [
       "npcs": [
         {
           "name": "沈寒舟",
+          "gender": "男",
           "role": "帝国上将",
           "personality": "面冷心热，控制欲极强，对军规近乎偏执",
           "relationship": "你的直属上司，Alpha，正处在易感期边缘"
         },
         {
           "name": "程副官",
+          "gender": "男",
           "role": "上将副官",
           "personality": "心思缜密，铁面无私，Beta",
           "relationship": "一直怀疑你的背景，处处设防",
@@ -481,6 +503,7 @@ window.SCENARIO_LIBRARY = [
         },
         {
           "name": "艾琳将军",
+          "gender": "男",
           "role": "军情处处长",
           "personality": "老谋深算，擅长交易",
           "relationship": "想把你作为联姻筹码送往外域军团",
@@ -550,12 +573,14 @@ window.SCENARIO_LIBRARY = [
       "npcs": [
         {
           "name": "江野",
+          "gender": "男",
           "role": "校霸/Alpha",
           "personality": "张扬热烈，占有欲强但笨拙真诚",
           "relationship": "隔壁班体育生，单方面宣布要追你"
         },
         {
           "name": "程亦",
+          "gender": "男",
           "role": "竞赛队学长/Alpha",
           "personality": "温柔克制，成绩优异，情感细腻",
           "relationship": "暗恋你一年，一直默默照顾你",
@@ -564,6 +589,7 @@ window.SCENARIO_LIBRARY = [
         },
         {
           "name": "周婷",
+          "gender": "女",
           "role": "班长/Beta",
           "personality": "八面玲珑，热心肠",
           "relationship": "你的同桌，也是唯一知道你发情期日程的人"
@@ -631,6 +657,7 @@ window.SCENARIO_LIBRARY = [
       "npcs": [
         {
           "name": "纪云深",
+          "gender": "女",
           "role": "顶流 Alpha",
           "personality": "营业时完美无缺，私下毒舌别扭，重度信息素依赖",
           "relationship": "你的恋综 CP 搭子",
@@ -639,6 +666,7 @@ window.SCENARIO_LIBRARY = [
         },
         {
           "name": "顾野",
+          "gender": "男",
           "role": "视帝 Alpha",
           "personality": "深沉狡黠，笑里藏刀",
           "relationship": "纪云深的对家，中途进场搅局",
@@ -647,6 +675,7 @@ window.SCENARIO_LIBRARY = [
         },
         {
           "name": "丽姐",
+          "gender": "女",
           "role": "你的经纪人",
           "personality": "精明算计，利益至上",
           "relationship": "一手安排你签约恋综，也最了解你的把柄"
@@ -714,6 +743,7 @@ window.SCENARIO_LIBRARY = [
       "npcs": [
         {
           "name": "顾北辰",
+          "gender": "男",
           "role": "顾氏集团总裁/Alpha",
           "personality": "冷漠疏离，掌控欲强，有重度失眠",
           "relationship": "你的契约丈夫，从不碰你，却总在深夜出现在你房门外",
@@ -722,6 +752,7 @@ window.SCENARIO_LIBRARY = [
         },
         {
           "name": "顾明珠",
+          "gender": "女",
           "role": "顾家旁支小姐",
           "personality": "笑里藏刀，攀比心重",
           "relationship": "觊觎家主之位，视你为眼中钉",
@@ -730,6 +761,7 @@ window.SCENARIO_LIBRARY = [
         },
         {
           "name": "老管家",
+          "gender": "男",
           "role": "顾宅管家/Beta",
           "personality": "忠仆，话少心明",
           "relationship": "唯一知晓顾家旧事的人"
@@ -797,18 +829,21 @@ window.SCENARIO_LIBRARY = [
       "npcs": [
         {
           "name": "萧无咎",
+          "gender": "男",
           "role": "玄天盟盟主/Alpha",
           "personality": "桀骜孤高，实则嘴硬心软，重度挑食",
           "relationship": "你的东家，每晚都来厨房蹭宵夜"
         },
         {
           "name": "白露",
+          "gender": "女",
           "role": "盟主侍女/Omega",
           "personality": "温婉多思，善解人意",
           "relationship": "盟主府里唯一能跟你说上话的人"
         },
         {
           "name": "仇千山",
+          "gender": "男",
           "role": "万剑门门主/Alpha",
           "personality": "刚愎自用，野心勃勃",
           "relationship": "觊觎盟主之位，总想用信息素压人一头"

@@ -31,24 +31,28 @@
       "npcs": [
         {
           "name": "忠仆·青鸾",
+          "gender": "女",
           "role": "御前女官",
           "personality": "冷静忠诚，武艺高强",
           "relationship": "先帝留给你的最后一人，可托生死"
         },
         {
           "name": "叔父·云烈",
+          "gender": "男",
           "role": "镇国公",
           "personality": "雄才大略，野心昭然",
           "relationship": "掌北境军权，明面恭敬，暗藏锋芒"
         },
         {
           "name": "首辅·韩相",
+          "gender": "男",
           "role": "内阁首辅",
           "personality": "老谋深算，八面玲珑",
           "relationship": "三朝老臣，朝堂风向标"
         },
         {
           "name": "男妃·容玉",
+          "gender": "男",
           "role": "后宫新宠",
           "personality": "温柔似水，来历成谜",
           "relationship": "他入宫前，曾是一介边城小吏之子"
@@ -115,6 +119,7 @@
       "npcs": [
         {
           "name": "掌门·清月师太",
+          "gender": "女",
           "role": "峨眉掌门",
           "personality": "威严冷峻，执法如山",
           "relationship": "逐你出师门的人，也是暗中护你的人",
@@ -123,18 +128,21 @@
         },
         {
           "name": "少年·阿让",
+          "gender": "男",
           "role": "你教的男子武艺者",
           "personality": "倔强善良，心怀侠义",
           "relationship": "你被逐出师门的起因，如今在寻你"
         },
         {
           "name": "醉仙楼·苏三娘",
+          "gender": "女",
           "role": "江湖情报掌柜",
           "personality": "八面玲珑，笑里藏刀",
           "relationship": "她手里有你身世之谜的线索"
         },
         {
           "name": "魔教圣女·白璎",
+          "gender": "女",
           "role": "魔教新任圣女",
           "personality": "亦正亦邪，锋芒毕露",
           "relationship": "她邀你入魔教，说你的身世与魔教有关"
@@ -201,6 +209,7 @@
       "npcs": [
         {
           "name": "嫡姐·谢明若",
+          "gender": "女",
           "role": "侯府嫡长女",
           "personality": "温婉娴静，体弱多病",
           "relationship": "你的姐姐，她的病是侯府最大的谜",
@@ -209,18 +218,21 @@
         },
         {
           "name": "嫡母·李氏",
+          "gender": "女",
           "role": "侯夫人",
           "personality": "精明威严，护犊如命",
           "relationship": "她让你当家，未必出于真心"
         },
         {
           "name": "账房·孙账房",
+          "gender": "男",
           "role": "侯府老账房",
           "personality": "滑头世故，账目如水",
           "relationship": "他管账十年，最清楚侯府的窟窿"
         },
         {
           "name": "夫郎·沈郎",
+          "gender": "男",
           "role": "嫡姐的赘婿",
           "personality": "温润恭顺，出身微寒",
           "relationship": "他伺候嫡姐汤药，有些事你知道却不能说破",
@@ -289,18 +301,21 @@
       "npcs": [
         {
           "name": "副将·铁娘子",
+          "gender": "女",
           "role": "秦家军副将",
           "personality": "忠勇刚烈，快人快语",
           "relationship": "跟你打了八年仗的生死之交"
         },
         {
           "name": "妹妹·秦照月",
+          "gender": "女",
           "role": "新任女帅",
           "personality": "冷峻疏离，深不可测",
           "relationship": "她带着圣旨来接印，态度却不像来夺权的"
         },
         {
           "name": "军师·柳先生",
+          "gender": "男",
           "role": "秦家军军师",
           "personality": "老谋深算，足智多谋",
           "relationship": "他察觉出粮道被断与朝中有关",
@@ -309,6 +324,7 @@
         },
         {
           "name": "敌帅·拓跋燕",
+          "gender": "女",
           "role": "北境敌帅",
           "personality": "骁勇善战，诡计多端",
           "relationship": "与你在战场交手三次，三次平手"
@@ -375,24 +391,28 @@
       "npcs": [
         {
           "name": "母亲·夏岚",
+          "gender": "女",
           "role": "本市市长",
           "personality": "雷厉风行，公私分明",
           "relationship": "她忙于政务，也隐瞒着你的身世"
         },
         {
           "name": "同学·魏雪薇",
+          "gender": "女",
           "role": "同班同学",
           "personality": "高傲骄纵，外强中干",
           "relationship": "她卡你的推荐信，理由不明"
         },
         {
           "name": "班主任·林老师",
+          "gender": "女",
           "role": "高三班主任",
           "personality": "热心负责，左右为难",
           "relationship": "她同情你，却不敢得罪教育局长"
         },
         {
           "name": "神秘男人·夏远",
+          "gender": "男",
           "role": "十二年未见的父亲",
           "personality": "温和疲惫，身上有秘密",
           "relationship": "他在密谈中被你拍到，转身却认出了你",

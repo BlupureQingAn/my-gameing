@@ -4083,7 +4083,7 @@
             padding: 0 10px;
         }
         .wx-navbar-title { font-weight: 800; font-size: 0.95rem; color: var(--wechat-text); }
-        .wx-close-btn, .wx-back-btn, .wx-profile-btn {
+        .wx-close-btn, .wx-back-btn {
             position: absolute;
             border: 0;
             background: transparent;
@@ -4096,10 +4096,9 @@
         }
         .wx-close-btn { right: 6px; }
         .wx-back-btn { left: 6px; }
-        .wx-profile-btn { right: 6px; font-size: 0.78rem; }
         .wx-avatar-btn {
             position: absolute;
-            right: 58px;
+            right: 6px;
             width: 28px;
             height: 28px;
             padding: 0;
@@ -4851,7 +4850,6 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                             <button class="wx-back-btn" type="button" onclick="backToWechatList()" title="返回">←</button>
                             <span class="wx-navbar-title" id="wx-chat-title">聊天</span>
                             <button class="wx-avatar-btn" type="button" id="wx-chat-avatar-btn" title="更换头像">👤</button>
-                            <button class="wx-profile-btn" type="button" id="wx-chat-profile-btn">状态</button>
                         </div>
                         <div class="social-chat-box" id="wx-chat-box"></div>
                         <div class="npc-chat-toolbar" id="wx-emoji-bar"></div>
@@ -9101,16 +9099,13 @@ function rebuildChoicesBlock(body, labels = []) {
             if (!box) return;
             const npc = findNpcByRef(state, npcKey);
             const title = document.getElementById("wx-chat-title");
-            const profileBtn = document.getElementById("wx-chat-profile-btn");
             if (!npc) {
                 if (title) title.innerText = "聊天";
-                if (profileBtn) profileBtn.onclick = null;
                 box.innerHTML = '<div class="list-sub">未找到 NPC 数据。</div>';
                 return;
             }
             const chatKey = String(npc.id || npc.name || npcKey);
             if (title) title.innerText = npc.name || "NPC";
-            if (profileBtn) profileBtn.onclick = () => Controller.openNpcProfile(npc.id || npc.name);
             // 聊天页头像按钮：与世界页同源（npc.avatar），点击换头像（头像库/自定义上传）
             const avatarBtn = document.getElementById("wx-chat-avatar-btn");
             if (avatarBtn) {
@@ -16636,8 +16631,6 @@ function openNpcProfile(npcId) {
                 if (isAvatarImg(av)) avatarBtn.innerHTML = `<img src="${String(av).replace(/"/g, "%22")}" alt="" onerror="this.parentElement.textContent='👤'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`;
                 else avatarBtn.textContent = String(_personChat.npcName || "?").slice(0, 1) || "👤";
             }
-            const profileBtn = document.getElementById("wx-chat-profile-btn");
-            if (profileBtn) profileBtn.onclick = null;
             if (!_personChat) { box.innerHTML = '<div class="list-sub">未找到人物卡数据。</div>'; return; }
             const npcLike = { id: _personChat.npcId, name: _personChat.npcName, avatar: _personChat.avatar };
             box.innerHTML = _personChat.messages.map((m) => chatMessageHtml(npcLike, m)).join("") || '<div class="list-sub" style="padding:20px;text-align:center;">与 Ta 打个招呼开始聊天吧～</div>';

@@ -31,18 +31,21 @@
       "npcs": [
         {
           "name": "阿宁",
+          "gender": "未知",
           "role": "固定水友/房管",
           "personality": "热心话痨，深夜场总在",
           "relationship": "你的房管，也是唯一知道你现实身份的人"
         },
         {
           "name": "墨老板",
+          "gender": "男",
           "role": "榜一大哥",
           "personality": "出手阔绰，从不说话",
           "relationship": "每当你陷入死亡副本，他都会准时打赏"
         },
         {
           "name": "苏娅",
+          "gender": "女",
           "role": "对家主播",
           "personality": "甜美锋利，流量女王",
           "relationship": "同平台主播，眼红你的爆火"
@@ -110,18 +113,21 @@
       "npcs": [
         {
           "name": "陈阿婆",
+          "gender": "男",
           "role": "馄饨摊老板",
           "personality": "固执热忱，一双手撑起一家店",
           "relationship": "你镜头里的常客，也是你最早的支持者"
         },
         {
           "name": "老周",
+          "gender": "男",
           "role": "烧烤摊老板",
           "personality": "豪爽憨厚，刀子嘴豆腐心",
           "relationship": "夜市里的老邻居，看着你长大"
         },
         {
           "name": "林总",
+          "gender": "男",
           "role": "资本方代表",
           "personality": "精明圆滑，利益至上",
           "relationship": "想签你做「城市美食 IP」"
@@ -189,18 +195,21 @@
       "npcs": [
         {
           "name": "许叙",
+          "gender": "未知",
           "role": "公司同事",
           "personality": "刻薄毒舌，工作狂，其实细腻敏感",
           "relationship": "白天最讨厌的同事，夜里最忠实的听众"
         },
         {
           "name": "鼓手阿野",
+          "gender": "男",
           "role": "忠实听众",
           "personality": "直率热烈，重度失眠",
           "relationship": "第一个认出你声音变化的听众"
         },
         {
           "name": "知了",
+          "gender": "女",
           "role": "平台头部主播",
           "personality": "表面甜美，内里心机",
           "relationship": "年度盛典的竞争对手"
@@ -268,18 +277,21 @@
       "npcs": [
         {
           "name": "师父老雷",
+          "gender": "男",
           "role": "失踪的探险队长",
           "personality": "经验老辣，胆大心细",
           "relationship": "三年前带队进黑谷后杳无音信"
         },
         {
           "name": "小满",
+          "gender": "未知",
           "role": "水友/急救队员",
           "personality": "冷静干练，外冷内热",
           "relationship": "直播间里唯一的官方救援联络人"
         },
         {
           "name": "蒋制片",
+          "gender": "未知",
           "role": "平台制片人",
           "personality": "利益至上，炒作为王",
           "relationship": "你的挑战赞助方，最怕你半途而废"
@@ -347,18 +359,21 @@
       "npcs": [
         {
           "name": "郭总",
+          "gender": "男",
           "role": "MCN 机构老板",
           "personality": "精明狠辣，笑里藏刀",
           "relationship": "你的老板，握着你的合约与把柄"
         },
         {
           "name": "薇姐",
+          "gender": "女",
           "role": "竞品主播",
           "personality": "外甜内毒，手段多",
           "relationship": "常年买水军黑你的对家"
         },
         {
           "name": "小鹿",
+          "gender": "女",
           "role": "你的助播",
           "personality": "单纯热情，视你为偶像",
           "relationship": "跟你打拼两年的小助理，不知道你的困境"

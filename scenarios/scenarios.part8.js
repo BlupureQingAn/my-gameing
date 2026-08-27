@@ -31,24 +31,28 @@
       "npcs": [
         {
           "name": "孕妇·小雨",
+          "gender": "女",
           "role": "幸存者",
           "personality": "温柔坚韧，快临盆",
           "relationship": "她是队伍里最脆弱也是最强的人"
         },
         {
           "name": "老人·王伯",
+          "gender": "男",
           "role": "幸存者",
           "personality": "倔强世故，见过大场面",
           "relationship": "他年轻时是货车司机，认得城里的每条路"
         },
         {
           "name": "研究员·林知",
+          "gender": "女",
           "role": "疾控中心研究员",
           "personality": "冷静克制，藏有心事",
           "relationship": "她手里的冰袋是所有人的希望，也是隐患"
         },
         {
           "name": "幸存者队长·刀疤",
+          "gender": "男",
           "role": "另一支队伍的头",
           "personality": "凶悍多疑，拳头说话",
           "relationship": "他的队伍盘踞在前往疾控中心的必经之路上"
@@ -115,24 +119,28 @@
       "npcs": [
         {
           "name": "城主·霍恩",
+          "gender": "男",
           "role": "地下城城主",
           "personality": "威严务实，深藏秘密",
           "relationship": "他对 12 号机组的故障「毫不知情」，但反应异常"
         },
         {
           "name": "老工程师·修叔",
+          "gender": "男",
           "role": "退休的供暖工程师",
           "personality": "沉默寡言，一肚子旧事",
           "relationship": "他参与过图纸的绘制，他说第 12 号机组「不存在」"
         },
         {
           "name": "维修员·阿光",
+          "gender": "男",
           "role": "你的搭档",
           "personality": "机灵热情，胆子大",
           "relationship": "他愿意陪你下冰层，但也怕黑"
         },
         {
           "name": "冰下信号·V",
+          "gender": "未知",
           "role": "未知信号源",
           "personality": "（信号）规律而温和",
           "relationship": "它在第 12 号机组的坐标下，规律地发着摩斯电码"
@@ -199,24 +207,28 @@
       "npcs": [
         {
           "name": "导师·周教授",
+          "gender": "男",
           "role": "（录音/失踪）",
           "personality": "温和执拗，超前时代",
           "relationship": "他消失在绿潮爆发前夜，留下录音笔和未解之谜"
         },
         {
           "name": "幸存者·大刘",
+          "gender": "男",
           "role": "灰区拾荒者",
           "personality": "粗犷豪爽，重义气",
           "relationship": "他收留了你，教你在灰区活下去的本事"
         },
         {
           "name": "种子商人·梅姨",
+          "gender": "女",
           "role": "灰区商人",
           "personality": "精明市侩，消息灵通",
           "relationship": "她高价收购「会发芽的东西」，来历不明"
         },
         {
           "name": "绿芽·小绿",
+          "gender": "未知",
           "role": "骷髅手心里的绿芽",
           "personality": "（植物）会回应你",
           "relationship": "它朝你生长的方式，像在认人"
@@ -283,24 +295,28 @@
       "npcs": [
         {
           "name": "师傅·老庄",
+          "gender": "男",
           "role": "档案室管理员",
           "personality": "固执守旧，一肚子旧事",
           "relationship": "他看过三十年前的城市地图，认得裂纹的形状"
         },
         {
           "name": "议会代表·苏利",
+          "gender": "未知",
           "role": "浮空城议会代表",
           "personality": "优雅冷静，滴水不漏",
           "relationship": "他主张「精简浮岛」，13 号在名单上"
         },
         {
           "name": "甲板区长·铁叔",
+          "gender": "男",
           "role": "甲板区负责人",
           "personality": "粗犷护短，讲义气",
           "relationship": "他管着甲板区的秩序，也知道些旧事"
         },
         {
           "name": "神秘老人·盲婆婆",
+          "gender": "女",
           "role": "甲板区老住户",
           "personality": "沉默寡言，能听风辨音",
           "relationship": "她能在引擎声里「听见」浮岛的过去"
@@ -367,24 +383,28 @@
       "npcs": [
         {
           "name": "狗·钉子",
+          "gender": "未知",
           "role": "你的狗",
           "personality": "瘸腿但机警，认路",
           "relationship": "陪你跑了五年公路的伙伴"
         },
         {
           "name": "垂死者·白手套",
+          "gender": "未知",
           "role": "铁盒子的委托人",
           "personality": "（已逝）冷静决绝",
           "relationship": "他把铁盒子和真相一起托付给你"
         },
         {
           "name": "军阀·蝎子",
+          "gender": "男",
           "role": "废土军阀",
           "personality": "残暴多疑，势力庞大",
           "relationship": "他的车队在公路上设卡，专门搜铁盒子"
         },
         {
           "name": "绿洲商人·梅老板",
+          "gender": "未知",
           "role": "绿洲商人",
           "personality": "精明圆滑，人脉极广",
           "relationship": "他是绿洲的地头蛇，能帮你也能卖你"

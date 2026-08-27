@@ -31,24 +31,28 @@
       "npcs": [
         {
           "name": "上司·赵御史",
+          "gender": "男",
           "role": "咸阳郡御史",
           "personality": "冷硬刻板，执法如山",
           "relationship": "你的顶头上司，铁面无私"
         },
         {
           "name": "同僚·王茂",
+          "gender": "男",
           "role": "衙署书吏",
           "personality": "油滑圆熟，见风使舵",
           "relationship": "你的同僚，擅长自保"
         },
         {
           "name": "村妇·刘媪",
+          "gender": "女",
           "role": "渭南农户",
           "personality": "坚韧泼辣，护犊如命",
           "relationship": "她的儿子被列为「家富者」，即将被征入咸阳"
         },
         {
           "name": "神秘的酒客·青衫客",
+          "gender": "男",
           "role": "咸阳酒肆常客",
           "personality": "洒脱不羁，见识广博",
           "relationship": "似乎认得太多的字，太多的事"
@@ -115,24 +119,28 @@
       "npcs": [
         {
           "name": "胡商·康萨",
+          "gender": "男",
           "role": "西市珠宝商",
           "personality": "精明豪爽，消息灵通",
           "relationship": "你的房东兼资助人，欣赏你的诗才"
         },
         {
           "name": "歌伎·念奴",
+          "gender": "女",
           "role": "平康坊歌伎",
           "personality": "才貌双绝，见识不凡",
           "relationship": "她传唱你的诗，也为你带来机遇与危险"
         },
         {
           "name": "权贵·杨太尉",
+          "gender": "男",
           "role": "门下省官员",
           "personality": "温文尔雅，深不可测",
           "relationship": "看过你的诗，想收你为门客"
         },
         {
           "name": "边将·崔都护",
+          "gender": "男",
           "role": "河西节度使幕僚",
           "personality": "豪迈直率，心怀边功",
           "relationship": "他邀你入幕，条件是你放弃科举"
@@ -199,18 +207,21 @@
       "npcs": [
         {
           "name": "母亲·张氏",
+          "gender": "女",
           "role": "张家老店主",
           "personality": "要强倔强，病中仍记挂店铺",
           "relationship": "你唯一的亲人，也是你的软肋"
         },
         {
           "name": "债主·钱三",
+          "gender": "男",
           "role": "州桥钱庄掌柜",
           "personality": "笑里藏刀，精于算计",
           "relationship": "你家欠他八十贯，他的目标是地契"
         },
         {
           "name": "御厨·阿翁",
+          "gender": "男",
           "role": "隐居民间的老师傅",
           "personality": "古怪倔强，手艺通神",
           "relationship": "你的师傅，也是你唯一可以依仗的本事",
@@ -219,6 +230,7 @@
         },
         {
           "name": "太学生·程少安",
+          "gender": "男",
           "role": "国子监太学生",
           "personality": "温润好学，爱吃也懂吃",
           "relationship": "常来店里吃饭，是食客也是贵人"
@@ -285,24 +297,28 @@
       "npcs": [
         {
           "name": "父亲·陆千户",
+          "gender": "男",
           "role": "锦衣卫千户",
           "personality": "老练深沉，惜字如金",
           "relationship": "他让你「装瞎」，但你知道他藏着旧事"
         },
         {
           "name": "档头·赵九",
+          "gender": "男",
           "role": "北镇抚司档头",
           "personality": "阴鸷寡言，掌管密档",
           "relationship": "你的直属上司，案发后第一个找你谈话"
         },
         {
           "name": "东厂督公·冯保",
+          "gender": "男",
           "role": "东厂提督太监",
           "personality": "城府极深，笑里藏刀",
           "relationship": "他也在查这八个字，来历不善"
         },
         {
           "name": "密信人·白衣客",
+          "gender": "男",
           "role": "神秘送信人",
           "personality": "神出鬼没，武功高强",
           "relationship": "他在你深夜回衙的路上，等了你两晚"
@@ -369,6 +385,7 @@
       "npcs": [
         {
           "name": "报馆老板·卢老板",
+          "gender": "男",
           "role": "报馆创办人",
           "personality": "精明世故，爱惜羽毛",
           "relationship": "他护着你也防着你，报馆的存亡系于你的笔",
@@ -377,18 +394,21 @@
         },
         {
           "name": "革命党·秦一鸣",
+          "gender": "男",
           "role": "同盟会上海负责人",
           "personality": "冷静果决，视死如归",
           "relationship": "你的旧友，密电就是他托付的"
         },
         {
           "name": "密探·金三",
+          "gender": "男",
           "role": "清廷上海密探",
           "personality": "阴狠多疑，嗅觉敏锐",
           "relationship": "已经盯上报馆，正在挖你的底"
         },
         {
           "name": "舞女·陆小曼",
+          "gender": "女",
           "role": "百乐门舞女",
           "personality": "八面玲珑，深藏不露",
           "relationship": "你名义上的「红颜知己」，真实身份成谜",

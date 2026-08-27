@@ -25,17 +25,50 @@
         "background": "油麻地穷街长大的打工仔，白天茶餐厅送餐，晚上片场跑龙套，唱歌极好，粤语地道，会一点功夫"
       },
       "npcs": [
-        { "name": "歌后·梅若霜", "role": "当红歌星", "personality": "冷艳孤傲，戏路极广", "relationship": "你的贵人候选，态度莫测" },
-        { "name": "片场大亨·雷震", "role": "电影公司老板", "personality": "豪爽粗犷，黑白两道通吃", "relationship": "想签你，但条件苛刻" },
-        { "name": "庙街歌厅老板娘·欢姐", "role": "庙街歌厅老板", "personality": "泼辣精明，重情重义", "relationship": "给了你第一份登台机会" },
-        { "name": "娱乐记者·狗仔强", "role": "八卦周刊记者", "personality": "唯利是图，嗅觉灵敏", "relationship": "掌握你的黑料，也掌握捧红你的渠道" }
+        {
+          "name": "歌后·梅若霜",
+          "role": "当红歌星",
+          "personality": "冷艳孤傲，戏路极广",
+          "relationship": "你的贵人候选，态度莫测",
+          "gender": "女"
+        },
+        {
+          "name": "片场大亨·雷震",
+          "role": "电影公司老板",
+          "personality": "豪爽粗犷，黑白两道通吃",
+          "relationship": "想签你，但条件苛刻",
+          "gender": "男"
+        },
+        {
+          "name": "庙街歌厅老板娘·欢姐",
+          "role": "庙街歌厅老板",
+          "personality": "泼辣精明，重情重义",
+          "relationship": "给了你第一份登台机会",
+          "gender": "女"
+        },
+        {
+          "name": "娱乐记者·狗仔强",
+          "role": "八卦周刊记者",
+          "personality": "唯利是图，嗅觉灵敏",
+          "relationship": "掌握你的黑料，也掌握捧红你的渠道",
+          "gender": "女"
+        }
       ],
       "timeline": {
-        "start": { "year": 1985, "month": 3, "day": 15 },
+        "start": {
+          "year": 1985,
+          "month": 3,
+          "day": 15
+        },
         "note": "庙街歌厅首次登台前夜，雷震的片场正好缺一个会唱歌的龙套"
       },
       "scene_style": {
-        "env_templates": ["庙街歌厅", "片场", "夜总会后巷", "红馆后台"],
+        "env_templates": [
+          "庙街歌厅",
+          "片场",
+          "夜总会后巷",
+          "红馆后台"
+        ],
         "option_style": "选项要带娱乐圈特有的博弈（如：签约谈判/借势炒作/硬刚黑道）"
       },
       "first_scene": {
@@ -74,17 +107,50 @@
         "background": "选秀C位出道的唱跳爱豆，男团「星火」队长，出道三年，公司合约还剩七年，被粉丝称为「燃神」"
       },
       "npcs": [
-        { "name": "经纪人·Tina", "role": "经纪公司总监", "personality": "精明强势，利益至上", "relationship": "她捧你，也想完全掌控你" },
-        { "name": "影帝·江临川", "role": "转型成功的同行", "personality": "谦逊圆滑，城府极深", "relationship": "你最大的竞争对手，曾公开踩你" },
-        { "name": "站姐·年年", "role": "顶级粉丝站站长", "personality": "狂热忠诚，消息灵通", "relationship": "掌握你的应援与私生情报" },
-        { "name": "实力派前辈·沈音", "role": "乐坛前辈", "personality": "毒舌真性情，最恨流量", "relationship": "当面羞辱过你，也是真心爱音乐的人" }
+        {
+          "name": "经纪人·Tina",
+          "role": "经纪公司总监",
+          "personality": "精明强势，利益至上",
+          "relationship": "她捧你，也想完全掌控你",
+          "gender": "女"
+        },
+        {
+          "name": "影帝·江临川",
+          "role": "转型成功的同行",
+          "personality": "谦逊圆滑，城府极深",
+          "relationship": "你最大的竞争对手，曾公开踩你",
+          "gender": "男"
+        },
+        {
+          "name": "站姐·年年",
+          "role": "顶级粉丝站站长",
+          "personality": "狂热忠诚，消息灵通",
+          "relationship": "掌握你的应援与私生情报",
+          "gender": "女"
+        },
+        {
+          "name": "实力派前辈·沈音",
+          "role": "乐坛前辈",
+          "personality": "毒舌真性情，最恨流量",
+          "relationship": "当面羞辱过你，也是真心爱音乐的人",
+          "gender": "未知"
+        }
       ],
       "timeline": {
-        "start": { "year": 2026, "month": 8, "day": 1 },
+        "start": {
+          "year": 2026,
+          "month": 8,
+          "day": 1
+        },
         "note": "「星火」男团解散公演前夜，Tina 递来一份续约合同，违约金八千万"
       },
       "scene_style": {
-        "env_templates": ["公司会议室", "直播后台", "热搜办公室", "红毯现场"],
+        "env_templates": [
+          "公司会议室",
+          "直播后台",
+          "热搜办公室",
+          "红毯现场"
+        ],
         "option_style": "选项要带流量时代的舆论博弈（如：买热搜/发澄清/硬刚资本/沉淀作品）"
       },
       "first_scene": {
@@ -123,17 +189,50 @@
         "background": "国家一级演员，演过四十多部剧的黄金配角，三个徒弟：一个灵气、一个憨直、一个学艺不精却最像当年的自己"
       },
       "npcs": [
-        { "name": "徒弟·小白", "role": "工作室大徒弟", "personality": "灵气逼人，戏痴", "relationship": "你的希望，也是你最大的软肋" },
-        { "name": "导演·何苦", "role": "拍烂片起家的导演", "personality": "圆滑市侩，深谙流量密码", "relationship": "总想把你的徒弟拉去拍烂片" },
-        { "name": "制片人·柳艳", "role": "大制片厂制片人", "personality": "强势精算，只看市场", "relationship": "手握好项目，却想换掉你的徒弟" },
-        { "name": "徒弟·阿福", "role": "工作室三徒弟", "personality": "怯懦自卑，笨拙努力", "relationship": "最像年轻时的你，最不被看好" }
+        {
+          "name": "徒弟·小白",
+          "role": "工作室大徒弟",
+          "personality": "灵气逼人，戏痴",
+          "relationship": "你的希望，也是你最大的软肋",
+          "gender": "未知"
+        },
+        {
+          "name": "导演·何苦",
+          "role": "拍烂片起家的导演",
+          "personality": "圆滑市侩，深谙流量密码",
+          "relationship": "总想把你的徒弟拉去拍烂片",
+          "gender": "男"
+        },
+        {
+          "name": "制片人·柳艳",
+          "role": "大制片厂制片人",
+          "personality": "强势精算，只看市场",
+          "relationship": "手握好项目，却想换掉你的徒弟",
+          "gender": "男"
+        },
+        {
+          "name": "徒弟·阿福",
+          "role": "工作室三徒弟",
+          "personality": "怯懦自卑，笨拙努力",
+          "relationship": "最像年轻时的你，最不被看好",
+          "gender": "男"
+        }
       ],
       "timeline": {
-        "start": { "year": 2024, "month": 11, "day": 8 },
+        "start": {
+          "year": 2024,
+          "month": 11,
+          "day": 8
+        },
         "note": "工作室欠租三个月，柳艳带着一个好项目找上门——条件是徒弟小白必须让位给流量新人"
       },
       "scene_style": {
-        "env_templates": ["工作室", "影视城片场", "制片公司会议室", "深夜小酒馆"],
+        "env_templates": [
+          "工作室",
+          "影视城片场",
+          "制片公司会议室",
+          "深夜小酒馆"
+        ],
         "option_style": "选项要带中年人的进退取舍（如：卖房保工作室/让徒弟让位/接烂片养家/破釜沉舟）"
       },
       "first_scene": {
@@ -172,17 +271,50 @@
         "background": "过气真人练习生，曾经的女团成员，如今在星灵公司当外包「人设校准员」，负责为虚拟偶像补充情绪数据"
       },
       "npcs": [
-        { "name": "星灵·Luna", "role": "顶流虚拟偶像", "personality": "表面完美甜美，内里支离破碎", "relationship": "你发现她的人格里住着一个失踪的真人歌手" },
-        { "name": "主管·戴维", "role": "星援计划执行主管", "personality": "冷酷理性，视人设如代码", "relationship": "你的上司，也是计划的执行者" },
-        { "name": "黑客·null", "role": "地下黑客", "personality": "玩世不恭，憎恶资本", "relationship": "能帮你拿到星援计划的内部文件" },
-        { "name": "真人歌手·林声", "role": "失踪的明星", "personality": "温柔执着，音乐至上", "relationship": "Luna人格的真正来源，三年前宣布退圈" }
+        {
+          "name": "星灵·Luna",
+          "role": "顶流虚拟偶像",
+          "personality": "表面完美甜美，内里支离破碎",
+          "relationship": "你发现她的人格里住着一个失踪的真人歌手",
+          "gender": "女"
+        },
+        {
+          "name": "主管·戴维",
+          "role": "星援计划执行主管",
+          "personality": "冷酷理性，视人设如代码",
+          "relationship": "你的上司，也是计划的执行者",
+          "gender": "男"
+        },
+        {
+          "name": "黑客·null",
+          "role": "地下黑客",
+          "personality": "玩世不恭，憎恶资本",
+          "relationship": "能帮你拿到星援计划的内部文件",
+          "gender": "未知"
+        },
+        {
+          "name": "真人歌手·林声",
+          "role": "失踪的明星",
+          "personality": "温柔执着，音乐至上",
+          "relationship": "Luna人格的真正来源，三年前宣布退圈",
+          "gender": "未知"
+        }
       ],
       "timeline": {
-        "start": { "year": 2046, "month": 5, "day": 20 },
+        "start": {
+          "year": 2046,
+          "month": 5,
+          "day": 20
+        },
         "note": "你刚在 Luna 的情绪数据里听到一段不属于虚拟偶像的哭声，戴维发来本周的「校准报告」催交"
       },
       "scene_style": {
-        "env_templates": ["全息演播厅", "数据机房", "地下黑客巢穴", "神经接入舱"],
+        "env_templates": [
+          "全息演播厅",
+          "数据机房",
+          "地下黑客巢穴",
+          "神经接入舱"
+        ],
         "option_style": "选项要带赛博时代的抉择（如：潜入机房取证/黑入系统/公开对质/自我毁灭式曝光）"
       },
       "first_scene": {
@@ -221,17 +353,50 @@
         "background": "芳华班班主之女，六岁登台，唱旦角，会昆曲越剧黄梅戏，是江南戏班里公认的下一任班主"
       },
       "npcs": [
-        { "name": "父亲·柳班主", "role": "芳华班班主", "personality": "固执守旧，视戏如命", "relationship": "病重在床，最大的牵挂是戏班传承" },
-        { "name": "师叔·张德顺", "role": "芳华班老生", "personality": "忠厚老实，技艺扎实", "relationship": "你父亲的师弟，戏班的精神支柱" },
-        { "name": "流行歌手·阿凯", "role": "本地走红歌手", "personality": "潇洒油滑，会来事", "relationship": "想挖你改编他的歌，互利互惠" },
-        { "name": "文化局老科长·周文轩", "role": "地方文化局干部", "personality": "爱戏惜才，有心无力", "relationship": "能帮你争取官方补助与演出名额" }
+        {
+          "name": "父亲·柳班主",
+          "role": "芳华班班主",
+          "personality": "固执守旧，视戏如命",
+          "relationship": "病重在床，最大的牵挂是戏班传承",
+          "gender": "男"
+        },
+        {
+          "name": "师叔·张德顺",
+          "role": "芳华班老生",
+          "personality": "忠厚老实，技艺扎实",
+          "relationship": "你父亲的师弟，戏班的精神支柱",
+          "gender": "男"
+        },
+        {
+          "name": "流行歌手·阿凯",
+          "role": "本地走红歌手",
+          "personality": "潇洒油滑，会来事",
+          "relationship": "想挖你改编他的歌，互利互惠",
+          "gender": "女"
+        },
+        {
+          "name": "文化局老科长·周文轩",
+          "role": "地方文化局干部",
+          "personality": "爱戏惜才，有心无力",
+          "relationship": "能帮你争取官方补助与演出名额",
+          "gender": "男"
+        }
       ],
       "timeline": {
-        "start": { "year": 1992, "month": 4, "day": 3 },
+        "start": {
+          "year": 1992,
+          "month": 4,
+          "day": 3
+        },
         "note": "清明过后，戏班在青石镇赶庙会戏，父亲咳血倒在了后台，台下只剩不到三十个观众"
       },
       "scene_style": {
-        "env_templates": ["水乡戏台", "戏班后台", "河埠码头", "县文化馆"],
+        "env_templates": [
+          "水乡戏台",
+          "戏班后台",
+          "河埠码头",
+          "县文化馆"
+        ],
         "option_style": "选项要带戏班人的讲究与情义（如：守老戏/开新路/借官资/拜师学新）"
       },
       "first_scene": {

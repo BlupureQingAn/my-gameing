@@ -31,25 +31,29 @@
           "personality": "机灵懂事，黏人",
           "relationship": "你在这个世界唯一的亲人",
           "favor": 85,
-          "affection": 0
+          "affection": 0,
+          "gender": "男"
         },
         {
           "name": "奶奶·李氏",
           "role": "祖母",
           "personality": "慈祥硬朗，深谙农事",
-          "relationship": "她年轻时是十里八乡有名的种地好手"
+          "relationship": "她年轻时是十里八乡有名的种地好手",
+          "gender": "女"
         },
         {
           "name": "地主·赵员外",
           "role": "青石县地主",
           "personality": "贪婪精明，笑里藏刀",
-          "relationship": "他盯着你家那三亩地好久了"
+          "relationship": "他盯着你家那三亩地好久了",
+          "gender": "男"
         },
         {
           "name": "邻家·陈二婶",
           "role": "隔壁邻居",
           "personality": "热心泼辣，消息灵通",
-          "relationship": "村里的八卦中心，也是你的人情枢纽"
+          "relationship": "村里的八卦中心，也是你的人情枢纽",
+          "gender": "女"
         }
       ],
       "timeline": {
@@ -109,25 +113,29 @@
           "name": "灯塔人·老疤",
           "role": "灯塔守灯人",
           "personality": "沉默警觉，来历不明",
-          "relationship": "他在灯塔里住了很多年，见到你的第一句话是「你不该来」"
+          "relationship": "他在灯塔里住了很多年，见到你的第一句话是「你不该来」",
+          "gender": "男"
         },
         {
           "name": "幸存者·阿梅",
           "role": "另一名幸存者",
           "personality": "开朗倔强，野外经验丰富",
-          "relationship": "她是第三批幸存者，在岛上独自生活了两年"
+          "relationship": "她是第三批幸存者，在岛上独自生活了两年",
+          "gender": "女"
         },
         {
           "name": "蟹壳留言·第四批",
           "role": "（留言）",
           "personality": "字迹潦草，充满警告",
-          "relationship": "他们的痕迹遍布全岛，却没有一个人留下尸体"
+          "relationship": "他们的痕迹遍布全岛，却没有一个人留下尸体",
+          "gender": "未知"
         },
         {
           "name": "岛上的猫·海盐",
           "role": "野猫",
           "personality": "慵懒机警，通人性",
-          "relationship": "它总在你最需要的时候出现，像是岛上的「导航员」"
+          "relationship": "它总在你最需要的时候出现，像是岛上的「导航员」",
+          "gender": "未知"
         }
       ],
       "timeline": {
@@ -187,25 +195,29 @@
           "name": "机器人·管家",
           "role": "老式农业机器人",
           "personality": "唠叨守旧，忠诚可靠",
-          "relationship": "伯父留给你的唯一财产，知道农场的全部秘密"
+          "relationship": "伯父留给你的唯一财产，知道农场的全部秘密",
+          "gender": "未知"
         },
         {
           "name": "检测员·艾拉",
           "role": "星际农业协会检测员",
           "personality": "严谨公正，外冷内热",
-          "relationship": "每季度来一次，她的评级决定农场的存亡"
+          "relationship": "每季度来一次，她的评级决定农场的存亡",
+          "gender": "女"
         },
         {
           "name": "邻居·老威",
           "role": "隔壁行星的农场主",
           "personality": "粗犷热心，经验丰富",
-          "relationship": "他提醒你：伯父的试验区，最好别碰"
+          "relationship": "他提醒你：伯父的试验区，最好别碰",
+          "gender": "男"
         },
         {
           "name": "神秘旅人·伽玛",
           "role": "路过的星际旅人",
           "personality": "神出鬼没，知道很多",
-          "relationship": "他声称见过你伯父——在他失踪前一周"
+          "relationship": "他声称见过你伯父——在他失踪前一周",
+          "gender": "未知"
         }
       ],
       "timeline": {
@@ -267,25 +279,29 @@
           "personality": "倔强硬气，海上经验丰富",
           "relationship": "你的爷爷，病床上还惦记着那半张航海图",
           "favor": 85,
-          "affection": 0
+          "affection": 0,
+          "gender": "男"
         },
         {
           "name": "阿婆·桂香",
           "role": "村里晒盐阿婆",
           "personality": "慈祥能干，一手好盐",
-          "relationship": "从小看你长大，是村里的主心骨"
+          "relationship": "从小看你长大，是村里的主心骨",
+          "gender": "女"
         },
         {
           "name": "发小·大壮",
           "role": "回村创业的年轻人",
           "personality": "热情冲动，点子多",
-          "relationship": "他想拉你一起搞民宿直播"
+          "relationship": "他想拉你一起搞民宿直播",
+          "gender": "男"
         },
         {
           "name": "鱼贩·老刘",
           "role": "收购海货的贩子",
           "personality": "精明圆滑，压价狠",
-          "relationship": "他控制着村里的海货销路"
+          "relationship": "他控制着村里的海货销路",
+          "gender": "男"
         }
       ],
       "timeline": {
@@ -345,25 +361,29 @@
           "name": "奶奶·云溪婆",
           "role": "（遗物/记忆）",
           "personality": "爽朗能干，古道热肠",
-          "relationship": "她留下的账本和照片，是你的创业地图"
+          "relationship": "她留下的账本和照片，是你的创业地图",
+          "gender": "女"
         },
         {
           "name": "村支书·老周",
           "role": "云溪村支书",
           "personality": "务实肯干，有心无力",
-          "relationship": "他支持你搞民宿，想借你让村里活起来"
+          "relationship": "他支持你搞民宿，想借你让村里活起来",
+          "gender": "男"
         },
         {
           "name": "留守老人·福叔",
           "role": "村中老茶农",
           "personality": "沉默倔强，手艺一绝",
-          "relationship": "他懂山里的茶，也懂山里的路"
+          "relationship": "他懂山里的茶，也懂山里的路",
+          "gender": "男"
         },
         {
           "name": "背包客·阿柚",
           "role": "第一位客人",
           "personality": "随性洒脱，眼光毒辣",
-          "relationship": "她的游记，可能决定你民宿的第一波口碑"
+          "relationship": "她的游记，可能决定你民宿的第一波口碑",
+          "gender": "未知"
         }
       ],
       "timeline": {

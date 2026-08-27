@@ -31,18 +31,21 @@
       "npcs": [
         {
           "name": "女王·雪球",
+          "gender": "未知",
           "role": "蓝双种母",
           "personality": "高冷傲娇，只让云朵一个人摸",
           "relationship": "你的镇店之宝，血统优秀但脾气大"
         },
         {
           "name": "公公·团子",
+          "gender": "未知",
           "role": "海豹重点色种公",
           "personality": "贪吃贪睡，唯一爱好是偷吃",
           "relationship": "负责'产量'的种公，但最近有点掉毛"
         },
         {
           "name": "兽医·林医生",
+          "gender": "未知",
           "role": "城郊宠物医院",
           "personality": "专业负责，收费公道，爱唠叨",
           "relationship": "猫舍的救命稻草，也是你半个老师",
@@ -51,6 +54,7 @@
         },
         {
           "name": "买家·贵妇王太太",
+          "gender": "女",
           "role": "意向客户",
           "personality": "挑剔，爱讲价，消息已读不回",
           "relationship": "看中了雪球第一窝的蓝双弟弟，但迟迟不交定金"
@@ -118,6 +122,7 @@
       "npcs": [
         {
           "name": "老王",
+          "gender": "男",
           "role": "隔壁修车铺老板",
           "personality": "豪爽仗义，嘴硬心软",
           "relationship": "巷子里的老主顾，也是你的半个军师",
@@ -126,18 +131,21 @@
         },
         {
           "name": "李婶",
+          "gender": "女",
           "role": "楼上住户",
           "personality": "嗓门大，记性差，赊账一赊就是大半年",
           "relationship": "你的'困难客户'，但她闺女对你挺好"
         },
         {
           "name": "快递员·小刘",
+          "gender": "男",
           "role": "片区快递员",
           "personality": "风风火火，消息灵通",
           "relationship": "隔三差五来借充电，带来巷子外的最新消息"
         },
         {
           "name": "竞争者·大强",
+          "gender": "男",
           "role": "连锁便利店加盟商",
           "personality": "笑面虎，扩张心切",
           "relationship": "在你巷口 500 米外开了家 24 小时便利店，天天搞促销"
@@ -205,6 +213,7 @@
       "npcs": [
         {
           "name": "熟客·阿芳",
+          "gender": "女",
           "role": "夜班护士",
           "personality": "爱笑，但眼里的疲惫藏不住",
           "relationship": "每天下班都来，是你的'深夜老友'",
@@ -213,18 +222,21 @@
         },
         {
           "name": "邻居·刘老板",
+          "gender": "男",
           "role": "隔壁烧烤店老板",
           "personality": "热情到有点烦人，总想拉你搞'美食街'",
           "relationship": "跟你抢客人，也常来蹭汤"
         },
         {
           "name": "常客·老孟",
+          "gender": "男",
           "role": "出租车司机",
           "personality": "见多识广，消息灵通，爱吹牛但靠谱",
           "relationship": "你这儿的消息源，也是深夜的常客"
         },
         {
           "name": "食安员·小张",
+          "gender": "未知",
           "role": "街道食安检查员",
           "personality": "公事公办，铁面无私",
           "relationship": "今天下午刚来贴过整改通知"
@@ -292,24 +304,28 @@
       "npcs": [
         {
           "name": "供货商·老赵",
+          "gender": "男",
           "role": "花卉市场批发商",
           "personality": "爽快，爱推销，消息灵通",
           "relationship": "你的主要供货商，最近想压你的价"
         },
         {
           "name": "房东·钱姐",
+          "gender": "女",
           "role": "花店房东",
           "personality": "精明，爱来店里顺花",
           "relationship": "店面合同明年到期，她暗示过有人想租"
         },
         {
           "name": "同行·莉莉",
+          "gender": "女",
           "role": "隔壁街花店老板",
           "personality": "心直口快，擅长抄你的爆款",
           "relationship": "既是竞争对手，也是圈里唯一能聊天的同行"
         },
         {
           "name": "常客·程先生",
+          "gender": "男",
           "role": "神秘熟客",
           "personality": "每个月买一束不同的花，从不留名字",
           "relationship": "你的忠实客户，花束的故事背后似乎另有隐情"
@@ -377,24 +393,28 @@
       "npcs": [
         {
           "name": "店员·小鹿",
+          "gender": "女",
           "role": "书店兼职",
           "personality": "文艺青年，会拉花会荐书，脑洞大",
           "relationship": "你的得力助手，也是读书会的灵魂人物"
         },
         {
           "name": "老读者·孙教授",
+          "gender": "男",
           "role": "退休教授",
           "personality": "每周三都来，只看不买，但每本书都能讲出典故",
           "relationship": "书店的精神支柱，他的'坐一会儿'是你坚持的理由"
         },
         {
           "name": "房东·周总",
+          "gender": "未知",
           "role": "商铺房东",
           "personality": "精明商人，只谈租金不谈情怀",
           "relationship": "刚通知你下季度租金涨 15%"
         },
         {
           "name": "网红·琪琪",
+          "gender": "女",
           "role": "探店博主",
           "personality": "粉丝百万，拍照打卡一套流",
           "relationship": "来店里拍过一次视频，播放量 80 万，也带来了'书店变网红'的争议"
