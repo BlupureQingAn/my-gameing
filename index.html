@@ -397,8 +397,8 @@
         }
 
         .header.collapsed {
-            padding-top: 6px;
-            padding-bottom: 6px;
+            height: 0;
+            padding: 0;
             border-bottom-width: 0;
             box-shadow: none;
         }
@@ -407,6 +407,14 @@
         }
         .header.collapsed #site-title {
             display: none;
+        }
+        /* 折叠后导航栏完全收起，展开按钮悬浮视口右上角 */
+        .header.collapsed .top-nav-collapse-btn {
+            position: fixed;
+            top: 6px;
+            right: 8px;
+            margin-left: 0;
+            z-index: 1000;
         }
 
         .top-nav-collapse-btn {
