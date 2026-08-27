@@ -1339,11 +1339,14 @@
         }
 
         /* 卡片直接平铺在 view-main(原 story-board 容器已删除;去外层气泡容器视觉,卡片与页面同底) */
+        /* height:100% 约束让 chat/event 的 flex:1+overflow-y:auto 真正生效:状态栏/tab/推进条固定,剧情区独立滚动 */
         #view-main.active {
             position: relative;
             display: flex;
             flex-direction: column;
             gap: 12px;
+            height: 100%;
+            overflow: hidden;
         }
 
         #view-main > * {
@@ -4367,12 +4370,6 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <button class="scenario-filter-chip" id="community-tab-forum" onclick="Controller.switchCommunityTab('forum')"><img class="ic" src="icons/chat.svg" alt=""> 论坛</button>
                     <button class="scenario-filter-chip" id="community-tab-chars" onclick="Controller.switchCommunityTab('chars')">👤 人物卡</button>
                 </div>
-                <div class="home-rank-tabs" id="community-rank-tabs" style="margin-top:10px;">
-                    <button class="scenario-filter-chip active" data-rank="recommend" onclick="Controller.switchRankTab('recommend')">🔥 推荐</button>
-                    <button class="scenario-filter-chip" data-rank="hot" onclick="Controller.switchRankTab('hot')">🚀 最热</button>
-                    <button class="scenario-filter-chip" data-rank="chars" onclick="Controller.switchRankTab('chars')">👤 角色榜</button>
-                </div>
-                <div id="community-rank-panel" class="home-rank-panel" style="display:none;"></div>
                 <div class="setting-actions" style="margin:6px 0 2px;">
                     <button class="mini-btn primary" onclick="Controller.openPostModal()"><img class="ic" src="icons/pen.svg" alt=""> 发动态</button>
                 </div>
@@ -8348,7 +8345,10 @@ function rebuildChoicesBlock(body, labels = []) {
             };
         }
         function placePosOf(place, idx, seed) {
-            const x = Number(place && place.x), y = Number(place && place.y);
+            // 先判 null/undefined/空串再 Number(): Number(null)=0 会误当合法坐标 → 全部挤左缘
+            const p = place || {};
+            const x = p.x == null || p.x === "" ? NaN : Number(p.x);
+            const y = p.y == null || p.y === "" ? NaN : Number(p.y);
             if (Number.isFinite(x) && Number.isFinite(y)) return { x, y };
             const rnd = _mulberry32((seed ^ (idx * 2654435761)) >>> 0);
             return { x: 8 + rnd() * 84, y: 8 + rnd() * 84 };
@@ -8599,11 +8599,19 @@ function rebuildChoicesBlock(body, labels = []) {
             modal.classList.add("show");
         }
         function scrollToBottom() {
-            const content = document.getElementById("main-content");
             const active = document.querySelector(".view-section.active");
             const activeId = active?.id || "";
             if (!["view-main", "view-world"].includes(activeId)) return;
             if (!autoFollowBottom) return;
+            if (activeId === "view-main") {
+                // view-main 内部独立滚动(状态栏/tab 固定),滚当前可见的剧情/事件容器
+                const chat = document.getElementById("play-chat-area");
+                const evt = document.getElementById("play-event-area");
+                const target = evt && evt.style.display !== "none" ? evt : chat;
+                if (target) target.scrollTop = target.scrollHeight;
+                return;
+            }
+            const content = document.getElementById("main-content");
             content.scrollTop = content.scrollHeight;
         }
         function setAutoFollowBottom(next) {
@@ -10678,8 +10686,9 @@ function rebuildChoicesBlock(body, labels = []) {
                         if (!name) return;
                         places.push({
                             name,
-                            x: Number(q("sf-map-x")) || 0,
-                            y: Number(q("sf-map-y")) || 0,
+                            // 空输入存 null=未设坐标,渲染时确定性散开;手输数字(含 0)尊重
+                            x: q("sf-map-x") === "" ? null : Number(q("sf-map-x")) || 0,
+                            y: q("sf-map-y") === "" ? null : Number(q("sf-map-y")) || 0,
                             desc: q("sf-map-desc")
                         });
                     });
@@ -11873,7 +11882,6 @@ function rebuildChoicesBlock(body, labels = []) {
     const DiscoverService = (() => {
         let bannerIdx = 0;
         let bannerTimer = null;
-        let activeRank = "recommend";
         // 轮播候选：本地热度 plays 降序取 top7；全部 0(新用户)按分类热度兜底
         function bannerCards() {
             const lib = Array.isArray(window.SCENARIO_LIBRARY) ? window.SCENARIO_LIBRARY : [];
@@ -11906,6 +11914,7 @@ function rebuildChoicesBlock(body, labels = []) {
                     <div class="hb-sub">${MarkdownService.escapeHtml(summary)}</div>
                     <div class="hb-foot">
                         <span class="hb-plays"><img class="ic" src="icons/plays.svg" alt="" style="width:12px;height:12px;vertical-align:-1px;"> ${ScenarioCardViewService.localPlays(c.id)} 游玩</span>
+                        <span class="hb-play-btn mini-btn primary" onclick="event.stopPropagation(); Controller.openGameDetail('${c.id}')">详情</span>
                         <span class="hb-play-btn mini-btn primary">立即游玩</span>
                     </div>
                 </div>`;
@@ -11932,87 +11941,6 @@ function rebuildChoicesBlock(body, labels = []) {
             bannerTimer = setInterval(() => nextBanner(), 5000);
         }
         function stopBanner() { clearInterval(bannerTimer); bannerTimer = null; }
-        // 榜单数据源
-        function rankRecommend() {
-            const cards = ScenarioCardService.loadCards();
-            const lib = Array.isArray(window.SCENARIO_LIBRARY) ? window.SCENARIO_LIBRARY : [];
-            const all = [...cards, ...lib].filter((c, i, arr) => arr.findIndex((x) => x.id === c.id) === i);
-            return all
-                .map((c) => ({ card: c, plays: ScenarioCardViewService.localPlays(c.id) }))
-                .sort((a, b) => b.plays - a.plays)
-                .slice(0, 10)
-                .filter((x) => x.plays > 0);
-        }
-        async function rankHot() {
-            if (!AuthService.getToken()) return [];
-            try {
-                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/cards/community?sort=play_count`, { headers: { "X-Auth-Token": "Bearer " + AuthService.getToken() } });
-                const d = await res.json().catch(() => ({}));
-                return (d.items || []).slice(0, 10);
-            } catch (e) { return []; }
-        }
-        async function rankChars() {
-            if (!AuthService.getToken()) return [];
-            try {
-                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/characters/hot`, { headers: { "X-Auth-Token": "Bearer " + AuthService.getToken() } });
-                const d = await res.json().catch(() => ({}));
-                return (d.items || []).slice(0, 10);
-            } catch (e) { return []; }
-        }
-        async function renderRankPanel(tab, panelId = "community-rank-panel", tabsId = "community-rank-tabs") {
-            activeRank = tab;
-            const panel = document.getElementById(panelId);
-            if (!panel) return;
-            document.querySelectorAll(`#${tabsId} .scenario-filter-chip`).forEach((b) => {
-                b.classList.toggle("active", b.dataset.rank === tab);
-            });
-            panel.style.display = "block";
-            panel.innerHTML = '<span class="list-sub">加载中...</span>';
-            if (tab === "recommend") {
-                const rows = rankRecommend();
-                if (!rows.length) { panel.innerHTML = '<span class="list-sub">还没有游玩记录，先去玩几张卡吧～</span>'; return; }
-                panel.innerHTML = rows.map((x, i) => {
-                    const cover = i < 3 ? `<div class="rank-cover" id="rk-cover-${CoverService.safeId(x.card.id)}"><span class="scc-shine"></span></div>` : "";
-                    return `<div class="rank-row" onclick="Controller.playScenarioCard('${x.card.id}')">
-                        ${cover}
-                        <span class="rank-no">${i + 1}</span>
-                        <div class="rank-main">
-                            <div class="rank-title">${MarkdownService.escapeHtml(String(x.card.title || ""))} <span class="list-sub">${MarkdownService.escapeHtml(String(x.card.category || ""))}</span></div>
-                            <div class="rank-sub">👁 ${x.plays} 次游玩</div>
-                        </div>
-                        <span class="mini-btn primary">游玩</span>
-                    </div>`;
-                }).join("");
-                rows.slice(0, 3).forEach((x) => CoverService.paint("rk-cover-" + CoverService.safeId(x.card.id), x.card));
-            } else if (tab === "hot") {
-                const items = await rankHot();
-                if (!items.length) { panel.innerHTML = '<span class="list-sub">社区暂无作品，快去创作并上架吧～</span>'; return; }
-                panel.innerHTML = items.map((c, i) => `<div class="rank-row" onclick="Controller.useCommunityCard('${c.id}')">
-                    <span class="rank-no">${i + 1}</span>
-                    <div class="rank-main">
-                        <div class="rank-title">${MarkdownService.escapeHtml(String(c.title || ""))} <span class="list-sub">${MarkdownService.escapeHtml(String(c.category || ""))}</span></div>
-                        <div class="rank-sub">👁 ${c.play_count} 游玩 · 作者 ${MarkdownService.escapeHtml(String(c.author_id || "").slice(0, 6))}</div>
-                    </div>
-                    <span class="mini-btn primary">使用</span>
-                </div>`).join("");
-            } else {
-                const items = await rankChars();
-                if (!items.length) { panel.innerHTML = '<span class="list-sub">暂无热聊角色，给喜欢的角色送支笔芯吧～</span>'; return; }
-                panel.innerHTML = items.map((c, i) => `<div class="rank-row">
-                    <span class="rank-no">${i + 1}</span>
-                    <div class="rank-main">
-                        <div class="rank-title">${MarkdownService.escapeHtml(String(c.name || ""))} <span class="list-sub">${MarkdownService.escapeHtml(String(c.role || ""))}</span></div>
-                        <div class="rank-sub"><img class="ic" src="icons/pen.svg" alt=""> ${Number(c.pens || 0)} 笔芯 · 来自「${MarkdownService.escapeHtml(String(c.card_title || ""))}」</div>
-                    </div>
-                </div>`).join("");
-            }
-        }
-        function toggleRankPanel(tab) {
-            const panel = document.getElementById("community-rank-panel");
-            if (!panel) return;
-            if (activeRank === tab && panel.style.display !== "none") { panel.style.display = "none"; return; }
-            renderRankPanel(tab);
-        }
         function renderSortBar() {
             const bar = document.getElementById("scenario-sort-bar");
             if (!bar) return;
@@ -12071,10 +11999,8 @@ function rebuildChoicesBlock(body, labels = []) {
             startBanner();
             bindBannerSwipe();
             renderSortBar();
-            const panel = document.getElementById("community-rank-panel");
-            if (panel && panel.style.display !== "none") renderRankPanel(activeRank);
         }
-        return { renderHomeDiscovery, renderRankPanel, toggleRankPanel, gotoBanner, nextBanner, bannerCards, renderSortBar };
+        return { renderHomeDiscovery, gotoBanner, nextBanner, bannerCards, renderSortBar };
     })();
     // 内联 onclick(轮播圆点)直接引用,故挂全局
     window.DiscoverService = DiscoverService;
@@ -12172,6 +12098,7 @@ function rebuildChoicesBlock(body, labels = []) {
                     <div class="recent-title">${MarkdownService.escapeHtml(String(card.title || ""))}</div>
                     <div class="list-sub">${MarkdownService.escapeHtml(String(card.category || "其他"))} · ${timeAgoText(t)}</div>
                 </div>
+                <button class="tiny-btn" data-op="detail">详情</button>
                 <button class="tiny-btn" data-op="play">${lock.locked ? "🔒 解锁" : "游玩"}</button>
                 <div class="recent-actions"><button class="scenario-action-btn delete" data-op="remove-recent">移出</button></div>
             </div>`;
@@ -12183,6 +12110,10 @@ function rebuildChoicesBlock(body, labels = []) {
                 const lock = ScenarioUnlockService.getLockInfo(card);
                 if (lock.locked) { ScenarioUnlockService.promptUnlock(card); return; }
                 Controller.playScenarioCard(card.id);
+            };
+            row.querySelector('[data-op="detail"]').onclick = () => {
+                const card = ScenarioCardService.loadCards().find((c) => c.id === row.dataset.cardId);
+                if (card) Controller.openGameDetail(card.id);
             };
             row.querySelector('[data-op="remove-recent"]').onclick = () => {
                 const id = row.dataset.cardId;
@@ -12209,6 +12140,7 @@ function rebuildChoicesBlock(body, labels = []) {
                     <div class="recent-title">${MarkdownService.escapeHtml(String(card.title || ""))}</div>
                     <div class="list-sub">${tags.map((t) => MarkdownService.escapeHtml(t)).join(" · ")}</div>
                 </div>
+                <button class="tiny-btn" data-op="detail">详情</button>
                 <button class="tiny-btn" data-op="play">${lock.locked ? "🔒 解锁" : "游玩"}</button>
                 <div class="recent-actions"><button class="scenario-action-btn collect" data-op="uncollect">☆ 取消收藏</button></div>
             </div>`;
@@ -12220,6 +12152,10 @@ function rebuildChoicesBlock(body, labels = []) {
                 const lock = ScenarioUnlockService.getLockInfo(card);
                 if (lock.locked) { ScenarioUnlockService.promptUnlock(card); return; }
                 Controller.playScenarioCard(card.id);
+            };
+            row.querySelector('[data-op="detail"]').onclick = () => {
+                const card = ScenarioCardService.loadCards().find((c) => c.id === row.dataset.cardId);
+                if (card) Controller.openGameDetail(card.id);
             };
             row.querySelector('[data-op="uncollect"]').onclick = () => {
                 ScenarioCardViewService.toggleCollectLocal(row.dataset.cardId);
@@ -12628,11 +12564,13 @@ function rebuildChoicesBlock(body, labels = []) {
                 const card = tpl.content.querySelector(".ai-beauty-card");
                 if (!card) return null;
                 const clone = card.cloneNode(true);
-                // 递归清空所有文本节点，只保留标签骨架
+                // 递归清空所有文本节点，只保留标签骨架；选项按钮(data-choice)保留文字，
+                // 否则 AI 复刻出空描边按钮(pruneEmptyElements 认 data-choice 不删 → 选项无字)
                 const walk = (node) => {
                     if (node.nodeType === Node.TEXT_NODE) {
                         node.textContent = "";
                     } else if (node.nodeType === Node.ELEMENT_NODE) {
+                        if (node.hasAttribute && node.hasAttribute("data-choice")) return;
                         Array.from(node.childNodes).forEach(walk);
                     }
                 };
@@ -12925,13 +12863,13 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
                 : "";
             const latestSkeleton = slimLatestHtmlCard(latestHtmlCard);
             const latestCardBlock = latestSkeleton
-                ? `\n\n最近一次HTML卡片结构骨架（必须沿用其样式与结构，仅替换内容；正文不需要输出）：\n${latestSkeleton}`
+                ? `\n\n最近一次HTML卡片结构骨架（必须沿用其样式与结构，仅替换内容；正文不需要输出）：\n${latestSkeleton}\n注意：选项按钮（data-choice 元素）内必须写可见文字，且须为新剧情生成的新选项内容，不可留空。`
                 : "";
             return `玩家最新输入：${userText}\n\n最近记录：\n${recentHistory}${latestCardBlock}${colorWarning}`;
         }        function buildChoiceRetryPrompt(userText, recentHistory, rawText, scenarioSpec, latestHtmlCard = "") {
             const latestSkeleton = slimLatestHtmlCard(latestHtmlCard);
             const latestCardBlock = latestSkeleton
-                ? `\n\n最近一次HTML卡片结构骨架（必须沿用其样式与结构，仅替换内容；正文不需要输出）：\n${latestSkeleton}`
+                ? `\n\n最近一次HTML卡片结构骨架（必须沿用其样式与结构，仅替换内容；正文不需要输出）：\n${latestSkeleton}\n注意：选项按钮（data-choice 元素）内必须写可见文字，且须为新剧情生成的新选项内容，不可留空。`
                 : "";
             return [
                 "【最高优先级：先遵守当前卡设定】",
@@ -13213,6 +13151,7 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             if (code === "QUOTA_EXCEEDED") return "今日免费次数已用完，开通会员后不限量畅玩";
             if (code === "MEMBERSHIP_EXPIRED") return "会员已到期，请续费";
             if (code === "POOL_UNAVAILABLE") return "AI 服务暂时不可用，请稍后重试";
+            if (code === "INSUFFICIENT_COIN") return "云币不足，请签到领取 300 云币或充值后再试";
             if (code === "NOT_LOGGED_IN" || code === "SESSION_EXPIRED") return "登录状态已失效，请重新登录";
             return "";
         }
@@ -14684,6 +14623,7 @@ const token = delta.content || "";
                     let extraHint = "";
                     if (error?.workerCode === "QUOTA_EXCEEDED") extraHint = "\n\n点击右上角「当前会员类型」可开通会员，立即不限量。";
                     else if (error?.workerCode === "MEMBERSHIP_EXPIRED") extraHint = "\n\n会员已到期，点击右上角「当前会员类型」可立即续费。";
+                    else if (error?.workerCode === "INSUFFICIENT_COIN") extraHint = "\n\n「我的」→ 充值/云币 → 每日签到可领取 300 云币，或直接充值。";
                     // 网络层 reject 可能是裸对象/字符串/无 message，兜底显示可读文案,杜绝 "undefined"
                     const errText = error?.message || (typeof error === "string" ? error : "网络连接中断，请稍后重试");
                     UIRenderer.finishStreaming(`⚠️ 连接失败：${errText}${extraHint}\n\n请检查网络后重试。`, { conflictDetected: false });
@@ -17557,7 +17497,6 @@ function openNpcProfile(npcId) {
         function renderTemplateMarket() { TemplateMarketService.render(); }
         function useSkeletonTemplate(cardId) { TemplateMarketService.useTemplate(cardId); }
         function renderHomeDiscovery() { DiscoverService.renderHomeDiscovery(); }
-        function switchRankTab(tab) { DiscoverService.toggleRankPanel(tab); }
         function switchSortMode(mode) {
             ScenarioCardViewService.setSortMode(mode);
             DiscoverService.renderSortBar();
@@ -17673,7 +17612,7 @@ function openNpcProfile(npcId) {
             switchView("view-scenario-editor");
             ScenarioEditorService.focusEditor();
         }
-        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, getEndingDefs, buildEndingChecks, refreshEndingBadge, fallbackEnding, requestEnding, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, openCardSettings, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, toggleAvatarLibraryPanel, avatarPickLib, avatarPick, avatarUpload, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, openWechatApp, closeWechatApp, switchWechatTab, openWechatChat, backToWechatList, appendEmojiToInput, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, unlockCloudSlot, saveToCloudSlot, loadFromCloudSlot, deleteCloudSlot, clearLocalCache, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, closeFullMap, placeClick, placeGo, advanceStory, openPhoneDiary, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate, renderHomeDiscovery, switchRankTab, switchSortMode, openCreationWizard, wizardPickStyle, wizardTitleCount, wizardPromptCount, wizardNext, wizardPrev, wizardConfirm, closeUploadPriceModal, confirmUploadWithPrice };
+        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, getEndingDefs, buildEndingChecks, refreshEndingBadge, fallbackEnding, requestEnding, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, openCardSettings, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, toggleAvatarLibraryPanel, avatarPickLib, avatarPick, avatarUpload, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, openWechatApp, closeWechatApp, switchWechatTab, openWechatChat, backToWechatList, appendEmojiToInput, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, unlockCloudSlot, saveToCloudSlot, loadFromCloudSlot, deleteCloudSlot, clearLocalCache, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, closeFullMap, placeClick, placeGo, advanceStory, openPhoneDiary, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate, renderHomeDiscovery, switchSortMode, openCreationWizard, wizardPickStyle, wizardTitleCount, wizardPromptCount, wizardNext, wizardPrev, wizardConfirm, closeUploadPriceModal, confirmUploadWithPrice };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
@@ -17713,7 +17652,6 @@ function openNpcProfile(npcId) {
     function renderTemplateMarket() { Controller.renderTemplateMarket(); }
     function useSkeletonTemplate(cardId) { Controller.useSkeletonTemplate(cardId); }
     function renderHomeDiscovery() { Controller.renderHomeDiscovery(); }
-    function switchRankTab(tab) { Controller.switchRankTab(tab); }
     function switchSortMode(mode) { Controller.switchSortMode(mode); }
     function openCreationWizard() { Controller.openCreationWizard(); }
     function wizardPickStyle(s) { Controller.wizardPickStyle(s); }
