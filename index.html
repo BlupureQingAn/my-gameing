@@ -401,6 +401,10 @@
             padding: 0;
             border-bottom-width: 0;
             box-shadow: none;
+            /* backdrop-filter 会作为 fixed 后代的包含块，必须移除否则悬浮按钮被裁剪 */
+            backdrop-filter: none;
+            /* 整个 header 层叠上下文提到弹窗(300000)之上，悬浮按钮才不被 modal 遮挡 */
+            z-index: 400000;
         }
         .header.collapsed .top-mini-nav {
             display: none;
@@ -408,13 +412,13 @@
         .header.collapsed #site-title {
             display: none;
         }
-        /* 折叠后导航栏完全收起，展开按钮悬浮视口右上角 */
+        /* 折叠后导航栏完全收起，展开按钮悬浮视口右上角(高于弹窗层 300000) */
         .header.collapsed .top-nav-collapse-btn {
             position: fixed;
             top: 6px;
             right: 8px;
             margin-left: 0;
-            z-index: 1000;
+            z-index: 400000;
         }
 
         .top-nav-collapse-btn {
