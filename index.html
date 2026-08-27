@@ -12,6 +12,7 @@
     <style>
         /* ==================== 变量层（Design Tokens） ==================== */
         :root {
+            color-scheme: light;
             --base-font-size: 16px;
             --bg-main: #efe3cf;
             --bg-soft: #f7eedf;
@@ -57,6 +58,7 @@
         }
 
         body[data-theme="dark"] {
+            color-scheme: dark;
             --bg-main: #111723;
             --bg-soft: #182130;
             --card: #182131;
@@ -909,29 +911,6 @@
             font-weight: 800;
             color: var(--text-dark);
         }
-        .advance-btn {
-            display: block;
-            margin: 14px auto 4px;
-            width: min(76vw, 320px);
-            height: 64px;
-            border-radius: 22px;
-            border: none;
-            background: linear-gradient(135deg, #f7e6c1, #eed19a 55%, #e2bd73);
-            color: #6b4e1f;
-            font-size: 1.05rem;
-            font-weight: 900;
-            cursor: pointer;
-            box-shadow: 0 8px 24px rgba(226, 189, 115, 0.45);
-            transition: transform .15s, box-shadow .15s;
-        }
-        .advance-btn:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 12px 30px rgba(226, 189, 115, 0.55); }
-        body[data-theme="dark"] .advance-btn {
-            background: linear-gradient(135deg, #6b5a2f, #57481f 55%, #443817);
-            color: #f3e2bd;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-        }
-        .advance-btn:active { transform: scale(.97); }
-        .advance-hint { text-align: center; font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px; }
         /* 手机页模拟器: 固定 360×640(9:16),由 fitPhoneShell 按可用空间等比缩放 */
         .phone-shell {
             position: relative;
@@ -1354,10 +1333,9 @@
             z-index: 1;
         }
 
-        /* 顶部角色信息/状态条/推进按钮固定，剧情与事件各自在剩余空间滚动 */
+        /* 顶部角色信息/状态条固定，剧情与事件各自在剩余空间滚动 */
         #view-main #play-status-bar,
-        #view-main #play-tabs,
-        #view-main #play-advance-area {
+        #view-main #play-tabs {
             flex: none;
         }
         #view-main #play-chat-area,
@@ -1782,7 +1760,8 @@
             padding-bottom: 10px;
             border-bottom: 1px solid var(--ct-line);
         }
-        .card .card-title {
+        .card .card-title,
+        .ai-beauty-card .wy-role-name {
             font-size: 1.02rem;
             font-weight: 800;
             letter-spacing: 1px;
@@ -1806,7 +1785,9 @@
         .card .card-body {
             padding: 12px 0 2px;
         }
-        .card .card-story {
+        /* AI 卡正文(.wy-content)与预制卡(.card-story)共用主题正文字体,保证全程风格统一 */
+        .card .card-story,
+        .ai-beauty-card .wy-content {
             line-height: 1.78;
             color: var(--ct-text);
             margin-top: 10px;
@@ -2271,6 +2252,11 @@
         .bubble,
         #view-main .ai-beauty-card {
             animation: storyLogIn 0.32s ease-out both;
+        }
+        /* 流式渲染每 80ms 重建 bubble.innerHTML,内部卡节点每次都是新元素会重放入场动画→生成期间狂闪;html-host 期间禁动画,完成时 mountCardNode 挂载最终卡只播一次。
+           注意带 #view-main 前缀压过 "#view-main .ai-beauty-card"(ID 权重) */
+        #view-main .bubble.html-host .ai-beauty-card {
+            animation: none;
         }
         @keyframes storyLogIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -4619,10 +4605,6 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <button type="button" class="play-tab-btn" data-play-tab="events" onclick="switchPlayTab('events')">📅 事件</button>
             </div>
             <div id="play-chat-area"></div>
-            <div id="play-advance-area">
-                <button type="button" class="advance-btn" onclick="advanceStory()">推进<br>剧情</button>
-                <div class="advance-hint">进入新的故事发展</div>
-            </div>
             <div id="play-event-area" style="display:none;"></div>
         </section>
 
@@ -5460,7 +5442,14 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
 
     const IdentityService = (() => {
         function loadRegistry() {
-            return StorageService.readJson(AppConfig.storageKeys.nameRegistry, { cnNames: [], enNames: [], fullNames: [] });
+            // 残缺数据防御:旧版本/被清空的 registry 可能是 {} 或缺字段,数组缺失会让 uniqueIdentityNames 崩溃
+            const raw = StorageService.readJson(AppConfig.storageKeys.nameRegistry, null);
+            const r = raw && typeof raw === "object" ? raw : {};
+            return {
+                cnNames: Array.isArray(r.cnNames) ? r.cnNames : [],
+                enNames: Array.isArray(r.enNames) ? r.enNames : [],
+                fullNames: Array.isArray(r.fullNames) ? r.fullNames : []
+            };
         }
         function saveRegistry(registry) {
             StorageService.writeJson(AppConfig.storageKeys.nameRegistry, registry);
@@ -5919,7 +5908,7 @@ function getSkeletonHtml(themeMode = "light", state = null) {
             const statusBlock = `<div style="padding:10px 12px;border-radius:12px;background:transparent;border-left:4px solid var(--theme-primary);margin-bottom:8px">✨ ${statusPanelLabel}：{STATS_HTML}</div>`;
             
             // 2. 将主体、页眉、各区块、按钮背景全部设为透明，移除阴影
-            const base = "<article class=\"ai-beauty-card wenyou-card\" style=\"--theme-primary:{THEME_PRIMARY};--theme-secondary:{THEME_SECONDARY};--card-bg:transparent;--text-main:{TEXT_MAIN};--text-muted:{TEXT_MUTED};--font-family:{FONT_FAMILY};--border-radius:{BORDER_RADIUS};--card-shadow:none;position:relative;overflow:hidden;background:transparent;border-radius:var(--border-radius);box-shadow:none;border:1px solid color-mix(in srgb,var(--theme-primary) 30%,transparent);font-family:var(--font-family);color:var(--text-main)\">" +
+            const base = "<article class=\"ai-beauty-card wenyou-card\" style=\"--theme-primary:{THEME_PRIMARY};--theme-secondary:{THEME_SECONDARY};--card-bg:transparent;--text-main:{TEXT_MAIN};--text-muted:{TEXT_MUTED};--border-radius:{BORDER_RADIUS};--card-shadow:none;position:relative;overflow:hidden;background:transparent;border-radius:var(--border-radius);box-shadow:none;border:1px solid color-mix(in srgb,var(--theme-primary) 30%,transparent);color:var(--text-main)\">" +
                 "<div style=\"position:relative;padding:8px\">" +
                 "<header class=\"wy-header ai-beauty-card-title\" style=\"display:flex;flex-direction:column;align-items:center;text-align:center;padding:24px 15px 20px;background:transparent;position:relative;\">" +
                 "<div style=\"font-size:0.9rem;font-weight:800;letter-spacing:4px;color:var(--theme-secondary);margin-bottom:10px;text-transform:uppercase;opacity:0.85;\">✦ {当前文游/世界设定名称} ✦</div>" +
@@ -6700,8 +6689,9 @@ function rebuildChoicesBlock(body, labels = []) {
             card.classList.add("card");
             if (themeKey) card.classList.add(`card-theme-${themeKey}`);
             card.dataset.theme = themeKey || "default";
-            // 主题库接管主视觉:移除 AI 根节点内联背景/边框/文字色(beautyRules 已指示 AI 无需输出样式)
-            ["background", "background-color", "background-image", "border", "color"].forEach((p) => card.style.removeProperty(p));
+            // 主题库接管主视觉:移除 AI 根节点内联背景/边框/文字色/字体(beautyRules 已指示 AI 无需输出样式;
+            // font-family 不删会绕过主题字体,导致 AI 卡字体与预制卡不一致)
+            ["background", "background-color", "background-image", "border", "color", "font-family"].forEach((p) => card.style.removeProperty(p));
         }
         return { renderAiMessage, bindHtmlChoiceEvents, formatQuotedDialogueLines, injectStatsIntoCard, applyCardTheme };
     })();
@@ -12532,12 +12522,12 @@ function rebuildChoicesBlock(body, labels = []) {
                 // 合并空白
                 .replace(/\s+/g, " ")
                 .trim();
-            // 只保留中文、数字、常用标点，过滤掉残留的 CSS/JS 字符
+            // 只清理符号类残留(保留字母/数字/连字符——英文人名地名被剥掉会导致剧情上下文不连贯)
             return stripped
-                .replace(/[a-zA-Z_\-:#;{}()[\]@%&=+*|\\/<>^~`'"]/g, " ")
+                .replace(/[{}()\[\]@%&=+*|\\/<>^~`"#:;]/g, " ")
                 .replace(/\s+/g, " ")
                 .trim()
-                .slice(0, 300);
+                .slice(0, 400);
         }
 
         // 压缩单条历史记录为简短摘要
@@ -12594,14 +12584,33 @@ function rebuildChoicesBlock(body, labels = []) {
             const history = Array.isArray(state.history) ? state.history : [];
             const entries = history.slice(-totalRounds * 2); // user+ai 各算一条
 
+            let aiCardNo = 0;
             return entries.map((item, idx) => {
                 const isRecent = idx >= entries.length - recentFull * 2;
                 const maxLen = isRecent ? recentMax : olderMax;
                 const role = item.role === "user" ? "玩家" : "AI";
-                const isLatestAiHtml = idx === entries.length - 1
-                    && item.role === "ai"
-                    && (String(item.text || "").includes("<article") || String(item.text || "").includes("ai-beauty-card"));
-                if (isLatestAiHtml) return `${role}：[最新HTML卡片已单独提供，不在此重复]`;
+                const raw = String(item.text || "");
+                const isHtml = raw.includes("<article") || raw.includes("ai-beauty-card");
+                if (isHtml && item.role === "ai") {
+                    // 每张 AI 卡都注入剧情正文(不只最新一张):前面卡的剧情必须对 AI 完整可见,
+                    // 否则后生成的卡不尊重前卡剧情(另起炉灶/复述改写/前后矛盾——用户反馈"篡改")
+                    aiCardNo += 1;
+                    const isLatestAi = idx === entries.length - 1;
+                    const m = raw.match(/data-block=["']event["'][^>]*>([\s\S]*?)<\/section>/i);
+                    const body = m ? extractTextFromHtml(m[1]) : extractTextFromHtml(raw);
+                    const opts = [];
+                    const optRe = /data-choice=["']\d+["'][^>]*>([\s\S]*?)<\/div>/gi;
+                    let om;
+                    while ((om = optRe.exec(raw))) {
+                        const label = extractTextFromHtml(om[1]);
+                        if (label) opts.push(label);
+                    }
+                    const choices = opts.length ? `（该卡给出的选项：${opts.join(" / ")}）` : "";
+                    const cardMax = isRecent ? 400 : 200; // AI 卡剧情注入放宽:前卡剧情必须足够完整
+                    const cut = body.length > cardMax ? body.slice(0, cardMax) + "…" : body;
+                    const label = isLatestAi ? "上一轮剧情结尾" : `前情第${aiCardNo}张剧情卡`;
+                    return `【${label}】${cut}${choices}`;
+                }
                 const summary = compressEntry(item, maxLen);
                 return `${role}：${summary}`;
             }).join("\n");
@@ -12863,13 +12872,13 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
                 : "";
             const latestSkeleton = slimLatestHtmlCard(latestHtmlCard);
             const latestCardBlock = latestSkeleton
-                ? `\n\n最近一次HTML卡片结构骨架（必须沿用其样式与结构，仅替换内容；正文不需要输出）：\n${latestSkeleton}\n注意：选项按钮（data-choice 元素）内必须写可见文字，且须为新剧情生成的新选项内容，不可留空。`
+                ? `\n\n最近一次HTML卡片结构骨架（必须沿用其样式与结构，仅替换内容；正文不需要输出）：\n${latestSkeleton}\n注意：选项按钮（data-choice 元素）内必须写可见文字，且须为新剧情生成的新选项内容，不可留空。\n\n【连贯性铁律】剧情必须紧接「上一轮剧情结尾」继续推进：延续上一轮的地点/时间/人物/事件与叙事人称，围绕上一轮结尾的悬念或处境展开新进展，禁止另起炉灶、禁止复述或改写上一轮已发生的内容。`
                 : "";
             return `玩家最新输入：${userText}\n\n最近记录：\n${recentHistory}${latestCardBlock}${colorWarning}`;
         }        function buildChoiceRetryPrompt(userText, recentHistory, rawText, scenarioSpec, latestHtmlCard = "") {
             const latestSkeleton = slimLatestHtmlCard(latestHtmlCard);
             const latestCardBlock = latestSkeleton
-                ? `\n\n最近一次HTML卡片结构骨架（必须沿用其样式与结构，仅替换内容；正文不需要输出）：\n${latestSkeleton}\n注意：选项按钮（data-choice 元素）内必须写可见文字，且须为新剧情生成的新选项内容，不可留空。`
+                ? `\n\n最近一次HTML卡片结构骨架（必须沿用其样式与结构，仅替换内容；正文不需要输出）：\n${latestSkeleton}\n注意：选项按钮（data-choice 元素）内必须写可见文字，且须为新剧情生成的新选项内容，不可留空。\n\n【连贯性铁律】剧情必须紧接「上一轮剧情结尾」继续推进：延续上一轮的地点/时间/人物/事件与叙事人称，围绕上一轮结尾的悬念或处境展开新进展，禁止另起炉灶、禁止复述或改写上一轮已发生的内容。`
                 : "";
             return [
                 "【最高优先级：先遵守当前卡设定】",
@@ -15462,8 +15471,6 @@ const token = delta.content || "";
             const isChat = tab === "chat";
             chatArea.style.display = isChat ? "" : "none";
             eventArea.style.display = isChat ? "none" : "";
-            const advanceArea = document.getElementById("play-advance-area");
-            if (advanceArea) advanceArea.style.display = isChat ? "" : "none";
             document.querySelectorAll(".play-tab-btn").forEach((b) => {
                 b.classList.toggle("active", b.dataset.playTab === tab);
             });
@@ -16405,27 +16412,29 @@ function openNpcProfile(npcId) {
             renderAll();
             switchView("view-saves");
         }
-        // ---- 清除本地缓存（仅进度存档,不动登录/会员/云币）----
-        // 白名单式删除：只清进度类 key；登录(pb_auth_*)/用户缓存/会员/云币保留。
-        // 注意：新增进度类 key 必须登记到 CLEAR_CACHE_KEYS 或 PREFIX 清单，否则清除缓存后残留会导致
+        // ---- 清除本地缓存（仅进度存档,不动登录/会员/云币/用户资产）----
+        // 白名单式删除：只清【进度/会话】类 key；【资产/用户数据】一律保留：
+        //   - 保留: bitlife_scenario_cards_v1(下载/自制卡列表)、bitlife_scenario_text_v1(剧本设定)、
+        //     bitlife_scenario_chat_policy_map_v1(聊天策略)、bitlife_card_collects_v1(收藏)、
+        //     bitlife_game_hot_v1(热度+收藏标记)、pb_auth_*(登录)、bitlife_user_cache_v1(用户缓存)
+        //   - 删除: bitlife_save*(槽位/自动档)、play_meta_map(最近游玩+开局确认)、map_override、
+        //     选中卡、已忽略警告
+        // 注意：卡列表/收藏绝不可入清单——删除会被 loadCards() 立即重建(计数假象)且丢失用户资产。
+        // 名字登记(used_name_registry)同样不可入清单:删除后 StateService.init() 生成新身份时立即重建,
+        // 造成"连续点击每次都显示已清除"的计数假象(曾实测二次清除仍有 1 个命中)。
+        // 新增进度类 key 必须登记到 CLEAR_CACHE_KEYS 或 PREFIX 清单，否则清除缓存后残留会导致
         // "最近游玩还在 / 跳过开局确认" 等假性 bug（曾因 play_meta_map 残留引发）。
         const CLEAR_CACHE_PREFIXES = ["bitlife_save"];
         const CLEAR_CACHE_KEYS = [
             "bitlife_scenario_play_meta_map_v1",   // 最近游玩 + hasInitialized（不删→跳过开局角色确认）
             "bitlife_map_override_v1",             // 地图覆盖
             "bitlife_selected_scenario_card_v1",   // 当前选中卡
-            "bitlife_scenario_cards_v1",           // 卡列表
-            "bitlife_scenario_text_v1",
-            "bitlife_scenario_chat_policy_map_v1",
-            "bitlife_scenario_dismissed_warnings_map_v1",
-            "bitlife_used_name_registry_v1",
-            "bitlife_game_hot_v1",
-            "bitlife_card_collects_v1"
+            "bitlife_scenario_dismissed_warnings_map_v1"
         ];
         async function clearLocalCache() {
             const ok = await NoticeModalService.confirm({
                 title: "清除本地存档缓存",
-                descHtml: "将删除当前浏览器保存的<b>全部本地存档与自动进度</b>（含各剧本槽位、自动档、最近游玩记录与地图覆盖）。登录、会员与云币不受影响。确定继续吗？"
+                descHtml: "将删除当前浏览器保存的<b>全部本地存档与自动进度</b>（含各剧本槽位、自动档、最近游玩记录与地图覆盖）。<b>剧本卡、收藏、登录、会员与云币不受影响</b>。确定继续吗？"
             });
             if (!ok) return;
             let removed = 0;
