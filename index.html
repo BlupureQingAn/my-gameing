@@ -4191,11 +4191,203 @@
             max-height: none;
             height: auto;
             margin: 0;
-            padding: 14px 12px;
+            padding: 14px 12px 18px;
             border: 0;
             border-radius: 0;
             background: var(--wechat-bg);
         }
+
+        /* ============ 微信风格重制（搬运自 Guaizai-s/xiaoshouji weixin.css）============ */
+        #wx-main, #wx-chat {
+            --wx-green: #07C160;
+            --wx-green-soft: #95EC69;
+            --wx-bubble-self: #A8E979;
+            --wx-bubble-other: #FFFFFF;
+            --wx-bg: #F5F5F5;
+            --wx-text-primary: #111111;
+            --wx-text-secondary: #858585;
+            --wx-text-tertiary: #B2B2B2;
+            --wx-border: rgba(0, 0, 0, 0.07);
+            --wx-radius-sm: 8px;
+            --wx-radius-md: 12px;
+        }
+        body[data-theme="dark"] #wx-main, body[data-theme="dark"] #wx-chat {
+            --wx-bg: #111111;
+            --wx-bubble-self: #6FBE62;
+            --wx-bubble-other: #262626;
+            --wx-text-primary: #F1F1F1;
+            --wx-text-secondary: #A8A8A8;
+            --wx-border: rgba(255, 255, 255, 0.08);
+        }
+        /* 导航栏：白底、标题 17px 居中、返回箭头 */
+        #wx-main .wx-navbar, #wx-chat .wx-navbar {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--wx-border);
+            height: 44px;
+            padding: 0 14px;
+        }
+        body[data-theme="dark"] #wx-main .wx-navbar, body[data-theme="dark"] #wx-chat .wx-navbar {
+            background: rgba(28, 28, 28, 0.92);
+        }
+        #wx-main .wx-navbar-title, #wx-chat .wx-navbar-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--wx-text-primary);
+        }
+        #wx-main .wx-close-btn, #wx-main .wx-back-btn, #wx-chat .wx-close-btn, #wx-chat .wx-back-btn {
+            color: var(--wx-text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #wx-main .wx-close-btn { right: 6px; }
+        #wx-chat .wx-avatar-btn {
+            background: transparent;
+            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+        }
+        /* 列表：白底、分隔线、48px 圆角头像、未读红点 */
+        #wx-main .wx-session-list, #wx-main .wx-contact-list {
+            background: var(--wx-bubble-other);
+            padding: 0;
+        }
+        #wx-main .wx-list-item {
+            border-radius: 0;
+            padding: 13px 16px;
+            border-bottom: 1px solid var(--wx-border);
+        }
+        #wx-main .wx-list-item:last-child { border-bottom: none; }
+        #wx-main .wx-list-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 9px;
+            border: 0;
+            font-size: 1.25rem;
+        }
+        #wx-main .wx-list-title { font-size: 16px; font-weight: 500; color: var(--wx-text-primary); }
+        #wx-main .wx-list-desc { font-size: 14px; color: var(--wx-text-secondary); margin-top: 4px; }
+        #wx-main .wx-list-time { font-size: 12px; color: var(--wx-text-secondary); margin-top: 2px; }
+        #wx-main .wx-badge { background: #F43530; font-size: 12px; padding: 1px 5px; }
+        #wx-main .wx-badge.off { background: #C9C9C9; }
+        /* 底部 tab：微信四栏、SVG 图标、微信绿高亮 */
+        #wx-main .wx-tabbar {
+            background: rgba(255, 255, 255, 0.94);
+            border-top: 1px solid var(--wx-border);
+            padding: 4px 0 calc(env(safe-area-inset-bottom, 0px) + 4px);
+            gap: 0;
+        }
+        body[data-theme="dark"] #wx-main .wx-tabbar { background: rgba(28, 28, 28, 0.94); }
+        #wx-main .wx-tab {
+            border-radius: 0;
+            padding: 4px 0;
+            font-size: 10px;
+            font-weight: 500;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            color: var(--wx-text-primary);
+        }
+        #wx-main .wx-tab.active { color: var(--wx-green); background: transparent; }
+        #wx-main .wx-tab-icon { width: 24px; height: 24px; flex-shrink: 0; }
+        /* 聊天页：灰底、微信绿气泡 + 白色对方气泡、38px 圆角头像、三角尖角 */
+        #wx-chat .social-chat-box { background: var(--wx-bg); }
+        #wx-chat .npc-chat-avatar { width: 38px; height: 38px; border-radius: 8px; border: 0; font-size: 1.1rem; }
+        #wx-chat .npc-chat-bubble {
+            max-width: min(68vw, 520px);
+            font-size: 16px;
+            line-height: 1.48;
+            padding: 9px 12px;
+            border: 0;
+            border-radius: var(--wx-radius-md);
+            border-top-left-radius: 5px;
+            background: var(--wx-bubble-other);
+            color: var(--wx-text-primary);
+            box-shadow: none;
+        }
+        #wx-chat .npc-chat-msg.npc .npc-chat-bubble::before {
+            content: "";
+            position: absolute;
+            top: 12px;
+            left: -4px;
+            width: 0;
+            height: 0;
+            background: none;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+            border-right: 6px solid var(--wx-bubble-other);
+            border-left: 0;
+            border-bottom: 0;
+            transform: none;
+        }
+        #wx-chat .npc-chat-msg.me .npc-chat-bubble {
+            background: var(--wx-bubble-self);
+            border-color: transparent;
+            border-radius: var(--wx-radius-md);
+            border-top-right-radius: 5px;
+            color: #111111;
+        }
+        #wx-chat .npc-chat-msg.me .npc-chat-bubble::before {
+            content: "";
+            position: absolute;
+            top: 12px;
+            right: -4px;
+            width: 0;
+            height: 0;
+            background: none;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+            border-left: 6px solid var(--wx-bubble-self);
+            border-right: 0;
+            border-top: 6px solid transparent;
+            transform: none;
+        }
+        body[data-theme="dark"] #wx-chat .npc-chat-bubble { color: #FFFFFF; }
+        body[data-theme="dark"] #wx-chat .npc-chat-msg.npc .npc-chat-bubble::before { border-right-color: #262626; }
+        body[data-theme="dark"] #wx-chat .npc-chat-msg.me .npc-chat-bubble { background: #6FBE62; color: #111111; }
+        body[data-theme="dark"] #wx-chat .npc-chat-msg.me .npc-chat-bubble::before { border-left-color: #6FBE62; }
+        /* 输入栏：灰底工具条、圆角输入框、绿色胶囊发送 */
+        #wx-chat .npc-chat-composer {
+            background: rgba(247, 247, 247, 0.96);
+            border-top: 1px solid var(--wx-border);
+            padding: 7px 8px calc(env(safe-area-inset-bottom, 0px) + 7px);
+            gap: 0;
+            align-items: center;
+        }
+        body[data-theme="dark"] #wx-chat .npc-chat-composer { background: rgba(28, 28, 28, 0.96); }
+        #wx-chat .npc-chat-composer textarea {
+            flex: 1;
+            min-width: 0;
+            height: 38px;
+            min-height: 38px;
+            border: 0;
+            border-radius: 19px;
+            padding: 7px 13px;
+            margin: 0 7px;
+            font-size: 16px;
+            outline: none;
+            background: var(--wx-bubble-other);
+            color: var(--wx-text-primary);
+            box-sizing: border-box;
+        }
+        #wx-chat .npc-chat-composer .send-btn {
+            min-width: 0;
+            height: 34px;
+            padding: 0 13px;
+            border: 0;
+            border-radius: 17px;
+            background: var(--wx-green);
+            font-size: 14px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        #wx-chat .npc-chat-composer .send-btn:disabled { background: #E2E2E2; }
+        #wx-main .wx-empty { padding: 48px 16px; }
+        #wx-main .wx-empty .wx-empty-text { font-size: 14px; color: var(--wx-text-secondary); margin-top: 10px; }
+        #wx-main .wx-empty-icon { font-size: 40px; opacity: 0.55; }
 
     </style>
 </head>
@@ -4845,15 +5037,37 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                         <div class="wx-body">
                             <div class="wx-session-list" id="wx-session-list"></div>
                             <div class="wx-contact-list" id="wx-contact-list" style="display:none;"></div>
+                            <div class="wx-empty" id="wx-discover" style="display:none;flex-direction:column;align-items:center;justify-content:center;height:100%;">
+                                <span class="wx-empty-icon">🧭</span>
+                                <div class="wx-empty-text">发现页建设中，敬请期待</div>
+                            </div>
+                            <div class="wx-empty" id="wx-me" style="display:none;flex-direction:column;align-items:center;justify-content:center;height:100%;">
+                                <span class="wx-empty-icon">👤</span>
+                                <div class="wx-empty-text" id="wx-me-info">我</div>
+                            </div>
                         </div>
                         <div class="wx-tabbar" id="wx-tabbar">
-                            <button type="button" class="wx-tab active" data-tab="chat" onclick="switchWechatTab('chat')">💬 聊天</button>
-                            <button type="button" class="wx-tab" data-tab="contacts" onclick="switchWechatTab('contacts')">👥 通讯录</button>
+                            <button type="button" class="wx-tab active" data-tab="chat" onclick="switchWechatTab('chat')">
+                                <svg class="wx-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                                <span>微信</span>
+                            </button>
+                            <button type="button" class="wx-tab" data-tab="contacts" onclick="switchWechatTab('contacts')">
+                                <svg class="wx-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                                <span>通讯录</span>
+                            </button>
+                            <button type="button" class="wx-tab" data-tab="discover" onclick="switchWechatTab('discover')">
+                                <svg class="wx-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16 8l-8 4-4 8 8-4 4-8z"/><circle cx="12" cy="12" r="9"/></svg>
+                                <span>发现</span>
+                            </button>
+                            <button type="button" class="wx-tab" data-tab="me" onclick="switchWechatTab('me')">
+                                <svg class="wx-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                <span>我</span>
+                            </button>
                         </div>
                     </div>
                     <div id="wx-chat" style="display:none;">
                         <div class="wx-navbar">
-                            <button class="wx-back-btn" type="button" onclick="backToWechatList()" title="返回">←</button>
+                            <button class="wx-back-btn" type="button" onclick="backToWechatList()" title="返回"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg></button>
                             <span class="wx-navbar-title" id="wx-chat-title">聊天</span>
                             <button class="wx-avatar-btn" type="button" id="wx-chat-avatar-btn" title="更换头像">👤</button>
                         </div>
@@ -16522,11 +16736,11 @@ function openNpcProfile(npcId) {
             if (t.input) { t.input.value = `${t.input.value || ""}${emoji}`; t.input.focus(); }
         }
         function switchWechatTab(tab) {
-            const isChat = tab === "chat";
-            const chatList = document.getElementById("wx-session-list");
-            const contactList = document.getElementById("wx-contact-list");
-            if (chatList) chatList.style.display = isChat ? "" : "none";
-            if (contactList) contactList.style.display = isChat ? "none" : "";
+            const show = (id, v) => { const el = document.getElementById(id); if (el) el.style.display = v ? "" : "none"; };
+            show("wx-session-list", tab === "chat");
+            show("wx-contact-list", tab === "contacts");
+            show("wx-discover", tab === "discover");
+            show("wx-me", tab === "me");
             document.querySelectorAll("#wx-tabbar .wx-tab").forEach((b) => {
                 b.classList.toggle("active", b.dataset.tab === tab);
             });
@@ -16538,6 +16752,11 @@ function openNpcProfile(npcId) {
             if (!active || active.id !== "view-phone") switchView("view-phone");
             showWechatMain();
             switchWechatTab("chat");
+            const meInfo = document.getElementById("wx-me-info");
+            if (meInfo) {
+                const u = AuthService.getUserData();
+                meInfo.textContent = u ? `${u.nickname || "我"} · ${Number(u.coins || 0)} 云币` : "我";
+            }
             renderWxEmojiBar();
             UIRenderer.renderWechatSessions(StateService.get());
             UIRenderer.renderWechatContacts(StateService.get());
