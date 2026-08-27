@@ -2876,7 +2876,7 @@
         .hb-sub { font-size: 0.74rem; color: var(--sub); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
         .hb-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
         .hb-plays { font-size: 0.72rem; color: var(--sub); }
-        .hb-play-btn { font-size: 0.74rem; }
+        .hb-play-btn { font-size: 0.74rem; flex: none; padding: 6px 10px; }
         /* B1：轮播卡封面区（AI 封面按需生成，未生成时渐变+动效占位） */
         .hb-cover {
             position: relative;
@@ -11131,6 +11131,8 @@ function rebuildChoicesBlock(body, labels = []) {
         }
         // 本会话已请求过(id|hash)且失败的封面不再重试:官方卡封面全部预生成在 KV,未命中=后端未预生成,失败静默占位防风暴
         const sessionCoverReq = new Set();
+        // 请求去重:同卡并发 ensure(banner 与列表/榜单同时需要)共享同一 in-flight 请求,双方都拿到结果,不重复请求
+        const _inflight = new Map();
         // 内存封面缓存:生成成功后共享给 banner/列表/榜单等所有容器,切视图/重渲染不丢,大图(≥300KB 不落 localStorage)也即时命中
         const _memCache = new Map();
         // 大图 dataURL 降采样 512 宽缩略图落 localStorage(总量 <3MB 才写,防爆),刷新后秒回不等 KV 慢传输
@@ -11168,27 +11170,32 @@ function rebuildChoicesBlock(body, labels = []) {
             const hit = cached(id, ph);
             if (hit) return hit;
             const reqKey = id + "|" + ph;
+            if (_inflight.has(reqKey)) return _inflight.get(reqKey);
             if (sessionCoverReq.has(reqKey)) return "";
-            sessionCoverReq.add(reqKey);
-            try {
-                const res = await enqueueCover(() => fetch(`${AppConfig.proxy.baseUrl}/api/cover/generate`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ prompt })
-                }));
-                const d = await res.json().catch(() => ({}));
-                if (!res.ok || !d.image) return "";
-                _memCache.set(id, { url: d.image, ts: Date.now(), ph });
-                // 大图 dataURL 不落 localStorage(5MB 限额会爆;worker 侧 KV 7 天缓存已兜底,下次 ensure 接口秒回)
-                if (d.image.length < 300000) {
-                    const m = read();
-                    m[id] = { url: d.image, ts: Date.now(), hash: ph };
-                    write(m);
-                } else {
-                    persistThumb(id, d.image, ph);
-                }
-                return d.image;
-            } catch (e) { return ""; }
+            const p = (async () => {
+                try {
+                    const res = await enqueueCover(() => fetch(`${AppConfig.proxy.baseUrl}/api/cover/generate`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ prompt })
+                    }));
+                    const d = await res.json().catch(() => ({}));
+                    if (!res.ok || !d.image) return "";
+                    _memCache.set(id, { url: d.image, ts: Date.now(), ph });
+                    // 大图 dataURL 不落 localStorage(5MB 限额会爆;worker 侧 KV 7 天缓存已兜底,下次 ensure 接口秒回)
+                    if (d.image.length < 300000) {
+                        const m = read();
+                        m[id] = { url: d.image, ts: Date.now(), hash: ph };
+                        write(m);
+                    } else {
+                        persistThumb(id, d.image, ph);
+                    }
+                    return d.image;
+                } catch (e) { return ""; }
+            })();
+            _inflight.set(reqKey, p);
+            p.then((url) => { _inflight.delete(reqKey); if (!url) sessionCoverReq.add(reqKey); }).catch(() => {});
+            return p;
         }
         // 自建卡封面:优先已上传 coverUrl → 本机私有缓存 → 付费 AI 生成(consume, 私有 KV 跨设备复用, 不与其他用户共享)
         const SELF_KEY = "bitlife_card_cover_self_v1";
