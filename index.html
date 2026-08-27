@@ -9046,7 +9046,7 @@ function rebuildChoicesBlock(body, labels = []) {
         }
         function wxRowHtml(n, line2, timeHtml, badgeHtml) {
             const cleanName = MarkdownService.escapeHtml(String(n.name || "未命名").replace(/[\(（].*?[\)）]/g, "").trim());
-            const avUrl = isAvatarImg(n.avatar) ? n.avatar : "";
+            const avUrl = isAvatarImg(n.avatar) ? n.avatar : (typeof window.assignNpcAvatar === "function" ? window.assignNpcAvatar(n.name, n.gender) : "");
             const fb = MarkdownService.escapeHtml(String(n.name || "?").slice(0, 1));
             const avHtml = avUrl
                 ? `<img src="${String(avUrl).replace(/"/g, "%22")}" alt="" loading="lazy" onerror="this.parentElement.textContent=this.dataset.fb" data-fb="${fb}">`
@@ -9288,7 +9288,7 @@ function rebuildChoicesBlock(body, labels = []) {
             }
             const authorLine = (card) => {
                 const a = ScenarioCardService.authorOf(card);
-                return a ? `👤 ${MarkdownService.escapeHtml(a)}` : "";
+                return a ? `${MarkdownService.escapeHtml(a)}` : "";
             };
             const renderRow = (card) => {
                 const row = document.createElement("div");
@@ -14981,13 +14981,6 @@ const token = delta.content || "";
             return "📖";
         }
         const fmtNum = (n) => Number(n || 0) >= 10000 ? (Number(n || 0) / 10000).toFixed(1) + "万" : String(Number(n || 0));
-        function npcAvatar(n) {
-            const a = String(n.avatar || n.emoji || "").trim();
-            if (a) return a.slice(0, 4);
-            // 存量 NPC 无 avatar 字段：按性别确定性分配头像库（同 NPC 每次不变）
-            if (typeof window.assignNpcAvatar === "function") return window.assignNpcAvatar(n.name, n.gender);
-            return String(n.name || "?").slice(0, 1);
-        }
         function roleIdOf(n) { return String(n.id || n.name || "role").replace(/[^\w-]/g, "_"); }
         window.roleIdOf = roleIdOf;
         async function openGameDetail(cardId) {
@@ -15119,7 +15112,7 @@ const token = delta.content || "";
                     const hotCount = 100 + Number(d.roles[rid] || 0);
                     const desc = String(n.personality || (n.profile && n.profile.personality) || n.relationship || "…").slice(0, 60);
                     html += `<div class="gd-role-card">
-                        <div class="gd-role-avatar">${n.avatar || n.emoji ? MarkdownService.escapeHtml(npcAvatar(n)) : firstLetterAvatar(n.name, "", "width:100%;height:100%;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;")}</div>
+                        <div class="gd-role-avatar">${(() => { const avU = isAvatarImg(n.avatar) ? n.avatar : (typeof window.assignNpcAvatar === "function" ? window.assignNpcAvatar(n.name, n.gender) : ""); if (avU) return `<img src="${String(avU).replace(/"/g, "%22")}" alt="" loading="lazy" onerror="this.parentElement.textContent='?'" style="width:100%;height:100%;object-fit:cover;border-radius:10px;display:block;">`; if (n.emoji) return MarkdownService.escapeHtml(String(n.emoji).slice(0, 4)); return firstLetterAvatar(n.name, "", "width:100%;height:100%;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;"); })()}</div>
                         <div class="gd-role-main">
                             <div class="gd-role-name">${MarkdownService.escapeHtml(String(n.name || "角色"))} <span class="list-sub">${MarkdownService.escapeHtml(String(n.role || n.relation || ""))}</span></div>
                             <div class="gd-role-sub">${MarkdownService.escapeHtml(desc)}</div>
