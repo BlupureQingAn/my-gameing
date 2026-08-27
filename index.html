@@ -259,31 +259,8 @@
             display: flex;
             justify-content: flex-end;
             align-items: center;
-            font-size: 0.76rem;
-            padding: 4px 12px;
-        }
-
-        @media (max-width: 520px) {
-            #site-title {
-                font-size: 1.02rem;
-            }
-            .top-nav-btn {
-                padding: 5px 8px;
-            }
-            #usage-badge {
-                font-size: 0.72rem;
-                padding: 4px 8px;
-            }
-            /* 移动端按钮组换行到 logo 下方整行靠右 */
-            .header {
-                flex-wrap: wrap;
-            }
-            .top-nav-group {
-                width: 100%;
-                justify-content: flex-end;
-                gap: 4px;
-                margin-left: 0;
-            }
+            font-size: 0.72rem;
+            padding: 3px 10px;
         }
 
         .history-panel {
@@ -4513,7 +4490,40 @@
         #wx-ctx-menu button.danger { color: #FA5151; }
         body[data-theme="dark"] #wx-ctx-menu button:hover { background: rgba(255, 255, 255, 0.08); }
 
-    </style>
+        @media (max-width: 520px) {
+            #site-title {
+                font-size: 0.9rem;
+            }
+            .top-nav-btn {
+                padding: 4px 6px;
+                font-size: 0.7rem;
+            }
+            #usage-badge {
+                font-size: 0.62rem;
+                padding: 2px 6px;
+            }
+            .top-mini-nav {
+                gap: 3px;
+            }
+            .top-nav-collapse-btn {
+                padding: 3px 8px;
+            }
+            /* 移动端：第一行=标题+按钮(按钮靠右)，第二行=云币徽章(靠右、内容宽) */
+            .header {
+                flex-wrap: nowrap;
+            }
+            .top-nav-group {
+                width: auto;
+                flex-wrap: wrap;
+                justify-content: flex-end;
+                gap: 3px;
+                margin-left: auto;
+            }
+            #usage-badge {
+                margin-left: auto;
+            }
+        }
+</style>
 </head>
 <body>
 
@@ -4703,7 +4713,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <button class="top-nav-btn" data-view="view-community" onclick="switchView('view-community')">社区</button>
             <button class="top-nav-btn" data-view="view-settings" onclick="switchView('view-settings')">我的</button>
             <button class="top-nav-btn" id="top-nav-history-btn" onclick="toggleHistoryPanel()">历史</button>
-            <span id="usage-badge" onclick="MembershipService.openPanel()" style="display:none;font-size:0.76rem;font-weight:700;color:#6b3f00;padding:4px 12px;border-radius:999px;background:linear-gradient(135deg,#ffe9a8,#ffd66b);border:1px solid #e0a93a;cursor:pointer;box-shadow:0 2px 8px rgba(224,169,58,.4);" title="点击开通/续费会员"></span>
+            <span id="usage-badge" onclick="MembershipService.openPanel()" style="display:none;font-weight:700;color:#6b3f00;border-radius:999px;background:linear-gradient(135deg,#ffe9a8,#ffd66b);border:1px solid #e0a93a;cursor:pointer;box-shadow:0 2px 8px rgba(224,169,58,.4);" title="点击开通/续费会员"></span>
         </div>
         <button id="top-nav-collapse-btn" class="top-nav-collapse-btn" onclick="toggleTopNavCollapse()" title="收起导航">▲</button>
     </header>
