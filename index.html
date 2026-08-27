@@ -4854,7 +4854,8 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             model: "gpt-4o-mini"
         },
         proxy: {
-            baseUrl: "https://ai.blupure.cn"
+            // blupure.cn 子域访问时走同域 nginx 反代(国内直连快);GitHub Pages 等外部域回退 CF worker
+            baseUrl: /blupure\.cn$/i.test(location.hostname) ? location.origin : "https://ai.blupure.cn"
         },
         defaultScenario: [
             "请在这里粘贴你的文游设定文本。",
