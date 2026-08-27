@@ -15592,7 +15592,7 @@ const token = delta.content || "";
                 html += `<div class="gd-sec-title"><img class="ic" src="icons/trophy.svg" alt=""> 本作品角色榜</div>`;
                 npcs.forEach((n) => {
                     const rid = roleIdOf(n);
-                    const hotCount = 100 + Number(d.roles[rid] || 0);
+                    const hotCount = Number(d.roles[rid] || 0);
                     const desc = String(n.personality || (n.profile && n.profile.personality) || n.relationship || "…").slice(0, 60);
                     html += `<div class="gd-role-card">
                         <div class="gd-role-avatar">${(() => { const avU = isAvatarImg(n.avatar) ? n.avatar : (typeof window.assignNpcAvatar === "function" ? window.assignNpcAvatar(n.name, n.gender) : ""); if (avU) return `<img src="${String(avU).replace(/"/g, "%22")}" alt="" loading="lazy" onerror="this.parentElement.textContent='?'" style="width:100%;height:100%;object-fit:cover;border-radius:10px;display:block;">`; if (n.emoji) return MarkdownService.escapeHtml(String(n.emoji).slice(0, 4)); return firstLetterAvatar(n.name, "", "width:100%;height:100%;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;"); })()}</div>
@@ -15626,16 +15626,15 @@ const token = delta.content || "";
             } else {
                 html += `<div class="list-sub">还没有打赏，成为第一个支持 TA 的人吧～</div>`;
             }
-            if (!d.local) {
-                html += `<div class="gd-sec-title"><img class="ic" src="icons/chat.svg" alt=""> 讨论区</div>
+            // 官方卡/社区卡详情均有讨论区(评论按 card_id 存查，无官方限制)
+            html += `<div class="gd-sec-title"><img class="ic" src="icons/chat.svg" alt=""> 讨论区</div>
                 <div id="gd-reviews-box" style="margin-bottom:6px;"><span class="list-sub">加载中...</span></div>
                 <div class="gd-rev-input">
                     <input id="gd-rev-input" maxlength="200" placeholder="写下你的评论…（200字以内）" onkeydown="if(event.key==='Enter')Controller.postGameReview()">
                     <button class="mini-btn primary" onclick="Controller.postGameReview()">评论</button>
                 </div>`;
-            }
             content.innerHTML = html;
-            if (!d.local) { loadReviews(card.id); loadCharFavs(); }
+            loadReviews(card.id); loadCharFavs();
         }
         function closeGameDetail() {
             document.getElementById("game-detail-modal").style.display = "none";
@@ -17911,7 +17910,10 @@ function openNpcProfile(npcId) {
                         const k = c.id + "::" + rid;
                         if (seen.has(k)) continue;
                         seen.add(k);
-                        rankCards.push({ card_id: c.id, character_id: rid, card_title: c.title || "", name: String(n.name), role: String(n.role || n.relation || ""), pens: 0, favs: 0, gender: n.gender, avatar: n.avatar });
+                        // 从 hot API 数据中查找点赞数
+                        const hotItem = hot.find(h => h.card_id + "::" + h.character_id === k);
+                        const pens = hotItem ? Number(hotItem.pens || 0) : 0;
+                        rankCards.push({ card_id: c.id, character_id: rid, card_title: c.title || "", name: String(n.name), role: String(n.role || n.relation || ""), pens, favs: 0, gender: n.gender, avatar: n.avatar });
                     }
                 }
                 rankCards.sort((a, b) => Number(b.pens || 0) - Number(a.pens || 0));
@@ -18185,10 +18187,11 @@ function openNpcProfile(npcId) {
         function openInitPreviewModal() {
             document.getElementById("init-preview-modal").style.display = "flex";
         }
-        function closeInitPreviewModal() {
+        function closeInitPreviewModal(skipRestore) {
             document.getElementById("init-preview-modal").style.display = "none";
             pendingInitPlan = null;
-            restorePendingInitView();
+            // 确认游玩时 skipRestore=true: 已 enterPlay+切 view-main, 再 restore 会 leavePlay 覆盖进游玩态(footer 消失)
+            if (!skipRestore) restorePendingInitView();
         }
         function bindSelectOrCustom(selectId, customId, value) {
             const sel = document.getElementById(selectId);
@@ -18743,7 +18746,7 @@ function openNpcProfile(npcId) {
             ScenarioPlayMetaService.setInitialized(ScenarioCardService.getSelectedId(), true);
             PlayViewStateService.enterPlay(ScenarioCardService.getSelectedId());
             pendingInitFromView = null; // 已确认进入游玩，取消恢复不再生效
-            closeInitPreviewModal();
+            closeInitPreviewModal(true);
             switchView("view-main");
             renderAll(); // renderAll 内部已包含 renderTop，无需重复调用
             InitIntroService.start({
