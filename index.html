@@ -302,9 +302,33 @@
             align-items: center;
             gap: 10px;
             box-shadow: 0 10px 28px rgba(80, 53, 21, 0.08);
+            max-height: 300px;
+            overflow: hidden;
+            transition: max-height .35s ease, padding .35s ease, opacity .35s ease, border-bottom-width .35s ease;
         }
 
-        .header.collapsed .top-mini-nav { display: none; }
+        .header.collapsed {
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            border-bottom-width: 0;
+            opacity: 0;
+            box-shadow: none;
+        }
+
+        .top-nav-collapse-btn {
+            display: block;
+            margin: 6px auto 0;
+            padding: 3px 16px;
+            font-size: 0.72rem;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: var(--input-bg, #fff);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all .2s;
+        }
+        .top-nav-collapse-btn:hover { color: #7b5cd6; border-color: rgba(123,92,214,.45); }
 
         .card {
             background: var(--card-strong);
@@ -4126,12 +4150,11 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
 <div id="app">
     <div class="bear-layer" id="bear-layer"></div>
 
-    <header class="header">
+    <header class="header" id="top-nav-bar">
         <div>
             <h1 id="site-title"><img src="icons/android-chrome-192x192.png" alt="" style="width:1.25em;height:1.25em;vertical-align:-0.22em;margin-right:6px;border-radius:6px;">云吞吞文游</h1>
         </div>
         <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
-            <button id="top-nav-collapse-btn" class="top-nav-btn" style="padding:2px 10px;font-size:0.72rem;" onclick="toggleTopNavCollapse()" title="收起/展开导航">▴</button>
             <div class="top-mini-nav top-nav-primary" id="top-nav-primary-row">
                 <button class="top-nav-btn active" data-view="view-home" onclick="switchView('view-home')">首页</button>
                 <button class="top-nav-btn" data-view="view-template-market" onclick="switchView('view-template-market')"><img class="ic" src="icons/grid.svg" alt=""> 模板</button>
@@ -4144,6 +4167,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             </div>
         </div>
     </header>
+    <button id="top-nav-collapse-btn" class="top-nav-collapse-btn" onclick="toggleTopNavCollapse()" title="收起导航">▲</button>
 
     <main class="content" id="main-content">
         <section id="view-home" class="view-section active">
@@ -16404,14 +16428,16 @@ function openNpcProfile(npcId) {
                 UIRenderer.renderWorld();
             });
         }
+        window.openAvatarPickerForNpc = openAvatarPickerForNpc;
         function toggleTopNavCollapse() {
             const header = document.querySelector(".header");
             const btn = document.getElementById("top-nav-collapse-btn");
             if (!header || !btn) return;
             const collapsed = header.classList.toggle("collapsed");
-            btn.textContent = collapsed ? "▾" : "▴";
+            btn.textContent = collapsed ? "▼" : "▲";
             btn.title = collapsed ? "展开导航" : "收起导航";
         }
+        window.toggleTopNavCollapse = toggleTopNavCollapse;
         function openAvatarPickerModal(initialValue, onConfirm) {
             const modal = document.getElementById("avatar-picker-modal");
             const grid = document.getElementById("avatar-picker-grid");
@@ -16440,15 +16466,18 @@ function openNpcProfile(npcId) {
             };
             modal.style.display = "flex";
         }
+        window.openAvatarPickerModal = openAvatarPickerModal;
         function _avatarGridPick(el) {
             _avatarPickerValue = el.dataset.avUrl || "";
             const grid = document.getElementById("avatar-picker-grid");
             [...grid.children].forEach((c) => c.style.borderColor = (c === el) ? "var(--accent)" : "transparent");
         }
+        window._avatarGridPick = _avatarGridPick;
         function closeAvatarPickerModal() {
             const modal = document.getElementById("avatar-picker-modal");
             if (modal) modal.style.display = "none";
         }
+        window.closeAvatarPickerModal = closeAvatarPickerModal;
         // 游玩页状态栏点头像 → 弹网格选头像,写当前角色卡并立即刷新
         function openAvatarPickerForPlay() {
             const st = StateService.get();
@@ -16924,8 +16953,6 @@ function openNpcProfile(npcId) {
     function restartLife() { Controller.restartLife(); }
     function togglePlayDockNav() { Controller.togglePlayDockNav(); }
     function switchView(viewId) { Controller.switchView(viewId); }
-    function toggleTopNavCollapse() { Controller.toggleTopNavCollapse(); }
-    function openAvatarPickerForNpc(npcId) { Controller.openAvatarPickerForNpc(npcId); }
     function openCardSettings() { Controller.openCardSettings(); }
     function saveSettings() { Controller.saveSettings(); }
     function saveUserApiSettings() { Controller.saveUserApiSettings(); }
