@@ -814,6 +814,8 @@
             overflow: auto;
             background: var(--input-bg);
         }
+        /* stage 高度=图片实际渲染高度,pin 的 % 定位不会漂出图片范围 */
+        .fullmap-stage { position: relative; width: 100%; }
         .full-map-canvas img { width: 100%; display: block; }
         .fullmap-pin {
             position: absolute;
@@ -825,6 +827,10 @@
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
             background: none;
             border: none;
+            max-width: 88%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
             padding: 0;
             font: inherit;
         }
@@ -4558,101 +4564,9 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <div id="my-collect-list" style="margin-top:8px;"><span class="list-sub">加载中...</span></div>
             </section>
             <section class="card">
-                <div class="list-title">📖 叙事控制</div>
-                <div class="list-sub">以下设置即时生效并注入 AI 提示词，无需保存按钮。</div>
-                <div style="margin-top:10px;display:flex;flex-direction:column;gap:10px;">
-                    <div class="nc-row"><span class="nc-label">叙事模式</span>
-                        <select id="nc-mode">
-                            <option value="game">🎮 游戏式（事件 + 选项）</option>
-                            <option value="novel">📖 小说式（连续叙述）</option>
-                        </select>
-                    </div>
-                    <label class="settings-toggle">
-                        <span><strong style="display:block;color:var(--text);">仅手动完结事件</strong><span class="list-sub" style="display:block;">AI 不自行开启新事件，由你点击"推进剧情"驱动</span></span>
-                        <input type="checkbox" id="nc-manual-end">
-                    </label>
-                    <div class="nc-row"><span class="nc-label">文风</span>
-                        <select id="nc-style-track">
-                            <option value="card">跟随卡片设定</option>
-                            <option value="free">自由设定</option>
-                        </select>
-                        <input id="nc-style-free" type="text" maxlength="40" placeholder="如：轻喜剧、古风诗意、悬疑紧张">
-                    </div>
-                    <div class="nc-row"><span class="nc-label">叙事节奏</span>
-                        <select id="nc-pace">
-                            <option value="balanced">⚖️ 适中</option>
-                            <option value="fast">⚡ 明快</option>
-                            <option value="slow">🌿 舒缓</option>
-                        </select>
-                    </div>
-                    <div class="nc-row"><span class="nc-label">单轮字数</span>
-                        <input id="nc-word-min" type="number" min="40" max="500" step="10" value="80">
-                        <span style="color:var(--sub);">~</span>
-                        <input id="nc-word-max" type="number" min="60" max="800" step="10" value="250">
-                        <span style="color:var(--sub);flex:none;">字</span>
-                    </div>
-                    <div class="nc-row"><span class="nc-label">文字展示</span>
-                        <select id="nc-text-display">
-                            <option value="sentence">分句渐显</option>
-                            <option value="paragraph">整段展示</option>
-                        </select>
-                        <span style="color:var(--sub);flex:none;font-size:.8rem;">阅读</span>
-                        <input type="range" id="nc-read-speed" min="1" max="5" step="1" style="flex:1;">
-                        <span id="nc-read-speed-val" style="min-width:44px;font-weight:700;text-align:right;font-size:.8rem;">适中</span>
-                    </div>
-                    <div class="nc-row"><span class="nc-label">记忆方式</span>
-                        <select id="nc-memory-mode">
-                            <option value="auto">🧠 自动记忆（推荐）</option>
-                            <option value="off">🚫 关闭记忆</option>
-                        </select>
-                        <button type="button" class="mini-btn" style="flex:none;" onclick="SettingsService.openMemoryManager()">🧠 记忆管理</button>
-                    </div>
-                </div>
-            </section>
-            <section class="card">
-                <div class="list-title">🎨 主题与展示</div>
-                <div style="margin-top:10px;display:flex;flex-direction:column;gap:10px;">
-                    <div class="nc-row"><span class="nc-label">主题皮肤</span>
-                        <select id="nc-skin">
-                            <option value="default">☁️ 云吞暖纸</option>
-                            <option value="deepblue">🌊 深海墨蓝</option>
-                            <option value="violet">🍇 暮色紫檀</option>
-                            <option value="forest">🌲 森林晨雾</option>
-                            <option value="neon">🌃 暗夜霓虹</option>
-                            <option value="snow">❄️ 初雪纯白</option>
-                        </select>
-                    </div>
-                    <div class="nc-row"><span class="nc-label">壁纸</span>
-                        <input id="nc-wallpaper" type="text" maxlength="200" placeholder="图片 URL（留空用默认背景）">
-                    </div>
-                    <div class="nc-row"><span class="nc-label">地图背景</span>
-                        <select id="nc-map-bg">
-                            <option value="">跟随剧本设定</option>
-                            <option value="school">🌸 樱花校园</option>
-                            <option value="palace">🏯 古代皇宫</option>
-                            <option value="city">🏙️ 现代城市</option>
-                            <option value="doomsday">☣️ 末日城市</option>
-                            <option value="magic">🔮 魔法学院</option>
-                            <option value="parchment">📜 通用羊皮</option>
-                            <option value="custom">🖼️ 自定义图片</option>
-                        </select>
-                    </div>
-                    <div class="nc-row"><span class="nc-label">地图图片</span>
-                        <input id="nc-map-url" type="text" maxlength="500" placeholder="自定义地图图片 URL（选「自定义」时生效）">
-                        <input id="nc-map-file" type="file" accept="image/*" style="display:none;">
-                        <button type="button" class="mini-btn" style="flex:none;" onclick="document.getElementById('nc-map-file').click()">📤 上传</button>
-                    </div>
-                    <div class="list-sub">地图背景按当前剧本分别保存，仅替换地图底图，不影响图钉地点。</div>
-                    <div class="nc-row"><span class="nc-label">透明度</span>
-                        <input type="range" id="nc-opacity" min="50" max="100" step="5" style="flex:1;">
-                        <span id="nc-opacity-val" style="min-width:40px;font-weight:700;text-align:right;font-size:.8rem;">100%</span>
-                    </div>
-                    <div class="nc-row"><span class="nc-label">显示开关</span>
-                        <label class="inline-chk"><input type="checkbox" id="nc-show-status"> 状态栏</label>
-                        <label class="inline-chk"><input type="checkbox" id="nc-show-map"> 大地图</label>
-                        <label class="inline-chk"><input type="checkbox" id="nc-show-events"> 事件列表</label>
-                    </div>
-                </div>
+                <div class="list-title">📜 我的剧本</div>
+                <div class="list-sub">别人游玩你的卡：每轮 30 币；解锁你的卡：+1000 币（防刷上限 10 轮/卡/天）。</div>
+                <div id="my-community-cards" style="margin-top:8px;"><span class="list-sub">加载中...</span></div>
             </section>
             <section class="card">
                 <div class="list-title">🛤️ 访问线路</div>
@@ -4692,11 +4606,6 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                         <span id="ui-byok-test-result" class="list-sub" style="margin:0;"></span>
                     </div>
                 </div>
-            </section>
-            <section class="card">
-                <div class="list-title">📜 我的剧本</div>
-                <div class="list-sub">别人游玩你的卡：每轮 30 币；解锁你的卡：+1000 币（防刷上限 10 轮/卡/天）。</div>
-                <div id="my-community-cards" style="margin-top:8px;"><span class="list-sub">加载中...</span></div>
             </section>
             <section class="card">
                 <div class="list-title">👑 会员服务</div>
@@ -8208,6 +8117,46 @@ function rebuildChoicesBlock(body, labels = []) {
         return /^(data:|https?:)/i.test(String(v || "")) || /^[a-zA-Z0-9_\-/]+\.(png|jpe?g|webp|gif|svg)$/i.test(String(v || ""));
     }
 
+    // 首字头像(与世界页 renderWorld 一致):名字首字 + 名字哈希底色
+    function firstLetterAvatar(name, cls, styleExtra) {
+        const nm = String(name || "?");
+        let h = 0;
+        for (let i = 0; i < nm.length; i++) h = (h * 31 + nm.charCodeAt(i)) % 360;
+        return `<span${cls ? ` class="${cls}"` : ""} style="background:hsl(${h}, 68%, 55%);${styleExtra || ""}">${MarkdownService.escapeHtml(nm.slice(0, 1))}</span>`;
+    }
+
+    // 头像统一压缩:256px 居中裁剪 + webp(0.8),失败(旧浏览器无 webp)降级原 dataURL
+    function compressImageFile(file, cb) {
+        try {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const src = String(reader.result || "");
+                try {
+                    const img = new Image();
+                    img.onload = () => {
+                        try {
+                            const size = 256;
+                            const scale = Math.max(size / img.width, size / img.height);
+                            const sw = size / scale, sh = size / scale;
+                            const canvas = document.createElement("canvas");
+                            canvas.width = size; canvas.height = size;
+                            canvas.getContext("2d").drawImage(img, (img.width - sw) / 2, (img.height - sh) / 2, sw, sh, 0, 0, size, size);
+                            canvas.toBlob((blob) => {
+                                if (!blob) { cb(src); return; }
+                                const fr = new FileReader();
+                                fr.onload = () => cb(String(fr.result || src));
+                                fr.readAsDataURL(blob);
+                            }, "image/webp", 0.8);
+                        } catch (e) { cb(src); }
+                    };
+                    img.onerror = () => cb(src);
+                    img.src = src;
+                } catch (e) { cb(src); }
+            };
+            reader.readAsDataURL(file);
+        } catch (e) { cb(""); }
+    }
+
     const UIRenderer = (() => {
         let currentStreamingTarget = null;
         let currentSocialNpcId = null;
@@ -8801,8 +8750,11 @@ function rebuildChoicesBlock(body, labels = []) {
             return true;
         }
         function setSendingDisabled(disabled) {
-            document.getElementById("send-btn").disabled = disabled;
-            document.getElementById("btn-next-month").disabled = disabled;
+            // 元素可能未渲染(如未进过游玩页),缺失时静默跳过,否则抛错会卡死 requestAI 的 isGenerating
+            const sb = document.getElementById("send-btn");
+            const nm = document.getElementById("btn-next-month");
+            if (sb) sb.disabled = disabled;
+            if (nm) nm.disabled = disabled;
         }
         function renderInventory(state) {
             const list = document.getElementById("inventory-list");
@@ -8928,7 +8880,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const name = n && n.name ? n.name : "?";
             const avUrl = n ? (isAvatarImg(n.avatar) ? n.avatar : "") : "";
             const fb = MarkdownService.escapeHtml(String(name).slice(0, 1));
-            if (!avUrl) return `<div class="npc-chat-avatar" title="${MarkdownService.escapeHtml(name)}">🧑</div>`;
+            if (!avUrl) return `<div class="npc-chat-avatar" title="${MarkdownService.escapeHtml(name)}">${firstLetterAvatar(name, "", "width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;")}</div>`;
             return `<div class="npc-chat-avatar" title="${MarkdownService.escapeHtml(name)}"><img src="${String(avUrl).replace(/"/g, "%22")}" alt="" loading="lazy" onerror="this.parentElement.textContent=this.dataset.fb" data-fb="${fb}" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit;"></div>`;
         }
         function chatMessageHtml(npc, m) {
@@ -9646,6 +9598,9 @@ function rebuildChoicesBlock(body, labels = []) {
             });
         }
         // 我的页:昵称/签名/头像 即时保存（PATCH 直连 PocketBase，PB users 集合默认允许用户改自己的记录）
+        // 注意:PB_URL/COLLECTION 定义在 AuthService IIFE 内部,此处必须自行声明,否则引用抛 ReferenceError
+        const PB_URL = "https://db.blupure.cn";
+        const COLLECTION = "users";
         async function saveProfile(patch) {
             const user = AuthService.getUserData();
             const token = AuthService.getToken();
@@ -9658,7 +9613,10 @@ function rebuildChoicesBlock(body, labels = []) {
                 });
                 if (res.ok) {
                     const updated = await res.json().catch(() => null);
-                    if (updated) Object.assign(user, updated); // getUserData 返回内存引用,直接生效
+                    if (updated) {
+                        Object.assign(user, updated); // getUserData 返回内存引用,直接生效
+                        AuthService.refreshCache(); // 立即落盘本地缓存,刷新/重开不丢
+                    }
                 }
             } catch (e) { /* 网络失败静默,下次编辑重试 */ }
         }
@@ -9721,14 +9679,10 @@ function rebuildChoicesBlock(body, labels = []) {
             if (fileEl) fileEl.addEventListener("change", () => {
                 const f = fileEl.files?.[0];
                 if (!f) return;
-                if (f.size > 2 * 1024 * 1024) { NoticeModalService.showInfo({ title: "头像过大", descHtml: "请上传 2MB 以内的图片" }); return; }
-                const reader = new FileReader();
-                reader.onload = () => {
-                    const url = String(reader.result || "");
+                compressImageFile(f, (url) => {
                     saveProfile({ faceimg: url });
                     if (avatarEl) avatarEl.src = url;
-                };
-                reader.readAsDataURL(f);
+                });
                 fileEl.value = "";
             });
         }
@@ -9904,18 +9858,7 @@ function rebuildChoicesBlock(body, labels = []) {
             if (endingCard) endingCard.style.display = getSettingsContext() ? "" : "none";
             const n = getNarrative(_settingsCardId === null ? null : _settingsCardId);
             const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
-            const setChk = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
-            set("nc-mode", n.mode); setChk("nc-manual-end", n.manualEnd);
-            set("nc-style-track", n.styleTrack); set("nc-style-free", n.styleFree);
-            set("nc-pace", n.pace); set("nc-word-min", n.wordMin); set("nc-word-max", n.wordMax);
-            set("nc-text-display", n.textDisplay); set("nc-read-speed", n.readSpeed); set("nc-memory-mode", n.memoryMode);
-            set("nc-skin", n.skin); set("nc-wallpaper", n.wallpaper); set("nc-opacity", n.opacity);
-            setChk("nc-show-status", n.showStatus); setChk("nc-show-map", n.showMap); setChk("nc-show-events", n.showEvents);
             set("nc-route", n.route);
-            const speedNames = { 1: "很慢", 2: "偏慢", 3: "适中", 4: "偏快", 5: "很快" };
-            const sv = document.getElementById("nc-read-speed-val"); if (sv) sv.textContent = speedNames[Math.round(n.readSpeed)] || "适中";
-            const ov = document.getElementById("nc-opacity-val"); if (ov) ov.textContent = Math.round(Number(n.opacity) || 100) + "%";
-            loadMapUI();
         }
         const MAP_OVERRIDE_KEY = "bitlife_map_override_v1";
         function getMapOverride(cardId) {
@@ -9931,77 +9874,25 @@ function rebuildChoicesBlock(body, labels = []) {
             all[cardId] = { ...(all[cardId] || {}), ...patch };
             localStorage.setItem(MAP_OVERRIDE_KEY, JSON.stringify(all));
         }
-        function loadMapUI() {
-            const card = (typeof ScenarioCardService !== "undefined" && typeof ScenarioCardService.getSelectedCard === "function") ? ScenarioCardService.getSelectedCard() : null;
-            const ov = getMapOverride(card ? card.id : "");
-            const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
-            set("nc-map-bg", ov ? ov.bg || "" : "");
-            set("nc-map-url", ov ? ov.bgUrl || "" : "");
-        }
-        function onMapFilePicked() {
-            const card = (typeof ScenarioCardService !== "undefined" && typeof ScenarioCardService.getSelectedCard === "function") ? ScenarioCardService.getSelectedCard() : null;
-            const input = document.getElementById("nc-map-file");
-            const f = input && input.files && input.files[0];
-            if (!f || !card) return;
-            const reader = new FileReader();
-            reader.onload = () => {
-                setMapOverride(card.id, { bg: "custom", bgUrl: String(reader.result || "") });
-                const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
-                set("nc-map-bg", "custom");
-                set("nc-map-url", String(reader.result || ""));
-                if (typeof activeView !== "undefined" && activeView === "view-main") UIRenderer.renderPlayEventList();
-                NoticeModalService.showInfo({ title: "已更换地图", descHtml: "已为该剧本设置自定义地图背景，游玩页即时生效。" });
-            };
-            reader.readAsDataURL(f);
-        }
         function bindNarrativeAutoSave() {
-            const map = {
-                "nc-mode": "mode", "nc-manual-end": "manualEnd", "nc-style-track": "styleTrack", "nc-style-free": "styleFree",
-                "nc-pace": "pace", "nc-word-min": "wordMin", "nc-word-max": "wordMax",
-                "nc-text-display": "textDisplay", "nc-read-speed": "readSpeed", "nc-memory-mode": "memoryMode",
-                "nc-skin": "skin", "nc-wallpaper": "wallpaper", "nc-opacity": "opacity",
-                "nc-show-status": "showStatus", "nc-show-map": "showMap", "nc-show-events": "showEvents",
-                "nc-route": "route",
-            };
-            const speedNames = { 1: "很慢", 2: "偏慢", 3: "适中", 4: "偏快", 5: "很快" };
-            Object.keys(map).forEach((id) => {
+            // 「我的」页仅剩访问线路(nc-route)一项;叙事控制/主题与展示区块已移除
+            const bind = (id, key) => {
                 const el = document.getElementById(id);
                 if (!el) return;
-                const key = map[id];
                 const fn = () => {
                     let val;
                     if (el.type === "checkbox") val = el.checked;
                     else if (el.type === "number" || el.type === "range") val = Number(el.value);
                     else val = el.value;
-                    const n = saveNarrative({ [key]: val });
+                    saveNarrative({ [key]: val });
                     applyNarrativeUI();
-                    if (key === "opacity") { const v = document.getElementById("nc-opacity-val"); if (v) v.textContent = Math.round(val) + "%"; }
-                    if (key === "readSpeed") { const v = document.getElementById("nc-read-speed-val"); if (v) v.textContent = speedNames[Math.round(val)] || "适中"; }
-                    if (key.startsWith("show") && typeof activeView !== "undefined" && activeView === "view-main") {
-                        if (key === "showStatus") UIRenderer.renderPlayStatusBar(StateService.get());
-                        else UIRenderer.renderPlayEventList();
-                    }
                 };
                 el.addEventListener("change", fn);
                 el.addEventListener("input", fn);
-            });
-            const bindMapOverride = (id) => {
-                const el = document.getElementById(id);
-                if (!el) return;
-                el.addEventListener("change", () => {
-                    const card = (typeof ScenarioCardService !== "undefined" && typeof ScenarioCardService.getSelectedCard === "function") ? ScenarioCardService.getSelectedCard() : null;
-                    if (!card) return;
-                    const bg = document.getElementById("nc-map-bg") ? document.getElementById("nc-map-bg").value : "";
-                    const url = document.getElementById("nc-map-url") ? document.getElementById("nc-map-url").value.trim() : "";
-                    if (!bg) setMapOverride(card.id, { bg: "", bgUrl: "" });
-                    else setMapOverride(card.id, bg === "custom" ? { bg: "custom", bgUrl: url } : { bg, bgUrl: "" });
-                    if (typeof activeView !== "undefined" && activeView === "view-main") UIRenderer.renderPlayEventList();
-                });
             };
-            bindMapOverride("nc-map-bg");
-            bindMapOverride("nc-map-url");
+            bind("nc-route", "route");
         }
-        return { loadToUI, saveFromUI, saveUserApiFromUI, getApiConfig, getByok, applyFontSize, loadFontSize, onFontSizeInput, testByokConnection, getScenarioText, getScenarioTextForModel, getBeautyCardSetting, getChatPolicyConfig, getThinkingPayloadForCard, importScenarioFromFile, bindProfileAutoSave, bindByokAutoSave, setSettingsContext, getSettingsContext, getNarrative, saveNarrative, applyNarrativeUI, buildNarrativePrompt, openMemoryManager, clearNpcMemory, loadNarrativeToUI, bindNarrativeAutoSave, getMapOverride, setMapOverride, loadMapUI, onMapFilePicked };
+        return { loadToUI, saveFromUI, saveUserApiFromUI, getApiConfig, getByok, applyFontSize, loadFontSize, onFontSizeInput, testByokConnection, getScenarioText, getScenarioTextForModel, getBeautyCardSetting, getChatPolicyConfig, getThinkingPayloadForCard, importScenarioFromFile, bindProfileAutoSave, bindByokAutoSave, setSettingsContext, getSettingsContext, getNarrative, saveNarrative, applyNarrativeUI, buildNarrativePrompt, openMemoryManager, clearNpcMemory, loadNarrativeToUI, bindNarrativeAutoSave, getMapOverride, setMapOverride };
     })();
     SettingsService.loadFontSize();
 
@@ -14708,10 +14599,10 @@ const token = delta.content || "";
                     UIRenderer.finishStreaming(`⚠️ 连接失败：${errText}${extraHint}\n\n请检查网络后重试。`, { conflictDetected: false });
                 }
             } finally {
-                if (!uiUnlocked) {
+                // 无条件复位:任何路径(含成功后 render 抛异常)都不能让 isGenerating 卡死,
+                // 否则 guardGenerating 会拦死后续所有推进/探索点击
                 isGenerating = false;
                 UIRenderer.setSendingDisabled(false);
-                }
             }
         }
         function getIsGenerating() {
@@ -14816,10 +14707,7 @@ const token = delta.content || "";
         function npcAvatar(n) {
             const a = String(n.avatar || n.emoji || "").trim();
             if (a) return a.slice(0, 4);
-            const g = String(n.gender || "");
-            if (g === "女") return "👩";
-            if (g === "男") return "👨";
-            return "🧑";
+            return String(n.name || "?").slice(0, 1);
         }
         function roleIdOf(n) { return String(n.id || n.name || "role").replace(/[^\w-]/g, "_"); }
         async function openGameDetail(cardId) {
@@ -14881,7 +14769,7 @@ const token = delta.content || "";
             </div>`;
             if (!d.local && d.author) {
                 html += `<div class="gd-author-row">
-                    ${d.author.faceimg ? `<img class="gd-donor-avatar" src="${MarkdownService.escapeHtml(d.author.faceimg)}" onerror="this.style.display='none'">` : '<span class="gd-donor-avatar" style="display:flex;align-items:center;justify-content:center;">🧑‍🎨</span>'}
+                    ${d.author.faceimg ? `<img class="gd-donor-avatar" src="${MarkdownService.escapeHtml(d.author.faceimg)}" onerror="this.style.display='none'">` : `<span class="gd-donor-avatar" style="display:flex;align-items:center;justify-content:center;">${firstLetterAvatar(d.author.nickname || "匿", "", "width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;color:#fff;")}</span>`}
                     <span style="font-weight:700;color:var(--text);">${MarkdownService.escapeHtml(d.author.nickname || "匿名作者")}</span>
                     <span class="list-sub">作品作者</span>
                 </div>`;
@@ -14932,7 +14820,7 @@ const token = delta.content || "";
                     const hotCount = 100 + Number(d.roles[rid] || 0);
                     const desc = String(n.personality || (n.profile && n.profile.personality) || n.relationship || "…").slice(0, 60);
                     html += `<div class="gd-role-card">
-                        <div class="gd-role-avatar">${MarkdownService.escapeHtml(npcAvatar(n))}</div>
+                        <div class="gd-role-avatar">${n.avatar || n.emoji ? MarkdownService.escapeHtml(npcAvatar(n)) : firstLetterAvatar(n.name, "", "width:100%;height:100%;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;")}</div>
                         <div class="gd-role-main">
                             <div class="gd-role-name">${MarkdownService.escapeHtml(String(n.name || "角色"))} <span class="list-sub">${MarkdownService.escapeHtml(String(n.role || n.relation || ""))}</span></div>
                             <div class="gd-role-sub">${MarkdownService.escapeHtml(desc)}</div>
@@ -14959,7 +14847,7 @@ const token = delta.content || "";
             if (d.donors && d.donors.length) {
                 html += d.donors.slice(0, 10).map((u, i) => `<div class="gd-donor-row">
                     <span style="width:18px;color:${i < 3 ? "#d4a017" : "var(--sub)"};font-weight:800;">${i + 1}</span>
-                    ${u.user.faceimg ? `<img class="gd-donor-avatar" src="${MarkdownService.escapeHtml(u.user.faceimg)}" onerror="this.style.display='none'">` : '<span class="gd-donor-avatar" style="display:flex;align-items:center;justify-content:center;">🧑</span>'}
+                    ${u.user.faceimg ? `<img class="gd-donor-avatar" src="${MarkdownService.escapeHtml(u.user.faceimg)}" onerror="this.style.display='none'">` : `<span class="gd-donor-avatar" style="display:flex;align-items:center;justify-content:center;">${firstLetterAvatar(u.user.nickname || "神", "", "width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;color:#fff;")}</span>`}
                     <span class="gd-donor-name">${MarkdownService.escapeHtml(u.user.nickname || "神秘玩家")}</span>
                     <span class="gd-donor-amt">${fmtNum(u.amount)} 币</span>
                 </div>`).join("");
@@ -15616,6 +15504,7 @@ const token = delta.content || "";
             UIRenderer.renderTop(state);
             UIRenderer.renderPlayStatusBar(state);
             if (activeView === "view-main") UIRenderer.renderPlayEventList();
+            else switchView("view-main"); // 从地图跳转时主动回剧情页
             sendUserText(`前往${name}探索，看看有什么新事件发生`);
         }
         function showFullMap() {
@@ -15642,7 +15531,9 @@ const token = delta.content || "";
             const pins = (map.places || []).map((p) => {
                 const active = p.name === cur;
                 const name = MarkdownService.escapeHtml(String(p.name || ""));
-                return `<button type="button" class="fullmap-pin${active ? " current" : ""}" style="left:${Math.min(100, Math.max(0, Number(p.x) || 0))}%;top:${Math.min(100, Math.max(0, Number(p.y) || 0))}%" onclick="placeClick('${name.replace(/'/g, "\\'")}')"><span class="pin-icon">📍</span><span class="pin-name">${name}</span></button>`;
+                const px = Math.min(94, Math.max(6, Number(p.x) || 0)); // 留边距:pin 中心不贴图缘,配合 translate(-50%) 不会漂出图片
+                const py = Math.min(94, Math.max(6, Number(p.y) || 0));
+                return `<button type="button" class="fullmap-pin${active ? " current" : ""}" style="left:${px}%;top:${py}%" onclick="placeClick('${name.replace(/'/g, "\\'")}')"><span class="pin-icon">📍</span><span class="pin-name">${name}</span></button>`;
             }).join("");
             const img = map.src ? `<img src="${map.src}" alt="地图">` : "";
             const overlay = document.createElement("div");
@@ -15651,7 +15542,7 @@ const token = delta.content || "";
             overlay.onclick = closeFullMap;
             overlay.innerHTML = `<div class="full-map-frame" onclick="event.stopPropagation()">
                 <div class="full-map-head"><span style="font-weight:800;">🗺️ 大地图</span><span class="list-sub">当前：${MarkdownService.escapeHtml(cur || "未知")}</span><span style="display:flex;gap:6px;"><button type="button" class="mini-btn ghost" style="flex:none;" onclick="openMapPickerForPlay()">🗺 换地图</button><button type="button" class="mini-btn ghost" style="flex:none;" onclick="closeFullMap()">✕ 关闭</button></span></div>
-                <div class="full-map-canvas">${img}<div class="fullmap-pins">${pins}</div></div>
+                <div class="full-map-canvas"><div class="fullmap-stage">${img}<div class="fullmap-pins">${pins}</div></div></div>
                 <div class="full-map-foot list-sub">${(map.places || []).length ? "点击图钉前往对应地点，可触发新的事件" : "这张地图还没有地点，去编辑器添加图钉吧"}</div>
             </div>`;
             document.body.appendChild(overlay);
@@ -15664,6 +15555,7 @@ const token = delta.content || "";
             const map = UIRenderer.getActiveMap();
             const loc = (map && map.places || []).find((p) => p.name === name);
             const safe = String(name || "").replace(/'/g, "\\'");
+            closeFullMap(); // 点地点必关图,有详情则弹框,无详情直接前往
             if (loc && loc.desc) {
                 NoticeModalService.showInfo({
                     title: `📍 ${loc.name}`,
@@ -15671,7 +15563,6 @@ const token = delta.content || "";
                 });
                 return;
             }
-            closeFullMap();
             moveToLocation(name);
         }
         function placeGo(name) {
@@ -16170,7 +16061,7 @@ function openNpcProfile(npcId) {
             const desc = `
                 <div style="border-radius:14px;overflow:hidden;background:var(--card);padding:2px;">
                     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:10px;">
-                        <div style="width:54px;height:54px;border-radius:10px;background:var(--accent);display:grid;place-items:center;font-size:24px;color:#fff;">🧑</div>
+                        <div style="width:54px;height:54px;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;">${firstLetterAvatar(getStr(npc.name), "", "width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;")}</div>
                         <div>
                             <div style="font-size:1.1rem;font-weight:800;color:var(--accent-dark);">${MarkdownService.escapeHtml(getStr(npc.name))}</div>
                             <div style="font-size:.8rem;color:var(--sub);">${MarkdownService.escapeHtml(getStr(npc.relation, "NPC"))}</div>
@@ -16485,16 +16376,33 @@ function openNpcProfile(npcId) {
             switchView("view-saves");
         }
         // ---- 清除本地缓存（仅进度存档,不动登录/会员/云币）----
+        // 白名单式删除：只清进度类 key；登录(pb_auth_*)/用户缓存/会员/云币保留。
+        // 注意：新增进度类 key 必须登记到 CLEAR_CACHE_KEYS 或 PREFIX 清单，否则清除缓存后残留会导致
+        // "最近游玩还在 / 跳过开局确认" 等假性 bug（曾因 play_meta_map 残留引发）。
+        const CLEAR_CACHE_PREFIXES = ["bitlife_save"];
+        const CLEAR_CACHE_KEYS = [
+            "bitlife_scenario_play_meta_map_v1",   // 最近游玩 + hasInitialized（不删→跳过开局角色确认）
+            "bitlife_map_override_v1",             // 地图覆盖
+            "bitlife_selected_scenario_card_v1",   // 当前选中卡
+            "bitlife_scenario_cards_v1",           // 卡列表
+            "bitlife_scenario_text_v1",
+            "bitlife_scenario_chat_policy_map_v1",
+            "bitlife_scenario_dismissed_warnings_map_v1",
+            "bitlife_used_name_registry_v1",
+            "bitlife_game_hot_v1",
+            "bitlife_card_collects_v1"
+        ];
         async function clearLocalCache() {
             const ok = await NoticeModalService.confirm({
                 title: "清除本地存档缓存",
-                descHtml: "将删除当前浏览器保存的<b>全部本地存档与自动进度</b>（含各剧本槽位与自动档）。登录、会员与云币不受影响。确定继续吗？"
+                descHtml: "将删除当前浏览器保存的<b>全部本地存档与自动进度</b>（含各剧本槽位、自动档、最近游玩记录与地图覆盖）。登录、会员与云币不受影响。确定继续吗？"
             });
             if (!ok) return;
             let removed = 0;
             for (let i = localStorage.length - 1; i >= 0; i--) {
                 const key = localStorage.key(i) || "";
-                if (key.startsWith("bitlife_save_slot_") || key.startsWith("bitlife_save")) {
+                const hit = CLEAR_CACHE_PREFIXES.some((p) => key.startsWith(p)) || CLEAR_CACHE_KEYS.includes(key);
+                if (hit) {
                     localStorage.removeItem(key);
                     removed++;
                 }
@@ -16832,7 +16740,7 @@ function openNpcProfile(npcId) {
             if (!AuthService.getToken()) { container.innerHTML = '<span class="list-sub">登录后查看人物卡。</span>'; return; }
             container.innerHTML = '<span class="list-sub">加载中...</span>';
             const charCard = (c, favBtn) => `<div class="char-card">
-                <div class="char-avatar">🧑‍🎤</div>
+                <div class="char-avatar">${firstLetterAvatar(c.name || "角", "", "width:100%;height:100%;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;")}</div>
                 <div style="flex:1;min-width:0;">
                     <div class="char-name">${escapeForHtml(c.name || "角色")} <span class="list-sub">${escapeForHtml(c.role || "")}</span></div>
                     <div class="char-sub">来自「${escapeForHtml(c.card_title || "")}」 · <img class="ic" src="icons/pen.svg" alt=""> ${Number(c.pens || 0)} · <img class="ic" src="icons/star.svg" alt=""> ${Number(c.favs || 0)}</div>
@@ -17239,12 +17147,10 @@ function openNpcProfile(npcId) {
             upEl.onchange = () => {
                 const f = upEl.files && upEl.files[0];
                 if (!f) return;
-                const reader = new FileReader();
-                reader.onload = () => {
+                compressImageFile(f, (url) => {
                     closeAvatarPickerModal();
-                    if (onConfirm) onConfirm(String(reader.result));
-                };
-                reader.readAsDataURL(f);
+                    if (onConfirm) onConfirm(String(url));
+                });
             };
             modal.style.display = "flex";
         }
@@ -18209,7 +18115,7 @@ function openNpcProfile(npcId) {
                     coins: u.coins, membership_type: u.membership_type || "",
                     membership_expires_at: u.membership_expires_at || "",
                     checkin_streak: u.checkin_streak || 0, last_checkin_date: u.last_checkin_date || "",
-                    nickname: u.nickname || "", faceimg: u.faceimg || "",
+                    nickname: u.nickname || "", signature: u.signature || "", faceimg: u.faceimg || "",
                     ts: Date.now()
                 }));
             } catch (e) {}
@@ -18225,7 +18131,7 @@ function openNpcProfile(npcId) {
                     coins: Number(c.coins ?? c.coin ?? 0), membership_type: c.membership_type || "",
                     membership_expires_at: c.membership_expires_at || "",
                     checkin_streak: c.checkin_streak || 0, last_checkin_date: c.last_checkin_date || "",
-                    nickname: c.nickname || "", faceimg: c.faceimg || ""
+                    nickname: c.nickname || "", signature: c.signature || "", faceimg: c.faceimg || ""
                 };
             } catch (e) {}
         }
@@ -18756,7 +18662,7 @@ function openNpcProfile(npcId) {
             if (e.key === "Enter") handleSubmit();
         });
 
-        return { init, handleSubmit, toggleMode, enterResetMode, sendCode, register, resetPassword, logout, getToken, getEmail, getUserData, refreshBalance, applyCheckin, updateUsageStatusUI, hasMembership, socialLogin, showDoc };
+        return { init, handleSubmit, toggleMode, enterResetMode, sendCode, register, resetPassword, logout, getToken, getEmail, getUserData, refreshBalance, applyCheckin, updateUsageStatusUI, hasMembership, socialLogin, showDoc, refreshCache: cacheUser };
     })();
 
     function hideBootScreen() {
