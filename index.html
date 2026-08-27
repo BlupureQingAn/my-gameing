@@ -984,8 +984,9 @@
         }
         .advance-btn:active { transform: scale(.97); }
         .advance-hint { text-align: center; font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px; }
-        /* 手机页模拟器 */
+        /* 手机页模拟器: 固定 360×640(9:16),由 fitPhoneShell 按可用空间等比缩放 */
         .phone-shell {
+            position: relative;
             border-radius: 22px;
             padding: 14px 14px 16px;
             background: linear-gradient(160deg, rgba(255,255,255,.96), rgba(246,244,252,.9));
@@ -994,10 +995,11 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
-            width: 100%;
-            max-width: 360px;
+            width: 360px;
+            height: 640px;
+            flex: 0 0 auto;
             margin: 0 auto;
-            aspect-ratio: 9 / 16;
+            transform-origin: top center;
             overflow: hidden;
             --phone-accent: #5b5bd6;
             background-size: cover;
@@ -3972,6 +3974,122 @@
             border-color: var(--accent);
             color: var(--accent-dark);
         }
+        /* ============ 世界页×社交融合：手机内微信 app ============ */
+        .npc-card { cursor: pointer; }
+        .npc-card:hover { border-color: var(--accent); box-shadow: 0 6px 16px rgba(0,0,0,.12); }
+        .wx-screen {
+            position: absolute;
+            inset: 0;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            background: var(--wechat-bg);
+            border-radius: 22px;
+            overflow: hidden;
+        }
+        .wx-navbar {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 44px;
+            flex-shrink: 0;
+            background: var(--wechat-header-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid color-mix(in srgb, var(--wechat-bubble-line) 55%, transparent);
+            padding: 0 10px;
+        }
+        .wx-navbar-title { font-weight: 800; font-size: 0.95rem; color: var(--wechat-text); }
+        .wx-close-btn, .wx-back-btn, .wx-profile-btn {
+            position: absolute;
+            border: 0;
+            background: transparent;
+            color: var(--accent-dark);
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 8px;
+        }
+        .wx-close-btn { right: 6px; }
+        .wx-back-btn { left: 6px; }
+        .wx-profile-btn { right: 6px; font-size: 0.78rem; }
+        .wx-body { flex: 1; min-height: 0; overflow-y: auto; }
+        .wx-session-list, .wx-contact-list { padding: 8px 10px; }
+        .wx-list-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 8px;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+        .wx-list-item:hover { background: color-mix(in srgb, var(--card) 55%, transparent); }
+        .wx-list-avatar {
+            width: 46px;
+            height: 46px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+            border: 1px solid var(--wechat-bubble-line);
+        }
+        .wx-list-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .wx-list-content { flex: 1; min-width: 0; }
+        .wx-list-title { font-size: 0.88rem; font-weight: 700; color: var(--wechat-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .wx-list-desc { font-size: 0.74rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+        .wx-list-meta { flex-shrink: 0; }
+        .wx-list-time { font-size: 0.68rem; color: var(--text-muted); }
+        .wx-badge {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 1px 7px;
+            border-radius: 999px;
+            font-size: 0.64rem;
+            font-weight: 700;
+            color: #fff;
+            background: #9aa0a8;
+            vertical-align: 1px;
+        }
+        .wx-tabbar {
+            display: flex;
+            flex-shrink: 0;
+            border-top: 1px solid color-mix(in srgb, var(--wechat-bubble-line) 55%, transparent);
+            background: var(--wechat-toolbar-bg);
+            padding: 6px 8px calc(env(safe-area-inset-bottom, 0px) + 6px);
+            gap: 6px;
+        }
+        .wx-tab {
+            flex: 1;
+            border: 0;
+            background: transparent;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            padding: 8px 0;
+            cursor: pointer;
+            border-radius: 10px;
+        }
+        .wx-tab.active { color: var(--accent-dark); background: color-mix(in srgb, var(--accent) 14%, transparent); }
+        .wx-empty { text-align: center; padding: 26px 12px; }
+        #wx-chat { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+        #wx-chat .social-chat-box {
+            flex: 1;
+            min-height: 0;
+            max-height: none;
+            height: auto;
+            margin: 0;
+            padding: 14px 12px;
+            border: 0;
+            border-radius: 0;
+            background: var(--wechat-bg);
+        }
 
     </style>
 </head>
@@ -4419,7 +4537,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <div class="list-title">👤 我的信息</div>
                 <div style="margin: 10px 0; padding: 12px; background: var(--card-soft); border-radius: 12px; border: 1px solid var(--line);">
                     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-                        <label style="position:relative;cursor:pointer;" title="点击更换头像">
+                        <label style="position:relative;cursor:pointer;" title="点击更换头像" onclick="event.preventDefault(); openAvatarPickerForProfile();">
                             <img id="display-user-avatar" src="icons/android-chrome-192x192.png" style="width:64px;height:64px;border-radius:12px;object-fit:cover;border:2px solid var(--line,#e2ccb0);background:#fff;">
                             <input id="avatar-upload" type="file" accept="image/*" style="display:none;">
                         </label>
@@ -4630,10 +4748,6 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 </div>
                 <div id="npc-grid" style="margin-top:8px;"></div>
             </section>
-            <section class="card">
-                <div class="list-title">💬 社交（类似微信单聊）</div>
-                <div id="social-list" style="margin-top:8px;"></div>
-            </section>
         </section>
 
         <section id="view-inventory" class="view-section">
@@ -4720,6 +4834,36 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <button type="button" class="phone-dock-btn" onclick="phoneAppTap('memories')">📖<span>你的回忆</span></button>
                     <button type="button" class="phone-dock-btn" onclick="phoneAppTap('jobs')">🔨<span>找点活干</span></button>
                     <button type="button" class="phone-dock-btn" onclick="phoneAppTap('settings')">⚙️<span>设置</span></button>
+                </div>
+                <!-- 手机内微信 app（世界页×社交融合） -->
+                <div class="wx-screen" id="wx-screen" style="display:none;">
+                    <div id="wx-main" style="display:flex;flex-direction:column;flex:1;min-height:0;">
+                        <div class="wx-navbar">
+                            <span class="wx-navbar-title">微信</span>
+                            <button class="wx-close-btn" type="button" onclick="closeWechatApp()" title="关闭微信">✕</button>
+                        </div>
+                        <div class="wx-body">
+                            <div class="wx-session-list" id="wx-session-list"></div>
+                            <div class="wx-contact-list" id="wx-contact-list" style="display:none;"></div>
+                        </div>
+                        <div class="wx-tabbar" id="wx-tabbar">
+                            <button type="button" class="wx-tab active" data-tab="chat" onclick="switchWechatTab('chat')">💬 聊天</button>
+                            <button type="button" class="wx-tab" data-tab="contacts" onclick="switchWechatTab('contacts')">👥 通讯录</button>
+                        </div>
+                    </div>
+                    <div id="wx-chat" style="display:none;">
+                        <div class="wx-navbar">
+                            <button class="wx-back-btn" type="button" onclick="backToWechatList()" title="返回">←</button>
+                            <span class="wx-navbar-title" id="wx-chat-title">聊天</span>
+                            <button class="wx-profile-btn" type="button" id="wx-chat-profile-btn">状态</button>
+                        </div>
+                        <div class="social-chat-box" id="wx-chat-box"></div>
+                        <div class="npc-chat-toolbar" id="wx-emoji-bar"></div>
+                        <div class="npc-chat-composer">
+                            <textarea id="wx-chat-input" placeholder="发消息"></textarea>
+                            <button class="send-btn" type="button" onclick="sendNpcMessage()">发送</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -8333,9 +8477,9 @@ function rebuildChoicesBlock(body, labels = []) {
                 const avHtml = avUrl
                     ? `<img src="${String(avUrl).replace(/"/g, "%22")}" alt="" loading="lazy" onerror="this.parentElement.textContent=this.dataset.fb" data-fb="${fallbackChar}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;">`
                     : fallbackChar;
-                return `<div class="npc-card">
+                return `<div class="npc-card" onclick="Controller.openNpcProfile('${String(n.id || "").replace(/'/g, "\\'")}')" title="查看档案">
                     <div class="npc-card-head">
-                        <div class="npc-avatar" style="background:${avatarColor(n.name || "?")};cursor:pointer;" onclick="openAvatarPickerForNpc('${String(n.id || "").replace(/'/g, "\\'")}')" title="更换头像">${avHtml}</div>
+                        <div class="npc-avatar" style="background:${avatarColor(n.name || "?")};cursor:pointer;" onclick="event.stopPropagation(); openAvatarPickerForNpc('${String(n.id || "").replace(/'/g, "\\'")}')" title="更换头像">${avHtml}</div>
                         <div class="npc-name">${MarkdownService.escapeHtml(n.name || "未命名")}</div>
                         <span class="npc-badge ${appeared ? "on" : "off"}">${appeared ? "已登场" : "未登场"}</span>
                     </div>
@@ -8346,7 +8490,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 </div>`;
             };
             const groupHtml = (opened, title, list) => list.length
-                ? `<details class="npc-group ${opened ? "on" : "off"}"${opened ? " open" : ""}><summary>${opened ? "✅" : "🔒"} ${title}（${list.length}）</summary><div class="npc-group-grid">${list.map((n) => card(n)).join("")}</div></details>`
+                ? `<details class="npc-group ${opened ? "on" : "off"}"${opened ? " open" : ""}><summary>${opened ? "✅" : "🔒"} ${title}（${list.length}）</summary><div class="npc-grid">${list.map((n) => card(n)).join("")}</div></details>`
                 : "";
             grid.innerHTML = npcs.length
                 ? groupHtml(true, "已登场人物", on) + groupHtml(false, "未登场人物", off)
@@ -8702,19 +8846,99 @@ function rebuildChoicesBlock(body, labels = []) {
             if (!state.npcChats || typeof state.npcChats !== "object") state.npcChats = {};
             if (!Array.isArray(state.npcChats[chatKey])) state.npcChats[chatKey] = [];
             const chats = state.npcChats[chatKey];
-            box.innerHTML = chats.map((m) => {
-                const mine = m.from === "me";
-                const who = mine ? "我" : npc.name;
-                const avatar = mine ? "🐱" : "🧑";
-                const safeText = mine ? String(m.text || "") : AiResponseLayoutService.formatQuotedDialogueLines(String(m.text || ""));
-                return `
-                    <div class="npc-chat-msg ${mine ? "me" : "npc"}">
-                        ${mine ? "" : `<div class="npc-chat-avatar" title="${who}">${avatar}</div>`}
-                        <div class="npc-chat-bubble">${MarkdownService.render(safeText)}</div>
-                        ${mine ? `<div class="npc-chat-avatar" title="${who}">${avatar}</div>` : ""}
-                    </div>
-                `;
-            }).join("");
+            box.innerHTML = chats.map((m) => chatMessageHtml(npc, m)).join("");
+            box.scrollTop = box.scrollHeight;
+        }
+        // ---- 世界页×社交融合：手机内微信 app 渲染（会话/通讯录/聊天） ----
+        function npcChatAvatarHtml(n, mine) {
+            if (mine) return `<div class="npc-chat-avatar" title="我">🐱</div>`;
+            const name = n && n.name ? n.name : "?";
+            const avUrl = n ? (isAvatarImg(n.avatar) ? n.avatar : "") : "";
+            const fb = MarkdownService.escapeHtml(String(name).slice(0, 1));
+            if (!avUrl) return `<div class="npc-chat-avatar" title="${MarkdownService.escapeHtml(name)}">🧑</div>`;
+            return `<div class="npc-chat-avatar" title="${MarkdownService.escapeHtml(name)}"><img src="${String(avUrl).replace(/"/g, "%22")}" alt="" loading="lazy" onerror="this.parentElement.textContent=this.dataset.fb" data-fb="${fb}" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit;"></div>`;
+        }
+        function chatMessageHtml(npc, m) {
+            const mine = m.from === "me";
+            const safeText = mine ? String(m.text || "") : AiResponseLayoutService.formatQuotedDialogueLines(String(m.text || ""));
+            return `
+                <div class="npc-chat-msg ${mine ? "me" : "npc"}">
+                    ${mine ? "" : npcChatAvatarHtml(npc, false)}
+                    <div class="npc-chat-bubble">${MarkdownService.render(safeText)}</div>
+                    ${mine ? `<div class="npc-chat-avatar" title="我">🐱</div>` : ""}
+                </div>
+            `;
+        }
+        function wxRowHtml(n, line2, timeHtml, badgeHtml) {
+            const cleanName = MarkdownService.escapeHtml(String(n.name || "未命名").replace(/[\(（].*?[\)）]/g, "").trim());
+            const avUrl = isAvatarImg(n.avatar) ? n.avatar : "";
+            const fb = MarkdownService.escapeHtml(String(n.name || "?").slice(0, 1));
+            const avHtml = avUrl
+                ? `<img src="${String(avUrl).replace(/"/g, "%22")}" alt="" loading="lazy" onerror="this.parentElement.textContent=this.dataset.fb" data-fb="${fb}">`
+                : `<span>${fb}</span>`;
+            return `<div class="wx-list-item" onclick="openWechatChat('${String(n.id || n.name || "").replace(/'/g, "\\'")}')">
+                <div class="wx-list-avatar" style="background:${avatarColor(n.name || "?")}">${avHtml}</div>
+                <div class="wx-list-content">
+                    <div class="wx-list-title">${cleanName}${badgeHtml || ""}</div>
+                    <div class="wx-list-desc">${line2}</div>
+                </div>
+                ${timeHtml ? `<div class="wx-list-meta"><div class="wx-list-time">${timeHtml}</div></div>` : ""}
+            </div>`;
+        }
+        function renderWechatSessions(state) {
+            const list = document.getElementById("wx-session-list");
+            if (!list) return;
+            const npcs = Array.isArray(state.npcs) ? state.npcs : [];
+            const chats = (state.npcChats && typeof state.npcChats === "object") ? state.npcChats : {};
+            const rows = [];
+            npcs.forEach((n) => {
+                if (StatePatchService.isProtagonistLikeNpc(state, n)) return;
+                const key = String(n.id || n.name || "");
+                const msgs = Array.isArray(chats[key]) ? chats[key] : [];
+                if (!msgs.length) return;
+                const last = msgs[msgs.length - 1];
+                const t = last && last.ts ? new Date(Number(last.ts)) : null;
+                const time = t && !isNaN(t.getTime()) ? `${String(t.getHours()).padStart(2, "0")}:${String(t.getMinutes()).padStart(2, "0")}` : "";
+                const preview = String((last && last.text) || "");
+                rows.push({ n, preview: MarkdownService.escapeHtml(preview.slice(0, 24)) + (preview.length > 24 ? "…" : ""), time: MarkdownService.escapeHtml(time) });
+            });
+            list.innerHTML = rows.length
+                ? rows.map((r) => wxRowHtml(r.n, r.preview, r.time, "")).join("")
+                : '<div class="list-sub wx-empty">还没有聊天记录，去「通讯录」找个人聊聊吧～</div>';
+        }
+        function renderWechatContacts(state) {
+            const list = document.getElementById("wx-contact-list");
+            if (!list) return;
+            const npcs = Array.isArray(state.npcs) ? state.npcs : [];
+            const memory = state.npcMemoryMap || {};
+            const isOn = (n) => Boolean(memory[n.id] && Object.keys(memory[n.id]).length) || Boolean(String(n.status || "").trim());
+            const items = npcs.filter((n) => !StatePatchService.isProtagonistLikeNpc(state, n));
+            list.innerHTML = items.length
+                ? items.map((n) => {
+                    const badge = isOn(n) ? "" : '<span class="wx-badge off">未登场</span>';
+                    const line2 = `${MarkdownService.escapeHtml(n.relation || "关系未明")} · ${MarkdownService.escapeHtml(n.status || "在线")}`;
+                    return wxRowHtml(n, line2, "", badge);
+                }).join("")
+                : '<div class="list-sub wx-empty">通讯录空空如也，去世界页认识些新朋友吧～</div>';
+        }
+        function renderWechatChat(state, npcKey) {
+            const box = document.getElementById("wx-chat-box");
+            if (!box) return;
+            const npc = findNpcByRef(state, npcKey);
+            const title = document.getElementById("wx-chat-title");
+            const profileBtn = document.getElementById("wx-chat-profile-btn");
+            if (!npc) {
+                if (title) title.innerText = "聊天";
+                if (profileBtn) profileBtn.onclick = null;
+                box.innerHTML = '<div class="list-sub">未找到 NPC 数据。</div>';
+                return;
+            }
+            const chatKey = String(npc.id || npc.name || npcKey);
+            if (title) title.innerText = npc.name || "NPC";
+            if (profileBtn) profileBtn.onclick = () => Controller.openNpcProfile(npc.id || npc.name);
+            if (!state.npcChats || typeof state.npcChats !== "object") state.npcChats = {};
+            if (!Array.isArray(state.npcChats[chatKey])) state.npcChats[chatKey] = [];
+            box.innerHTML = state.npcChats[chatKey].map((m) => chatMessageHtml(npc, m)).join("");
             box.scrollTop = box.scrollHeight;
         }
         function renderSaveSlots(state) {
@@ -8838,7 +9062,7 @@ function rebuildChoicesBlock(body, labels = []) {
         }
         const DEFAULT_PHONE_APPS = {
             func: [
-                { icon: "💬", label: "通讯", action: "chat" },
+                { icon: "💬", label: "微信", action: "chat" },
                 { icon: "📣", label: "论坛", action: "forum" },
                 { icon: "📔", label: "查看日记", action: "diary" },
                 { icon: "🛒", label: "商店", action: "shop" }
@@ -8956,6 +9180,8 @@ function rebuildChoicesBlock(body, labels = []) {
                 if (_bgmState.idx < 0) _bgmState.idx = 0;
                 _bgmRenderTitle();
             }
+            // 微信会话列表随手机页刷新（新聊天消息自动出现在会话列表）
+            renderWechatSessions(state);
         }
         function bgmSetEnabled(on) {
             const s = _bgmState;
@@ -8966,7 +9192,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const s = _bgmState;
             if (s.audio) s.audio.volume = Math.max(0, Math.min(1, Number(v) || 0));
         }
-        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, clearFancyStatus, renderPlayStatusBar, renderPlayEventList, renderWorld, renderDiary, renderEndingModal, renderPhone, buildEventRounds, avatarColor, heartLadder, stripHtml, normalizeLocations, bgmToggle, bgmNext, bgmPrev, bgmSetEnabled, bgmSetVolume, mapSrcOf, getActiveMap };
+        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderWechatSessions, renderWechatContacts, renderWechatChat, renderSaveSlots, renderScenarioCards, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, clearFancyStatus, renderPlayStatusBar, renderPlayEventList, renderWorld, renderDiary, renderEndingModal, renderPhone, buildEventRounds, avatarColor, heartLadder, stripHtml, normalizeLocations, bgmToggle, bgmNext, bgmPrev, bgmSetEnabled, bgmSetVolume, mapSrcOf, getActiveMap };
     })();
 
     // ---- 手机专属设置页：BGM 开关/音量、消息通知、主题色、字体大小 ----
@@ -9302,6 +9528,20 @@ function rebuildChoicesBlock(body, labels = []) {
                 }
             } catch (e) { /* 网络失败静默,下次编辑重试 */ }
         }
+        // 我的页点头像 → 头像库弹窗(内含上传),选中即保存账号头像
+        function openAvatarPickerForProfile() {
+            const user = AuthService.getUserData();
+            if (!user?.id) {
+                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后即可从头像库选择并保存头像。" });
+                return;
+            }
+            openAvatarPickerModal(user.faceimg || "", async (val) => {
+                const avatarEl = document.getElementById("display-user-avatar");
+                if (avatarEl) avatarEl.src = val;
+                await saveProfile({ faceimg: val });
+            });
+        }
+        window.openAvatarPickerForProfile = openAvatarPickerForProfile;
         // 小手机:点击签名就地编辑(登录态同步账号资料,未登录仅改当前角色卡)
         async function phoneEditSignature() {
             const el = document.getElementById("phone-user-sig");
@@ -15138,7 +15378,7 @@ const token = delta.content || "";
         }
         function phoneAppTap(action) {
             switch (action) {
-                case "chat": switchView("view-world"); break;
+                case "chat": openWechatApp(); break;
                 case "forum": switchView("view-community"); break;
                 case "diary":
                 case "memories": openPhoneDiary(); break;
@@ -15425,10 +15665,10 @@ ${recent || "（无）"}
             }
             if (viewId === "view-world" && !silent) {
                 UIRenderer.renderWorld();
-                UIRenderer.renderSocialList(StateService.get());
             }
             if (viewId === "view-phone" && !silent) {
                 UIRenderer.renderPhone(StateService.get());
+                fitPhoneShell();
             }
             if (viewId === "view-home") {
                 // 从卡片/游玩页回到主页时，强制刷新主页列表，避免看到旧缓存视图
@@ -15632,6 +15872,12 @@ function openNpcProfile(npcId) {
 
 
         function openNpcChat(npcId) {
+            // 融合后统一走手机内微信聊天；view-npc-chat 保留为兜底路径
+            if (document.getElementById("wx-screen")) {
+                openWechatApp();
+                openWechatChat(npcId);
+                return;
+            }
             const state = StateService.get();
             const npc = findNpcByRef(state, npcId);
             if (!npc) {
@@ -15686,48 +15932,143 @@ function openNpcProfile(npcId) {
             renderAll();
         }
         function backToSocialList() {
+            // 旧入口（独立聊天页兜底）；微信 app 内的返回走 backToWechatList
             switchView("view-world");
             UIRenderer.renderSocialList(StateService.get());
         }
+        // ---- 世界页×社交融合：手机内微信 app（会话/通讯录/聊天） ----
+        let wxCurrentNpcId = null;
+        const WX_EMOJIS = ["😀", "😊", "🥺", "😂", "😡", "😭", "❤️", "👍"];
+        function showWechatMain() {
+            const main = document.getElementById("wx-main");
+            const chat = document.getElementById("wx-chat");
+            if (main) main.style.display = "flex";
+            if (chat) chat.style.display = "none";
+        }
+        function showWechatChatPage() {
+            const main = document.getElementById("wx-main");
+            const chat = document.getElementById("wx-chat");
+            if (main) main.style.display = "none";
+            if (chat) chat.style.display = "flex";
+        }
+        function renderWxEmojiBar() {
+            const bar = document.getElementById("wx-emoji-bar");
+            if (!bar || bar.dataset.bound) return;
+            bar.dataset.bound = "1";
+            bar.innerHTML = WX_EMOJIS.map((e) => `<button class="emoji-btn" type="button" onclick="wxEmoji('${e}')">${e}</button>`).join("");
+        }
+        function appendEmojiToInput(emoji) {
+            const t = getActiveChatTargets();
+            if (t.input) { t.input.value = `${t.input.value || ""}${emoji}`; t.input.focus(); }
+        }
+        function switchWechatTab(tab) {
+            const isChat = tab === "chat";
+            const chatList = document.getElementById("wx-session-list");
+            const contactList = document.getElementById("wx-contact-list");
+            if (chatList) chatList.style.display = isChat ? "" : "none";
+            if (contactList) contactList.style.display = isChat ? "none" : "";
+            document.querySelectorAll("#wx-tabbar .wx-tab").forEach((b) => {
+                b.classList.toggle("active", b.dataset.tab === tab);
+            });
+        }
+        function openWechatApp() {
+            const screen = document.getElementById("wx-screen");
+            if (!screen) return;
+            const active = document.querySelector(".view-section.active");
+            if (!active || active.id !== "view-phone") switchView("view-phone");
+            showWechatMain();
+            switchWechatTab("chat");
+            renderWxEmojiBar();
+            UIRenderer.renderWechatSessions(StateService.get());
+            UIRenderer.renderWechatContacts(StateService.get());
+            screen.style.display = "flex";
+        }
+        function closeWechatApp() {
+            const screen = document.getElementById("wx-screen");
+            if (screen) screen.style.display = "none";
+        }
+        function openWechatChat(npcId) {
+            const state = StateService.get();
+            const npc = findNpcByRef(state, npcId);
+            if (!npc) {
+                openInfoModal("无法打开聊天", "当前 NPC 数据不存在，可能是旧存档中的 NPC 标识丢失了。");
+                return;
+            }
+            if (npc.status === "死亡") {
+                openInfoModal("无法对话", "Ta 已故，无法对话。");
+                return;
+            }
+            wxCurrentNpcId = String(npc.id || npc.name || "");
+            currentSocialNpcId = wxCurrentNpcId;
+            showWechatChatPage();
+            renderWxEmojiBar();
+            UIRenderer.renderWechatChat(state, wxCurrentNpcId);
+            const input = document.getElementById("wx-chat-input");
+            if (input) input.focus();
+        }
+        function backToWechatList() {
+            showWechatMain();
+            UIRenderer.renderWechatSessions(StateService.get());
+        }
+        function getActiveChatTargets() {
+            const screen = document.getElementById("wx-screen");
+            const wxOpen = !!screen && screen.style.display !== "none";
+            if (wxOpen) {
+                return {
+                    input: document.getElementById("wx-chat-input"),
+                    sendBtn: document.querySelector("#wx-chat .send-btn"),
+                    title: document.getElementById("wx-chat-title"),
+                    renderChat: () => UIRenderer.renderWechatChat(StateService.get(), String(wxCurrentNpcId || "")),
+                    refreshList: () => UIRenderer.renderWechatSessions(StateService.get())
+                };
+            }
+            return {
+                input: document.getElementById("npc-chat-input"),
+                sendBtn: document.querySelector("#view-npc-chat .send-btn"),
+                title: document.getElementById("npc-chat-title"),
+                renderChat: () => UIRenderer.renderSocialChat(StateService.get(), String(currentSocialNpcId || "")),
+                refreshList: null
+            };
+        }
         async function sendNpcMessage() {
             const state = StateService.get();
-            const npcId = String(currentSocialNpcId || "");
+            const npcId = String(currentSocialNpcId || wxCurrentNpcId || "");
             const npc = findNpcByRef(state, npcId);
             if (!npc) return;
             const chatKey = String(npc.id || npc.name || npcId);
-            const input = document.getElementById("npc-chat-input");
-            const txt = input.value.trim();
+            const t = getActiveChatTargets();
+            const input = t.input;
+            const txt = input ? input.value.trim() : "";
             if (!txt) return;
-            const sendBtn = document.querySelector("#view-npc-chat .send-btn");
-            const oldTitle = document.getElementById("npc-chat-title")?.innerText || npc.name || "";
-            input.disabled = true;
+            const sendBtn = t.sendBtn;
+            const oldTitle = t.title ? t.title.innerText : npc.name || "";
+            if (input) input.disabled = true;
             if (sendBtn) sendBtn.disabled = true;
-            input.value = "";
+            if (input) input.value = "";
 
             // 立即显示我方气泡（无需等待 AI）
             if (!state.npcChats || typeof state.npcChats !== "object") state.npcChats = {};
             if (!Array.isArray(state.npcChats[chatKey])) state.npcChats[chatKey] = [];
             state.npcChats[chatKey].push({ from: "me", text: txt, ts: Date.now() });
             StateService.save();
-            UIRenderer.renderSocialChat(state, chatKey);
-            const titleEl = document.getElementById("npc-chat-title");
-            if (titleEl) titleEl.innerText = `${npc.name}（正在输入...）`;
+            t.renderChat();
+            if (t.title) t.title.innerText = `${npc.name}（正在输入...）`;
 
             try {
                 await NpcChatService.applyUserMessage(state, chatKey, txt);
                 // 社交线完整对话内容已在 applyUserMessage 内 push 进 history（【社交线】标记），此处不再重复摘要
-                UIRenderer.renderSocialList(state);
-                UIRenderer.renderSocialChat(state, chatKey);
+                if (t.refreshList) t.refreshList();
+                t.renderChat();
             } catch (e) {
                 const list = (state.npcChats && state.npcChats[chatKey]) || [];
                 list.push({ from: "npc", text: `⚠️ 对话失败：${e.message}`, ts: Date.now() });
                 StateService.save();
-                UIRenderer.renderSocialChat(state, chatKey);
+                t.renderChat();
             } finally {
-                if (titleEl) titleEl.innerText = oldTitle || npc.name || "NPC";
-                input.disabled = false;
+                if (t.title) t.title.innerText = oldTitle || npc.name || "NPC";
+                if (input) input.disabled = false;
                 if (sendBtn) sendBtn.disabled = false;
-                input.focus();
+                if (input) input.focus();
             }
         }
         function saveToSlot(index) {
@@ -16467,7 +16808,7 @@ function openNpcProfile(npcId) {
             _avatarPickerValue = String(initialValue || "");
             grid.innerHTML = AVATAR_LIBRARY.map((a, i) => {
                 const sel = _avatarPickerValue === a.url;
-                return `<div data-av-url="${String(a.url || "").replace(/"/g, "%22")}" style="cursor:pointer;border:2px solid ${sel ? "var(--accent)" : "transparent"};border-radius:10px;overflow:hidden;aspect-ratio:1;" onclick="_avatarGridPick(this)"><img src="${String(a.url || "").replace(/"/g, "%22")}" alt="${MarkdownService.escapeHtml(String(a.name || ""))}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;"></div>`;
+                return `<div data-av-url="${String(a.url || "").replace(/"/g, "%22")}" style="position:relative;cursor:pointer;border:2px solid ${sel ? "var(--accent)" : "transparent"};border-radius:10px;overflow:hidden;padding-top:100%;" onclick="_avatarGridPick(this)"><img src="${String(a.url || "").replace(/"/g, "%22")}" alt="${MarkdownService.escapeHtml(String(a.name || ""))}" loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:block;"></div>`;
             }).join("");
             const okBtn = document.getElementById("avatar-picker-ok-btn");
             okBtn.onclick = async () => {
@@ -16917,7 +17258,7 @@ function openNpcProfile(npcId) {
             switchView("view-scenario-editor");
             ScenarioEditorService.focusEditor();
         }
-        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, getEndingDefs, buildEndingChecks, refreshEndingBadge, fallbackEnding, requestEnding, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, openCardSettings, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, toggleAvatarLibraryPanel, avatarPickLib, avatarPick, avatarUpload, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, closeFullMap, placeClick, placeGo, advanceStory, openPhoneDiary, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate, renderHomeDiscovery, switchRankTab, switchSortMode, openCreationWizard, wizardPickStyle, wizardTitleCount, wizardPromptCount, wizardNext, wizardPrev, wizardConfirm, closeUploadPriceModal, confirmUploadWithPrice };
+        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, getEndingDefs, buildEndingChecks, refreshEndingBadge, fallbackEnding, requestEnding, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, openCardSettings, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, toggleAvatarLibraryPanel, avatarPickLib, avatarPick, avatarUpload, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, openWechatApp, closeWechatApp, switchWechatTab, openWechatChat, backToWechatList, appendEmojiToInput, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, closeFullMap, placeClick, placeGo, advanceStory, openPhoneDiary, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate, renderHomeDiscovery, switchRankTab, switchSortMode, openCreationWizard, wizardPickStyle, wizardTitleCount, wizardPromptCount, wizardNext, wizardPrev, wizardConfirm, closeUploadPriceModal, confirmUploadWithPrice };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
@@ -17002,7 +17343,29 @@ function openNpcProfile(npcId) {
     function avatarPickLib(i) { Controller.avatarPickLib(i); }
     function setInitAvatar(val) { Controller.setInitAvatar(val); }
     function sendNpcMessage() { Controller.sendNpcMessage(); }
+    function fitPhoneShell() {
+        // 小手机 360×640(9:16) 固定基准,按可用空间等比缩放(不改变宽高比)
+        const shell = document.querySelector(".phone-shell");
+        const view = document.getElementById("view-phone");
+        const main = document.getElementById("main-content");
+        if (!shell || !view || !main) return;
+        const availW = Math.max(140, main.clientWidth - 32);
+        const header = document.querySelector(".header");
+        const availH = Math.max(260, window.innerHeight - (header ? header.offsetHeight : 0) - 48);
+        const s = Math.max(0.5, Math.min(availW / 360, availH / 640, 1.6));
+        shell.style.transform = `scale(${s.toFixed(3)})`;
+        view.style.height = `${Math.ceil(640 * s)}px`;
+    }
+    window.fitPhoneShell = fitPhoneShell;
+    window.addEventListener("resize", fitPhoneShell);
+    fitPhoneShell();
     function backToSocialList() { Controller.backToSocialList(); }
+    function openWechatApp() { Controller.openWechatApp(); }
+    function closeWechatApp() { Controller.closeWechatApp(); }
+    function switchWechatTab(tab) { Controller.switchWechatTab(tab); }
+    function openWechatChat(npcId) { Controller.openWechatChat(npcId); }
+    function backToWechatList() { Controller.backToWechatList(); }
+    function wxEmoji(e) { Controller.appendEmojiToInput(e); }
     function closeInfoModal() { Controller.closeInfoModal(); }
 
     // ==================== MembershipService (会员开通/续费) ====================
