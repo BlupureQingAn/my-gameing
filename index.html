@@ -9563,7 +9563,9 @@ function rebuildChoicesBlock(body, labels = []) {
                 const emailEl = document.getElementById("display-user-email");
                 if (emailEl) emailEl.textContent = user.email || AuthService.getEmail();
                 const emailRow = document.getElementById("display-user-email-row");
-                if (emailRow) emailRow.style.display = user.social_uid ? "none" : "";
+                // 社交账号隐藏内部邮箱行:不能只依赖 social_uid(PB viewRule 下用户自身可能读不到该字段)
+                const isSocialAccount = !!user.social_uid || String(user.email || "").startsWith("social_");
+                if (emailRow) emailRow.style.display = isSocialAccount ? "none" : "";
                 const nickEl = document.getElementById("display-user-nickname");
                 if (nickEl) nickEl.value = user.nickname || "";
                 const sigEl = document.getElementById("display-user-signature");
@@ -18627,6 +18629,14 @@ function openNpcProfile(npcId) {
             const emailEl = document.getElementById("display-user-email");
             if (emailEl) emailEl.textContent = email;
             updateUsageStatusUI();
+            // 登录数据就绪后刷新"我的"页账户卡(昵称/头像/签名/余额):
+            // Controller.init 首次渲染时 _userData 尚为 null,若不刷新则微信/QQ/邮箱登录后账户卡停留默认
+            // (编辑资料弹窗实时读 getUserData 所以显示正常,主视图却一直是空)
+            try {
+                if (typeof SettingsService !== "undefined" && typeof SettingsService.loadToUI === "function") {
+                    SettingsService.loadToUI();
+                }
+            } catch (e) { console.warn("[Auth] 登录后刷新账户卡失败", e); }
             // 同步服务端解锁记录（合并本地缓存）
             ScenarioUnlockService.syncFromServer().then(() => {
                 try { UIRenderer.renderScenarioCards(); } catch (e) {}
