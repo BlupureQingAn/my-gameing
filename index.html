@@ -250,11 +250,17 @@
         .top-nav-group {
             margin-left: auto;
             justify-content: flex-end;
+            flex-wrap: wrap;
         }
 
         #usage-badge {
             white-space: nowrap;
-            flex: 0 0 auto;
+            flex: 1 0 100%;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            font-size: 0.76rem;
+            padding: 4px 12px;
         }
 
         @media (max-width: 520px) {
@@ -4350,7 +4356,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
         </div>
         <div class="list-sub" id="membership-intro-text">充值云币解锁剧本卡、抵扣 AI 对话；终身会员 188 元免一切云币消耗。</div>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin:10px 0;padding:10px 12px;border-radius:12px;background:var(--card-bg,#fffdf8);border:1px solid var(--line);">
-            <div style="font-size:0.9rem;font-weight:700;">💰 云币余额：<span id="membership-coin-balance" style="color:var(--accent-dark,#c0392b);">--</span></div>
+            <div style="font-size:0.9rem;font-weight:700;">云币余额：<span id="membership-coin-balance" style="color:var(--accent-dark,#c0392b);">--</span></div>
             <button id="membership-checkin-btn" class="mini-btn primary" style="margin:0;padding:6px 14px;" onclick="MembershipService.doCheckin()">每日签到</button>
         </div>
         <div id="membership-checkin-msg" class="list-sub" style="margin:-4px 0 10px;"></div>
@@ -4381,7 +4387,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <button class="top-nav-btn" data-view="view-community" onclick="switchView('view-community')">社区</button>
             <button class="top-nav-btn" data-view="view-settings" onclick="switchView('view-settings')">我的</button>
             <button class="top-nav-btn" id="top-nav-history-btn" onclick="toggleHistoryPanel()">历史</button>
-            <span id="usage-badge" onclick="MembershipService.openPanel()" style="display:none;font-size:0.85rem;font-weight:700;color:#6b3f00;padding:6px 12px;border-radius:999px;background:linear-gradient(135deg,#ffe9a8,#ffd66b);border:1px solid #e0a93a;cursor:pointer;box-shadow:0 2px 8px rgba(224,169,58,.4);" title="点击开通/续费会员"></span>
+            <span id="usage-badge" onclick="MembershipService.openPanel()" style="display:none;font-size:0.76rem;font-weight:700;color:#6b3f00;padding:4px 12px;border-radius:999px;background:linear-gradient(135deg,#ffe9a8,#ffd66b);border:1px solid #e0a93a;cursor:pointer;box-shadow:0 2px 8px rgba(224,169,58,.4);" title="点击开通/续费会员"></span>
         </div>
         <button id="top-nav-collapse-btn" class="top-nav-collapse-btn" onclick="toggleTopNavCollapse()" title="收起导航">▲</button>
     </header>
