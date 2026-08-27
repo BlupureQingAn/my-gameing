@@ -9136,8 +9136,8 @@ function rebuildChoicesBlock(body, labels = []) {
                 row.querySelector('[data-op="detail"]').onclick = () => Controller.openGameDetail(card.id);
                 const collectBtn = row.querySelector('[data-op="swipe-collect"]');
                 if (collectBtn) collectBtn.onclick = () => {
+                    // 登录后走数据库收藏(未登录弹提示); 成功后内部刷新列表
                     ScenarioCardViewService.toggleCollectLocal(card.id);
-                    UIRenderer.renderScenarioCards();
                 };
                 ScenarioCardInteractionService.bindSwipeAndSort(row, {
                     onReorder: (fromId, toId) => Controller.reorderScenarioCards(fromId, toId)
@@ -11552,36 +11552,87 @@ function rebuildChoicesBlock(body, labels = []) {
             if (k.includes("cottage")) return "🏡";
             return "📖";
         }
-        // 收藏状态：官方卡记在热度表 _collected；社区卡（已下载）记本地集合
+        // 收藏状态：登录用户以数据库为准(card_collects/card_likes 内存缓存)；游客回退本地集合/热度表
+        let _dbCollects = null; // Set|null; null=未加载(未登录/游客)
+        let _dbLikes = null;
+        async function loadMyMarksNow() {
+            if (!AuthService.getToken()) return;
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/game/my-marks`, {
+                    headers: { "X-Auth-Token": "Bearer " + AuthService.getToken() }
+                });
+                const d = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    _dbCollects = new Set(d.collects || []);
+                    _dbLikes = new Set(d.likes || []);
+                }
+            } catch (e) {}
+        }
+        function loadMyMarks() {
+            loadMyMarksNow().then(() => {
+                try { UIRenderer.renderScenarioCards(); } catch (e) {}
+                try { renderMyPageLists(); } catch (e) {}
+            });
+        }
+        function resetMyMarks() { _dbCollects = null; _dbLikes = null; }
+        function markCollectedLocally(cardId, on) {
+            if (!_dbCollects) _dbCollects = new Set();
+            if (on) _dbCollects.add(String(cardId)); else _dbCollects.delete(String(cardId));
+            // 同步本地缓存(游客回退/离线展示兼容)
+            const id = String(cardId || "");
+            const set = collectSet().filter((x) => x !== id);
+            if (on) set.push(id);
+            saveCollectSet(set);
+        }
+        function markLikedLocally(cardId, on) {
+            if (!_dbLikes) _dbLikes = new Set();
+            if (on) _dbLikes.add(String(cardId)); else _dbLikes.delete(String(cardId));
+        }
+        function getDbCollects() { return _dbCollects; }
+        function getDbLikes() { return _dbLikes; }
         function collectSet() {
             try { const a = JSON.parse(localStorage.getItem("bitlife_card_collects_v1") || "[]"); return Array.isArray(a) ? a : []; } catch (e) { return []; }
         }
         function saveCollectSet(arr) { try { localStorage.setItem("bitlife_card_collects_v1", JSON.stringify(arr)); } catch (e) {} }
         function isCollected(cardId) {
             const id = String(cardId || "");
+            if (_dbCollects && AuthService.getToken()) return _dbCollects.has(id);
             if (collectSet().includes(id)) return true;
             try {
                 const rec = JSON.parse(localStorage.getItem("bitlife_game_hot_v1") || "{}")[id];
                 return !!(rec && rec._collected);
             } catch (e) { return false; }
         }
-        function toggleCollectLocal(cardId) {
+        function isLiked(cardId) {
+            const id = String(cardId || "");
+            if (_dbLikes && AuthService.getToken()) return _dbLikes.has(id);
+            try {
+                const rec = JSON.parse(localStorage.getItem("bitlife_game_hot_v1") || "{}")[id];
+                return !!(rec && rec._liked);
+            } catch (e) { return false; }
+        }
+        async function toggleCollectLocal(cardId) {
             const id = String(cardId || "");
             if (!id) return;
-            const card = ScenarioCardService.loadCards().find((c) => c.id === id);
-            if (card && card.sourceType === "official") {
-                try {
-                    const h = JSON.parse(localStorage.getItem("bitlife_game_hot_v1") || "{}");
-                    const rec = h[id] || (h[id] = { plays: 0, likes: 0, collects: 0, donors: [], roles: {} });
-                    rec._collected = !rec._collected;
-                    rec.collects = Math.max(0, Number(rec.collects || 0) + (rec._collected ? 1 : -1));
-                    localStorage.setItem("bitlife_game_hot_v1", JSON.stringify(h));
-                } catch (e) {}
+            if (!AuthService.getToken()) {
+                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后可以收藏卡片，收藏会同步到账号。" });
                 return;
             }
-            const set = collectSet();
-            const on = !set.includes(id);
-            saveCollectSet(on ? [...set, id] : set.filter((x) => x !== id));
+            if (!_dbCollects) await loadMyMarksNow();
+            const on = !(_dbCollects && _dbCollects.has(id));
+            const res = await fetch(`${AppConfig.proxy.baseUrl}/api/game/collect`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + AuthService.getToken() },
+                body: JSON.stringify({ card_id: id, value: on })
+            }).catch(() => null);
+            const d = res ? await res.json().catch(() => ({})) : {};
+            if (!res || !res.ok) {
+                NoticeModalService.showInfo({ title: "操作失败", descHtml: d.error || "网络异常，请稍后重试" });
+                return;
+            }
+            markCollectedLocally(id, on);
+            try { UIRenderer.renderScenarioCards(); } catch (e) {}
+            try { renderMyPageLists(); } catch (e) {}
         }
         function matchesSearch(card, keyword) {
             const q = String(keyword || "").trim().toLowerCase();
@@ -11666,7 +11717,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 bar.appendChild(chip);
             });
         }
-        return { groupLabel, groupClass, pinLabel, cardTags, cardEmoji, isCollected, toggleCollectLocal, matchesSearch, getSearchKeyword, getCategories, getCategory, setCategory, isCollapsed, toggleCollapsed, expandAllGroups, renderFilter, hotRank, localPlays, getSortMode, setSortMode };
+        return { groupLabel, groupClass, pinLabel, cardTags, cardEmoji, isCollected, isLiked, toggleCollectLocal, loadMyMarks, loadMyMarksNow, resetMyMarks, markCollectedLocally, markLikedLocally, getDbCollects, getDbLikes, collectSet, matchesSearch, getSearchKeyword, getCategories, getCategory, setCategory, isCollapsed, toggleCollapsed, expandAllGroups, renderFilter, hotRank, localPlays, getSortMode, setSortMode };
     })();
 
     // ---- B1：AI 封面按需生成（仅首页展示位：轮播 + 推荐榜 top3；worker 文生图 → localStorage 缓存 TTL 7 天 + promptHash 失效） ----
@@ -12116,10 +12167,46 @@ function rebuildChoicesBlock(body, labels = []) {
             ScenarioCardInteractionService.bindSwipeAndSort(row, {});
         });
     }
-    function renderMyCollects() {
+    async function renderMyCollects() {
         const box = document.getElementById("my-collect-list");
         if (!box) return;
-        const cards = ScenarioCardService.loadCards().filter((c) => ScenarioCardViewService.isCollected(c.id));
+        // 登录用户: 收藏以数据库为准(跨设备同步); 游客回退本地集合
+        let collectedIds = null;
+        if (AuthService.getToken()) {
+            if (!ScenarioCardViewService.getDbCollects()) await ScenarioCardViewService.loadMyMarksNow();
+            collectedIds = ScenarioCardViewService.getDbCollects();
+        }
+        if (collectedIds === null) {
+            collectedIds = new Set();
+            ScenarioCardViewService.collectSet().forEach((id) => collectedIds.add(id));
+            try {
+                const h = JSON.parse(localStorage.getItem("bitlife_game_hot_v1") || "{}");
+                Object.entries(h).forEach(([id, rec]) => { if (rec && rec._collected) collectedIds.add(id); });
+            } catch (e) {}
+        }
+        if (!collectedIds.size) {
+            box.innerHTML = '<span class="list-sub">还没有收藏，在首页卡片左滑点「★ 收藏」。</span>';
+            return;
+        }
+        const localCards = ScenarioCardService.loadCards();
+        let cards = localCards.filter((c) => collectedIds.has(String(c.id)));
+        // 收藏了但不在本地(未下载的社区卡): 从社区列表补元数据
+        const missing = [...collectedIds].filter((id) => !localCards.some((c) => String(c.id) === id));
+        if (missing.length && AuthService.getToken()) {
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/cards/community`, {
+                    headers: { "X-Auth-Token": "Bearer " + AuthService.getToken() }
+                });
+                const d = await res.json().catch(() => ({}));
+                if (res.ok && Array.isArray(d.items)) {
+                    const byId = new Map(d.items.map((c) => [String(c.id), c]));
+                    cards = cards.concat(missing.map((id) => byId.get(id)).filter(Boolean).map((c) => ({
+                        id: c.id, title: c.title, category: c.category || "", theme: c.theme || "",
+                        sourceType: "community", text: ""
+                    })));
+                }
+            } catch (e) {}
+        }
         if (!cards.length) {
             box.innerHTML = '<span class="list-sub">还没有收藏，在首页卡片左滑点「★ 收藏」。</span>';
             return;
@@ -12150,8 +12237,8 @@ function rebuildChoicesBlock(body, labels = []) {
                 if (card) Controller.openGameDetail(card.id);
             };
             row.querySelector('[data-op="uncollect"]').onclick = () => {
+                // 走数据库取消收藏(成功后内部刷新我的页列表)
                 ScenarioCardViewService.toggleCollectLocal(row.dataset.cardId);
-                renderMyPageLists();
             };
             ScenarioCardInteractionService.bindSwipeAndSort(row, {});
         });
@@ -14762,12 +14849,30 @@ const token = delta.content || "";
             try {
                 if (card && card.sourceType === "official") {
                     const hot = hotOf(cardId);
-                    renderDetail(card, {
+                    let data = {
                         local: true, plays: hot.plays, likes: hot.likes, collects: hot.collects,
                         liked: !!hot._liked, collected: !!hot._collected,
                         donors: hot.donors || [], roles: hot.roles || {},
                         author: { id: "", nickname: "官方模板", faceimg: "" }, updatedAt: ""
-                    });
+                    };
+                    // 登录用户: 官方卡热度也读数据库(游玩/点赞/收藏全站同步)
+                    if (AuthService.getToken()) {
+                        try {
+                            const res = await fetch(`${AppConfig.proxy.baseUrl}/api/game/detail?id=${encodeURIComponent(cardId)}`, {
+                                headers: { "X-Auth-Token": "Bearer " + AuthService.getToken() }
+                            });
+                            const d = await res.json().catch(() => ({}));
+                            if (res.ok && d && d.id) {
+                                data = {
+                                    local: true, plays: d.play_count || 0, likes: d.likes_count || 0, collects: d.collects_count || 0,
+                                    liked: !!d.liked_by_me, collected: !!d.collected_by_me,
+                                    donors: d.donors || [], roles: d.role_hot || {},
+                                    author: d.author || data.author, updatedAt: d.created_at || ""
+                                };
+                            }
+                        } catch (e) {}
+                    }
+                    renderDetail(card, data);
                     return;
                 }
                 if (!AuthService.getToken()) {
@@ -14910,19 +15015,9 @@ const token = delta.content || "";
             document.getElementById("game-detail-modal").style.display = "none";
         }
         async function toggleLike(cardId) {
-            const card = cardOf(cardId);
-            if (card && card.sourceType === "official") {
-                const h = readHot();
-                const rec = h[cardId] || (h[cardId] = { plays: 0, likes: 0, collects: 0, donors: [], roles: {} });
-                rec._liked = !rec._liked;
-                rec.likes = Math.max(0, Number(rec.likes || 0) + (rec._liked ? 1 : -1));
-                writeHot(h);
-                openGameDetail(cardId);
-                return;
-            }
-            // 社区卡（含未下载的浏览列表卡）：走 API
+            // 官方卡/社区卡统一走 API(点赞入库, 全站同步); 未登录提示
             if (!AuthService.getToken()) {
-                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后可以点赞社区作品。" });
+                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后可以点赞作品，点赞会同步到账号。" });
                 return;
             }
             const on = !(await currentState(cardId)).liked;
@@ -14933,21 +15028,15 @@ const token = delta.content || "";
             });
             const d = await res.json().catch(() => ({}));
             if (!res.ok) { NoticeModalService.showInfo({ title: "操作失败", descHtml: d.error || "请稍后重试" }); return; }
+            try {
+                if (window.ScenarioCardViewService && ScenarioCardViewService.markLikedLocally) ScenarioCardViewService.markLikedLocally(cardId, on);
+            } catch (e) {}
             openGameDetail(cardId);
         }
         async function toggleCollect(cardId) {
-            const card = cardOf(cardId);
-            if (card && card.sourceType === "official") {
-                const h = readHot();
-                const rec = h[cardId] || (h[cardId] = { plays: 0, likes: 0, collects: 0, donors: [], roles: {} });
-                rec._collected = !rec._collected;
-                rec.collects = Math.max(0, Number(rec.collects || 0) + (rec._collected ? 1 : -1));
-                writeHot(h);
-                openGameDetail(cardId);
-                return;
-            }
+            // 官方卡/社区卡统一走 API(收藏入库, 全站同步); 未登录提示
             if (!AuthService.getToken()) {
-                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后可以收藏社区作品。" });
+                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后可以收藏作品，收藏会同步到账号。" });
                 return;
             }
             const on = !(await currentState(cardId)).collected;
@@ -14958,6 +15047,9 @@ const token = delta.content || "";
             });
             const d = await res.json().catch(() => ({}));
             if (!res.ok) { NoticeModalService.showInfo({ title: "操作失败", descHtml: d.error || "请稍后重试" }); return; }
+            try {
+                if (window.ScenarioCardViewService && ScenarioCardViewService.markCollectedLocally) ScenarioCardViewService.markCollectedLocally(cardId, on);
+            } catch (e) {}
             openGameDetail(cardId);
         }
         async function currentState(cardId) {
@@ -17357,12 +17449,13 @@ function openNpcProfile(npcId) {
             }
             selectScenarioCard(cardId);
             ScenarioPlayMetaService.touchPlayed(cardId); // 需求A:记录最近游玩,列表置顶排序
-            GameDetailService.bumpPlay(cardId); // 详情页热度:官方卡本地游玩计数
-            // 社区卡游玩计佣（fire-and-forget，官方卡/本地未上传卡由服务端忽略）
-            if (card && card.sourceType !== "official") {
+            GameDetailService.bumpPlay(cardId); // 详情页热度:本地兜底计数(未登录时官方卡)
+            // 游玩上报: 社区卡计佣/官方卡计数入库(服务端 card_plays); 未登录不发
+            const _tok = AuthService.getToken();
+            if (card && _tok) {
                 fetch(`${AppConfig.proxy.baseUrl}/api/play/report`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + AuthService.getToken() },
+                    headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + _tok },
                     body: JSON.stringify({ card_id: cardId })
                 }).catch(() => {});
             }
@@ -18637,6 +18730,12 @@ function openNpcProfile(npcId) {
                     SettingsService.loadToUI();
                 }
             } catch (e) { console.warn("[Auth] 登录后刷新账户卡失败", e); }
+            // 登录后拉取我的点赞/收藏(数据库为准, 全站同步), 完成后刷新卡片列表/我的页
+            try {
+                if (typeof ScenarioCardViewService !== "undefined" && typeof ScenarioCardViewService.loadMyMarks === "function") {
+                    ScenarioCardViewService.loadMyMarks();
+                }
+            } catch (e) { console.warn("[Auth] 拉取我的标记失败", e); }
             // 同步服务端解锁记录（合并本地缓存）
             ScenarioUnlockService.syncFromServer().then(() => {
                 try { UIRenderer.renderScenarioCards(); } catch (e) {}
@@ -18647,6 +18746,7 @@ function openNpcProfile(npcId) {
             clearSession();
             clearCachedUser();
             _userData = null;
+            try { if (typeof ScenarioCardViewService !== "undefined") ScenarioCardViewService.resetMyMarks(); } catch (e) {}
             const logoutBtn = document.getElementById("auth-logout-btn");
             if (logoutBtn) logoutBtn.style.display = "none";
             // 清空会员/次数显示
