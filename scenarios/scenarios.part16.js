@@ -33,7 +33,9 @@
           "name": "弟弟·李小米",
           "role": "弟弟",
           "personality": "机灵懂事，黏人",
-          "relationship": "你在这个世界唯一的亲人"
+          "relationship": "你在这个世界唯一的亲人",
+          "favor": 85,
+          "affection": 0
         },
         {
           "name": "奶奶·李氏",
@@ -282,7 +284,9 @@
           "name": "爷爷·老海生",
           "role": "老渔民",
           "personality": "倔强硬气，海上经验丰富",
-          "relationship": "你的爷爷，病床上还惦记着那半张航海图"
+          "relationship": "你的爷爷，病床上还惦记着那半张航海图",
+          "favor": 85,
+          "affection": 0
         },
         {
           "name": "阿婆·桂香",

@@ -189,7 +189,9 @@
           "name": "黑泽",
           "role": "力量型咒术师",
           "personality": "莽撞热血，拳头比脑子快",
-          "relationship": "你的搭档，嘴上嫌弃你弱，打架永远护着你"
+          "relationship": "你的搭档，嘴上嫌弃你弱，打架永远护着你",
+          "favor": 80,
+          "affection": 0
         },
         {
           "name": "藤井",

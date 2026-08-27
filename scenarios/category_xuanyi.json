@@ -25,17 +25,46 @@
         "background": "新上任的巡捕房探长，之前在北平办过三桩大案，调来临海港，与沈家无亲，但上任第一天就被告知：沈家老爷的死，和你的前任探长的失踪有关"
       },
       "npcs": [
-        { "name": "副探长·老猫", "role": "巡捕房副探长", "personality": "油滑老练，人脉极广", "relationship": "熟知港口一切黑幕，亦正亦邪" },
-        { "name": "沈夫人·白露", "role": "沈家遗孀", "personality": "美艳冷静，滴水不漏", "relationship": "死者的续弦妻子，嫌疑最大也最无辜" },
-        { "name": "舞女·红菱", "role": "百乐门舞女", "personality": "伶俐世故，记性极好", "relationship": "声称掌握关键线索，但要价不低" },
-        { "name": "码头老大·陈三", "role": "码头帮派头目", "personality": "豪爽凶悍，重江湖义气", "relationship": "与沈家有旧怨，也是港口消息的源头" }
+        {
+          "name": "副探长·老猫",
+          "role": "巡捕房副探长",
+          "personality": "油滑老练，人脉极广",
+          "relationship": "熟知港口一切黑幕，亦正亦邪"
+        },
+        {
+          "name": "沈夫人·白露",
+          "role": "沈家遗孀",
+          "personality": "美艳冷静，滴水不漏",
+          "relationship": "死者的续弦妻子，嫌疑最大也最无辜"
+        },
+        {
+          "name": "舞女·红菱",
+          "role": "百乐门舞女",
+          "personality": "伶俐世故，记性极好",
+          "relationship": "声称掌握关键线索，但要价不低"
+        },
+        {
+          "name": "码头老大·陈三",
+          "role": "码头帮派头目",
+          "personality": "豪爽凶悍，重江湖义气",
+          "relationship": "与沈家有旧怨，也是港口消息的源头"
+        }
       ],
       "timeline": {
-        "start": { "year": 1937, "month": 6, "day": 9 },
+        "start": {
+          "year": 1937,
+          "month": 6,
+          "day": 9
+        },
         "note": "沈家老爷死后第七天，你正式接手此案，尸检报告和遗书正在你桌上"
       },
       "scene_style": {
-        "env_templates": ["巡捕房", "沈家书房", "百乐门舞厅", "码头仓库"],
+        "env_templates": [
+          "巡捕房",
+          "沈家书房",
+          "百乐门舞厅",
+          "码头仓库"
+        ],
         "option_style": "选项要带刑侦逻辑与时代感（如：验尸/查船票/试探证人/追踪走私线）"
       },
       "first_scene": {
@@ -74,17 +103,46 @@
         "background": "失忆的实验体，自称「第七名志愿者」，手腕上的编号是 07，会一点心理学和反侦查技巧，直觉惊人"
       },
       "npcs": [
-        { "name": "研究员·白鸮", "role": "实验负责人", "personality": "冷静专业，滴水不漏", "relationship": "规则的制定者，也是唯一穿白大褂的人" },
-        { "name": "志愿者·01", "role": "第一号志愿者", "personality": "暴躁冲动，身手矫健", "relationship": "每次轮回都第一个死，每次都死法不同" },
-        { "name": "志愿者·03", "role": "第三号志愿者", "personality": "温柔寡言，医学背景", "relationship": "似乎也在悄悄调查，常与你对视" },
-        { "name": "监控里的女人·05", "role": "第五号志愿者", "personality": "神秘安静，从不说话", "relationship": "她的房间监控总是坏的" }
+        {
+          "name": "研究员·白鸮",
+          "role": "实验负责人",
+          "personality": "冷静专业，滴水不漏",
+          "relationship": "规则的制定者，也是唯一穿白大褂的人"
+        },
+        {
+          "name": "志愿者·01",
+          "role": "第一号志愿者",
+          "personality": "暴躁冲动，身手矫健",
+          "relationship": "每次轮回都第一个死，每次都死法不同"
+        },
+        {
+          "name": "志愿者·03",
+          "role": "第三号志愿者",
+          "personality": "温柔寡言，医学背景",
+          "relationship": "似乎也在悄悄调查，常与你对视"
+        },
+        {
+          "name": "监控里的女人·05",
+          "role": "第五号志愿者",
+          "personality": "神秘安静，从不说话",
+          "relationship": "她的房间监控总是坏的"
+        }
       ],
       "timeline": {
-        "start": { "year": 2026, "month": 10, "day": 31 },
+        "start": {
+          "year": 2026,
+          "month": 10,
+          "day": 31
+        },
         "note": "第七天的午夜，手环倒计时归零前十分钟，你在实验楼的通风管道里醒来——这是轮回里从没到过的地方"
       },
       "scene_style": {
-        "env_templates": ["实验楼走廊", "白鸮的办公室", "通风管道", "岛岸码头"],
+        "env_templates": [
+          "实验楼走廊",
+          "白鸮的办公室",
+          "通风管道",
+          "岛岸码头"
+        ],
         "option_style": "选项要带时间压迫感（如：先查标记/直闯办公室/唤醒03结盟/抢先出海）"
       },
       "first_scene": {
@@ -123,17 +181,46 @@
         "background": "历史系研究生，继承落霞府后辞掉工作搬进老宅，白天整理古籍，晚上和宅子打交道，天生能记住细节"
       },
       "npcs": [
-        { "name": "管家·福伯", "role": "老宅老管家", "personality": "沉默守旧，忠于顾家", "relationship": "从小看护这宅子，知道第八进的秘密" },
-        { "name": "民宿住客·白女士", "role": "长期住客", "personality": "优雅神秘，身份成谜", "relationship": "住了半年，似乎专门为第八进而来" },
-        { "name": "旧货商·钱掌柜", "role": "收购旧物的商人", "personality": "精明贪婪，消息灵通", "relationship": "手上有一批落霞府流出的旧物" },
-        { "name": "族谱整理人·阿禾", "role": "档案馆实习生", "personality": "细心执着，一丝不苟", "relationship": "帮你查族谱，查出一个惊人的名字" }
+        {
+          "name": "管家·福伯",
+          "role": "老宅老管家",
+          "personality": "沉默守旧，忠于顾家",
+          "relationship": "从小看护这宅子，知道第八进的秘密"
+        },
+        {
+          "name": "民宿住客·白女士",
+          "role": "长期住客",
+          "personality": "优雅神秘，身份成谜",
+          "relationship": "住了半年，似乎专门为第八进而来"
+        },
+        {
+          "name": "旧货商·钱掌柜",
+          "role": "收购旧物的商人",
+          "personality": "精明贪婪，消息灵通",
+          "relationship": "手上有一批落霞府流出的旧物"
+        },
+        {
+          "name": "族谱整理人·阿禾",
+          "role": "档案馆实习生",
+          "personality": "细心执着，一丝不苟",
+          "relationship": "帮你查族谱，查出一个惊人的名字"
+        }
       ],
       "timeline": {
-        "start": { "year": 2026, "month": 11, "day": 15 },
+        "start": {
+          "year": 2026,
+          "month": 11,
+          "day": 15
+        },
         "note": "你搬进落霞府第四十天，终于用钥匙打开了第八进的门"
       },
       "scene_style": {
-        "env_templates": ["第八进正厅", "老宅回廊", "福伯的耳房", "档案馆"],
+        "env_templates": [
+          "第八进正厅",
+          "老宅回廊",
+          "福伯的耳房",
+          "档案馆"
+        ],
         "option_style": "选项要带解谜与氛围感（如：对照全家福/查暗道/问福伯/翻旧物）"
       },
       "first_scene": {
@@ -172,17 +259,48 @@
         "background": "辞职的地铁站务员，熟悉S城地铁每一条线路和每一个维修通道，为调查好友小周的失踪而深夜上车"
       },
       "npcs": [
-        { "name": "车厢里的女人·阿绫", "role": "乘客", "personality": "温柔冷静，像是等了很久", "relationship": "她说她认识你，但你想不起她" },
-        { "name": "白衬衫男人", "role": "乘客", "personality": "西装革履，神色慌张", "relationship": "一直盯着运行图背面看，像是知道什么" },
-        { "name": "检票员·哑叔", "role": "旧4号线检票员", "personality": "沉默佝偻，从不说话", "relationship": "他认识所有上过这班车的人" },
-        { "name": "小周", "role": "失踪的好友", "personality": "乐观开朗，胆子大", "relationship": "失踪前夜给你发的最后一条消息：我找到4号线了" }
+        {
+          "name": "车厢里的女人·阿绫",
+          "role": "乘客",
+          "personality": "温柔冷静，像是等了很久",
+          "relationship": "她说她认识你，但你想不起她"
+        },
+        {
+          "name": "白衬衫男人",
+          "role": "乘客",
+          "personality": "西装革履，神色慌张",
+          "relationship": "一直盯着运行图背面看，像是知道什么"
+        },
+        {
+          "name": "检票员·哑叔",
+          "role": "旧4号线检票员",
+          "personality": "沉默佝偻，从不说话",
+          "relationship": "他认识所有上过这班车的人"
+        },
+        {
+          "name": "小周",
+          "role": "失踪的好友",
+          "personality": "乐观开朗，胆子大",
+          "relationship": "失踪前夜给你发的最后一条消息：我找到4号线了",
+          "favor": 80,
+          "affection": 0
+        }
       ],
       "timeline": {
-        "start": { "year": 2026, "month": 12, "day": 13 },
+        "start": {
+          "year": 2026,
+          "month": 12,
+          "day": 13
+        },
         "note": "小周失踪的第 30 天，深夜十二点整，你踏上了旧4号线"
       },
       "scene_style": {
-        "env_templates": ["旧4号线车厢", "未名站台", "回廊站", "维修通道"],
+        "env_templates": [
+          "旧4号线车厢",
+          "未名站台",
+          "回廊站",
+          "维修通道"
+        ],
         "option_style": "选项要带密闭空间的紧张感（如：查看运行图/搭话白衬衫/跟踪检票员/检查车厢连接处）"
       },
       "first_scene": {
@@ -221,17 +339,48 @@
         "background": "推理小说作家，程默的多年好友兼宿敌，作品风格截然相反，却互相欣赏，受邀参加签售会，本想在会后和他谈合作"
       },
       "npcs": [
-        { "name": "编辑·林紫", "role": "程默的编辑", "personality": "精明干练，爱才惜才", "relationship": "组织签售会的负责人，也是程默手稿的知情人" },
-        { "name": "恋人·温雅", "role": "程默的恋人", "personality": "安静聪慧，处变不惊", "relationship": "全程在场，证词滴水不漏" },
-        { "name": "同行·老段", "role": "推理作家", "personality": "刻薄好胜，与程默积怨", "relationship": "公开骂过程默，嫌疑最大" },
-        { "name": "管家·全叔", "role": "程默的管家", "personality": "一丝不苟，忠诚沉默", "relationship": "负责监控与门锁，掌握钥匙" }
+        {
+          "name": "编辑·林紫",
+          "role": "程默的编辑",
+          "personality": "精明干练，爱才惜才",
+          "relationship": "组织签售会的负责人，也是程默手稿的知情人"
+        },
+        {
+          "name": "恋人·温雅",
+          "role": "程默的恋人",
+          "personality": "安静聪慧，处变不惊",
+          "relationship": "全程在场，证词滴水不漏",
+          "favor": 80,
+          "affection": 85
+        },
+        {
+          "name": "同行·老段",
+          "role": "推理作家",
+          "personality": "刻薄好胜，与程默积怨",
+          "relationship": "公开骂过程默，嫌疑最大"
+        },
+        {
+          "name": "管家·全叔",
+          "role": "程默的管家",
+          "personality": "一丝不苟，忠诚沉默",
+          "relationship": "负责监控与门锁，掌握钥匙"
+        }
       ],
       "timeline": {
-        "start": { "year": 2026, "month": 6, "day": 28 },
+        "start": {
+          "year": 2026,
+          "month": 6,
+          "day": 28
+        },
         "note": "签售会进行到一半，楼上传来闷响，警察到达前，你抢先翻开书桌上的手稿"
       },
       "scene_style": {
-        "env_templates": ["书房", "直播演播厅", "宅邸走廊", "警局审讯室"],
+        "env_templates": [
+          "书房",
+          "直播演播厅",
+          "宅邸走廊",
+          "警局审讯室"
+        ],
         "option_style": "选项要带本格推理的严谨（如：核对直播时间轴/验监控死角/交叉验证证词/比对笔迹）"
       },
       "first_scene": {

@@ -32,7 +32,9 @@ window.SCENARIO_LIBRARY = [
           "name": "陆烬川",
           "role": "顶流偶像",
           "personality": "台上光芒万丈，台下疲惫孤独，占有欲强却极度缺乏安全感",
-          "relationship": "你的地下男友，用情至深但随时可能被事业压垮"
+          "relationship": "你的地下男友，用情至深但随时可能被事业压垮",
+          "favor": 75,
+          "affection": 85
         },
         {
           "name": "顾姐",
@@ -50,7 +52,9 @@ window.SCENARIO_LIBRARY = [
           "name": "闺蜜·小周",
           "role": "你的同事兼闺蜜",
           "personality": "嘴巴严，脑子活，是你在娱乐圈的唯一同伙",
-          "relationship": "知道全部秘密，负责帮你打掩护"
+          "relationship": "知道全部秘密，负责帮你打掩护",
+          "favor": 85,
+          "affection": 0
         }
       ],
       "timeline": {
@@ -122,7 +126,9 @@ window.SCENARIO_LIBRARY = [
           "name": "艾略特·克莱因",
           "role": "天才炼金师",
           "personality": "毒舌、天才、不信命运，喜欢实验一切",
-          "relationship": "注意到你'知道太多'，正在试探你"
+          "relationship": "注意到你'知道太多'，正在试探你",
+          "favor": -15,
+          "affection": 0
         },
         {
           "name": "洛恩",
@@ -200,7 +206,9 @@ window.SCENARIO_LIBRARY = [
           "name": "祁川",
           "role": "顶流男主",
           "personality": "表面高冷营业机器，私下细心到可怕，演技与真心难辨",
-          "relationship": "你的假CP对象，合约期快到了"
+          "relationship": "你的假CP对象，合约期快到了",
+          "favor": 65,
+          "affection": 70
         },
         {
           "name": "制片人·方姐",
@@ -296,7 +304,9 @@ window.SCENARIO_LIBRARY = [
           "name": "老酒鬼·卡图",
           "role": "前冒险者",
           "personality": "见多识广，毒舌但心善",
-          "relationship": "唯一知道勇者往事的老朋友，半路加入队伍"
+          "relationship": "唯一知道勇者往事的老朋友，半路加入队伍",
+          "favor": 70,
+          "affection": 0
         },
         {
           "name": "魔王使者·墨",
@@ -368,7 +378,9 @@ window.SCENARIO_LIBRARY = [
           "name": "陆之遥",
           "role": "金融海归",
           "personality": "表面温润从容，实则紧张到把车票捏皱了，一紧张就说冷笑话",
-          "relationship": "你的青梅竹马，带着十年的约定回来找你"
+          "relationship": "你的青梅竹马，带着十年的约定回来找你",
+          "favor": 70,
+          "affection": 60
         },
         {
           "name": "赵阿姨",
@@ -458,13 +470,17 @@ window.SCENARIO_LIBRARY = [
           "name": "程副官",
           "role": "上将副官",
           "personality": "心思缜密，铁面无私，Beta",
-          "relationship": "一直怀疑你的背景，处处设防"
+          "relationship": "一直怀疑你的背景，处处设防",
+          "favor": -20,
+          "affection": 0
         },
         {
           "name": "艾琳将军",
           "role": "军情处处长",
           "personality": "老谋深算，擅长交易",
-          "relationship": "想把你作为联姻筹码送往外域军团"
+          "relationship": "想把你作为联姻筹码送往外域军团",
+          "favor": -15,
+          "affection": 0
         }
       ],
       "timeline": {
@@ -536,7 +552,9 @@ window.SCENARIO_LIBRARY = [
           "name": "程亦",
           "role": "竞赛队学长/Alpha",
           "personality": "温柔克制，成绩优异，情感细腻",
-          "relationship": "暗恋你一年，一直默默照顾你"
+          "relationship": "暗恋你一年，一直默默照顾你",
+          "favor": 70,
+          "affection": 65
         },
         {
           "name": "周婷",
@@ -608,13 +626,17 @@ window.SCENARIO_LIBRARY = [
           "name": "纪云深",
           "role": "顶流 Alpha",
           "personality": "营业时完美无缺，私下毒舌别扭，重度信息素依赖",
-          "relationship": "你的恋综 CP 搭子"
+          "relationship": "你的恋综 CP 搭子",
+          "favor": 65,
+          "affection": 70
         },
         {
           "name": "顾野",
           "role": "视帝 Alpha",
           "personality": "深沉狡黠，笑里藏刀",
-          "relationship": "纪云深的对家，中途进场搅局"
+          "relationship": "纪云深的对家，中途进场搅局",
+          "favor": -30,
+          "affection": 0
         },
         {
           "name": "丽姐",
@@ -686,13 +708,17 @@ window.SCENARIO_LIBRARY = [
           "name": "顾北辰",
           "role": "顾氏集团总裁/Alpha",
           "personality": "冷漠疏离，掌控欲强，有重度失眠",
-          "relationship": "你的契约丈夫，从不碰你，却总在深夜出现在你房门外"
+          "relationship": "你的契约丈夫，从不碰你，却总在深夜出现在你房门外",
+          "favor": 85,
+          "affection": 90
         },
         {
           "name": "顾明珠",
           "role": "顾家旁支小姐",
           "personality": "笑里藏刀，攀比心重",
-          "relationship": "觊觎家主之位，视你为眼中钉"
+          "relationship": "觊觎家主之位，视你为眼中钉",
+          "favor": -40,
+          "affection": 0
         },
         {
           "name": "老管家",

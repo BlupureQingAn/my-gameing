@@ -375,7 +375,9 @@
           "name": "中介·老K",
           "role": "街头中间人",
           "personality": "滑头，消息灵通，两面三刀",
-          "relationship": "你的主要委托人，也常把你当弃子"
+          "relationship": "你的主要委托人，也常把你当弃子",
+          "favor": -35,
+          "affection": 0
         },
         {
           "name": "警探·陈",

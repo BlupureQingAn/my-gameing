@@ -134,7 +134,9 @@
           "name": "猎杀者·零",
           "role": "系统标记的猎杀者",
           "personality": "冷酷高效，来去无踪",
-          "relationship": "系统派来「清理」威胁的，他的目标正是你"
+          "relationship": "系统派来「清理」威胁的，他的目标正是你",
+          "favor": -25,
+          "affection": 0
         }
       ],
       "timeline": {

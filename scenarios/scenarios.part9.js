@@ -45,7 +45,9 @@
           "name": "兽医·林医生",
           "role": "城郊宠物医院",
           "personality": "专业负责，收费公道，爱唠叨",
-          "relationship": "猫舍的救命稻草，也是你半个老师"
+          "relationship": "猫舍的救命稻草，也是你半个老师",
+          "favor": 80,
+          "affection": 0
         },
         {
           "name": "买家·贵妇王太太",
@@ -117,7 +119,9 @@
           "name": "老王",
           "role": "隔壁修车铺老板",
           "personality": "豪爽仗义，嘴硬心软",
-          "relationship": "巷子里的老主顾，也是你的半个军师"
+          "relationship": "巷子里的老主顾，也是你的半个军师",
+          "favor": 80,
+          "affection": 0
         },
         {
           "name": "李婶",
@@ -201,7 +205,9 @@
           "name": "熟客·阿芳",
           "role": "夜班护士",
           "personality": "爱笑，但眼里的疲惫藏不住",
-          "relationship": "每天下班都来，是你的'深夜老友'"
+          "relationship": "每天下班都来，是你的'深夜老友'",
+          "favor": 75,
+          "affection": 0
         },
         {
           "name": "邻居·刘老板",

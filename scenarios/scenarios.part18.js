@@ -33,13 +33,17 @@
           "name": "林晚晴",
           "role": "转班来的青梅竹马",
           "personality": "温柔要强，心里藏事",
-          "relationship": "你的同桌，你暗恋三年的人，她似乎也在等你开口"
+          "relationship": "你的同桌，你暗恋三年的人，她似乎也在等你开口",
+          "favor": 70,
+          "affection": 65
         },
         {
           "name": "死党·大刘",
           "role": "你的同桌",
           "personality": "咋咋呼呼，恋爱军师",
-          "relationship": "全班的八卦中心，总怂恿你表白"
+          "relationship": "全班的八卦中心，总怂恿你表白",
+          "favor": 80,
+          "affection": 0
         },
         {
           "name": "班主任·老周",
@@ -122,7 +126,9 @@
           "name": "同桌·阿豪",
           "role": "你的同桌",
           "personality": "懒散仗义，成绩垫底",
-          "relationship": "你最好的朋友，最近总觉得你不对劲"
+          "relationship": "你最好的朋友，最近总觉得你不对劲",
+          "favor": 70,
+          "affection": 0
         },
         {
           "name": "班主任·王姐",

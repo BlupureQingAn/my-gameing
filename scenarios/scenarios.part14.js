@@ -211,7 +211,9 @@
           "name": "御厨·阿翁",
           "role": "隐居民间的老师傅",
           "personality": "古怪倔强，手艺通神",
-          "relationship": "你的师傅，也是你唯一可以依仗的本事"
+          "relationship": "你的师傅，也是你唯一可以依仗的本事",
+          "favor": 70,
+          "affection": 0
         },
         {
           "name": "太学生·程少安",
@@ -365,7 +367,9 @@
           "name": "报馆老板·卢老板",
           "role": "报馆创办人",
           "personality": "精明世故，爱惜羽毛",
-          "relationship": "他护着你也防着你，报馆的存亡系于你的笔"
+          "relationship": "他护着你也防着你，报馆的存亡系于你的笔",
+          "favor": 80,
+          "affection": 0
         },
         {
           "name": "革命党·秦一鸣",
@@ -383,7 +387,9 @@
           "name": "舞女·陆小曼",
           "role": "百乐门舞女",
           "personality": "八面玲珑，深藏不露",
-          "relationship": "你名义上的「红颜知己」，真实身份成谜"
+          "relationship": "你名义上的「红颜知己」，真实身份成谜",
+          "favor": 85,
+          "affection": 0
         }
       ],
       "timeline": {

@@ -117,7 +117,9 @@
           "name": "陈警官",
           "role": "海岸警卫",
           "personality": "敏锐正直，执念很强",
-          "relationship": "怀疑你窝藏货船事件的目击者"
+          "relationship": "怀疑你窝藏货船事件的目击者",
+          "favor": -20,
+          "affection": 0
         },
         {
           "name": "阿婆",
@@ -195,7 +197,9 @@
           "name": "阿屠",
           "role": "驭龙司老将",
           "personality": "嗜血残暴，追踪术了得",
-          "relationship": "曾亲手斩杀你的母亲，你的仇人"
+          "relationship": "曾亲手斩杀你的母亲，你的仇人",
+          "favor": -40,
+          "affection": -30
         },
         {
           "name": "灵犀",
@@ -345,7 +349,9 @@
           "name": "苍梧",
           "role": "狼族大酋长",
           "personality": "沉稳寡言，责任重于一切，人形与狼形判若两狼",
-          "relationship": "救你一命的人，也是最先怀疑你的人"
+          "relationship": "救你一命的人，也是最先怀疑你的人",
+          "favor": -20,
+          "affection": 0
         },
         {
           "name": "阿蒂拉",

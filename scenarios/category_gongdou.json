@@ -25,17 +25,49 @@
         "background": "将门之女，父沈镇官拜副都统。因父功入宫封娴妃，性情温婉藏锋芒。三年前被构陷与禁卫军总管私通，皇帝震怒，褫夺封号打入冷宫。"
       },
       "npcs": [
-        { "name": "皇后乌雅氏", "role": "中宫皇后", "personality": "端庄慈和，绵里藏针", "relationship": "表面善待你，实为储位之争的操盘手" },
-        { "name": "年贵妃", "role": "宠冠六宫", "personality": "明艳张扬，笑里藏刀", "relationship": "当年构陷你私通的主谋，与皇后暗中角力" },
-        { "name": "李德海", "role": "御前总管太监", "personality": "见风使舵，八面玲珑", "relationship": "皇帝身边最信任的人，谁给的好处多就为谁说话" },
-        { "name": "春杏", "role": "贴身宫女", "personality": "忠厚单纯，胆小怕事", "relationship": "前世为你挡下毒药自缢身亡，这一世你最想护住的人" }
+        {
+          "name": "皇后乌雅氏",
+          "role": "中宫皇后",
+          "personality": "端庄慈和，绵里藏针",
+          "relationship": "表面善待你，实为储位之争的操盘手"
+        },
+        {
+          "name": "年贵妃",
+          "role": "宠冠六宫",
+          "personality": "明艳张扬，笑里藏刀",
+          "relationship": "当年构陷你私通的主谋，与皇后暗中角力",
+          "favor": -45,
+          "affection": 0
+        },
+        {
+          "name": "李德海",
+          "role": "御前总管太监",
+          "personality": "见风使舵，八面玲珑",
+          "relationship": "皇帝身边最信任的人，谁给的好处多就为谁说话"
+        },
+        {
+          "name": "春杏",
+          "role": "贴身宫女",
+          "personality": "忠厚单纯，胆小怕事",
+          "relationship": "前世为你挡下毒药自缢身亡，这一世你最想护住的人",
+          "favor": 85,
+          "affection": 0
+        }
       ],
       "timeline": {
-        "start": { "year": 1725, "month": 3, "day": 1 },
+        "start": {
+          "year": 1725,
+          "month": 3,
+          "day": 1
+        },
         "note": "雍正三年三月初一，你重生的日子。前世的牢狱之灾即将在三十日后上演"
       },
       "scene_style": {
-        "env_templates": ["冷宫残雪下的破败宫墙", "御花园牡丹竞放的回廊", "储秀宫暖阁的鎏金香炉"],
+        "env_templates": [
+          "冷宫残雪下的破败宫墙",
+          "御花园牡丹竞放的回廊",
+          "储秀宫暖阁的鎏金香炉"
+        ],
         "option_style": "宫斗选项必须权衡利弊——一步错，步步错，人人都有两副面孔"
       },
       "first_scene": {
@@ -74,17 +106,49 @@
         "background": "尚书省户部小吏苏惟庸之女，幼年丧母，随父在长安长大。粗通文墨，擅女红，尤善以针线绣出人物百态——绣观音像可令宫人落泪，绣牡丹可引蝴蝶停驻。"
       },
       "npcs": [
-        { "name": "刘尚宫", "role": "尚宫局尚宫", "personality": "严苛冷面，赏罚分明", "relationship": "掌管六局升迁，最厌恶偷奸耍滑之人" },
-        { "name": "李龟年", "role": "太乐署乐正", "personality": "风雅豁达，知音难求", "relationship": "偶然听见你哼曲，引为忘年之交" },
-        { "name": "崔明远", "role": "太子府伴读", "personality": "温润如玉，重情重义", "relationship": "与你青梅竹马，如今身份悬殊，却仍暗中照拂" },
-        { "name": "杜夫人", "role": "宰相夫人", "personality": "精干世故，手眼通天", "relationship": "赏识你的绣工，想收你为门下耳目" }
+        {
+          "name": "刘尚宫",
+          "role": "尚宫局尚宫",
+          "personality": "严苛冷面，赏罚分明",
+          "relationship": "掌管六局升迁，最厌恶偷奸耍滑之人"
+        },
+        {
+          "name": "李龟年",
+          "role": "太乐署乐正",
+          "personality": "风雅豁达，知音难求",
+          "relationship": "偶然听见你哼曲，引为忘年之交",
+          "favor": 80,
+          "affection": 0
+        },
+        {
+          "name": "崔明远",
+          "role": "太子府伴读",
+          "personality": "温润如玉，重情重义",
+          "relationship": "与你青梅竹马，如今身份悬殊，却仍暗中照拂",
+          "favor": 70,
+          "affection": 60
+        },
+        {
+          "name": "杜夫人",
+          "role": "宰相夫人",
+          "personality": "精干世故，手眼通天",
+          "relationship": "赏识你的绣工，想收你为门下耳目"
+        }
       ],
       "timeline": {
-        "start": { "year": 712, "month": 5, "day": 10 },
+        "start": {
+          "year": 712,
+          "month": 5,
+          "day": 10
+        },
         "note": "开元元年五月，你入宫第三日。宫宴后第七天，宰相杜暹之妻杜夫人将召你献绣"
       },
       "scene_style": {
-        "env_templates": ["大明宫含元殿的晨光", "西市胡姬酒肆的葡萄香", "司衣局满架绫罗的织机声"],
+        "env_templates": [
+          "大明宫含元殿的晨光",
+          "西市胡姬酒肆的葡萄香",
+          "司衣局满架绫罗的织机声"
+        ],
         "option_style": "选项要贴近唐代风物与仕途逻辑，一步一个脚印地往上走"
       },
       "first_scene": {
@@ -123,17 +187,45 @@
         "background": "江南织造府养女，生父生母不详。自幼长在织造府后园，通音律、善丹青，性子沉静，却有一双能看透人心的眼睛。"
       },
       "npcs": [
-        { "name": "萧衍", "role": "大昭昭明帝", "personality": "年轻冷峻，深不可测", "relationship": "你的钦点之人，从不表露喜怒，却总在你意料之外的地方出现" },
-        { "name": "沈贵妃", "role": "先帝旧人，贵妃", "personality": "雍容圆滑，滴水不漏", "relationship": "后宫实际掌权者，对昭华令持令人怀有复杂态度" },
-        { "name": "钦天监监正", "role": "卜算昭华令之人", "personality": "仙风道骨，语焉不详", "relationship": "曾对你说：'令出无声，祸福自渡'——你至今不明白这句话" },
-        { "name": "顾临渊", "role": "织造府少东家", "personality": "温文尔雅，藏锋于鞘", "relationship": "名义上的义兄，实际暗中查探你的身世多年" }
+        {
+          "name": "萧衍",
+          "role": "大昭昭明帝",
+          "personality": "年轻冷峻，深不可测",
+          "relationship": "你的钦点之人，从不表露喜怒，却总在你意料之外的地方出现"
+        },
+        {
+          "name": "沈贵妃",
+          "role": "先帝旧人，贵妃",
+          "personality": "雍容圆滑，滴水不漏",
+          "relationship": "后宫实际掌权者，对昭华令持令人怀有复杂态度"
+        },
+        {
+          "name": "钦天监监正",
+          "role": "卜算昭华令之人",
+          "personality": "仙风道骨，语焉不详",
+          "relationship": "曾对你说：'令出无声，祸福自渡'——你至今不明白这句话"
+        },
+        {
+          "name": "顾临渊",
+          "role": "织造府少东家",
+          "personality": "温文尔雅，藏锋于鞘",
+          "relationship": "名义上的义兄，实际暗中查探你的身世多年"
+        }
       ],
       "timeline": {
-        "start": { "year": 1172, "month": 8, "day": 15 },
+        "start": {
+          "year": 1172,
+          "month": 8,
+          "day": 15
+        },
         "note": "昭明三年仲秋，你入储秀宫第一日。七日后为初选，十五日后为终选"
       },
       "scene_style": {
-        "env_templates": ["储秀宫抄手游廊的桂花香", "御花园太湖石后的私语", "织造府烟雨中的后园"],
+        "env_templates": [
+          "储秀宫抄手游廊的桂花香",
+          "御花园太湖石后的私语",
+          "织造府烟雨中的后园"
+        ],
         "option_style": "每一步选择都可能改变后位归属，谨慎为上，但也要有赌徒的胆量"
       },
       "first_scene": {
@@ -172,17 +264,47 @@
         "background": "修仙世家叶氏庶女，母亲是凡人舞姬。自幼不受重视，七岁测出读心道天赋，被送往青岩山修行，如今修为炼气七层，在众妃嫔中垫底。"
       },
       "npcs": [
-        { "name": "慕容珺", "role": "玄文帝", "personality": "冷冽疏离，化神期修士", "relationship": "选你入宫似乎别有深意，他看你的眼神总带着审视" },
-        { "name": "祝皇后", "role": "中宫皇后", "personality": "雍容威仪，元婴期大修", "relationship": "修摄魂咒，后宫三千佳丽的'心魔'都由她亲手镇压" },
-        { "name": "青岩山大师姐", "role": "护道人", "personality": "清冷寡言，剑心通明", "relationship": "奉师命暗中护你，却告诫你：'宫中之事，不可全信宗门' " },
-        { "name": "曹公公", "role": "司礼监掌印", "personality": "油滑谄媚，深藏不露", "relationship": "一个会御剑的太监，你知道他绝不简单" }
+        {
+          "name": "慕容珺",
+          "role": "玄文帝",
+          "personality": "冷冽疏离，化神期修士",
+          "relationship": "选你入宫似乎别有深意，他看你的眼神总带着审视"
+        },
+        {
+          "name": "祝皇后",
+          "role": "中宫皇后",
+          "personality": "雍容威仪，元婴期大修",
+          "relationship": "修摄魂咒，后宫三千佳丽的'心魔'都由她亲手镇压"
+        },
+        {
+          "name": "青岩山大师姐",
+          "role": "护道人",
+          "personality": "清冷寡言，剑心通明",
+          "relationship": "奉师命暗中护你，却告诫你：'宫中之事，不可全信宗门' ",
+          "favor": 80,
+          "affection": 0
+        },
+        {
+          "name": "曹公公",
+          "role": "司礼监掌印",
+          "personality": "油滑谄媚，深藏不露",
+          "relationship": "一个会御剑的太监，你知道他绝不简单"
+        }
       ],
       "timeline": {
-        "start": { "year": 1342, "month": 9, "day": 15 },
+        "start": {
+          "year": 1342,
+          "month": 9,
+          "day": 15
+        },
         "note": "大玄历一三四二年仲秋，你入宫当日恰逢十五月圆——凤脉异动的征兆，今夜便会显现"
       },
       "scene_style": {
-        "env_templates": ["月圆之夜的鎏金宫阙", "凤脉祭坛的幽蓝微光", "各宫妃嫔的丹药房氤氲"],
+        "env_templates": [
+          "月圆之夜的鎏金宫阙",
+          "凤脉祭坛的幽蓝微光",
+          "各宫妃嫔的丹药房氤氲"
+        ],
         "option_style": "修行与宫斗双线并进：选项可能同时改变宫闱格局与你的修为"
       },
       "first_scene": {
@@ -221,17 +343,49 @@
         "background": "教坊司舞姬出身，一曲《惊鸿》倾倒先帝，被赎身封贵妃，诞下皇九子萧鸾。先帝驾崩，九子继位，你临朝称制。"
       },
       "npcs": [
-        { "name": "萧鸾", "role": "幼帝", "personality": "早慧沉默，三岁已能背《帝范》", "relationship": "你的儿子，也是你最大的软肋" },
-        { "name": "萧元衡", "role": "宗正寺卿，宗室之首", "personality": "老谋深算，以正统自居", "relationship": "一直在等你还政，好扶他的侄子上位" },
-        { "name": "温廷尉", "role": "国舅，外戚之首", "personality": "志大才疏，贪权好利", "relationship": "你名义上的盟友，实则随时准备反噬" },
-        { "name": "孟姑姑", "role": "掌印女官", "personality": "心细如发，忠心耿耿", "relationship": "教坊司旧识，如今是你唯一可以交托生死的人" }
+        {
+          "name": "萧鸾",
+          "role": "幼帝",
+          "personality": "早慧沉默，三岁已能背《帝范》",
+          "relationship": "你的儿子，也是你最大的软肋",
+          "favor": 85,
+          "affection": 0
+        },
+        {
+          "name": "萧元衡",
+          "role": "宗正寺卿，宗室之首",
+          "personality": "老谋深算，以正统自居",
+          "relationship": "一直在等你还政，好扶他的侄子上位"
+        },
+        {
+          "name": "温廷尉",
+          "role": "国舅，外戚之首",
+          "personality": "志大才疏，贪权好利",
+          "relationship": "你名义上的盟友，实则随时准备反噬",
+          "favor": -35,
+          "affection": 0
+        },
+        {
+          "name": "孟姑姑",
+          "role": "掌印女官",
+          "personality": "心细如发，忠心耿耿",
+          "relationship": "教坊司旧识，如今是你唯一可以交托生死的人"
+        }
       ],
       "timeline": {
-        "start": { "year": 1057, "month": 2, "day": 9 },
+        "start": {
+          "year": 1057,
+          "month": 2,
+          "day": 9
+        },
         "note": "大雍景和二年，先帝驾崩第三日。明日是你首次临朝听政，宗室已经备好了'劝进还政'的折子"
       },
       "scene_style": {
-        "env_templates": ["金銮殿珠帘后的龙椅", "慈宁宫深夜的孤灯", "教坊司灯火摇曳的旧台"],
+        "env_templates": [
+          "金銮殿珠帘后的龙椅",
+          "慈宁宫深夜的孤灯",
+          "教坊司灯火摇曳的旧台"
+        ],
         "option_style": "权谋选项讲究一步三算，短期的退让往往是为了长线的绞杀"
       },
       "first_scene": {

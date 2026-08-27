@@ -25,12 +25,47 @@
         "background": "孤儿院长大的 Omega，凭借全科目第一的成绩进入帝国军校，信息素检测报告被列为最高机密"
       },
       "npcs": [
-        { "name": "沈寒舟", "role": "帝国上将", "personality": "面冷心热，控制欲极强，对军规近乎偏执", "relationship": "你的直属上司，Alpha，正处在易感期边缘" },
-        { "name": "程副官", "role": "上将副官", "personality": "心思缜密，铁面无私，Beta", "relationship": "一直怀疑你的背景，处处设防" },
-        { "name": "艾琳将军", "role": "军情处处长", "personality": "老谋深算，擅长交易", "relationship": "想把你作为联姻筹码送往外域军团" }
+        {
+          "name": "沈寒舟",
+          "role": "帝国上将",
+          "personality": "面冷心热，控制欲极强，对军规近乎偏执",
+          "relationship": "你的直属上司，Alpha，正处在易感期边缘"
+        },
+        {
+          "name": "程副官",
+          "role": "上将副官",
+          "personality": "心思缜密，铁面无私，Beta",
+          "relationship": "一直怀疑你的背景，处处设防",
+          "favor": -20,
+          "affection": 0
+        },
+        {
+          "name": "艾琳将军",
+          "role": "军情处处长",
+          "personality": "老谋深算，擅长交易",
+          "relationship": "想把你作为联姻筹码送往外域军团",
+          "favor": -15,
+          "affection": 0
+        }
       ],
-      "timeline": { "start": { "year": 402, "month": 3, "day": 17 }, "note": "你入职上将贴身护卫队刚满一个月，今晚是他易感期前的最后一次例行会议" },
-      "scene_style": { "env_templates": ["上将指挥室", "舰桥瞭望台", "军官食堂", "训练舱", "医疗舱"], "option_style": "每个选择都在军规、本能与真心之间博弈，信息素浓度随剧情波动" },
+      "timeline": {
+        "start": {
+          "year": 402,
+          "month": 3,
+          "day": 17
+        },
+        "note": "你入职上将贴身护卫队刚满一个月，今晚是他易感期前的最后一次例行会议"
+      },
+      "scene_style": {
+        "env_templates": [
+          "上将指挥室",
+          "舰桥瞭望台",
+          "军官食堂",
+          "训练舱",
+          "医疗舱"
+        ],
+        "option_style": "每个选择都在军规、本能与真心之间博弈，信息素浓度随剧情波动"
+      },
       "first_scene": {
         "story": "例行会议散场，舰桥灯光渐次熄灭。你正要离开，却听见身后传来压抑的呼吸声——沈寒舟单手撑在控制台上，指节发白，军帽下的额角滚下汗珠。他哑着嗓子说：「回去，报告我身体不适，今晚谁都别来舰桥。」可你闻到空气中那股骤然浓烈的冷杉气息，脚却钉在了原地。他的眼神在克制与失控之间剧烈摇晃：「林澈，我再给你三秒钟。」",
         "options": [
@@ -67,12 +102,45 @@
         "background": "母亲是 Alpha 军官，父亲是 Beta 教师，从小被要求「Omega 也要靠自己」"
       },
       "npcs": [
-        { "name": "江野", "role": "校霸/Alpha", "personality": "张扬热烈，占有欲强但笨拙真诚", "relationship": "隔壁班体育生，单方面宣布要追你" },
-        { "name": "程亦", "role": "竞赛队学长/Alpha", "personality": "温柔克制，成绩优异，情感细腻", "relationship": "暗恋你一年，一直默默照顾你" },
-        { "name": "周婷", "role": "班长/Beta", "personality": "八面玲珑，热心肠", "relationship": "你的同桌，也是唯一知道你发情期日程的人" }
+        {
+          "name": "江野",
+          "role": "校霸/Alpha",
+          "personality": "张扬热烈，占有欲强但笨拙真诚",
+          "relationship": "隔壁班体育生，单方面宣布要追你"
+        },
+        {
+          "name": "程亦",
+          "role": "竞赛队学长/Alpha",
+          "personality": "温柔克制，成绩优异，情感细腻",
+          "relationship": "暗恋你一年，一直默默照顾你",
+          "favor": 70,
+          "affection": 65
+        },
+        {
+          "name": "周婷",
+          "role": "班长/Beta",
+          "personality": "八面玲珑，热心肠",
+          "relationship": "你的同桌，也是唯一知道你发情期日程的人"
+        }
       ],
-      "timeline": { "start": { "year": 2026, "month": 9, "day": 1 }, "note": "转学第一天，年级公示栏贴出了你的分化档案" },
-      "scene_style": { "env_templates": ["走廊转角", "图书馆自习室", "天台", "篮球场边", "食堂窗口"], "option_style": "青春期的心动与规则拉扯：每一次越界都有后果" },
+      "timeline": {
+        "start": {
+          "year": 2026,
+          "month": 9,
+          "day": 1
+        },
+        "note": "转学第一天，年级公示栏贴出了你的分化档案"
+      },
+      "scene_style": {
+        "env_templates": [
+          "走廊转角",
+          "图书馆自习室",
+          "天台",
+          "篮球场边",
+          "食堂窗口"
+        ],
+        "option_style": "青春期的心动与规则拉扯：每一次越界都有后果"
+      },
       "first_scene": {
         "story": "转学第一天的晚自习，你正低头刷题，一张揉皱的纸条被同桌周婷推过来，上面歪歪扭扭写着：「Omega 学霸是吧？明天放学天台，江野等你。」你抬头，前排那个校霸正回头冲你咧嘴笑，校服外套搭在肩上，像只占了领地的狼。周婷压低声音：「他上一任对象被他信息素熏哭过，你小心点。」窗外的晚霞烧得正烈。",
         "options": [
@@ -109,12 +177,47 @@
         "background": "拿过影后却因合约纠纷沉寂三年，靠这次恋综翻身，母亲手术费压在肩上"
       },
       "npcs": [
-        { "name": "纪云深", "role": "顶流 Alpha", "personality": "营业时完美无缺，私下毒舌别扭，重度信息素依赖", "relationship": "你的恋综 CP 搭子" },
-        { "name": "顾野", "role": "视帝 Alpha", "personality": "深沉狡黠，笑里藏刀", "relationship": "纪云深的对家，中途进场搅局" },
-        { "name": "丽姐", "role": "你的经纪人", "personality": "精明算计，利益至上", "relationship": "一手安排你签约恋综，也最了解你的把柄" }
+        {
+          "name": "纪云深",
+          "role": "顶流 Alpha",
+          "personality": "营业时完美无缺，私下毒舌别扭，重度信息素依赖",
+          "relationship": "你的恋综 CP 搭子",
+          "favor": 65,
+          "affection": 70
+        },
+        {
+          "name": "顾野",
+          "role": "视帝 Alpha",
+          "personality": "深沉狡黠，笑里藏刀",
+          "relationship": "纪云深的对家，中途进场搅局",
+          "favor": -30,
+          "affection": 0
+        },
+        {
+          "name": "丽姐",
+          "role": "你的经纪人",
+          "personality": "精明算计，利益至上",
+          "relationship": "一手安排你签约恋综，也最了解你的把柄"
+        }
       ],
-      "timeline": { "start": { "year": 2026, "month": 6, "day": 10 }, "note": "恋综第一集录制当天，化妆间里你第一次闻到纪云深的信息素" },
-      "scene_style": { "env_templates": ["化妆间", "红毯现场", "海边民宿", "游戏环节舞台", "深夜天台"], "option_style": "镜头内外的双面博弈：每一句台词都可能被放大" },
+      "timeline": {
+        "start": {
+          "year": 2026,
+          "month": 6,
+          "day": 10
+        },
+        "note": "恋综第一集录制当天，化妆间里你第一次闻到纪云深的信息素"
+      },
+      "scene_style": {
+        "env_templates": [
+          "化妆间",
+          "红毯现场",
+          "海边民宿",
+          "游戏环节舞台",
+          "深夜天台"
+        ],
+        "option_style": "镜头内外的双面博弈：每一句台词都可能被放大"
+      },
       "first_scene": {
         "story": "化妆间门被推开，纪云深一身黑西装走进来，随手把保温杯放在你妆台上：「下一场是情侣默契问答，待会儿我答错了你配合演生气。」他声音低，像在交代工作。你还没开口，经纪人丽姐已经推门进来，笑盈盈地说：「哎呀，两位提前培养感情呢？」纪云深挑眉，忽然俯身在你耳畔，呼吸擦过你的后颈：「夏老师，合约第一条——镜头外也不许露馅。」",
         "options": [
@@ -151,12 +254,47 @@
         "background": "破产集团的千金，钢琴十级，被迫联姻时刚拿到国外音乐学院的录取通知书"
       },
       "npcs": [
-        { "name": "顾北辰", "role": "顾氏集团总裁/Alpha", "personality": "冷漠疏离，掌控欲强，有重度失眠", "relationship": "你的契约丈夫，从不碰你，却总在深夜出现在你房门外" },
-        { "name": "顾明珠", "role": "顾家旁支小姐", "personality": "笑里藏刀，攀比心重", "relationship": "觊觎家主之位，视你为眼中钉" },
-        { "name": "老管家", "role": "顾宅管家/Beta", "personality": "忠仆，话少心明", "relationship": "唯一知晓顾家旧事的人" }
+        {
+          "name": "顾北辰",
+          "role": "顾氏集团总裁/Alpha",
+          "personality": "冷漠疏离，掌控欲强，有重度失眠",
+          "relationship": "你的契约丈夫，从不碰你，却总在深夜出现在你房门外",
+          "favor": 85,
+          "affection": 90
+        },
+        {
+          "name": "顾明珠",
+          "role": "顾家旁支小姐",
+          "personality": "笑里藏刀，攀比心重",
+          "relationship": "觊觎家主之位，视你为眼中钉",
+          "favor": -40,
+          "affection": 0
+        },
+        {
+          "name": "老管家",
+          "role": "顾宅管家/Beta",
+          "personality": "忠仆，话少心明",
+          "relationship": "唯一知晓顾家旧事的人"
+        }
       ],
-      "timeline": { "start": { "year": 2026, "month": 11, "day": 20 }, "note": "婚后第七个月，你在书房抽屉里发现了那份信息素研究报告" },
-      "scene_style": { "env_templates": ["顾宅餐厅", "琴房", "书房", "深夜花园", "慈善晚宴"], "option_style": "悬疑与深情交织：真相每揭开一层，心就多凉一分" },
+      "timeline": {
+        "start": {
+          "year": 2026,
+          "month": 11,
+          "day": 20
+        },
+        "note": "婚后第七个月，你在书房抽屉里发现了那份信息素研究报告"
+      },
+      "scene_style": {
+        "env_templates": [
+          "顾宅餐厅",
+          "琴房",
+          "书房",
+          "深夜花园",
+          "慈善晚宴"
+        ],
+        "option_style": "悬疑与深情交织：真相每揭开一层，心就多凉一分"
+      },
       "first_scene": {
         "story": "你在书房找一本书，指尖忽然碰到抽屉夹层里的一叠纸。泛黄的研究报告上印着你的名字——出生年份、信息素浓度曲线、风险评估，右下角是母亲的签名。门忽然被推开，顾北辰站在门口，神色晦暗：「苏晚，你在做什么。」他声音平静得可怕，可你看见他垂在身侧的手在抖。窗外风声大作，像有人在哭。",
         "options": [
@@ -193,12 +331,43 @@
         "background": "曾是边陲小镇的厨子，因一手「鱼跃龙门」名动江湖，被盟主府高价聘走"
       },
       "npcs": [
-        { "name": "萧无咎", "role": "玄天盟盟主/Alpha", "personality": "桀骜孤高，实则嘴硬心软，重度挑食", "relationship": "你的东家，每晚都来厨房蹭宵夜" },
-        { "name": "白露", "role": "盟主侍女/Omega", "personality": "温婉多思，善解人意", "relationship": "盟主府里唯一能跟你说上话的人" },
-        { "name": "仇千山", "role": "万剑门门主/Alpha", "personality": "刚愎自用，野心勃勃", "relationship": "觊觎盟主之位，总想用信息素压人一头" }
+        {
+          "name": "萧无咎",
+          "role": "玄天盟盟主/Alpha",
+          "personality": "桀骜孤高，实则嘴硬心软，重度挑食",
+          "relationship": "你的东家，每晚都来厨房蹭宵夜"
+        },
+        {
+          "name": "白露",
+          "role": "盟主侍女/Omega",
+          "personality": "温婉多思，善解人意",
+          "relationship": "盟主府里唯一能跟你说上话的人"
+        },
+        {
+          "name": "仇千山",
+          "role": "万剑门门主/Alpha",
+          "personality": "刚愎自用，野心勃勃",
+          "relationship": "觊觎盟主之位，总想用信息素压人一头"
+        }
       ],
-      "timeline": { "start": { "year": 1265, "month": 5, "day": 14 }, "note": "你入盟主府第 49 天，江湖大会在即，盟主易感期被提前触发" },
-      "scene_style": { "env_templates": ["盟主府厨房", "后山菜地", "江湖大会演武场", "月下屋顶", "酒窖"], "option_style": "柴米油盐与刀光剑影并行：做饭即修行，心动即破局" },
+      "timeline": {
+        "start": {
+          "year": 1265,
+          "month": 5,
+          "day": 14
+        },
+        "note": "你入盟主府第 49 天，江湖大会在即，盟主易感期被提前触发"
+      },
+      "scene_style": {
+        "env_templates": [
+          "盟主府厨房",
+          "后山菜地",
+          "江湖大会演武场",
+          "月下屋顶",
+          "酒窖"
+        ],
+        "option_style": "柴米油盐与刀光剑影并行：做饭即修行，心动即破局"
+      },
       "first_scene": {
         "story": "子时，你正准备熄灶，一个高大的影子无声地滑进厨房。萧无咎黑衣半敞，易感期让他的瞳色暗沉得像化不开的墨。他没说话，径直在灶台边坐下，盯着锅里温着的桂花酒酿。半晌，他开口，声音哑得吓人：「今天仇千山在大会上说，要送个 Omega 给我做夫人。」他转头看你，眼神里有罕见的茫然：「你说，我是不是该找个能治得住我信息素的？」灶火噼啪，你的心跳震耳欲聋。",
         "options": [

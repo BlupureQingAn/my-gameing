@@ -128,13 +128,17 @@
           "name": "僵尸·阿僵",
           "role": "巷口面摊主",
           "personality": "沉默笨拙，煮面好吃",
-          "relationship": "全街唯一和你交心的老实人"
+          "relationship": "全街唯一和你交心的老实人",
+          "favor": 80,
+          "affection": 0
         },
         {
           "name": "猫妖·黑爪",
           "role": "收保护费的猫",
           "personality": "傲娇毒舌，贪吃",
-          "relationship": "全街最危险的存在，却总护着你"
+          "relationship": "全街最危险的存在，却总护着你",
+          "favor": 80,
+          "affection": 0
         }
       ],
       "timeline": {
@@ -199,13 +203,17 @@
           "name": "合租室友·大壮",
           "role": "房产中介",
           "personality": "憨厚讲义气",
-          "relationship": "唯一的现实朋友，处境也艰难"
+          "relationship": "唯一的现实朋友，处境也艰难",
+          "favor": 70,
+          "affection": 0
         },
         {
           "name": "前女友·苏晚",
           "role": "三甲医院医生",
           "personality": "理性冷静，医者仁心",
-          "relationship": "当年嫌你穷分手，如今是行业资源"
+          "relationship": "当年嫌你穷分手，如今是行业资源",
+          "favor": 30,
+          "affection": -25
         },
         {
           "name": "资本大佬·韩爷",
@@ -371,7 +379,9 @@
           "name": "失恋女孩·小昭",
           "role": "常客",
           "personality": "大大咧咧，外热内伤",
-          "relationship": "每天来点「咸的」，和你成了朋友"
+          "relationship": "每天来点「咸的」，和你成了朋友",
+          "favor": 70,
+          "affection": 0
         },
         {
           "name": "失眠作家·老周",

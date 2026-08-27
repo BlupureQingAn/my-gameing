@@ -39,7 +39,9 @@
           "name": "年贵妃",
           "role": "宠冠六宫",
           "personality": "明艳张扬，笑里藏刀",
-          "relationship": "当年构陷你私通的主谋，与皇后暗中角力"
+          "relationship": "当年构陷你私通的主谋，与皇后暗中角力",
+          "favor": -45,
+          "affection": 0
         },
         {
           "name": "李德海",
@@ -51,7 +53,9 @@
           "name": "春杏",
           "role": "贴身宫女",
           "personality": "忠厚单纯，胆小怕事",
-          "relationship": "前世为你挡下毒药自缢身亡，这一世你最想护住的人"
+          "relationship": "前世为你挡下毒药自缢身亡，这一世你最想护住的人",
+          "favor": 85,
+          "affection": 0
         }
       ],
       "timeline": {
@@ -121,13 +125,17 @@
           "name": "李龟年",
           "role": "太乐署乐正",
           "personality": "风雅豁达，知音难求",
-          "relationship": "偶然听见你哼曲，引为忘年之交"
+          "relationship": "偶然听见你哼曲，引为忘年之交",
+          "favor": 80,
+          "affection": 0
         },
         {
           "name": "崔明远",
           "role": "太子府伴读",
           "personality": "温润如玉，重情重义",
-          "relationship": "与你青梅竹马，如今身份悬殊，却仍暗中照拂"
+          "relationship": "与你青梅竹马，如今身份悬殊，却仍暗中照拂",
+          "favor": 70,
+          "affection": 60
         },
         {
           "name": "杜夫人",
@@ -291,7 +299,9 @@
           "name": "青岩山大师姐",
           "role": "护道人",
           "personality": "清冷寡言，剑心通明",
-          "relationship": "奉师命暗中护你，却告诫你：'宫中之事，不可全信宗门'"
+          "relationship": "奉师命暗中护你，却告诫你：'宫中之事，不可全信宗门'",
+          "favor": 80,
+          "affection": 0
         },
         {
           "name": "曹公公",
@@ -361,7 +371,9 @@
           "name": "萧鸾",
           "role": "幼帝",
           "personality": "早慧沉默，三岁已能背《帝范》",
-          "relationship": "你的儿子，也是你最大的软肋"
+          "relationship": "你的儿子，也是你最大的软肋",
+          "favor": 85,
+          "affection": 0
         },
         {
           "name": "萧元衡",
@@ -373,7 +385,9 @@
           "name": "温廷尉",
           "role": "国舅，外戚之首",
           "personality": "志大才疏，贪权好利",
-          "relationship": "你名义上的盟友，实则随时准备反噬"
+          "relationship": "你名义上的盟友，实则随时准备反噬",
+          "favor": -35,
+          "affection": 0
         },
         {
           "name": "孟姑姑",

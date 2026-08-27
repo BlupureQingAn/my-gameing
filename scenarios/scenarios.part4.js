@@ -122,7 +122,9 @@
           "name": "黑风寨寨主·仇九",
           "role": "大泽匪首",
           "personality": "凶残贪婪，却极讲信用",
-          "relationship": "欠你一次救命之恩，可兑现也可作废"
+          "relationship": "欠你一次救命之恩，可兑现也可作废",
+          "favor": 80,
+          "affection": 0
         },
         {
           "name": "青云宗弟子·柳含烟",
@@ -205,7 +207,9 @@
           "name": "五宗之魁·蛊王",
           "role": "五毒宗宗主",
           "personality": "阴毒诡诈，笑里藏刀",
-          "relationship": "头号夺位者，屡次试探你的底线"
+          "relationship": "头号夺位者，屡次试探你的底线",
+          "favor": -15,
+          "affection": 0
         },
         {
           "name": "正道剑仙·谢青霜",

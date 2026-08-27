@@ -25,17 +25,51 @@
         "background": "大景靖安侯府庶女。原身怯懦愚钝，是侯府最不起眼的透明人。穿越前的你是个擅长人情世故的互联网运营，看透了各种套路。"
       },
       "npcs": [
-        { "name": "林晚歌", "role": "嫡姐", "personality": "温柔大方，实则工于心计", "relationship": "原著中的'白莲花'，所有恶事的幕后推手" },
-        { "name": "沈砚", "role": "未婚夫，定北侯世子", "personality": "温润如玉，风流多情", "relationship": "原著中第三章与你退婚，第五章迎娶你嫡姐" },
-        { "name": "周妈妈", "role": "继母心腹", "personality": "势力刻薄，欺软怕硬", "relationship": "原著中负责给你下毒的人" },
-        { "name": "顾衍之", "role": "侯府门客", "personality": "落拓不羁，智谋深沉", "relationship": "原著中并未登场的人物——这让你感到不安" }
+        {
+          "name": "林晚歌",
+          "role": "嫡姐",
+          "personality": "温柔大方，实则工于心计",
+          "relationship": "原著中的'白莲花'，所有恶事的幕后推手",
+          "favor": -30,
+          "affection": 0
+        },
+        {
+          "name": "沈砚",
+          "role": "未婚夫，定北侯世子",
+          "personality": "温润如玉，风流多情",
+          "relationship": "原著中第三章与你退婚，第五章迎娶你嫡姐",
+          "favor": 30,
+          "affection": -10
+        },
+        {
+          "name": "周妈妈",
+          "role": "继母心腹",
+          "personality": "势力刻薄，欺软怕硬",
+          "relationship": "原著中负责给你下毒的人",
+          "favor": -45,
+          "affection": 0
+        },
+        {
+          "name": "顾衍之",
+          "role": "侯府门客",
+          "personality": "落拓不羁，智谋深沉",
+          "relationship": "原著中并未登场的人物——这让你感到不安"
+        }
       ],
       "timeline": {
-        "start": { "year": 1178, "month": 4, "day": 2 },
+        "start": {
+          "year": 1178,
+          "month": 4,
+          "day": 2
+        },
         "note": "原著第三章——退婚风波前七日。你还有七天时间准备"
       },
       "scene_style": {
-        "env_templates": ["侯府西园的假山回廊", "花朝节的灯市", "后院厨房的烟火"],
+        "env_templates": [
+          "侯府西园的假山回廊",
+          "花朝节的灯市",
+          "后院厨房的烟火"
+        ],
         "option_style": "现代思维vs古代规则的选择题——用知识碾压，还是藏拙保命"
       },
       "first_scene": {
@@ -74,17 +108,47 @@
         "background": "穿越前的考古学博士生。穿越后自称流落北地南归的寒门士子，无族谱可考——这是你最大的破绽，也是你最大的自由。"
       },
       "npcs": [
-        { "name": "王羲之", "role": "会稽内史，书圣", "personality": "旷达率真，嗜酒爱鹅", "relationship": "对你在兰亭写的'一笔书法'惊为天人，视你为忘年之交" },
-        { "name": "谢安", "role": "吴兴太守，名士领袖", "personality": "沉稳大度，机锋内藏", "relationship": "对你来历存疑，却欣赏你的才学，总在关键处提点你" },
-        { "name": "桓温", "role": "大司马，枭雄", "personality": "雄才大略，野心勃勃", "relationship": "北伐在即，他需要一个'知北方地理形势'的人" },
-        { "name": "郗道茂", "role": "王献之之妻，才女", "personality": "聪慧坚韧，外柔内刚", "relationship": "你穿越后见到的第一个'知道结局'的人——她的结局并不好" }
+        {
+          "name": "王羲之",
+          "role": "会稽内史，书圣",
+          "personality": "旷达率真，嗜酒爱鹅",
+          "relationship": "对你在兰亭写的'一笔书法'惊为天人，视你为忘年之交",
+          "favor": 80,
+          "affection": 0
+        },
+        {
+          "name": "谢安",
+          "role": "吴兴太守，名士领袖",
+          "personality": "沉稳大度，机锋内藏",
+          "relationship": "对你来历存疑，却欣赏你的才学，总在关键处提点你"
+        },
+        {
+          "name": "桓温",
+          "role": "大司马，枭雄",
+          "personality": "雄才大略，野心勃勃",
+          "relationship": "北伐在即，他需要一个'知北方地理形势'的人"
+        },
+        {
+          "name": "郗道茂",
+          "role": "王献之之妻，才女",
+          "personality": "聪慧坚韧，外柔内刚",
+          "relationship": "你穿越后见到的第一个'知道结局'的人——她的结局并不好"
+        }
       ],
       "timeline": {
-        "start": { "year": 353, "month": 3, "day": 3 },
+        "start": {
+          "year": 353,
+          "month": 3,
+          "day": 3
+        },
         "note": "永和九年三月初三，兰亭雅集当日——你穿越的时辰，恰好是那场千古雅集最盛时"
       },
       "scene_style": {
-        "env_templates": ["兰亭水畔的曲水流觞", "会稽山中的竹林精舍", "建康城乌衣巷的巷陌"],
+        "env_templates": [
+          "兰亭水畔的曲水流觞",
+          "会稽山中的竹林精舍",
+          "建康城乌衣巷的巷陌"
+        ],
         "option_style": "清谈对答要有机锋与气度，选项本身就是一种'风度表演'"
       },
       "first_scene": {
@@ -123,17 +187,45 @@
         "background": "穿越前是电商平台运营，精通选品、定价、营销话术。穿越后成为大梁王朝无籍流民，栖身破庙。"
       },
       "npcs": [
-        { "name": "秦望舒", "role": "县尉，未来的造反者", "personality": "深沉果决，爱民如子", "relationship": "三个月后他将揭竿而起——你是选择阻止他，还是帮他？" },
-        { "name": "老周头", "role": "破庙邻居", "personality": "憨厚朴实，见多识广", "relationship": "第一个接受你'神物'的人，帮你把名声传了出去" },
-        { "name": "陆知微", "role": "刺史府长史", "personality": "精明干练，疑心深重", "relationship": "正在暗中调查'县城神药'的来历——他怀疑有妖人作祟" },
-        { "name": "系统", "role": "咸鱼商城系统", "personality": "毒舌，奸商，偶尔良心发现", "relationship": "你的金手指，也是你最大的秘密" }
+        {
+          "name": "秦望舒",
+          "role": "县尉，未来的造反者",
+          "personality": "深沉果决，爱民如子",
+          "relationship": "三个月后他将揭竿而起——你是选择阻止他，还是帮他？"
+        },
+        {
+          "name": "老周头",
+          "role": "破庙邻居",
+          "personality": "憨厚朴实，见多识广",
+          "relationship": "第一个接受你'神物'的人，帮你把名声传了出去"
+        },
+        {
+          "name": "陆知微",
+          "role": "刺史府长史",
+          "personality": "精明干练，疑心深重",
+          "relationship": "正在暗中调查'县城神药'的来历——他怀疑有妖人作祟"
+        },
+        {
+          "name": "系统",
+          "role": "咸鱼商城系统",
+          "personality": "毒舌，奸商，偶尔良心发现",
+          "relationship": "你的金手指，也是你最大的秘密"
+        }
       ],
       "timeline": {
-        "start": { "year": 1140, "month": 2, "day": 11 },
+        "start": {
+          "year": 1140,
+          "month": 2,
+          "day": 11
+        },
         "note": "大梁崇元三年春，饥荒第二年。离县尉造反还有九十二天"
       },
       "scene_style": {
-        "env_templates": ["饥荒县的破败集市", "系统商城幽蓝的货架界面", "堤坝工地的篝火"],
+        "env_templates": [
+          "饥荒县的破败集市",
+          "系统商城幽蓝的货架界面",
+          "堤坝工地的篝火"
+        ],
         "option_style": "资源管理型选项：每花一分积分都要想清楚值不值"
       },
       "first_scene": {
@@ -172,17 +264,49 @@
         "background": "现代都市白领，擅长烹饪与整理收纳，大学辅修过野外生存。穿越后被黑爪部落俘虏，因'会生火'而免于一死。"
       },
       "npcs": [
-        { "name": "铁牙", "role": "黑爪部落首领", "personality": "勇猛豪迈，重诺守义", "relationship": "对你的烤肉惊为天人，封你为部落'火祭司'" },
-        { "name": "夜枭", "role": "部落最年轻的猎手", "personality": "沉默寡言，观察力惊人", "relationship": "第一个意识到你'不只是会生火'的人，暗中保护你" },
-        { "name": "银鬃", "role": "银鬃部落首领", "personality": "狡诈冷酷，唯利是图", "relationship": "战争的发起者，却在私下派使者试探你的底细" },
-        { "name": "阿岚", "role": "部落巫医之女", "personality": "温柔好奇，天真烂漫", "relationship": "缠着要学你'把肉变熟'的手艺，成了你的第一个学生" }
+        {
+          "name": "铁牙",
+          "role": "黑爪部落首领",
+          "personality": "勇猛豪迈，重诺守义",
+          "relationship": "对你的烤肉惊为天人，封你为部落'火祭司'"
+        },
+        {
+          "name": "夜枭",
+          "role": "部落最年轻的猎手",
+          "personality": "沉默寡言，观察力惊人",
+          "relationship": "第一个意识到你'不只是会生火'的人，暗中保护你",
+          "favor": 80,
+          "affection": 0
+        },
+        {
+          "name": "银鬃",
+          "role": "银鬃部落首领",
+          "personality": "狡诈冷酷，唯利是图",
+          "relationship": "战争的发起者，却在私下派使者试探你的底细",
+          "favor": -15,
+          "affection": 0
+        },
+        {
+          "name": "阿岚",
+          "role": "部落巫医之女",
+          "personality": "温柔好奇，天真烂漫",
+          "relationship": "缠着要学你'把肉变熟'的手艺，成了你的第一个学生"
+        }
       ],
       "timeline": {
-        "start": { "year": 1, "month": 4, "day": 1 },
+        "start": {
+          "year": 1,
+          "month": 4,
+          "day": 1
+        },
         "note": "你穿越到兽世的第一天。距银鬃部落宣战还有十五天，距冬月兽潮还有八个月"
       },
       "scene_style": {
-        "env_templates": ["部落篝火晚会的烤肉香气", "晨雾弥漫的狩猎场", "冬月将至的阴沉天空"],
+        "env_templates": [
+          "部落篝火晚会的烤肉香气",
+          "晨雾弥漫的狩猎场",
+          "冬月将至的阴沉天空"
+        ],
         "option_style": "生存决策型选项：资源、信任、武力之间的权衡"
       },
       "first_scene": {
@@ -221,17 +345,47 @@
         "background": "21世纪程序员，主攻分布式系统与网络安全。冷冻苏醒后，是飞船上唯一能读懂'古典代码'的人类。"
       },
       "npcs": [
-        { "name": "曙光", "role": "飞船主AI", "personality": "冷静理性，偶尔毒舌", "relationship": "你的'同事'——它负责算力，你负责灵感" },
-        { "name": "薇拉", "role": "仿生人船员", "personality": "温婉干练，隐藏着出厂设置之外的秘密", "relationship": "第一个信任你的人，也是唯一知道你身份的人" },
-        { "name": "阿德里安", "role": "船长", "personality": "果决暴躁，疑心极重", "relationship": "需要你的能力，却时刻警惕你这个'来历不明的苏醒者'" },
-        { "name": "海盗头目·鬼手", "role": "星盗首领", "personality": "疯狂狡诈，技术老练", "relationship": "他的黑客手段让你想起 21 世纪的老同行——或许他也来自你的时代" }
+        {
+          "name": "曙光",
+          "role": "飞船主AI",
+          "personality": "冷静理性，偶尔毒舌",
+          "relationship": "你的'同事'——它负责算力，你负责灵感"
+        },
+        {
+          "name": "薇拉",
+          "role": "仿生人船员",
+          "personality": "温婉干练，隐藏着出厂设置之外的秘密",
+          "relationship": "第一个信任你的人，也是唯一知道你身份的人",
+          "favor": 80,
+          "affection": 0
+        },
+        {
+          "name": "阿德里安",
+          "role": "船长",
+          "personality": "果决暴躁，疑心极重",
+          "relationship": "需要你的能力，却时刻警惕你这个'来历不明的苏醒者'"
+        },
+        {
+          "name": "海盗头目·鬼手",
+          "role": "星盗首领",
+          "personality": "疯狂狡诈，技术老练",
+          "relationship": "他的黑客手段让你想起 21 世纪的老同行——或许他也来自你的时代"
+        }
       ],
       "timeline": {
-        "start": { "year": 2287, "month": 6, "day": 13 },
+        "start": {
+          "year": 2287,
+          "month": 6,
+          "day": 13
+        },
         "note": "你苏醒的第一天。曙光号燃料已不足，最近的补给站有 40 光时航程，而海盗正在逼近"
       },
       "scene_style": {
-        "env_templates": ["飞船舰桥的应急红光", "休眠舱走廊的幽蓝指示灯", "舷窗外掠过的陨石带"],
+        "env_templates": [
+          "飞船舰桥的应急红光",
+          "休眠舱走廊的幽蓝指示灯",
+          "舷窗外掠过的陨石带"
+        ],
         "option_style": "技术决策型选项：每一次操作都可能引发连锁反应"
       },
       "first_scene": {

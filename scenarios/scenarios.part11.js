@@ -300,7 +300,9 @@
           "name": "小周",
           "role": "失踪的好友",
           "personality": "乐观开朗，胆子大",
-          "relationship": "失踪前夜给你发的最后一条消息：我找到4号线了"
+          "relationship": "失踪前夜给你发的最后一条消息：我找到4号线了",
+          "favor": 80,
+          "affection": 0
         }
       ],
       "timeline": {
@@ -371,7 +373,9 @@
           "name": "恋人·温雅",
           "role": "程默的恋人",
           "personality": "安静聪慧，处变不惊",
-          "relationship": "全程在场，证词滴水不漏"
+          "relationship": "全程在场，证词滴水不漏",
+          "favor": 80,
+          "affection": 85
         },
         {
           "name": "同行·老段",

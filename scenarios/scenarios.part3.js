@@ -291,7 +291,9 @@
           "name": "护士长·刘姐",
           "role": "急诊护士长",
           "personality": "火眼金睛，处事果断，急诊科真正的老大",
-          "relationship": "你的救命稻草，总在你被围攻时挺身而出"
+          "relationship": "你的救命稻草，总在你被围攻时挺身而出",
+          "favor": 80,
+          "affection": 0
         },
         {
           "name": "同事·小赵",
@@ -375,13 +377,17 @@
           "name": "同行·小梅",
           "role": "女骑手",
           "personality": "风风火火，号称'闪电'，曾创下一天 68 单纪录",
-          "relationship": "你暗恋的同行，也教过你不少避坑技巧"
+          "relationship": "你暗恋的同行，也教过你不少避坑技巧",
+          "favor": 70,
+          "affection": 65
         },
         {
           "name": "客户·陈姐",
           "role": "写字楼白领",
           "personality": "挑剔，爱给差评，但偶尔也心软",
-          "relationship": "你的'老主顾'，她的一单今天出了问题"
+          "relationship": "你的'老主顾'，她的一单今天出了问题",
+          "favor": 75,
+          "affection": 0
         },
         {
           "name": "小男孩·豆豆",

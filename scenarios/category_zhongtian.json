@@ -25,17 +25,48 @@
         "background": "穿越者，原主父母双亡，家中三亩薄田，弟弟李小米八岁，还有一个瘫痪在床的奶奶，日子穷得揭不开锅"
       },
       "npcs": [
-        { "name": "弟弟·李小米", "role": "弟弟", "personality": "机灵懂事，黏人", "relationship": "你在这个世界唯一的亲人" },
-        { "name": "奶奶·李氏", "role": "祖母", "personality": "慈祥硬朗，深谙农事", "relationship": "她年轻时是十里八乡有名的种地好手" },
-        { "name": "地主·赵员外", "role": "青石县地主", "personality": "贪婪精明，笑里藏刀", "relationship": "他盯着你家那三亩地好久了" },
-        { "name": "邻家·陈二婶", "role": "隔壁邻居", "personality": "热心泼辣，消息灵通", "relationship": "村里的八卦中心，也是你的人情枢纽" }
+        {
+          "name": "弟弟·李小米",
+          "role": "弟弟",
+          "personality": "机灵懂事，黏人",
+          "relationship": "你在这个世界唯一的亲人",
+          "favor": 85,
+          "affection": 0
+        },
+        {
+          "name": "奶奶·李氏",
+          "role": "祖母",
+          "personality": "慈祥硬朗，深谙农事",
+          "relationship": "她年轻时是十里八乡有名的种地好手"
+        },
+        {
+          "name": "地主·赵员外",
+          "role": "青石县地主",
+          "personality": "贪婪精明，笑里藏刀",
+          "relationship": "他盯着你家那三亩地好久了"
+        },
+        {
+          "name": "邻家·陈二婶",
+          "role": "隔壁邻居",
+          "personality": "热心泼辣，消息灵通",
+          "relationship": "村里的八卦中心，也是你的人情枢纽"
+        }
       ],
       "timeline": {
-        "start": { "year": 1036, "month": 3, "day": 1 },
+        "start": {
+          "year": 1036,
+          "month": 3,
+          "day": 1
+        },
         "note": "春耕将至，你家的种子被老鼠祸害了一半，赵员外派人来「问」地，弟弟饿得直哭"
       },
       "scene_style": {
-        "env_templates": ["农家小院", "田埂", "县集", "赵家粮行"],
+        "env_templates": [
+          "农家小院",
+          "田埂",
+          "县集",
+          "赵家粮行"
+        ],
         "option_style": "选项要带种田的踏实与生计（如：换良种/赊粮过春/开荒种豆/做小买卖）"
       },
       "first_scene": {
@@ -74,17 +105,46 @@
         "background": "出差的程序员，游轮失事落海，漂到荒岛，会编程但野外生存经验为零，冷静理性，擅长观察"
       },
       "npcs": [
-        { "name": "灯塔人·老疤", "role": "灯塔守灯人", "personality": "沉默警觉，来历不明", "relationship": "他在灯塔里住了很多年，见到你的第一句话是「你不该来」" },
-        { "name": "幸存者·阿梅", "role": "另一名幸存者", "personality": "开朗倔强，野外经验丰富", "relationship": "她是第三批幸存者，在岛上独自生活了两年" },
-        { "name": "蟹壳留言·第四批", "role": "（留言）", "personality": "字迹潦草，充满警告", "relationship": "他们的痕迹遍布全岛，却没有一个人留下尸体" },
-        { "name": "岛上的猫·海盐", "role": "野猫", "personality": "慵懒机警，通人性", "relationship": "它总在你最需要的时候出现，像是岛上的「导航员」" }
+        {
+          "name": "灯塔人·老疤",
+          "role": "灯塔守灯人",
+          "personality": "沉默警觉，来历不明",
+          "relationship": "他在灯塔里住了很多年，见到你的第一句话是「你不该来」"
+        },
+        {
+          "name": "幸存者·阿梅",
+          "role": "另一名幸存者",
+          "personality": "开朗倔强，野外经验丰富",
+          "relationship": "她是第三批幸存者，在岛上独自生活了两年"
+        },
+        {
+          "name": "蟹壳留言·第四批",
+          "role": "（留言）",
+          "personality": "字迹潦草，充满警告",
+          "relationship": "他们的痕迹遍布全岛，却没有一个人留下尸体"
+        },
+        {
+          "name": "岛上的猫·海盐",
+          "role": "野猫",
+          "personality": "慵懒机警，通人性",
+          "relationship": "它总在你最需要的时候出现，像是岛上的「导航员」"
+        }
       ],
       "timeline": {
-        "start": { "year": 2026, "month": 6, "day": 3 },
+        "start": {
+          "year": 2026,
+          "month": 6,
+          "day": 3
+        },
         "note": "你上岛的第三天，淡水只剩半瓶，而灯塔的光在黄昏时准时亮起——岛上明明没有人烟"
       },
       "scene_style": {
-        "env_templates": ["沙滩", "椰林", "淡水溪流", "灯塔"],
+        "env_templates": [
+          "沙滩",
+          "椰林",
+          "淡水溪流",
+          "灯塔"
+        ],
         "option_style": "选项要带生存的本能与推理（如：先建庇护所/探灯塔/找淡水/研究沟渠）"
       },
       "first_scene": {
@@ -123,17 +183,46 @@
         "background": "地球来的农业工程师，伯父的继承人，带着一台型号老旧的农业机器人「管家」，踏上 K-2 星球的土地"
       },
       "npcs": [
-        { "name": "机器人·管家", "role": "老式农业机器人", "personality": "唠叨守旧，忠诚可靠", "relationship": "伯父留给你的唯一财产，知道农场的全部秘密" },
-        { "name": "检测员·艾拉", "role": "星际农业协会检测员", "personality": "严谨公正，外冷内热", "relationship": "每季度来一次，她的评级决定农场的存亡" },
-        { "name": "邻居·老威", "role": "隔壁行星的农场主", "personality": "粗犷热心，经验丰富", "relationship": "他提醒你：伯父的试验区，最好别碰" },
-        { "name": "神秘旅人·伽玛", "role": "路过的星际旅人", "personality": "神出鬼没，知道很多", "relationship": "他声称见过你伯父——在他失踪前一周" }
+        {
+          "name": "机器人·管家",
+          "role": "老式农业机器人",
+          "personality": "唠叨守旧，忠诚可靠",
+          "relationship": "伯父留给你的唯一财产，知道农场的全部秘密"
+        },
+        {
+          "name": "检测员·艾拉",
+          "role": "星际农业协会检测员",
+          "personality": "严谨公正，外冷内热",
+          "relationship": "每季度来一次，她的评级决定农场的存亡"
+        },
+        {
+          "name": "邻居·老威",
+          "role": "隔壁行星的农场主",
+          "personality": "粗犷热心，经验丰富",
+          "relationship": "他提醒你：伯父的试验区，最好别碰"
+        },
+        {
+          "name": "神秘旅人·伽玛",
+          "role": "路过的星际旅人",
+          "personality": "神出鬼没，知道很多",
+          "relationship": "他声称见过你伯父——在他失踪前一周"
+        }
       ],
       "timeline": {
-        "start": { "year": 2189, "month": 4, "day": 1 },
+        "start": {
+          "year": 2189,
+          "month": 4,
+          "day": 1
+        },
         "note": "你到 K-2 星球的第一天，管家的主屏幕显示一行字：「欢迎回家。农场大门已解锁。试验区，非请勿入。」而检测员艾拉的飞船，正在降落"
       },
       "scene_style": {
-        "env_templates": ["农场谷仓", "金色麦田", "试验区", "星际港口"],
+        "env_templates": [
+          "农场谷仓",
+          "金色麦田",
+          "试验区",
+          "星际港口"
+        ],
         "option_style": "选项要带农场主的经营与抉择（如：先修机械/开垦麦田/探试验区/接待检测员）"
       },
       "first_scene": {
@@ -172,17 +261,48 @@
         "background": "海角村长大的孩子，五年前去城里做厨师，爷爷病重后返乡，会做一手好菜，也记得爷爷教的每一样海上本事"
       },
       "npcs": [
-        { "name": "爷爷·老海生", "role": "老渔民", "personality": "倔强硬气，海上经验丰富", "relationship": "你的爷爷，病床上还惦记着那半张航海图" },
-        { "name": "阿婆·桂香", "role": "村里晒盐阿婆", "personality": "慈祥能干，一手好盐", "relationship": "从小看你长大，是村里的主心骨" },
-        { "name": "发小·大壮", "role": "回村创业的年轻人", "personality": "热情冲动，点子多", "relationship": "他想拉你一起搞民宿直播" },
-        { "name": "鱼贩·老刘", "role": "收购海货的贩子", "personality": "精明圆滑，压价狠", "relationship": "他控制着村里的海货销路" }
+        {
+          "name": "爷爷·老海生",
+          "role": "老渔民",
+          "personality": "倔强硬气，海上经验丰富",
+          "relationship": "你的爷爷，病床上还惦记着那半张航海图",
+          "favor": 85,
+          "affection": 0
+        },
+        {
+          "name": "阿婆·桂香",
+          "role": "村里晒盐阿婆",
+          "personality": "慈祥能干，一手好盐",
+          "relationship": "从小看你长大，是村里的主心骨"
+        },
+        {
+          "name": "发小·大壮",
+          "role": "回村创业的年轻人",
+          "personality": "热情冲动，点子多",
+          "relationship": "他想拉你一起搞民宿直播"
+        },
+        {
+          "name": "鱼贩·老刘",
+          "role": "收购海货的贩子",
+          "personality": "精明圆滑，压价狠",
+          "relationship": "他控制着村里的海货销路"
+        }
       ],
       "timeline": {
-        "start": { "year": 2026, "month": 6, "day": 15 },
+        "start": {
+          "year": 2026,
+          "month": 6,
+          "day": 15
+        },
         "note": "爷爷住院的第三天，你回到村子，老刘正带着人挨家收海货，价格压到了去年的六成"
       },
       "scene_style": {
-        "env_templates": ["码头", "旧渔船", "晒网场", "渔村小院"],
+        "env_templates": [
+          "码头",
+          "旧渔船",
+          "晒网场",
+          "渔村小院"
+        ],
         "option_style": "选项要带渔村的生计与乡愁（如：先修船出海/接爷爷出院/跟大壮创业/和老刘谈价）"
       },
       "first_scene": {
@@ -221,17 +341,46 @@
         "background": "前互联网公司产品经理，厌倦城市生活辞职返乡，继承了奶奶的百年老宅「云溪居」，存款二十万，决心改造成民宿"
       },
       "npcs": [
-        { "name": "奶奶·云溪婆", "role": "（遗物/记忆）", "personality": "爽朗能干，古道热肠", "relationship": "她留下的账本和照片，是你的创业地图" },
-        { "name": "村支书·老周", "role": "云溪村支书", "personality": "务实肯干，有心无力", "relationship": "他支持你搞民宿，想借你让村里活起来" },
-        { "name": "留守老人·福叔", "role": "村中老茶农", "personality": "沉默倔强，手艺一绝", "relationship": "他懂山里的茶，也懂山里的路" },
-        { "name": "背包客·阿柚", "role": "第一位客人", "personality": "随性洒脱，眼光毒辣", "relationship": "她的游记，可能决定你民宿的第一波口碑" }
+        {
+          "name": "奶奶·云溪婆",
+          "role": "（遗物/记忆）",
+          "personality": "爽朗能干，古道热肠",
+          "relationship": "她留下的账本和照片，是你的创业地图"
+        },
+        {
+          "name": "村支书·老周",
+          "role": "云溪村支书",
+          "personality": "务实肯干，有心无力",
+          "relationship": "他支持你搞民宿，想借你让村里活起来"
+        },
+        {
+          "name": "留守老人·福叔",
+          "role": "村中老茶农",
+          "personality": "沉默倔强，手艺一绝",
+          "relationship": "他懂山里的茶，也懂山里的路"
+        },
+        {
+          "name": "背包客·阿柚",
+          "role": "第一位客人",
+          "personality": "随性洒脱，眼光毒辣",
+          "relationship": "她的游记，可能决定你民宿的第一波口碑"
+        }
       ],
       "timeline": {
-        "start": { "year": 2026, "month": 4, "day": 12 },
+        "start": {
+          "year": 2026,
+          "month": 4,
+          "day": 12
+        },
         "note": "你回村的第三天，老宅的屋顶还在漏雨，阿柚已经背着包站在门口——她是在网上看到你随手发的修房视频找来的"
       },
       "scene_style": {
-        "env_templates": ["老宅天井", "竹林", "茶山", "云溪畔"],
+        "env_templates": [
+          "老宅天井",
+          "竹林",
+          "茶山",
+          "云溪畔"
+        ],
         "option_style": "选项要带山村创业的踏实（如：先修屋/先招客/先找福叔学茶/先跑手续）"
       },
       "first_scene": {

@@ -33,19 +33,25 @@
           "name": "林晚歌",
           "role": "嫡姐",
           "personality": "温柔大方，实则工于心计",
-          "relationship": "原著中的'白莲花'，所有恶事的幕后推手"
+          "relationship": "原著中的'白莲花'，所有恶事的幕后推手",
+          "favor": -30,
+          "affection": 0
         },
         {
           "name": "沈砚",
           "role": "未婚夫，定北侯世子",
           "personality": "温润如玉，风流多情",
-          "relationship": "原著中第三章与你退婚，第五章迎娶你嫡姐"
+          "relationship": "原著中第三章与你退婚，第五章迎娶你嫡姐",
+          "favor": 30,
+          "affection": -10
         },
         {
           "name": "周妈妈",
           "role": "继母心腹",
           "personality": "势力刻薄，欺软怕硬",
-          "relationship": "原著中负责给你下毒的人"
+          "relationship": "原著中负责给你下毒的人",
+          "favor": -45,
+          "affection": 0
         },
         {
           "name": "顾衍之",
@@ -115,7 +121,9 @@
           "name": "王羲之",
           "role": "会稽内史，书圣",
           "personality": "旷达率真，嗜酒爱鹅",
-          "relationship": "对你在兰亭写的'一笔书法'惊为天人，视你为忘年之交"
+          "relationship": "对你在兰亭写的'一笔书法'惊为天人，视你为忘年之交",
+          "favor": 80,
+          "affection": 0
         },
         {
           "name": "谢安",
@@ -285,13 +293,17 @@
           "name": "夜枭",
           "role": "部落最年轻的猎手",
           "personality": "沉默寡言，观察力惊人",
-          "relationship": "第一个意识到你'不只是会生火'的人，暗中保护你"
+          "relationship": "第一个意识到你'不只是会生火'的人，暗中保护你",
+          "favor": 80,
+          "affection": 0
         },
         {
           "name": "银鬃",
           "role": "银鬃部落首领",
           "personality": "狡诈冷酷，唯利是图",
-          "relationship": "战争的发起者，却在私下派使者试探你的底细"
+          "relationship": "战争的发起者，却在私下派使者试探你的底细",
+          "favor": -15,
+          "affection": 0
         },
         {
           "name": "阿岚",
@@ -367,7 +379,9 @@
           "name": "薇拉",
           "role": "仿生人船员",
           "personality": "温婉干练，隐藏着出厂设置之外的秘密",
-          "relationship": "第一个信任你的人，也是唯一知道你身份的人"
+          "relationship": "第一个信任你的人，也是唯一知道你身份的人",
+          "favor": 80,
+          "affection": 0
         },
         {
           "name": "阿德里安",

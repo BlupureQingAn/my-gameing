@@ -261,6 +261,19 @@
                 font-size: 0.72rem;
                 padding: 4px 8px;
             }
+            /* 移动端顶部分两行：首页/模板/社区 | 云币/我的/登出 */
+            .header {
+                flex-wrap: wrap;
+            }
+            .top-nav-primary,
+            .top-nav-secondary {
+                width: 100%;
+                justify-content: space-between;
+                gap: 4px;
+            }
+            .top-nav-secondary {
+                justify-content: flex-end;
+            }
         }
 
         .gender-actions {
@@ -954,9 +967,65 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+            width: 100%;
+            max-width: 360px;
+            margin: 0 auto;
+            aspect-ratio: 9 / 16;
+            overflow: hidden;
+            --phone-accent: #5b5bd6;
         }
         body[data-theme="dark"] .phone-shell { background: linear-gradient(160deg, rgba(30,26,40,.97), rgba(38,32,50,.93)); }
-        .phone-statusbar { display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: 700; color: var(--text-muted); }
+        .phone-statusbar { display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: 700; color: var(--phone-accent, var(--text-muted)); }
+        .phone-set-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 2px;
+            border-bottom: 1px dashed var(--line, #e2ccb0);
+        }
+        .phone-set-row:last-child { border-bottom: none; }
+        .switch-wrap {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+            flex: 0 0 auto;
+            cursor: pointer;
+        }
+        .switch-wrap input { opacity: 0; width: 0; height: 0; }
+        .switch-slider {
+            position: absolute;
+            inset: 0;
+            background: #d0c8ba;
+            border-radius: 999px;
+            transition: background .2s;
+        }
+        .switch-slider::before {
+            content: "";
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            left: 3px;
+            top: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform .2s;
+            box-shadow: 0 1px 4px rgba(0,0,0,.25);
+        }
+        .switch-wrap input:checked + .switch-slider { background: var(--phone-accent, #5b5bd6); }
+        .switch-wrap input:checked + .switch-slider::before { transform: translateX(20px); }
+        .phone-theme-grid { display: flex; gap: 8px; }
+        .phone-theme-dot {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            padding: 0;
+        }
+        .phone-theme-dot.active { border-color: var(--text-strong, #3a2b1a); box-shadow: 0 0 0 2px var(--card-strong, #fff); }
+        #ps-font-size .mini-btn.active { background: var(--primary, #6b3f00); color: #fff; }
         .phone-status-icons { letter-spacing: 3px; }
         .phone-user-card {
             display: flex;
@@ -3701,6 +3770,8 @@
             align-items: center;
             justify-content: center;
             background: linear-gradient(135deg, #ffe8c0, #f3c98b 55%, #e2b26b);
+            background-size: cover;
+            background-position: center;
             margin-bottom: 8px;
             box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
         }
@@ -3916,6 +3987,9 @@
     .init-avatar-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
     .init-avatar-emoji-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:var(--input-bg);font-size:1.15rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
     .init-avatar-emoji-btn:hover{border-color:var(--accent);transform:scale(1.12)}
+    .init-avatar-lib-btn{width:52px;height:52px;border-radius:10px;border:1px solid var(--line);background:var(--input-bg);cursor:pointer;overflow:hidden;padding:0}
+    .init-avatar-lib-btn img{width:100%;height:100%;object-fit:cover;display:block}
+    .init-avatar-lib-btn:hover{border-color:var(--accent);transform:scale(1.08)}
     #init-avatar-emoji-panel{display:flex;flex-wrap:wrap;gap:5px;padding:8px;border:1px dashed var(--line);border-radius:10px;background:var(--panel-tint)}
     .stat-roll-line{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px dashed var(--line)}
     .stat-roll-line:last-child{border-bottom:none}
@@ -4038,11 +4112,13 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <h1 id="site-title"><img src="icons/android-chrome-192x192.png" alt="" style="width:1.25em;height:1.25em;vertical-align:-0.22em;margin-right:6px;border-radius:6px;">云吞吞文游</h1>
         </div>
         <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
-            <div class="top-mini-nav">
-                <span id="usage-badge" onclick="MembershipService.openPanel()" style="display:none;font-size:0.85rem;font-weight:700;color:#6b3f00;padding:6px 12px;border-radius:999px;background:linear-gradient(135deg,#ffe9a8,#ffd66b);border:1px solid #e0a93a;cursor:pointer;box-shadow:0 2px 8px rgba(224,169,58,.4);" title="点击开通/续费会员"></span>
+            <div class="top-mini-nav top-nav-primary">
                 <button class="top-nav-btn active" data-view="view-home" onclick="switchView('view-home')">首页</button>
                 <button class="top-nav-btn" data-view="view-template-market" onclick="switchView('view-template-market')"><img class="ic" src="icons/grid.svg" alt=""> 模板</button>
                 <button class="top-nav-btn" data-view="view-community" onclick="switchView('view-community')">社区</button>
+            </div>
+            <div class="top-mini-nav top-nav-secondary">
+                <span id="usage-badge" onclick="MembershipService.openPanel()" style="display:none;font-size:0.85rem;font-weight:700;color:#6b3f00;padding:6px 12px;border-radius:999px;background:linear-gradient(135deg,#ffe9a8,#ffd66b);border:1px solid #e0a93a;cursor:pointer;box-shadow:0 2px 8px rgba(224,169,58,.4);" title="点击开通/续费会员"></span>
                 <button class="top-nav-btn" data-view="view-settings" onclick="switchView('view-settings')">我的</button>
                 <button class="top-nav-btn" id="auth-logout-btn" style="display:none;" onclick="AuthService.logout()">登出</button>
             </div>
@@ -4060,12 +4136,6 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <div id="home-banner-swiper" class="home-banner-swiper"></div>
                     <div id="home-banner-dots" class="home-banner-dots"></div>
                 </div>
-                <div id="home-rank-tabs" class="home-rank-tabs">
-                    <button class="scenario-filter-chip active" data-rank="recommend" onclick="Controller.switchRankTab('recommend')">🔥 推荐</button>
-                    <button class="scenario-filter-chip" data-rank="hot" onclick="Controller.switchRankTab('hot')">🚀 最热</button>
-                    <button class="scenario-filter-chip" data-rank="chars" onclick="Controller.switchRankTab('chars')">👤 角色榜</button>
-                </div>
-                <div id="home-rank-panel" class="home-rank-panel" style="display:none;"></div>
                 <div class="list-title"><img class="ic" src="icons/grid.svg" alt=""> 文游设定卡片列表</div>
                 <input id="scenario-search-input" type="text" placeholder="搜索卡片（标题/分组/样式/设定内容）">
                 <div id="scenario-filter-bar" class="scenario-filter-bar"></div>
@@ -4145,6 +4215,12 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <button class="scenario-filter-chip" id="community-tab-forum" onclick="Controller.switchCommunityTab('forum')"><img class="ic" src="icons/chat.svg" alt=""> 论坛</button>
                     <button class="scenario-filter-chip" id="community-tab-chars" onclick="Controller.switchCommunityTab('chars')">👤 人物卡</button>
                 </div>
+                <div class="home-rank-tabs" id="community-rank-tabs" style="margin-top:10px;">
+                    <button class="scenario-filter-chip active" data-rank="recommend" onclick="Controller.switchRankTab('recommend')">🔥 推荐</button>
+                    <button class="scenario-filter-chip" data-rank="hot" onclick="Controller.switchRankTab('hot')">🚀 最热</button>
+                    <button class="scenario-filter-chip" data-rank="chars" onclick="Controller.switchRankTab('chars')">👤 角色榜</button>
+                </div>
+                <div id="community-rank-panel" class="home-rank-panel" style="display:none;"></div>
                 <div class="setting-actions" style="margin:6px 0 2px;">
                     <button class="mini-btn primary" onclick="Controller.openPostModal()"><img class="ic" src="icons/pen.svg" alt=""> 发动态</button>
                 </div>
@@ -4290,6 +4366,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
         </section>
 
         <section id="view-settings" class="view-section">
+            <div id="settings-context-hint" style="display:none;margin:0 0 10px;padding:10px 12px;border-radius:12px;background:#fff4e0;border:1px solid #e8b84b;font-size:0.85rem;color:#8a4b00;"></div>
             <section class="card">
                 <div class="list-title">👤 我的信息</div>
                 <div style="margin: 10px 0; padding: 12px; background: var(--card-soft); border-radius: 12px; border: 1px solid var(--line);">
@@ -4442,6 +4519,11 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <div class="list-sub">BYOK 直连你的端点不耗云币；云吞池由服务端模型池自动路由。</div>
                 </div>
             </section>
+            <section class="card" id="card-settings-ending-card" style="display:none;">
+                <div class="list-title">🎬 这段故事（AI 结局评定）</div>
+                <div class="list-sub">满足结局条件时可评定；随时可手动结束本剧获得 S~D 评级与复盘。</div>
+                <button type="button" class="story-end-btn" style="margin-top:10px;width:100%;" onclick="endStory()">🎬 结束本剧并评定结局</button>
+            </section>
             <section class="card">
                 <div class="list-title">🖥️ 显示设置</div>
                 <div style="display:flex;align-items:center;gap:10px;margin:10px 0;">
@@ -4486,7 +4568,6 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <div id="play-advance-area">
                 <button type="button" class="advance-btn" onclick="advanceStory()">推进<br>剧情</button>
                 <div class="advance-hint">进入新的故事发展</div>
-                <button type="button" class="story-end-btn" onclick="endStory()">🎬 这段故事（AI 结局评定）</button>
             </div>
             <div id="play-event-area" style="display:none;"></div>
         </section>
@@ -4596,13 +4677,63 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 </div>
             </div>
         </section>
+
+        <section id="view-phone-settings" class="view-section">
+            <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                    <div class="list-title" style="margin:0;">⚙️ 手机设置</div>
+                    <button type="button" class="mini-btn" onclick="switchView('view-phone')">‹ 返回</button>
+                </div>
+                <div class="phone-set-row">
+                    <div>
+                        <div class="sf-label">🎵 背景音乐</div>
+                        <div class="list-sub">播放剧本配置的背景音乐</div>
+                    </div>
+                    <label class="switch-wrap"><input type="checkbox" id="ps-bgm" onchange="PhoneSettingsService.toggle('bgm')"><span class="switch-slider"></span></label>
+                </div>
+                <div class="phone-set-row">
+                    <div class="sf-label" style="margin:0;">🔊 音量 <span id="ps-vol-val">100%</span></div>
+                    <input type="range" id="ps-volume" min="0" max="100" value="100" oninput="PhoneSettingsService.setVolume(this.value)" style="max-width:180px;">
+                </div>
+                <div class="phone-set-row">
+                    <div>
+                        <div class="sf-label">🔔 消息通知</div>
+                        <div class="list-sub">收到新消息时顶部提示</div>
+                    </div>
+                    <label class="switch-wrap"><input type="checkbox" id="ps-notify" onchange="PhoneSettingsService.toggle('notify')"><span class="switch-slider"></span></label>
+                </div>
+                <div class="phone-set-row">
+                    <div>
+                        <div class="sf-label">🎨 手机主题色</div>
+                        <div class="list-sub">手机壳与界面强调色</div>
+                    </div>
+                    <div class="phone-theme-grid" id="ps-theme-grid">
+                        <button type="button" class="phone-theme-dot" data-c="#5b5bd6" style="background:#5b5bd6" onclick="PhoneSettingsService.setTheme('#5b5bd6')"></button>
+                        <button type="button" class="phone-theme-dot" data-c="#e07a5f" style="background:#e07a5f" onclick="PhoneSettingsService.setTheme('#e07a5f')"></button>
+                        <button type="button" class="phone-theme-dot" data-c="#2a9d8f" style="background:#2a9d8f" onclick="PhoneSettingsService.setTheme('#2a9d8f')"></button>
+                        <button type="button" class="phone-theme-dot" data-c="#e9c46a" style="background:#e9c46a" onclick="PhoneSettingsService.setTheme('#e9c46a')"></button>
+                        <button type="button" class="phone-theme-dot" data-c="#9b5de5" style="background:#9b5de5" onclick="PhoneSettingsService.setTheme('#9b5de5')"></button>
+                        <button type="button" class="phone-theme-dot" data-c="#f15bb5" style="background:#f15bb5" onclick="PhoneSettingsService.setTheme('#f15bb5')"></button>
+                    </div>
+                </div>
+                <div class="phone-set-row">
+                    <div>
+                        <div class="sf-label">🔤 字体大小</div>
+                        <div class="list-sub">调整手机界面文字大小</div>
+                    </div>
+                    <div style="display:flex;gap:6px;" id="ps-font-size">
+                        <button type="button" class="mini-btn" onclick="PhoneSettingsService.setFont(0.9)">小</button>
+                        <button type="button" class="mini-btn" onclick="PhoneSettingsService.setFont(1)">中</button>
+                        <button type="button" class="mini-btn" onclick="PhoneSettingsService.setFont(1.15)">大</button>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <footer class="chat-footer">
         <div class="play-toolbar">
             <div class="quick-actions">
-                <button class="quick-btn" id="btn-next-month" onclick="sendUserText('下一月')">⏭ 下一月</button>
-                <button class="quick-btn" onclick="sendUserText('继续')">▶ 继续</button>
             </div>
             <div class="composer">
                 <textarea id="chat-input" placeholder="输入你的行动或对白…"></textarea>
@@ -4677,11 +4808,12 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <div class="init-avatar-preview" id="init-preview-avatar-show">😀</div>
                     <div class="init-avatar-actions">
                         <button type="button" class="mini-btn" onclick="toggleAvatarEmojiPanel()">😀 表情</button>
-                        <button type="button" class="mini-btn" onclick="avatarUpload()">🖼️ 上传</button>
-                        <button type="button" class="mini-btn" onclick="avatarAiSuggest()">✨ AI 推荐</button>
+                        <button type="button" class="mini-btn" onclick="toggleAvatarLibraryPanel()">🖼️ 头像库</button>
+                        <button type="button" class="mini-btn" onclick="avatarUpload()">📤 上传</button>
                         <input type="file" id="init-avatar-file" accept="image/*" style="display:none;">
                     </div>
                 </div>
+                <div id="init-avatar-library-panel" style="display:none;"></div>
                 <div id="init-avatar-emoji-panel" style="display:none;"></div>
                 <div id="init-preview-stats-panel" style="margin-top:2px;">
                     <div style="display:flex;align-items:center;gap:8px;">
@@ -5079,9 +5211,20 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
         let activePlayCardId = null;
         function enterPlay(cardId) {
             activePlayCardId = String(cardId || ScenarioCardService.getSelectedId() || "");
+            // 进入剧本时按该卡独立设置应用主题/壁纸/透明度
+            try {
+                if (typeof SettingsService !== "undefined" && typeof SettingsService.applyNarrativeUI === "function") {
+                    SettingsService.applyNarrativeUI(activePlayCardId);
+                }
+            } catch (e) {}
         }
         function leavePlay() {
             activePlayCardId = null;
+            try {
+                if (typeof SettingsService !== "undefined" && typeof SettingsService.applyNarrativeUI === "function") {
+                    SettingsService.applyNarrativeUI(null);
+                }
+            } catch (e) {}
         }
         function isInPlayMode() {
             return !!activePlayCardId;
@@ -5107,7 +5250,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
     })();
 
     const NavigationVisibilityService = (() => {
-        const PLAY_VIEWS = new Set(["view-main", "view-inventory", "view-social", "view-npc-chat", "view-saves"]);
+        const PLAY_VIEWS = new Set(["view-main", "view-phone", "view-world", "view-inventory", "view-social", "view-npc-chat", "view-saves"]);
         function apply(viewId) {
             const inPlay = PlayViewStateService.isInPlayMode();
             document.querySelectorAll(".nav-btn").forEach((btn) => {
@@ -5299,7 +5442,9 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 ? Utils.deepClone(preset.npcs)
                 : createDefaultNpcs();
             next.stats = Array.isArray(preset.stats) ? Utils.deepClone(preset.stats) : [];
-            next.avatar = String(preset.avatar || "").slice(0, 40);
+            const _av0 = String(preset.avatar || "");
+            // data:/http 图片地址完整保留（截断会破坏 data URL 导致头像显示问号），emoji/文字才限长
+            next.avatar = (_av0.startsWith("data:") || _av0.startsWith("http")) ? _av0 : _av0.slice(0, 40);
             next.appearance = String(preset.appearance || "").trim().slice(0, 60);
             next.personality = String(preset.personality || "").trim().slice(0, 60);
             next.family = String(preset.family || "").trim().slice(0, 60);
@@ -7986,7 +8131,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const roleHtml = state.role ? `<span class="psb-role">${MarkdownService.escapeHtml(state.role)}</span>` : "";
             const avatarText = (state.avatar && !state.avatar.startsWith("data:")) ? state.avatar : MarkdownService.escapeHtml(name.slice(0, 1));
             const avatarImg = state.avatar && (state.avatar.startsWith("data:") || state.avatar.startsWith("http"))
-                ? `<img src="${String(state.avatar).replace(/"/g, "%22")}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+                ? `<img src="${String(state.avatar).replace(/"/g, "%22")}" data-fb="${String(avatarText).replace(/"/g, "&quot;")}" onerror="this.parentElement.textContent=this.dataset.fb" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
                 : MarkdownService.escapeHtml(avatarText);
             box.innerHTML = `
                 <div class="psb-avatar" style="background:${avatarColor(name)}">${avatarImg}</div>
@@ -7996,6 +8141,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 </div>
                 <div class="psb-chips">${chips.join("")}</div>
                 ${statsHtml}
+                <button type="button" class="psb-save-btn" onclick="openCardSettings()" title="剧本设置">⚙️</button>
                 <button type="button" class="psb-save-btn" onclick="switchView('view-saves')" title="存读档">💾</button>`;
         }
         // 事件分轮：按 user 消息切分 history 为"一轮事件 = 指令 + 后续回叙"
@@ -8684,6 +8830,7 @@ function rebuildChoicesBlock(body, labels = []) {
         function renderPhone(state) {
             const shell = document.getElementById("view-phone");
             if (!shell) return;
+            try { PhoneSettingsService.apply(); } catch (e) {}
             const name = state.name || "旅人";
             const av = document.getElementById("phone-avatar");
             const nm = document.getElementById("phone-user-name");
@@ -8725,8 +8872,86 @@ function rebuildChoicesBlock(body, labels = []) {
                 _bgmRenderTitle();
             }
         }
-        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, clearFancyStatus, renderPlayStatusBar, renderPlayEventList, renderWorld, renderDiary, renderEndingModal, renderPhone, buildEventRounds, avatarColor, heartLadder, stripHtml, normalizeLocations, bgmToggle, bgmNext, bgmPrev, mapSrcOf, getActiveMap };
+        function bgmSetEnabled(on) {
+            const s = _bgmState;
+            if (on && !s.playing) bgmToggle();
+            if (!on && s.playing) bgmToggle();
+        }
+        function bgmSetVolume(v) {
+            const s = _bgmState;
+            if (s.audio) s.audio.volume = Math.max(0, Math.min(1, Number(v) || 0));
+        }
+        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderSaveSlots, renderScenarioCards, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, clearFancyStatus, renderPlayStatusBar, renderPlayEventList, renderWorld, renderDiary, renderEndingModal, renderPhone, buildEventRounds, avatarColor, heartLadder, stripHtml, normalizeLocations, bgmToggle, bgmNext, bgmPrev, bgmSetEnabled, bgmSetVolume, mapSrcOf, getActiveMap };
     })();
+
+    // ---- 手机专属设置页：BGM 开关/音量、消息通知、主题色、字体大小 ----
+    const PhoneSettingsService = (() => {
+        const DEFAULTS = { bgm: true, bgmVolume: 1, notify: true, theme: "#5b5bd6", fontSize: 1 };
+        const THEME_DOTS = ["#5b5bd6", "#e07a5f", "#2a9d8f", "#e9c46a", "#9b5de5", "#f15bb5"];
+        const FONT_MAP = { "小": 0.9, "中": 1, "大": 1.15 };
+        function get() {
+            const s = StateService.get();
+            if (!s.phoneSettings || typeof s.phoneSettings !== "object") s.phoneSettings = { ...DEFAULTS };
+            return s.phoneSettings;
+        }
+        function apply() {
+            const ps = get();
+            const shell = document.querySelector(".phone-shell");
+            if (shell) {
+                shell.style.setProperty("--phone-accent", ps.theme);
+                shell.style.fontSize = `${(ps.fontSize || 1) * 100}%`;
+            }
+            const fill = document.getElementById("phone-bgm-fill");
+            if (fill) fill.style.background = ps.theme;
+            UIRenderer.bgmSetVolume(ps.bgmVolume);
+        }
+        function refreshUI() {
+            const ps = get();
+            const bgmEl = document.getElementById("ps-bgm");
+            const notEl = document.getElementById("ps-notify");
+            const volEl = document.getElementById("ps-volume");
+            const volVal = document.getElementById("ps-vol-val");
+            if (bgmEl) bgmEl.checked = !!ps.bgm;
+            if (notEl) notEl.checked = !!ps.notify;
+            if (volEl) volEl.value = Math.round((ps.bgmVolume || 1) * 100);
+            if (volVal) volVal.textContent = `${Math.round((ps.bgmVolume || 1) * 100)}%`;
+            document.querySelectorAll("#ps-theme-grid .phone-theme-dot").forEach((d) => {
+                d.classList.toggle("active", d.dataset.c === ps.theme);
+            });
+            document.querySelectorAll("#ps-font-size .mini-btn").forEach((b) => {
+                const target = FONT_MAP[b.textContent] || 1;
+                b.classList.toggle("active", Math.abs((ps.fontSize || 1) - target) < 0.01);
+            });
+        }
+        function toggle(key) {
+            const ps = get();
+            ps[key] = !ps[key];
+            if (key === "bgm") UIRenderer.bgmSetEnabled(ps.bgm);
+            if (key === "notify" && ps.notify) NoticeModalService.showInfo({ title: "🔔 消息通知", descHtml: "通知已开启，收到新消息时会提醒你。" });
+            refreshUI();
+        }
+        function setVolume(v) {
+            const ps = get();
+            ps.bgmVolume = Math.max(0, Math.min(1, Number(v) / 100));
+            UIRenderer.bgmSetVolume(ps.bgmVolume);
+            const val = document.getElementById("ps-vol-val");
+            if (val) val.textContent = `${Math.round(ps.bgmVolume * 100)}%`;
+        }
+        function setTheme(c) {
+            const ps = get();
+            ps.theme = c;
+            apply();
+            refreshUI();
+        }
+        function setFont(f) {
+            const ps = get();
+            ps.fontSize = f;
+            apply();
+            refreshUI();
+        }
+        return { get, apply, refreshUI, toggle, setVolume, setTheme, setFont };
+    })();
+    window.PhoneSettingsService = PhoneSettingsService;
 
     const VisualEffects = (() => {
         function createBears() {
@@ -9027,19 +9252,39 @@ function rebuildChoicesBlock(body, labels = []) {
             showStatus: true, showMap: true, showEvents: true,
             route: "auto",
         };
-        function getNarrative() {
+        // 设置上下文:null=全局默认(我的页),字符串=剧本卡 id(剧情页 ⚙️ 打开)
+        let _settingsCardId = null;
+        function setSettingsContext(cardId) { _settingsCardId = cardId || null; }
+        function getSettingsContext() { return _settingsCardId; }
+        // 当前游玩中的卡 id(未游玩为空串)
+        function currentPlayCardId() { return String(typeof activePlayCardId !== "undefined" ? (activePlayCardId || "") : ""); }
+        function narrKeyOf(cardId) {
+            const id = String(cardId || "").replace(/[^\w-]/g, "_");
+            return id ? `${NARR_KEY}_${id}` : NARR_KEY;
+        }
+        function getNarrativeRaw(cardId) {
             try {
-                const s = JSON.parse(localStorage.getItem(NARR_KEY) || "null");
+                const s = JSON.parse(localStorage.getItem(narrKeyOf(cardId)) || "null");
                 return s && typeof s === "object" ? { ...DEFAULT_NARRATIVE, ...s } : { ...DEFAULT_NARRATIVE };
             } catch (e) { return { ...DEFAULT_NARRATIVE }; }
         }
-        function saveNarrative(patch) {
-            const next = { ...getNarrative(), ...patch };
-            localStorage.setItem(NARR_KEY, JSON.stringify(next));
+        // 不传参→当前游玩卡(继承全局默认);传 null→强制全局;传 id→指定卡(继承全局)
+        function getNarrative(cardId) {
+            const useId = cardId === undefined ? currentPlayCardId() : String(cardId || "");
+            const base = getNarrativeRaw("");
+            if (!useId) return base;
+            return { ...base, ...getNarrativeRaw(useId) };
+        }
+        function saveNarrative(patch, cardId) {
+            const useId = cardId === undefined ? _settingsCardId || "" : String(cardId || "");
+            const key = narrKeyOf(useId);
+            const next = { ...getNarrative(useId), ...patch };
+            localStorage.setItem(key, JSON.stringify(next));
             return next;
         }
-        function applyNarrativeUI() {
-            const n = getNarrative();
+        function applyNarrativeUI(cardId) {
+            // 无参时按设置上下文应用(null=全局默认);游玩中渲染设置用 getNarrative() 已自动取当前卡
+            const n = getNarrative(cardId === undefined ? (_settingsCardId === null ? null : _settingsCardId) : cardId);
             document.body.dataset.skin = n.skin === "default" ? "" : n.skin;
             document.documentElement.style.setProperty("--card-alpha", String(Math.max(50, Math.min(100, Number(n.opacity) || 100)) / 100));
             if (String(n.wallpaper || "").trim()) {
@@ -9096,7 +9341,21 @@ function rebuildChoicesBlock(body, labels = []) {
             NoticeModalService.showInfo({ title: "已清空", descHtml: "该角色的长期记忆已清空。" });
         }
         function loadNarrativeToUI() {
-            const n = getNarrative();
+            // 上下文提示:剧本内设置 vs 全局默认;结局评定仅剧本上下文显示
+            const hintEl = document.getElementById("settings-context-hint");
+            if (hintEl) {
+                const cid = getSettingsContext();
+                if (cid) {
+                    const card = (typeof ScenarioCardService !== "undefined") ? ScenarioCardService.loadCards().find((c) => String(c.id || "") === String(cid)) : null;
+                    hintEl.style.display = "block";
+                    hintEl.textContent = `⚙️ 当前正在编辑剧本「${card ? String(card.title || "") : "当前剧本"}」的独立设置（不影响其他剧本）。「我的」页修改的是全局默认值，所有剧本未单独设置时继承。`;
+                } else {
+                    hintEl.style.display = "none";
+                }
+            }
+            const endingCard = document.getElementById("card-settings-ending-card");
+            if (endingCard) endingCard.style.display = getSettingsContext() ? "" : "none";
+            const n = getNarrative(_settingsCardId === null ? null : _settingsCardId);
             const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
             const setChk = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
             set("nc-mode", n.mode); setChk("nc-manual-end", n.manualEnd);
@@ -9476,9 +9735,11 @@ function rebuildChoicesBlock(body, labels = []) {
                 ["sf-npc-relationship", "与主角的关系", npc.relationship]
             ];
             const affection = Number.isFinite(Number(npc.affection)) ? Number(npc.affection) : "";
+            const favor = Number.isFinite(Number(npc.favor)) ? Number(npc.favor) : "";
             row.innerHTML = fields.map(([cls, ph, val]) =>
                 `<input class="${cls}" type="text" placeholder="${ph}" value="${String(val || "").replace(/"/g, "&quot;")}">`
             ).join("") +
+                `<input class="sf-npc-favor" type="number" min="-100" max="100" placeholder="友善初值" title="友善值 -100~100（留空=65）" value="${favor === "" ? "" : favor}">` +
                 `<input class="sf-npc-affection" type="number" min="-100" max="100" placeholder="爱慕初值" title="爱慕值 -100~100（留空=0）" value="${affection === "" ? "" : affection}">` +
                 `<button class="sf-npc-del" title="删除" onclick="ScenarioEditorService.removeNpcRow(this)">✕</button>`;
             list.appendChild(row);
@@ -9845,11 +10106,13 @@ function rebuildChoicesBlock(body, labels = []) {
                 const name = q("sf-npc-name");
                 if (!name) return;
                 const affRaw = Number(q("sf-npc-affection"));
+                const favRaw = Number(q("sf-npc-favor"));
                 npcs.push({
                     name,
                     role: q("sf-npc-role"),
                     personality: q("sf-npc-personality"),
                     relationship: q("sf-npc-relationship"),
+                    favor: Number.isFinite(favRaw) ? Math.min(100, Math.max(-100, favRaw)) : 65,
                     affection: Number.isFinite(affRaw) ? Math.min(100, Math.max(-100, affRaw)) : 0
                 });
             });
@@ -10957,15 +11220,15 @@ function rebuildChoicesBlock(body, labels = []) {
         let bannerIdx = 0;
         let bannerTimer = null;
         let activeRank = "recommend";
-        // 轮播候选：本地热度 plays 降序取 top5；全部 0(新用户)按分类热度兜底
+        // 轮播候选：本地热度 plays 降序取 top7；全部 0(新用户)按分类热度兜底
         function bannerCards() {
             const lib = Array.isArray(window.SCENARIO_LIBRARY) ? window.SCENARIO_LIBRARY : [];
             const ranked = lib.map((c) => ({ card: c, plays: ScenarioCardViewService.localPlays(c.id) }));
             ranked.sort((a, b) => b.plays - a.plays);
-            let top = ranked.slice(0, 5);
+            let top = ranked.slice(0, 7);
             if (!top.some((x) => x.plays > 0)) {
                 ranked.sort((a, b) => ScenarioCardViewService.hotRank(a.card.category) - ScenarioCardViewService.hotRank(b.card.category));
-                top = ranked.slice(0, 5);
+                top = ranked.slice(0, 7);
             }
             return top.map((x) => x.card);
         }
@@ -11042,11 +11305,11 @@ function rebuildChoicesBlock(body, labels = []) {
                 return (d.items || []).slice(0, 10);
             } catch (e) { return []; }
         }
-        async function renderRankPanel(tab) {
+        async function renderRankPanel(tab, panelId = "community-rank-panel", tabsId = "community-rank-tabs") {
             activeRank = tab;
-            const panel = document.getElementById("home-rank-panel");
+            const panel = document.getElementById(panelId);
             if (!panel) return;
-            document.querySelectorAll("#home-rank-tabs .scenario-filter-chip").forEach((b) => {
+            document.querySelectorAll(`#${tabsId} .scenario-filter-chip`).forEach((b) => {
                 b.classList.toggle("active", b.dataset.rank === tab);
             });
             panel.style.display = "block";
@@ -11091,7 +11354,7 @@ function rebuildChoicesBlock(body, labels = []) {
             }
         }
         function toggleRankPanel(tab) {
-            const panel = document.getElementById("home-rank-panel");
+            const panel = document.getElementById("community-rank-panel");
             if (!panel) return;
             if (activeRank === tab && panel.style.display !== "none") { panel.style.display = "none"; return; }
             renderRankPanel(tab);
@@ -11103,11 +11366,45 @@ function rebuildChoicesBlock(body, labels = []) {
                 b.classList.toggle("active", b.dataset.sort === ScenarioCardViewService.getSortMode());
             });
         }
+        // 触摸滑动切卡：水平拖动超 50px 切上一张/下一张；垂直拖动放行给页面滚动
+        function bindBannerSwipe() {
+            const box = document.getElementById("home-banner-swiper");
+            if (!box || box.dataset.swipeBound) return;
+            box.dataset.swipeBound = "1";
+            let startX = 0, startY = 0, swiped = false;
+            box.addEventListener("touchstart", (e) => {
+                const t = e.touches?.[0];
+                if (!t) return;
+                startX = t.clientX; startY = t.clientY; swiped = false;
+            }, { passive: true });
+            box.addEventListener("touchmove", (e) => {
+                const t = e.touches?.[0];
+                if (!t) return;
+                const dx = t.clientX - startX;
+                const dy = t.clientY - startY;
+                if (Math.abs(dy) > Math.abs(dx)) return;
+                if (Math.abs(dx) > 50) {
+                    swiped = true;
+                    if (dx < 0) nextBanner(); else gotoBanner(bannerIdx - 1);
+                    startX = t.clientX; startY = t.clientY;
+                }
+            }, { passive: true });
+            box.addEventListener("touchend", () => {
+                if (!swiped) return;
+                const t0 = Date.now();
+                const intercept = (e) => {
+                    if (Date.now() - t0 < 350) e.stopPropagation();
+                    box.removeEventListener("click", intercept, true);
+                };
+                box.addEventListener("click", intercept, true);
+            }, { passive: true });
+        }
         function renderHomeDiscovery() {
             renderBanner();
             startBanner();
+            bindBannerSwipe();
             renderSortBar();
-            const panel = document.getElementById("home-rank-panel");
+            const panel = document.getElementById("community-rank-panel");
             if (panel && panel.style.display !== "none") renderRankPanel(activeRank);
         }
         return { renderHomeDiscovery, renderRankPanel, toggleRankPanel, gotoBanner, nextBanner, bannerCards, renderSortBar };
@@ -13258,7 +13555,8 @@ const token = delta.content || "";
                 name: String(n.name || `人物${i + 1}`).slice(0, 20),
                 gender: String(n.gender || "未知").slice(0, 6),
                 relation: String(n.role || "熟人").slice(0, 12),
-                favor: 65,
+                favor: Number.isFinite(Number(n.favor)) ? Math.max(-100, Math.min(100, Number(n.favor))) : 65,
+                affection: Number.isFinite(Number(n.affection)) ? Math.max(-100, Math.min(100, Number(n.affection))) : 0,
                 status: "在线",
                 mood: "平静",
                 traits: String(n.personality || "").slice(0, 48),
@@ -14617,22 +14915,32 @@ const token = delta.content || "";
                     if (guardGenerating("AI 正在推进剧情，稍后再找活干。")) break;
                     sendUserText("找点活干，看看有没有什么任务或活计可做");
                     break;
-                case "settings": switchView("view-settings"); break;
+                case "settings": switchView("view-phone-settings"); PhoneSettingsService.refreshUI(); break;
                 default: NoticeModalService.showInfo({ title: "敬请期待", descHtml: "这个 App 还在开发中，先去主世界逛逛吧～" });
             }
         }
         // ---- 世界页：从收藏引入 NPC + 新建 NPC ----
-        function openNpcImport() {
-            const state = StateService.get();
-            const known = new Set((state.npcs || []).map((n) => n.id));
-            const profiles = Array.isArray(state.npcProfiles) ? state.npcProfiles : [];
-            const candidates = profiles.filter((p) => p && !known.has(p.id));
-            if (!candidates.length) {
-                NoticeModalService.showInfo({ title: "⭐ 从收藏引入", descHtml: "收藏夹里没有可引入的新角色。角色在剧情中登场后会自动进入收藏。" });
+        // 数据源为社区人物卡收藏（/api/characters/favorites，天然只含角色卡），非本地 npcProfiles
+        let _npcFavCache = [];
+        async function openNpcImport() {
+            if (!AuthService.getToken()) {
+                NoticeModalService.showInfo({ title: "⭐ 从收藏引入", descHtml: "请先登录，收藏的角色才能引入到世界里。" });
                 return;
             }
-            const items = candidates.map((p, i) =>
-                `<button type="button" class="event-btn" style="margin:3px;text-align:left;" onclick="importNpcFromCollection(${i})">${MarkdownService.escapeHtml(String(p.name || "?").slice(0, 1))} ${MarkdownService.escapeHtml(p.name || "未命名")} · ${MarkdownService.escapeHtml(p.relation || "关系未明")}（友善 ${Number(p.favor) || 0}）</button>`
+            const state = StateService.get();
+            const known = new Set((state.npcs || []).map((n) => n.id));
+            _npcFavCache = [];
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/characters/favorites`, { headers: { "X-Auth-Token": "Bearer " + AuthService.getToken() } });
+                const d = await res.json().catch(() => ({}));
+                _npcFavCache = (d.items || []).filter((f) => f && f.name && !known.has(String(f.character_id || ("fav_" + f.name))));
+            } catch (e) {}
+            if (!_npcFavCache.length) {
+                NoticeModalService.showInfo({ title: "⭐ 从收藏引入", descHtml: "收藏夹里没有可引入的角色。在社区给喜欢的人物卡点亮收藏后，这里就能引入啦。" });
+                return;
+            }
+            const items = _npcFavCache.map((f, i) =>
+                `<button type="button" class="event-btn" style="margin:3px;text-align:left;" onclick="importNpcFromCollection(${i})">${MarkdownService.escapeHtml(String(f.name || "?").slice(0, 1))} ${MarkdownService.escapeHtml(f.name || "未命名")} · ${MarkdownService.escapeHtml(f.role || "关系未明")}<span class="list-sub">（来自「${MarkdownService.escapeHtml(String(f.card_title || "").slice(0, 10))}」）</span></button>`
             ).join("");
             NoticeModalService.showInfo({
                 title: "⭐ 从收藏引入",
@@ -14641,23 +14949,20 @@ const token = delta.content || "";
         }
         function importNpcFromCollection(idx) {
             const state = StateService.get();
-            const profiles = Array.isArray(state.npcProfiles) ? state.npcProfiles : [];
-            const p = profiles[idx];
-            if (!p) return;
+            const f = _npcFavCache[idx];
+            if (!f) return;
             if (!Array.isArray(state.npcs)) state.npcs = [];
-            if (state.npcs.some((n) => n.id === p.id)) { closeInfoModal(); return; }
-            const id = `npc_col_${Date.now()}`;
+            const id = `npc_fav_${Date.now()}`;
             state.npcs.push({
-                id, name: p.name || "未命名", gender: p.gender || "", relation: p.relation || "关系未明",
-                favor: Math.max(0, Number(p.favor) || 0) || 50, status: "收藏引入", mood: p.mood || "",
+                id, name: f.name || "未命名", gender: "", relation: f.role || "关系未明",
+                favor: 50, affection: 0, status: "收藏引入", mood: ""
             });
             if (!state.npcMemoryMap) state.npcMemoryMap = {};
-            const summary = UIRenderer.stripHtml(p.description || p.summary || "").slice(0, 200);
-            state.npcMemoryMap[id] = { summary, tags: { promises: [], conflicts: [], secrets: [], notes: [] }, updatedAt: Date.now() };
+            state.npcMemoryMap[id] = { summary: "", tags: { promises: [], conflicts: [], secrets: [], notes: [] }, updatedAt: Date.now() };
             StateService.save();
             UIRenderer.renderWorld();
             closeInfoModal();
-            NoticeModalService.showInfo({ title: "✅ 引入成功", descHtml: `${MarkdownService.escapeHtml(p.name || "这位角色")} 已登场，快去世界页看看吧～` });
+            NoticeModalService.showInfo({ title: "✅ 引入成功", descHtml: `${MarkdownService.escapeHtml(f.name || "这位角色")} 已登场，快去世界页看看吧～` });
         }
         function openNewNpcModal() {
             NoticeModalService.showInfo({
@@ -14853,8 +15158,19 @@ ${recent || "（无）"}
         function togglePlayDockNav() {
             PlayDockService.toggleNav();
         }
+        function openCardSettings() {
+            // 打开当前剧本卡的独立设置(叙事控制/主题与展示/访问线路 + 结局评定)
+            window._cardSettingsNav = true;
+            SettingsService.setSettingsContext(PlayStateService.getActivePlayCardId() || "");
+            switchView("view-settings");
+        }
         function switchView(viewId, silent = false) {
             const prevView = activeView;
+            if (viewId === "view-settings") {
+                // 默认入口=全局默认值;openCardSettings 会先置 _cardSettingsNav 再进入(剧本内设置)
+                if (!window._cardSettingsNav) SettingsService.setSettingsContext(null);
+                window._cardSettingsNav = false;
+            }
             activeView = viewId;
             document.querySelectorAll(".view-section").forEach((el) => el.classList.remove("active"));
             const target = document.getElementById(viewId);
@@ -14978,6 +15294,19 @@ function openNpcProfile(npcId) {
                         <div style="height:100%;width:${favor}%;background:${favorColor};border-radius:3px;transition:width .4s;"></div>
                     </div>
                 </div>`;
+            const affection = Math.max(-100, Math.min(100, Number(npc.affection) || 0));
+            const affectionColor = affection >= 40 ? "#e75480" : affection > 0 ? "#f0a0c0" : affection === 0 ? "#9aa0a6" : "#8aa0b0";
+            const affectionLabel = affection >= 80 ? "深爱" : affection >= 40 ? "心动" : affection > 0 ? "好感" : affection === 0 ? "无感" : "反感";
+            const affectionBar = `
+                <div style="margin:10px 0 4px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                        <span style="font-size:.78rem;color:var(--sub);">爱慕值</span>
+                        <span style="font-size:.82rem;font-weight:700;color:${affectionColor};">${affection > 0 ? "+" + affection : affection} · ${affectionLabel}</span>
+                    </div>
+                    <div style="height:6px;border-radius:3px;background:rgba(0,0,0,.08);overflow:hidden;">
+                        <div style="height:100%;width:${Math.abs(affection)}%;background:${affectionColor};border-radius:3px;transition:width .4s;"></div>
+                    </div>
+                </div>`;
 
             // 修复点：对 value 使用 getStr 强制转字符串
             const statusTagsHtml = [
@@ -15055,6 +15384,7 @@ function openNpcProfile(npcId) {
                         </div>
                     </div>
                     ${favorBar}
+                    ${affectionBar}
                     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;">${statusTagsHtml}</div>
                     ${statsPanelHtml}
                     ${detailHtml}
@@ -15827,6 +16157,27 @@ function openNpcProfile(npcId) {
             if (fill) fill.style.width = v + "%";
         }
         const AVATAR_EMOJI_POOL = ["😀", "😎", "🥳", "🤠", "😇", "🦊", "🐯", "🐰", "🐻", "🐼", "🦁", "🐺", "🦉", "🐱", "🐶", "🌸", "🌙", "⭐", "🔥", "🍀", "🎩", "🧣", "👑", "💫"];
+        // 头像库：avatars/*.png 静态资源（图片由小徐提供后上传仓库，先留空占位）
+        const AVATAR_LIBRARY = [
+            // { name: "示例", url: "avatars/example.png" },
+        ];
+        function toggleAvatarLibraryPanel() {
+            const panel = document.getElementById("init-avatar-library-panel");
+            if (!panel) return;
+            if (panel.style.display !== "none") { panel.style.display = "none"; return; }
+            if (!AVATAR_LIBRARY.length) {
+                panel.innerHTML = '<span class="list-sub">头像库图片整理中，先用表情或上传一张吧～</span>';
+            } else {
+                panel.innerHTML = AVATAR_LIBRARY.map((a, i) =>
+                    `<button type="button" class="init-avatar-lib-btn" title="${MarkdownService.escapeHtml(String(a.name || ""))}" onclick="avatarPickLib(${i})"><img src="${String(a.url || "").replace(/"/g, "%22")}" alt="${MarkdownService.escapeHtml(String(a.name || ""))}" loading="lazy"></button>`
+                ).join("");
+            }
+            panel.style.display = "flex";
+        }
+        function avatarPickLib(i) {
+            const a = AVATAR_LIBRARY[i];
+            if (a) setInitAvatar(a.url);
+        }
         function toggleAvatarEmojiPanel() {
             const panel = document.getElementById("init-avatar-emoji-panel");
             if (!panel) return;
@@ -15855,20 +16206,29 @@ function openNpcProfile(npcId) {
                 const f = input.files && input.files[0];
                 input.value = "";
                 if (!f) return;
-                if (f.size > 2 * 1024 * 1024) { NoticeModalService.showInfo({ title: "头像过大", descHtml: "请上传 2MB 以内的图片" }); return; }
+                if (!String(f.type || "").startsWith("image/")) { NoticeModalService.showInfo({ title: "头像格式", descHtml: "请上传图片文件" }); return; }
+                if (f.size > 5 * 1024 * 1024) { NoticeModalService.showInfo({ title: "头像过大", descHtml: "请上传 5MB 以内的图片" }); return; }
                 const reader = new FileReader();
-                reader.onload = () => setInitAvatar(String(reader.result || ""));
+                reader.onload = () => {
+                    const img = new Image();
+                    img.onload = () => {
+                        try {
+                            const canvas = document.createElement("canvas");
+                            canvas.width = 128; canvas.height = 128;
+                            const ctx = canvas.getContext("2d");
+                            const src = Math.min(img.width, img.height);
+                            ctx.drawImage(img, (img.width - src) / 2, (img.height - src) / 2, src, src, 0, 0, 128, 128);
+                            setInitAvatar(canvas.toDataURL("image/jpeg", 0.85));
+                        } catch (e) {
+                            setInitAvatar(String(reader.result || ""));
+                        }
+                    };
+                    img.onerror = () => NoticeModalService.showInfo({ title: "图片读取失败", descHtml: "这张图片无法解析，请换一张试试。" });
+                    img.src = String(reader.result || "");
+                };
                 reader.readAsDataURL(f);
             };
             input.click();
-        }
-        function avatarAiSuggest() {
-            const name = String(document.getElementById("init-preview-name")?.value || "云吞").trim();
-            let h = 0;
-            for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
-            const emoji = AVATAR_EMOJI_POOL[h % AVATAR_EMOJI_POOL.length];
-            setInitAvatar(emoji);
-            NoticeModalService.showInfo({ title: "✨ AI 推荐", descHtml: `根据名字「${MarkdownService.escapeHtml(name)}」为你推荐头像：<span style="font-size:2rem;">${emoji}</span><div class="list-sub">可再点几次换一个，或打开表情面板自选。</div>` });
         }
         function bindInitPreviewForm(plan) {
             document.getElementById("init-preview-name").value = plan.name || "";
@@ -16187,7 +16547,7 @@ function openNpcProfile(npcId) {
             switchView("view-scenario-editor");
             ScenarioEditorService.focusEditor();
         }
-        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, getEndingDefs, buildEndingChecks, refreshEndingBadge, fallbackEnding, requestEnding, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, avatarPick, avatarUpload, avatarAiSuggest, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, closeFullMap, placeClick, placeGo, advanceStory, openPhoneDiary, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate, renderHomeDiscovery, switchRankTab, switchSortMode, openCreationWizard, wizardPickStyle, wizardTitleCount, wizardPromptCount, wizardNext, wizardPrev, wizardConfirm, closeUploadPriceModal, confirmUploadWithPrice };
+        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, getEndingDefs, buildEndingChecks, refreshEndingBadge, fallbackEnding, requestEnding, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, openCardSettings, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, toggleAvatarLibraryPanel, avatarPickLib, avatarPick, avatarUpload, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, closeFullMap, placeClick, placeGo, advanceStory, openPhoneDiary, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate, renderHomeDiscovery, switchRankTab, switchSortMode, openCreationWizard, wizardPickStyle, wizardTitleCount, wizardPromptCount, wizardNext, wizardPrev, wizardConfirm, closeUploadPriceModal, confirmUploadWithPrice };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
@@ -16245,6 +16605,7 @@ function openNpcProfile(npcId) {
     function restartLife() { Controller.restartLife(); }
     function togglePlayDockNav() { Controller.togglePlayDockNav(); }
     function switchView(viewId) { Controller.switchView(viewId); }
+    function openCardSettings() { Controller.openCardSettings(); }
     function saveSettings() { Controller.saveSettings(); }
     function saveUserApiSettings() { Controller.saveUserApiSettings(); }
     function saveScenarioCard() { Controller.saveScenarioCard(); }
@@ -16267,7 +16628,8 @@ function openNpcProfile(npcId) {
     function toggleAvatarEmojiPanel() { Controller.toggleAvatarEmojiPanel(); }
     function avatarPick(emoji) { Controller.avatarPick(emoji); }
     function avatarUpload() { Controller.avatarUpload(); }
-    function avatarAiSuggest() { Controller.avatarAiSuggest(); }
+    function toggleAvatarLibraryPanel() { Controller.toggleAvatarLibraryPanel(); }
+    function avatarPickLib(i) { Controller.avatarPickLib(i); }
     function setInitAvatar(val) { Controller.setInitAvatar(val); }
     function sendNpcMessage() { Controller.sendNpcMessage(); }
     function backToSocialList() { Controller.backToSocialList(); }
@@ -16282,14 +16644,15 @@ function openNpcProfile(npcId) {
         let _creatingOrder = false; // 创建中锁,防双击产生两个订单
         const PENDING_KEY = "bitlife_pending_pay_order_v1"; // 跳转收银台前持久化,返回后自动查单
 
-        function openPanel() {
+        async function openPanel() {
             const modal = document.getElementById("membership-modal");
             if (!modal) return;
             const isMember = AuthService.hasMembership();
             const titleEl = document.getElementById("membership-title");
             if (titleEl) titleEl.innerText = isMember ? "会员续费 / 升级" : "开通会员";
             modal.style.display = "flex";
-            ensureCountdownStart(); // 一次性限时:仅首次打开充值面板开始 24h 倒计时
+            await syncServerOffer(); // 账号级限时优惠:首次打开充值面板由服务器计时(登录后),localStorage 仅兜底
+            ensureCountdownStart();
             renderPlans();
             renderCoinBalance();
             startCountdown();
@@ -16404,19 +16767,40 @@ function openNpcProfile(npcId) {
             grid.innerHTML = planCards;
             updateLifetimePriceTexts();
         }
-        // 终身会员一次性限时:仅首次打开充值面板触发 24h 优惠,过期后永久恢复 ¥249(不再自动续期)
+        // 终身会员一次性限时:每用户从首次打开充值面板起 24h 优惠,过期恢复 ¥249
+        // 服务器账号级计时(offer:{userId} KV),localStorage 仅未登录/接口失败时兜底
         const COUNTDOWN_KEY = "bitlife_membership_countdown_v1";
         const COUNTDOWN_MS = 24 * 3600 * 1000;
         let _cdTimer = null;
+        let _serverOffer = null; // {active, startedAt, price}
         function countdownStart() {
+            if (_serverOffer && _serverOffer.startedAt) return _serverOffer.startedAt;
             return Number(localStorage.getItem(COUNTDOWN_KEY) || 0);
         }
         function ensureCountdownStart() {
             if (!countdownStart()) localStorage.setItem(COUNTDOWN_KEY, String(Date.now()));
         }
         function countdownActive() {
+            if (_serverOffer) return _serverOffer.active;
             const start = countdownStart();
             return !start || Date.now() - start < COUNTDOWN_MS;
+        }
+        // 登录用户打开充值页时同步服务器优惠状态(POST 幂等:仅首次写入时间戳)
+        async function syncServerOffer() {
+            try {
+                const token = AuthService.getToken();
+                if (!token) { _serverOffer = null; return; }
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/pay/offer`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token }
+                });
+                const d = await res.json().catch(() => ({}));
+                if (res.ok && d) {
+                    _serverOffer = { active: !!d.active, startedAt: Number(d.startedAt || 0), price: String(d.price || "") };
+                } else {
+                    _serverOffer = null;
+                }
+            } catch (e) { _serverOffer = null; }
         }
         function renderCountdown() {
             const el = document.getElementById("membership-countdown");
@@ -16664,6 +17048,7 @@ function openNpcProfile(npcId) {
                     coins: u.coins, membership_type: u.membership_type || "",
                     membership_expires_at: u.membership_expires_at || "",
                     checkin_streak: u.checkin_streak || 0, last_checkin_date: u.last_checkin_date || "",
+                    nickname: u.nickname || "", faceimg: u.faceimg || "",
                     ts: Date.now()
                 }));
             } catch (e) {}
@@ -16678,7 +17063,8 @@ function openNpcProfile(npcId) {
                     id: c.id, email: c.email,
                     coins: Number(c.coins ?? c.coin ?? 0), membership_type: c.membership_type || "",
                     membership_expires_at: c.membership_expires_at || "",
-                    checkin_streak: c.checkin_streak || 0, last_checkin_date: c.last_checkin_date || ""
+                    checkin_streak: c.checkin_streak || 0, last_checkin_date: c.last_checkin_date || "",
+                    nickname: c.nickname || "", faceimg: c.faceimg || ""
                 };
             } catch (e) {}
         }

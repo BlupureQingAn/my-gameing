@@ -39,7 +39,9 @@
           "name": "AI·晨曦",
           "role": "舰载智能中枢",
           "personality": "冷静理性，拥有人格",
-          "relationship": "你的顶头上司，也是最大的监视者"
+          "relationship": "你的顶头上司，也是最大的监视者",
+          "favor": -25,
+          "affection": 0
         },
         {
           "name": "守钟人·T8",
@@ -51,7 +53,9 @@
           "name": "维修主管·老鲁",
           "role": "维修部主管",
           "personality": "粗犷豪爽，护犊子",
-          "relationship": "把你当亲徒弟，提醒你别碰货舱底层"
+          "relationship": "把你当亲徒弟，提醒你别碰货舱底层",
+          "favor": 75,
+          "affection": 0
         }
       ],
       "timeline": {
@@ -134,7 +138,9 @@
           "name": "记忆里的女孩·小满",
           "role": "原始体的妹妹",
           "personality": "温柔坚韧，在找你",
-          "relationship": "你在城市的地下乐队里遇到了她，她看着你的脸愣住了"
+          "relationship": "你在城市的地下乐队里遇到了她，她看着你的脸愣住了",
+          "favor": 85,
+          "affection": 0
         }
       ],
       "timeline": {
@@ -383,7 +389,9 @@
           "name": "母亲·顾青",
           "role": "（记忆/录音）中学物理老师",
           "personality": "温柔坚韧，喜欢仰望星空",
-          "relationship": "她留下的旧笔记本里，夹着一张和蓝图一模一样的草图"
+          "relationship": "她留下的旧笔记本里，夹着一张和蓝图一模一样的草图",
+          "favor": 70,
+          "affection": 0
         }
       ],
       "timeline": {

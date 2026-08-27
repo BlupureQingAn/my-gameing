@@ -116,7 +116,9 @@
           "name": "掌门·清月师太",
           "role": "峨眉掌门",
           "personality": "威严冷峻，执法如山",
-          "relationship": "逐你出师门的人，也是暗中护你的人"
+          "relationship": "逐你出师门的人，也是暗中护你的人",
+          "favor": 80,
+          "affection": 0
         },
         {
           "name": "少年·阿让",
@@ -199,7 +201,9 @@
           "name": "嫡姐·谢明若",
           "role": "侯府嫡长女",
           "personality": "温婉娴静，体弱多病",
-          "relationship": "你的姐姐，她的病是侯府最大的谜"
+          "relationship": "你的姐姐，她的病是侯府最大的谜",
+          "favor": 85,
+          "affection": 0
         },
         {
           "name": "嫡母·李氏",
@@ -217,7 +221,9 @@
           "name": "夫郎·沈郎",
           "role": "嫡姐的赘婿",
           "personality": "温润恭顺，出身微寒",
-          "relationship": "他伺候嫡姐汤药，有些事你知道却不能说破"
+          "relationship": "他伺候嫡姐汤药，有些事你知道却不能说破",
+          "favor": 85,
+          "affection": 0
         }
       ],
       "timeline": {
@@ -294,7 +300,9 @@
           "name": "军师·柳先生",
           "role": "秦家军军师",
           "personality": "老谋深算，足智多谋",
-          "relationship": "他察觉出粮道被断与朝中有关"
+          "relationship": "他察觉出粮道被断与朝中有关",
+          "favor": 80,
+          "affection": 0
         },
         {
           "name": "敌帅·拓跋燕",
@@ -383,7 +391,9 @@
           "name": "神秘男人·夏远",
           "role": "十二年未见的父亲",
           "personality": "温和疲惫，身上有秘密",
-          "relationship": "他在密谈中被你拍到，转身却认出了你"
+          "relationship": "他在密谈中被你拍到，转身却认出了你",
+          "favor": 85,
+          "affection": 0
         }
       ],
       "timeline": {

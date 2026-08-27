@@ -195,13 +195,17 @@
           "name": "陆屿舟",
           "role": "金融系新生",
           "personality": "张扬热烈，行动力爆棚，会当面锣对面鼓地追求",
-          "relationship": "转学生，开学第一周就公开告白"
+          "relationship": "转学生，开学第一周就公开告白",
+          "favor": 60,
+          "affection": 55
         },
         {
           "name": "陈姐",
           "role": "奶茶店老板娘",
           "personality": "热心八卦，护犊子",
-          "relationship": "你的老板兼爱情军师"
+          "relationship": "你的老板兼爱情军师",
+          "favor": 80,
+          "affection": 0
         }
       ],
       "timeline": {
