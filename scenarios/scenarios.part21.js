@@ -32,6 +32,7 @@
         {
           "name": "白少羽",
           "gender": "男",
+          "avatar": "avatars/avatar_18.jpg",
           "role": "龙系天才",
           "personality": "张扬骄傲，输不起但重义气",
           "relationship": "你入学第一天就向你宣战的同桌"
@@ -39,6 +40,7 @@
         {
           "name": "苏弥",
           "gender": "女",
+          "avatar": "avatars/avatar_09.jpg",
           "role": "治愈系优等生",
           "personality": "温婉沉稳，观察力极强",
           "relationship": "总在你星龙失控时替你善后的学姐"
@@ -46,6 +48,7 @@
         {
           "name": "阿澈",
           "gender": "男",
+          "avatar": "avatars/avatar_30.jpg",
           "role": "降灵师",
           "personality": "神神叨叨，知晓上古秘辛",
           "relationship": "第一眼就认出你星龙的来历"
@@ -114,6 +117,7 @@
         {
           "name": "埃罗",
           "gender": "男",
+          "avatar": "avatars/avatar_15.jpg",
           "role": "黑魔法天才",
           "personality": "毒舌孤傲，实力深不可测",
           "relationship": "烬院学长，总说你是「靠运气进的门」"
@@ -121,6 +125,7 @@
         {
           "name": "夏娅",
           "gender": "女",
+          "avatar": "avatars/avatar_31.jpg",
           "role": "火焰继承人",
           "personality": "争强好胜，外热内软",
           "relationship": "星院首席，视你为头号对手"
@@ -128,6 +133,7 @@
         {
           "name": "诺恩",
           "gender": "男",
+          "avatar": "avatars/avatar_22.jpg",
           "role": "图书馆守护者",
           "personality": "寡言神秘，与预言之镜有旧",
           "relationship": "从不说话，却总在关键时刻帮你"
@@ -196,6 +202,7 @@
         {
           "name": "黑泽",
           "gender": "男",
+          "avatar": "avatars/avatar_36.jpg",
           "role": "力量型咒术师",
           "personality": "莽撞热血，拳头比脑子快",
           "relationship": "你的搭档，嘴上嫌弃你弱，打架永远护着你",
@@ -205,6 +212,7 @@
         {
           "name": "藤井",
           "gender": "男",
+          "avatar": "avatars/avatar_22.jpg",
           "role": "辅助型学长",
           "personality": "冷静缜密，情报专家",
           "relationship": "塾里的万事通，知道很多秘密但不说"
@@ -212,6 +220,7 @@
         {
           "name": "玖条",
           "gender": "未知",
+          "avatar": "avatars/avatar_07.jpg",
           "role": "转学生",
           "personality": "温和礼貌，偶尔露出不符年龄的冷漠",
           "relationship": "新来的搭档，对涩谷事件异常关注"
@@ -280,6 +289,7 @@
         {
           "name": "雷震",
           "gender": "男",
+          "avatar": "avatars/avatar_38.jpg",
           "role": "校霸/雷系能力者",
           "personality": "嚣张暴烈，认准的人掏心掏肺",
           "relationship": "你的第一个搭档，能力经常失控"
@@ -287,6 +297,7 @@
         {
           "name": "御音",
           "gender": "未知",
+          "avatar": "avatars/avatar_44.jpg",
           "role": "优等生/音系能力者",
           "personality": "清冷优雅，完美主义",
           "relationship": "全校最锋利的刀，需要你的剑鞘"
@@ -294,6 +305,7 @@
         {
           "name": "纪会长",
           "gender": "男",
+          "avatar": "avatars/avatar_12.jpg",
           "role": "学生会会长",
           "personality": "运筹帷幄，城府极深",
           "relationship": "知道你档案里的秘密"
@@ -362,6 +374,7 @@
         {
           "name": "林澈",
           "gender": "男",
+          "avatar": "avatars/avatar_22.jpg",
           "role": "舰队指挥官",
           "personality": "冷静睿智，背负着无法言说的过去",
           "relationship": "你的直属长官，也是你论文里唯一被歌颂的将领"
@@ -369,6 +382,7 @@
         {
           "name": "夏语冰",
           "gender": "女",
+          "avatar": "avatars/avatar_07.jpg",
           "role": "机甲王牌",
           "personality": "孤高锐利，信任只给强者",
           "relationship": "机甲驾驶员，第一眼就看穿你的身份"
@@ -376,6 +390,7 @@
         {
           "name": "白夜",
           "gender": "未知",
+          "avatar": "avatars/avatar_05.jpg",
           "role": "随舰记者",
           "personality": "八面玲珑，立场不明",
           "relationship": "在你上舰前就与你搭上话的「旧识」"

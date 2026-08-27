@@ -30,14 +30,16 @@
           "role": "蓝双种母",
           "personality": "高冷傲娇，只让云朵一个人摸",
           "relationship": "你的镇店之宝，血统优秀但脾气大",
-          "gender": "未知"
+          "gender": "未知",
+          "avatar": "avatars/avatar_36.jpg"
         },
         {
           "name": "公公·团子",
           "role": "海豹重点色种公",
           "personality": "贪吃贪睡，唯一爱好是偷吃",
           "relationship": "负责'产量'的种公，但最近有点掉毛",
-          "gender": "未知"
+          "gender": "未知",
+          "avatar": "avatars/avatar_41.jpg"
         },
         {
           "name": "兽医·林医生",
@@ -46,14 +48,16 @@
           "relationship": "猫舍的救命稻草，也是你半个老师",
           "favor": 80,
           "affection": 0,
-          "gender": "未知"
+          "gender": "未知",
+          "avatar": "avatars/avatar_40.jpg"
         },
         {
           "name": "买家·贵妇王太太",
           "role": "意向客户",
           "personality": "挑剔，爱讲价，消息已读不回",
           "relationship": "看中了雪球第一窝的蓝双弟弟，但迟迟不交定金",
-          "gender": "女"
+          "gender": "女",
+          "avatar": "avatars/avatar_25.jpg"
         }
       ],
       "timeline": {
@@ -117,28 +121,32 @@
           "relationship": "巷子里的老主顾，也是你的半个军师",
           "favor": 80,
           "affection": 0,
-          "gender": "男"
+          "gender": "男",
+          "avatar": "avatars/avatar_29.jpg"
         },
         {
           "name": "李婶",
           "role": "楼上住户",
           "personality": "嗓门大，记性差，赊账一赊就是大半年",
           "relationship": "你的'困难客户'，但她闺女对你挺好",
-          "gender": "女"
+          "gender": "女",
+          "avatar": "avatars/avatar_40.jpg"
         },
         {
           "name": "快递员·小刘",
           "role": "片区快递员",
           "personality": "风风火火，消息灵通",
           "relationship": "隔三差五来借充电，带来巷子外的最新消息",
-          "gender": "男"
+          "gender": "男",
+          "avatar": "avatars/avatar_12.jpg"
         },
         {
           "name": "竞争者·大强",
           "role": "连锁便利店加盟商",
           "personality": "笑面虎，扩张心切",
           "relationship": "在你巷口 500 米外开了家 24 小时便利店，天天搞促销",
-          "gender": "男"
+          "gender": "男",
+          "avatar": "avatars/avatar_19.jpg"
         }
       ],
       "timeline": {
@@ -202,28 +210,32 @@
           "relationship": "每天下班都来，是你的'深夜老友'",
           "favor": 75,
           "affection": 0,
-          "gender": "女"
+          "gender": "女",
+          "avatar": "avatars/avatar_35.jpg"
         },
         {
           "name": "邻居·刘老板",
           "role": "隔壁烧烤店老板",
           "personality": "热情到有点烦人，总想拉你搞'美食街'",
           "relationship": "跟你抢客人，也常来蹭汤",
-          "gender": "男"
+          "gender": "男",
+          "avatar": "avatars/avatar_22.jpg"
         },
         {
           "name": "常客·老孟",
           "role": "出租车司机",
           "personality": "见多识广，消息灵通，爱吹牛但靠谱",
           "relationship": "你这儿的消息源，也是深夜的常客",
-          "gender": "男"
+          "gender": "男",
+          "avatar": "avatars/avatar_18.jpg"
         },
         {
           "name": "食安员·小张",
           "role": "街道食安检查员",
           "personality": "公事公办，铁面无私",
           "relationship": "今天下午刚来贴过整改通知",
-          "gender": "未知"
+          "gender": "未知",
+          "avatar": "avatars/avatar_08.jpg"
         }
       ],
       "timeline": {
@@ -285,28 +297,32 @@
           "role": "花卉市场批发商",
           "personality": "爽快，爱推销，消息灵通",
           "relationship": "你的主要供货商，最近想压你的价",
-          "gender": "男"
+          "gender": "男",
+          "avatar": "avatars/avatar_22.jpg"
         },
         {
           "name": "房东·钱姐",
           "role": "花店房东",
           "personality": "精明，爱来店里顺花",
           "relationship": "店面合同明年到期，她暗示过有人想租",
-          "gender": "女"
+          "gender": "女",
+          "avatar": "avatars/avatar_17.jpg"
         },
         {
           "name": "同行·莉莉",
           "role": "隔壁街花店老板",
           "personality": "心直口快，擅长抄你的爆款",
           "relationship": "既是竞争对手，也是圈里唯一能聊天的同行",
-          "gender": "女"
+          "gender": "女",
+          "avatar": "avatars/avatar_43.jpg"
         },
         {
           "name": "常客·程先生",
           "role": "神秘熟客",
           "personality": "每个月买一束不同的花，从不留名字",
           "relationship": "你的忠实客户，花束的故事背后似乎另有隐情",
-          "gender": "男"
+          "gender": "男",
+          "avatar": "avatars/avatar_04.jpg"
         }
       ],
       "timeline": {
@@ -368,28 +384,32 @@
           "role": "书店兼职",
           "personality": "文艺青年，会拉花会荐书，脑洞大",
           "relationship": "你的得力助手，也是读书会的灵魂人物",
-          "gender": "女"
+          "gender": "女",
+          "avatar": "avatars/avatar_16.jpg"
         },
         {
           "name": "老读者·孙教授",
           "role": "退休教授",
           "personality": "每周三都来，只看不买，但每本书都能讲出典故",
           "relationship": "书店的精神支柱，他的'坐一会儿'是你坚持的理由",
-          "gender": "男"
+          "gender": "男",
+          "avatar": "avatars/avatar_36.jpg"
         },
         {
           "name": "房东·周总",
           "role": "商铺房东",
           "personality": "精明商人，只谈租金不谈情怀",
           "relationship": "刚通知你下季度租金涨 15%",
-          "gender": "未知"
+          "gender": "未知",
+          "avatar": "avatars/avatar_35.jpg"
         },
         {
           "name": "网红·琪琪",
           "role": "探店博主",
           "personality": "粉丝百万，拍照打卡一套流",
           "relationship": "来店里拍过一次视频，播放量 80 万，也带来了'书店变网红'的争议",
-          "gender": "女"
+          "gender": "女",
+          "avatar": "avatars/avatar_27.jpg"
         }
       ],
       "timeline": {

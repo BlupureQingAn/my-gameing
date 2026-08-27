@@ -17229,6 +17229,26 @@ function openNpcProfile(npcId) {
                 ]);
                 const hot = (await hotRes.json().catch(() => ({}))).items || [];
                 const favs = (await favRes.json().catch(() => ({}))).items || [];
+                // 官方卡 NPC 不在 community_cards 集合，worker 查不到 → 返回清洗后下划线 role_id 与空来源；
+                // 用本地官方卡数据按 card_id::roleIdOf(n) 补全 name/role/card_title/avatar/gender（批9.12修复3）
+                const localNpcs = new Map();
+                for (const card of ScenarioCardService.loadCards().filter((x) => x.sourceType === "official" || String(x.id || "").startsWith("scenario_preset_"))) {
+                    for (const n of (card.structured && Array.isArray(card.structured.npcs)) ? card.structured.npcs : []) {
+                        if (!n || !n.name) continue;
+                        localNpcs.set(String(card.id) + "::" + roleIdOf(n), { name: String(n.name), role: String(n.role || n.relation || ""), card_title: card.title || "", avatar: n.avatar || "", gender: n.gender || "" });
+                    }
+                }
+                const patchLocalNpc = (list) => (list || []).forEach((c) => {
+                    const ln = localNpcs.get(String(c.card_id) + "::" + String(c.character_id));
+                    if (!ln) return;
+                    c.name = ln.name;
+                    c.role = ln.role;
+                    if (!c.card_title) c.card_title = ln.card_title;
+                    if (!c.avatar) c.avatar = ln.avatar;
+                    if (!c.gender) c.gender = ln.gender;
+                });
+                patchLocalNpc(hot);
+                patchLocalNpc(favs);
                 const favBtn = (c) => `<button class="mini-btn" onclick="Controller.toggleCharacterFav('${escapeForHtml(c.card_id)}','${escapeForHtml(c.character_id)}',this)">${favs.some(f => f.card_id === c.card_id && f.character_id === c.character_id) ? '<img class="ic" src="icons/star.svg" alt=""> 已收藏' : '<img class="ic" src="icons/star.svg" alt=""> 收藏'}</button>`;
                 let html = `<div class="gd-sec-title">🔥 热聊人物卡榜</div>`;
                 // 批9.12:榜内容 = 爱心前10人物 + 官方剧本全部NPC（按爱心数排序，无爱心也展示）；自定义本地卡不再补充
@@ -17259,7 +17279,7 @@ function openNpcProfile(npcId) {
                 }
                 html += `<div class="gd-sec-title"><img class="ic" src="icons/star.svg" alt=""> 我的收藏</div>`;
                 if (favs.length) {
-                    html += favs.map((c) => charCard({ name: c.name, role: c.role, card_title: c.card_title, pens: 0, favs: 1 }, `<button class="mini-btn" onclick="Controller.toggleCharacterFav('${escapeForHtml(c.card_id)}','${escapeForHtml(c.character_id)}',this)">✕ 取消</button>`)).join("");
+                    html += favs.map((c) => charCard({ card_id: c.card_id, character_id: c.character_id, name: c.name, role: c.role, card_title: c.card_title, pens: 0, favs: 1, avatar: c.avatar, gender: c.gender }, `<button class="mini-btn" onclick="Controller.toggleCharacterFav('${escapeForHtml(c.card_id)}','${escapeForHtml(c.character_id)}',this)">✕ 取消</button>`)).join("");
                 } else {
                     html += '<span class="list-sub">还没有收藏人物卡，在作品详情页角色榜点 <img class="ic" src="icons/star.svg" alt=""> 收藏。</span>';
                 }

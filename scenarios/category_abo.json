@@ -30,7 +30,8 @@
           "role": "帝国上将",
           "personality": "面冷心热，控制欲极强，对军规近乎偏执",
           "relationship": "你的直属上司，Alpha，正处在易感期边缘",
-          "gender": "男"
+          "gender": "男",
+          "avatar": "avatars/avatar_30.jpg"
         },
         {
           "name": "程副官",
@@ -39,7 +40,8 @@
           "relationship": "一直怀疑你的背景，处处设防",
           "favor": -20,
           "affection": 0,
-          "gender": "男"
+          "gender": "男",
+          "avatar": "avatars/avatar_23.jpg"
         },
         {
           "name": "艾琳将军",
@@ -48,7 +50,8 @@
           "relationship": "想把你作为联姻筹码送往外域军团",
           "favor": -15,
           "affection": 0,
-          "gender": "男"
+          "gender": "男",
+          "avatar": "avatars/avatar_29.jpg"
         }
       ],
       "timeline": {
@@ -110,7 +113,8 @@
           "role": "校霸/Alpha",
           "personality": "张扬热烈，占有欲强但笨拙真诚",
           "relationship": "隔壁班体育生，单方面宣布要追你",
-          "gender": "男"
+          "gender": "男",
+          "avatar": "avatars/avatar_04.jpg"
         },
         {
           "name": "程亦",
@@ -119,14 +123,16 @@
           "relationship": "暗恋你一年，一直默默照顾你",
           "favor": 70,
           "affection": 65,
-          "gender": "男"
+          "gender": "男",
+          "avatar": "avatars/avatar_06.jpg"
         },
         {
           "name": "周婷",
           "role": "班长/Beta",
           "personality": "八面玲珑，热心肠",
           "relationship": "你的同桌，也是唯一知道你发情期日程的人",
-          "gender": "女"
+          "gender": "女",
+          "avatar": "avatars/avatar_43.jpg"
         }
       ],
       "timeline": {
@@ -190,7 +196,8 @@
           "relationship": "你的恋综 CP 搭子",
           "favor": 65,
           "affection": 70,
-          "gender": "女"
+          "gender": "女",
+          "avatar": "avatars/avatar_16.jpg"
         },
         {
           "name": "顾野",
@@ -199,14 +206,16 @@
           "relationship": "纪云深的对家，中途进场搅局",
           "favor": -30,
           "affection": 0,
-          "gender": "男"
+          "gender": "男",
+          "avatar": "avatars/avatar_03.jpg"
         },
         {
           "name": "丽姐",
           "role": "你的经纪人",
           "personality": "精明算计，利益至上",
           "relationship": "一手安排你签约恋综，也最了解你的把柄",
-          "gender": "女"
+          "gender": "女",
+          "avatar": "avatars/avatar_26.jpg"
         }
       ],
       "timeline": {
@@ -270,7 +279,8 @@
           "relationship": "你的契约丈夫，从不碰你，却总在深夜出现在你房门外",
           "favor": 85,
           "affection": 90,
-          "gender": "男"
+          "gender": "男",
+          "avatar": "avatars/avatar_18.jpg"
         },
         {
           "name": "顾明珠",
@@ -279,14 +289,16 @@
           "relationship": "觊觎家主之位，视你为眼中钉",
           "favor": -40,
           "affection": 0,
-          "gender": "女"
+          "gender": "女",
+          "avatar": "avatars/avatar_33.jpg"
         },
         {
           "name": "老管家",
           "role": "顾宅管家/Beta",
           "personality": "忠仆，话少心明",
           "relationship": "唯一知晓顾家旧事的人",
-          "gender": "男"
+          "gender": "男",
+          "avatar": "avatars/avatar_15.jpg"
         }
       ],
       "timeline": {
@@ -348,21 +360,24 @@
           "role": "玄天盟盟主/Alpha",
           "personality": "桀骜孤高，实则嘴硬心软，重度挑食",
           "relationship": "你的东家，每晚都来厨房蹭宵夜",
-          "gender": "男"
+          "gender": "男",
+          "avatar": "avatars/avatar_24.jpg"
         },
         {
           "name": "白露",
           "role": "盟主侍女/Omega",
           "personality": "温婉多思，善解人意",
           "relationship": "盟主府里唯一能跟你说上话的人",
-          "gender": "女"
+          "gender": "女",
+          "avatar": "avatars/avatar_43.jpg"
         },
         {
           "name": "仇千山",
           "role": "万剑门门主/Alpha",
           "personality": "刚愎自用，野心勃勃",
           "relationship": "觊觎盟主之位，总想用信息素压人一头",
-          "gender": "男"
+          "gender": "男",
+          "avatar": "avatars/avatar_12.jpg"
         }
       ],
       "timeline": {

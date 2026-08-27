@@ -60,6 +60,7 @@ export function validateStructured(data) {
                 const npc = {
                     name: str(n.name, 40),
                     gender: str(n.gender, 8),
+                    avatar: str(n.avatar, 80),
                     role: str(n.role, 60),
                     personality: str(n.personality, 300),
                     relationship: str(n.relationship, 300),

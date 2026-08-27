@@ -32,6 +32,7 @@
         {
           "name": "林晚歌",
           "gender": "女",
+          "avatar": "avatars/avatar_32.jpg",
           "role": "嫡姐",
           "personality": "温柔大方，实则工于心计",
           "relationship": "原著中的'白莲花'，所有恶事的幕后推手",
@@ -41,6 +42,7 @@
         {
           "name": "沈砚",
           "gender": "女",
+          "avatar": "avatars/avatar_33.jpg",
           "role": "未婚夫，定北侯世子",
           "personality": "温润如玉，风流多情",
           "relationship": "原著中第三章与你退婚，第五章迎娶你嫡姐",
@@ -50,6 +52,7 @@
         {
           "name": "周妈妈",
           "gender": "女",
+          "avatar": "avatars/avatar_42.jpg",
           "role": "继母心腹",
           "personality": "势力刻薄，欺软怕硬",
           "relationship": "原著中负责给你下毒的人",
@@ -59,6 +62,7 @@
         {
           "name": "顾衍之",
           "gender": "男",
+          "avatar": "avatars/avatar_36.jpg",
           "role": "侯府门客",
           "personality": "落拓不羁，智谋深沉",
           "relationship": "原著中并未登场的人物——这让你感到不安"
@@ -125,6 +129,7 @@
         {
           "name": "王羲之",
           "gender": "男",
+          "avatar": "avatars/avatar_11.jpg",
           "role": "会稽内史，书圣",
           "personality": "旷达率真，嗜酒爱鹅",
           "relationship": "对你在兰亭写的'一笔书法'惊为天人，视你为忘年之交",
@@ -134,6 +139,7 @@
         {
           "name": "谢安",
           "gender": "男",
+          "avatar": "avatars/avatar_14.jpg",
           "role": "吴兴太守，名士领袖",
           "personality": "沉稳大度，机锋内藏",
           "relationship": "对你来历存疑，却欣赏你的才学，总在关键处提点你"
@@ -141,6 +147,7 @@
         {
           "name": "桓温",
           "gender": "男",
+          "avatar": "avatars/avatar_23.jpg",
           "role": "大司马，枭雄",
           "personality": "雄才大略，野心勃勃",
           "relationship": "北伐在即，他需要一个'知北方地理形势'的人"
@@ -148,6 +155,7 @@
         {
           "name": "郗道茂",
           "gender": "女",
+          "avatar": "avatars/avatar_07.jpg",
           "role": "王献之之妻，才女",
           "personality": "聪慧坚韧，外柔内刚",
           "relationship": "你穿越后见到的第一个'知道结局'的人——她的结局并不好"
@@ -214,6 +222,7 @@
         {
           "name": "秦望舒",
           "gender": "男",
+          "avatar": "avatars/avatar_22.jpg",
           "role": "县尉，未来的造反者",
           "personality": "深沉果决，爱民如子",
           "relationship": "三个月后他将揭竿而起——你是选择阻止他，还是帮他？"
@@ -221,6 +230,7 @@
         {
           "name": "老周头",
           "gender": "男",
+          "avatar": "avatars/avatar_14.jpg",
           "role": "破庙邻居",
           "personality": "憨厚朴实，见多识广",
           "relationship": "第一个接受你'神物'的人，帮你把名声传了出去"
@@ -228,6 +238,7 @@
         {
           "name": "陆知微",
           "gender": "男",
+          "avatar": "avatars/avatar_06.jpg",
           "role": "刺史府长史",
           "personality": "精明干练，疑心深重",
           "relationship": "正在暗中调查'县城神药'的来历——他怀疑有妖人作祟"
@@ -235,6 +246,7 @@
         {
           "name": "系统",
           "gender": "男",
+          "avatar": "avatars/avatar_38.jpg",
           "role": "咸鱼商城系统",
           "personality": "毒舌，奸商，偶尔良心发现",
           "relationship": "你的金手指，也是你最大的秘密"
@@ -301,6 +313,7 @@
         {
           "name": "铁牙",
           "gender": "男",
+          "avatar": "avatars/avatar_13.jpg",
           "role": "黑爪部落首领",
           "personality": "勇猛豪迈，重诺守义",
           "relationship": "对你的烤肉惊为天人，封你为部落'火祭司'"
@@ -308,6 +321,7 @@
         {
           "name": "夜枭",
           "gender": "男",
+          "avatar": "avatars/avatar_22.jpg",
           "role": "部落最年轻的猎手",
           "personality": "沉默寡言，观察力惊人",
           "relationship": "第一个意识到你'不只是会生火'的人，暗中保护你",
@@ -317,6 +331,7 @@
         {
           "name": "银鬃",
           "gender": "男",
+          "avatar": "avatars/avatar_01.jpg",
           "role": "银鬃部落首领",
           "personality": "狡诈冷酷，唯利是图",
           "relationship": "战争的发起者，却在私下派使者试探你的底细",
@@ -326,6 +341,7 @@
         {
           "name": "阿岚",
           "gender": "女",
+          "avatar": "avatars/avatar_08.jpg",
           "role": "部落巫医之女",
           "personality": "温柔好奇，天真烂漫",
           "relationship": "缠着要学你'把肉变熟'的手艺，成了你的第一个学生"
@@ -392,6 +408,7 @@
         {
           "name": "曙光",
           "gender": "未知",
+          "avatar": "avatars/avatar_42.jpg",
           "role": "飞船主AI",
           "personality": "冷静理性，偶尔毒舌",
           "relationship": "你的'同事'——它负责算力，你负责灵感"
@@ -399,6 +416,7 @@
         {
           "name": "薇拉",
           "gender": "女",
+          "avatar": "avatars/avatar_44.jpg",
           "role": "仿生人船员",
           "personality": "温婉干练，隐藏着出厂设置之外的秘密",
           "relationship": "第一个信任你的人，也是唯一知道你身份的人",
@@ -408,6 +426,7 @@
         {
           "name": "阿德里安",
           "gender": "男",
+          "avatar": "avatars/avatar_22.jpg",
           "role": "船长",
           "personality": "果决暴躁，疑心极重",
           "relationship": "需要你的能力，却时刻警惕你这个'来历不明的苏醒者'"
@@ -415,6 +434,7 @@
         {
           "name": "海盗头目·鬼手",
           "gender": "男",
+          "avatar": "avatars/avatar_36.jpg",
           "role": "星盗首领",
           "personality": "疯狂狡诈，技术老练",
           "relationship": "他的黑客手段让你想起 21 世纪的老同行——或许他也来自你的时代"
