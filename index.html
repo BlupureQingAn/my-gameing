@@ -10878,6 +10878,8 @@ function rebuildChoicesBlock(body, labels = []) {
                 fn().catch(() => {}).then(resolve, resolve).finally(() => { _coverInflight--; pumpCover(); });
             }
         }
+        // 本会话已请求过(id|hash)的封面不再重试:官方卡封面全部预生成在 KV,未命中=后端未预生成,前端只允许一次请求,失败静默占位
+        const sessionCoverReq = new Set();
         async function ensure(card) {
             const id = String(card?.id || "");
             if (!id) return "";
@@ -10885,11 +10887,13 @@ function rebuildChoicesBlock(body, labels = []) {
             const ph = hashStr(prompt);
             const hit = cached(id, ph);
             if (hit) return hit;
-            if (!AuthService.getToken()) return "";
+            const reqKey = id + "|" + ph;
+            if (sessionCoverReq.has(reqKey)) return "";
+            sessionCoverReq.add(reqKey);
             try {
                 const res = await enqueueCover(() => fetch(`${AppConfig.proxy.baseUrl}/api/cover/generate`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + AuthService.getToken() },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ prompt })
                 }));
                 const d = await res.json().catch(() => ({}));
@@ -16902,9 +16906,23 @@ function openNpcProfile(npcId) {
             }
         }
 
+        // auth 请求统一超时(网络抖动/CF 断连时 fetch 会无限挂起,"登录中"永久卡住;20s 强制失败并给出可操作提示)
+        async function authFetch(url, opts = {}) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort("auth request timeout"), 20000);
+            try {
+                return await fetch(url, { ...opts, signal: controller.signal });
+            } catch (e) {
+                if (e?.name === "AbortError") throw new Error("请求超时（网络不稳定），请重试；若提示已注册可直接登录");
+                throw e;
+            } finally {
+                clearTimeout(timer);
+            }
+        }
+
         async function register(email, password, passwordConfirm, username, code) {
             // 注册走 worker(验证码服务端校验; PB users 已收紧为仅管理员建号)
-            const res = await fetch(`${AppConfig.proxy.baseUrl}/api/auth/register`, {
+            const res = await authFetch(`${AppConfig.proxy.baseUrl}/api/auth/register`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password, passwordConfirm, ...(username ? { username } : {}), code })
@@ -16932,7 +16950,7 @@ function openNpcProfile(npcId) {
             const btn = document.getElementById("auth-send-code-btn");
             if (btn) { btn.disabled = true; btn.textContent = "发送中..."; }
             try {
-                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/auth/send-code`, {
+                const res = await authFetch(`${AppConfig.proxy.baseUrl}/api/auth/send-code`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ email, purpose: _isResetMode ? "reset" : "register" })
@@ -16955,7 +16973,7 @@ function openNpcProfile(npcId) {
         }
 
         async function resetPassword(email, password, code) {
-            const res = await fetch(`${AppConfig.proxy.baseUrl}/api/auth/reset-password`, {
+            const res = await authFetch(`${AppConfig.proxy.baseUrl}/api/auth/reset-password`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password, code })
@@ -16974,7 +16992,7 @@ function openNpcProfile(npcId) {
         }
 
         async function login(identity, password) {
-            const res = await fetch(`${PB_URL}/api/collections/${COLLECTION}/auth-with-password`, {
+            const res = await authFetch(`${PB_URL}/api/collections/${COLLECTION}/auth-with-password`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ identity, password })
