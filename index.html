@@ -11161,6 +11161,8 @@ function rebuildChoicesBlock(body, labels = []) {
             } catch (e) { /* 忽略 */ }
         }
         async function ensure(card) {
+            // 官方卡封面静态化:卡片数据自带 cover 相对路径(scenarios/covers/*.jpg),直接浏览器静态加载,不走 KV/生成 API
+            if (card?.cover) return String(card.cover);
             const id = String(card?.id || "");
             if (!id) return "";
             const prompt = promptOf(card);
