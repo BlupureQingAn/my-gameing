@@ -508,66 +508,7 @@
             transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
             box-shadow: 0 0 8px rgba(0,0,0,0.1);
         }
-        /* ---- 新版顶部状态面板（pill 卡片样式） ---- */
-        #game-stats-card {
-            padding: 10px 12px !important;
-            border-radius: 12px !important;
-            background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(255,244,232,.88)) !important;
-            border-left: 4px solid #c0392b !important;
-            margin-bottom: 8px;
-            display: block !important;
-            box-shadow: 0 4px 16px rgba(192,57,43,0.08);
-        }
-        body[data-theme="dark"] #game-stats-card {
-            background: linear-gradient(135deg, rgba(31,25,25,0.97), rgba(46,28,22,0.92)) !important;
-            border-left-color: #c0392b !important;
-        }
-        #game-stats-card .wy-stat-title {
-            font-size: 0.82rem;
-            font-weight: 700;
-            color: #c0392b;
-            margin-bottom: 8px;
-            letter-spacing: 0.02em;
-        }
-        #game-stats-card .wy-stat-pills {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-        #game-stats-card .wy-stat-pill-wrap {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-            min-width: 72px;
-        }
-        #game-stats-card .wy-stat-pill {
-            padding: 4px 10px;
-            border-radius: 999px;
-            background: linear-gradient(135deg, color-mix(in srgb,#c0392b 22%,#ffffff 78%), #ffffff);
-            border: 1px solid color-mix(in srgb,#c0392b 32%,#ffffff 68%);
-            font-size: 12px;
-            font-weight: 700;
-            color: #5a1a10;
-            white-space: nowrap;
-        }
-        body[data-theme="dark"] #game-stats-card .wy-stat-pill {
-            background: linear-gradient(135deg, color-mix(in srgb,#c0392b 30%,#1a0a08 70%), #1a0a08);
-            border-color: color-mix(in srgb,#c0392b 45%,#1a0a08 55%);
-            color: #f5c6bb;
-        }
-        #game-stats-card .wy-stat-bar-track {
-            height: 4px;
-            border-radius: 2px;
-            background: rgba(192,57,43,0.12);
-            overflow: hidden;
-            margin: 0 4px;
-        }
-        #game-stats-card .wy-stat-bar-fill {
-            height: 100%;
-            border-radius: 2px;
-            transition: width .5s cubic-bezier(0.34,1.56,0.64,1);
-        }
-
+        /* ---- 游玩页融合：状态栏 / 剧情事件 tab / 世界图谱（2026-08-25） ---- */
         /* ---- 游玩页融合：状态栏 / 剧情事件 tab / 世界图谱（2026-08-25） ---- */
         #play-status-bar {
             padding: 10px 12px;
@@ -739,6 +680,7 @@
             overflow: hidden;
         }
         .psb-stat-bar .stat-fill {
+            display: block;
             height: 100%;
             border-radius: 999px;
             transition: width .4s ease;
@@ -887,24 +829,24 @@
             font: inherit;
         }
         .fullmap-pin .pin-icon {
-            width: 26px; height: 26px;
+            width: 18px; height: 18px;
             border-radius: 50%;
             background: linear-gradient(135deg, #7b5cd6, #9d7bf0);
             color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.9rem;
+            font-size: 0.6rem;
             font-weight: 800;
-            border: 2px solid #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+            border: 1.5px solid #fff;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.35);
         }
         .fullmap-pin .pin-name {
-            padding: 2px 8px;
+            padding: 1px 6px;
             border-radius: 999px;
             background: rgba(0,0,0,0.6);
             color: #fff;
-            font-size: 0.72rem;
+            font-size: 0.6rem;
             font-weight: 700;
             white-space: nowrap;
         }
@@ -1402,6 +1344,20 @@
             position: relative;
             z-index: 1;
         }
+
+        /* 顶部角色信息/状态条/推进按钮固定，剧情与事件各自在剩余空间滚动 */
+        #view-main #play-status-bar,
+        #view-main #play-tabs,
+        #view-main #play-advance-area {
+            flex: none;
+        }
+        #view-main #play-chat-area,
+        #view-main #play-event-area {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+        }
+        #view-main #play-chat-area .ai-beauty-card { margin-bottom: 12px; }
 
         .settings-toggle {
             display: flex;
@@ -3501,6 +3457,11 @@
         .gd-hot-btn.on { border-color: #e0a63c; background: #fff3d6; color: #8a4b00; }
         .gd-hot-btn .gd-hot-num { display: block; font-size: 1.02rem; font-weight: 800; color: var(--text); }
         .gd-sec-title { font-size: 0.88rem; font-weight: 700; color: var(--accent-dark); margin: 12px 0 6px; }
+        .gd-setting-block { border: 1px solid var(--line); border-radius: 12px; background: var(--card-soft); padding: 8px 10px; font-size: 0.8rem; line-height: 1.6; }
+        .gd-setting-line { display: flex; gap: 6px; }
+        .gd-setting-line .list-sub { flex: none; min-width: 44px; }
+        .gd-setting-line b { font-weight: 700; color: var(--text); }
+        .gd-setting-npc { display: flex; gap: 6px; }
         .ic { width: 1em; height: 1em; vertical-align: -0.125em; display: inline-block; flex: none; }
         .gd-role-card { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--card-soft); margin-bottom: 6px; }
         .gd-role-avatar { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; background: var(--card); border: 1px solid var(--line); flex-shrink: 0; }
@@ -4015,6 +3976,25 @@
         .wx-close-btn { right: 6px; }
         .wx-back-btn { left: 6px; }
         .wx-profile-btn { right: 6px; font-size: 0.78rem; }
+        .wx-avatar-btn {
+            position: absolute;
+            right: 58px;
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            border: 0;
+            border-radius: 50%;
+            overflow: hidden;
+            background: color-mix(in srgb, var(--wechat-bubble-line) 45%, transparent);
+            color: var(--wechat-text);
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
         .wx-body { flex: 1; min-height: 0; overflow-y: auto; }
         .wx-session-list, .wx-contact-list { padding: 8px 10px; }
         .wx-list-item {
@@ -4549,8 +4529,9 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <div id="display-user-email-row" style="font-size: 0.9rem;">邮箱：<span id="display-user-email" style="font-weight: 700;">-</span></div>
                     <div style="font-size: 0.9rem; margin-top: 6px;">云币余额：<span id="display-remaining-count" style="font-weight: 800; color: var(--accent-dark);">--</span>（AI 对话按 token 计费：输入 4 币/千 token，输出 12 币/千 token）</div>
                     <div style="font-size: 0.9rem; margin-top: 6px;">会员：<span id="display-membership-badge" style="font-weight: 700; color: var(--accent-dark);">未开通</span></div>
-                    <div style="margin-top: 10px;">
+                    <div style="margin-top: 10px; display:flex; gap:8px; flex-wrap:wrap;">
                         <button id="open-membership-btn" class="mini-btn primary" onclick="MembershipService.openPanel()">充值 / 云币</button>
+                        <button class="mini-btn ghost" onclick="clearLocalCache()" title="只清除本地存档进度，不动登录/会员/云币">🧹 清除本地缓存</button>
                     </div>
                 </div>
                 <label class="settings-toggle">
@@ -4751,7 +4732,6 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
         </section>
 
         <section id="view-inventory" class="view-section">
-            <section class="card" id="game-stats-card" style="display:none;"></section>
             <section class="card">
                 <div class="list-title">🎒 背包物品</div>
                 <div id="inventory-list" style="margin-top:8px;"></div>
@@ -4797,7 +4777,8 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
 
         <section id="view-saves" class="view-section">
             <section class="card">
-                <div class="list-title">💾 存档槽位（5个）</div>
+                <div class="list-title">💾 存档（本地 5 槽 + 云 3 槽）</div>
+                <div class="list-sub">本地存档：保存在当前浏览器（换账号仍自动加载）。云存档：登录后每剧本解锁 3 槽（200 币/槽，一次性），跨设备同步进度、头像与地图。</div>
                 <div class="slot-grid" id="save-slots" style="margin-top:8px;"></div>
             </section>
         </section>
@@ -4855,6 +4836,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                         <div class="wx-navbar">
                             <button class="wx-back-btn" type="button" onclick="backToWechatList()" title="返回">←</button>
                             <span class="wx-navbar-title" id="wx-chat-title">聊天</span>
+                            <button class="wx-avatar-btn" type="button" id="wx-chat-avatar-btn" title="更换头像">👤</button>
                             <button class="wx-profile-btn" type="button" id="wx-chat-profile-btn">状态</button>
                         </div>
                         <div class="social-chat-box" id="wx-chat-box"></div>
@@ -4862,6 +4844,20 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                         <div class="npc-chat-composer">
                             <textarea id="wx-chat-input" placeholder="发消息"></textarea>
                             <button class="send-btn" type="button" onclick="sendNpcMessage()">发送</button>
+                        </div>
+                    </div>
+                    <!-- 手机内论坛 app（当前剧本评论区） -->
+                    <div class="wx-screen" id="forum-screen" style="display:none;">
+                        <div class="wx-navbar">
+                            <span class="wx-navbar-title" id="forum-screen-title">论坛</span>
+                            <button class="wx-close-btn" type="button" onclick="closeForumApp()" title="关闭论坛">✕</button>
+                        </div>
+                        <div class="wx-body">
+                            <div id="forum-reviews-box" style="padding:10px;"><span class="list-sub">加载中...</span></div>
+                        </div>
+                        <div class="npc-chat-composer" style="flex:none;">
+                            <textarea id="forum-rev-input" placeholder="写下你的评论…（200字以内）"></textarea>
+                            <button class="send-btn" type="button" onclick="postForumReview()">发送</button>
                         </div>
                     </div>
                 </div>
@@ -5144,6 +5140,19 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <button class="mini-btn ghost" onclick="closeAvatarPickerModal()">取消</button>
                 <label class="mini-btn ghost" style="position:relative;overflow:hidden;">上传<input type="file" accept="image/*" id="avatar-picker-upload" style="position:absolute;inset:0;opacity:0;cursor:pointer;"></label>
                 <button class="mini-btn primary" id="avatar-picker-ok-btn">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 地图库选择弹窗：网格 + 上传（复刻头像库逻辑） -->
+    <div class="modal-overlay" id="map-picker-modal" style="display:none;">
+        <div class="modal-card" style="width:min(92vw,420px);">
+            <div class="modal-title">选择地图背景</div>
+            <div class="modal-desc" id="map-picker-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-height:46vh;overflow-y:auto;"></div>
+            <div class="gender-actions" style="margin-top:12px;">
+                <button class="mini-btn ghost" onclick="closeMapPickerModal()">取消</button>
+                <label class="mini-btn ghost" style="position:relative;overflow:hidden;">上传<input type="file" accept="image/*" id="map-picker-upload" style="position:absolute;inset:0;opacity:0;cursor:pointer;"></label>
+                <button class="mini-btn primary" id="map-picker-ok-btn">确定</button>
             </div>
         </div>
     </div>
@@ -5480,7 +5489,6 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             const enableGamePanels = inPlay && isPlayView && viewId !== "view-npc-chat";
             const footer = document.querySelector(".chat-footer");
             if (footer) footer.style.display = enableGamePanels ? "flex" : "none";
-            document.getElementById("game-stats-card").style.display = "none"; // 需求:背包页不再显示主角状态面板(剧情页状态栏已有)
             document.querySelector(".quick-actions").style.display = enableGamePanels ? "flex" : "none";
             document.querySelector(".chat-footer .composer").style.display = enableGamePanels ? "flex" : "none";
             PlayDockService.apply();
@@ -5583,8 +5591,13 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
         return hit ? hit.i : "📍";
     }
     function generateNearbyLocations(base) {
-        const baseName = String(base || "云吞城");
+        const baseName = String(base || "").trim();
+        const hasBase = Boolean(baseName) && baseName !== "待生成";
         const pool = MAP_PLACE_POOL.slice().sort(() => Math.random() - 0.5);
+        if (!hasBase) {
+            // 主城名未生成时不再拼"待生成·xxx"前缀，直接给子地点
+            return pool.slice(0, 4).map((p) => ({ name: p.n, icon: p.i }));
+        }
         const others = pool.slice(0, 3).map((p) => ({ name: `${baseName}·${p.n}`, icon: p.i }));
         return [{ name: baseName, icon: "📍" }, ...others];
     }
@@ -6748,9 +6761,6 @@ function rebuildChoicesBlock(body, labels = []) {
                 const state = StateService.get();
                 AiPanelSyncService.applySnapshot(state, snapshot);
             }
-            // 清除 fancy 标记，让 renderStats 按新逻辑重新渲染顶部状态栏
-            const topBox = document.getElementById("game-stats-card");
-            if (topBox) delete topBox.dataset.isFancy;
         }
         // AI 直接输出 HTML 的卡片注入主题 class(JSON 填空路径 fillCardTemplate 已自带,此处补主路径)
         function applyCardTheme(container) {
@@ -8259,47 +8269,6 @@ function rebuildChoicesBlock(body, labels = []) {
         }
         function renderTop(state) {
             document.getElementById("site-title").innerHTML = '<img src="icons/android-chrome-192x192.png" alt="" style="width:1.25em;height:1.25em;vertical-align:-0.22em;margin-right:6px;border-radius:6px;">云吞吞文游';
-            renderStats(state);
-        }
-        function renderStats(state) {
-            const box = document.getElementById("game-stats-card");
-            if (!box) return;
-            const stats = Array.isArray(state.stats) ? state.stats : [];
-            if (stats.length === 0) {
-                box.innerHTML = `<div class="wy-stat-title">✨ 主角状态</div><div class="list-sub" style="opacity:0.6;padding:4px 0;">⏳ 等待剧情初始化属性...</div>`;
-                return;
-            }
-            const pillsHtml = stats.map((s) => {
-                const rawValue = String(s.value ?? "0");
-                let hasBar = false;
-                let pct = 0;
-                let barColor = "#c0392b";
-                if (rawValue.includes("/")) {
-                    const parts = rawValue.split("/");
-                    const current = parseFloat(parts[0]);
-                    const max = parseFloat(parts[1]);
-                    if (isFinite(current) && isFinite(max) && max > 0) {
-                        pct = Math.min(100, Math.max(0, (current / max) * 100));
-                        hasBar = true;
-                        barColor = pct > 60 ? "#4daa70" : pct > 30 ? "#e08c2b" : "#e05555";
-                    }
-                }
-                const label = MarkdownService.escapeHtml(s.label || "属性");
-                const icon = s.icon || "✨";
-                const val = MarkdownService.escapeHtml(rawValue);
-                const bar = hasBar
-                    ? `<div class="wy-stat-bar-track"><div class="wy-stat-bar-fill" style="width:${pct}%;background:${barColor};"></div></div>`
-                    : "";
-                return `<div class="wy-stat-pill-wrap"><div class="wy-stat-pill">${icon}${label} ${val}</div>${bar}</div>`;
-            }).join("");
-            const tags = (Array.isArray(state.panelStatusTags) ? state.panelStatusTags : [])
-                .filter((t) => t && (t.label || t.value));
-            const tagHtml = tags.length
-                ? `<div class="status-tag-row" style="margin-top:8px;">${tags.map((tag) =>
-                    `<div class="status-tag"><strong>${MarkdownService.escapeHtml(tag.label)}</strong><em>${MarkdownService.escapeHtml(tag.value)}</em></div>`
-                ).join("")}</div>`
-                : "";
-            box.innerHTML = `<div class="wy-stat-title">✨ 主角状态</div><div class="wy-stat-pills">${pillsHtml}</div>${tagHtml}`;
         }
         function avatarColor(name) {
             let h = 0;
@@ -8382,21 +8351,129 @@ function rebuildChoicesBlock(body, labels = []) {
         function mapSrcOf(bg, bgUrl) {
             return bg === "custom" ? (bgUrl || "") : (bg ? `maps/${bg}.webp` : "");
         }
+        // 题材→默认地图背景映射（官方卡无 map 时的兜底；历史并入宫廷）
+        const MAP_THEME_MAP = {
+            校园: "school", 奇幻: "magic", 历史: "palace", 宫斗: "palace",
+            都市: "city", 职场: "city", 娱乐圈: "city", 悬疑: "city", 无限流: "city", 科幻: "city",
+            末世: "doomsday"
+        };
+        function themeMapBgOf(category) {
+            return MAP_THEME_MAP[String(category || "")] || "parchment";
+        }
+        // 确定性伪随机：同一剧本同一地点位置稳定（cardId 派生 seed），未设 x/y 的地点均匀散开
+        function _hashSeed(str) {
+            let h = 0;
+            for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+            return h;
+        }
+        function _mulberry32(seed) {
+            let a = seed >>> 0;
+            return () => {
+                a = (a + 0x6D2B79F5) >>> 0;
+                let t = a;
+                t = Math.imul(t ^ (t >>> 15), t | 1);
+                t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+                return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+            };
+        }
+        function placePosOf(place, idx, seed) {
+            const x = Number(place && place.x), y = Number(place && place.y);
+            if (Number.isFinite(x) && Number.isFinite(y)) return { x, y };
+            const rnd = _mulberry32((seed ^ (idx * 2654435761)) >>> 0);
+            return { x: 8 + rnd() * 84, y: 8 + rnd() * 84 };
+        }
         function getActiveMap() {
-            // 玩家 per-card 覆盖 > 剧本 structured.map；无地图返回 null
+            // 玩家 per-card 覆盖 > 剧本 structured.map；官方卡/无地图卡按题材映射默认背景 + 用当前地点生成图钉
             const card = (typeof ScenarioCardService !== "undefined" && typeof ScenarioCardService.getSelectedCard === "function")
                 ? ScenarioCardService.getSelectedCard() : null;
             const base = card && card.structured && typeof card.structured.map === "object" ? card.structured.map : null;
-            if (!base || (!base.bg && !(base.places || []).length)) return null;
             let override = null;
             try {
                 const all = JSON.parse(localStorage.getItem("bitlife_map_override_v1") || "null");
-                override = (all && all[card.id]) || null;
+                override = (all && all[card && card.id]) || null;
             } catch (e) { /* 忽略损坏数据 */ }
-            const bg = (override && override.bg) || base.bg || "";
-            const bgUrl = (override && override.bgUrl) || base.bgUrl || "";
-            return { ...base, bg, bgUrl, src: mapSrcOf(bg, bgUrl) };
+            const bg = (override && override.bg) || (base && base.bg) || "";
+            const bgUrl = (override && override.bgUrl) || (base && base.bgUrl) || "";
+            let places = Array.isArray(base && base.places) ? base.places : [];
+            let effectiveBg = bg, effectiveUrl = bgUrl;
+            if (!effectiveBg && !effectiveUrl && !places.length) {
+                effectiveBg = themeMapBgOf(card && card.category);
+                const state = (typeof StateService !== "undefined" && typeof StateService.get === "function") ? StateService.get() : null;
+                places = (state ? normalizeLocations(state) : []).map((l) => ({ name: l.name, icon: l.icon, x: null, y: null }));
+            }
+            const seed = _hashSeed(String(card && card.id) || "map");
+            places = places.map((p, i) => ({ ...p, ...placePosOf(p, i, seed) }));
+            return { ...(base || {}), bg: effectiveBg, bgUrl: effectiveUrl, places, src: mapSrcOf(effectiveBg, effectiveUrl) };
         }
+        // ---- 地图库选择器（复刻头像库：默认 6 张 + 自定义上传 dataURL） ----
+        const MAP_LIBRARY = [
+            { name: "樱花校园", url: "maps/school.webp" },
+            { name: "古代皇宫", url: "maps/palace.webp" },
+            { name: "现代城市", url: "maps/city.webp" },
+            { name: "末日城市", url: "maps/doomsday.webp" },
+            { name: "魔法学院", url: "maps/magic.webp" },
+            { name: "通用羊皮", url: "maps/parchment.webp" }
+        ];
+        let _mapPickerValue = "";
+        function openMapPickerModal(initialValue, onConfirm) {
+            const modal = document.getElementById("map-picker-modal");
+            const grid = document.getElementById("map-picker-grid");
+            if (!modal || !grid) return;
+            _mapPickerValue = String(initialValue || "");
+            const isCustom = /^(data:|https?:)/.test(_mapPickerValue);
+            grid.innerHTML = MAP_LIBRARY.map((m) => {
+                const key = m.url.replace("maps/", "").replace(".webp", "");
+                const sel = !isCustom && _mapPickerValue === key;
+                return `<div data-map-key="${key}" style="position:relative;cursor:pointer;border:2px solid ${sel ? "var(--accent)" : "transparent"};border-radius:10px;overflow:hidden;padding-top:66%;background:var(--input-bg);" onclick="_mapGridPick(this)"><img src="${m.url}" alt="${MarkdownService.escapeHtml(m.name)}" loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:block;"><span style="position:absolute;left:4px;bottom:3px;font-size:0.62rem;font-weight:800;color:#fff;background:rgba(0,0,0,0.55);padding:1px 6px;border-radius:999px;">${MarkdownService.escapeHtml(m.name)}</span></div>`;
+            }).join("");
+            const okBtn = document.getElementById("map-picker-ok-btn");
+            okBtn.onclick = async () => {
+                closeMapPickerModal();
+                if (onConfirm && _mapPickerValue) await onConfirm(_mapPickerValue);
+            };
+            const upEl = document.getElementById("map-picker-upload");
+            upEl.value = "";
+            upEl.onchange = () => {
+                const f = upEl.files && upEl.files[0];
+                if (!f) return;
+                const reader = new FileReader();
+                reader.onload = () => {
+                    closeMapPickerModal();
+                    if (onConfirm) onConfirm(String(reader.result));
+                };
+                reader.readAsDataURL(f);
+            };
+            modal.style.display = "flex";
+        }
+        window.openMapPickerModal = openMapPickerModal;
+        function _mapGridPick(el) {
+            _mapPickerValue = String(el.dataset.mapKey || "");
+            const grid = document.getElementById("map-picker-grid");
+            [...grid.children].forEach((c) => c.style.borderColor = (c === el) ? "var(--accent)" : "transparent");
+        }
+        window._mapGridPick = _mapGridPick;
+        function closeMapPickerModal() {
+            const modal = document.getElementById("map-picker-modal");
+            if (modal) modal.style.display = "none";
+        }
+        window.closeMapPickerModal = closeMapPickerModal;
+        // 游玩入口：完整地图「换地图」→ 网格弹窗，选/传后写 per-card override
+        function openMapPickerForPlay() {
+            const card = (typeof ScenarioCardService !== "undefined" && typeof ScenarioCardService.getSelectedCard === "function") ? ScenarioCardService.getSelectedCard() : null;
+            if (!card) { NoticeModalService.showInfo({ title: "无法更换", descHtml: "请先选择要游玩的剧本。" }); return; }
+            const cur = getActiveMap();
+            const curVal = cur && cur.bg === "custom" ? (cur.bgUrl || "") : (cur && cur.bg ? cur.bg : "");
+            openMapPickerModal(curVal, (val) => {
+                let all = {};
+                try { all = JSON.parse(localStorage.getItem("bitlife_map_override_v1") || "null") || {}; } catch (e) { all = {}; }
+                const isCustom = /^(data:|https?:)/.test(String(val));
+                all[card.id] = isCustom ? { bg: "custom", bgUrl: val } : { bg: val, bgUrl: "" };
+                localStorage.setItem("bitlife_map_override_v1", JSON.stringify(all));
+                try { renderPlayEventList(); } catch (e) {}
+                NoticeModalService.showInfo({ title: "已更换地图", descHtml: "地图背景已更新，本次游玩即时生效。" });
+            });
+        }
+        window.openMapPickerForPlay = openMapPickerForPlay;
         function renderPlayMapBar(state) {
             const narr = (typeof SettingsService !== "undefined" && typeof SettingsService.getNarrative === "function") ? SettingsService.getNarrative() : null;
             if (narr && narr.showMap === false) return "";
@@ -8549,10 +8626,6 @@ function rebuildChoicesBlock(body, labels = []) {
                     <button class="mini-btn primary" onclick="restartLife()">🔁 开启新人生</button>
                 </div>`;
             modal.classList.add("show");
-        }
-        function clearFancyStatus() {
-            const box = document.getElementById("game-stats-card");
-            if (box) delete box.dataset.isFancy;
         }
         function scrollToBottom() {
             const content = document.getElementById("main-content");
@@ -8936,6 +9009,17 @@ function rebuildChoicesBlock(body, labels = []) {
             const chatKey = String(npc.id || npc.name || npcKey);
             if (title) title.innerText = npc.name || "NPC";
             if (profileBtn) profileBtn.onclick = () => Controller.openNpcProfile(npc.id || npc.name);
+            // 聊天页头像按钮：与世界页同源（npc.avatar），点击换头像（头像库/自定义上传）
+            const avatarBtn = document.getElementById("wx-chat-avatar-btn");
+            if (avatarBtn) {
+                const av = npc.avatar || "";
+                if (isAvatarImg(av)) {
+                    avatarBtn.innerHTML = `<img src="${String(av).replace(/"/g, "%22")}" alt="" onerror="this.parentElement.textContent='👤'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`;
+                } else {
+                    avatarBtn.textContent = String(npc.name || "?").slice(0, 1) || "👤";
+                }
+                avatarBtn.onclick = () => openAvatarPickerForNpc(npc.id || npc.name);
+            }
             if (!state.npcChats || typeof state.npcChats !== "object") state.npcChats = {};
             if (!Array.isArray(state.npcChats[chatKey])) state.npcChats[chatKey] = [];
             box.innerHTML = state.npcChats[chatKey].map((m) => chatMessageHtml(npc, m)).join("");
@@ -8964,6 +9048,56 @@ function rebuildChoicesBlock(body, labels = []) {
                 row.querySelector('[data-op="load"]').onclick = () => Controller.loadFromSlot(slot.index);
                 row.querySelector('[data-op="del"]').onclick = () => Controller.deleteSlot(slot.index);
                 box.appendChild(row);
+            });
+            renderCloudSlots(box);
+        }
+        // 云存档区：每剧本 3 槽,未解锁显示 🔒 + 解锁按钮（200 币/槽,一次性）
+        function renderCloudSlots(box) {
+            const sec = document.createElement("div");
+            sec.style.marginTop = "14px";
+            box.appendChild(sec);
+            if (!AuthService.getToken()) {
+                sec.innerHTML = '<div class="list-sub">☁️ 云存档：登录后每剧本可解锁 3 个槽位（200 币/槽，一次性），跨设备同步进度。本地存档为浏览器共享（换账号仍自动加载）。</div>';
+                return;
+            }
+            sec.innerHTML = '<div class="list-sub">☁️ 云存档加载中...</div>';
+            const cardId = ScenarioCardService.getSelectedId();
+            SaveSlotService.fetchCloudSaves(cardId).then((cloud) => {
+                if (!cloud) {
+                    sec.innerHTML = '<div class="list-sub">☁️ 云存档加载失败，请稍后重试。</div>';
+                    return;
+                }
+                const coins = Number(cloud.coins || 0);
+                const rows = SaveSlotService.CLOUD_SLOTS.map((idx) => {
+                    const unlocked = !!cloud.unlocks[idx];
+                    const saved = cloud.slots[idx];
+                    let meta = null;
+                    if (saved) {
+                        try { const parsed = JSON.parse(saved.data); meta = parsed.meta; } catch (e) {}
+                    }
+                    const title = unlocked
+                        ? `云槽位 ${idx} ${meta ? "✅" : "（空）"}`
+                        : `云槽位 ${idx} 🔒（未解锁 · ${SaveSlotService.CLOUD_SLOT_PRICE} 币）`;
+                    const desc = meta ? `${meta.name}｜${meta.time}｜${meta.savedAt}` : (unlocked ? "暂无存档" : "解锁后可跨设备存档");
+                    const btns = unlocked
+                        ? `<button class="tiny-btn" data-op="c-save">${meta ? "覆盖" : "保存"}</button>` +
+                          (meta ? `<button class="tiny-btn" data-op="c-load">读取</button><button class="tiny-btn" data-op="c-del">删除</button>` : "")
+                        : `<button class="tiny-btn" data-op="c-unlock">解锁</button>`;
+                    return `<div class="list-row">
+                        <div>
+                            <div class="list-title">${title}</div>
+                            <div class="list-sub">${desc}</div>
+                        </div>
+                        <div style="display:flex; gap:6px;">${btns}</div>
+                    </div>`;
+                }).join("");
+                sec.innerHTML = `<div class="list-sub" style="margin-bottom:4px;">☁️ 云存档（跨设备 · 余额 ${coins} 币）</div>${rows}`;
+                sec.querySelectorAll('[data-op="c-unlock"]').forEach((b, i) => { b.onclick = () => Controller.unlockCloudSlot(SaveSlotService.CLOUD_SLOTS[i]); });
+                sec.querySelectorAll('[data-op="c-save"]').forEach((b, i) => { b.onclick = () => Controller.saveToCloudSlot(SaveSlotService.CLOUD_SLOTS[i]); });
+                sec.querySelectorAll('[data-op="c-load"]').forEach((b, i) => { b.onclick = () => Controller.loadFromCloudSlot(SaveSlotService.CLOUD_SLOTS[i]); });
+                sec.querySelectorAll('[data-op="c-del"]').forEach((b, i) => { b.onclick = () => Controller.deleteCloudSlot(SaveSlotService.CLOUD_SLOTS[i]); });
+            }).catch(() => {
+                sec.innerHTML = '<div class="list-sub">☁️ 云存档加载失败，请稍后重试。</div>';
             });
         }
         function renderScenarioCards() {
@@ -9192,7 +9326,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const s = _bgmState;
             if (s.audio) s.audio.volume = Math.max(0, Math.min(1, Number(v) || 0));
         }
-        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderWechatSessions, renderWechatContacts, renderWechatChat, renderSaveSlots, renderScenarioCards, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, clearFancyStatus, renderPlayStatusBar, renderPlayEventList, renderWorld, renderDiary, renderEndingModal, renderPhone, buildEventRounds, avatarColor, heartLadder, stripHtml, normalizeLocations, bgmToggle, bgmNext, bgmPrev, bgmSetEnabled, bgmSetVolume, mapSrcOf, getActiveMap };
+        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderWechatSessions, renderWechatContacts, renderWechatChat, renderSaveSlots, renderScenarioCards, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, renderPlayStatusBar, renderPlayEventList, renderWorld, renderDiary, renderEndingModal, renderPhone, buildEventRounds, avatarColor, heartLadder, stripHtml, normalizeLocations, bgmToggle, bgmNext, bgmPrev, bgmSetEnabled, bgmSetVolume, mapSrcOf, getActiveMap };
     })();
 
     // ---- 手机专属设置页：BGM 开关/音量、消息通知、主题色、字体大小 ----
@@ -10740,6 +10874,9 @@ function rebuildChoicesBlock(body, labels = []) {
 
     const SaveSlotService = (() => {
         const SLOT_COUNT = 5;
+        const CLOUD_SLOT_COUNT = 3;
+        const CLOUD_SLOT_PRICE = 200;
+        const CLOUD_SLOTS = [1, 2, 3];
         function slotKey(index) {
             return `${GameSessionService.activeKey(AppConfig.storageKeys.saveSlotPrefix)}${index}`;
         }
@@ -10751,6 +10888,14 @@ function rebuildChoicesBlock(body, labels = []) {
             }
             return slots;
         }
+        // 地图配置随档:头像/地图库 URL 引用与自定义 dataURL 都在 state 快照内,地图 override(独立 key)单独并入 payload
+        function mapOverrideOf() {
+            try {
+                const cardId = GameSessionService.getActiveCardId();
+                const all = JSON.parse(localStorage.getItem("bitlife_map_override_v1") || "null");
+                return (all && all[cardId]) || null;
+            } catch (e) { return null; }
+        }
         function saveToSlot(index, state) {
             const payload = {
                 meta: {
@@ -10759,7 +10904,8 @@ function rebuildChoicesBlock(body, labels = []) {
                     time: Utils.nowDateStr(state),
                     savedAt: new Date().toLocaleString()
                 },
-                state
+                state,
+                mapOverride: mapOverrideOf()
             };
             StorageService.writeJson(slotKey(index), payload);
         }
@@ -10769,7 +10915,74 @@ function rebuildChoicesBlock(body, labels = []) {
         function deleteSlot(index) {
             localStorage.removeItem(slotKey(index));
         }
-        return { SLOT_COUNT, listSlots, saveToSlot, loadFromSlot, deleteSlot };
+        // ---- 云存档（需登录；槽位一次性解锁 200 币/槽）----
+        function cloudFetch(path, opts) {
+            return fetch(`${AppConfig.proxy.baseUrl}${path}`, {
+                ...(opts || {}),
+                headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + AuthService.getToken() }
+            });
+        }
+        async function fetchCloudSaves(cardId) {
+            if (!AuthService.getToken()) return null;
+            try {
+                const res = await cloudFetch(`/api/saves?card_id=${encodeURIComponent(cardId)}`);
+                if (!res.ok) return null;
+                const d = await res.json().catch(() => ({}));
+                return { unlocks: d.unlocks || {}, slots: d.slots || {}, coins: d.coins };
+            } catch (e) { return null; }
+        }
+        async function unlockCloudSlot(cardId, slotIndex) {
+            const res = await cloudFetch("/api/saves/unlock", {
+                method: "POST",
+                body: JSON.stringify({ card_id: cardId, slot_index: slotIndex })
+            });
+            const d = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(d.error || "解锁失败");
+            return d;
+        }
+        function buildCloudPayload(state) {
+            return {
+                meta: {
+                    name: state.name,
+                    age: Math.floor((state.age || 0) / 12),
+                    time: Utils.nowDateStr(state),
+                    savedAt: new Date().toLocaleString()
+                },
+                state,
+                mapOverride: mapOverrideOf()
+            };
+        }
+        async function saveToCloudSlot(cardId, slotIndex, state) {
+            const res = await cloudFetch("/api/saves", {
+                method: "POST",
+                body: JSON.stringify({ card_id: cardId, slot_index: slotIndex, data: JSON.stringify(buildCloudPayload(state)) })
+            });
+            const d = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(d.error || "云端保存失败");
+        }
+        async function deleteCloudSlot(cardId, slotIndex) {
+            const res = await cloudFetch("/api/saves", {
+                method: "POST",
+                body: JSON.stringify({ card_id: cardId, slot_index: slotIndex, data: "__DELETE__" })
+            });
+            const d = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(d.error || "云端删除失败");
+        }
+        // 云端存档 → 本地自动档（恢复进度,含地图 override 回写）
+        function applyCloudPayload(payload) {
+            if (!payload || !payload.state) return false;
+            StorageService.writeJson(GameSessionService.activeKey(AppConfig.storageKeys.save), payload.state);
+            if (payload.mapOverride) {
+                try {
+                    let all = {};
+                    try { all = JSON.parse(localStorage.getItem("bitlife_map_override_v1") || "null") || {}; } catch (e) { all = {}; }
+                    all[GameSessionService.getActiveCardId()] = payload.mapOverride;
+                    localStorage.setItem("bitlife_map_override_v1", JSON.stringify(all));
+                } catch (e) {}
+            }
+            return true;
+        }
+        return { SLOT_COUNT, CLOUD_SLOT_COUNT, CLOUD_SLOT_PRICE, CLOUD_SLOTS, listSlots, saveToSlot, loadFromSlot, deleteSlot, fetchCloudSaves, unlockCloudSlot, saveToCloudSlot, deleteCloudSlot, applyCloudPayload };
     })();
 
     const EventService = (() => {
@@ -14021,17 +14234,27 @@ const token = delta.content || "";
             const tlMonth = Number(tlStart.month);
             const tlDay = Number(tlStart.day);
             const nationMatch = era.match(/([一-鿿]{1,8}(?:国|朝|邦|王朝))/);
-            const background = String(identity.background || "");
-            const locationRaw = background.split(/[。；;\n]/)[0].trim().slice(0, 12);
+            // 开局地点：优先结构化地图首个地点名（不再从 background 截断剧情文本当 location）
+            const mapPlaces = (st.map && Array.isArray(st.map.places)) ? st.map.places : [];
+            const locationRaw = String(mapPlaces[0]?.name || identity.location || "").trim().slice(0, 16);
+            // 官方卡 NPC 未提供 gender 时按角色称呼推断，避免开局全员"未知"
+            const inferNpcGender = (n) => {
+                const g = String(n.gender || "").trim();
+                if (g) return g.slice(0, 6);
+                const role = String(n.role || "").trim();
+                if (/[小姐|夫人|女士|公主|姑娘|妹妹|姐姐|母|太后|奶奶|外婆|女儿]/.test(role)) return "女";
+                if (/[先生|公子|少爷|王子|哥哥|弟弟|父|皇帝|王爷|老爷|外公|爷爷|儿子]/.test(role)) return "男";
+                return "未知";
+            };
             const npcs = (Array.isArray(st.npcs) ? st.npcs : []).map((n, i) => ({
                 id: String(n.id || `npc_${i + 1}`).replace(/[^\w-]/g, "_"),
                 name: String(n.name || `人物${i + 1}`).slice(0, 20),
-                gender: String(n.gender || "未知").slice(0, 6),
-                relation: String(n.role || "熟人").slice(0, 12),
+                gender: inferNpcGender(n),
+                relation: String(n.relationship || n.role || "熟人").slice(0, 12),
                 favor: Number.isFinite(Number(n.favor)) ? Math.max(-100, Math.min(100, Number(n.favor))) : 65,
                 affection: Number.isFinite(Number(n.affection)) ? Math.max(-100, Math.min(100, Number(n.affection))) : 0,
                 status: "在线",
-                mood: "平静",
+                mood: String(n.personality || "").split(/[，,。]/)[0].trim().slice(0, 8) || "平静",
                 traits: String(n.personality || "").slice(0, 48),
                 profile: {
                     identity: String(n.role || "").slice(0, 40),
@@ -14668,6 +14891,40 @@ const token = delta.content || "";
                 <div class="gd-hot-btn ${d.liked ? "on" : ""}" onclick="Controller.toggleGameLike('${card.id}')"><span class="gd-hot-num">${fmtNum(d.likes)}</span><img class="ic" src="icons/heart.svg" alt=""> 点赞</div>
                 <div class="gd-hot-btn ${d.collected ? "on" : ""}" onclick="Controller.toggleGameCollect('${card.id}')"><span class="gd-hot-num">${fmtNum(d.collects)}</span><img class="ic" src="icons/star.svg" alt=""> 收藏</div>
             </div>`;
+            // 📖 剧本设定：structured.world + identity + npcs 简表 + timeline
+            {
+                const identity = st.identity || {};
+                const timeline = st.timeline || {};
+                const ts = timeline.start || {};
+                const hasWorld = ["era", "genre", "summary", "rules", "atmosphere"].some((k) => k === "rules" ? (world.rules || []).length : String(world[k] || "").trim());
+                const hasIdentity = ["name", "gender", "age", "background"].some((k) => String(identity[k] || "").trim());
+                const hasTimeline = (ts.year || ts.month || ts.day) || timeline.note;
+                if (hasWorld || hasIdentity || npcs.length || hasTimeline) {
+                    html += `<div class="gd-sec-title">📖 剧本设定</div><div class="gd-setting-block">`;
+                    if (world.era || world.genre) html += `<div class="gd-setting-line"><span class="list-sub">时代题材</span><span><b>${MarkdownService.escapeHtml(String(world.era || "未知"))}</b>${world.genre ? " · " + MarkdownService.escapeHtml(String(world.genre)) : ""}</span></div>`;
+                    if (String(world.summary || "").trim()) html += `<div class="gd-setting-line"><span class="list-sub">简介</span><span>${MarkdownService.escapeHtml(String(world.summary).trim())}</span></div>`;
+                    if (String(world.atmosphere || "").trim()) html += `<div class="gd-setting-line"><span class="list-sub">氛围</span><span>${MarkdownService.escapeHtml(String(world.atmosphere).trim())}</span></div>`;
+                    if (Array.isArray(world.rules) && world.rules.length) html += `<div class="gd-setting-line"><span class="list-sub">规则</span><span>${world.rules.slice(0, 12).map((r) => `· ${MarkdownService.escapeHtml(String(r).trim())}`).join("<br>")}</span></div>`;
+                    if (hasIdentity) {
+                        const idBits = [identity.name ? `姓名：${String(identity.name).trim()}` : "", identity.gender ? `性别：${String(identity.gender).trim()}` : "", identity.age ? `年龄：${String(identity.age).trim()}` : ""].filter(Boolean).join(" · ");
+                        html += `<div class="gd-setting-line"><span class="list-sub">主角身份</span><span>${MarkdownService.escapeHtml(idBits)}${String(identity.background || "").trim() ? " — " + MarkdownService.escapeHtml(String(identity.background).trim()) : ""}</span></div>`;
+                    }
+                    npcs.forEach((n) => {
+                        const npcName = String(n.name || "角色").trim();
+                        const npcRole = String(n.role || n.relation || "").trim();
+                        const npcDesc = String(n.personality || "").trim().slice(0, 40);
+                        html += `<div class="gd-setting-npc"><span class="list-sub">人物</span><span><b>${MarkdownService.escapeHtml(npcName)}</b>${npcRole ? "（" + MarkdownService.escapeHtml(npcRole) + "）" : ""}${npcDesc ? "：" + MarkdownService.escapeHtml(npcDesc) : ""}</span></div>`;
+                    });
+                    if (hasTimeline) {
+                        const dateBits = [];
+                        if (ts.year) dateBits.push(ts.year + "年");
+                        if (ts.month) dateBits.push(ts.month + "月");
+                        if (ts.day) dateBits.push(ts.day + "日");
+                        html += `<div class="gd-setting-line"><span class="list-sub">时间线</span><span>${dateBits.length ? "起始于 " + MarkdownService.escapeHtml(dateBits.join("")) : ""}${timeline.note ? (dateBits.length ? "；" : "") + MarkdownService.escapeHtml(String(timeline.note).trim()) : ""}</span></div>`;
+                    }
+                    html += `</div>`;
+                }
+            }
             if (npcs.length) {
                 html += `<div class="gd-sec-title"><img class="ic" src="icons/trophy.svg" alt=""> 本作品角色榜</div>`;
                 npcs.forEach((n) => {
@@ -14859,10 +15116,11 @@ const token = delta.content || "";
                 NoticeModalService.showInfo({ title: "操作失败", descHtml: e.message || "请稍后重试" });
             }
         }
-        async function loadReviews(cardId) {
-            const box = document.getElementById("gd-reviews-box");
-            if (!box || !AuthService.getToken()) { if (box) box.innerHTML = '<span class="list-sub">登录后参与讨论。</span>'; return; }
+        async function renderReviewsInto(box, cardId, replyHandler) {
+            if (!box) return;
+            if (!AuthService.getToken()) { box.innerHTML = '<span class="list-sub">登录后参与讨论。</span>'; return; }
             box.innerHTML = '<span class="list-sub">加载中...</span>';
+            const doReply = typeof replyHandler === "string" && replyHandler ? replyHandler : "Controller.replyGameReview";
             try {
                 const res = await fetch(`${AppConfig.proxy.baseUrl}/api/game/reviews?card_id=${encodeURIComponent(cardId)}&limit=50`, {
                     headers: { "X-Auth-Token": "Bearer " + AuthService.getToken() }
@@ -14874,7 +15132,7 @@ const token = delta.content || "";
                     <span class="gd-rev-author">${MarkdownService.escapeHtml(r.author?.nickname || "玩家")}</span>
                     <span class="gd-rev-time">${gdTime(r.created_at)}</span>
                     <div style="margin-top:2px;">${MarkdownService.escapeHtml(r.content)}</div>
-                    <button class="mini-btn ghost" style="margin-top:4px;" onclick="Controller.replyGameReview('${r.id}','${MarkdownService.escapeHtml(r.author?.nickname || "玩家")}')">回复</button>
+                    <button class="mini-btn ghost" style="margin-top:4px;" onclick="${doReply}('${r.id}','${MarkdownService.escapeHtml(r.author?.nickname || "玩家")}')">回复</button>
                 </div>`;
                 box.innerHTML = items.map((t) => {
                     const reps = Array.isArray(t.replies) ? t.replies : [];
@@ -14895,6 +15153,65 @@ const token = delta.content || "";
                 }).join("");
             } catch (e) {
                 box.innerHTML = '<span class="list-sub">加载失败，请稍后重试。</span>';
+            }
+        }
+        async function loadReviews(cardId) {
+            await renderReviewsInto(document.getElementById("gd-reviews-box"), cardId);
+        }
+        // ---- 手机壳内论坛：当前剧本评论区 ----
+        let _forumCardId = "";
+        function openForumApp() {
+            const screen = document.getElementById("forum-screen");
+            if (!screen) return;
+            const active = document.querySelector(".view-section.active");
+            if (!active || active.id !== "view-phone") switchView("view-phone");
+            const cardId = (typeof PlayViewStateService !== "undefined" && PlayViewStateService.getActivePlayCardId()) || ScenarioCardService.getSelectedId() || "";
+            _forumCardId = String(cardId || "");
+            const box = document.getElementById("forum-reviews-box");
+            const input = document.getElementById("forum-rev-input");
+            _revTargetId = "";
+            if (input) { input.value = ""; input.placeholder = "写下你的评论…（200字以内）"; }
+            if (!_forumCardId) {
+                if (box) box.innerHTML = '<span class="list-sub">还没有开始剧本，先开一局再来论坛聊聊吧～</span>';
+            } else {
+                const card = cardOf(_forumCardId);
+                const title = document.getElementById("forum-screen-title");
+                if (title) title.textContent = card && card.title ? `「${card.title}」评论区` : "论坛";
+                renderReviewsInto(box, _forumCardId, "Controller.forumReply");
+            }
+            screen.style.display = "flex";
+        }
+        function closeForumApp() {
+            const screen = document.getElementById("forum-screen");
+            if (screen) screen.style.display = "none";
+        }
+        function forumReply(commentId, authorName) {
+            const input = document.getElementById("forum-rev-input");
+            if (!input) return;
+            _revTargetId = commentId;
+            input.placeholder = `回复 ${authorName}：`;
+            input.focus();
+        }
+        async function postForumReview() {
+            const input = document.getElementById("forum-rev-input");
+            const content = String(input?.value || "").trim();
+            if (!content) return;
+            if (!_forumCardId) return;
+            if (!AuthService.getToken()) { NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后参与讨论。" }); return; }
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/game/reviews`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + AuthService.getToken() },
+                    body: JSON.stringify({ card_id: _forumCardId, content, parent_id: _revTargetId || "" })
+                });
+                const d = await res.json().catch(() => ({}));
+                if (!res.ok) { NoticeModalService.showInfo({ title: "评论失败", descHtml: d.error || "请稍后再试" }); return; }
+                input.value = "";
+                _revTargetId = "";
+                input.placeholder = "写下你的评论…（200字以内）";
+                renderReviewsInto(document.getElementById("forum-reviews-box"), _forumCardId, "Controller.forumReply");
+            } catch (e) {
+                NoticeModalService.showInfo({ title: "评论失败", descHtml: "请稍后再试" });
             }
         }
         function replyGameReview(commentId, authorName) {
@@ -14928,7 +15245,7 @@ const token = delta.content || "";
         }
         let _currentDetailCardId = "";
         function currentDetailCard() { return _currentDetailCardId; }
-        return { openGameDetail, closeGameDetail, toggleLike, toggleCollect, donate, roleHot, bumpPlay, loadReviews, toggleRoleFavorite, postGameReview, replyGameReview };
+        return { openGameDetail, closeGameDetail, toggleLike, toggleCollect, donate, roleHot, bumpPlay, loadReviews, toggleRoleFavorite, postGameReview, replyGameReview, renderReviewsInto, openForumApp, closeForumApp, forumReply, postForumReview };
     })();
 
     // ---- 官方模板市场：分组浏览 + 一键复制到工作区 ----
@@ -15202,7 +15519,6 @@ const token = delta.content || "";
         }
         function sendUserText(text) {
             if (ChatService.getIsGenerating()) return;
-            UIRenderer.clearFancyStatus(); // 发送新指令时清除美化标记，等待下一次 HTML 卡片注入
             const state = StateService.get();
             // 固定事件(回合触发)检查 + 事件队列消费:命中事件拼入指令头部,AI 必然演绎
             const userMsgCount = (state.history || []).filter((h) => h.role === "user").length + 1;
@@ -15334,7 +15650,7 @@ const token = delta.content || "";
             overlay.className = "full-map-overlay";
             overlay.onclick = closeFullMap;
             overlay.innerHTML = `<div class="full-map-frame" onclick="event.stopPropagation()">
-                <div class="full-map-head"><span style="font-weight:800;">🗺️ 大地图</span><span class="list-sub">当前：${MarkdownService.escapeHtml(cur || "未知")}</span><button type="button" class="mini-btn ghost" onclick="closeFullMap()">✕ 关闭</button></div>
+                <div class="full-map-head"><span style="font-weight:800;">🗺️ 大地图</span><span class="list-sub">当前：${MarkdownService.escapeHtml(cur || "未知")}</span><span style="display:flex;gap:6px;"><button type="button" class="mini-btn ghost" style="flex:none;" onclick="openMapPickerForPlay()">🗺 换地图</button><button type="button" class="mini-btn ghost" style="flex:none;" onclick="closeFullMap()">✕ 关闭</button></span></div>
                 <div class="full-map-canvas">${img}<div class="fullmap-pins">${pins}</div></div>
                 <div class="full-map-foot list-sub">${(map.places || []).length ? "点击图钉前往对应地点，可触发新的事件" : "这张地图还没有地点，去编辑器添加图钉吧"}</div>
             </div>`;
@@ -15379,7 +15695,7 @@ const token = delta.content || "";
         function phoneAppTap(action) {
             switch (action) {
                 case "chat": openWechatApp(); break;
-                case "forum": switchView("view-community"); break;
+                case "forum": GameDetailService.openForumApp(); break;
                 case "diary":
                 case "memories": openPhoneDiary(); break;
                 case "shop": startPay(); break;
@@ -15685,6 +16001,9 @@ ${recent || "（无）"}
             }
             if (viewId === "view-settings" && !silent) {
                 renderMyPageLists();
+            }
+            if (viewId === "view-saves" && !silent) {
+                UIRenderer.renderSaveSlots(StateService.get());
             }
         }
         function openInfoModal(title, desc, actionText, onAction) {
@@ -16077,10 +16396,22 @@ function openNpcProfile(npcId) {
             renderAll();
             switchView("view-saves");
         }
+        function restoreSavedPayload(saved) {
+            if (!saved?.state) return false;
+            StorageService.writeJson(GameSessionService.activeKey(AppConfig.storageKeys.save), saved.state);
+            if (saved.mapOverride) {
+                try {
+                    let all = {};
+                    try { all = JSON.parse(localStorage.getItem("bitlife_map_override_v1") || "null") || {}; } catch (e) { all = {}; }
+                    all[GameSessionService.getActiveCardId()] = saved.mapOverride;
+                    localStorage.setItem("bitlife_map_override_v1", JSON.stringify(all));
+                } catch (e) {}
+            }
+            return true;
+        }
         function loadFromSlot(index) {
             const saved = SaveSlotService.loadFromSlot(index);
-            if (!saved?.state) return;
-            StorageService.writeJson(GameSessionService.activeKey(AppConfig.storageKeys.save), saved.state);
+            if (!restoreSavedPayload(saved)) return;
             StateService.init();
             // 恢复游玩状态，确保 footer 和状态栏正常显示
             const cardId = ScenarioCardService.getSelectedId();
@@ -16092,6 +16423,85 @@ function openNpcProfile(npcId) {
             SaveSlotService.deleteSlot(index);
             renderAll();
             switchView("view-saves");
+        }
+        // ---- 云存档操作 ----
+        async function unlockCloudSlot(slotIndex) {
+            const cardId = ScenarioCardService.getSelectedId();
+            if (!AuthService.getToken()) { NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后解锁云存档槽位。" }); return; }
+            const ok = await NoticeModalService.confirm({
+                title: "解锁云存档槽位",
+                descHtml: `解锁后可在云端保存该剧本进度（跨设备同步，一次性扣 ${SaveSlotService.CLOUD_SLOT_PRICE} 云币）。确定解锁槽位 ${slotIndex} 吗？`
+            });
+            if (!ok) return;
+            try {
+                const d = await SaveSlotService.unlockCloudSlot(cardId, slotIndex);
+                NoticeModalService.showInfo({ title: "解锁成功", descHtml: `云槽位 ${slotIndex} 已解锁，剩余 ${d.coins} 云币。` });
+            } catch (e) {
+                NoticeModalService.showInfo({ title: "解锁失败", descHtml: e.message || "请稍后重试" });
+            }
+            renderAll();
+            switchView("view-saves");
+        }
+        async function saveToCloudSlot(slotIndex) {
+            const cardId = ScenarioCardService.getSelectedId();
+            if (!AuthService.getToken()) { NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后使用云存档。" }); return; }
+            try {
+                await SaveSlotService.saveToCloudSlot(cardId, slotIndex, StateService.get());
+                NoticeModalService.showInfo({ title: "已保存到云端", descHtml: `云槽位 ${slotIndex} 已同步（含头像与地图配置）。` });
+            } catch (e) {
+                NoticeModalService.showInfo({ title: "云端保存失败", descHtml: e.message || "请稍后重试" });
+            }
+            renderAll();
+            switchView("view-saves");
+        }
+        async function loadFromCloudSlot(slotIndex) {
+            if (!AuthService.getToken()) { NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后使用云存档。" }); return; }
+            try {
+                const cloud = await SaveSlotService.fetchCloudSaves(ScenarioCardService.getSelectedId());
+                const saved = cloud && cloud.slots && cloud.slots[slotIndex];
+                if (!saved) { NoticeModalService.showInfo({ title: "云端存档为空", descHtml: "该槽位还没有存档。" }); return; }
+                let payload = null;
+                try { payload = JSON.parse(saved.data); } catch (e) {}
+                if (!restoreSavedPayload(payload)) { NoticeModalService.showInfo({ title: "读取失败", descHtml: "云端存档数据损坏，无法读取。" }); return; }
+                StateService.init();
+                PlayViewStateService.enterPlay(ScenarioCardService.getSelectedId());
+                renderAll();
+                switchView("view-main");
+            } catch (e) {
+                NoticeModalService.showInfo({ title: "云端读取失败", descHtml: e.message || "请稍后重试" });
+            }
+        }
+        async function deleteCloudSlot(slotIndex) {
+            const cardId = ScenarioCardService.getSelectedId();
+            const ok = await NoticeModalService.confirm({ title: "删除云端存档", descHtml: `确定删除云槽位 ${slotIndex} 的存档吗？（槽位解锁状态保留，可重新保存）` });
+            if (!ok) return;
+            try {
+                await SaveSlotService.deleteCloudSlot(cardId, slotIndex);
+                NoticeModalService.showInfo({ title: "已删除", descHtml: "云端存档已删除。" });
+            } catch (e) {
+                NoticeModalService.showInfo({ title: "删除失败", descHtml: e.message || "请稍后重试" });
+            }
+            renderAll();
+            switchView("view-saves");
+        }
+        // ---- 清除本地缓存（仅进度存档,不动登录/会员/云币）----
+        async function clearLocalCache() {
+            const ok = await NoticeModalService.confirm({
+                title: "清除本地存档缓存",
+                descHtml: "将删除当前浏览器保存的<b>全部本地存档与自动进度</b>（含各剧本槽位与自动档）。登录、会员与云币不受影响。确定继续吗？"
+            });
+            if (!ok) return;
+            let removed = 0;
+            for (let i = localStorage.length - 1; i >= 0; i--) {
+                const key = localStorage.key(i) || "";
+                if (key.startsWith("bitlife_save_slot_") || key.startsWith("bitlife_save")) {
+                    localStorage.removeItem(key);
+                    removed++;
+                }
+            }
+            StateService.init();
+            renderAll();
+            NoticeModalService.showInfo({ title: "已清除", descHtml: `已清除 ${removed} 个本地存档缓存。下次游玩将重新开局。` });
         }
         function saveSettings() {
             SettingsService.saveFromUI();
@@ -16789,6 +17199,15 @@ function openNpcProfile(npcId) {
                 npc.avatar = val;
                 StateService.save();
                 UIRenderer.renderWorld();
+                // 微信头像与世界页同源：换头像后同步刷新微信会话/通讯录/聊天页
+                const wx = document.getElementById("wx-screen");
+                if (wx && wx.style.display !== "none") {
+                    try { UIRenderer.renderWechatSessions(StateService.get()); UIRenderer.renderWechatContacts(StateService.get()); } catch (e) {}
+                    const chat = document.getElementById("wx-chat");
+                    if (chat && chat.style.display !== "none") {
+                        try { UIRenderer.renderWechatChat(StateService.get(), String(npc.id || npc.name || "")); } catch (e) {}
+                    }
+                }
             });
         }
         window.openAvatarPickerForNpc = openAvatarPickerForNpc;
@@ -17258,7 +17677,7 @@ function openNpcProfile(npcId) {
             switchView("view-scenario-editor");
             ScenarioEditorService.focusEditor();
         }
-        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, getEndingDefs, buildEndingChecks, refreshEndingBadge, fallbackEnding, requestEnding, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, openCardSettings, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, toggleAvatarLibraryPanel, avatarPickLib, avatarPick, avatarUpload, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, openWechatApp, closeWechatApp, switchWechatTab, openWechatChat, backToWechatList, appendEmojiToInput, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, closeFullMap, placeClick, placeGo, advanceStory, openPhoneDiary, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate, renderHomeDiscovery, switchRankTab, switchSortMode, openCreationWizard, wizardPickStyle, wizardTitleCount, wizardPromptCount, wizardNext, wizardPrev, wizardConfirm, closeUploadPriceModal, confirmUploadWithPrice };
+        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, getEndingDefs, buildEndingChecks, refreshEndingBadge, fallbackEnding, requestEnding, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, openCardSettings, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, openInitPreviewModal, closeInitPreviewModal, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, toggleAvatarLibraryPanel, avatarPickLib, avatarPick, avatarUpload, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, openWechatApp, closeWechatApp, switchWechatTab, openWechatChat, backToWechatList, appendEmojiToInput, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, unlockCloudSlot, saveToCloudSlot, loadFromCloudSlot, deleteCloudSlot, clearLocalCache, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, closeFullMap, placeClick, placeGo, advanceStory, openPhoneDiary, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate, renderHomeDiscovery, switchRankTab, switchSortMode, openCreationWizard, wizardPickStyle, wizardTitleCount, wizardPromptCount, wizardNext, wizardPrev, wizardConfirm, closeUploadPriceModal, confirmUploadWithPrice };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
@@ -17288,6 +17707,10 @@ function openNpcProfile(npcId) {
     function toggleRoleFavorite(cardId, roleId, btn) { Controller.toggleRoleFavorite(cardId, roleId, btn); }
     function postGameReview() { Controller.postGameReview(); }
     function replyGameReview(commentId, authorName) { Controller.replyGameReview(commentId, authorName); }
+    function openForumApp() { GameDetailService.openForumApp(); }
+    function closeForumApp() { GameDetailService.closeForumApp(); }
+    function forumReply(commentId, authorName) { GameDetailService.forumReply(commentId, authorName); }
+    function postForumReview() { GameDetailService.postForumReview(); }
     function toggleCharacterFav(cardId, roleId) { Controller.toggleCharacterFav(cardId, roleId); }
     function handlePostImage(input) { Controller.handlePostImage(input); }
     function clearPostImage() { Controller.clearPostImage(); }
@@ -17367,6 +17790,11 @@ function openNpcProfile(npcId) {
     function backToWechatList() { Controller.backToWechatList(); }
     function wxEmoji(e) { Controller.appendEmojiToInput(e); }
     function closeInfoModal() { Controller.closeInfoModal(); }
+    function unlockCloudSlot(index) { Controller.unlockCloudSlot(index); }
+    function saveToCloudSlot(index) { Controller.saveToCloudSlot(index); }
+    function loadFromCloudSlot(index) { Controller.loadFromCloudSlot(index); }
+    function deleteCloudSlot(index) { Controller.deleteCloudSlot(index); }
+    function clearLocalCache() { Controller.clearLocalCache(); }
 
     // ==================== MembershipService (会员开通/续费) ====================
     const MembershipService = (() => {
