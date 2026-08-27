@@ -586,9 +586,10 @@
             border-left-color: #9d7bf0;
         }
         .psb-avatar {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1066,9 +1067,10 @@
             border: 1px solid rgba(123,92,214,.2);
         }
         .phone-avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1188,9 +1190,10 @@
         body[data-theme="dark"] .npc-card { background: linear-gradient(135deg, rgba(28,24,38,0.95), rgba(36,30,48,0.9)); }
         .npc-card-head { display: flex; align-items: center; gap: 8px; }
         .npc-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -2620,9 +2623,10 @@
         }
 
         .npc-chat-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            border-radius: 9px;
+            overflow: hidden;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -3017,7 +3021,7 @@
         }
         .feed-head { display: flex; align-items: center; gap: 8px; }
         .feed-avatar {
-            width: 30px; height: 30px; border-radius: 50%;
+            width: 34px; height: 34px; border-radius: 8px;
             background: var(--card-soft); border: 1px solid var(--line);
             object-fit: cover; flex-shrink: 0;
         }
@@ -4024,7 +4028,7 @@
     body[data-theme="dark"][data-skin="snow"]{--bg-main:#151c24;--bg-soft:#1c2631;--card:#24303d;--line:#3a4a5b;--text:#e4edf5;--sub:#93a6b8;--accent:#8fb6d8;--accent-dark:#bcd8f0;--bg-page:radial-gradient(circle at top,rgba(24,36,48,.92) 0%,rgba(13,20,28,.97) 55%,#0a1016 100%)}
     /* ===== 创建角色:头像三通道 + 属性重掷 ===== */
     .init-avatar-row{display:flex;align-items:center;gap:10px}
-    .init-avatar-preview{width:56px;height:56px;border-radius:50%;background:var(--card-soft);border:2px dashed var(--line);display:flex;align-items:center;justify-content:center;font-size:1.7rem;overflow:hidden;flex-shrink:0}
+    .init-avatar-preview{width:60px;height:60px;border-radius:10px;background:var(--card-soft);border:2px dashed var(--line);display:flex;align-items:center;justify-content:center;font-size:1.7rem;overflow:hidden;flex-shrink:0}
     .init-avatar-preview img{width:100%;height:100%;object-fit:cover}
     .init-avatar-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
     .init-avatar-emoji-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:var(--input-bg);font-size:1.15rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
@@ -4416,7 +4420,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <div style="margin: 10px 0; padding: 12px; background: var(--card-soft); border-radius: 12px; border: 1px solid var(--line);">
                     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
                         <label style="position:relative;cursor:pointer;" title="点击更换头像">
-                            <img id="display-user-avatar" src="icons/android-chrome-192x192.png" style="width:58px;height:58px;border-radius:50%;object-fit:cover;border:2px solid var(--line,#e2ccb0);background:#fff;">
+                            <img id="display-user-avatar" src="icons/android-chrome-192x192.png" style="width:64px;height:64px;border-radius:12px;object-fit:cover;border:2px solid var(--line,#e2ccb0);background:#fff;">
                             <input id="avatar-upload" type="file" accept="image/*" style="display:none;">
                         </label>
                         <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
@@ -8045,6 +8049,11 @@ function rebuildChoicesBlock(body, labels = []) {
         return { checkTimeEvents, checkRoundEvents, drainQueue, dateKey };
     })();
 
+    // 判断头像值是否为图片(dataURL/绝对URL/相对静态图路径),相对路径支持 avatars/xxx.jpg 等
+    function isAvatarImg(v) {
+        return /^(data:|https?:)/i.test(String(v || "")) || /^[a-zA-Z0-9_\-/]+\.(png|jpe?g|webp|gif|svg)$/i.test(String(v || ""));
+    }
+
     const UIRenderer = (() => {
         let currentStreamingTarget = null;
         let currentSocialNpcId = null;
@@ -8195,9 +8204,9 @@ function rebuildChoicesBlock(body, labels = []) {
                 ? `<div class="psb-stats">${coreStats.map(statBarHtml).join("")}</div>`
                 : "";
             const roleHtml = state.role ? `<span class="psb-role">${MarkdownService.escapeHtml(state.role)}</span>` : "";
-            const avatarText = (state.avatar && !state.avatar.startsWith("data:")) ? state.avatar : MarkdownService.escapeHtml(name.slice(0, 1));
-            const avatarImg = state.avatar && (state.avatar.startsWith("data:") || state.avatar.startsWith("http"))
-                ? `<img src="${String(state.avatar).replace(/"/g, "%22")}" data-fb="${String(avatarText).replace(/"/g, "&quot;")}" onerror="this.parentElement.textContent=this.dataset.fb" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+            const avatarText = (state.avatar && !state.avatar.startsWith("data:") && !isAvatarImg(state.avatar)) ? state.avatar : name.slice(0, 1);
+            const avatarImg = isAvatarImg(state.avatar)
+                ? `<img src="${String(state.avatar).replace(/"/g, "%22")}" data-fb="${MarkdownService.escapeHtml(String(avatarText).replace(/"/g, "&quot;"))}" onerror="this.parentElement.textContent=this.dataset.fb" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`
                 : MarkdownService.escapeHtml(avatarText);
             box.innerHTML = `
                 <div class="psb-avatar" style="background:${avatarColor(name)};cursor:pointer;" onclick="openAvatarPickerForPlay()" title="更换头像">${avatarImg}</div>
@@ -8319,10 +8328,10 @@ function rebuildChoicesBlock(body, labels = []) {
                 const affection = Number.isFinite(Number(n.affection)) ? Number(n.affection) : 0;
                 const introRaw = (memory[n.id] && memory[n.id].summary) ? stripHtml(memory[n.id].summary) : stripHtml(n.description || "");
                 const intro = introRaw.slice(0, 60);
-                const avUrl = n.avatar && /^(data:|https?:)/i.test(n.avatar) ? n.avatar : "";
+                const avUrl = isAvatarImg(n.avatar) ? n.avatar : "";
                 const fallbackChar = MarkdownService.escapeHtml(String(n.name || "?").slice(0, 1));
                 const avHtml = avUrl
-                    ? `<img src="${String(avUrl).replace(/"/g, "%22")}" alt="" loading="lazy" onerror="this.parentElement.textContent=this.dataset.fb" data-fb="${fallbackChar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`
+                    ? `<img src="${String(avUrl).replace(/"/g, "%22")}" alt="" loading="lazy" onerror="this.parentElement.textContent=this.dataset.fb" data-fb="${fallbackChar}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;">`
                     : fallbackChar;
                 return `<div class="npc-card">
                     <div class="npc-card-head">
@@ -8905,8 +8914,8 @@ function rebuildChoicesBlock(body, labels = []) {
             const nm = document.getElementById("phone-user-name");
             if (av) {
                 av.style.background = avatarColor(name);
-                if (state.avatar && (state.avatar.startsWith("data:") || state.avatar.startsWith("http"))) {
-                    av.innerHTML = `<img src="${String(state.avatar).replace(/"/g, "%22")}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+                if (isAvatarImg(state.avatar)) {
+                    av.innerHTML = `<img src="${String(state.avatar).replace(/"/g, "%22")}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`;
                 } else if (state.avatar && !state.avatar.startsWith("data:")) {
                     av.textContent = state.avatar;
                 } else {
@@ -9618,7 +9627,7 @@ function rebuildChoicesBlock(body, labels = []) {
             bindMapOverride("nc-map-bg");
             bindMapOverride("nc-map-url");
         }
-        return { loadToUI, saveFromUI, saveUserApiFromUI, getApiConfig, getByok, applyFontSize, loadFontSize, onFontSizeInput, testByokConnection, getScenarioText, getScenarioTextForModel, getBeautyCardSetting, getChatPolicyConfig, getThinkingPayloadForCard, importScenarioFromFile, bindProfileAutoSave, bindByokAutoSave, getNarrative, saveNarrative, applyNarrativeUI, buildNarrativePrompt, openMemoryManager, clearNpcMemory, loadNarrativeToUI, bindNarrativeAutoSave, getMapOverride, setMapOverride, loadMapUI, onMapFilePicked };
+        return { loadToUI, saveFromUI, saveUserApiFromUI, getApiConfig, getByok, applyFontSize, loadFontSize, onFontSizeInput, testByokConnection, getScenarioText, getScenarioTextForModel, getBeautyCardSetting, getChatPolicyConfig, getThinkingPayloadForCard, importScenarioFromFile, bindProfileAutoSave, bindByokAutoSave, setSettingsContext, getSettingsContext, getNarrative, saveNarrative, applyNarrativeUI, buildNarrativePrompt, openMemoryManager, clearNpcMemory, loadNarrativeToUI, bindNarrativeAutoSave, getMapOverride, setMapOverride, loadMapUI, onMapFilePicked };
     })();
     SettingsService.loadFontSize();
 
@@ -11577,30 +11586,26 @@ function rebuildChoicesBlock(body, labels = []) {
                 b.classList.toggle("active", b.dataset.sort === ScenarioCardViewService.getSortMode());
             });
         }
-        // 触摸滑动切卡：水平拖动超 50px 切上一张/下一张；垂直拖动放行给页面滚动
+        // 滑动切卡：触摸/鼠标水平拖动超 50px 切上一张/下一张；垂直拖动放行给页面滚动
         function bindBannerSwipe() {
             const box = document.getElementById("home-banner-swiper");
             if (!box || box.dataset.swipeBound) return;
             box.dataset.swipeBound = "1";
-            let startX = 0, startY = 0, swiped = false;
-            box.addEventListener("touchstart", (e) => {
-                const t = e.touches?.[0];
-                if (!t) return;
-                startX = t.clientX; startY = t.clientY; swiped = false;
-            }, { passive: true });
-            box.addEventListener("touchmove", (e) => {
-                const t = e.touches?.[0];
-                if (!t) return;
-                const dx = t.clientX - startX;
-                const dy = t.clientY - startY;
+            let startX = 0, startY = 0, swiped = false, active = false;
+            const begin = (x, y) => { startX = x; startY = y; swiped = false; active = true; };
+            const move = (x, y) => {
+                if (!active) return;
+                const dx = x - startX;
+                const dy = y - startY;
                 if (Math.abs(dy) > Math.abs(dx)) return;
                 if (Math.abs(dx) > 50) {
                     swiped = true;
                     if (dx < 0) nextBanner(); else gotoBanner(bannerIdx - 1);
-                    startX = t.clientX; startY = t.clientY;
+                    startX = x; startY = y;
                 }
-            }, { passive: true });
-            box.addEventListener("touchend", () => {
+            };
+            const end = () => {
+                active = false;
                 if (!swiped) return;
                 const t0 = Date.now();
                 const intercept = (e) => {
@@ -11608,7 +11613,24 @@ function rebuildChoicesBlock(body, labels = []) {
                     box.removeEventListener("click", intercept, true);
                 };
                 box.addEventListener("click", intercept, true);
+            };
+            box.addEventListener("touchstart", (e) => {
+                const t = e.touches?.[0];
+                if (t) begin(t.clientX, t.clientY);
             }, { passive: true });
+            box.addEventListener("touchmove", (e) => {
+                const t = e.touches?.[0];
+                if (t) move(t.clientX, t.clientY);
+            }, { passive: true });
+            box.addEventListener("touchend", end, { passive: true });
+            box.addEventListener("mousedown", (e) => {
+                if (e.button !== 0) return;
+                begin(e.clientX, e.clientY);
+                e.preventDefault();
+            });
+            box.addEventListener("mousemove", (e) => move(e.clientX, e.clientY));
+            box.addEventListener("mouseup", end);
+            box.addEventListener("mouseleave", () => { active = false; });
         }
         function renderHomeDiscovery() {
             renderBanner();
@@ -15589,7 +15611,7 @@ function openNpcProfile(npcId) {
             const desc = `
                 <div style="border-radius:14px;overflow:hidden;background:var(--card);padding:2px;">
                     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:10px;">
-                        <div style="width:50px;height:50px;border-radius:50%;background:var(--accent);display:grid;place-items:center;font-size:24px;color:#fff;">🧑</div>
+                        <div style="width:54px;height:54px;border-radius:10px;background:var(--accent);display:grid;place-items:center;font-size:24px;color:#fff;">🧑</div>
                         <div>
                             <div style="font-size:1.1rem;font-weight:800;color:var(--accent-dark);">${MarkdownService.escapeHtml(getStr(npc.name))}</div>
                             <div style="font-size:.8rem;color:var(--sub);">${MarkdownService.escapeHtml(getStr(npc.relation, "NPC"))}</div>
@@ -16532,7 +16554,7 @@ function openNpcProfile(npcId) {
             if (!hidden || !show) return;
             const v = String(val || "");
             hidden.value = v;
-            if (v.startsWith("data:") || v.startsWith("http")) {
+            if (isAvatarImg(v)) {
                 show.innerHTML = `<img src="${v.replace(/"/g, "%22")}" alt="头像">`;
             } else {
                 show.textContent = v || "😀";
