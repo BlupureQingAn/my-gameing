@@ -11166,15 +11166,22 @@ function rebuildChoicesBlock(body, labels = []) {
             return String(v || "").split("\n").map((s) => s.trim()).filter(Boolean);
         }
         // 速查表：后续轮次用压缩版设定替换全量设定，压减每轮 payload（首轮仍用全量保证开局一致性）
-        function buildQuickRef(card) {
+        // 初始角色表单修改后：主角姓名/性别/年龄以 state 为准（仅本次游玩生效），背景等其余设定仍用卡数据
+        function buildQuickRef(card, state = null) {
             const st = card?.structured;
+            const pName = String(state?.name || "").trim();
+            const pGender = String(state?.gender || "").trim();
+            const pAgeYears = Number.isFinite(Number(state?.age)) ? Math.floor(Number(state.age) / 12) : null;
+            const stateName = (pName && pName !== "待生成") ? pName : "";
+            const stateGender = (pGender && pGender !== "待生成") ? pGender : "";
+            const stateAge = (pAgeYears !== null && pAgeYears > 0) ? `约${pAgeYears}岁` : "";
             if (st && st.world && st.identity) {
                 const parts = [];
                 const era = st.world.era || "";
                 const genre = st.world.genre || "";
                 if (era || genre) parts.push(`【时代/题材】${[era, genre].filter(Boolean).join(" · ")}`);
                 const idn = st.identity;
-                const idLine = [idn.name, idn.gender, idn.age ? `约${idn.age}岁` : ""].filter(Boolean).join("·");
+                const idLine = [stateName || idn.name, stateGender || idn.gender, stateAge || (idn.age ? `约${idn.age}岁` : "")].filter(Boolean).join("·");
                 if (idLine) parts.push(`【身份】${idLine}${idn.background ? `——${String(idn.background).replace(/\s+/g, " ").slice(0, 60)}` : ""}`);
                 const npcs = (st.npcs || []).slice(0, 6).filter((n) => n && n.name);
                 if (npcs.length) parts.push(`【人物】${npcs.map((n) => `${n.name}（${n.role || "?"}·${n.relationship || "?"}）`).join("；")}`);
@@ -11188,6 +11195,8 @@ function rebuildChoicesBlock(body, labels = []) {
             // 无结构化 → 从纯文本设定提取压缩版（身份段 2 行 + 规则段 8 行）
             const lines = lineList(card?.text);
             const out = [];
+            // state 身份有效时头部注入（替换预制身份段，避免双份矛盾）
+            if (stateName) out.push(`【身份】${[stateName, stateGender, stateAge].filter(Boolean).join("·")}`);
             const pick = (re, max) => {
                 const idx = lines.findIndex((l) => re.test(l));
                 if (idx < 0) return;
@@ -11199,11 +11208,32 @@ function rebuildChoicesBlock(body, labels = []) {
                     n++;
                 }
             };
-            pick(/身份|主角|人物设定/, 2);
+            if (!stateName) pick(/身份|主角|人物设定/, 2);
             pick(/规则|世界法则|禁忌/, 8);
             return out.length ? out.join("\n") : String(card?.text || "").slice(0, 400);
         }
-        return { buildQuickRef };
+        // 首轮全量设定：按行重建【主角身份】段——姓名/性别/年龄用 state 值，背景等其余行原样保留（仅本次游玩生效）
+        function applyProtagonistOverride(text, state) {
+            const t = String(text || "");
+            const name = String(state?.name || "").trim();
+            if (!name || name === "待生成") return t; // state 无有效姓名时整体回退原文
+            const lines = t.split("\n");
+            const idx = lines.findIndex((l) => l.trim() === "【主角身份】");
+            if (idx < 0) return t; // 卡文本无该段时不动
+            let end = idx + 1;
+            while (end < lines.length && !/^【/.test(lines[end].trim())) end++; // 段边界 = 下一个【段
+            const pGender = String(state?.gender || "").trim();
+            const pAgeYears = Number.isFinite(Number(state?.age)) ? Math.floor(Number(state.age) / 12) : null;
+            const next = lines.slice(idx, end).map((l) => {
+                const key = l.trim().split(/[：:]/)[0];
+                if (key === "姓名") return `姓名：${name}`;
+                if (key === "性别" && pGender && pGender !== "待生成") return `性别：${pGender}`;
+                if (key === "年龄" && pAgeYears !== null && pAgeYears > 0) return `年龄：${pAgeYears}`;
+                return l;
+            });
+            return [...lines.slice(0, idx), ...next, ...lines.slice(end)].join("\n");
+        }
+        return { buildQuickRef, applyProtagonistOverride };
     })();
 
     const BUILTIN_THEMES = [
@@ -13514,12 +13544,20 @@ function rebuildChoicesBlock(body, labels = []) {
 
     const InitIntroService = (() => {
         function buildFirstSceneFields(fsCard, state, firstScene, openingChoices = []) {
+            // 首卡正文：预制主角名替换为表单名（split/join 免正则转义；卡内 NPC 同名时跳过防误伤台词）
+            let story = String(firstScene.story).trim();
+            const presetName = String(fsCard?.structured?.identity?.name || "").trim();
+            const stateName = String(state?.name || "").trim();
+            const npcNames = (fsCard?.structured?.npcs || []).map((n) => String(n?.name || "").trim());
+            if (presetName && stateName && stateName !== "待生成" && stateName !== presetName && !npcNames.includes(presetName)) {
+                story = story.split(presetName).join(stateName);
+            }
             const options = (Array.isArray(firstScene.options) && firstScene.options.length
                 ? firstScene.options
                 : (openingChoices || []).map((c) => c.label || c.key || "继续")).slice(0, 4);
             const w = fsCard.structured.world || {};
             const fields = {
-                story: String(firstScene.story).trim(),
+                story,
                 options,
                 scene: (w.era || w.genre || "开局").slice(0, 40)
             };
@@ -13922,7 +13960,8 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
                 "【最高优先级：设定文本约束】",
                 "你必须严格以设定文本为唯一世界规则源进行回复与推进。",
                 "设定文本优先级高于任何默认现代背景、常见校园模板或现实年份。",
-                "当设定与常识冲突时，以设定为准。不得引入不符合设定年代/地域/身份的元素。"
+                "当设定与常识冲突时，以设定为准。不得引入不符合设定年代/地域/身份的元素。",
+                "主角的姓名/性别/年龄等运行时事实以【事实锁定】中的「主角」信息为准；设定文本【主角身份】与其冲突时，以【事实锁定】为准。"
             ].join("\n");
             const narrativeRules = (typeof SettingsService !== "undefined" && typeof SettingsService.buildNarrativePrompt === "function")
                 ? SettingsService.buildNarrativePrompt()
@@ -15577,8 +15616,8 @@ const token = delta.content || "";
                 const userMsgCount = (state.history || []).filter((h) => h.role === "user").length;
                 // M5 管线优化：首轮用全量设定保证开局一致性，后续轮用速查表压缩 payload
                 const scenarioSpec = userMsgCount <= 1
-                    ? SettingsService.getScenarioTextForModel()
-                    : ScenarioSpecCompressService.buildQuickRef(ScenarioCardService.getSelectedCard()) || SettingsService.getScenarioTextForModel();
+                    ? ScenarioSpecCompressService.applyProtagonistOverride(SettingsService.getScenarioTextForModel(), state)
+                    : ScenarioSpecCompressService.buildQuickRef(ScenarioCardService.getSelectedCard(), state) || SettingsService.getScenarioTextForModel();
                 const beautyCardSetting = SettingsService.getBeautyCardSetting();
                 const beautyModeEnabled = HtmlCardService.isBeautyModeEnabled(beautyCardSetting);
                 const policyConfig = SettingsService.getChatPolicyConfig();
