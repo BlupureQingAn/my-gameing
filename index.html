@@ -412,13 +412,29 @@
         .header.collapsed #site-title {
             display: none;
         }
-        /* 折叠后导航栏完全收起，展开按钮悬浮视口右上角(高于弹窗层 300000) */
-        .header.collapsed .top-nav-collapse-btn {
+        /* 折叠后导航栏完全收起，展开按钮为 header 外的独立悬浮元素（避免被 height:0+backdrop-filter 裁剪） */
+        #top-nav-expand-btn {
+            display: none;
             position: fixed;
             top: 6px;
             right: 8px;
-            margin-left: 0;
             z-index: 400000;
+            padding: 3px 16px;
+            font-size: 0.72rem;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: var(--input-bg, #fff);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all .2s;
+        }
+        #top-nav-expand-btn:hover { color: #7b5cd6; border-color: rgba(123,92,214,.45); }
+        .header.collapsed ~ #top-nav-expand-btn { display: block; }
+        /* 桌面/平板：悬浮于内容区(#app 居中, max-width 1120px)右上角 */
+        @media (min-width: 521px) {
+            .header.collapsed ~ #top-nav-expand-btn {
+                right: max(12px, calc(50vw - 560px + 12px));
+            }
         }
 
         .top-nav-collapse-btn {
@@ -4734,6 +4750,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
         </div>
         <button id="top-nav-collapse-btn" class="top-nav-collapse-btn" onclick="toggleTopNavCollapse()" title="收起导航">▲</button>
     </header>
+    <button id="top-nav-expand-btn" class="top-nav-expand-btn" onclick="toggleTopNavCollapse()" title="展开导航">▼</button>
     <div id="history-panel" class="history-panel" style="display:none;">
         <div class="history-panel-title"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M8 18h8v-2H8zm0-4h8v-2H8zm-2 8q-.825 0-1.412-.587T4 20V4q0-.825.588-1.412T6 2h8l6 6v12q0 .825-.587 1.413T18 22zm7-13h5l-5-5z"/></svg> 历史记录</div>
         <div id="history-panel-body"></div>
@@ -5073,12 +5090,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
 
         <section id="view-main" class="view-section">
             <div id="play-status-bar"></div>
-            <div class="play-tabs" id="play-tabs">
-                <button type="button" class="play-tab-btn active" data-play-tab="chat" onclick="switchPlayTab('chat')"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6 22q-.825 0-1.412-.587T4 20V4q0-.825.588-1.412T6 2h12q.825 0 1.413.588T20 4v16q0 .825-.587 1.413T18 22zm5-11l2.5-1.5L16 11V4h-5z"/></svg> 剧情</button>
-                <button type="button" class="play-tab-btn" data-play-tab="events" onclick="switchPlayTab('events')"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M12 14q-.425 0-.712-.288T11 13t.288-.712T12 12t.713.288T13 13t-.288.713T12 14m-4.712-.288Q7 13.426 7 13t.288-.712T8 12t.713.288T9 13t-.288.713T8 14t-.712-.288M16 14q-.425 0-.712-.288T15 13t.288-.712T16 12t.713.288T17 13t-.288.713T16 14m-4 4q-.425 0-.712-.288T11 17t.288-.712T12 16t.713.288T13 17t-.288.713T12 18m-4.712-.288Q7 17.426 7 17t.288-.712T8 16t.713.288T9 17t-.288.713T8 18t-.712-.288M16 18q-.425 0-.712-.288T15 17t.288-.712T16 16t.713.288T17 17t-.288.713T16 18M5 22q-.825 0-1.412-.587T3 20V6q0-.825.588-1.412T5 4h1V2h2v2h8V2h2v2h1q.825 0 1.413.588T21 6v14q0 .825-.587 1.413T19 22zm0-2h14V10H5z"/></svg> 事件</button>
-            </div>
             <div id="play-chat-area"></div>
-            <div id="play-event-area" style="display:none;"></div>
         </section>
 
         <section id="view-world" class="view-section">
@@ -5091,6 +5103,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 </div>
                 <div id="npc-grid" style="margin-top:8px;"></div>
             </section>
+            <div id="play-event-area" style="margin-top:10px;"></div>
         </section>
 
         <section id="view-inventory" class="view-section">
@@ -5232,9 +5245,6 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                             <button type="button" class="wx-action-btn" onclick="wxActionTap('camera')"><span class="wx-action-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10.5l6-3.5v10l-6-3.5"/></svg></span><span class="wx-action-label">拍摄</span></button>
                             <button type="button" class="wx-action-btn" onclick="wxActionTap('voice')"><span class="wx-action-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0122 16.92z"/></svg></span><span class="wx-action-label">语音通话</span></button>
                             <button type="button" class="wx-action-btn" onclick="wxActionTap('location')"><span class="wx-action-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></span><span class="wx-action-label">位置</span></button>
-                            <button type="button" class="wx-action-btn" onclick="wxActionTap('hongbao')"><span class="wx-action-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="9" width="18" height="11" rx="3"/><circle cx="12" cy="14.5" r="2.5"/><path d="M12 7c-3 0-5 1.5-5 3.5" stroke-linecap="round"/><path d="M12 7c3 0 5 1.5 5 3.5" stroke-linecap="round"/></svg></span><span class="wx-action-label">红包</span></button>
-                            <button type="button" class="wx-action-btn" onclick="wxActionTap('gift')"><span class="wx-action-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 12v8a1 1 0 01-1 1H5a1 1 0 01-1-1v-8"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg></span><span class="wx-action-label">礼物</span></button>
-                            <button type="button" class="wx-action-btn" onclick="wxActionTap('transfer')"><span class="wx-action-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/><path d="M12 8v8"/></svg></span><span class="wx-action-label">转账</span></button>
                             <button type="button" class="wx-action-btn" onclick="wxActionTap('emoji')"><span class="wx-action-icon"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9.5h.01M15 9.5h.01" stroke-linecap="round" stroke-width="2.2"/></svg></span><span class="wx-action-label">表情</span></button>
                         </div>
                         <div class="npc-chat-composer">
@@ -8855,13 +8865,21 @@ function rebuildChoicesBlock(body, labels = []) {
         }
         // 游玩页融合：状态栏（头像/名字/身份/体力/时间/地点/属性进度条/存档）
         const STAT_COLORS = { 容貌: "#8B5E3C", 体质: "#E8793C", 智力: "#4CAF50", 魅力: "#9C6ADE", 体能: "#26A69A", 道德: "#E53935", 道德值: "#E53935" };
-        // stats icon emoji → Material Symbols path（未命中统一用星标）
+        // stats icon emoji → Material Symbols path（未命中按 label 兜底，再统一用星标）
         const STAT_ICON_SVG = {
             "❤️": "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z",
             "💔": "M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55l-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z",
             "⚡": "m8 22l1-7H4l9-13h2l-1 8h6L10 22z",
             "💰": "M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z",
-            "✨": "m12 17.27l4.15 2.51c.76.46 1.69-.22 1.49-1.08l-1.1-4.72 3.67-3.18c.67-.58.31-1.68-.57-1.75l-4.83-.41-1.89-4.46c-.34-.81-1.5-.81-1.84 0L9.19 8.63l-4.83.41c-.88.07-1.24 1.17-.57 1.75l3.67 3.18-1.1 4.72c-.2.86.73 1.54 1.49 1.08z"
+            "✨": "m12 17.27l4.15 2.51c.76.46 1.69-.22 1.49-1.08l-1.1-4.72 3.67-3.18c.67-.58.31-1.68-.57-1.75l-4.83-.41-1.89-4.46c-.34-.81-1.5-.81-1.84 0L9.19 8.63l-4.83.41c-.88.07-1.24 1.17-.57 1.75l3.67 3.18-1.1 4.72c-.2.86.73 1.54 1.49 1.08z",
+            // 需求一：svg-search 下载的 Material Symbols outline（monitor-heart / mood / diamond / workspace-premium）
+            "😊": "M15.5 11q.625 0 1.063-.437T17 9.5t-.437-1.062T15.5 8t-1.062.438T14 9.5t.438 1.063T15.5 11m-7 0q.625 0 1.063-.437T10 9.5t-.437-1.062T8.5 8t-1.062.438T7 9.5t.438 1.063T8.5 11m6.588 5.538Q16.475 15.575 17.1 14H6.9q.625 1.575 2.013 2.538T12 17.5t3.088-.962M8.1 21.213q-1.825-.788-3.175-2.138T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22t-3.9-.788m9.575-3.537Q20 15.35 20 12t-2.325-5.675T12 4T6.325 6.325T4 12t2.325 5.675T12 20t5.675-2.325",
+            "💎": "M12 21L2 9l3-6h14l3 6zM9.625 8h4.75l-1.5-3h-1.75zM11 16.675V10H5.45zm2 0L18.55 10H13zM16.6 8h2.65l-1.5-3H15.1zM4.75 8H7.4l1.5-3H6.25z",
+            "👑": "m9.675 13.7l.875-2.85L8.25 9h2.85l.9-2.8l.9 2.8h2.85l-2.325 1.85l.875 2.85l-2.3-1.775zM6 23v-7.725q-.95-1.05-1.475-2.4T4 10q0-3.35 2.325-5.675T12 2t5.675 2.325T20 10q0 1.525-.525 2.875T18 15.275V23l-6-2zm10.25-8.75Q18 12.5 18 10t-1.75-4.25T12 4T7.75 5.75T6 10t1.75 4.25T12 16t4.25-1.75M8 20.025L12 19l4 1.025v-3.1q-.875.5-1.888.788T12 18t-2.113-.288T8 16.926zm4-1.55",
+            "健康": "M2 9V6q0-.825.588-1.412T4 4h16q.825 0 1.413.588T22 6v3h-2V6H4v3zm2 11q-.825 0-1.412-.587T2 18v-3h2v3h16v-3h2v3q0 .825-.587 1.413T20 20zm6.525-3.137q.25-.138.375-.413l3.1-6.2l1.1 2.2q.125.275.375.413T16 13h6v-2h-5.375L14.9 7.55q-.125-.275-.375-.387T14 7.05t-.525.113t-.375.387l-3.1 6.2l-1.1-2.2q-.125-.275-.375-.413T8 11H2v2h5.375L9.1 16.45q.125.275.375.413T10 17t.525-.137M12 12",
+            "心情": "M15.5 11q.625 0 1.063-.437T17 9.5t-.437-1.062T15.5 8t-1.062.438T14 9.5t.438 1.063T15.5 11m-7 0q.625 0 1.063-.437T10 9.5t-.437-1.062T8.5 8t-1.062.438T7 9.5t.438 1.063T8.5 11m6.588 5.538Q16.475 15.575 17.1 14H6.9q.625 1.575 2.013 2.538T12 17.5t3.088-.962M8.1 21.213q-1.825-.788-3.175-2.138T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22t-3.9-.788m9.575-3.537Q20 15.35 20 12t-2.325-5.675T12 4T6.325 6.325T4 12t2.325 5.675T12 20t5.675-2.325",
+            "魅力": "M12 21L2 9l3-6h14l3 6zM9.625 8h4.75l-1.5-3h-1.75zM11 16.675V10H5.45zm2 0L18.55 10H13zM16.6 8h2.65l-1.5-3H15.1zM4.75 8H7.4l1.5-3H6.25z",
+            "权势": "m9.675 13.7l.875-2.85L8.25 9h2.85l.9-2.8l.9 2.8h2.85l-2.325 1.85l.875 2.85l-2.3-1.775zM6 23v-7.725q-.95-1.05-1.475-2.4T4 10q0-3.35 2.325-5.675T12 2t5.675 2.325T20 10q0 1.525-.525 2.875T18 15.275V23l-6-2zm10.25-8.75Q18 12.5 18 10t-1.75-4.25T12 4T7.75 5.75T6 10t1.75 4.25T12 16t4.25-1.75M8 20.025L12 19l4 1.025v-3.1q-.875.5-1.888.788T12 18t-2.113-.288T8 16.926zm4-1.55"
         };
         function statBarHtml(s) {
             const vStr = String(s.value ?? "");
@@ -8870,7 +8888,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const max = parts.length > 1 ? parseFloat(parts[1]) : 100;
             const pct = Number.isFinite(val) && max > 0 ? Math.min(100, Math.max(0, (val / max) * 100)) : 0;
             const color = STAT_COLORS[s.label] || avatarColor(s.label || "?");
-            const icon = STAT_ICON_SVG[s.icon] || STAT_ICON_SVG["✨"];
+            const icon = STAT_ICON_SVG[s.icon] || STAT_ICON_SVG[s.label] || STAT_ICON_SVG["✨"];
             return `<span class="psb-stat-bar"><span><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="${icon}"/></svg>${MarkdownService.escapeHtml(s.label || "")}</span><span class="stat-track"><span class="stat-fill" style="width:${pct}%;background:${color};"></span></span><span class="stat-val">${MarkdownService.escapeHtml(vStr)}</span></span>`;
         }
         function renderPlayStatusBar(state) {
@@ -9099,7 +9117,10 @@ function rebuildChoicesBlock(body, labels = []) {
             const latest = rounds[rounds.length - 1];
             const past = rounds.slice(0, -1);
             const cardHtml = (r, i) => {
-                const title = (r.texts[0] || r.userText || "（空指令）").replace(/\s+/g, " ").slice(0, 26);
+                // 事件名取该轮卡片的章节标题：填空协议 card-title / 骨架 wy-header；取不到再回退纯文本摘要（去 HTML 标签）
+                const raw0 = r.texts[0] || "";
+                const titleM = String(raw0).match(/<div class="card-title"[^>]*>([\s\S]*?)<\/div>|<div class="wy-header[^"]*"[^>]*>([\s\S]*?)<\/div>|<span class="wy-role-name"[^>]*>([\s\S]*?)<\/span>/);
+                const title = (titleM ? String(titleM[1] || titleM[2] || titleM[3] || "").trim() : UIRenderer.stripHtml(raw0).replace(/\s+/g, " ").slice(0, 26)) || r.userText || "（空指令）";
                 return `<div class="event-card">
                     <div class="event-card-main">
                         <div class="event-card-title"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6 22q-.825 0-1.412-.587T4 20V4q0-.825.588-1.412T6 2h12q.825 0 1.413.588T20 4v16q0 .825-.587 1.413T18 22zm5-11l2.5-1.5L16 11V4h-5z"/></svg> ${MarkdownService.escapeHtml(title)}</div>
@@ -9160,6 +9181,8 @@ function rebuildChoicesBlock(body, labels = []) {
             grid.innerHTML = npcs.length
                 ? groupHtml(true, "已登场人物", on) + groupHtml(false, "未登场人物", off)
                 : '<div class="list-sub" style="opacity:0.6;"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M8.1 21.213q-1.825-.788-3.175-2.138T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22t-3.9-.788M11 19.95V18q-.825 0-1.412-.587T9 16v-1l-4.8-4.8q-.075.45-.137.9T4 12q0 3.025 1.988 5.3T11 19.95m6.9-2.55q1.025-1.125 1.563-2.512T20 12q0-2.45-1.362-4.475T15 4.6V5q0 .825-.587 1.413T13 7h-2v2q0 .425-.288.713T10 10H8v2h6q.425 0 .713.288T15 13v3h1q.65 0 1.175.388T17.9 17.4"/></svg> 还没有可互动的角色</div>';
+            // 事件页已搬入世界页：图谱 → 地图条 → 事件列表（renderPlayEventList 内含 renderPlayMapBar）
+            try { renderPlayEventList(); } catch (e) {}
         }
         // 手机轻量 App：日记时间线（事件分轮 → 📅 日期 + 摘要，可点击展开正文）
         function stripHtml(html) {
@@ -14293,12 +14316,12 @@ const token = delta.content || "";
         function buildFallbackStatsFromScenario(scenarioText = "", plan = {}) {
             const text = String(scenarioText || "");
             const base = [
-                { key: "health", label: "健康", icon: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M13.4 21.9L12 20.5l3.55-3.55l-8.5-8.5L3.5 12l-1.4-1.4l1.4-1.45l-1.4-1.4l2.1-2.1L2.8 4.2l1.4-1.4l1.45 1.4l2.1-2.1l1.4 1.4l1.45-1.4L12 3.5L8.45 7.05l8.5 8.5L20.5 12l1.4 1.4l-1.4 1.45l1.4 1.4l-2.1 2.1l1.4 1.45l-1.4 1.4l-1.45-1.4l-2.1 2.1l-1.4-1.4z'/></svg>", value: 72 },
-                { key: "mood", label: "心情", icon: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M11 4V1h2v3zm0 19v-3h2v3zm9-10v-2h3v2zM1 13v-2h3v2zm17.7-6.3l-1.4-1.4l1.75-1.8l1.45 1.45zM4.95 20.5L3.5 19.05l1.8-1.75l1.4 1.4zm14.1 0l-1.75-1.8l1.4-1.4l1.8 1.75zM5.3 6.7L3.5 4.95L4.95 3.5L6.7 5.3zm2.45 9.55Q6 14.5 6 12t1.75-4.25T12 6t4.25 1.75T18 12t-1.75 4.25T12 18t-4.25-1.75'/></svg>", value: 68 },
-                { key: "charm", label: "魅力", icon: "✨", value: 66 }
+                { key: "health", label: "健康", icon: "❤️", value: 72 },
+                { key: "mood", label: "心情", icon: "😊", value: 68 },
+                { key: "charm", label: "魅力", icon: "💎", value: 66 }
             ];
             if (/宫|皇|王府|后宅|嫔|太监|朝堂|古代|宋|唐|明|清/.test(text)) {
-                base.push({ key: "power", label: "权势", icon: "🏮", value: 55 });
+                base.push({ key: "power", label: "权势", icon: "👑", value: 55 });
                 return base;
             }
             if (/修仙|宗门|灵力|功法|仙|魔|道/.test(text)) {
@@ -14316,8 +14339,8 @@ const token = delta.content || "";
             const ageYears = Number(plan?.ageYears);
             if (Number.isFinite(ageYears) && ageYears <= 12) {
                 return [
-                    { key: "health", label: "健康", icon: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M13.4 21.9L12 20.5l3.55-3.55l-8.5-8.5L3.5 12l-1.4-1.4l1.4-1.45l-1.4-1.4l2.1-2.1L2.8 4.2l1.4-1.4l1.45 1.4l2.1-2.1l1.4 1.4l1.45-1.4L12 3.5L8.45 7.05l8.5 8.5L20.5 12l1.4 1.4l-1.4 1.45l1.4 1.4l-2.1 2.1l1.4 1.45l-1.4 1.4l-1.45-1.4l-2.1 2.1l-1.4-1.4z'/></svg>", value: 75 },
-                    { key: "mood", label: "心情", icon: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M11 4V1h2v3zm0 19v-3h2v3zm9-10v-2h3v2zM1 13v-2h3v2zm17.7-6.3l-1.4-1.4l1.75-1.8l1.45 1.45zM4.95 20.5L3.5 19.05l1.8-1.75l1.4 1.4zm14.1 0l-1.75-1.8l1.4-1.4l1.8 1.75zM5.3 6.7L3.5 4.95L4.95 3.5L6.7 5.3zm2.45 9.55Q6 14.5 6 12t1.75-4.25T12 6t4.25 1.75T18 12t-1.75 4.25T12 18t-4.25-1.75'/></svg>", value: 72 },
+                    { key: "health", label: "健康", icon: "❤️", value: 75 },
+                    { key: "mood", label: "心情", icon: "😊", value: 72 },
                     { key: "growth", label: "成长", icon: "🌱", value: 60 },
                     { key: "family", label: "亲缘", icon: "🏠", value: 66 }
                 ];
@@ -16389,19 +16412,6 @@ const token = delta.content || "";
             if (activeView === "view-world") UIRenderer.renderSocialList(state);
             ChatService.requestAI(finalText);
         }
-        // 游玩页融合：剧情/事件 tab 切换（事件 tab 每次激活时实时渲染）
-        function switchPlayTab(tab) {
-            const chatArea = document.getElementById("play-chat-area");
-            const eventArea = document.getElementById("play-event-area");
-            if (!chatArea || !eventArea) return;
-            const isChat = tab === "chat";
-            chatArea.style.display = isChat ? "" : "none";
-            eventArea.style.display = isChat ? "none" : "";
-            document.querySelectorAll(".play-tab-btn").forEach((b) => {
-                b.classList.toggle("active", b.dataset.playTab === tab);
-            });
-            if (!isChat) UIRenderer.renderPlayEventList();
-        }
         // 游玩页融合：事件重刷 = 截断该轮 history → 清空重建 → 重发该轮指令
         function rerunEvent(idx) {
             if (ChatService.getIsGenerating()) {
@@ -16448,12 +16458,12 @@ const token = delta.content || "";
             const rounds = UIRenderer.buildEventRounds(StateService.get().history);
             const r = rounds[idx];
             if (!r) return;
-            switchPlayTab("chat");
+            switchView("view-main");
             const input = document.getElementById("chat-input");
             if (input) { input.value = r.userText; input.focus(); }
         }
         function enterEvent(idx) {
-            switchPlayTab("chat");
+            switchView("view-main");
             const el = document.querySelector(`#play-chat-area [data-round="${idx}"]`);
             if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
         }
@@ -17084,13 +17094,19 @@ function openNpcProfile(npcId) {
                     ${memoryTagSections}
                 </div>` : "";
 
+            const npcName = getStr(npc.name);
+            const npcAvUrl = isAvatarImg(npc.avatar) ? String(npc.avatar) : (typeof window.assignNpcAvatar === "function" ? window.assignNpcAvatar(npcName, npc.gender) : "");
+            const npcAvFb = MarkdownService.escapeHtml(npcName.slice(0, 1));
+            const npcAvatarHtml = npcAvUrl
+                ? `<img src="${npcAvUrl.replace(/"/g, "%22")}" alt="" onerror="this.parentElement.textContent=this.dataset.fb" data-fb="${npcAvFb}" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit;">`
+                : npcAvFb;
             const desc = `
                 <div style="border-radius:14px;overflow:hidden;background:var(--card);padding:2px;">
                     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:10px;">
-                        <div style="width:54px;height:54px;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;">${firstLetterAvatar(getStr(npc.name), "", "width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;")}</div>
-                        <div>
-                            <div style="font-size:1.1rem;font-weight:800;color:var(--accent-dark);">${MarkdownService.escapeHtml(getStr(npc.name))}</div>
-                            <div style="font-size:.8rem;color:var(--sub);">${MarkdownService.escapeHtml(getStr(npc.relation, "NPC"))}</div>
+                        <div style="width:54px;height:54px;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:${(typeof UIRenderer !== "undefined" && typeof UIRenderer.avatarColor === "function" ? UIRenderer.avatarColor(npcName) : "#8b5e3c")};font-size:24px;color:#fff;font-weight:700;flex:none;">${npcAvatarHtml}</div>
+                        <div style="min-width:0;">
+                            <div style="font-size:1.1rem;font-weight:800;color:var(--accent-dark);">${MarkdownService.escapeHtml(npcName)}</div>
+                            <div style="font-size:.8rem;color:var(--sub);word-break:break-word;overflow-wrap:anywhere;">${MarkdownService.escapeHtml(getStr(npc.relation, "NPC"))}</div>
                         </div>
                     </div>
                     ${favorBar}
@@ -17448,7 +17464,7 @@ function openNpcProfile(npcId) {
                 const eb = document.getElementById("wx-emoji-bar");
                 if (eb) eb.classList.toggle("open");
             } else {
-                const names = { album: "相册", camera: "拍摄", voice: "语音通话", location: "位置", hongbao: "红包", gift: "礼物", transfer: "转账" };
+                const names = { album: "相册", camera: "拍摄", voice: "语音通话", location: "位置" };
                 openInfoModal("功能提示", `「${names[kind] || "该功能"}」即将上线，敬请期待～`);
             }
         }
@@ -18106,7 +18122,11 @@ function openNpcProfile(npcId) {
                 for (const card of ScenarioCardService.loadCards().filter((x) => x.sourceType === "official" || String(x.id || "").startsWith("scenario_preset_"))) {
                     for (const n of (card.structured && Array.isArray(card.structured.npcs)) ? card.structured.npcs : []) {
                         if (!n || !n.name) continue;
-                        localNpcs.set(String(card.id) + "::" + roleIdOf(n), { name: String(n.name), role: String(n.role || n.relation || ""), card_title: card.title || "", avatar: n.avatar || "", gender: n.gender || "" });
+                        // first-wins：官方卡中文名经 roleIdOf 清洗可能碰撞(陆之遥/赵阿姨都变 ___)，首个 NPC 占据键，
+                        // 与 openPersonCardChat 的 find(首个命中) 语义一致，榜名=点开卡，修复错位
+                        const key = String(card.id) + "::" + roleIdOf(n);
+                        if (localNpcs.has(key)) continue;
+                        localNpcs.set(key, { name: String(n.name), role: String(n.role || n.relation || ""), card_title: card.title || "", avatar: n.avatar || "", gender: n.gender || "" });
                     }
                 }
                 const patchLocalNpc = (list) => (list || []).forEach((c) => {
@@ -18450,7 +18470,7 @@ function openNpcProfile(npcId) {
         }
         // ---- 创建角色增强：属性重掷/微调 + 头像三通道 ----
         const INIT_STAT_DEFS = [
-            { label: "容貌", icon: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M13.4 21.9L12 20.5l3.55-3.55l-8.5-8.5L3.5 12l-1.4-1.4l1.4-1.45l-1.4-1.4l2.1-2.1L2.8 4.2l1.4-1.4l1.45 1.4l2.1-2.1l1.4 1.4l1.45-1.4L12 3.5L8.45 7.05l8.5 8.5L20.5 12l1.4 1.4l-1.4 1.45l1.4 1.4l-2.1 2.1l1.4 1.45l-1.4 1.4l-1.45-1.4l-2.1 2.1l-1.4-1.4z'/></svg>" },
+            { label: "容貌", icon: "❤️" },
             { label: "体质", icon: "❤️" },
             { label: "智力", icon: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M11 15h2l.15-1.25q.2-.075.363-.175t.287-.225l1.15.5l1-1.7l-1-.75q.05-.2.05-.4t-.05-.4l1-.75l-1-1.7l-1.15.5q-.125-.125-.288-.225t-.362-.175L13 7h-2l-.15 1.25q-.2.075-.363.175t-.287.225l-1.15-.5l-1 1.7l1 .75Q9 10.8 9 11t.05.4l-1 .75l1 1.7l1.15-.5q.125.125.288.225t.362.175zm-.062-2.937Q10.5 11.625 10.5 11t.438-1.062T12 9.5t1.063.438T13.5 11t-.437 1.063T12 12.5t-1.062-.437M6 22v-4.3q-1.425-1.3-2.212-3.037T3 11q0-3.75 2.625-6.375T12 2q3.125 0 5.538 1.838t3.137 4.787l1.3 5.125q.125.475-.175.863T21 15h-2v3q0 .825-.587 1.413T17 20h-2v2z'/></svg>" },
             { label: "魅力", icon: "✨" },
@@ -19146,12 +19166,11 @@ function openNpcProfile(npcId) {
             switchView("view-scenario-editor");
             ScenarioEditorService.focusEditor();
         }
-        return { init, onSendClick, sendUserText, switchPlayTab, rerunEvent, getEndingDefs, buildEndingChecks, refreshEndingBadge, fallbackEnding, requestEnding, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, openCardSettings, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, autoDownloadAndPlay, openInitPreviewModal, closeInitPreviewModal, toggleHistoryPanel, renderPostRefPicker, clearPostRef, openPersonCardChat, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, toggleAvatarLibraryPanel, avatarPickLib, avatarPick, avatarUpload, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, openWechatApp, closeWechatApp, switchWechatTab, openWechatChat, backToWechatList, appendEmojiToInput, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, unlockCloudSlot, saveToCloudSlot, loadFromCloudSlot, deleteCloudSlot, clearLocalCache, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, closeFullMap, placeClick, placeGo, advanceStory, openPhoneDiary, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate, renderHomeDiscovery, switchSortMode, openCreationWizard, wizardPickStyle, wizardTitleCount, wizardPromptCount, wizardNext, wizardPrev, wizardConfirm, closeUploadPriceModal, confirmUploadWithPrice };
+        return { init, onSendClick, sendUserText, rerunEvent, getEndingDefs, buildEndingChecks, refreshEndingBadge, fallbackEnding, requestEnding, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, openCardSettings, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, autoDownloadAndPlay, openInitPreviewModal, closeInitPreviewModal, toggleHistoryPanel, renderPostRefPicker, clearPostRef, openPersonCardChat, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, toggleAvatarLibraryPanel, avatarPickLib, avatarPick, avatarUpload, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, openWechatApp, closeWechatApp, switchWechatTab, openWechatChat, backToWechatList, appendEmojiToInput, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, unlockCloudSlot, saveToCloudSlot, loadFromCloudSlot, deleteCloudSlot, clearLocalCache, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, closeFullMap, placeClick, placeGo, advanceStory, openPhoneDiary, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate, renderHomeDiscovery, switchSortMode, openCreationWizard, wizardPickStyle, wizardTitleCount, wizardPromptCount, wizardNext, wizardPrev, wizardConfirm, closeUploadPriceModal, confirmUploadWithPrice };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
     function sendUserText(text) { Controller.sendUserText(text); }
-    function switchPlayTab(tab) { Controller.switchPlayTab(tab); }
     function rerunEvent(idx) { Controller.rerunEvent(idx); }
     function showEventDetail(idx) { Controller.showEventDetail(idx); }
     function editEvent(idx) { Controller.editEvent(idx); }
