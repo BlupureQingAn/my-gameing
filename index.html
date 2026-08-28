@@ -17626,9 +17626,15 @@ function openNpcProfile(npcId) {
                     removed++;
                 }
             }
-            // 草稿卡(创作中未上传,status=draft)一并清除;已上传/下载的卡保留(仅本地卡列表过滤,不触碰数据库)
+            // 未上传的自制卡(草稿 status=draft + 历史遗留无 uploaded 标记)一并清除;已上传(uploaded)/下载(community)的卡与内置自定义卡保留
             const cards = ScenarioCardService.loadCards();
-            const kept = cards.filter((c) => c.status !== "draft");
+            const kept = cards.filter((c) => {
+                if (c.sourceType === "custom" && c.id !== "scenario_custom") {
+                    if (c.status === "draft") return false;
+                    if (!c.uploaded) return false;
+                }
+                return true;
+            });
             if (kept.length !== cards.length) {
                 ScenarioCardService.saveCards(kept);
                 removed += cards.length - kept.length;
@@ -17801,8 +17807,9 @@ function openNpcProfile(npcId) {
                     if (cid) {
                         const all = ScenarioCardService.loadCards();
                         const card = all.find((c) => String(c.id || "") === cid);
-                        if (card && card.status === "draft") {
-                            delete card.status;
+                        if (card) {
+                            card.uploaded = true; // 上传标记:清除本地缓存时未上传的自制卡才会被清
+                            if (card.status === "draft") delete card.status;
                             ScenarioCardService.saveCards(all);
                             UIRenderer.renderScenarioCards();
                         }
