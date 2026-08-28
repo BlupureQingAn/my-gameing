@@ -5843,7 +5843,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
 
     const GameSessionService = (() => {
         function normalizeCardId(cardId) {
-            return String(cardId || ScenarioCardService.CUSTOM_CARD_ID || "scenario_custom").replace(/[^\w-]/g, "_");
+            return String(cardId || "").replace(/[^\w-]/g, "_");
         }
         function getActiveCardId() {
             return normalizeCardId(ScenarioCardService.getSelectedId());
@@ -12058,22 +12058,11 @@ function rebuildChoicesBlock(body, labels = []) {
     })();
 
     const ScenarioCardService = (() => {
-        const CUSTOM_CARD_ID = "scenario_custom";
+        // 历史占位卡(scenario_custom 创作入口卡/scenario_default 旧版)已移除,数据里残留的加载时剔除
         const LEGACY_CUSTOM_IDS = new Set(["scenario_default", "scenario_custom"]);
         function nextOrder(cards = []) {
             const max = cards.reduce((acc, it) => Math.max(acc, Number(it.order) || 0), 0);
             return max + 1;
-        }
-        function buildCustomCard(base = {}) {
-            return {
-                id: CUSTOM_CARD_ID,
-                title: String(base.title || "自定义设定卡片"),
-                theme: String(base.theme || ""),
-                text: String(base.text || AppConfig.defaultScenario),
-                sourceType: "custom",
-                pinned: base.pinned !== false,
-                order: Number(base.order) || 1
-            };
         }
         function normalizeCard(card = {}, index = 0) {
             const id = String(card.id || "");
@@ -12120,21 +12109,16 @@ function rebuildChoicesBlock(body, labels = []) {
             });
         }
         function normalizeCards(rawCards) {
-            const cards = Array.isArray(rawCards) ? rawCards.map((c, idx) => normalizeCard(c, idx)) : [];
-            let custom = cards.find((c) => LEGACY_CUSTOM_IDS.has(String(c.id || "")));
-            const others = cards.filter((c) => !LEGACY_CUSTOM_IDS.has(String(c.id || "")));
-            if (!custom) custom = buildCustomCard();
-            custom = buildCustomCard(custom);
-            const merged = [custom, ...others].map((c, idx) => normalizeCard(c, idx));
-            const sorted = sortCards(merged);
-            // 自定义卡永远置顶（需求），不受 pinned/order/历史数据影响
-            const finalOrder = [custom, ...sorted.filter((c) => c.id !== custom.id)];
-            return finalOrder.map((c, idx) => ({ ...c, order: idx + 1 }));
+            const cards = (Array.isArray(rawCards) ? rawCards : [])
+                .filter((c) => !LEGACY_CUSTOM_IDS.has(String(c?.id || "")))
+                .map((c, idx) => normalizeCard(c, idx));
+            const sorted = sortCards(cards);
+            return sorted.map((c, idx) => ({ ...c, order: idx + 1 }));
         }
         function buildInitialCards() {
-            // 官方剧本库来自 scenarios/scenarios.js（build-scenarios.mjs 生成），自定义卡永远保留第一张
+            // 官方剧本库来自 scenarios/scenarios.js（build-scenarios.mjs 生成）
             const official = (Array.isArray(window.SCENARIO_LIBRARY) ? window.SCENARIO_LIBRARY : []);
-            return Utils.deepClone([buildCustomCard(), ...official]);
+            return Utils.deepClone(official);
         }
         function loadCards() {
             const cards = StorageService.readJson(AppConfig.storageKeys.scenarioCards, null);
@@ -12167,12 +12151,14 @@ function rebuildChoicesBlock(body, labels = []) {
             StorageService.writeJson(AppConfig.storageKeys.scenarioCards, normalizeCards(cards));
         }
         function getSelectedId() {
-            const raw = StorageService.readText(AppConfig.storageKeys.selectedScenarioCardId, CUSTOM_CARD_ID);
-            return LEGACY_CUSTOM_IDS.has(raw) ? CUSTOM_CARD_ID : raw;
+            const raw = StorageService.readText(AppConfig.storageKeys.selectedScenarioCardId, "");
+            if (raw && !LEGACY_CUSTOM_IDS.has(raw)) return raw;
+            // 空/历史占位卡:回退到第一张实际存在的卡
+            const cards = loadCards();
+            return cards.length ? String(cards[0].id || "") : "";
         }
         function setSelectedId(id) {
-            const normalizedId = LEGACY_CUSTOM_IDS.has(String(id || "")) ? CUSTOM_CARD_ID : id;
-            StorageService.writeText(AppConfig.storageKeys.selectedScenarioCardId, normalizedId);
+            StorageService.writeText(AppConfig.storageKeys.selectedScenarioCardId, String(id || ""));
         }
         function getSelectedCard() {
             const cards = loadCards();
@@ -12194,16 +12180,10 @@ function rebuildChoicesBlock(body, labels = []) {
             purgeCardRuntimeData(id);
             const cards = loadCards().filter((c) => c.id !== id);
             saveCards(cards);
-            // 若删除的是自定义卡片，则立刻补回一张新的自定义卡片并置顶，保证系统可用
-            if (id === CUSTOM_CARD_ID) {
-                const nextCards = loadCards();
-                const custom = buildCustomCard({ title: "自定义设定卡片", pinned: true, order: 1 });
-                const merged = normalizeCards([custom, ...nextCards.filter((c) => c.id !== CUSTOM_CARD_ID)]);
-                saveCards(merged);
-                setSelectedId(CUSTOM_CARD_ID);
-                return true;
+            if (getSelectedId() === id) {
+                const next = loadCards();
+                setSelectedId(next.length ? String(next[0].id || "") : "");
             }
-            if (getSelectedId() === id) setSelectedId(CUSTOM_CARD_ID);
             return true;
         }
         function purgeCardRuntimeData(cardId) {
@@ -12303,7 +12283,7 @@ function rebuildChoicesBlock(body, labels = []) {
             if (card.sourceType === "official") return "官方";
             return String(card.author || card.author_name || card.uploader || "").trim();
         }
-        return { CUSTOM_CARD_ID, loadCards, saveCards, getSelectedId, setSelectedId, getSelectedCard, updateSelectedCard, deleteCard, createCard, upsertCard, togglePin, reorderCards, themeNameOf, authorOf };
+        return { loadCards, saveCards, getSelectedId, setSelectedId, getSelectedCard, updateSelectedCard, deleteCard, createCard, upsertCard, togglePin, reorderCards, themeNameOf, authorOf };
     })();
 
     const CardScopedConfigService = (() => {
@@ -17629,7 +17609,7 @@ function openNpcProfile(npcId) {
             // 未上传的自制卡(草稿 status=draft + 历史遗留无 uploaded 标记)一并清除;已上传(uploaded)/下载(community)的卡与内置自定义卡保留
             const cards = ScenarioCardService.loadCards();
             const kept = cards.filter((c) => {
-                if (c.sourceType === "custom" && c.id !== "scenario_custom") {
+                if (c.sourceType === "custom") {
                     if (c.status === "draft") return false;
                     if (!c.uploaded) return false;
                 }
