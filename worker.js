@@ -422,6 +422,16 @@ function pickModel(usageMap, today, isMember) {
 
 // ==================== 5. H5 支付（h5zhifu.com） ====================
 
+// h5zhifu 网关多节点：默认 open.h5zhifu.com，网络不佳时自动切换国内备用节点（北京/上海/广州/成都）
+// 仅后端程序调用，浏览器不可直接打开；env.PAY_API_URL 显式配置时只走该域名（禁用自动切换）
+const PAY_GATEWAY_BASES = [
+    "https://open.h5zhifu.com",
+    "https://bj.open.serverapi.work",
+    "https://sh.open.serverapi.work",
+    "https://gz.open.serverapi.work",
+    "https://cd.open.serverapi.work"
+];
+
 // 签名：非空参数（除 sign）按参数名 ASCII 升序拼接 a=b&c=d，追加 &key=密钥，md5 转大写（微信 APIv2 风格）
 function h5BuildSign(params, secret) {
     const keys = Object.keys(params)
@@ -471,22 +481,30 @@ async function createPayOrder(env, userId, planId, payType) {
     };
     params.sign = h5BuildSign(params, env.H5_APP_SECRET);
 
-    let payRes;
-    try {
-        payRes = await fetch("https://open.h5zhifu.com/api/h5", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(params),
-            signal: AbortSignal.timeout(15000)
-        });
-    } catch (e) {
-        throw new Error(e.name === "TimeoutError" ? "支付网关响应超时，请稍后重试" : "支付网关连接失败");
+    // 网络失败/网关故障(非 2xx)按序切换备用节点；业务错误(2xx 但 code!==200)直接报错不切换
+    let lastErr = null;
+    const bases = env.PAY_API_URL ? [env.PAY_API_URL] : PAY_GATEWAY_BASES;
+    for (const base of bases) {
+        let payRes;
+        try {
+            payRes = await fetch(`${base}/api/h5`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(params),
+                signal: AbortSignal.timeout(15000)
+            });
+        } catch (e) {
+            lastErr = new Error(e.name === "TimeoutError" ? "支付网关响应超时，请稍后重试" : "支付网关连接失败");
+            continue;
+        }
+        const payJson = await payRes.json().catch(() => ({}));
+        if (payRes.ok && payJson.code === 200 && payJson.data && payJson.data.jump_url) {
+            return { orderNo, jumpUrl: payJson.data.jump_url, tradeNo: payJson.data.trade_no || "" };
+        }
+        if (payRes.ok) throw new Error(payJson.msg || "支付网关返回异常");
+        lastErr = new Error(`支付网关响应异常(HTTP ${payRes.status})`);
     }
-    const payJson = await payRes.json().catch(() => ({}));
-    if (payJson.code === 200 && payJson.data && payJson.data.jump_url) {
-        return { orderNo, jumpUrl: payJson.data.jump_url, tradeNo: payJson.data.trade_no || "" };
-    }
-    throw new Error(payJson.msg || "支付网关返回异常");
+    throw lastErr || new Error("支付网关连接失败");
 }
 
 // 回调处理：验签 → paid/success → 订单/金额校验 → 幂等 → 充值档发云币(首充双倍)/lifetime 开通会员
