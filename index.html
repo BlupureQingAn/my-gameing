@@ -16494,7 +16494,7 @@ const token = delta.content || "";
         function phoneAppTap(action) {
             switch (action) {
                 case "chat": openWechatApp(); break;
-                case "forum": switchView("view-community"); switchCommunityTab("feed"); break;
+                case "forum": openForumApp(); break;
                 case "diary":
                 case "memories": openPhoneDiary(); break;
                 case "backpack": switchView("view-inventory"); break;
