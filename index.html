@@ -1037,9 +1037,9 @@
         .phone-shell {
             position: relative;
             border-radius: 22px;
-            padding: 14px 14px 16px;
+            padding: 12px 12px 14px;
             background: linear-gradient(160deg, rgba(255,255,255,.96), rgba(246,244,252,.9));
-            border: 1px solid var(--line);
+            border: 5px solid var(--phone-accent);
             box-shadow: 0 10px 30px rgba(0,0,0,.10);
             display: flex;
             flex-direction: column;
@@ -1056,7 +1056,7 @@
             background-repeat: no-repeat;
         }
         body[data-theme="dark"] .phone-shell { background: linear-gradient(160deg, rgba(30,26,40,.97), rgba(38,32,50,.93)); }
-        .phone-statusbar { display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: 700; color: var(--phone-accent, var(--text-muted)); }
+        .phone-statusbar { display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: 700; color: var(--text-muted); }
         .phone-set-row {
             display: flex;
             justify-content: space-between;
@@ -3582,6 +3582,8 @@
         .gd-setting-line b { font-weight: 700; color: var(--text); }
         .gd-setting-npc { display: flex; gap: 6px; }
         .ic { width: 1em; height: 1em; vertical-align: -0.125em; display: inline-block; flex: none; }
+        /* 文本流内联 SVG 图标统一下移(底部导航等与文字同行的图标);flex/absolute 容器内的图标不受影响 */
+        .wx-ui-icon { vertical-align: -0.18em; display: inline-block; flex: none; }
         .gd-role-card { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--card-soft); margin-bottom: 6px; }
         .gd-role-avatar { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; background: var(--card); border: 1px solid var(--line); flex-shrink: 0; }
         .gd-role-main { flex: 1; min-width: 0; }
@@ -4379,7 +4381,7 @@
         #wx-chat .npc-chat-composer .send-btn:disabled { background: #E2E2E2; }
         #wx-main .wx-empty { padding: 48px 16px; }
         #wx-main .wx-empty .wx-empty-text { font-size: 14px; color: var(--wx-text-secondary); margin-top: 10px; }
-        #wx-main .wx-empty-icon { font-size: 40px; opacity: 0.55; }
+        #wx-main .wx-empty-icon { font-size: 40px; opacity: 0.55; color: var(--wx-text-secondary); }
         /* ===== 微信UI第二波（抄小手机 weixin.css）：时间条/未读红点/分隔线缩进/长按菜单/加号面板 ===== */
         /* 聊天时间条：居中 11px 灰字 */
         #wx-chat .wx-time-label {
@@ -5147,7 +5149,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <div class="phone-shell">
                 <div class="phone-statusbar">
                     <span id="phone-clock">00:00</span>
-                    <span class="phone-status-icons">📶 🛜 🔋</span>
+                    <span class="phone-status-icons"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M2 20v-8h4v8H2zm6 0v-12h4v12H8zm6 0V4h4v16h-4zm6 0v-4h4v4h-4z"/></svg><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg></span>
                 </div>
                 <div class="phone-user-card">
                     <div class="phone-avatar" id="phone-avatar"></div>
@@ -5166,7 +5168,10 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                         <button type="button" onclick="bgmPrev()" title="上一曲">⏮</button>
                         <button type="button" onclick="bgmToggle()" id="phone-bgm-play" title="播放/暂停">▶</button>
                         <button type="button" onclick="bgmNext()" title="下一曲">⏭</button>
+                        <button type="button" onclick="bgmImport()" title="导入本地音乐">📂</button>
+                        <button type="button" id="phone-bgm-clear" onclick="bgmClearImport()" title="移除导入的音乐" style="display:none">🗑</button>
                     </div>
+                    <input type="file" id="phone-bgm-file" accept="audio/*" style="display:none;">
                 </div>
                 <div class="phone-apps-row" id="phone-apps-func"></div>
                 <div class="phone-apps-row wide" id="phone-apps-more"></div>
@@ -6014,6 +6019,75 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
         { n: "学府", i: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M10 14h4v-2h-4zm0-3h8V9h-8zm0-3h8V6h-8zM8 18q-.825 0-1.412-.587T6 16V4q0-.825.588-1.412T8 2h12q.825 0 1.413.588T22 4v12q0 .825-.587 1.413T20 18zm-4 4q-.825 0-1.412-.587T2 20V6h2v14h14v2z'/></svg>" }, { n: "庙宇", i: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M1 21v-4l2-2V9L1 7V3h2v2h2V3h2v2h2V3h2v4L9 9v1h6V9l-2-2V3h2v2h2V3h2v2h2V3h2v4l-2 2v6l2 2v4h-9v-3q0-.825-.587-1.412T12 16t-1.412.588T10 18v3z'/></svg>" }, { n: "工坊", i: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='m18.9 21l-5.475-5.475l2.1-2.1L21 18.9zM5.1 21L3 18.9L9.9 12l-1.7-1.7l-.7.7l-1.275-1.275v2.05l-.7.7L2.5 9.45l.7-.7h2.05L4 7.5l3.55-3.55q.5-.5 1.075-.725T9.8 3t1.175.225t1.075.725l-2.3 2.3L11 7.5l-.7.7L12 9.9l2.25-2.25q-.1-.275-.162-.575t-.063-.6q0-1.475 1.013-2.488t2.487-1.012q.375 0 .713.075t.687.225L16.45 5.75l1.8 1.8l2.475-2.475q.175.35.238.687t.062.713q0 1.475-1.012 2.488t-2.488 1.012q-.3 0-.6-.05t-.575-.175z'/></svg>" }, { n: "茶馆", i: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M4 21v-2h16v2zm4-4q-1.65 0-2.825-1.175T4 13V3h16q.825 0 1.413.588T22 5v3q0 .825-.587 1.413T20 10h-2v3q0 1.65-1.175 2.825T14 17zm10-9h2V5h-2z'/></svg>" },
         { n: "广场", i: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M5 17v-7h2v7zm6 0v-7h2v7zm-9 4v-2h20v2zm15-4v-7h2v7zM2 8V6l10-5l10 5v2z'/></svg>" }, { n: "森林", i: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M13 22v-3h4v3zm-6 0v-4H0l3.85-6H2L9 2l7 10h-1.85l3.875 6H11v4zm12.25-4L16 13h1.925l-5.3-7.575L15 2l7 10h-1.85L24 18z'/></svg>" }, { n: "河畔", i: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='m1 18l6-8l4.5 6h2.525l-3.775-5L14 6l9 12z'/></svg>" }, { n: "街巷", i: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M6.175 19.825Q5 18.65 5 17V8.825Q4.125 8.5 3.563 7.738T3 6q0-1.25.875-2.125T6 3t2.125.875T9 6q0 .975-.562 1.738T7 8.825V17q0 .825.588 1.413T9 19t1.413-.587T11 17V7q0-1.65 1.175-2.825T15 3t2.825 1.175T19 7v8.175q.875.325 1.438 1.088T21 18q0 1.25-.875 2.125T18 21t-2.125-.875T15 18q0-.975.563-1.75T17 15.175V7q0-.825-.587-1.412T15 5t-1.412.588T13 7v10q0 1.65-1.175 2.825T9 21t-2.825-1.175'/></svg>" }
     ];
+    // 题材→开局地点池（图标复用 MAP_PLACE_POOL 素材，地点不再拼"主城·"前缀、不再千篇一律）
+    const THEME_LOCATION_POOL = {
+        urban: [
+            { n: "中央广场", i: MAP_PLACE_POOL[8].i }, { n: "河滨公园", i: MAP_PLACE_POOL[9].i }, { n: "老城街巷", i: MAP_PLACE_POOL[11].i },
+            { n: "商业街", i: MAP_PLACE_POOL[11].i }, { n: "地铁站", i: "🚇" }, { n: "城市边缘", i: MAP_PLACE_POOL[2].i }
+        ],
+        campus: [
+            { n: "教学楼", i: MAP_PLACE_POOL[4].i }, { n: "操场", i: MAP_PLACE_POOL[8].i }, { n: "图书馆", i: MAP_PLACE_POOL[4].i },
+            { n: "食堂", i: MAP_PLACE_POOL[0].i }, { n: "宿舍楼", i: MAP_PLACE_POOL[4].i }, { n: "校门口", i: MAP_PLACE_POOL[4].i }
+        ],
+        ancient: [
+            { n: "长街", i: MAP_PLACE_POOL[11].i }, { n: "东市", i: MAP_PLACE_POOL[0].i }, { n: "码头", i: MAP_PLACE_POOL[3].i },
+            { n: "茶馆", i: MAP_PLACE_POOL[7].i }, { n: "寺庙", i: MAP_PLACE_POOL[5].i }, { n: "城郊", i: MAP_PLACE_POOL[2].i }
+        ],
+        wuxia: [
+            { n: "镖局", i: MAP_PLACE_POOL[6].i }, { n: "茶馆", i: MAP_PLACE_POOL[7].i }, { n: "山门", i: MAP_PLACE_POOL[5].i },
+            { n: "擂台", i: MAP_PLACE_POOL[8].i }, { n: "竹林", i: MAP_PLACE_POOL[9].i }, { n: "渡口", i: MAP_PLACE_POOL[3].i }
+        ],
+        fantasy: [
+            { n: "魔法集市", i: MAP_PLACE_POOL[0].i }, { n: "黑森林", i: MAP_PLACE_POOL[9].i }, { n: "湖畔", i: MAP_PLACE_POOL[10].i },
+            { n: "地下城入口", i: MAP_PLACE_POOL[6].i }, { n: "酒馆", i: MAP_PLACE_POOL[1].i }, { n: "瞭望塔", i: MAP_PLACE_POOL[8].i }
+        ],
+        apocalypse: [
+            { n: "避难所", i: MAP_PLACE_POOL[6].i }, { n: "废墟街道", i: MAP_PLACE_POOL[11].i }, { n: "加油站", i: MAP_PLACE_POOL[6].i },
+            { n: "军事哨站", i: MAP_PLACE_POOL[8].i }, { n: "旧医院", i: MAP_PLACE_POOL[4].i }, { n: "广播站", i: MAP_PLACE_POOL[4].i }
+        ],
+        scifi: [
+            { n: "星港", i: MAP_PLACE_POOL[3].i }, { n: "中心城", i: MAP_PLACE_POOL[8].i }, { n: "实验区", i: MAP_PLACE_POOL[6].i },
+            { n: "轨道站", i: MAP_PLACE_POOL[3].i }, { n: "居民舱", i: MAP_PLACE_POOL[4].i }, { n: "废料场", i: MAP_PLACE_POOL[6].i }
+        ],
+        general: [
+            { n: "广场", i: MAP_PLACE_POOL[8].i }, { n: "街巷", i: MAP_PLACE_POOL[11].i }, { n: "市集", i: MAP_PLACE_POOL[0].i },
+            { n: "河畔", i: MAP_PLACE_POOL[10].i }, { n: "公园", i: MAP_PLACE_POOL[9].i }, { n: "酒馆", i: MAP_PLACE_POOL[1].i }
+        ]
+    };
+    function themeKeyOf(genre, category) {
+        const text = `${String(genre || "")}${String(category || "")}`;
+        if (/校园/.test(text)) return "campus";
+        if (/武侠/.test(text)) return "wuxia";
+        if (/奇幻|魔法|玄幻/.test(text)) return "fantasy";
+        if (/末世|末日/.test(text)) return "apocalypse";
+        if (/科幻/.test(text)) return "scifi";
+        if (/古风|历史|宫斗|古代/.test(text)) return "ancient";
+        if (/都市|职场|娱乐圈|悬疑|现代/.test(text)) return "urban";
+        return "general";
+    }
+    function locationSeedOf(cardId) {
+        let h = 0;
+        const str = String(cardId || "loc");
+        for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+        return h;
+    }
+    // 确定性从题材池取 count 个地点，首位替换为主地点（若有）；不带"主城·"前缀
+    function themedLocationsOf(genre, category, baseName, cardId, count = 4) {
+        const pool = THEME_LOCATION_POOL[themeKeyOf(genre, category)] || THEME_LOCATION_POOL.general;
+        let a = locationSeedOf(cardId) >>> 0;
+        const rnd = () => {
+            a = (a + 0x6D2B79F5) >>> 0;
+            let t = a;
+            t = Math.imul(t ^ (t >>> 15), t | 1);
+            t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+        const picks = pool.slice().sort(() => rnd() - 0.5).slice(0, count);
+        const list = picks.map((p) => ({ name: p.n, icon: p.i }));
+        const bn = String(baseName || "").trim();
+        if (bn && list.length) list[0] = { name: bn.slice(0, 16), icon: list[0].icon };
+        return list;
+    }
     function mapIconOf(name) {
         const tail = String(name || "").split("·").pop();
         const hit = MAP_PLACE_POOL.find((p) => p.n === tail);
@@ -6027,7 +6101,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             // 主城名未生成时不再拼"待生成·xxx"前缀，直接给子地点
             return pool.slice(0, 4).map((p) => ({ name: p.n, icon: p.i }));
         }
-        const others = pool.slice(0, 3).map((p) => ({ name: `${baseName}·${p.n}`, icon: p.i }));
+        const others = pool.slice(0, 3).map((p) => ({ name: p.n, icon: p.i }));
         return [{ name: baseName, icon: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M13.413 11.413Q14 10.825 14 10t-.587-1.412T12 8t-1.412.588T10 10t.588 1.413T12 12t1.413-.587M12 22q-4.025-3.425-6.012-6.362T4 10.2q0-3.75 2.413-5.975T12 2t5.588 2.225T20 10.2q0 2.5-1.987 5.438T12 22'/></svg>" }, ...others];
     }
     const StateService = (() => {
@@ -6148,7 +6222,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             }
         }
 
-        function resetWithPreset({ selectedGender, forcedGender, forcedOrientation, forcedRole, name, englishName, ageYears, nationality, location, currentYear, currentMonth, currentDay, timeEra, weekIndex, weekdayIndex, inventory, npcs, stats, panelStatusTags, rebornReason, avatar, appearance, personality, family, genderIdentity }) {
+        function resetWithPreset({ selectedGender, forcedGender, forcedOrientation, forcedRole, name, englishName, ageYears, nationality, location, locations, currentYear, currentMonth, currentDay, timeEra, weekIndex, weekdayIndex, inventory, npcs, stats, panelStatusTags, rebornReason, avatar, appearance, personality, family, genderIdentity }) {
             const finalGender = forcedGender || selectedGender || baseState.gender;
             gameState = buildInitialState(finalGender, {
                 gender: forcedGender,
@@ -6159,6 +6233,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 ageYears,
                 nationality,
                 location,
+                locations,
                 currentYear,
                 currentMonth,
                 currentDay,
@@ -8828,8 +8903,15 @@ function rebuildChoicesBlock(body, labels = []) {
             都市: "city", 职场: "city", 娱乐圈: "city", 悬疑: "city", 无限流: "city", 科幻: "city",
             末世: "doomsday"
         };
-        function themeMapBgOf(category) {
-            return MAP_THEME_MAP[String(category || "")] || "parchment";
+        function themeMapBgOf(category, genre) {
+            const g = String(genre || "").trim();
+            const c = String(category || "").trim();
+            if (MAP_THEME_MAP[g]) return MAP_THEME_MAP[g];
+            if (MAP_THEME_MAP[c]) return MAP_THEME_MAP[c];
+            for (const key in MAP_THEME_MAP) {
+                if (key.length > 1 && (g.includes(key) || c.includes(key))) return MAP_THEME_MAP[key];
+            }
+            return "parchment";
         }
         // 确定性伪随机：同一剧本同一地点位置稳定（cardId 派生 seed），未设 x/y 的地点均匀散开
         function _hashSeed(str) {
@@ -8871,7 +8953,8 @@ function rebuildChoicesBlock(body, labels = []) {
             let places = Array.isArray(base && base.places) ? base.places : [];
             let effectiveBg = bg, effectiveUrl = bgUrl;
             if (!effectiveBg && !effectiveUrl && !places.length) {
-                effectiveBg = themeMapBgOf(card && card.category);
+                const cardGenre = (card && card.structured && card.structured.world && card.structured.world.genre) || (card && card.theme);
+                effectiveBg = themeMapBgOf(card && card.category, cardGenre);
                 const state = (typeof StateService !== "undefined" && typeof StateService.get === "function") ? StateService.get() : null;
                 places = (state ? normalizeLocations(state) : []).map((l) => ({ name: l.name, icon: l.icon, x: null, y: null }));
             }
@@ -9536,9 +9619,9 @@ function rebuildChoicesBlock(body, labels = []) {
             if (avatarBtn) {
                 const av = npc.avatar || "";
                 if (isAvatarImg(av)) {
-                    avatarBtn.innerHTML = `<img src="${String(av).replace(/"/g, "%22")}" alt="" onerror="this.parentElement.textContent='<svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M9.175 10.825Q8 9.65 8 8t1.175-2.825T12 4t2.825 1.175T16 8t-1.175 2.825T12 12t-2.825-1.175M4 20v-2.8q0-.85.438-1.562T5.6 14.55q1.55-.775 3.15-1.162T12 13t3.25.388t3.15 1.162q.725.375 1.163 1.088T20 17.2V20z"/></svg>'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`;
+                    avatarBtn.innerHTML = `<img src="${String(av).replace(/"/g, "%22")}" alt="" onerror="this.parentElement.textContent='?'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`;
                 } else {
-                    avatarBtn.textContent = String(npc.name || "?").slice(0, 1) || "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M9.175 10.825Q8 9.65 8 8t1.175-2.825T12 4t2.825 1.175T16 8t-1.175 2.825T12 12t-2.825-1.175M4 20v-2.8q0-.85.438-1.562T5.6 14.55q1.55-.775 3.15-1.162T12 13t3.25.388t3.15 1.162q.725.375 1.163 1.088T20 17.2V20z'/></svg>";
+                    avatarBtn.textContent = Array.from(String(npc.name || "?"))[0] || "?";
                 }
                 avatarBtn.onclick = () => openAvatarPickerForNpc(npc.id || npc.name);
             }
@@ -9881,21 +9964,135 @@ function rebuildChoicesBlock(body, labels = []) {
             };
             fillApps(apps && apps.func, DEFAULT_PHONE_APPS.func, document.getElementById("phone-apps-func"));
             fillApps(apps && apps.more, DEFAULT_PHONE_APPS.more, document.getElementById("phone-apps-more"));
+            bgmRebuild();
+            // 微信会话列表随手机页刷新（新聊天消息自动出现在会话列表）
+            renderWechatSessions(state);
+        }
+        // 本地音乐库:IndexedDB 存储音频 Blob(音频超 localStorage base64 限制)
+        const BgmLibrary = {
+            _db: null,
+            _open() {
+                return new Promise((res, rej) => {
+                    if (this._db) return res(this._db);
+                    if (typeof indexedDB === "undefined") return rej(new Error("当前环境不支持本地存储"));
+                    const r = indexedDB.open("bitlife_bgm_lib_v1", 1);
+                    r.onupgradeneeded = () => {
+                        const d = r.result;
+                        if (!d.objectStoreNames.contains("tracks")) d.createObjectStore("tracks", { keyPath: "id" });
+                    };
+                    r.onsuccess = () => { this._db = r.result; res(this._db); };
+                    r.onerror = () => rej(r.error || new Error("打开本地音乐库失败"));
+                });
+            },
+            async put(id, blob, name) {
+                const db = await this._open();
+                return new Promise((res, rej) => {
+                    const t = db.transaction("tracks", "readwrite");
+                    t.objectStore("tracks").put({ id, blob, name });
+                    t.oncomplete = () => res();
+                    t.onerror = () => rej(t.error || new Error("写入本地音乐库失败"));
+                });
+            },
+            async get(id) {
+                const db = await this._open();
+                return new Promise((res, rej) => {
+                    const t = db.transaction("tracks", "readonly");
+                    const rq = t.objectStore("tracks").get(id);
+                    rq.onsuccess = () => res(rq.result || null);
+                    rq.onerror = () => rej(rq.error || new Error("读取本地音乐库失败"));
+                });
+            },
+            async remove(id) {
+                const db = await this._open();
+                return new Promise((res, rej) => {
+                    const t = db.transaction("tracks", "readwrite");
+                    t.objectStore("tracks").delete(id);
+                    t.oncomplete = () => res();
+                    t.onerror = () => rej(t.error || new Error("删除本地音乐失败"));
+                });
+            }
+        };
+        async function bgmRebuild() {
+            const s = _bgmState;
+            const ps = PhoneSettingsService.get();
+            const custom = ps.bgmCustom && typeof ps.bgmCustom === "object" ? ps.bgmCustom : null;
+            const customName = custom ? String(custom.name || "本地音乐").trim().slice(0, 40) : "";
+            if (!customName) {
+                if (s.customUrl) { URL.revokeObjectURL(s.customUrl); s.customUrl = null; }
+                s.customKey = "";
+            } else if (s.customKey !== customName) {
+                try {
+                    const rec = await BgmLibrary.get("custom");
+                    if (rec && rec.blob) {
+                        if (s.customUrl) URL.revokeObjectURL(s.customUrl);
+                        s.customUrl = URL.createObjectURL(rec.blob);
+                        s.customKey = customName;
+                    } else {
+                        s.customUrl = null;
+                        s.customKey = "";
+                    }
+                } catch (e) {
+                    s.customUrl = null;
+                    s.customKey = "";
+                }
+            }
+            const state = StateService.get();
             const bgmList = Array.isArray(state.bgms) ? state.bgms : [];
-            _bgmState.list = bgmList;
-            if (_bgmState.idx >= bgmList.length) _bgmState.idx = -1;
+            s.list = bgmList.concat(s.customUrl ? [{ title: `我的音乐·${s.customKey}`, url: s.customUrl }] : []);
+            if (s.idx >= s.list.length) s.idx = -1;
             const titleEl = document.getElementById("phone-bgm-title");
             const btns = document.querySelectorAll(".phone-bgm-btns button");
-            if (!bgmList.length) {
+            const clearBtn = document.getElementById("phone-bgm-clear");
+            if (clearBtn) clearBtn.style.display = s.customUrl ? "" : "none";
+            if (!s.list.length) {
                 if (titleEl) titleEl.textContent = "背景音乐 · 暂无（剧本未配置）";
                 btns.forEach((b) => { b.disabled = true; });
             } else {
                 btns.forEach((b) => { b.disabled = false; });
-                if (_bgmState.idx < 0) _bgmState.idx = 0;
+                if (s.idx < 0) s.idx = 0;
                 _bgmRenderTitle();
             }
-            // 微信会话列表随手机页刷新（新聊天消息自动出现在会话列表）
-            renderWechatSessions(state);
+        }
+        function bgmImport() {
+            const input = document.getElementById("phone-bgm-file");
+            if (!input) return;
+            input.value = "";
+            input.onchange = async () => {
+                const f = input.files && input.files[0];
+                if (!f) return;
+                if (f.size > 30 * 1024 * 1024) {
+                    NoticeModalService.showInfo({ title: "文件过大", descHtml: "请选择不超过 30MB 的音乐文件。" });
+                    return;
+                }
+                const okType = String(f.type || "").startsWith("audio/") || /\.(mp3|wav|m4a|ogg|flac|aac)$/i.test(String(f.name || ""));
+                if (!okType) {
+                    NoticeModalService.showInfo({ title: "格式不支持", descHtml: "请选择音频文件（mp3/wav/m4a/ogg/flac/aac）。" });
+                    return;
+                }
+                try {
+                    await BgmLibrary.put("custom", f, f.name);
+                    const ps = PhoneSettingsService.get();
+                    ps.bgmCustom = { name: f.name };
+                    StateService.save();
+                    await bgmRebuild();
+                    NoticeModalService.showInfo({ title: "导入成功", descHtml: `已导入「${MarkdownService.escapeHtml(String(f.name).slice(0, 40))}」，可点击播放。` });
+                } catch (e) {
+                    NoticeModalService.showInfo({ title: "导入失败", descHtml: String((e && e.message) || e || "未知错误") });
+                }
+            };
+            input.click();
+        }
+        async function bgmClearImport() {
+            const s = _bgmState;
+            try { await BgmLibrary.remove("custom"); } catch (e) {}
+            if (s.customUrl) { URL.revokeObjectURL(s.customUrl); s.customUrl = null; }
+            s.customKey = "";
+            const ps = PhoneSettingsService.get();
+            ps.bgmCustom = null;
+            StateService.save();
+            if (s.audio) { s.audio.pause(); s.audio.src = ""; }
+            s.playing = false;
+            await bgmRebuild();
         }
         function bgmSetEnabled(on) {
             const s = _bgmState;
@@ -9906,7 +10103,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const s = _bgmState;
             if (s.audio) s.audio.volume = Math.max(0, Math.min(1, Number(v) || 0));
         }
-        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderWechatSessions, renderWechatContacts, renderWechatChat, renderSaveSlots, renderScenarioCards, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, renderPlayStatusBar, renderPlayEventList, renderWorld, renderDiary, renderEndingModal, renderPhone, buildEventRounds, avatarColor, heartLadder, stripHtml, normalizeLocations, bgmToggle, bgmNext, bgmPrev, bgmSetEnabled, bgmSetVolume, mapSrcOf, getActiveMap };
+        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderWechatSessions, renderWechatContacts, renderWechatChat, renderSaveSlots, renderScenarioCards, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, renderPlayStatusBar, renderPlayEventList, renderWorld, renderDiary, renderEndingModal, renderPhone, buildEventRounds, avatarColor, heartLadder, stripHtml, normalizeLocations, bgmToggle, bgmNext, bgmPrev, bgmSetEnabled, bgmSetVolume, bgmImport, bgmClearImport, mapSrcOf, getActiveMap };
     })();
 
     // ---- 手机专属设置页：BGM 开关/音量、消息通知、主题色、字体大小 ----
@@ -14846,6 +15043,15 @@ const token = delta.content || "";
                     secret: String(n.secret || "").slice(0, 80)
                 }
             })).slice(0, 12);
+            // 开局地点列表:编辑器设定(map.places)优先;否则按题材确定性生成,不带"主城·"前缀
+            const initLocations = mapPlaces.length
+                ? mapPlaces.slice(0, 10).map((p) => ({ name: String(p.name || "").trim().slice(0, 20), desc: String(p.desc || "").trim().slice(0, 80), icon: String(p.icon || ""), x: p.x, y: p.y })).filter((l) => l.name)
+                : themedLocationsOf(world.genre, card.category, String(identity.location || "").trim() || locationRaw, card.id, 4);
+            // 身份预制:structured.identity 有值优先;缺失按背景职业词/题材兜底,避免确认弹窗大量空白
+            const bgText = String(identity.background || "").trim();
+            const ROLE_DICT = ["学生", "老师", "医生", "护士", "律师", "记者", "演员", "歌手", "画家", "作家", "厨师", "司机", "程序员", "工程师", "设计师", "老板", "商人", "士兵", "军人", "警察", "书生", "道士", "和尚", "工匠", "掌柜", "农夫", "猎人", "仆从", "丫鬟", "管家", "秘书", "助理", "主播", "教练", "运动员", "研究员", "店员", "快递员", "保安", "教授", "将军", "丞相", "皇帝", "王爷", "公主", "太子", "妃嫔", "皇子", "剑客", "侠客", "镖师", "捕快", "船夫", "宫女", "太监"];
+            const ROLE_BY_THEME = { campus: "学生", wuxia: "侠客", scifi: "探索者", apocalypse: "幸存者", fantasy: "冒险者", ancient: "书生", urban: "上班族", general: "" };
+            const themeRole = ROLE_BY_THEME[themeKeyOf(world.genre, card.category)] || "";
             // 创作向导可写入 structured.stats(数组[{key,label,value}]),有则优先;否则从设定文本兜底提取
             // 属性表(带 init/min/max)开局转 stats 初值,运行时 clamp 用
             const stats = Array.isArray(st.stats) && st.stats.length
@@ -14857,13 +15063,17 @@ const token = delta.content || "";
                 : StatsService.normalizeStats(buildFallbackStatsFromScenario(card.text || "", { ageYears: Number.isFinite(ageRaw) ? ageRaw : 18 }));
             return {
                 name,
-                englishName: String(fallbackIdentity.englishName || "PendingName").trim().slice(0, 32),
+                englishName: String(identity.englishName || fallbackIdentity.englishName || "PendingName").trim().slice(0, 32),
                 forcedGender: String(identity.gender || "").trim() || selectedGender || "女",
-                forcedOrientation: "",
-                forcedRole: "",
+                forcedOrientation: String(identity.orientation || "").trim().slice(0, 12) || "异性恋",
+                forcedRole: String(identity.role || "").trim().slice(0, 12) || ROLE_DICT.find((r) => bgText.includes(r)) || themeRole || "",
                 ageYears: Number.isFinite(ageRaw) && ageRaw >= 0 ? ageRaw : 18,
-                nationality: nationMatch ? nationMatch[1] : "",
-                location: locationRaw || "",
+                nationality: nationMatch ? nationMatch[1] : (String(identity.nationality || "").trim().slice(0, 12) || (/现代|都市|校园|职场|娱乐圈/.test(era) || /古代|古风|历史|宫斗|武侠/.test(era) ? "中国" : "")),
+                location: locationRaw || (initLocations[0] && initLocations[0].name) || "",
+                appearance: String(identity.appearance || "").trim().slice(0, 40),
+                personality: String(identity.personality || "").trim().slice(0, 40),
+                family: String(identity.family || "").trim().slice(0, 40),
+                locations: initLocations,
                 timeEra: era,
                 currentYear: Number.isFinite(tlYear) ? tlYear : null,
                 currentMonth: Number.isFinite(tlMonth) ? tlMonth : null,
@@ -14900,7 +15110,7 @@ const token = delta.content || "";
                 "  summary: string，60-150 字游戏简介",
                 "  rules: array[string]，6-8 条世界规则/叙事规则，每条约 12-30 字",
                 "  stats: array[{key,label,value}]，4-6 项角色属性，key 英文标识、label 中文名、value 为 0-100 数字",
-                "  identity: object{name: string 主角姓名, gender: string 性别, age: string 年龄, background: string 60-150 字背景}，严格从用户描述提取，描述中没提到的字段填空字符串",
+                "  identity: object{name: string 主角姓名, gender: string 性别, age: string 年龄, background: string 60-150 字背景, nationality: string 国籍, role: string 职业/身份, appearance: string 外貌, personality: string 性格, family: string 家庭背景}，严格从用户描述提取，描述中没提到的字段填空字符串",
                 "  npcs: array[{name: string 姓名, role: string 角色/职位, personality: string 性格, relationship: string 与主角的关系}]，从用户描述提取 1-4 个重要人物，描述中没有则给空数组",
                 "  opening: object{story: string 200-300 字开场白, options: array[string] 2-3 个开场选项}"
             ].join("\n");
@@ -17129,8 +17339,8 @@ function openNpcProfile(npcId) {
             const avatarBtn = document.getElementById("wx-chat-avatar-btn");
             if (avatarBtn && _personChat) {
                 const av = _personChat.avatar;
-                if (isAvatarImg(av)) avatarBtn.innerHTML = `<img src="${String(av).replace(/"/g, "%22")}" alt="" onerror="this.parentElement.textContent='<svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M9.175 10.825Q8 9.65 8 8t1.175-2.825T12 4t2.825 1.175T16 8t-1.175 2.825T12 12t-2.825-1.175M4 20v-2.8q0-.85.438-1.562T5.6 14.55q1.55-.775 3.15-1.162T12 13t3.25.388t3.15 1.162q.725.375 1.163 1.088T20 17.2V20z"/></svg>'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`;
-                else avatarBtn.textContent = String(_personChat.npcName || "?").slice(0, 1) || "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M9.175 10.825Q8 9.65 8 8t1.175-2.825T12 4t2.825 1.175T16 8t-1.175 2.825T12 12t-2.825-1.175M4 20v-2.8q0-.85.438-1.562T5.6 14.55q1.55-.775 3.15-1.162T12 13t3.25.388t3.15 1.162q.725.375 1.163 1.088T20 17.2V20z'/></svg>";
+                if (isAvatarImg(av)) avatarBtn.innerHTML = `<img src="${String(av).replace(/"/g, "%22")}" alt="" onerror="this.parentElement.textContent='?'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`;
+                else avatarBtn.textContent = Array.from(String(_personChat.npcName || "?"))[0] || "?";
             }
             if (!_personChat) { box.innerHTML = '<div class="list-sub">未找到人物卡数据。</div>'; return; }
             const npcLike = { id: _personChat.npcId, name: _personChat.npcName, avatar: _personChat.avatar };
@@ -18891,10 +19101,9 @@ function openNpcProfile(npcId) {
                 if (flags.rules && Array.isArray(gen.rules)) card.structured.world.rules = gen.rules.map((s) => String(s).trim()).filter(Boolean).slice(0, 12);
                 if (flags.stats && Array.isArray(gen.stats)) card.structured.stats = gen.stats.map((s) => ({ key: String(s.key || "stat"), label: String(s.label || s.key || "属性"), value: Number(s.value) || 0 })).slice(0, 10);
                 if (flags.identity && gen.identity && typeof gen.identity === "object") {
-                    card.structured.identity.name = String(gen.identity.name || "").trim().slice(0, 20);
-                    card.structured.identity.gender = String(gen.identity.gender || "").trim().slice(0, 10);
-                    card.structured.identity.age = String(gen.identity.age || "").trim().slice(0, 10);
-                    card.structured.identity.background = String(gen.identity.background || "").trim().slice(0, 500);
+                    ["name", "gender", "age", "background", "nationality", "role", "appearance", "personality", "family"].forEach((k) => {
+                        card.structured.identity[k] = String(gen.identity[k] || "").trim().slice(0, k === "background" ? 500 : 40);
+                    });
                 }
                 if (flags.npcs && Array.isArray(gen.npcs)) {
                     card.structured.npcs = gen.npcs.map((n) => ({
@@ -18968,6 +19177,8 @@ function openNpcProfile(npcId) {
     function bgmToggle() { UIRenderer.bgmToggle(); }
     function bgmNext() { UIRenderer.bgmNext(); }
     function bgmPrev() { UIRenderer.bgmPrev(); }
+    function bgmImport() { UIRenderer.bgmImport(); }
+    function bgmClearImport() { UIRenderer.bgmClearImport(); }
     function endStory() { Controller.endStory(); }
     function getEndingDefs(state) { return Controller.getEndingDefs(state); }
     function buildEndingChecks(state, endings) { return Controller.buildEndingChecks(state, endings); }
