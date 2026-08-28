@@ -9924,13 +9924,55 @@ function rebuildChoicesBlock(body, labels = []) {
                 { icon: "💘", label: "姻缘一线牵", action: "date" }
             ]
         };
-        // 内置 BGM（所有剧本通用，合成资源）
+        // 内置 BGM（所有剧本通用；第一首为无配置卡片的默认 BGM）
         const BUILTIN_BGMS = [
-            { title: "古风·山水", url: "scenarios/bgm/bgm_1.wav" },
-            { title: "都市节拍", url: "scenarios/bgm/bgm_2.wav" },
-            { title: "治愈清风", url: "scenarios/bgm/bgm_3.wav" }
+            { title: "背景音乐 1", url: "scenarios/bgm/bgm_1.mp3" },
+            { title: "背景音乐 2", url: "scenarios/bgm/bgm_2.mp3" },
+            { title: "背景音乐 3", url: "scenarios/bgm/bgm_3.mp3" },
+            { title: "背景音乐 4", url: "scenarios/bgm/bgm_4.mp3" },
+            { title: "背景音乐 5", url: "scenarios/bgm/bgm_5.mp3" },
+            { title: "背景音乐 6", url: "scenarios/bgm/bgm_6.mp3" },
+            { title: "背景音乐 7", url: "scenarios/bgm/bgm_7.mp3" }
         ];
         let _bgmState = { list: [], idx: -1, playing: false, audio: null };
+        let _fadeTimer = null;
+        function _fadeVol(audio, from, to, dur, cb) {
+            if (!audio) { if (cb) cb(); return; }
+            if (_fadeTimer) clearInterval(_fadeTimer);
+            const t0 = performance.now();
+            audio.volume = from;
+            _fadeTimer = setInterval(() => {
+                const p = Math.min(1, (performance.now() - t0) / dur);
+                audio.volume = from + (to - from) * p;
+                if (p >= 1) {
+                    clearInterval(_fadeTimer);
+                    _fadeTimer = null;
+                    audio.volume = to;
+                    if (cb) cb();
+                }
+            }, 50);
+        }
+        const _gainCache = new Map();
+        async function _analyzeGain(url) {
+            try {
+                const buf = await (await fetch(url)).arrayBuffer();
+                const ac = new AudioContext();
+                try {
+                    const dec = await ac.decodeAudioData(buf);
+                    const ch = dec.getChannelData(0);
+                    let sum = 0, n = 0;
+                    for (let i = 0; i < ch.length; i += 100) { sum += ch[i] * ch[i]; n++; }
+                    const rms = Math.sqrt(sum / n);
+                    return Math.max(0.4, Math.min(2.5, 0.22 / (rms || 0.22)));
+                } finally { ac.close(); }
+            } catch (e) { return 1; }
+        }
+        async function _ensureGain(url) {
+            if (_gainCache.has(url)) return _gainCache.get(url);
+            const g = await _analyzeGain(url);
+            _gainCache.set(url, g);
+            return g;
+        }
         function _bgmRenderTitle() {
             const s = _bgmState;
             const titleEl = document.getElementById("phone-bgm-title");
@@ -9957,35 +9999,46 @@ function rebuildChoicesBlock(body, labels = []) {
                 s.audio.addEventListener("ended", () => { s.playing = false; bgmNext(); });
             }
             if (s.playing) {
-                s.audio.pause();
+                _fadeVol(s.audio, s.audio.volume, 0, 600, () => { if (!s.playing && s.audio) s.audio.pause(); });
                 s.playing = false;
             } else {
                 if (s.audio.src !== src) { s.audio.src = src; s.audio.load(); }
+                s.audio.volume = 0;
                 s.audio.play().catch(() => {});
+                const targetVol = Number(PhoneSettingsService.get().bgmVolume) || 0.6;
+                _fadeVol(s.audio, 0, targetVol, 1000);
                 s.playing = true;
+                _ensureGain(src).then(g => {
+                    if (s.playing && s.audio && s.audio.src === src && g !== 1) {
+                        _fadeVol(s.audio, s.audio.volume, targetVol * g, 300);
+                    }
+                });
             }
             _bgmRenderTitle();
         }
-        function bgmNext() {
+        function _switchTrack(dir) {
             const s = _bgmState;
-            if (!s.list.length) return;
-            s.idx = (s.idx + 1) % s.list.length;
+            if (!s.list.length || s._switchPending) return;
+            s.idx = dir > 0 ? (s.idx + 1) % s.list.length : (s.idx <= 0 ? s.list.length - 1 : s.idx - 1);
             const was = s.playing;
-            if (s.audio) { s.audio.pause(); }
-            s.playing = false;
-            _bgmRenderTitle();
-            if (was) bgmToggle();
+            if (was && s.audio) {
+                s._switchPending = true;
+                _fadeVol(s.audio, s.audio.volume, 0, 600, () => {
+                    s._switchPending = false;
+                    if (s.audio) s.audio.pause();
+                    s.playing = false;
+                    _bgmRenderTitle();
+                    bgmToggle();
+                });
+            } else {
+                if (s.audio) s.audio.pause();
+                s.playing = false;
+                _bgmRenderTitle();
+                if (was) bgmToggle();
+            }
         }
-        function bgmPrev() {
-            const s = _bgmState;
-            if (!s.list.length) return;
-            s.idx = s.idx <= 0 ? s.list.length - 1 : s.idx - 1;
-            const was = s.playing;
-            if (s.audio) { s.audio.pause(); }
-            s.playing = false;
-            _bgmRenderTitle();
-            if (was) bgmToggle();
-        }
+        function bgmNext() { _switchTrack(1); }
+        function bgmPrev() { _switchTrack(-1); }
         function renderPhone(state) {
             const shell = document.getElementById("view-phone");
             if (!shell) return;
@@ -10161,9 +10214,11 @@ function rebuildChoicesBlock(body, labels = []) {
         }
         function bgmSetVolume(v) {
             const s = _bgmState;
-            if (s.audio) s.audio.volume = Math.max(0, Math.min(1, Number(v) || 0));
+            if (!s.audio) return;
+            const base = Math.max(0, Math.min(1, Number(v) || 0));
+            s.audio.volume = base * (_gainCache.get(s.audio.src) || 1);
         }
-        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderWechatSessions, renderWechatContacts, renderWechatChat, renderSaveSlots, renderScenarioCards, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, renderPlayStatusBar, renderPlayEventList, renderWorld, renderDiary, renderEndingModal, renderPhone, buildEventRounds, avatarColor, heartLadder, stripHtml, normalizeLocations, bgmToggle, bgmNext, bgmPrev, bgmSetEnabled, bgmSetVolume, bgmImport, bgmClearImport, mapSrcOf, getActiveMap, chatMessagesHtml };
+        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderWechatSessions, renderWechatContacts, renderWechatChat, renderSaveSlots, renderScenarioCards, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, renderPlayStatusBar, renderPlayEventList, renderWorld, renderDiary, renderEndingModal, renderPhone, buildEventRounds, avatarColor, heartLadder, stripHtml, normalizeLocations, bgmToggle, bgmNext, bgmPrev, bgmSetEnabled, bgmSetVolume, bgmImport, bgmClearImport, mapSrcOf, getActiveMap, chatMessagesHtml, _bgmState, _ensureGain };
     })();
 
     // ---- 手机专属设置页：BGM 开关/音量、消息通知、主题色、字体大小 ----
