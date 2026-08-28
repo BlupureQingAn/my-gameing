@@ -10137,13 +10137,13 @@ function rebuildChoicesBlock(body, labels = []) {
         };
         // 内置 BGM（所有剧本通用；第一首为无配置卡片的默认 BGM）
         const BUILTIN_BGMS = [
-            { title: "背景音乐 1", url: "scenarios/bgm/bgm_1.mp3" },
-            { title: "背景音乐 2", url: "scenarios/bgm/bgm_2.mp3" },
-            { title: "背景音乐 3", url: "scenarios/bgm/bgm_3.mp3" },
-            { title: "背景音乐 4", url: "scenarios/bgm/bgm_4.mp3" },
-            { title: "背景音乐 5", url: "scenarios/bgm/bgm_5.mp3" },
-            { title: "背景音乐 6", url: "scenarios/bgm/bgm_6.mp3" },
-            { title: "背景音乐 7", url: "scenarios/bgm/bgm_7.mp3" }
+            { title: "都市轻快恋爱风", url: "scenarios/bgm/bgm_都市轻快恋爱风.mp3" },
+            { title: "宏大叙事钢琴纯音乐", url: "scenarios/bgm/bgm_宏大叙事钢琴纯音乐.mp3" },
+            { title: "朦胧梦幻科幻", url: "scenarios/bgm/bgm_朦胧梦幻科幻.mp3" },
+            { title: "悬疑诡异节奏", url: "scenarios/bgm/bgm_悬疑诡异节奏.mp3" },
+            { title: "沉重氛围节拍", url: "scenarios/bgm/bgm_沉重氛围节拍.mp3" },
+            { title: "温柔感动钢琴曲", url: "scenarios/bgm/bgm_温柔感动钢琴曲.mp3" },
+            { title: "暧昧沉浸节拍", url: "scenarios/bgm/bgm_暧昧沉浸节拍.mp3" }
         ];
         let _bgmState = { list: [], idx: -1, playing: false, audio: null };
         let _fadeTimer = null;
@@ -10207,7 +10207,7 @@ function rebuildChoicesBlock(body, labels = []) {
                     const fill = document.getElementById("phone-bgm-fill");
                     if (fill && s.audio && s.audio.duration) fill.style.width = `${(s.audio.currentTime / s.audio.duration) * 100}%`;
                 });
-                s.audio.addEventListener("ended", () => { s.playing = false; bgmNext(); });
+                s.audio.addEventListener("ended", () => { if (s.playing && s.audio) { s.audio.currentTime = 0; s.audio.play().catch(() => {}); } });
             }
             if (s.playing) {
                 _fadeVol(s.audio, s.audio.volume, 0, 600, () => { if (!s.playing && s.audio) s.audio.pause(); });
@@ -10373,7 +10373,17 @@ function rebuildChoicesBlock(body, labels = []) {
                 btns.forEach((b) => { if (!b.classList.contains("phone-bgm-import-btn")) b.disabled = true; });
             } else {
                 btns.forEach((b) => { b.disabled = false; });
-                if (s.idx < 0) s.idx = 0;
+                if (s.idx < 0) {
+                    // 初始进入:当前剧本卡按题材指定了内置曲目则指向该曲,否则默认第一首
+                    s.idx = 0;
+                    try {
+                        const selCard = (ScenarioCardService.loadCards() || []).find((c) => c.id === ScenarioCardService.getSelectedId());
+                        if (selCard && selCard.bgm) {
+                            const bi = BUILTIN_BGMS.findIndex((b) => b.title === selCard.bgm);
+                            if (bi >= 0) s.idx = bi;
+                        }
+                    } catch (e) {}
+                }
                 _bgmRenderTitle();
             }
         }
