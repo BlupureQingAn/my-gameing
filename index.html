@@ -19443,6 +19443,7 @@ function openNpcProfile(npcId) {
         async function startPay() {
             const user = AuthService.getUserData();
             if (!user) { NoticeModalService.showInfo({ title: "提示", descHtml: "请先登录" }); return; }
+            if (selectedPayType === "alipay") { NoticeModalService.showInfo({ title: "提示", descHtml: "尚未开通支付宝支付" }); return; }
             const payArea = document.getElementById("membership-pay-area");
             // 已有同套餐同支付方式的未完成订单:直接复用,不重复创建
             if (_currentOrder && _currentOrder.payType === selectedPayType && _currentOrder.planId === selectedPlan) {
