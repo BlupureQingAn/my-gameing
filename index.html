@@ -17614,7 +17614,7 @@ function openNpcProfile(npcId) {
         async function clearLocalCache() {
             const ok = await NoticeModalService.confirm({
                 title: "清除本地存档缓存",
-                descHtml: "将删除当前浏览器保存的<b>全部本地存档与自动进度</b>（含各剧本槽位、自动档、最近游玩记录与地图覆盖）。<b>剧本卡、收藏、登录、会员与云币不受影响</b>。确定继续吗？"
+                descHtml: "将删除当前浏览器保存的<b>全部本地存档与自动进度</b>（含各剧本槽位、自动档、最近游玩记录与地图覆盖）及<b>未上传的创作草稿</b>。<b>已上传/下载的剧本卡、收藏、登录、会员与云币不受影响</b>。确定继续吗？"
             });
             if (!ok) return;
             let removed = 0;
@@ -17626,9 +17626,16 @@ function openNpcProfile(npcId) {
                     removed++;
                 }
             }
+            // 草稿卡(创作中未上传,status=draft)一并清除;已上传/下载的卡保留(仅本地卡列表过滤,不触碰数据库)
+            const cards = ScenarioCardService.loadCards();
+            const kept = cards.filter((c) => c.status !== "draft");
+            if (kept.length !== cards.length) {
+                ScenarioCardService.saveCards(kept);
+                removed += cards.length - kept.length;
+            }
             StateService.init();
             renderAll();
-            NoticeModalService.showInfo({ title: "已清除", descHtml: `已清除 ${removed} 个本地存档缓存。下次游玩将重新开局。` });
+            NoticeModalService.showInfo({ title: "已清除", descHtml: `已清除 ${removed} 个本地存档缓存（含未上传的创作草稿）。下次游玩将重新开局。` });
         }
         function saveSettings() {
             SettingsService.saveFromUI();
