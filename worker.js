@@ -1043,7 +1043,7 @@ export default {
                 try { body = await request.json(); } catch (e) {}
                 const prompt = String(body.prompt || "").slice(0, 200).trim();
                 if (!prompt) return errorResponse("缺少 prompt", 400, null, "INVALID_PROMPT");
-                // consume=true:自建卡付费生成(100 云币),私有 KV key(u:{userId}:cv:{prompt})——跨设备同用户复用,不与其他用户共享
+                // consume=true:自建卡付费生成(100 云币);KV(u:{userId}:cv:{prompt})仅为同一用户同提示词防重复扣费(生成成功后前端保存即入卡数据 coverUrl,数据库永久持有)
                 const consume = body.consume === true;
                 const COVER_COST = 100;
                 const now = Date.now();
@@ -1660,6 +1660,31 @@ export default {
                     };
                 }));
                 return new Response(JSON.stringify({ items, total: d.totalItems || 0 }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+
+            // ---- 路由：本月官方卡热度榜（轮播动态展示，GET /api/game/hot?limit=7；匿名可用）----
+            if (url.pathname === "/api/game/hot" && request.method === "GET") {
+                const limit = Math.min(Math.max(Number(url.searchParams.get("limit") || 7), 1), 20);
+                const now = new Date();
+                const monthStart = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-01 00:00:00`;
+                const filter = encodeURIComponent(`card_id~'scenario_preset'&&created>='${monthStart}'`);
+                const counts = new Map();
+                let page = 1;
+                while (page <= 50) {
+                    const q = await pbAdminFetch(env, `/api/collections/card_plays/records?perPage=200&page=${page}&fields=card_id,created&filter=${filter}`);
+                    const d = await q.json().catch(() => ({}));
+                    const items = d.items || [];
+                    items.forEach((r) => { const k = String(r.card_id || ""); if (k) counts.set(k, (counts.get(k) || 0) + 1); });
+                    if (items.length < 200) break;
+                    page++;
+                }
+                const top = [...counts.entries()]
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, limit)
+                    .map(([id, plays]) => ({ id, plays }));
+                return new Response(JSON.stringify(top), {
                     headers: { ...corsHeaders(), "Content-Type": "application/json" }
                 });
             }

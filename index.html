@@ -2997,7 +2997,7 @@
         .hb-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
         .hb-plays { font-size: 0.72rem; color: var(--sub); }
         .hb-play-btn { font-size: 0.74rem; flex: none; padding: 6px 10px; }
-        /* B1：轮播卡封面区（AI 封面按需生成，未生成时渐变+动效占位） */
+        /* B1：轮播卡封面区（官方卡静态封面；无封面时渐变+动效占位） */
         .hb-cover {
             position: relative;
             width: 100%;
@@ -12532,71 +12532,10 @@ function rebuildChoicesBlock(body, labels = []) {
         return { groupLabel, groupClass, pinLabel, cardTags, cardEmoji, isCollected, isLiked, toggleCollectLocal, loadMyMarks, loadMyMarksNow, resetMyMarks, markCollectedLocally, markLikedLocally, getDbCollects, getDbLikes, collectSet, matchesSearch, getSearchKeyword, getCategories, getCategory, setCategory, isCollapsed, toggleCollapsed, expandAllGroups, renderFilter, hotRank, localPlays, getSortMode, setSortMode };
     })();
 
-    // ---- B1：AI 封面按需生成（仅首页展示位：轮播 + 推荐榜 top3；worker 文生图 → localStorage 缓存 TTL 7 天 + promptHash 失效） ----
+    // ---- 封面服务：官方卡全量静态封面(scenarios/covers/*.jpg,卡片数据带 cover 路径)；社区卡走 coverUrl/用户付费 AI 生成(ensureSelf) ----
     const CoverService = (() => {
-        const KEY = "bitlife_card_cover_v1";
-        const TTL = 7 * 24 * 3600 * 1000;
-        // 23 大分类 → 风格/情绪关键词（针对性模板；未命中用兜底风格）
-        const CATEGORY_STYLE_MAP = {
-            "恋爱": "Makoto Shinkai style, dreamy light, romantic",
-            "ABO": "anime romance, sci-fi scent of alpha omega",
-            "乙女": "otome game art, pastel, sweet",
-            "职场": "polished anime, modern office, professional",
-            "修仙": "Chinese ink wash painting, misty mountains, ethereal",
-            "穿越": "period drama, anachronistic fantasy, adventurous",
-            "都市": "modern cityscape, chic neon, contemporary",
-            "无限流": "cinematic, dimensional rifts, thrilling",
-            "末世": "cinematic, desolate ruins, wasteland survival",
-            "经营": "warm illustration, cozy shop, cheerful",
-            "科幻": "cinematic sci-fi, futuristic city, epic",
-            "悬疑": "film noir, shadowy, mysterious, tense",
-            "跑团": "fantasy adventure, dice and tavern, epic",
-            "奇幻": "high fantasy, magical glow, enchanted",
-            "历史": "historical drama, antique, majestic",
-            "宫斗": "Chinese palace drama, elegant, scheming",
-            "种田": "pastoral illustration, cozy countryside",
-            "女尊": "ancient fantasy, elegant matriarchal court",
-            "校园": "Makoto Shinkai style, schoolyard, youthful",
-            "娱乐圈": "glamorous spotlight, celebrity stage",
-            "人外": "dark fantasy, exotic creature, intriguing",
-            "同人": "anime fanart, nostalgic, heartfelt",
-            "主播": "vibrant stage lights, pop idol, energetic"
-        };
-        function hashStr(s) {
-            let h = 0;
-            for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-            return h.toString(36);
-        }
-        function read() { try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { return {}; } }
-        function write(m) { try { localStorage.setItem(KEY, JSON.stringify(m)); } catch (e) {} }
-        function cached(cardId, promptHash) {
-            const rec = read()[String(cardId)];
-            if (!rec || !rec.url) return "";
-            if (promptHash && rec.hash !== promptHash) return "";
-            return Date.now() - rec.ts < TTL ? rec.url : "";
-        }
-        // 6 段结构化提示词模板：[主体]+[环境]+[情绪]+[风格]+[构图]+[画质]，整体 ≤120 字防 worker 截断
-        function promptOf(card) {
-            const st = card?.structured;
-            const category = String(card?.category || "");
-            const genre = String(st?.world?.genre || "").split(/[·,，/]/)[0] || "";
-            const style = CATEGORY_STYLE_MAP[category] || CATEGORY_STYLE_MAP[genre] || "stylish illustration, beautiful scenery";
-            const era = st?.world?.era || "";
-            const idn = st?.identity || {};
-            const hero = [idn.name, idn.gender, idn.age ? `约${idn.age}岁` : ""].filter(Boolean).join("·");
-            const summary = String(st?.world?.summary || "").replace(/\s+/g, " ").slice(0, 40);
-            const atmosphere = String(st?.world?.atmosphere || "").replace(/\s+/g, " ").slice(0, 20);
-            const parts = [];
-            parts.push(hero ? `主角${hero}，${era || "未知时代"}` : `时代背景：${era || "未知"}`);
-            if (summary) parts.push(`场景：${summary}`);
-            if (atmosphere) parts.push(`氛围：${atmosphere}`);
-            parts.push(style);
-            parts.push("4:3 横版封面构图");
-            parts.push("8k, highly detailed, masterpiece, no text, no watermark");
-            return parts.join("，");
-        }
         function safeId(cardId) { return String(cardId || "x").replace(/[^\w-]/g, "_"); }
-        // cover 请求全局并发队列(最多 2 个 in-flight):视口内多卡并发 paint 不再同时打爆生成接口(Agnes 503 queue full 的直接诱因)
+        // 封面生成请求并发队列(最多 2 个 in-flight),防同时打爆生成接口
         const _coverQueue = [];
         let _coverInflight = 0;
         const COVER_MAX_CONCURRENT = 2;
@@ -12613,37 +12552,6 @@ function rebuildChoicesBlock(body, labels = []) {
                 fn().catch(() => {}).then(resolve, resolve).finally(() => { _coverInflight--; pumpCover(); });
             }
         }
-        // 本会话已请求过(id|hash)且失败的封面不再重试:官方卡封面全部预生成在 KV,未命中=后端未预生成,失败静默占位防风暴
-        const sessionCoverReq = new Set();
-        // 请求去重:同卡并发 ensure(banner 与列表/榜单同时需要)共享同一 in-flight 请求,双方都拿到结果,不重复请求
-        const _inflight = new Map();
-        // 内存封面缓存:生成成功后共享给 banner/列表/榜单等所有容器,切视图/重渲染不丢,大图(≥300KB 不落 localStorage)也即时命中
-        const _memCache = new Map();
-        // 大图 dataURL 降采样 512 宽缩略图落 localStorage(总量 <3MB 才写,防爆),刷新后秒回不等 KV 慢传输
-        function persistThumb(cardId, dataUrl, ph) {
-            try {
-                const img = new Image();
-                img.onload = () => {
-                    try {
-                        const scale = Math.min(1, 512 / img.width);
-                        const c = document.createElement("canvas");
-                        c.width = Math.round(img.width * scale);
-                        c.height = Math.round(img.height * scale);
-                        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-                        const thumb = c.toDataURL("image/jpeg", 0.8);
-                        if (thumb.length >= 300000) return;
-                        const m = read();
-                        const total = Object.values(m).reduce((s, r) => s + (r && r.url ? r.url.length : 0), 0);
-                        if (total + thumb.length < 3 * 1024 * 1024) {
-                            m[cardId] = { url: thumb, ts: Date.now(), hash: ph };
-                            write(m);
-                        }
-                    } catch (e) { /* 降采样失败不影响主流程 */ }
-                };
-                img.onerror = () => {};
-                img.src = dataUrl;
-            } catch (e) { /* 忽略 */ }
-        }
         async function ensure(card) {
             // 官方卡封面静态化:卡片数据自带 cover 相对路径(scenarios/covers/*.jpg),直接浏览器静态加载,不走 KV/生成 API
             // 分片数据里存的是 "covers/xxx.jpg",相对页面解析会变成 /covers/ → 404,归一为 /scenarios/covers/
@@ -12653,55 +12561,13 @@ function rebuildChoicesBlock(body, labels = []) {
                 const m = c.match(/covers\/[^/?#]+\.jpg$/i);
                 return m ? `scenarios/${m[0]}` : c;
             }
-            const id = String(card?.id || "");
-            if (!id) return "";
-            const prompt = promptOf(card);
-            const ph = hashStr(prompt);
-            const mem = _memCache.get(id);
-            if (mem && mem.ph === ph && Date.now() - mem.ts < TTL) return mem.url;
-            const hit = cached(id, ph);
-            if (hit) return hit;
-            const reqKey = id + "|" + ph;
-            if (_inflight.has(reqKey)) return _inflight.get(reqKey);
-            if (sessionCoverReq.has(reqKey)) return "";
-            const p = (async () => {
-                try {
-                    const res = await enqueueCover(() => fetch(`${AppConfig.proxy.baseUrl}/api/cover/generate`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ prompt })
-                    }));
-                    const d = await res.json().catch(() => ({}));
-                    if (!res.ok || !d.image) return "";
-                    _memCache.set(id, { url: d.image, ts: Date.now(), ph });
-                    // 大图 dataURL 不落 localStorage(5MB 限额会爆;worker 侧 KV 7 天缓存已兜底,下次 ensure 接口秒回)
-                    if (d.image.length < 300000) {
-                        const m = read();
-                        m[id] = { url: d.image, ts: Date.now(), hash: ph };
-                        write(m);
-                    } else {
-                        persistThumb(id, d.image, ph);
-                    }
-                    return d.image;
-                } catch (e) { return ""; }
-            })();
-            _inflight.set(reqKey, p);
-            p.then((url) => { _inflight.delete(reqKey); if (!url) sessionCoverReq.add(reqKey); }).catch(() => {});
-            return p;
+            // 无静态封面的卡(不应出现:官方卡全量预生成,社区卡走 ensureSelf)返回空 → 渐变占位
+            return "";
         }
-        // 自建卡封面:优先已上传 coverUrl → 本机私有缓存 → 付费 AI 生成(consume, 私有 KV 跨设备复用, 不与其他用户共享)
-        const SELF_KEY = "bitlife_card_cover_self_v1";
-        function readSelf() { try { return JSON.parse(localStorage.getItem(SELF_KEY) || "{}"); } catch (e) { return {}; } }
-        function writeSelf(m) { try { localStorage.setItem(SELF_KEY, JSON.stringify(m)); } catch (e) {} }
+        // 自建卡封面:优先卡数据 coverUrl(上传或付费生成后保存即永久入库)；无 coverUrl 仅编辑页主动生成(带 prompt)
         async function ensureSelf(card, opts = {}) {
             if (!opts.force && card?.coverUrl) return { url: card.coverUrl };
-            const cid = String(card?.id || "");
-            if (!cid) return { url: "" };
             const prompt = String(opts.prompt || "").trim().slice(0, 120);
-            const ph = prompt ? hashStr(prompt) : "";
-            const rec = readSelf()[cid];
-            // 缓存 key 记录提示词 hash:改提示词重新生成不命中旧缓存(重新扣费);首页 paint 无提示词直接吃缓存
-            if (rec && rec.url && Date.now() - rec.ts < TTL && (!prompt || rec.ph === ph)) return { url: rec.url };
             if (!prompt || !AuthService.getToken()) return { url: "" }; // 未提供提示词不自动生成
             try {
                 const res = await enqueueCover(() => fetch(`${AppConfig.proxy.baseUrl}/api/cover/generate`, {
@@ -12712,11 +12578,6 @@ function rebuildChoicesBlock(body, labels = []) {
                 const d = await res.json().catch(() => ({}));
                 if (res.status === 402) return { url: "", error: d.error || "云币不足" };
                 if (!res.ok || !d.image) return { url: "", error: d.error || "生成失败" };
-                if (d.image.length < 300000) {
-                    const m = readSelf();
-                    m[cid] = { url: d.image, ts: Date.now(), ph };
-                    writeSelf(m);
-                }
                 return { url: d.image };
             } catch (e) { return { url: "", error: "网络异常，请稍后重试" }; }
         }
@@ -12730,16 +12591,24 @@ function rebuildChoicesBlock(body, labels = []) {
                 el.classList.add("has-cover");
             }
         }
-        return { ensure, cached, paint, safeId, promptOf, ensureSelf };
+        return { ensure, paint, safeId, ensureSelf };
     })();
 
     // ---- 发现页：轮播推荐 + 榜单聚合（对齐 uugame 发现页，简化交互） ----
     const DiscoverService = (() => {
         let bannerIdx = 0;
         let bannerTimer = null;
-        // 轮播候选：本地热度 plays 降序取 top7；全部 0(新用户)按分类热度兜底
+        // 轮播候选：数据库本月游玩 top7（/api/game/hot 聚合 card_plays）；未拉取/失败降级本地热度
+        let _hotCache = null; // { ts, top: [{id, plays, category}] }
         function bannerCards() {
             const lib = Array.isArray(window.SCENARIO_LIBRARY) ? window.SCENARIO_LIBRARY : [];
+            if (_hotCache && _hotCache.top.length) {
+                const byId = new Map(lib.map((c) => [c.id, c]));
+                const list = _hotCache.top
+                    .map((h) => { const c = byId.get(h.id); return c ? { card: c, plays: h.plays } : null; })
+                    .filter(Boolean);
+                if (list.length) return list.map((x) => x.card);
+            }
             const ranked = lib.map((c) => ({ card: c, plays: ScenarioCardViewService.localPlays(c.id) }));
             ranked.sort((a, b) => b.plays - a.plays);
             let top = ranked.slice(0, 7);
@@ -12749,6 +12618,23 @@ function rebuildChoicesBlock(body, labels = []) {
             }
             return top.map((x) => x.card);
         }
+        // 拉取数据库本月热度榜并补载缺失分片后重渲染（TTL 60s；失败静默保留降级）
+        async function refreshHot(force) {
+            if (_hotCache && Date.now() - _hotCache.ts < 60000 && !force) return;
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/game/hot?limit=7`);
+                const d = await res.json().catch(() => null);
+                if (!res.ok || !Array.isArray(d) || !d.length) return;
+                const lib = Array.isArray(window.SCENARIO_LIBRARY) ? window.SCENARIO_LIBRARY : [];
+                const byId = new Map(lib.map((c) => [c.id, c]));
+                const missingCats = [...new Set(d.filter((h) => !byId.has(h.id)).map((h) => h.category || "").filter(Boolean))];
+                for (const cat of missingCats) {
+                    if (typeof window.ensureChunksFor === "function") await window.ensureChunksFor(cat);
+                }
+                _hotCache = { ts: Date.now(), top: d };
+                renderBanner();
+            } catch (e) { /* 网络异常保留现有轮播 */ }
+        }
         function renderBanner() {
             const box = document.getElementById("home-banner-swiper");
             const dots = document.getElementById("home-banner-dots");
@@ -12756,6 +12642,10 @@ function rebuildChoicesBlock(body, labels = []) {
             const cards = bannerCards();
             if (!cards.length) { box.innerHTML = ""; return; }
             bannerIdx = Math.min(bannerIdx, cards.length - 1);
+            const playsOf = (id) => {
+                if (_hotCache) { const h = _hotCache.top.find((x) => x.id === id); if (h) return h.plays; }
+                return ScenarioCardViewService.localPlays(id);
+            };
             box.innerHTML = cards.map((c) => {
                 const summary = String(c.structured?.world?.summary || c.structured?.world?.atmosphere || "").slice(0, 56);
                 const sid = CoverService.safeId(c.id);
@@ -12768,7 +12658,7 @@ function rebuildChoicesBlock(body, labels = []) {
                     <div class="hb-title">${MarkdownService.escapeHtml(String(c.title || ""))}</div>
                     <div class="hb-sub">${MarkdownService.escapeHtml(summary)}</div>
                     <div class="hb-foot">
-                        <span class="hb-plays"><img class="ic" src="icons/plays.svg" alt="" style="width:12px;height:12px;vertical-align:-1px;"> ${ScenarioCardViewService.localPlays(c.id)} 游玩</span>
+                        <span class="hb-plays"><img class="ic" src="icons/plays.svg" alt="" style="width:12px;height:12px;vertical-align:-1px;"> ${playsOf(c.id)} 游玩</span>
                         <span class="hb-play-btn mini-btn primary" onclick="event.stopPropagation(); Controller.openGameDetail('${c.id}')">详情</span>
                         <span class="hb-play-btn mini-btn primary">立即游玩</span>
                     </div>
@@ -12851,11 +12741,12 @@ function rebuildChoicesBlock(body, labels = []) {
         }
         function renderHomeDiscovery() {
             renderBanner();
+            refreshHot();
             startBanner();
             bindBannerSwipe();
             renderSortBar();
         }
-        return { renderHomeDiscovery, gotoBanner, nextBanner, bannerCards, renderSortBar };
+        return { renderHomeDiscovery, gotoBanner, nextBanner, bannerCards, renderSortBar, refreshHot };
     })();
     // 内联 onclick(轮播圆点)直接引用,故挂全局
     window.DiscoverService = DiscoverService;
