@@ -5223,7 +5223,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                                 <span>通讯录</span>
                             </button>
                             <button type="button" class="wx-tab" data-tab="discover" onclick="switchWechatTab('discover')">
-                                <svg class="wx-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16 8l-8 4-4 8 8-4 4-8z"/><circle cx="12" cy="12" r="9"/></svg>
+                                <svg class="wx-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="m8 16l2-6l6-2l-2 6z"/><path stroke-linecap="round" stroke-linejoin="round" d="M3 12a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2m0 14v2M3 12h2m14 0h2"/></svg>
                                 <span>发现</span>
                             </button>
                             <button type="button" class="wx-tab" data-tab="me" onclick="switchWechatTab('me')">
@@ -7537,7 +7537,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 "1) 必须优先遵循角色事实锁定块；若本轮剧情发生物品/人物状态变化，可在回复末尾（结束符之前）附加 ```state-patch``` 数据块同步（仅作后台同步，不会显示给玩家），无变化则完全省略。",
                 "2) 必须只基于玩家最新输入和上下文推进剧情，不可脱离输入自说自话，不可重置世界观。",
                 "3) 当前已启用美化卡片模式：必须直接输出 HTML 卡片，严禁输出 Markdown 文本。",
-                "4) 【字数硬约束】每次回复的剧情正文部分必须不少于 400 字。请通过环境描写、人物神态、心理活动和细腻的对话来丰富内容，禁止敷衍简短。",
+                "4) 【字数硬约束】每次回复的剧情正文部分必须不少于 300 字。请通过环境描写、人物神态、心理活动和细腻的对话来丰富内容，禁止敷衍简短。",
                 "5) 每次回复都应包含：时间信息、状态变化、剧情对话、（AI想法：...）。",
                 "6) 回复末尾必须提供 1-3 条可执行选项，使用编号格式：1. xxx",
                 "7) 若剧情不适合选项，也要提供继续观察/继续推进等中性选项。",
@@ -9037,7 +9037,7 @@ function rebuildChoicesBlock(body, labels = []) {
         const STAT_COLORS = { 容貌: "#8B5E3C", 体质: "#E8793C", 智力: "#4CAF50", 魅力: "#9C6ADE", 体能: "#26A69A", 道德: "#E53935", 道德值: "#E53935" };
         // stats icon emoji → Material Symbols path（未命中按 label 兜底，再统一用星标）
         const STAT_ICON_SVG = {
-            "❤️": "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z",
+            "❤️": "M2 9V6q0-.825.588-1.412T4 4h16q.825 0 1.413.588T22 6v3h-2V6H4v3zm2 11q-.825 0-1.412-.587T2 18v-3h2v3h16v-3h2v3q0 .825-.587 1.413T20 20zm6.525-3.137q.25-.138.375-.413l3.1-6.2l1.1 2.2q.125.275.375.413T16 13h6v-2h-5.375L14.9 7.55q-.125-.275-.375-.387T14 7.05t-.525.113t-.375.387l-3.1 6.2l-1.1-2.2q-.125-.275-.375-.413T8 11H2v2h5.375L9.1 16.45q.125.275.375.413T10 17t.525-.137M12 12",
             "💔": "M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55l-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z",
             "⚡": "m8 22l1-7H4l9-13h2l-1 8h6L10 22z",
             "💰": "M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z",
@@ -9049,7 +9049,16 @@ function rebuildChoicesBlock(body, labels = []) {
             "健康": "M2 9V6q0-.825.588-1.412T4 4h16q.825 0 1.413.588T22 6v3h-2V6H4v3zm2 11q-.825 0-1.412-.587T2 18v-3h2v3h16v-3h2v3q0 .825-.587 1.413T20 20zm6.525-3.137q.25-.138.375-.413l3.1-6.2l1.1 2.2q.125.275.375.413T16 13h6v-2h-5.375L14.9 7.55q-.125-.275-.375-.387T14 7.05t-.525.113t-.375.387l-3.1 6.2l-1.1-2.2q-.125-.275-.375-.413T8 11H2v2h5.375L9.1 16.45q.125.275.375.413T10 17t.525-.137M12 12",
             "心情": "M15.5 11q.625 0 1.063-.437T17 9.5t-.437-1.062T15.5 8t-1.062.438T14 9.5t.438 1.063T15.5 11m-7 0q.625 0 1.063-.437T10 9.5t-.437-1.062T8.5 8t-1.062.438T7 9.5t.438 1.063T8.5 11m6.588 5.538Q16.475 15.575 17.1 14H6.9q.625 1.575 2.013 2.538T12 17.5t3.088-.962M8.1 21.213q-1.825-.788-3.175-2.138T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22t-3.9-.788m9.575-3.537Q20 15.35 20 12t-2.325-5.675T12 4T6.325 6.325T4 12t2.325 5.675T12 20t5.675-2.325",
             "魅力": "M12 21L2 9l3-6h14l3 6zM9.625 8h4.75l-1.5-3h-1.75zM11 16.675V10H5.45zm2 0L18.55 10H13zM16.6 8h2.65l-1.5-3H15.1zM4.75 8H7.4l1.5-3H6.25z",
-            "权势": "m9.675 13.7l.875-2.85L8.25 9h2.85l.9-2.8l.9 2.8h2.85l-2.325 1.85l.875 2.85l-2.3-1.775zM6 23v-7.725q-.95-1.05-1.475-2.4T4 10q0-3.35 2.325-5.675T12 2t5.675 2.325T20 10q0 1.525-.525 2.875T18 15.275V23l-6-2zm10.25-8.75Q18 12.5 18 10t-1.75-4.25T12 4T7.75 5.75T6 10t1.75 4.25T12 16t4.25-1.75M8 20.025L12 19l4 1.025v-3.1q-.875.5-1.888.788T12 18t-2.113-.288T8 16.926zm4-1.55"
+            "权势": "m9.675 13.7l.875-2.85L8.25 9h2.85l.9-2.8l.9 2.8h2.85l-2.325 1.85l.875 2.85l-2.3-1.775zM6 23v-7.725q-.95-1.05-1.475-2.4T4 10q0-3.35 2.325-5.675T12 2t5.675 2.325T20 10q0 1.525-.525 2.875T18 15.275V23l-6-2zm10.25-8.75Q18 12.5 18 10t-1.75-4.25T12 4T7.75 5.75T6 10t1.75 4.25T12 16t4.25-1.75M8 20.025L12 19l4 1.025v-3.1q-.875.5-1.888.788T12 18t-2.113-.288T8 16.926zm4-1.55",
+            // BGM 2.0 后补: 灵力/学识/事业/成长 专属下载 SVG(auto-awesome / school / work / eco)
+            "🌀": "M19 8.3q-.125 0-.263-.075T18.55 8l-.8-1.75l-1.75-.8q-.15-.05-.225-.187T15.7 5q0-.125.075-.262T16 4.55l1.75-.8l.8-1.75q.05-.15.188-.225T19 1.7q.125 0 .263.075T19.45 2l.8 1.75l1.75.8q.15.05.225.188T22.3 5q0 .125-.075.263T22 5.45l-1.75.8l-.8 1.75q-.05.15-.188.225T19 8.3Zm0 14q-.125 0-.263-.075T18.55 22l-.8-1.75l-1.75-.8q-.15-.05-.225-.188T15.7 19q0-.125.075-.263T16 18.55l1.75-.8l.8-1.75q.05-.15.188-.225T19 15.7q.125 0 .263.075t.187.225l.8 1.75l1.75.8q.15.05.225.188T22.3 19q0 .125-.075.263T22 19.45l-1.75.8l-.8 1.75q-.05.15-.188.225T19 22.3ZM9 18.575q-.275 0-.525-.15T8.1 18l-1.6-3.5L3 12.9q-.275-.125-.425-.375T2.425 12q0-.275.15-.525T3 11.1l3.5-1.6L8.1 6q.125-.275.375-.425T9 5.425q.275 0 .525.15T9.9 6l1.6 3.5l3.5 1.6q.275.125.425.375t.15.525q0 .275-.15.525T15 12.9l-3.5 1.6L9.9 18q-.125.275-.375.425t-.525.15Zm0-3.425L10 13l2.15-1L10 11L9 8.85L8 11l-2.15 1L8 13l1 2.15ZM9 12Z",
+            "灵力": "M19 8.3q-.125 0-.263-.075T18.55 8l-.8-1.75l-1.75-.8q-.15-.05-.225-.187T15.7 5q0-.125.075-.262T16 4.55l1.75-.8l.8-1.75q.05-.15.188-.225T19 1.7q.125 0 .263.075T19.45 2l.8 1.75l1.75.8q.15.05.225.188T22.3 5q0 .125-.075.263T22 5.45l-1.75.8l-.8 1.75q-.05.15-.188.225T19 8.3Zm0 14q-.125 0-.263-.075T18.55 22l-.8-1.75l-1.75-.8q-.15-.05-.225-.188T15.7 19q0-.125.075-.263T16 18.55l1.75-.8l.8-1.75q.05-.15.188-.225T19 15.7q.125 0 .263.075t.187.225l.8 1.75l1.75.8q.15.05.225.188T22.3 19q0 .125-.075.263T22 19.45l-1.75.8l-.8 1.75q-.05.15-.188.225T19 22.3ZM9 18.575q-.275 0-.525-.15T8.1 18l-1.6-3.5L3 12.9q-.275-.125-.425-.375T2.425 12q0-.275.15-.525T3 11.1l3.5-1.6L8.1 6q.125-.275.375-.425T9 5.425q.275 0 .525.15T9.9 6l1.6 3.5l3.5 1.6q.275.125.425.375t.15.525q0 .275-.15.525T15 12.9l-3.5 1.6L9.9 18q-.125.275-.375.425t-.525.15Zm0-3.425L10 13l2.15-1L10 11L9 8.85L8 11l-2.15 1L8 13l1 2.15ZM9 12Z",
+            "📚": "M6.05 17.775q-.5-.275-.775-.737T5 16v-4.8L2.6 9.875q-.275-.15-.4-.375T2.075 9t.125-.5t.4-.375l8.45-4.6q.225-.125.463-.188T12 3.275t.488.063t.462.187l9.525 5.2q.25.125.388.363T23 9.6V16q0 .425-.288.713T22 17t-.712-.288T21 16v-5.9l-2 1.1V16q0 .575-.275 1.038t-.775.737l-5 2.7q-.225.125-.462.188t-.488.062t-.488-.062t-.462-.188zM12 12.7L18.85 9L12 5.3L5.15 9zm0 6.025l5-2.7V12.25l-4.025 2.225q-.225.125-.475.188t-.5.062t-.5-.062t-.475-.188L7 12.25v3.775zm0-3",
+            "学识": "M6.05 17.775q-.5-.275-.775-.737T5 16v-4.8L2.6 9.875q-.275-.15-.4-.375T2.075 9t.125-.5t.4-.375l8.45-4.6q.225-.125.463-.188T12 3.275t.488.063t.462.187l9.525 5.2q.25.125.388.363T23 9.6V16q0 .425-.288.713T22 17t-.712-.288T21 16v-5.9l-2 1.1V16q0 .575-.275 1.038t-.775.737l-5 2.7q-.225.125-.462.188t-.488.062t-.488-.062t-.462-.188zM12 12.7L18.85 9L12 5.3L5.15 9zm0 6.025l5-2.7V12.25l-4.025 2.225q-.225.125-.475.188t-.5.062t-.5-.062t-.475-.188L7 12.25v3.775zm0-3",
+            "💼": "M4 21q-.825 0-1.412-.587T2 19V8q0-.825.588-1.412T4 6h4V4q0-.825.588-1.412T10 2h4q.825 0 1.413.588T16 4v2h4q.825 0 1.413.588T22 8v11q0 .825-.587 1.413T20 21zm0-2h16V8H4zm6-13h4V4h-4zM4 19V8z",
+            "事业": "M4 21q-.825 0-1.412-.587T2 19V8q0-.825.588-1.412T4 6h4V4q0-.825.588-1.412T10 2h4q.825 0 1.413.588T16 4v2h4q.825 0 1.413.588T22 8v11q0 .825-.587 1.413T20 21zm0-2h16V8H4zm6-13h4V4h-4zM4 19V8z",
+            "🌱": "M5.4 19.6Q4.275 18.475 3.637 17T3 13.95t.6-3.112T5.55 7.95q1.5-1.5 4.238-2.275t7.087-.65q.65.025 1.2.275t.975.675t.675.988T20 8.175q.05 2.05-.112 3.788t-.526 3.137t-.924 2.488T17.1 19.45q-1.325 1.325-2.812 1.938T11.25 22q-1.625 0-3.175-.638T5.4 19.6m2.8-.4q.725.425 1.488.613T11.25 20q1.15 0 2.275-.462t2.15-1.488q.45-.45.913-1.263t.8-2.124t.512-3.175t.05-4.438q-1.225-.05-2.762-.037t-3.063.237t-2.9.725t-2.25 1.375q-1.125 1.125-1.55 2.225T5 13.7q0 1.475.563 2.588t.987 1.562q1.05-2 2.775-3.838T13.35 11q-1.8 1.575-3.137 3.563T8.2 19.2m0 0",
+            "成长": "M5.4 19.6Q4.275 18.475 3.637 17T3 13.95t.6-3.112T5.55 7.95q1.5-1.5 4.238-2.275t7.087-.65q.65.025 1.2.275t.975.675t.675.988T20 8.175q.05 2.05-.112 3.788t-.526 3.137t-.924 2.488T17.1 19.45q-1.325 1.325-2.812 1.938T11.25 22q-1.625 0-3.175-.638T5.4 19.6m2.8-.4q.725.425 1.488.613T11.25 20q1.15 0 2.275-.462t2.15-1.488q.45-.45.913-1.263t.8-2.124t.512-3.175t.05-4.438q-1.225-.05-2.762-.037t-3.063.237t-2.9.725t-2.25 1.375q-1.125 1.125-1.55 2.225T5 13.7q0 1.475.563 2.588t.987 1.562q1.05-2 2.775-3.838T13.35 11q-1.8 1.575-3.137 3.563T8.2 19.2m0 0"
         };
         function statBarHtml(s) {
             const vStr = String(s.value ?? "");
@@ -9988,6 +9997,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 }
             } catch (e) {}
         }
+        function getHomeOnlineCards() { return _homeOnlineCards; }
         // 在线卡点击游玩 → 先下载进本地再进入游玩
         async function autoDownloadAndPlay(cardId) {
             TopLoader.show("下载剧本中...");
@@ -10081,7 +10091,7 @@ function rebuildChoicesBlock(body, labels = []) {
                         </div>
                     </div>
                     <div class="scenario-card-actions">
-                        <button class="scenario-action-btn collect" data-op="swipe-collect">${collected ? "☆ 取消收藏" : "★ 收藏"}</button>
+                        <button class="scenario-action-btn collect${collected ? " on" : ""}" data-op="swipe-collect">${collected ? '<svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="m12 17.275l-4.15 2.5q-.275.175-.575.15t-.525-.2t-.35-.437t-.05-.588l1.1-4.725L3.775 10.8q-.25-.225-.312-.513t.037-.562t.3-.45t.55-.225l4.85-.425l1.875-4.45q.125-.3.388-.45t.537-.15t.537.15t.388.45l1.875 4.45l4.85.425q.35.05.55.225t.3.45t.038.563t-.313.512l-3.675 3.175l1.1 4.725q.075.325-.05.588t-.35.437t-.525.2t-.575-.15z"/></svg> 取消收藏' : '<svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="m8.85 16.825l3.15-1.9l3.15 1.925l-.825-3.6l2.775-2.4l-3.65-.325l-1.45-3.4l-1.45 3.375l-3.65.325l2.775 2.425zm3.15.45l-4.15 2.5q-.275.175-.575.15t-.525-.2t-.35-.437t-.05-.588l1.1-4.725L3.775 10.8q-.25-.225-.312-.513t.037-.562t.3-.45t.55-.225l4.85-.425l1.875-4.45q.125-.3.388-.45t.537-.15t.537.15t.388.45l1.875 4.45l4.85.425q.35.05.55.225t.3.45t.038.563t-.313.512l-3.675 3.175l1.1 4.725q.075.325-.05.588t-.35.437t-.525.2t-.575-.15zm0-5.025"/></svg> 收藏'}</button>
                     </div>
                 `;
                 row.querySelector('[data-op="play"]').onclick = () => {
@@ -10439,7 +10449,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const base = Math.max(0, Math.min(1, Number(v) || 0));
             s.audio.volume = base * (_gainCache.get(s.audio.src) || 1);
         }
-        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderWechatSessions, renderWechatContacts, renderWechatChat, renderSaveSlots, renderScenarioCards, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, renderPlayStatusBar, renderPlayEventList, renderWorld, renderDiary, renderEndingModal, renderPhone, buildEventRounds, avatarColor, heartLadder, stripHtml, normalizeLocations, bgmToggle, bgmNext, bgmPrev, bgmSetEnabled, bgmSetVolume, bgmImport, bgmClearImport, mapSrcOf, getActiveMap, chatMessagesHtml, _bgmState, _ensureGain };
+        return { renderTop, appendMessage, updateStreaming, finishStreaming, renderHistory, patchLastAiMessage, setSendingDisabled, renderInventory, renderSocialList, renderSocialChat, renderWechatSessions, renderWechatContacts, renderWechatChat, renderSaveSlots, renderScenarioCards, setAutoFollowBottom, cancelAutoFollowByUserGesture, isNearBottom, markUserScrolledUp, renderPlayStatusBar, renderPlayEventList, renderWorld, renderDiary, renderEndingModal, renderPhone, buildEventRounds, avatarColor, heartLadder, stripHtml, normalizeLocations, bgmToggle, bgmNext, bgmPrev, bgmSetEnabled, bgmSetVolume, bgmImport, bgmClearImport, mapSrcOf, getActiveMap, chatMessagesHtml, _bgmState, _ensureGain, loadHomeOnlineCards, getHomeOnlineCards };
     })();
 
     // ---- 手机专属设置页：BGM 开关/音量、消息通知、主题色、字体大小 ----
@@ -10977,7 +10987,7 @@ function rebuildChoicesBlock(body, labels = []) {
         const NARR_KEY = "bitlife_narrative_v1";
         const DEFAULT_NARRATIVE = {
             mode: "game", manualEnd: false, styleTrack: "card", styleFree: "",
-            pace: "balanced", wordMin: 80, wordMax: 250,
+            pace: "balanced", wordMin: 300, wordMax: 500,
             textDisplay: "sentence", readSpeed: 3,
             memoryMode: "auto",
             skin: "default", wallpaper: "", opacity: 100,
@@ -12761,6 +12771,8 @@ function rebuildChoicesBlock(body, labels = []) {
                 return;
             }
             markCollectedLocally(id, on);
+            const cTitle = (ScenarioCardService.loadCards() || []).find((c) => String(c.id) === id);
+            NoticeModalService.showInfo({ title: on ? "收藏成功" : "已取消收藏", descHtml: (on ? "已收藏「" : "已取消收藏「") + (cTitle ? cTitle.title : "该卡片") + "」" });
             try { UIRenderer.renderScenarioCards(); } catch (e) {}
             try { renderMyPageLists(); } catch (e) {}
         }
@@ -13349,7 +13361,7 @@ function rebuildChoicesBlock(body, labels = []) {
         function getIntroCoreRules() {
             return [
                 "【任务】你是开局介绍生成器。",
-                "请基于设定与角色档案，输出一张高质量、细腻的 HTML 卡片，字数不少于 400 字。",
+                "请基于设定与角色档案，输出一张高质量、细腻的 HTML 卡片，字数不少于 300 字。",
                 "强制要求：最外层必须是 <article class=\"ai-beauty-card\">。",
                 "【输出格式】请直接开始输出 HTML 内容，最外层必须是 <article class=\"ai-beauty-card\">，禁止任何前缀说明、禁止用Markdown代码块包裹、禁止在HTML前后输出任何解释文字。",
                 "卡片内必须包含：世界背景简述、主角当前身份与处境、当前时间、关键NPC概览、1-3条编号选项。",
@@ -13737,7 +13749,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 if (name === "time") return `<section class="wy-meta" data-block="time">⏱️ {当前时间}</section>`;
                 if (name === "status") return `<section class="wy-stats" data-block="status"><div>✨ ${statusPanelLabel}：{数值变化}</div></section>`;
                 if (name === "relations") return `<section data-block="relations"><div><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M1 20v-2.8q0-.85.438-1.562T2.6 14.55q1.55-.775 3.15-1.162T9 13t3.25.388t3.15 1.162q.725.375 1.163 1.088T17 17.2V20zm18 0v-3q0-1.1-.612-2.113T16.65 13.15q1.275.15 2.4.513t2.1.887q.9.5 1.375 1.112T23 17v3zM6.175 10.825Q5 9.65 5 8t1.175-2.825T9 4t2.825 1.175T13 8t-1.175 2.825T9 12t-2.825-1.175m11.65 0Q16.65 12 15 12q-.275 0-.7-.062t-.7-.138q.675-.8 1.038-1.775T15 8t-.362-2.025T13.6 4.2q.35-.125.7-.163T15 4q1.65 0 2.825 1.175T19 8t-1.175 2.825"/></svg> 人物关系</div><div>{NPC状态}</div></section>`;
-                if (name === "event") return `<section class="wy-content" data-block="event"><div>【剧情正文：不少于400字】</div></section>`;
+                if (name === "event") return `<section class="wy-content" data-block="event"><div>【剧情正文：不少于300字】</div></section>`;
                 if (name === "thought") return `<section class="wy-content" data-block="thought"><div>AI想法：{思考}</div></section>`;
                 if (name === "choices") return `<section class="wy-options" data-block="choices">{1-3个选项按钮}</section>`;
                 if (name === "hint") return `<div data-block="hint">提示文案</div>`;
@@ -13891,10 +13903,10 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
                 "【输出格式——最高优先级：固定 6 字段协议】",
                 "本次回复必须严格输出如下格式，只需输出这一条内容，禁止任何额外文字：",
                 "{{标题},{时间},{正文},{选项一},{选项二},{选项三}}",
-                "字段说明：标题=本回合场景名（20字内）；时间=本回合剧情时间（如 第3年·5月·雨夜，根据剧情推进自行输出，不要写系统日期）；正文=剧情正文 600-800字、多段、对话写成 XXX 对你说：\"...\"、段落用换行分隔；选项一/二/三=2-3 个推进选项（用不到的字段留空）。",
+                "字段说明：标题=本回合场景名（20字内）；时间=本回合剧情时间（如 第3年·5月·雨夜，根据剧情推进自行输出，不要写系统日期）；正文=剧情正文 300-500字、多段、对话写成 XXX 对你说：\"...\"、段落用换行分隔；选项一/二/三=2-3 个推进选项（用不到的字段留空）。",
                 "字段内禁止出现英文逗号 , 与右花括号 }；严禁输出 HTML 标签、Markdown 标记（##、**、>、- 列表）、JSON 或任何解释文字；禁止用 ``` 包裹。",
                 "若你更习惯旧格式，也可输出 JSON 填空协议（前端会同样渲染成卡片）：",
-                '{"story": "剧情正文（纯文本，可多段；对话写成 XXX 对你说："..."），600-800字", "time": {"year": 2026, "month": 8, "day": 15}, "stats": [{"key": "健康", "value": "78/100"}], "items": ["本轮新增物品"], "options": ["选项一", "选项二", "选项三"], "scene": "环境标签（如 夜晚/雨中/酒馆）"}',
+                '{"story": "剧情正文（纯文本，可多段；对话写成 XXX 对你说："..."），300-500字", "time": {"year": 2026, "month": 8, "day": 15}, "stats": [{"key": "健康", "value": "78/100"}], "items": ["本轮新增物品"], "options": ["选项一", "选项二", "选项三"], "scene": "环境标签（如 夜晚/雨中/酒馆）"}',
                 "JSON 填空协议必填字段：story、options（2-4 个选项）；可选字段：time/stats/items/scene（无变化可整体省略）。",
                 "stats 键名必须来自白名单：健康/体力/生命/心情/情绪/精神/学识/智力/智慧/魅力/声望/名望/财富/金钱/武力/修为/灵力/权势/人脉/事业/饱食/饥饿/好感/体魄/才学/威望/体质/敏捷/力量/耐力/感知/意志/运气。",
                 "stats 值格式为数字或 数字/上限（如 78/100）；只列出本轮有变化或玩家最关心的 2-5 项。",
@@ -14015,7 +14027,7 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
                 "你上一次的回复输出了纯文本、Markdown 或 HTML 卡片，这是严重格式错误。",
                 "本次必须严格输出如下格式，且只输出这一条：",
                 "{{标题},{时间},{正文},{选项一},{选项二},{选项三}}",
-                "字段内禁止出现英文逗号 , 与右花括号 }；正文 600-800 字；至少 2 个选项。",
+                "字段内禁止出现英文逗号 , 与右花括号 }；正文 300-500 字；至少 2 个选项。",
                 "严禁输出 HTML 标签、Markdown 标记、JSON 或解释文字；禁止用 ``` 包裹。",
                 "若原回复带有 ```state-patch``` 数据块，请原样保留在协议之后。",
                 latestCardBlock,
@@ -18513,27 +18525,27 @@ function openNpcProfile(npcId) {
             const listEl = document.getElementById("post-ref-list");
             if (!listEl) return;
             const q = String(keyword || "").trim().toLowerCase();
-            loadHomeOnlineCards();
+            UIRenderer.loadHomeOnlineCards();
             const cards = [];
             const seen = new Set();
             ScenarioCardService.loadCards().filter((c) => c.status !== "draft").forEach((c) => {
                 seen.add(String(c.id));
                 cards.push({ id: c.id, title: c.title || "未命名", author: ScenarioCardService.authorOf(c) });
             });
-            _homeOnlineCards.forEach((oc) => {
+            UIRenderer.getHomeOnlineCards().forEach((oc) => {
                 if (seen.has(String(oc.id))) return;
                 seen.add(String(oc.id));
                 cards.push({ id: oc.id, title: oc.title || "未命名", author: oc.author_name || "" });
             });
             const filtered = q ? cards.filter((c) => (String(c.title) + " " + String(c.author)).toLowerCase().includes(q)) : cards;
             if (!filtered.length) { listEl.innerHTML = '<span class="list-sub">未找到卡片</span>'; return; }
-            listEl.innerHTML = filtered.map((c) => `<div class="post-ref-item" data-id="${escapeHtml(String(c.id))}">${escapeHtml(c.title)}</div>`).join("");
+            listEl.innerHTML = filtered.map((c) => `<div class="post-ref-item" data-id="${MarkdownService.escapeHtml(String(c.id))}">${MarkdownService.escapeHtml(c.title)}</div>`).join("");
             listEl.querySelectorAll(".post-ref-item").forEach((el) => {
                 el.onclick = () => {
                     const c = cards.find((x) => String(x.id) === el.dataset.id);
                     if (!c) return;
                     _postRefCard = c;
-                    document.getElementById("post-card-ref").innerHTML = `将引用：${escapeHtml(c.title)} <span class="post-ref-remove" onclick="Controller.clearPostRef()"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z"/></svg> 移除</span>`;
+                    document.getElementById("post-card-ref").innerHTML = `将引用：${MarkdownService.escapeHtml(c.title)} <span class="post-ref-remove" onclick="Controller.clearPostRef()"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z"/></svg> 移除</span>`;
                     listEl.innerHTML = "";
                 };
             });
@@ -18936,11 +18948,11 @@ function openNpcProfile(npcId) {
             const games = list.filter((e) => e.type === "game");
             const chars = list.filter((e) => e.type === "char");
             const rowHtml = (e, emoji) => `
-                <div class="hp-row" data-hp="${e.type}" data-id="${escapeHtml(String(e.id))}">
+                <div class="hp-row" data-hp="${e.type}" data-id="${MarkdownService.escapeHtml(String(e.id))}">
                     <span class="hp-emoji">${emoji}</span>
                     <div class="hp-main">
-                        <div class="hp-name">${escapeHtml(e.title || "未命名")}</div>
-                        ${e.sub ? `<div class="hp-sub">${escapeHtml(e.sub)}</div>` : ""}
+                        <div class="hp-name">${MarkdownService.escapeHtml(e.title || "未命名")}</div>
+                        ${e.sub ? `<div class="hp-sub">${MarkdownService.escapeHtml(e.sub)}</div>` : ""}
                     </div>
                     <span class="hp-time">${historyTimeText(e.ts)}</span>
                 </div>`;

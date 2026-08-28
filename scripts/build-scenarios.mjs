@@ -28,6 +28,15 @@ function bgmFor(cat) {
     return CATEGORY_BGM[String(cat || "")] || "都市轻快恋爱风";
 }
 
+// 题材 → 默认开局年份（源 JSON 缺失 timeline.start 时注入,让首卡时间贴合剧本设定;makeCard 的 2026 兜底仅作最后保险）
+const CATEGORY_YEAR = {
+    "恋爱": 2026, "乙女": 2026, "校园": 2026, "职场": 2026, "主播": 2026, "娱乐圈": 2026, "经营": 2026,
+    "科幻": 2200, "末世": 2200,
+    "ABO": 2035,
+    "历史": 2026, "宫斗": 2026, "女尊": 2026, "穿越": 2026, "同人": 2026, "无限流": 2026,
+    "修仙": 1, "奇幻": 1, "人外": 1, "跑团": 1,
+};
+
 const dir = path.join(process.cwd(), "scenarios");
 const files = fs.readdirSync(dir)
     .filter(f => f.startsWith("category_") && f.endsWith(".json"))
@@ -39,7 +48,11 @@ for (const f of files) {
     for (const item of arr) {
         // makeCard 内部做完整 schema 校验，坏剧本直接抛错中断打包
         // theme 在源 JSON 顶层,需并入 data 供 schema 校验读取(否则全部降级 retro-paper)
-        const card = makeCard({ id: item.id, title: item.title, category: item.category, data: { theme: item.theme, ...item.data } });
+        const data = { ...(item.data || {}) };
+        if (!data.timeline || !data.timeline.start) {
+            data.timeline = { ...(data.timeline || {}), start: { year: CATEGORY_YEAR[String(item.category || "")] || 2026, month: 1, day: 1 } };
+        }
+        const card = makeCard({ id: item.id, title: item.title, category: item.category, data: { theme: item.theme, ...data } });
         // 封面静态化:scenarios/covers/{id}.jpg 存在则卡片数据带 cover 相对路径,前端直接静态加载(不再走 KV/生成 API)
         const coverFile = path.join(dir, "covers", item.id + ".jpg");
         library.push({
