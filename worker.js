@@ -200,6 +200,8 @@ async function getLifetimeOffer(env, userId) {
 const coverCache = new Map();
 // 云存档：每个剧本 3 槽，一次性解锁价（云币/槽，可调）
 const CLOUD_SLOT_PRICE = 200;
+// 角色卡聊天：每张卡一次性解锁价（云币/张；终身会员免费）
+const CHAR_CHAT_UNLOCK_PRICE = 200;
 // Uint8Array → base64（Worker 无 Buffer，分块转字符串防调用栈溢出）
 function toBase64(bytes) {
     let bin = "";
@@ -1311,6 +1313,121 @@ export default {
                 });
                 if (!unlockRes.ok) return errorResponse("解锁记录写入失败", 500, null, "UNLOCK_FAILED");
                 return new Response(JSON.stringify({ unlocked: true, coins: coin }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+
+            // ---- 路由：角色卡聊天解锁（200 云币/张；终身会员免费；幂等）----
+            if (url.pathname === "/api/char-chat/unlocked" && request.method === "GET") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const r = auth.record;
+                const cardId = String(url.searchParams.get("cardId") || url.searchParams.get("card_id") || "").trim();
+                const npcId = String(url.searchParams.get("npcId") || url.searchParams.get("npc_id") || "").trim();
+                if (!cardId || !npcId) return errorResponse("缺少 cardId/npcId", 400, null, "INVALID_PARAM");
+                const filter = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(r.id)}'&&card_id='${escapePocketBaseFilterValue(cardId)}'&&npc_id='${escapePocketBaseFilterValue(npcId)}'`);
+                const q = await pbAdminFetch(env, `/api/collections/char_chat_unlocks/records?perPage=1&skipTotal=true&filter=${filter}`);
+                const d = await q.json().catch(() => ({}));
+                return new Response(JSON.stringify({ unlocked: !!((d.items || [])[0]) }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+            if (url.pathname === "/api/char-chat/unlock" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const r = auth.record;
+                let body = {};
+                try { body = await request.json(); } catch (e) {}
+                const cardId = String(body.cardId || body.card_id || "").trim();
+                const npcId = String(body.npcId || body.npc_id || "").trim();
+                if (!cardId || !npcId) return errorResponse("缺少 cardId/npcId", 400, null, "INVALID_PARAM");
+                const lockFilter = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(r.id)}'&&card_id='${escapePocketBaseFilterValue(cardId)}'&&npc_id='${escapePocketBaseFilterValue(npcId)}'`);
+                const exQ = await pbAdminFetch(env, `/api/collections/char_chat_unlocks/records?perPage=1&skipTotal=true&filter=${lockFilter}`);
+                const exD = await exQ.json().catch(() => ({}));
+                if ((exD.items || []).length) {
+                    return new Response(JSON.stringify({ unlocked: true, already: true, coins: Number(r.coins || 0) }), {
+                        headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                    });
+                }
+                const price = CHAR_CHAT_UNLOCK_PRICE;
+                let coin = Number(r.coins || 0);
+                const free = isMember(r);
+                if (!free && coin < price) {
+                    return errorResponse(`云币不足（解锁需 ${price} 云币）`, 402, { coins: coin, cost: price }, "INSUFFICIENT_COIN");
+                }
+                if (!free) {
+                    coin -= price;
+                    const dedRes = await pbAdminFetch(env, `/api/collections/users/records/${r.id}`, {
+                        method: "PATCH",
+                        body: JSON.stringify({ coins: coin })
+                    });
+                    if (!dedRes.ok) return errorResponse("扣费失败，请重试", 500, null, "COIN_DEDUCT_FAILED");
+                }
+                const unlockRes = await pbAdminFetch(env, `/api/collections/char_chat_unlocks/records`, {
+                    method: "POST",
+                    body: JSON.stringify({ user_id: r.id, card_id: cardId, npc_id: npcId, created_at: new Date().toISOString() })
+                });
+                if (!unlockRes.ok) return errorResponse("解锁记录写入失败", 500, null, "UNLOCK_FAILED");
+                return new Response(JSON.stringify({ unlocked: true, free, coins: coin }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+
+            // ---- 路由：角色卡聊天记录云存档（仅已解锁者可读写，跟随账户跨设备）----
+            if (url.pathname === "/api/char-chat/messages" && request.method === "GET") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const r = auth.record;
+                const cardId = String(url.searchParams.get("cardId") || url.searchParams.get("card_id") || "").trim();
+                const npcId = String(url.searchParams.get("npcId") || url.searchParams.get("npc_id") || "").trim();
+                if (!cardId || !npcId) return errorResponse("缺少 cardId/npcId", 400, null, "INVALID_PARAM");
+                const filter = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(r.id)}'&&card_id='${escapePocketBaseFilterValue(cardId)}'&&npc_id='${escapePocketBaseFilterValue(npcId)}'`);
+                const q = await pbAdminFetch(env, `/api/collections/person_card_chats_v1/records?perPage=1&skipTotal=true&filter=${filter}&fields=messages`);
+                const d = await q.json().catch(() => ({}));
+                const rec = (d.items || [])[0];
+                let messages = [];
+                if (rec) {
+                    if (typeof rec.messages === "string") { try { messages = JSON.parse(rec.messages); } catch (e) {} }
+                    else if (Array.isArray(rec.messages)) messages = rec.messages;
+                }
+                return new Response(JSON.stringify({ messages }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+            if (url.pathname === "/api/char-chat/messages" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const r = auth.record;
+                let body = {};
+                try { body = await request.json(); } catch (e) {}
+                const cardId = String(body.cardId || body.card_id || "").trim();
+                const npcId = String(body.npcId || body.npc_id || "").trim();
+                const messages = Array.isArray(body.messages) ? body.messages.slice(-100) : [];
+                if (!cardId || !npcId) return errorResponse("缺少 cardId/npcId", 400, null, "INVALID_PARAM");
+                const msgStr = JSON.stringify(messages);
+                if (msgStr.length > 2000000) return errorResponse("聊天记录过大", 400, null, "DATA_TOO_LARGE");
+                const lockFilter = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(r.id)}'&&card_id='${escapePocketBaseFilterValue(cardId)}'&&npc_id='${escapePocketBaseFilterValue(npcId)}'`);
+                const lockQ = await pbAdminFetch(env, `/api/collections/char_chat_unlocks/records?perPage=1&skipTotal=true&filter=${lockFilter}`);
+                const lockD = await lockQ.json().catch(() => ({}));
+                if (!(lockD.items || []).length) return errorResponse("该角色卡未解锁", 403, null, "CHAT_LOCKED");
+                const upsFilter = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(r.id)}'&&card_id='${escapePocketBaseFilterValue(cardId)}'&&npc_id='${escapePocketBaseFilterValue(npcId)}'`);
+                const upsQ = await pbAdminFetch(env, `/api/collections/person_card_chats_v1/records?perPage=1&skipTotal=true&filter=${upsFilter}&fields=id`);
+                const upsD = await upsQ.json().catch(() => ({}));
+                const existing = (upsD.items || [])[0];
+                let res;
+                if (existing) {
+                    res = await pbAdminFetch(env, `/api/collections/person_card_chats_v1/records/${existing.id}`, {
+                        method: "PATCH",
+                        body: JSON.stringify({ messages: msgStr, updated_at: new Date().toISOString() })
+                    });
+                } else {
+                    res = await pbAdminFetch(env, `/api/collections/person_card_chats_v1/records`, {
+                        method: "POST",
+                        body: JSON.stringify({ user_id: r.id, card_id: cardId, npc_id: npcId, messages: msgStr, created_at: new Date().toISOString() })
+                    });
+                }
+                if (!res.ok) return errorResponse("聊天记录保存失败", 500, null, "CHAT_SAVE_FAILED");
+                return new Response(JSON.stringify({ ok: true, count: messages.length }), {
                     headers: { ...corsHeaders(), "Content-Type": "application/json" }
                 });
             }

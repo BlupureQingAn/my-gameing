@@ -5546,6 +5546,18 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
         </div>
     </div>
 
+    <!-- 角色卡聊天解锁确认弹窗：200 云币/张（终身会员免费），解锁后聊天记录云存档 -->
+    <div class="modal-overlay" id="char-chat-unlock-modal" style="display:none;">
+        <div class="modal-card">
+            <div class="modal-title">解锁角色卡聊天</div>
+            <div class="modal-desc" id="char-chat-unlock-desc" style="text-align:left;"></div>
+            <div class="gender-actions" style="margin-top:12px;">
+                <button class="mini-btn ghost" onclick="closeCharChatUnlockModal()">取消</button>
+                <button class="mini-btn primary" id="char-chat-unlock-ok-btn" onclick="confirmCharChatUnlock()">解锁（200 云币）</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 头像库选择弹窗：n×n 网格 + 底部确定按钮 -->
     <div class="modal-overlay" id="avatar-picker-modal" style="display:none;">
         <div class="modal-card" style="width:min(92vw,420px);">
@@ -7389,6 +7401,102 @@ function rebuildChoicesBlock(body, labels = []) {
         return { parse, fillCardTemplate, timeTitle, getCardTheme };
     })();
 
+    // ==================== 结构化卡片协议（bug6：AI 输出固定 6 字段 {{标题},{时间},{正文},{选项一},{选项二},{选项三}}） ====================
+    const StructuredCardProtocolService = (() => {
+        const FIELD_COUNT = 6;
+        function isStructured(text) {
+            return String(text || "").trim().startsWith("{{");
+        }
+        // 完整解析：严格 6 字段（标题/时间/正文/3 选项），story 必填；解析失败返回 null（走旧路径）
+        function parseFull(text) {
+            const src = String(text || "").trim();
+            if (!src.startsWith("{{")) return null;
+            const parts = [];
+            let rest = src.slice(2);
+            for (let i = 0; i < FIELD_COUNT; i++) {
+                const isLast = i === FIELD_COUNT - 1;
+                const endIdx = isLast ? rest.lastIndexOf("}}") : rest.indexOf("}");
+                if (endIdx < 0) return null;
+                let val = rest.slice(0, endIdx);
+                // 字段间分隔符 "},{"：第 2 个字段起内容前带 ",{" 前缀，剥掉
+                if (i > 0 && val.startsWith(",{")) val = val.slice(2);
+                parts.push(val.trim());
+                rest = rest.slice(endIdx + (isLast ? 2 : 1));
+                // 结尾仅容忍标点残留（AI 可能在 }} 后补句号），其余垃圾视为解析失败
+                if (isLast && rest.trim().replace(/[。.！!？?，,]+$/g, "").trim()) return null;
+            }
+            const story = parts[2] || "";
+            if (!story.trim()) return null;
+            return {
+                title: parts[0],
+                time: parts[1],
+                story,
+                options: [parts[3], parts[4], parts[5]].map((o) => o.trim()).filter(Boolean).slice(0, 3)
+            };
+        }
+        // 流式部分解析：返回 { complete, fields(已定型字段), cur(当前字段累积), curIndex(当前字段 0-5) }
+        function parseStreaming(text) {
+            const src = String(text || "").trim();
+            const out = { complete: false, fields: [], cur: "", curIndex: 0 };
+            if (!src.startsWith("{{")) return out;
+            let rest = src.slice(2);
+            for (let i = 0; i < FIELD_COUNT; i++) {
+                const isLast = i === FIELD_COUNT - 1;
+                const endIdx = isLast ? rest.indexOf("}}") : rest.indexOf("}");
+                if (endIdx < 0) {
+                    let cur = rest;
+                    if (i > 0 && cur.startsWith(",{")) cur = cur.slice(2);
+                    out.curIndex = i;
+                    out.cur = cur.trim();
+                    return out;
+                }
+                let val = rest.slice(0, endIdx);
+                if (i > 0 && val.startsWith(",{")) val = val.slice(2);
+                out.fields.push(val.trim());
+                rest = rest.slice(endIdx + (isLast ? 2 : 1));
+                if (isLast) {
+                    out.complete = true;
+                    if (rest.trim()) { out.cur = rest.trim(); out.curIndex = FIELD_COUNT; }
+                }
+            }
+            return out;
+        }
+        // 流式期间的基础卡骨架（标题/时间可先定型，正文与选项逐步填充；time 节点常驻供中途写入）
+        function fillStructuredFrame(title, time, theme) {
+            const safeTheme = MarkdownService.escapeHtml(String(theme || "").slice(0, 30));
+            const themeClass = `card-theme-${safeTheme.replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase() || "default"}`;
+            const timeHtml = `<div class="card-time" data-block="time">${time ? MarkdownService.escapeHtml(time) : ""}</div>`;
+            return [
+                `<article class="ai-beauty-card card ${themeClass}" data-theme="${safeTheme}" data-structured-card="1">`,
+                `<header class="card-meta"><div class="card-title">${MarkdownService.escapeHtml(title || "")}</div>${timeHtml}</header>`,
+                `<section class="card-body"><section class="card-story" data-block="event"></section></section>`,
+                `<footer class="card-options" data-block="choices"><div class="wy-option-btn card-option-btn opt-1"></div><div class="wy-option-btn card-option-btn opt-2"></div><div class="wy-option-btn card-option-btn opt-3"></div></footer>`,
+                `</article>`
+            ].join("");
+        }
+        // 终版卡片（与 fillCardTemplate 同构；时间为 AI 输出字段而非系统时间）
+        function fillStructuredCard(fields, theme) {
+            const safeTheme = MarkdownService.escapeHtml(String(theme || "").slice(0, 30));
+            const themeClass = `card-theme-${safeTheme.replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase() || "default"}`;
+            const timeHtml = fields.time
+                ? `<div class="card-time" data-block="time">${MarkdownService.escapeHtml(fields.time)}</div>`
+                : "";
+            const storyHtml = MarkdownService.render(fields.story);
+            const optionsHtml = (fields.options || []).length
+                ? `<footer class="card-options" data-block="choices">${(fields.options || []).map((o, i) =>
+                    `<div class="wy-option-btn card-option-btn" data-choice="${MarkdownService.escapeHtml(o)}"><span class="wy-opt-icon">${["①", "②", "③"][i] || String(i + 1)}</span><span class="wy-opt-text">${MarkdownService.escapeHtml(o)}</span></div>`).join("")}</footer>`
+                : "";
+            return [
+                `<article class="ai-beauty-card card ${themeClass}" data-theme="${safeTheme}" data-structured-card="1">`,
+                `<header class="card-meta"><div class="card-title">${MarkdownService.escapeHtml(fields.title || "当前回合")}</div>${timeHtml}</header>`,
+                `<section class="card-body"><section class="card-story" data-block="event">${storyHtml}</section></section>`,
+                optionsHtml,
+                `</article>`
+            ].join("");
+        }
+        return { isStructured, parseFull, parseStreaming, fillStructuredFrame, fillStructuredCard };
+    })();
+
     const EndMarkerService = (() => {
         const END_MARKER = "<<<END_REPLY_7F9K>>>";
         function getMarker() {
@@ -8789,6 +8897,7 @@ function rebuildChoicesBlock(body, labels = []) {
 
     const UIRenderer = (() => {
         let currentStreamingTarget = null;
+        let structuredStreaming = null; // bug6: 流式结构化卡的 DOM 引用 { titleEl, timeEl, storyEl, optEls[] }
         let currentSocialNpcId = null;
         let autoFollowBottom = true;
         let lastScrollTop = 0;
@@ -8806,6 +8915,13 @@ function rebuildChoicesBlock(body, labels = []) {
         function renderStreamingFrame(text) {
             if (!currentStreamingTarget) return;
             const normalizedText = HtmlCardService.normalizeHtmlCard(text);
+            // bug6: 固定 6 字段结构化协议 → 字段级流式渲染（打字机，字段切换上个节点定型）
+            if (StructuredCardProtocolService.isStructured(normalizedText)) {
+                renderStructuredStreamingFrame(normalizedText);
+                streamLastRenderAt = Date.now();
+                scrollToBottom();
+                return;
+            }
             const fillFields = FillProtocolService.parse(normalizedText);
             const hasHtmlCard = !fillFields && HtmlCardService.isRenderableHtmlCard(normalizedText);
             if (hasHtmlCard) {
@@ -8822,6 +8938,60 @@ function rebuildChoicesBlock(body, labels = []) {
             AiResponseLayoutService.bindHtmlChoiceEvents(currentStreamingTarget);
             streamLastRenderAt = Date.now();
             scrollToBottom();
+        }
+        function renderStructuredStreamingFrame(text) {
+            if (!currentStreamingTarget) return;
+            const parsed = StructuredCardProtocolService.parseStreaming(text);
+            if (!parsed.fields.length && !parsed.cur) return;
+            let ss = structuredStreaming;
+            if (!ss) {
+                // 首帧：挂载基础卡骨架（标题/时间若已定型直接写入），后续帧只更新内容节点
+                const theme = FillProtocolService.getCardTheme();
+                currentStreamingTarget.classList.add("html-host");
+                currentStreamingTarget.innerHTML = StructuredCardProtocolService.fillStructuredFrame(
+                    parsed.fields[0] || (parsed.curIndex === 0 ? parsed.cur : ""),
+                    parsed.fields[1] || (parsed.curIndex === 1 ? parsed.cur : ""),
+                    theme
+                );
+                const root = currentStreamingTarget.querySelector(".ai-beauty-card");
+                if (!root) {
+                    currentStreamingTarget.classList.remove("html-host");
+                    return;
+                }
+                AiResponseLayoutService.applyCardTheme(currentStreamingTarget);
+                ss = structuredStreaming = {
+                    root,
+                    titleEl: root.querySelector(".card-title"),
+                    timeEl: root.querySelector(".card-time"),
+                    storyEl: root.querySelector(".card-story"),
+                    optEls: [root.querySelector(".opt-1"), root.querySelector(".opt-2"), root.querySelector(".opt-3")]
+                };
+            }
+            // 已定型字段完整显示，当前字段打字机式累积
+            const title = parsed.fields[0] ?? (parsed.curIndex === 0 ? parsed.cur : "");
+            const time = parsed.fields[1] ?? (parsed.curIndex === 1 ? parsed.cur : "");
+            let story = parsed.fields[2] ?? "";
+            if (parsed.curIndex === 2) story += parsed.cur;
+            if (ss.titleEl) ss.titleEl.textContent = title;
+            if (ss.timeEl) {
+                ss.timeEl.textContent = time;
+                ss.timeEl.style.display = time ? "" : "none";
+            }
+            if (ss.storyEl) ss.storyEl.innerHTML = MarkdownService.render(story);
+            for (let i = 0; i < 3; i++) {
+                const el = ss.optEls[i];
+                if (!el) continue;
+                const done = parsed.fields[3 + i];
+                const cur = parsed.curIndex === 3 + i ? parsed.cur : "";
+                const val = done ?? cur;
+                if (val) {
+                    el.innerHTML = `<span class="wy-opt-icon">${["①", "②", "③"][i]}</span><span class="wy-opt-text">${MarkdownService.escapeHtml(val)}</span>`;
+                    el.style.display = "";
+                } else {
+                    el.innerHTML = "";
+                    el.style.display = "none";
+                }
+            }
         }
         function flushStreamingRender() {
             if (streamThrottleTimer) {
@@ -9306,6 +9476,7 @@ function rebuildChoicesBlock(body, labels = []) {
             board.appendChild(bubble);
             if (streaming) {
                 currentStreamingTarget = bubble;
+                structuredStreaming = null;
                 streamPendingText = null;
                 streamLastRenderAt = 0;
                 if (streamThrottleTimer) {
@@ -9328,11 +9499,25 @@ function rebuildChoicesBlock(body, labels = []) {
                 ? "**⚠️ 检测到设定冲突，已自动纠偏重试一次。**\n\n"
                 : "";
             const normalizedText = HtmlCardService.normalizeHtmlCard(text);
+            const structuredFields = StructuredCardProtocolService.parseFull(normalizedText);
             const fillFields = FillProtocolService.parse(normalizedText);
             const hasHtmlCard = !fillFields && HtmlCardService.isRenderableHtmlCard(normalizedText);
             const oldNode = currentStreamingTarget;
             let node = oldNode;
-            if (fillFields) {
+            let mountedHtml = "";
+            if (structuredFields) {
+                // bug6: 结构化协议终版卡（套同款模板，时间为 AI 输出字段）
+                structuredStreaming = null;
+                node = mountCardNode(document.getElementById("play-chat-area"), StructuredCardProtocolService.fillStructuredCard(structuredFields, FillProtocolService.getCardTheme()));
+                if (node) {
+                    oldNode.replaceWith(node);
+                    HtmlCardService.applyReadableTextColors(node);
+                    AiResponseLayoutService.bindHtmlChoiceEvents(node);
+                    AiResponseLayoutService.injectStatsIntoCard(node);
+                    VisualEffects.decorateAiCardBears(node);
+                    mountedHtml = node.outerHTML;
+                }
+            } else if (fillFields) {
                 // 卡片直接平铺:新 article 替换流式期间的 bubble
                 node = mountCardNode(document.getElementById("play-chat-area"), FillProtocolService.fillCardTemplate(FillProtocolService.getCardTheme(), fillFields));
                 if (node) oldNode.replaceWith(node);
@@ -9361,6 +9546,7 @@ function rebuildChoicesBlock(body, labels = []) {
             }
             if (options.conflictDetected) node.classList.add("conflict");
             currentStreamingTarget = null;
+            structuredStreaming = null;
             streamPendingText = null;
             streamLastRenderAt = 0;
             if (streamThrottleTimer) {
@@ -9368,6 +9554,8 @@ function rebuildChoicesBlock(body, labels = []) {
                 streamThrottleTimer = null;
             }
             scrollToBottom();
+            // 结构化卡返回挂载后的 HTML（供历史记录存储，避免重进时渲染原始协议串）
+            return mountedHtml || undefined;
         }
         function renderHistory(history) {
             const board = document.getElementById("play-chat-area");
@@ -13076,6 +13264,8 @@ function rebuildChoicesBlock(body, labels = []) {
         }
         function finalizeCardLayout({ text, beautySetting, titleHint, nowText, policyConfig, cardId, preferredChoices = [], choiceSource = "turn", lockedSkeleton = null }) {
             const normalized = HtmlCardService.normalizeHtmlCard(text);
+            // bug6: 结构化协议直通（finishStreaming 负责套模板渲染）
+            if (StructuredCardProtocolService.parseFull(normalized)) return normalized;
             if (HtmlCardService.isRenderableHtmlCard(normalized)) {
                 // 如果有锁定骨架且前端支持强制对齐，尝试用骨架纠偏结构
                 if (lockedSkeleton && typeof HtmlStructureService !== "undefined" && HtmlStructureService.enforceCardStructure) {
@@ -13688,12 +13878,14 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             const isDark = ThemeService.getMode() === "dark";
 
             return [
-                "【输出格式——最高优先级】",
-                "⚠️ 本次回复必须直接输出 HTML 卡片：最外层是 class=\"ai-beauty-card\" 的 article/section/div 标签，包含剧情正文与选项等完整内容。严禁输出 Markdown 纯文本（如 ##、**、>、- 列表），严禁解释文字。",
-                'HTML 卡片结构要求：剧情正文（600-800字，多段；对话写成 XXX 对你说："..."）、结尾提供 1-3 个选项按钮（编号格式：1. xxx）。',
-                "若你更习惯结构化输出，可输出 JSON 填空协议（前端会自动渲染成同款卡片）：",
+                "【输出格式——最高优先级：固定 6 字段协议】",
+                "本次回复必须严格输出如下格式，只需输出这一条内容，禁止任何额外文字：",
+                "{{标题},{时间},{正文},{选项一},{选项二},{选项三}}",
+                "字段说明：标题=本回合场景名（20字内）；时间=本回合剧情时间（如 第3年·5月·雨夜，根据剧情推进自行输出，不要写系统日期）；正文=剧情正文 600-800字、多段、对话写成 XXX 对你说：\"...\"、段落用换行分隔；选项一/二/三=2-3 个推进选项（用不到的字段留空）。",
+                "字段内禁止出现英文逗号 , 与右花括号 }；严禁输出 HTML 标签、Markdown 标记（##、**、>、- 列表）、JSON 或任何解释文字；禁止用 ``` 包裹。",
+                "若你更习惯旧格式，也可输出 JSON 填空协议（前端会同样渲染成卡片）：",
                 '{"story": "剧情正文（纯文本，可多段；对话写成 XXX 对你说："..."），600-800字", "time": {"year": 2026, "month": 8, "day": 15}, "stats": [{"key": "健康", "value": "78/100"}], "items": ["本轮新增物品"], "options": ["选项一", "选项二", "选项三"], "scene": "环境标签（如 夜晚/雨中/酒馆）"}',
-                "填空协议必填字段：story、options（2-4 个选项）；可选字段：time/stats/items/scene（无变化可整体省略）。",
+                "JSON 填空协议必填字段：story、options（2-4 个选项）；可选字段：time/stats/items/scene（无变化可整体省略）。",
                 "stats 键名必须来自白名单：健康/体力/生命/心情/情绪/精神/学识/智力/智慧/魅力/声望/名望/财富/金钱/武力/修为/灵力/权势/人脉/事业/饱食/饥饿/好感/体魄/才学/威望/体质/敏捷/力量/耐力/感知/意志/运气。",
                 "stats 值格式为数字或 数字/上限（如 78/100）；只列出本轮有变化或玩家最关心的 2-5 项。",
                 "items 只列本轮新获得或失去的物品名；无变化则省略该字段。",
@@ -13726,8 +13918,12 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
                 ? `\n\n⚠️ 系统提示：检测到上一轮生成的卡片文字对比度过低，已被系统强制修正 ${window.colorCorrectionCount} 处。请在本轮选择更清晰的配色方案，确保文字与背景高对比。`
                 : "";
             const latestSkeleton = slimLatestHtmlCard(latestHtmlCard);
+            // bug6: 上一轮是结构化卡时,骨架仅作连贯性参考,输出格式必须仍用 6 字段协议
+            const prevStructured = /data-structured-card/.test(String(latestHtmlCard || ""));
             const latestCardBlock = latestSkeleton
-                ? `\n\n最近一次HTML卡片结构骨架（必须沿用其样式与结构，仅替换内容；正文不需要输出）：\n${latestSkeleton}\n注意：选项按钮（data-choice 元素）内必须写可见文字，且须为新剧情生成的新选项内容，不可留空。\n\n【连贯性铁律】剧情必须紧接「上一轮剧情结尾」继续推进：延续上一轮的地点/时间/人物/事件与叙事人称，围绕上一轮结尾的悬念或处境展开新进展，禁止另起炉灶、禁止复述或改写上一轮已发生的内容。`
+                ? (prevStructured
+                    ? `\n\n最近一次剧情卡（仅作连贯性与主题参考，本轮输出必须仍用固定 6 字段协议 {{标题},{时间},{正文},{选项一},{选项二},{选项三}}，不要输出 HTML）：\n${latestSkeleton.slice(0, 500)}\n\n【连贯性铁律】剧情必须紧接「上一轮剧情结尾」继续推进：延续上一轮的地点/时间/人物/事件与叙事人称，围绕上一轮结尾的悬念或处境展开新进展，禁止另起炉灶、禁止复述或改写上一轮已发生的内容。`
+                    : `\n\n最近一次HTML卡片结构骨架（必须沿用其样式与结构，仅替换内容；正文不需要输出）：\n${latestSkeleton}\n注意：选项按钮（data-choice 元素）内必须写可见文字，且须为新剧情生成的新选项内容，不可留空。\n\n【连贯性铁律】剧情必须紧接「上一轮剧情结尾」继续推进：延续上一轮的地点/时间/人物/事件与叙事人称，围绕上一轮结尾的悬念或处境展开新进展，禁止另起炉灶、禁止复述或改写上一轮已发生的内容。`)
                 : "";
             return `玩家最新输入：${userText}\n\n最近记录：\n${recentHistory}${latestCardBlock}${colorWarning}`;
         }        function buildChoiceRetryPrompt(userText, recentHistory, rawText, scenarioSpec, latestHtmlCard = "") {
@@ -13800,6 +13996,24 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
                 `上一次错误输出（纯文本，请将其内容填入 HTML 卡片的 data-block="event" 区域）：\n${String(rawText || "").slice(0, 600)}`
             ].filter(Boolean).join("\n\n");
         }
+        // bug6: 结构化强制重试 prompt（AI 未按 6 字段协议输出时用）
+        function buildStructuredRetryPrompt(userText, recentHistory, rawText, latestHtmlCard = "") {
+            const latestSkeleton = slimLatestHtmlCard(latestHtmlCard);
+            const latestCardBlock = latestSkeleton ? `最近一次卡片（仅作连贯性参考）：\n${latestSkeleton.slice(0, 400)}` : "";
+            return [
+                "【⚠️ 格式错误——必须重新输出固定 6 字段协议】",
+                "你上一次的回复输出了纯文本、Markdown 或 HTML 卡片，这是严重格式错误。",
+                "本次必须严格输出如下格式，且只输出这一条：",
+                "{{标题},{时间},{正文},{选项一},{选项二},{选项三}}",
+                "字段内禁止出现英文逗号 , 与右花括号 }；正文 600-800 字；至少 2 个选项。",
+                "严禁输出 HTML 标签、Markdown 标记、JSON 或解释文字；禁止用 ``` 包裹。",
+                "若原回复带有 ```state-patch``` 数据块，请原样保留在协议之后。",
+                latestCardBlock,
+                `玩家最新输入：${userText}`,
+                `最近记录：\n${recentHistory}`,
+                `上一次错误输出（请将其剧情内容改写成 6 字段协议）：\n${String(rawText || "").slice(0, 600)}`
+            ].filter(Boolean).join("\n\n");
+        }
         return {
             buildBeautyRules,
             buildSystemPrompt,
@@ -13808,6 +14022,7 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             buildConflictRetryPrompt,
             buildWarningRetryPrompt,
             buildHtmlRetryPrompt,
+            buildStructuredRetryPrompt,
             buildSkeletonHintFromLocked
         };
     })();
@@ -13842,6 +14057,9 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
         function buildHtmlRetryPrompt(userText, recentHistory, rawText, skeletonHint, latestHtmlCard) {
             return PromptTemplateService.buildHtmlRetryPrompt(userText, recentHistory, rawText, skeletonHint, latestHtmlCard);
         }
+        function buildStructuredRetryPrompt(userText, recentHistory, rawText, latestHtmlCard) {
+            return PromptTemplateService.buildStructuredRetryPrompt(userText, recentHistory, rawText, latestHtmlCard);
+        }
         return {
             buildRecentHistory,
             buildLatestAiHtmlCard,
@@ -13850,7 +14068,8 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             buildChoiceRetryPrompt,
             buildConflictRetryPrompt,
             buildWarningRetryPrompt,
-            buildHtmlRetryPrompt
+            buildHtmlRetryPrompt,
+            buildStructuredRetryPrompt
         };
     })();
 
@@ -15370,20 +15589,17 @@ const token = delta.content || "";
                 const rawPatchChanged = StateSyncService.applyWorldPatch(StateSyncService.mergeProtocolPatch(rawPatchResult.patch, turnFill), { render: false });
                 let displayText = rawVisibleText;
                 let conflictDetected = false;
-                if (beautyModeEnabled && policyConfig.enableHtmlCardForce && !turnFill) {
+                // bug6: 合法结构化(6 字段)直接走新路径;JSON 填空(turnFill)走旧路径;纯文本/残缺结构化/HTML 之外才进重试
+                let structuredOk = StructuredCardProtocolService.parseFull(rawVisibleText);                if (beautyModeEnabled && policyConfig.enableHtmlCardForce && !turnFill && !structuredOk) {
                     const turnChoices = ChoiceService.collectChoices(rawVisibleText);
                     const cardId = ScenarioCardService.getSelectedId();
 
-                    // HTML 重试：若 AI 未输出 HTML，用强制 prompt 重新请求一次
+                    // 结构化重试：若 AI 未按 6 字段协议输出，用强制 prompt 重新请求一次（HTML 卡兼容接受）
                     let finalVisibleText = rawVisibleText;
                     if (!HtmlNormalizeService.containsHtmlCard(rawVisibleText) && policyConfig.htmlRetryCount > 0) {
-                        console.log("[ChatService] AI 未输出 HTML 卡片，发起强制 HTML 重试...");
-                        const lockedSkeleton = ScenarioPlayMetaService.getLockedSkeleton(cardId);
-                        const isDark = ThemeService.getMode() === "dark";
-                        const retrySkeletonHint = PromptTemplateService.buildSkeletonHintFromLocked(lockedSkeleton, StateService.get())
-                            || HtmlCardTemplateService.getSkeletonHtml(isDark ? "dark" : "light", StateService.get());
+                        console.log("[ChatService] AI 未输出结构化协议/HTML 卡片，发起强制结构化重试...");
                         try {
-                            // 重试早停:AI 迟迟不输出 HTML 卡前缀(<article)则提前终止,避免白等一整次生成
+                            // 重试早停:AI 迟迟不输出协议前缀({{)则提前终止,避免白等一整次生成
                             let retryEarlyStopped = false;
                             const retryText = (await AIRequestService.streamCompletionWithFallback({
                                 config,
@@ -15392,11 +15608,11 @@ const token = delta.content || "";
                                 model: config.model,
                                 messages: [
                                     { role: "system", content: systemPrompt },
-                                    { role: "user", content: PromptPolicyService.buildHtmlRetryPrompt(userText, recentHistory, rawVisibleText, retrySkeletonHint, latestAiHtmlCard) }
+                                    { role: "user", content: PromptPolicyService.buildStructuredRetryPrompt(userText, recentHistory, rawVisibleText, latestAiHtmlCard) }
                                 ],
                                 temperature: policyConfig.temperature,
                                 onToken: (text) => {
-                                    if (!retryEarlyStopped && text.length > 150 && !text.includes("<article")) {
+                                    if (!retryEarlyStopped && text.length > 150 && !text.includes("{{")) {
                                         retryEarlyStopped = true;
                                         return false;
                                     }
@@ -15405,14 +15621,16 @@ const token = delta.content || "";
                                     return !EndMarkerService.hasMarker(text);
                                 }
                             })).trim();
-                            if (retryText && HtmlNormalizeService.containsHtmlCard(StatePatchService.extractPatch(retryText).cleaned || retryText)) {
+                            const retryCleaned = StatePatchService.extractPatch(retryText).cleaned || retryText;
+                            if (retryText && (StructuredCardProtocolService.parseFull(retryCleaned) || HtmlNormalizeService.containsHtmlCard(retryCleaned))) {
                                 const retryPatch = StatePatchService.extractPatch(retryText);
                                 StateSyncService.applyWorldPatch(retryPatch.patch, { render: false });
                                 finalVisibleText = retryPatch.cleaned || retryText;
-                                console.log("[ChatService] HTML 重试成功");
+                                structuredOk = StructuredCardProtocolService.parseFull(finalVisibleText);
+                                console.log("[ChatService] 结构化重试成功");
                             }
                         } catch (e) {
-                            console.warn("[ChatService] HTML 重试失败:", e);
+                            console.warn("[ChatService] 结构化重试失败:", e);
                         }
                     }
 
@@ -15469,9 +15687,10 @@ const token = delta.content || "";
                 const panelSnapshot = AiPanelSyncService.extractFromAiCard(displayText);
                 const panelHasData = (panelSnapshot.statItems?.length || panelSnapshot.npcUpdates?.length || panelSnapshot.statusTags?.length) > 0;
                 const panelChanged = AiPanelSyncService.syncFromAiText(StateService.get(), displayText);
-                UIRenderer.finishStreaming(displayText, { conflictDetected });
+                // 结构化卡 finishStreaming 返回挂载后的卡片 HTML，历史存 HTML（重进时不显示原始协议串）
+                const mountedHtml = UIRenderer.finishStreaming(displayText, { conflictDetected });
                 EventService.maybeTriggerAnimation(displayText);
-                const aiEntry = { role: "ai", date: Utils.nowDateStr(StateService.get()), text: displayText };
+                const aiEntry = { role: "ai", date: Utils.nowDateStr(StateService.get()), text: mountedHtml || displayText };
                 StateService.pushHistory(aiEntry);
                 StateService.save();
                 maybePushNpcStoryWechat(StateService.get(), displayText);
@@ -15484,8 +15703,8 @@ const token = delta.content || "";
                 UIRenderer.renderSocialList(currentState);
                 refreshEndingBadge(currentState);
 
-                // 第二阶段：辅路审计仅在协议缺失且卡片也未携带任何面板数据时触发（节省 AI 调用）
-                if (!rawPatchChanged && !panelHasData) {
+                // 第二阶段：辅路审计仅在协议缺失、卡片未携带面板数据且非结构化协议输出时触发（节省 AI 调用）
+                if (!rawPatchChanged && !panelHasData && !structuredOk) {
                     (async () => {
                         try {
                             const patch = await StateAuditorService.auditStateChange(StateService.get(), userText, displayText);
@@ -16189,6 +16408,8 @@ const token = delta.content || "";
     const Controller = (() => {
         let activeView = "view-home";
         let pendingInitPlan = null;
+        // Controller 侧独立的当前 NPC 会话键（UIRenderer 有同名内部变量，二者互不干扰）
+        let currentSocialNpcId = null;
         function renderAll() {
             const state = StateService.get();
             UIRenderer.renderTop(state);
@@ -17260,6 +17481,8 @@ function openNpcProfile(npcId) {
                 openInfoModal("无法对话", "Ta 已故，无法对话。");
                 return;
             }
+            // bug7: 剧本 NPC 聊天与角色卡聊天隔离——进入剧本聊天即退出 person-card 模式
+            _personChat = null;
             wxCurrentNpcId = String(npc.id || npc.name || "");
             currentSocialNpcId = wxCurrentNpcId;
             showWechatChatPage();
@@ -17290,6 +17513,14 @@ function openNpcProfile(npcId) {
                 const map = StorageService.readJson(PERSON_CHAT_KEY, {});
                 map[_personChat.cardId + "::" + _personChat.npcId] = (_personChat.messages || []).slice(-100);
                 StorageService.writeJson(PERSON_CHAT_KEY, map);
+                // 云端同步（跟随账户跨设备；失败静默——本地始终保留）
+                const token = AuthService.getToken();
+                if (!token) return;
+                fetch(`${AppConfig.proxy.baseUrl}/api/char-chat/messages`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token },
+                    body: JSON.stringify({ cardId: _personChat.cardId, npcId: _personChat.npcId, messages: (_personChat.messages || []).slice(-100) })
+                }).catch(() => {});
             } catch (e) {}
         }
         async function resolvePersonCardNpc(cardId, npcId) {
@@ -17309,12 +17540,94 @@ function openNpcProfile(npcId) {
             } catch (e) {}
             return { card: null, npc: null, author: "" };
         }
+        // 角色卡聊天解锁确认弹窗：200 云币/张（终身会员免费），解锁后聊天记录云存档跟随账户
+        let _charChatUnlockResolver = null;
+        function openCharChatUnlockModal(npcName, cardName, isMemberUser) {
+            const m = document.getElementById("char-chat-unlock-modal");
+            if (!m) return Promise.resolve(false);
+            const desc = document.getElementById("char-chat-unlock-desc");
+            if (desc) {
+                desc.innerHTML = `解锁后可与该角色聊天，<b>聊天记录自动云存档</b>（跟随账户，换设备不丢失）。<br><br>解锁「${MarkdownService.escapeHtml(String(npcName || "角色").slice(0, 20))}」<span class="list-sub">${MarkdownService.escapeHtml(String(cardName || "").slice(0, 30))}</span><br><b>${isMemberUser ? "终身会员免费" : "需 200 云币"}</b>，一次性永久解锁。`;
+            }
+            const okBtn = document.getElementById("char-chat-unlock-ok-btn");
+            if (okBtn) okBtn.textContent = isMemberUser ? "免费解锁" : "解锁（200 云币）";
+            m.style.display = "flex";
+            return new Promise((resolve) => { _charChatUnlockResolver = resolve; });
+        }
+        function closeCharChatUnlockModal() {
+            const m = document.getElementById("char-chat-unlock-modal");
+            if (m) m.style.display = "none";
+            if (_charChatUnlockResolver) { const r = _charChatUnlockResolver; _charChatUnlockResolver = null; r(false); }
+        }
+        function confirmCharChatUnlock() {
+            const m = document.getElementById("char-chat-unlock-modal");
+            if (m) m.style.display = "none";
+            if (_charChatUnlockResolver) { const r = _charChatUnlockResolver; _charChatUnlockResolver = null; r(true); }
+        }
+        window.openCharChatUnlockModal = openCharChatUnlockModal;
+        window.closeCharChatUnlockModal = closeCharChatUnlockModal;
+        window.confirmCharChatUnlock = confirmCharChatUnlock;
+
+        // 解锁检查：未登录提示；老用户本地存量不追溯；云端已解锁直进；否则确认弹窗付费
+        async function ensureCharChatUnlocked(cardId, npcId, npcName, cardName, localMsgs) {
+            if (!AuthService.getToken()) {
+                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后可以解锁角色卡聊天，聊天记录会云存档跟随账户。" });
+                return false;
+            }
+            if (localMsgs && localMsgs.length) return true; // 老用户已有聊天记录 → 不追溯收费
+            const authHeaders = { "X-Auth-Token": "Bearer " + AuthService.getToken() };
+            try {
+                const q = await fetch(`${AppConfig.proxy.baseUrl}/api/char-chat/unlocked?cardId=${encodeURIComponent(String(cardId || ""))}&npcId=${encodeURIComponent(String(npcId || ""))}`, { headers: authHeaders });
+                const qd = await q.json().catch(() => ({}));
+                if (qd.unlocked) return true;
+            } catch (e) {}
+            const user = (typeof AuthService.getUserData === "function" ? AuthService.getUserData() : null) || {};
+            const isMemberUser = String(user.membership_type || "") === "lifetime";
+            const ok = await openCharChatUnlockModal(npcName, cardName, isMemberUser);
+            if (!ok) return false;
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/char-chat/unlock`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", ...authHeaders },
+                    body: JSON.stringify({ cardId: String(cardId || ""), npcId: String(npcId || "") })
+                });
+                const d = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    NoticeModalService.showInfo({ title: "解锁失败", descHtml: d.error || "网络异常，请稍后重试" });
+                    return false;
+                }
+                return true;
+            } catch (e) {
+                NoticeModalService.showInfo({ title: "解锁失败", descHtml: "网络异常，请稍后重试" });
+                return false;
+            }
+        }
+
         async function openPersonCardChat(cardId, npcId) {
             const { card, npc, author } = await resolvePersonCardNpc(cardId, npcId);
             if (!npc) {
                 openInfoModal("无法聊天", "找不到该人物卡的角色数据，可能已被作者下架。");
                 return;
             }
+            // 解锁检查：未登录/取消/失败均不进入聊天
+            const localMsgs = loadPersonChats(cardId, npcId);
+            const unlocked = await ensureCharChatUnlocked(cardId, npcId, npc.name, card && card.title, localMsgs);
+            if (!unlocked) return;
+            // 云端记录优先；本地存量（老用户不追溯）尝试迁移上云（失败静默保留本地）
+            let msgs = localMsgs;
+            try {
+                const token = AuthService.getToken();
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/char-chat/messages?cardId=${encodeURIComponent(String(cardId || ""))}&npcId=${encodeURIComponent(String(npcId || ""))}`, { headers: { "X-Auth-Token": "Bearer " + token } });
+                const d = await res.json().catch(() => ({}));
+                if (Array.isArray(d.messages) && d.messages.length) msgs = d.messages;
+                else if (msgs.length) {
+                    fetch(`${AppConfig.proxy.baseUrl}/api/char-chat/messages`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token },
+                        body: JSON.stringify({ cardId: String(cardId || ""), npcId: String(npcId || ""), messages: msgs })
+                    }).catch(() => {});
+                }
+            } catch (e) {}
             const avatar = String(npc.avatar || "").trim() ||
                 (typeof window.assignNpcAvatar === "function" ? window.assignNpcAvatar(npc.name, npc.gender) : "");
             _personChat = {
@@ -17323,7 +17636,7 @@ function openNpcProfile(npcId) {
                 avatar,
                 desc: String(npc.role || npc.relationship || npc.personality || "").slice(0, 60),
                 cardText: String((card && (card.text || (card.structured && JSON.stringify(card.structured)))) || "").slice(0, 3000),
-                messages: loadPersonChats(cardId, npcId)
+                messages: msgs
             };
             wxCurrentNpcId = "person::" + _personChat.cardId + "::" + _personChat.npcId;
             currentSocialNpcId = wxCurrentNpcId;
@@ -17422,6 +17735,8 @@ function openNpcProfile(npcId) {
             }
         }
         function backToWechatList() {
+            // bug7: 返回会话列表即退出 person-card 模式,避免后续剧本聊天串号
+            _personChat = null;
             showWechatMain();
             const backBtn = document.querySelector(".wx-back-btn");
             if (backBtn) backBtn.style.display = "";
@@ -17578,7 +17893,8 @@ function openNpcProfile(npcId) {
             };
         }
         async function sendNpcMessage() {
-            if (_personChat) { await sendPersonCardMessage(); return; }
+            // bug7: 状态与当前会话键双重校验——仅 person-card 模式走角色卡发送,防止剧本聊天串号
+            if (_personChat && String(wxCurrentNpcId || "").startsWith("person::")) { await sendPersonCardMessage(); return; }
             const state = StateService.get();
             const npcId = String(currentSocialNpcId || wxCurrentNpcId || "");
             const npc = findNpcByRef(state, npcId);
