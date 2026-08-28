@@ -32,7 +32,7 @@
         {
           "name": "副探长·老猫",
           "gender": "男",
-          "avatar": "avatars/avatar_14.jpg",
+          "avatar": "avatars/avatar_03.jpg",
           "role": "巡捕房副探长",
           "personality": "油滑老练，人脉极广",
           "relationship": "熟知港口一切黑幕，亦正亦邪"
@@ -40,7 +40,7 @@
         {
           "name": "沈夫人·白露",
           "gender": "女",
-          "avatar": "avatars/avatar_02.jpg",
+          "avatar": "avatars/avatar_40.jpg",
           "role": "沈家遗孀",
           "personality": "美艳冷静，滴水不漏",
           "relationship": "死者的续弦妻子，嫌疑最大也最无辜"
@@ -48,7 +48,7 @@
         {
           "name": "舞女·红菱",
           "gender": "女",
-          "avatar": "avatars/avatar_32.jpg",
+          "avatar": "avatars/avatar_24.jpg",
           "role": "百乐门舞女",
           "personality": "伶俐世故，记性极好",
           "relationship": "声称掌握关键线索，但要价不低"
@@ -56,7 +56,7 @@
         {
           "name": "码头老大·陈三",
           "gender": "男",
-          "avatar": "avatars/avatar_24.jpg",
+          "avatar": "avatars/avatar_29.jpg",
           "role": "码头帮派头目",
           "personality": "豪爽凶悍，重江湖义气",
           "relationship": "与沈家有旧怨，也是港口消息的源头"
@@ -132,7 +132,7 @@
         {
           "name": "志愿者·01",
           "gender": "男",
-          "avatar": "avatars/avatar_30.jpg",
+          "avatar": "avatars/avatar_35.jpg",
           "role": "第一号志愿者",
           "personality": "暴躁冲动，身手矫健",
           "relationship": "每次轮回都第一个死，每次都死法不同"
@@ -148,7 +148,7 @@
         {
           "name": "监控里的女人·05",
           "gender": "女",
-          "avatar": "avatars/avatar_34.jpg",
+          "avatar": "avatars/avatar_24.jpg",
           "role": "第五号志愿者",
           "personality": "神秘安静，从不说话",
           "relationship": "她的房间监控总是坏的"
@@ -216,7 +216,7 @@
         {
           "name": "管家·福伯",
           "gender": "男",
-          "avatar": "avatars/avatar_03.jpg",
+          "avatar": "avatars/avatar_22.jpg",
           "role": "老宅老管家",
           "personality": "沉默守旧，忠于顾家",
           "relationship": "从小看护这宅子，知道第八进的秘密"
@@ -224,7 +224,7 @@
         {
           "name": "民宿住客·白女士",
           "gender": "女",
-          "avatar": "avatars/avatar_02.jpg",
+          "avatar": "avatars/avatar_17.jpg",
           "role": "长期住客",
           "personality": "优雅神秘，身份成谜",
           "relationship": "住了半年，似乎专门为第八进而来"
@@ -232,7 +232,7 @@
         {
           "name": "旧货商·钱掌柜",
           "gender": "男",
-          "avatar": "avatars/avatar_23.jpg",
+          "avatar": "avatars/avatar_22.jpg",
           "role": "收购旧物的商人",
           "personality": "精明贪婪，消息灵通",
           "relationship": "手上有一批落霞府流出的旧物"
@@ -308,7 +308,7 @@
         {
           "name": "车厢里的女人·阿绫",
           "gender": "女",
-          "avatar": "avatars/avatar_27.jpg",
+          "avatar": "avatars/avatar_20.jpg",
           "role": "乘客",
           "personality": "温柔冷静，像是等了很久",
           "relationship": "她说她认识你，但你想不起她"
@@ -316,7 +316,7 @@
         {
           "name": "白衬衫男人",
           "gender": "男",
-          "avatar": "avatars/avatar_24.jpg",
+          "avatar": "avatars/avatar_03.jpg",
           "role": "乘客",
           "personality": "西装革履，神色慌张",
           "relationship": "一直盯着运行图背面看，像是知道什么"
@@ -324,7 +324,7 @@
         {
           "name": "检票员·哑叔",
           "gender": "男",
-          "avatar": "avatars/avatar_15.jpg",
+          "avatar": "avatars/avatar_44.jpg",
           "role": "旧4号线检票员",
           "personality": "沉默佝偻，从不说话",
           "relationship": "他认识所有上过这班车的人"
@@ -402,7 +402,7 @@
         {
           "name": "编辑·林紫",
           "gender": "女",
-          "avatar": "avatars/avatar_31.jpg",
+          "avatar": "avatars/avatar_18.jpg",
           "role": "程默的编辑",
           "personality": "精明干练，爱才惜才",
           "relationship": "组织签售会的负责人，也是程默手稿的知情人"
@@ -410,7 +410,7 @@
         {
           "name": "恋人·温雅",
           "gender": "女",
-          "avatar": "avatars/avatar_16.jpg",
+          "avatar": "avatars/avatar_20.jpg",
           "role": "程默的恋人",
           "personality": "安静聪慧，处变不惊",
           "relationship": "全程在场，证词滴水不漏",
@@ -420,7 +420,7 @@
         {
           "name": "同行·老段",
           "gender": "男",
-          "avatar": "avatars/avatar_24.jpg",
+          "avatar": "avatars/avatar_23.jpg",
           "role": "推理作家",
           "personality": "刻薄好胜，与程默积怨",
           "relationship": "公开骂过程默，嫌疑最大"
@@ -428,7 +428,7 @@
         {
           "name": "管家·全叔",
           "gender": "男",
-          "avatar": "avatars/avatar_36.jpg",
+          "avatar": "avatars/avatar_30.jpg",
           "role": "程默的管家",
           "personality": "一丝不苟，忠诚沉默",
           "relationship": "负责监控与门锁，掌握钥匙"

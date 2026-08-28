@@ -32,7 +32,7 @@
         {
           "name": "程野",
           "gender": "男",
-          "avatar": "avatars/avatar_14.jpg",
+          "avatar": "avatars/avatar_01.jpg",
           "role": "主唱",
           "personality": "温柔细腻，习惯性照顾别人，敏感多思",
           "relationship": "团里第一个对你放下戒心的人"
@@ -40,7 +40,7 @@
         {
           "name": "沈默",
           "gender": "男",
-          "avatar": "avatars/avatar_21.jpg",
+          "avatar": "avatars/avatar_34.jpg",
           "role": "舞担",
           "personality": "外冷内热，寡言但执行力极强",
           "relationship": "每次行程都默默站你旁边挡镜头"
@@ -48,7 +48,7 @@
         {
           "name": "白桃",
           "gender": "男",
-          "avatar": "avatars/avatar_19.jpg",
+          "avatar": "avatars/avatar_16.jpg",
           "role": "忙内",
           "personality": "元气跳脱，对谁都甜甜的",
           "relationship": "看似最无害，眼神却总在你身上打转"
@@ -117,7 +117,7 @@
         {
           "name": "谢玄",
           "gender": "男",
-          "avatar": "avatars/avatar_21.jpg",
+          "avatar": "avatars/avatar_32.jpg",
           "role": "游戏男主/剑客",
           "personality": "冷峻深情，对「你」的记忆执念成狂",
           "relationship": "被你攻略了三年的纸片人，正在觉醒"
@@ -125,7 +125,7 @@
         {
           "name": "王主管",
           "gender": "男",
-          "avatar": "avatars/avatar_04.jpg",
+          "avatar": "avatars/avatar_33.jpg",
           "role": "测试组主管",
           "personality": "唯绩效论，心狠手辣",
           "relationship": "你的顶头上司，负责排查异常数据"
@@ -133,7 +133,7 @@
         {
           "name": "阿肆",
           "gender": "男",
-          "avatar": "avatars/avatar_30.jpg",
+          "avatar": "avatars/avatar_05.jpg",
           "role": "你的室友",
           "personality": "乐天派，游戏宅",
           "relationship": "知道你所有秘密，帮你打掩护"
@@ -202,7 +202,7 @@
         {
           "name": "江屿",
           "gender": "男",
-          "avatar": "avatars/avatar_19.jpg",
+          "avatar": "avatars/avatar_22.jpg",
           "role": "医学生/竹马",
           "personality": "温柔克制，习惯性照顾人，情感迟钝但认定即终身",
           "relationship": "你的发小，最近看你的眼神不太对"
@@ -210,7 +210,7 @@
         {
           "name": "陆屿舟",
           "gender": "男",
-          "avatar": "avatars/avatar_05.jpg",
+          "avatar": "avatars/avatar_32.jpg",
           "role": "金融系新生",
           "personality": "张扬热烈，行动力爆棚，会当面锣对面鼓地追求",
           "relationship": "转学生，开学第一周就公开告白",
@@ -220,7 +220,7 @@
         {
           "name": "陈姐",
           "gender": "女",
-          "avatar": "avatars/avatar_35.jpg",
+          "avatar": "avatars/avatar_07.jpg",
           "role": "奶茶店老板娘",
           "personality": "热心八卦，护犊子",
           "relationship": "你的老板兼爱情军师",
@@ -291,7 +291,7 @@
         {
           "name": "阿泽尔",
           "gender": "男",
-          "avatar": "avatars/avatar_38.jpg",
+          "avatar": "avatars/avatar_04.jpg",
           "role": "学生会会长",
           "personality": "优雅疏离，能读心的他从不轻易靠近任何人",
           "relationship": "第一个发现你不是异能者的人"
@@ -299,7 +299,7 @@
         {
           "name": "雷诺",
           "gender": "男",
-          "avatar": "avatars/avatar_06.jpg",
+          "avatar": "avatars/avatar_01.jpg",
           "role": "校霸",
           "personality": "暴躁外露，却会在你面前收敛火焰",
           "relationship": "总说你身上有股让他安心的味道"
@@ -307,7 +307,7 @@
         {
           "name": "伊莱",
           "gender": "男",
-          "avatar": "avatars/avatar_06.jpg",
+          "avatar": "avatars/avatar_23.jpg",
           "role": "优等生",
           "personality": "温和治愈，实则心思缜密",
           "relationship": "总在关键时刻出现在你身边"
@@ -376,7 +376,7 @@
         {
           "name": "陆渊",
           "gender": "男",
-          "avatar": "avatars/avatar_03.jpg",
+          "avatar": "avatars/avatar_02.jpg",
           "role": "队长/打野",
           "personality": "寡言沉稳，复盘时毒舌，私底下温柔到不像话",
           "relationship": "与你同队三年的老搭档，心结最深"
@@ -384,7 +384,7 @@
         {
           "name": "白泽",
           "gender": "男",
-          "avatar": "avatars/avatar_21.jpg",
+          "avatar": "avatars/avatar_34.jpg",
           "role": "指挥/中单",
           "personality": "话痨毒舌，其实是全队最细心的",
           "relationship": "天天嘴上跟你抬杠，转会期却第一个说要留队"
@@ -392,7 +392,7 @@
         {
           "name": "小鱼",
           "gender": "男",
-          "avatar": "avatars/avatar_30.jpg",
+          "avatar": "avatars/avatar_35.jpg",
           "role": "新人射手",
           "personality": "热血纯真，把你当偶像",
           "relationship": "队里唯一的活宝，也是你的小迷弟"

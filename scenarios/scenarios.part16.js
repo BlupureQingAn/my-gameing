@@ -32,7 +32,7 @@
         {
           "name": "弟弟·李小米",
           "gender": "男",
-          "avatar": "avatars/avatar_04.jpg",
+          "avatar": "avatars/avatar_29.jpg",
           "role": "弟弟",
           "personality": "机灵懂事，黏人",
           "relationship": "你在这个世界唯一的亲人",
@@ -42,7 +42,7 @@
         {
           "name": "奶奶·李氏",
           "gender": "女",
-          "avatar": "avatars/avatar_35.jpg",
+          "avatar": "avatars/avatar_20.jpg",
           "role": "祖母",
           "personality": "慈祥硬朗，深谙农事",
           "relationship": "她年轻时是十里八乡有名的种地好手"
@@ -50,7 +50,7 @@
         {
           "name": "地主·赵员外",
           "gender": "男",
-          "avatar": "avatars/avatar_18.jpg",
+          "avatar": "avatars/avatar_15.jpg",
           "role": "青石县地主",
           "personality": "贪婪精明，笑里藏刀",
           "relationship": "他盯着你家那三亩地好久了"
@@ -58,7 +58,7 @@
         {
           "name": "邻家·陈二婶",
           "gender": "女",
-          "avatar": "avatars/avatar_31.jpg",
+          "avatar": "avatars/avatar_37.jpg",
           "role": "隔壁邻居",
           "personality": "热心泼辣，消息灵通",
           "relationship": "村里的八卦中心，也是你的人情枢纽"
@@ -126,7 +126,7 @@
         {
           "name": "灯塔人·老疤",
           "gender": "男",
-          "avatar": "avatars/avatar_37.jpg",
+          "avatar": "avatars/avatar_11.jpg",
           "role": "灯塔守灯人",
           "personality": "沉默警觉，来历不明",
           "relationship": "他在灯塔里住了很多年，见到你的第一句话是「你不该来」"
@@ -134,7 +134,7 @@
         {
           "name": "幸存者·阿梅",
           "gender": "女",
-          "avatar": "avatars/avatar_31.jpg",
+          "avatar": "avatars/avatar_18.jpg",
           "role": "另一名幸存者",
           "personality": "开朗倔强，野外经验丰富",
           "relationship": "她是第三批幸存者，在岛上独自生活了两年"
@@ -226,7 +226,7 @@
         {
           "name": "检测员·艾拉",
           "gender": "女",
-          "avatar": "avatars/avatar_41.jpg",
+          "avatar": "avatars/avatar_38.jpg",
           "role": "星际农业协会检测员",
           "personality": "严谨公正，外冷内热",
           "relationship": "每季度来一次，她的评级决定农场的存亡"
@@ -234,7 +234,7 @@
         {
           "name": "邻居·老威",
           "gender": "男",
-          "avatar": "avatars/avatar_04.jpg",
+          "avatar": "avatars/avatar_05.jpg",
           "role": "隔壁行星的农场主",
           "personality": "粗犷热心，经验丰富",
           "relationship": "他提醒你：伯父的试验区，最好别碰"
@@ -310,7 +310,7 @@
         {
           "name": "爷爷·老海生",
           "gender": "男",
-          "avatar": "avatars/avatar_23.jpg",
+          "avatar": "avatars/avatar_04.jpg",
           "role": "老渔民",
           "personality": "倔强硬气，海上经验丰富",
           "relationship": "你的爷爷，病床上还惦记着那半张航海图",
@@ -320,7 +320,7 @@
         {
           "name": "阿婆·桂香",
           "gender": "女",
-          "avatar": "avatars/avatar_43.jpg",
+          "avatar": "avatars/avatar_40.jpg",
           "role": "村里晒盐阿婆",
           "personality": "慈祥能干，一手好盐",
           "relationship": "从小看你长大，是村里的主心骨"
@@ -328,7 +328,7 @@
         {
           "name": "发小·大壮",
           "gender": "男",
-          "avatar": "avatars/avatar_29.jpg",
+          "avatar": "avatars/avatar_34.jpg",
           "role": "回村创业的年轻人",
           "personality": "热情冲动，点子多",
           "relationship": "他想拉你一起搞民宿直播"
@@ -336,7 +336,7 @@
         {
           "name": "鱼贩·老刘",
           "gender": "男",
-          "avatar": "avatars/avatar_30.jpg",
+          "avatar": "avatars/avatar_23.jpg",
           "role": "收购海货的贩子",
           "personality": "精明圆滑，压价狠",
           "relationship": "他控制着村里的海货销路"
@@ -412,7 +412,7 @@
         {
           "name": "村支书·老周",
           "gender": "男",
-          "avatar": "avatars/avatar_36.jpg",
+          "avatar": "avatars/avatar_04.jpg",
           "role": "云溪村支书",
           "personality": "务实肯干，有心无力",
           "relationship": "他支持你搞民宿，想借你让村里活起来"
@@ -420,7 +420,7 @@
         {
           "name": "留守老人·福叔",
           "gender": "男",
-          "avatar": "avatars/avatar_29.jpg",
+          "avatar": "avatars/avatar_16.jpg",
           "role": "村中老茶农",
           "personality": "沉默倔强，手艺一绝",
           "relationship": "他懂山里的茶，也懂山里的路"

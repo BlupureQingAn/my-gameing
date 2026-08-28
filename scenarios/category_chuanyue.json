@@ -33,7 +33,7 @@
           "favor": -30,
           "affection": 0,
           "gender": "女",
-          "avatar": "avatars/avatar_32.jpg"
+          "avatar": "avatars/avatar_06.jpg"
         },
         {
           "name": "沈砚",
@@ -43,7 +43,7 @@
           "favor": 30,
           "affection": -10,
           "gender": "女",
-          "avatar": "avatars/avatar_33.jpg"
+          "avatar": "avatars/avatar_20.jpg"
         },
         {
           "name": "周妈妈",
@@ -53,7 +53,7 @@
           "favor": -45,
           "affection": 0,
           "gender": "女",
-          "avatar": "avatars/avatar_42.jpg"
+          "avatar": "avatars/avatar_25.jpg"
         },
         {
           "name": "顾衍之",
@@ -61,7 +61,7 @@
           "personality": "落拓不羁，智谋深沉",
           "relationship": "原著中并未登场的人物——这让你感到不安",
           "gender": "男",
-          "avatar": "avatars/avatar_36.jpg"
+          "avatar": "avatars/avatar_10.jpg"
         }
       ],
       "timeline": {
@@ -124,7 +124,7 @@
           "favor": 80,
           "affection": 0,
           "gender": "男",
-          "avatar": "avatars/avatar_11.jpg"
+          "avatar": "avatars/avatar_28.jpg"
         },
         {
           "name": "谢安",
@@ -132,7 +132,7 @@
           "personality": "沉稳大度，机锋内藏",
           "relationship": "对你来历存疑，却欣赏你的才学，总在关键处提点你",
           "gender": "男",
-          "avatar": "avatars/avatar_14.jpg"
+          "avatar": "avatars/avatar_11.jpg"
         },
         {
           "name": "桓温",
@@ -140,7 +140,7 @@
           "personality": "雄才大略，野心勃勃",
           "relationship": "北伐在即，他需要一个'知北方地理形势'的人",
           "gender": "男",
-          "avatar": "avatars/avatar_23.jpg"
+          "avatar": "avatars/avatar_28.jpg"
         },
         {
           "name": "郗道茂",
@@ -148,7 +148,7 @@
           "personality": "聪慧坚韧，外柔内刚",
           "relationship": "你穿越后见到的第一个'知道结局'的人——她的结局并不好",
           "gender": "女",
-          "avatar": "avatars/avatar_07.jpg"
+          "avatar": "avatars/avatar_09.jpg"
         }
       ],
       "timeline": {
@@ -209,7 +209,7 @@
           "personality": "深沉果决，爱民如子",
           "relationship": "三个月后他将揭竿而起——你是选择阻止他，还是帮他？",
           "gender": "男",
-          "avatar": "avatars/avatar_22.jpg"
+          "avatar": "avatars/avatar_31.jpg"
         },
         {
           "name": "老周头",
@@ -217,7 +217,7 @@
           "personality": "憨厚朴实，见多识广",
           "relationship": "第一个接受你'神物'的人，帮你把名声传了出去",
           "gender": "男",
-          "avatar": "avatars/avatar_14.jpg"
+          "avatar": "avatars/avatar_13.jpg"
         },
         {
           "name": "陆知微",
@@ -225,7 +225,7 @@
           "personality": "精明干练，疑心深重",
           "relationship": "正在暗中调查'县城神药'的来历——他怀疑有妖人作祟",
           "gender": "男",
-          "avatar": "avatars/avatar_06.jpg"
+          "avatar": "avatars/avatar_13.jpg"
         },
         {
           "name": "系统",
@@ -233,7 +233,7 @@
           "personality": "毒舌，奸商，偶尔良心发现",
           "relationship": "你的金手指，也是你最大的秘密",
           "gender": "男",
-          "avatar": "avatars/avatar_38.jpg"
+          "avatar": "avatars/avatar_14.jpg"
         }
       ],
       "timeline": {
@@ -294,7 +294,7 @@
           "personality": "勇猛豪迈，重诺守义",
           "relationship": "对你的烤肉惊为天人，封你为部落'火祭司'",
           "gender": "男",
-          "avatar": "avatars/avatar_13.jpg"
+          "avatar": "avatars/avatar_22.jpg"
         },
         {
           "name": "夜枭",
@@ -304,7 +304,7 @@
           "favor": 80,
           "affection": 0,
           "gender": "男",
-          "avatar": "avatars/avatar_22.jpg"
+          "avatar": "avatars/avatar_33.jpg"
         },
         {
           "name": "银鬃",
@@ -314,7 +314,7 @@
           "favor": -15,
           "affection": 0,
           "gender": "男",
-          "avatar": "avatars/avatar_01.jpg"
+          "avatar": "avatars/avatar_29.jpg"
         },
         {
           "name": "阿岚",
@@ -322,7 +322,7 @@
           "personality": "温柔好奇，天真烂漫",
           "relationship": "缠着要学你'把肉变熟'的手艺，成了你的第一个学生",
           "gender": "女",
-          "avatar": "avatars/avatar_08.jpg"
+          "avatar": "avatars/avatar_40.jpg"
         }
       ],
       "timeline": {
@@ -393,7 +393,7 @@
           "favor": 80,
           "affection": 0,
           "gender": "女",
-          "avatar": "avatars/avatar_44.jpg"
+          "avatar": "avatars/avatar_43.jpg"
         },
         {
           "name": "阿德里安",
@@ -401,7 +401,7 @@
           "personality": "果决暴躁，疑心极重",
           "relationship": "需要你的能力，却时刻警惕你这个'来历不明的苏醒者'",
           "gender": "男",
-          "avatar": "avatars/avatar_22.jpg"
+          "avatar": "avatars/avatar_29.jpg"
         },
         {
           "name": "海盗头目·鬼手",
@@ -409,7 +409,7 @@
           "personality": "疯狂狡诈，技术老练",
           "relationship": "他的黑客手段让你想起 21 世纪的老同行——或许他也来自你的时代",
           "gender": "男",
-          "avatar": "avatars/avatar_36.jpg"
+          "avatar": "avatars/avatar_28.jpg"
         }
       ],
       "timeline": {

@@ -42,7 +42,7 @@
         {
           "name": "死党·大刘",
           "gender": "男",
-          "avatar": "avatars/avatar_14.jpg",
+          "avatar": "avatars/avatar_05.jpg",
           "role": "你的同桌",
           "personality": "咋咋呼呼，恋爱军师",
           "relationship": "全班的八卦中心，总怂恿你表白",
@@ -52,7 +52,7 @@
         {
           "name": "班主任·老周",
           "gender": "男",
-          "avatar": "avatars/avatar_12.jpg",
+          "avatar": "avatars/avatar_11.jpg",
           "role": "高三（5）班班主任",
           "personality": "严厉唠叨，其实心软",
           "relationship": "他盯你们盯得最紧，也知道林晚晴转班的原因"
@@ -60,7 +60,7 @@
         {
           "name": "学霸·苏晴",
           "gender": "女",
-          "avatar": "avatars/avatar_09.jpg",
+          "avatar": "avatars/avatar_39.jpg",
           "role": "年级第一",
           "personality": "清冷自律，洞察一切",
           "relationship": "她坐在你后排，总在你发呆时敲你的椅背"
@@ -136,7 +136,7 @@
         {
           "name": "同桌·阿豪",
           "gender": "男",
-          "avatar": "avatars/avatar_11.jpg",
+          "avatar": "avatars/avatar_12.jpg",
           "role": "你的同桌",
           "personality": "懒散仗义，成绩垫底",
           "relationship": "你最好的朋友，最近总觉得你不对劲",
@@ -146,7 +146,7 @@
         {
           "name": "班主任·王姐",
           "gender": "女",
-          "avatar": "avatars/avatar_41.jpg",
+          "avatar": "avatars/avatar_40.jpg",
           "role": "高三班主任",
           "personality": "敏锐尽责，关心学生",
           "relationship": "她注意到你成绩的异常暴涨"
@@ -222,7 +222,7 @@
         {
           "name": "室友·阿凯",
           "gender": "男",
-          "avatar": "avatars/avatar_23.jpg",
+          "avatar": "avatars/avatar_34.jpg",
           "role": "推你上台的室友",
           "personality": "精明干练，人脉极广",
           "relationship": "他是你的竞选经理，但他的动机成谜"
@@ -230,7 +230,7 @@
         {
           "name": "对手·林哲",
           "gender": "男",
-          "avatar": "avatars/avatar_11.jpg",
+          "avatar": "avatars/avatar_22.jpg",
           "role": "内定候选人",
           "personality": "温文尔雅，滴水不漏",
           "relationship": "表面上友善，背地里已经在布局"
@@ -238,7 +238,7 @@
         {
           "name": "前任主席·陈辉",
           "gender": "男",
-          "avatar": "avatars/avatar_36.jpg",
+          "avatar": "avatars/avatar_04.jpg",
           "role": "卸任主席",
           "personality": "圆滑世故，深谙游戏规则",
           "relationship": "他提醒你：有些水，沾了就要负责"
@@ -246,7 +246,7 @@
         {
           "name": "社团联会长·大熊",
           "gender": "男",
-          "avatar": "avatars/avatar_18.jpg",
+          "avatar": "avatars/avatar_15.jpg",
           "role": "票仓掌控者",
           "personality": "豪爽直接，讲利益也讲情义",
           "relationship": "他的票可以给你，但条件是你得替他办一件事"
@@ -322,7 +322,7 @@
         {
           "name": "社员·老周",
           "gender": "男",
-          "avatar": "avatars/avatar_36.jpg",
+          "avatar": "avatars/avatar_22.jpg",
           "role": "社团资深社员",
           "personality": "大大咧咧，外粗内细",
           "relationship": "总想拉你组队，却总欲言又止"
@@ -338,7 +338,7 @@
         {
           "name": "前任会长·钟声",
           "gender": "男",
-          "avatar": "avatars/avatar_18.jpg",
+          "avatar": "avatars/avatar_35.jpg",
           "role": "神秘失踪的前会长",
           "personality": "（传闻）执拗勇敢，酷爱追查真相",
           "relationship": "他失踪前，验证的最后一个怪谈就是你抽中的这个"
@@ -406,7 +406,7 @@
         {
           "name": "图书馆女生·白雾",
           "gender": "女",
-          "avatar": "avatars/avatar_09.jpg",
+          "avatar": "avatars/avatar_39.jpg",
           "role": "总坐在同一位置的同学",
           "personality": "安静温柔，喜欢读旧书",
           "relationship": "她似乎知道你的「能力」，总在帮你"
@@ -414,7 +414,7 @@
         {
           "name": "不撑伞的男生·阿森",
           "gender": "男",
-          "avatar": "avatars/avatar_23.jpg",
+          "avatar": "avatars/avatar_22.jpg",
           "role": "下雨天不打伞的同学",
           "personality": "沉默寡言，雨天总在走廊发呆",
           "relationship": "他看你的眼神，像是在告别"
@@ -422,7 +422,7 @@
         {
           "name": "喂猫学姐·夏栀",
           "gender": "女",
-          "avatar": "avatars/avatar_34.jpg",
+          "avatar": "avatars/avatar_08.jpg",
           "role": "操场角落的学姐",
           "personality": "温柔坚韧，消息灵通",
           "relationship": "她认识天台上的影子，是知情者"
@@ -430,7 +430,7 @@
         {
           "name": "班主任·老陈",
           "gender": "男",
-          "avatar": "avatars/avatar_22.jpg",
+          "avatar": "avatars/avatar_11.jpg",
           "role": "新班主任",
           "personality": "粗心热情，回避话题",
           "relationship": "他刻意避开天台的话题，像在隐瞒什么"

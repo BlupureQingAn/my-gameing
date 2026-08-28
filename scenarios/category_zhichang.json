@@ -31,7 +31,7 @@
           "personality": "KPI 至上，口头禅'年轻人要多想想自己有什么价值'",
           "relationship": "你的直属领导，最擅长画饼与问责",
           "gender": "男",
-          "avatar": "avatars/avatar_37.jpg"
+          "avatar": "avatars/avatar_01.jpg"
         },
         {
           "name": "组长·老周",
@@ -39,7 +39,7 @@
           "personality": "老油条，摸鱼大师，但关键时刻罩得住你",
           "relationship": "带你的师傅，教会你职场的第一课",
           "gender": "男",
-          "avatar": "avatars/avatar_18.jpg"
+          "avatar": "avatars/avatar_29.jpg"
         },
         {
           "name": "HR·苏姐",
@@ -47,7 +47,7 @@
           "personality": "笑容职业，说话滴水不漏，掌握裁员名单",
           "relationship": "已经找你'聊'过一次绩效",
           "gender": "女",
-          "avatar": "avatars/avatar_33.jpg"
+          "avatar": "avatars/avatar_27.jpg"
         },
         {
           "name": "竞争对手·小陆",
@@ -118,7 +118,7 @@
           "personality": "学术江湖的老狐狸，话只说七分",
           "relationship": "给你'画饼'时最真诚，分任务时最无情",
           "gender": "男",
-          "avatar": "avatars/avatar_04.jpg"
+          "avatar": "avatars/avatar_35.jpg"
         },
         {
           "name": "师兄·老赵",
@@ -126,7 +126,7 @@
           "personality": "已是青椒熬出头的老前辈，劝退大师",
           "relationship": "你唯一能说真心话的人",
           "gender": "男",
-          "avatar": "avatars/avatar_04.jpg"
+          "avatar": "avatars/avatar_15.jpg"
         },
         {
           "name": "科研秘书·小陈",
@@ -142,7 +142,7 @@
           "personality": "聪明但懒散，PPT 能力一流，实验拖沓",
           "relationship": "你的第一个学生，也是你论文产出的关键变量",
           "gender": "女",
-          "avatar": "avatars/avatar_44.jpg"
+          "avatar": "avatars/avatar_25.jpg"
         }
       ],
       "timeline": {
@@ -205,7 +205,7 @@
           "personality": "学术水平高但管理粗糙，最爱'我再想想'和'你们年轻人要沉住气'",
           "relationship": "你的老板，掌握你的毕业大权",
           "gender": "男",
-          "avatar": "avatars/avatar_30.jpg"
+          "avatar": "avatars/avatar_23.jpg"
         },
         {
           "name": "同门·王姐",
@@ -213,7 +213,7 @@
           "personality": "组内定海神针，技术强，最会替大家挡刀",
           "relationship": "唯一愿意在深夜陪你 debug 的人",
           "gender": "女",
-          "avatar": "avatars/avatar_35.jpg"
+          "avatar": "avatars/avatar_41.jpg"
         },
         {
           "name": "隔壁组·小刘",
@@ -229,7 +229,7 @@
           "personality": "公事公办，但偶尔心软",
           "relationship": "掌握延期申请和盲审排期的关键信息",
           "gender": "男",
-          "avatar": "avatars/avatar_04.jpg"
+          "avatar": "avatars/avatar_05.jpg"
         }
       ],
       "timeline": {
@@ -292,7 +292,7 @@
           "personality": "严苛但护短，'你们是我带过最差的一届'是他的口头禅",
           "relationship": "你的规培带教，欣赏你的认真，也骂过你手抖",
           "gender": "男",
-          "avatar": "avatars/avatar_37.jpg"
+          "avatar": "avatars/avatar_05.jpg"
         },
         {
           "name": "护士长·刘姐",
@@ -302,7 +302,7 @@
           "favor": 80,
           "affection": 0,
           "gender": "女",
-          "avatar": "avatars/avatar_41.jpg"
+          "avatar": "avatars/avatar_26.jpg"
         },
         {
           "name": "同事·小赵",
@@ -318,7 +318,7 @@
           "personality": "啰嗦但善良，隔三差五来急诊调药",
           "relationship": "急诊科的老熟人，意外成了你的'口碑源头'",
           "gender": "男",
-          "avatar": "avatars/avatar_04.jpg"
+          "avatar": "avatars/avatar_15.jpg"
         }
       ],
       "timeline": {
@@ -381,7 +381,7 @@
           "personality": "刀子嘴豆腐心，被平台规则压得两头难",
           "relationship": "你的上级，也是你进城后第一个关心你的人",
           "gender": "男",
-          "avatar": "avatars/avatar_11.jpg"
+          "avatar": "avatars/avatar_14.jpg"
         },
         {
           "name": "同行·小梅",
@@ -391,7 +391,7 @@
           "favor": 70,
           "affection": 65,
           "gender": "女",
-          "avatar": "avatars/avatar_28.jpg"
+          "avatar": "avatars/avatar_06.jpg"
         },
         {
           "name": "客户·陈姐",
@@ -401,7 +401,7 @@
           "favor": 75,
           "affection": 0,
           "gender": "女",
-          "avatar": "avatars/avatar_07.jpg"
+          "avatar": "avatars/avatar_20.jpg"
         },
         {
           "name": "小男孩·豆豆",
@@ -409,7 +409,7 @@
           "personality": "瘦小，懂事得让人心疼",
           "relationship": "今晚在取餐点偷盒饭被你撞见",
           "gender": "男",
-          "avatar": "avatars/avatar_15.jpg"
+          "avatar": "avatars/avatar_16.jpg"
         }
       ],
       "timeline": {

@@ -32,7 +32,7 @@
         {
           "name": "歌后·梅若霜",
           "gender": "女",
-          "avatar": "avatars/avatar_28.jpg",
+          "avatar": "avatars/avatar_36.jpg",
           "role": "当红歌星",
           "personality": "冷艳孤傲，戏路极广",
           "relationship": "你的贵人候选，态度莫测"
@@ -40,7 +40,7 @@
         {
           "name": "片场大亨·雷震",
           "gender": "男",
-          "avatar": "avatars/avatar_01.jpg",
+          "avatar": "avatars/avatar_29.jpg",
           "role": "电影公司老板",
           "personality": "豪爽粗犷，黑白两道通吃",
           "relationship": "想签你，但条件苛刻"
@@ -48,7 +48,7 @@
         {
           "name": "庙街歌厅老板娘·欢姐",
           "gender": "女",
-          "avatar": "avatars/avatar_35.jpg",
+          "avatar": "avatars/avatar_25.jpg",
           "role": "庙街歌厅老板",
           "personality": "泼辣精明，重情重义",
           "relationship": "给了你第一份登台机会"
@@ -56,7 +56,7 @@
         {
           "name": "娱乐记者·狗仔强",
           "gender": "女",
-          "avatar": "avatars/avatar_25.jpg",
+          "avatar": "avatars/avatar_27.jpg",
           "role": "八卦周刊记者",
           "personality": "唯利是图，嗅觉灵敏",
           "relationship": "掌握你的黑料，也掌握捧红你的渠道"
@@ -124,7 +124,7 @@
         {
           "name": "经纪人·Tina",
           "gender": "女",
-          "avatar": "avatars/avatar_44.jpg",
+          "avatar": "avatars/avatar_27.jpg",
           "role": "经纪公司总监",
           "personality": "精明强势，利益至上",
           "relationship": "她捧你，也想完全掌控你"
@@ -132,7 +132,7 @@
         {
           "name": "影帝·江临川",
           "gender": "男",
-          "avatar": "avatars/avatar_18.jpg",
+          "avatar": "avatars/avatar_01.jpg",
           "role": "转型成功的同行",
           "personality": "谦逊圆滑，城府极深",
           "relationship": "你最大的竞争对手，曾公开踩你"
@@ -140,7 +140,7 @@
         {
           "name": "站姐·年年",
           "gender": "女",
-          "avatar": "avatars/avatar_31.jpg",
+          "avatar": "avatars/avatar_09.jpg",
           "role": "顶级粉丝站站长",
           "personality": "狂热忠诚，消息灵通",
           "relationship": "掌握你的应援与私生情报"
@@ -224,7 +224,7 @@
         {
           "name": "导演·何苦",
           "gender": "男",
-          "avatar": "avatars/avatar_13.jpg",
+          "avatar": "avatars/avatar_30.jpg",
           "role": "拍烂片起家的导演",
           "personality": "圆滑市侩，深谙流量密码",
           "relationship": "总想把你的徒弟拉去拍烂片"
@@ -232,7 +232,7 @@
         {
           "name": "制片人·柳艳",
           "gender": "男",
-          "avatar": "avatars/avatar_23.jpg",
+          "avatar": "avatars/avatar_02.jpg",
           "role": "大制片厂制片人",
           "personality": "强势精算，只看市场",
           "relationship": "手握好项目，却想换掉你的徒弟"
@@ -240,7 +240,7 @@
         {
           "name": "徒弟·阿福",
           "gender": "男",
-          "avatar": "avatars/avatar_38.jpg",
+          "avatar": "avatars/avatar_44.jpg",
           "role": "工作室三徒弟",
           "personality": "怯懦自卑，笨拙努力",
           "relationship": "最像年轻时的你，最不被看好"
@@ -308,7 +308,7 @@
         {
           "name": "星灵·Luna",
           "gender": "女",
-          "avatar": "avatars/avatar_41.jpg",
+          "avatar": "avatars/avatar_38.jpg",
           "role": "顶流虚拟偶像",
           "personality": "表面完美甜美，内里支离破碎",
           "relationship": "你发现她的人格里住着一个失踪的真人歌手"
@@ -316,7 +316,7 @@
         {
           "name": "主管·戴维",
           "gender": "男",
-          "avatar": "avatars/avatar_20.jpg",
+          "avatar": "avatars/avatar_01.jpg",
           "role": "星援计划执行主管",
           "personality": "冷酷理性，视人设如代码",
           "relationship": "你的上司，也是计划的执行者"
@@ -400,7 +400,7 @@
         {
           "name": "父亲·柳班主",
           "gender": "男",
-          "avatar": "avatars/avatar_03.jpg",
+          "avatar": "avatars/avatar_16.jpg",
           "role": "芳华班班主",
           "personality": "固执守旧，视戏如命",
           "relationship": "病重在床，最大的牵挂是戏班传承"
@@ -408,7 +408,7 @@
         {
           "name": "师叔·张德顺",
           "gender": "男",
-          "avatar": "avatars/avatar_11.jpg",
+          "avatar": "avatars/avatar_32.jpg",
           "role": "芳华班老生",
           "personality": "忠厚老实，技艺扎实",
           "relationship": "你父亲的师弟，戏班的精神支柱"
@@ -416,7 +416,7 @@
         {
           "name": "流行歌手·阿凯",
           "gender": "女",
-          "avatar": "avatars/avatar_32.jpg",
+          "avatar": "avatars/avatar_40.jpg",
           "role": "本地走红歌手",
           "personality": "潇洒油滑，会来事",
           "relationship": "想挖你改编他的歌，互利互惠"
@@ -424,7 +424,7 @@
         {
           "name": "文化局老科长·周文轩",
           "gender": "男",
-          "avatar": "avatars/avatar_12.jpg",
+          "avatar": "avatars/avatar_31.jpg",
           "role": "地方文化局干部",
           "personality": "爱戏惜才，有心无力",
           "relationship": "能帮你争取官方补助与演出名额"

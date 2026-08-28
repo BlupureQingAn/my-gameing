@@ -32,7 +32,7 @@
         {
           "name": "新娘·你",
           "gender": "女",
-          "avatar": "avatars/avatar_17.jpg",
+          "avatar": "avatars/avatar_08.jpg",
           "role": "婚礼中的自己",
           "personality": "微笑温柔，眼神空洞",
           "relationship": "她在婚礼上的每个举动，都是给你的提示"
@@ -40,7 +40,7 @@
         {
           "name": "新郎·模糊",
           "gender": "男",
-          "avatar": "avatars/avatar_19.jpg",
+          "avatar": "avatars/avatar_28.jpg",
           "role": "婚礼新郎",
           "personality": "越轮回越清晰",
           "relationship": "他是轮回的核心，也是你遗忘的关键"
@@ -48,7 +48,7 @@
         {
           "name": "宾客·红衣女人",
           "gender": "女",
-          "avatar": "avatars/avatar_32.jpg",
+          "avatar": "avatars/avatar_42.jpg",
           "role": "婚礼宾客",
           "personality": "警觉孤僻，从不敬酒",
           "relationship": "她是唯一会和你说话的宾客，但她的话不能全信"
@@ -132,7 +132,7 @@
         {
           "name": "将军·拓跋",
           "gender": "男",
-          "avatar": "avatars/avatar_36.jpg",
+          "avatar": "avatars/avatar_44.jpg",
           "role": "古代将领",
           "personality": "刚烈直率，重情义",
           "relationship": "他把你当小辈照顾，也教了你战场生存之道"
@@ -140,7 +140,7 @@
         {
           "name": "学者·白教授",
           "gender": "男",
-          "avatar": "avatars/avatar_19.jpg",
+          "avatar": "avatars/avatar_34.jpg",
           "role": "近代学者",
           "personality": "睿智温厚，洞察人心",
           "relationship": "他是竞技场的「活图书馆」，知道每轮关卡的规律"
@@ -218,7 +218,7 @@
         {
           "name": "管理员·老馆长",
           "gender": "男",
-          "avatar": "avatars/avatar_05.jpg",
+          "avatar": "avatars/avatar_10.jpg",
           "role": "副本管理员",
           "personality": "温和守旧，守口如瓶",
           "relationship": "他认识每一本书，也认识「你」"
@@ -226,7 +226,7 @@
         {
           "name": "读者·穿花裙的女孩",
           "gender": "女",
-          "avatar": "avatars/avatar_44.jpg",
+          "avatar": "avatars/avatar_07.jpg",
           "role": "另一名被困者",
           "personality": "活泼好奇，记性奇差",
           "relationship": "她已经找了七年出口，线索集了二十条"
@@ -242,7 +242,7 @@
         {
           "name": "写作者·无名的笔",
           "gender": "男",
-          "avatar": "avatars/avatar_13.jpg",
+          "avatar": "avatars/avatar_12.jpg",
           "role": "图书馆深处的书写者",
           "personality": "神秘执拗，不停书写",
           "relationship": "他书写的速度，比你阅读的速度快"
@@ -310,7 +310,7 @@
         {
           "name": "梦疗师·白医生",
           "gender": "男",
-          "avatar": "avatars/avatar_22.jpg",
+          "avatar": "avatars/avatar_31.jpg",
           "role": "梦疗中心医师",
           "personality": "温和专业，滴水不漏",
           "relationship": "他为你开的第一支药剂，剂量「稍微」超了标"
@@ -410,7 +410,7 @@
         {
           "name": "理货员·老周",
           "gender": "男",
-          "avatar": "avatars/avatar_04.jpg",
+          "avatar": "avatars/avatar_03.jpg",
           "role": "货架理货员",
           "personality": "疲惫世故，话里有话",
           "relationship": "他推着货车上夜班，知道货架的「规矩」"
@@ -418,7 +418,7 @@
         {
           "name": "顾客·西装男",
           "gender": "男",
-          "avatar": "avatars/avatar_19.jpg",
+          "avatar": "avatars/avatar_16.jpg",
           "role": "另一名被困者",
           "personality": "冷静精明，经验丰富",
           "relationship": "他已经被困了三晚，知道怎么「活下去」"

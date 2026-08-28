@@ -32,7 +32,7 @@
         {
           "name": "老李",
           "gender": "男",
-          "avatar": "avatars/avatar_01.jpg",
+          "avatar": "avatars/avatar_15.jpg",
           "role": "街口修车铺老板",
           "personality": "嘴碎热心，消息灵通",
           "relationship": "老街百事通，街坊的主心骨"
@@ -48,7 +48,7 @@
         {
           "name": "警察·周队",
           "gender": "男",
-          "avatar": "avatars/avatar_37.jpg",
+          "avatar": "avatars/avatar_21.jpg",
           "role": "辖区刑警",
           "personality": "锐利干练，通情达理",
           "relationship": "认识你十年，知道你最讨厌被卷进麻烦"
@@ -56,7 +56,7 @@
         {
           "name": "小姑娘·小满",
           "gender": "女",
-          "avatar": "avatars/avatar_28.jpg",
+          "avatar": "avatars/avatar_19.jpg",
           "role": "面馆帮工",
           "personality": "机灵乖巧，身世成谜",
           "relationship": "夜校学生，白天上课晚上打工"
@@ -124,7 +124,7 @@
         {
           "name": "房东·老阎",
           "gender": "男",
-          "avatar": "avatars/avatar_30.jpg",
+          "avatar": "avatars/avatar_23.jpg",
           "role": "三号院房东",
           "personality": "神神秘秘，抠门又热心",
           "relationship": "总借酱油，还人情还到怀疑人生"
@@ -132,7 +132,7 @@
         {
           "name": "狐狸精·苏苏",
           "gender": "女",
-          "avatar": "avatars/avatar_41.jpg",
+          "avatar": "avatars/avatar_06.jpg",
           "role": "对门邻居",
           "personality": "妖艳话痨，怕寂寞",
           "relationship": "表面爱捉弄你，实际是街上的消息源"
@@ -140,7 +140,7 @@
         {
           "name": "僵尸·阿僵",
           "gender": "男",
-          "avatar": "avatars/avatar_21.jpg",
+          "avatar": "avatars/avatar_34.jpg",
           "role": "巷口面摊主",
           "personality": "沉默笨拙，煮面好吃",
           "relationship": "全街唯一和你交心的老实人",
@@ -220,7 +220,7 @@
         {
           "name": "合租室友·大壮",
           "gender": "男",
-          "avatar": "avatars/avatar_05.jpg",
+          "avatar": "avatars/avatar_04.jpg",
           "role": "房产中介",
           "personality": "憨厚讲义气",
           "relationship": "唯一的现实朋友，处境也艰难",
@@ -230,7 +230,7 @@
         {
           "name": "前女友·苏晚",
           "gender": "女",
-          "avatar": "avatars/avatar_41.jpg",
+          "avatar": "avatars/avatar_26.jpg",
           "role": "三甲医院医生",
           "personality": "理性冷静，医者仁心",
           "relationship": "当年嫌你穷分手，如今是行业资源",
@@ -240,7 +240,7 @@
         {
           "name": "资本大佬·韩爷",
           "gender": "男",
-          "avatar": "avatars/avatar_38.jpg",
+          "avatar": "avatars/avatar_44.jpg",
           "role": "地下赌场与医馆老板",
           "personality": "笑面虎，手段狠辣",
           "relationship": "你展露医术后的合作与麻烦"
@@ -248,7 +248,7 @@
         {
           "name": "神秘少女·雪儿",
           "gender": "女",
-          "avatar": "avatars/avatar_44.jpg",
+          "avatar": "avatars/avatar_27.jpg",
           "role": "来历不明的病人",
           "personality": "沉默寡言，身怀异术",
           "relationship": "你救过的病人，疑与前世的你有关"
@@ -316,7 +316,7 @@
         {
           "name": "领导·张总",
           "gender": "男",
-          "avatar": "avatars/avatar_38.jpg",
+          "avatar": "avatars/avatar_32.jpg",
           "role": "产品总监",
           "personality": "圆滑世故，深谙办公室政治",
           "relationship": "他的态度决定你的去留"
@@ -324,7 +324,7 @@
         {
           "name": "同事·王凯",
           "gender": "男",
-          "avatar": "avatars/avatar_38.jpg",
+          "avatar": "avatars/avatar_30.jpg",
           "role": "同级产品经理",
           "personality": "进取心极强，手段灵活",
           "relationship": "你的竞争对手，也是你的镜子"
@@ -340,7 +340,7 @@
         {
           "name": "HR·刘姐",
           "gender": "女",
-          "avatar": "avatars/avatar_17.jpg",
+          "avatar": "avatars/avatar_06.jpg",
           "role": "人力资源总监",
           "personality": "公事公办，笑里藏刀",
           "relationship": "掌握裁员名单的最终版本"
@@ -408,7 +408,7 @@
         {
           "name": "店主·温姨",
           "gender": "女",
-          "avatar": "avatars/avatar_25.jpg",
+          "avatar": "avatars/avatar_09.jpg",
           "role": "天台咖啡店主",
           "personality": "安静通透，话不多但每句都有分量",
           "relationship": "你的收留者，也是你身世的引子"
@@ -416,7 +416,7 @@
         {
           "name": "失恋女孩·小昭",
           "gender": "女",
-          "avatar": "avatars/avatar_43.jpg",
+          "avatar": "avatars/avatar_24.jpg",
           "role": "常客",
           "personality": "大大咧咧，外热内伤",
           "relationship": "每天来点「咸的」，和你成了朋友",
@@ -426,7 +426,7 @@
         {
           "name": "失眠作家·老周",
           "gender": "男",
-          "avatar": "avatars/avatar_22.jpg",
+          "avatar": "avatars/avatar_29.jpg",
           "role": "常客",
           "personality": "毒舌幽默，笔名神秘",
           "relationship": "总在留言本上写故事，书里写的似乎就是这家店"
@@ -434,7 +434,7 @@
         {
           "name": "面包店老板·陈叔",
           "gender": "女",
-          "avatar": "avatars/avatar_02.jpg",
+          "avatar": "avatars/avatar_06.jpg",
           "role": "楼下面包店主",
           "personality": "热心肠，爱打听",
           "relationship": "知道温姨的一些往事"

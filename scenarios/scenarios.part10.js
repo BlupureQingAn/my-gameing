@@ -32,7 +32,7 @@
         {
           "name": "舰长·伊莱",
           "gender": "男",
-          "avatar": "avatars/avatar_30.jpg",
+          "avatar": "avatars/avatar_11.jpg",
           "role": "晨曦号舰长",
           "personality": "沉稳威严，深藏秘密",
           "relationship": "他似乎知道那个舱门的存在"
@@ -58,7 +58,7 @@
         {
           "name": "维修主管·老鲁",
           "gender": "男",
-          "avatar": "avatars/avatar_14.jpg",
+          "avatar": "avatars/avatar_15.jpg",
           "role": "维修部主管",
           "personality": "粗犷豪爽，护犊子",
           "relationship": "把你当亲徒弟，提醒你别碰货舱底层",
@@ -128,7 +128,7 @@
         {
           "name": "流浪医生·老K",
           "gender": "男",
-          "avatar": "avatars/avatar_05.jpg",
+          "avatar": "avatars/avatar_12.jpg",
           "role": "黑市医生",
           "personality": "嘴硬心软，技术高超",
           "relationship": "愿意帮你换身份芯片，但要你替他跑腿"
@@ -136,7 +136,7 @@
         {
           "name": "兄弟·三号",
           "gender": "男",
-          "avatar": "avatars/avatar_21.jpg",
+          "avatar": "avatars/avatar_44.jpg",
           "role": "先你逃出的克隆体",
           "personality": "谨慎多疑，神经质",
           "relationship": "知道农场更多秘密，但也可能出卖你"
@@ -144,7 +144,7 @@
         {
           "name": "义警·铁兰",
           "gender": "女",
-          "avatar": "avatars/avatar_10.jpg",
+          "avatar": "avatars/avatar_24.jpg",
           "role": "城市治安官",
           "personality": "冷厉高效，有洁癖",
           "relationship": "负责回收逃逸克隆体，她的档案里记录着每个克隆体的编号"
@@ -152,7 +152,7 @@
         {
           "name": "记忆里的女孩·小满",
           "gender": "女",
-          "avatar": "avatars/avatar_34.jpg",
+          "avatar": "avatars/avatar_36.jpg",
           "role": "原始体的妹妹",
           "personality": "温柔坚韧，在找你",
           "relationship": "你在城市的地下乐队里遇到了她，她看着你的脸愣住了",
@@ -222,7 +222,7 @@
         {
           "name": "站长·卡特",
           "gender": "男",
-          "avatar": "avatars/avatar_14.jpg",
+          "avatar": "avatars/avatar_05.jpg",
           "role": "红壤站站长",
           "personality": "强硬务实，冷血理性",
           "relationship": "她主张按配额硬撑，反对冒险"
@@ -230,7 +230,7 @@
         {
           "name": "安全官·周衍",
           "gender": "男",
-          "avatar": "avatars/avatar_24.jpg",
+          "avatar": "avatars/avatar_11.jpg",
           "role": "站内安全官",
           "personality": "冷静机敏，背景神秘",
           "relationship": "他怀疑天琴号失联是人为的"
@@ -238,7 +238,7 @@
         {
           "name": "生物学家·伊芙",
           "gender": "女",
-          "avatar": "avatars/avatar_07.jpg",
+          "avatar": "avatars/avatar_20.jpg",
           "role": "温室研究员",
           "personality": "理想主义，天真热情",
           "relationship": "视你为导师，也视水稻种子为宝贝"
@@ -246,7 +246,7 @@
         {
           "name": "机械师·大胡子",
           "gender": "男",
-          "avatar": "avatars/avatar_12.jpg",
+          "avatar": "avatars/avatar_35.jpg",
           "role": "站内机械师",
           "personality": "粗犷乐观，手艺过硬",
           "relationship": "能修好任何东西，包括不该修的"
@@ -406,7 +406,7 @@
         {
           "name": "站长·老严",
           "gender": "男",
-          "avatar": "avatars/avatar_37.jpg",
+          "avatar": "avatars/avatar_29.jpg",
           "role": "监听站站长",
           "personality": "固执老练，守口如瓶",
           "relationship": "他收到信号后的第一反应是封锁，但你知道他藏着事"
@@ -414,7 +414,7 @@
         {
           "name": "同事·阿禾",
           "gender": "男",
-          "avatar": "avatars/avatar_06.jpg",
+          "avatar": "avatars/avatar_21.jpg",
           "role": "监听站研究员",
           "personality": "年轻热血，充满理想",
           "relationship": "你的搭档，主张公开信号内容"
@@ -422,7 +422,7 @@
         {
           "name": "来访学者·Dr.沃克",
           "gender": "男",
-          "avatar": "avatars/avatar_03.jpg",
+          "avatar": "avatars/avatar_16.jpg",
           "role": "星际通信学者",
           "personality": "博学温和，来历成谜",
           "relationship": "他连夜赶到监听站，说认识你的母亲"
@@ -430,7 +430,7 @@
         {
           "name": "母亲·顾青",
           "gender": "女",
-          "avatar": "avatars/avatar_31.jpg",
+          "avatar": "avatars/avatar_41.jpg",
           "role": "（记忆/录音）中学物理老师",
           "personality": "温柔坚韧，喜欢仰望星空",
           "relationship": "她留下的旧笔记本里，夹着一张和蓝图一模一样的草图",
