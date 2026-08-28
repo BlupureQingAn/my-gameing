@@ -1664,12 +1664,10 @@ export default {
                 });
             }
 
-            // ---- 路由：本月官方卡热度榜（轮播动态展示，GET /api/game/hot?limit=7；匿名可用）----
+            // ---- 路由：官方卡历史热度榜（轮播动态展示，GET /api/game/hot?limit=7；匿名可用）----
             if (url.pathname === "/api/game/hot" && request.method === "GET") {
                 const limit = Math.min(Math.max(Number(url.searchParams.get("limit") || 7), 1), 20);
-                const now = new Date();
-                const monthStart = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-01 00:00:00`;
-                const filter = encodeURIComponent(`card_id~'scenario_preset'&&created>='${monthStart}'`);
+                const filter = encodeURIComponent(`card_id~'scenario_preset'`);
                 const counts = new Map();
                 let page = 1;
                 while (page <= 50) {
