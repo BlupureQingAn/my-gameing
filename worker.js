@@ -93,26 +93,26 @@ const MODEL_POOL = [
     // 原 qwen3.5-122b-a10b 已 EOL(HTTP 410);llama-3.3-70b-instruct 已从平台下架(8-24 实测 12s+ 无响应即额度耗尽)
     // llama-3.3-70b-instruct 已从平台下架(实测 503),保留条目但禁用防误测
     { id: "nv-llama-3.3-70b",        url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "meta/llama-3.3-70b-instruct",        dailyCap: 100, tier: 90, enabled: false },
-    { id: "nv-deepseek-v4-flash",    url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "deepseek-ai/deepseek-v4-flash-0731", dailyCap: 500, tier: 90, enabled: true },
-    { id: "nv-deepseek-v4-pro",      url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "deepseek-ai/deepseek-v4-pro-0813",   dailyCap: 500, tier: 90, enabled: true },
-    { id: "nv-kimi-k2.6",            url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "moonshotai/kimi-k2.6",               dailyCap: 500, tier: 90, enabled: true },
-    { id: "nv-kimi-k3",              url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "moonshotai/kimi-k3",                 dailyCap: 500, tier: 90, enabled: true },
-    { id: "nv-minimax-m3",           url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "minimaxai/minimax-m3",               dailyCap: 500, tier: 90, enabled: true },
-    { id: "nv-nemotron-super",       url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/nemotron-3-super-120b-a12b",  dailyCap: 500, tier: 90, enabled: true },
-    { id: "nv-nemotron-ultra",       url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/nemotron-3-ultra-550b-a55b",  dailyCap: 500, tier: 90, enabled: true },
-    { id: "nv-nemotron-4-340b",      url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/nemotron-4-340b-instruct",    dailyCap: 500, tier: 90, enabled: true },
-    { id: "nv-nemotron-nano-30b",    url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/nemotron-3-nano-30b-a3b",     dailyCap: 500, tier: 90, enabled: true },
-    { id: "nv-nemotron-lightning",   url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/nemotron-3.5-lightning-30b-a3b", dailyCap: 500, tier: 90, enabled: true },
-    { id: "nv-gpt-oss-120b",         url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "openai/gpt-oss-120b",                dailyCap: 500, tier: 90, enabled: true },
-    { id: "nv-gpt-oss-20b",          url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "openai/gpt-oss-20b",                 dailyCap: 500, tier: 90, enabled: true },
-    { id: "nv-mistral-large2",       url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "mistralai/mistral-large-2-instruct", dailyCap: 500, tier: 90, enabled: true },
-    { id: "nv-mistral-nemotron",     url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "mistralai/mistral-nemotron",         dailyCap: 500, tier: 90, enabled: true },
-    { id: "nv-nemotron-70b",         url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/llama-3.1-nemotron-70b-instruct", dailyCap: 500, tier: 90, enabled: true },
-    { id: "nv-nemotron-ultra-253b",  url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/llama-3.1-nemotron-ultra-253b-v1", dailyCap: 500, tier: 90, enabled: true },
-    { id: "nv-gemma-4-31b",          url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "google/gemma-4-31b-it",              dailyCap: 500, tier: 90, enabled: true },
-    { id: "nv-gemma-3-12b",          url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "google/gemma-3-12b-it",              dailyCap: 500, tier: 90, enabled: true },
-    { id: "nv-phi-3.5-moe",          url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "microsoft/phi-3.5-moe-instruct",     dailyCap: 500, tier: 90, enabled: true },
-    { id: "nv-yi-large",             url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "01-ai/yi-large",                     dailyCap: 500, tier: 90, enabled: true },
+    { id: "nv-deepseek-v4-flash",    url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "deepseek-ai/deepseek-v4-flash-0731", dailyCap: 800, tier: 90, enabled: true },
+    { id: "nv-deepseek-v4-pro",      url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "deepseek-ai/deepseek-v4-pro-0813",   dailyCap: 800, tier: 90, enabled: true },
+    { id: "nv-kimi-k2.6",            url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "moonshotai/kimi-k2.6",               dailyCap: 800, tier: 90, enabled: true },
+    { id: "nv-kimi-k3",              url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "moonshotai/kimi-k3",                 dailyCap: 800, tier: 90, enabled: true },
+    { id: "nv-minimax-m3",           url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "minimaxai/minimax-m3",               dailyCap: 800, tier: 90, enabled: true },
+    { id: "nv-nemotron-super",       url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/nemotron-3-super-120b-a12b",  dailyCap: 800, tier: 90, enabled: true },
+    { id: "nv-nemotron-ultra",       url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/nemotron-3-ultra-550b-a55b",  dailyCap: 800, tier: 90, enabled: true },
+    { id: "nv-nemotron-4-340b",      url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/nemotron-4-340b-instruct",    dailyCap: 800, tier: 90, enabled: true },
+    { id: "nv-nemotron-nano-30b",    url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/nemotron-3-nano-30b-a3b",     dailyCap: 5000, tier: 90, enabled: true },
+    { id: "nv-nemotron-lightning",   url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/nemotron-3.5-lightning-30b-a3b", dailyCap: 5000, tier: 90, enabled: true },
+    { id: "nv-gpt-oss-120b",         url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "openai/gpt-oss-120b",                dailyCap: 800, tier: 90, enabled: true },
+    { id: "nv-gpt-oss-20b",          url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "openai/gpt-oss-20b",                 dailyCap: 5000, tier: 90, enabled: true },
+    { id: "nv-mistral-large2",       url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "mistralai/mistral-large-2-instruct", dailyCap: 800, tier: 90, enabled: true },
+    { id: "nv-mistral-nemotron",     url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "mistralai/mistral-nemotron",         dailyCap: 5000, tier: 90, enabled: true },
+    { id: "nv-nemotron-70b",         url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/llama-3.1-nemotron-70b-instruct", dailyCap: 800, tier: 90, enabled: true },
+    { id: "nv-nemotron-ultra-253b",  url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/llama-3.1-nemotron-ultra-253b-v1", dailyCap: 800, tier: 90, enabled: true },
+    { id: "nv-gemma-4-31b",          url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "google/gemma-4-31b-it",              dailyCap: 5000, tier: 90, enabled: true },
+    { id: "nv-gemma-3-12b",          url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "google/gemma-3-12b-it",              dailyCap: 5000, tier: 90, enabled: true },
+    { id: "nv-phi-3.5-moe",          url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "microsoft/phi-3.5-moe-instruct",     dailyCap: 5000, tier: 90, enabled: true },
+    { id: "nv-yi-large",             url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "01-ai/yi-large",                     dailyCap: 5000, tier: 90, enabled: true },
     // ---- SiliconFlow Qwen3-8B（免费，最后兜底）----
     { id: "sf-qwen3-8b",      url: "https://api.siliconflow.cn/v1",      apiKeyEnv: "SILICONFLOW_KEY", model: "Qwen/Qwen3-8B",     dailyCap: Infinity, tier: 99, enabled: true },
 ];
@@ -127,21 +127,50 @@ const RATE_LIMIT_OVERRIDES = {
     "XFSPARK_X2_FLASH_KEY": { concurrency: 8, maxPerWindow: 60 },
     "XFSPARK_X2_KEY":       { concurrency: 8, maxPerWindow: 60 },
 };
-function rateLimitFor(envName) {
+// 模型级门控(优先于 key 级):NVIDIA 免费层按模型独立限流(2026-08 查证)
+// 大模型 ~40 RPM / 1000 req/天 → 门控取平台 75% 余量(30/min,并发 3);小模型 ~60 RPM / 14400 req/天 → 45/min,并发 5
+// 超限 429 由 Retry-After 短等重试 + 30s 短熔断兜底,不拖慢 fallback 链
+const MODEL_LIMIT_OVERRIDES = {
+    "nv-deepseek-v4-flash":   { concurrency: 3, maxPerWindow: 30 },
+    "nv-deepseek-v4-pro":     { concurrency: 3, maxPerWindow: 30 },
+    "nv-kimi-k2.6":           { concurrency: 3, maxPerWindow: 30 },
+    "nv-kimi-k3":             { concurrency: 3, maxPerWindow: 30 },
+    "nv-minimax-m3":          { concurrency: 3, maxPerWindow: 30 },
+    "nv-nemotron-super":      { concurrency: 3, maxPerWindow: 30 },
+    "nv-nemotron-ultra":      { concurrency: 3, maxPerWindow: 30 },
+    "nv-nemotron-4-340b":     { concurrency: 3, maxPerWindow: 30 },
+    "nv-gpt-oss-120b":        { concurrency: 3, maxPerWindow: 30 },
+    "nv-mistral-large2":      { concurrency: 3, maxPerWindow: 30 },
+    "nv-nemotron-70b":        { concurrency: 3, maxPerWindow: 30 },
+    "nv-nemotron-ultra-253b": { concurrency: 3, maxPerWindow: 30 },
+    "nv-nemotron-nano-30b":   { concurrency: 5, maxPerWindow: 45 },
+    "nv-nemotron-lightning":  { concurrency: 5, maxPerWindow: 45 },
+    "nv-gpt-oss-20b":         { concurrency: 5, maxPerWindow: 45 },
+    "nv-mistral-nemotron":    { concurrency: 5, maxPerWindow: 45 },
+    "nv-gemma-4-31b":         { concurrency: 5, maxPerWindow: 45 },
+    "nv-gemma-3-12b":         { concurrency: 5, maxPerWindow: 45 },
+    "nv-phi-3.5-moe":         { concurrency: 5, maxPerWindow: 45 },
+    "nv-yi-large":            { concurrency: 5, maxPerWindow: 45 },
+};
+function rateLimitFor(envName, modelId) {
+    if (modelId && MODEL_LIMIT_OVERRIDES[modelId]) {
+        return { ...RATE_LIMIT, ...MODEL_LIMIT_OVERRIDES[modelId] };
+    }
     return RATE_LIMIT_OVERRIDES[envName]
         ? { ...RATE_LIMIT, ...RATE_LIMIT_OVERRIDES[envName] }
         : RATE_LIMIT;
 }
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-const upstreamGates = new Map(); // apiKeyEnv -> { active, timestamps }
-function gateFor(envName) {
-    let g = upstreamGates.get(envName);
-    if (!g) { g = { active: 0, timestamps: [] }; upstreamGates.set(envName, g); }
+const upstreamGates = new Map(); // "envName"|"envName#modelId" -> { active, timestamps }
+function gateFor(envName, modelId) {
+    const key = modelId ? envName + "#" + modelId : envName;
+    let g = upstreamGates.get(key);
+    if (!g) { g = { active: 0, timestamps: [] }; upstreamGates.set(key, g); }
     return g;
 }
-async function gateAcquire(envName) {
-    const g = gateFor(envName);
-    const lim = rateLimitFor(envName);
+async function gateAcquire(envName, modelId) {
+    const g = gateFor(envName, modelId);
+    const lim = rateLimitFor(envName, modelId);
     const start = Date.now();
     while (true) {
         const now = Date.now();
@@ -155,8 +184,8 @@ async function gateAcquire(envName) {
         await sleep(50);
     }
 }
-function gateRelease(envName) {
-    const g = upstreamGates.get(envName);
+function gateRelease(envName, modelId) {
+    const g = upstreamGates.get(modelId ? envName + "#" + modelId : envName);
     if (g && g.active > 0) g.active--;
 }
 // Retry-After 解析:优先毫秒(OpenAI 系 retry-after-ms),其次秒(HTTP 标准 retry-after)
@@ -172,6 +201,8 @@ function parseRetryAfterMs(resp) {
 // (实测:key 过期的 ChatAnywhere 每次 ~0.5s 失败 × 11 个候选 = 每请求固定浪费 ~6.5s)
 // CF Workers 多实例内存隔离,仅用 Map 时每实例各自重走失败链;叠加 Cache API(zone 内全局共享)做跨实例熔断
 const MODEL_FAIL_COOLDOWN_MS = 5 * 60 * 1000;
+// 429 限流短熔断:Retry-After 等待重试仍 429 → 30s 内跳过该模型,避免每个请求都白试一次再 fallback
+const MODEL_429_COOLDOWN_MS = 30 * 1000;
 const modelFailTimes = new Map(); // modelId -> lastFailTime (本实例内存快路径)
 
 const failCacheUrl = (modelId) => `https://ai.blupure.cn/_internal/fail/${encodeURIComponent(modelId)}`;
@@ -192,11 +223,11 @@ async function isModelInCooldown(modelId) {
     return false;
 }
 
-async function setModelCooldown(modelId) {
+async function setModelCooldown(modelId, ms = MODEL_FAIL_COOLDOWN_MS) {
     modelFailTimes.set(modelId, Date.now());
     try {
         await caches.default.put(failCacheUrl(modelId), new Response("1", {
-            headers: { "Cache-Control": `max-age=${Math.floor(MODEL_FAIL_COOLDOWN_MS / 1000)}` }
+            headers: { "Cache-Control": `max-age=${Math.floor(ms / 1000)}` }
         }));
     } catch (e) { /* best-effort */ }
 }
@@ -676,7 +707,7 @@ export default {
                     if (!apiKey) { attempts.push(`${target.id}:nokey`); continue; }
                     const base = (modelUrlOverrides?.[target.id] || target.url).replace(/\/$/, "");
                     // 上游限流门控:并发/速率超限拿不到令牌 → 换候选(避免自触发 1302/1305)
-                    if (!(await gateAcquire(target.apiKeyEnv))) { attempts.push(`${target.id}:busy`); continue; }
+                    if (!(await gateAcquire(target.apiKeyEnv, target.id))) { attempts.push(`${target.id}:busy`); continue; }
                     let resp = null;
                     let respStatus = 0;
                     try {
@@ -710,7 +741,8 @@ export default {
                                             continue;
                                         }
                                     }
-                                    attempts.push(`${target.id}:429:${Date.now() - attemptStart}ms [${bodyPreview}]`); // 限流可恢复,不熔断,换候选
+                                    attempts.push(`${target.id}:429:${Date.now() - attemptStart}ms [${bodyPreview}]`); // 限流可恢复:30s 短熔断后换候选,避免下个请求白试
+                                    await setModelCooldown(target.id, MODEL_429_COOLDOWN_MS);
                                     resp = null;
                                     break;
                                 }
@@ -724,7 +756,7 @@ export default {
                             }
                         }
                     } finally {
-                        gateRelease(target.apiKeyEnv);
+                        gateRelease(target.apiKeyEnv, target.id);
                     }
                     if (!resp) continue;
                     attempts.push(`${target.id}:${respStatus}:${Date.now() - attemptStart}ms`);
