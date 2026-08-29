@@ -2465,5 +2465,34 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
         } catch (e) {
             return errorResponse("Worker Error", 500, e.message);
         }
+    },
+    // 社区动态 30 天自动清理：每天 04:10 UTC（北京时间 12:10）删除 created 超过 30 天的动态及其点赞/评论
+    async scheduled(event, env, ctx) {
+        const cutoff = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
+        const filter = encodeURIComponent(`created<'${cutoff}'`);
+        let deleted = 0;
+        try {
+            while (true) {
+                const q = await pbAdminFetch(env, `/api/collections/posts/records?perPage=200&page=1&filter=${filter}&fields=id`);
+                const d = await q.json().catch(() => ({}));
+                const items = d.items || [];
+                if (!items.length) break;
+                for (const p of items) {
+                    for (const coll of ["post_likes", "post_comments"]) {
+                        const f = encodeURIComponent(`post_id='${escapePocketBaseFilterValue(p.id)}'`);
+                        const lq = await pbAdminFetch(env, `/api/collections/${coll}/records?perPage=200&filter=${f}&fields=id`);
+                        const ld = await lq.json().catch(() => ({}));
+                        for (const r of ld.items || []) {
+                            await pbAdminFetch(env, `/api/collections/${coll}/records/${r.id}`, { method: "DELETE" });
+                        }
+                    }
+                    await pbAdminFetch(env, `/api/collections/posts/records/${p.id}`, { method: "DELETE" });
+                    deleted++;
+                }
+            }
+            console.log(`post-cleanup done deleted=${deleted} at=${cutoff}`);
+        } catch (e) {
+            console.error("post-cleanup error:", e && e.message);
+        }
     }
 };

@@ -18677,13 +18677,13 @@ function openNpcProfile(npcId) {
                 try {
                     const img = new Image();
                     img.onload = () => {
-                        // 压缩到最长边 640px / JPEG 0.8，控制 base64 体积
+                        // 压缩到最长边 640px / WebP 0.8，控制 base64 体积（webp 比 jpeg 平均小 30-50%）
                         const scale = Math.min(1, 640 / Math.max(img.width, img.height));
                         const canvas = document.createElement("canvas");
                         canvas.width = Math.max(1, Math.round(img.width * scale));
                         canvas.height = Math.max(1, Math.round(img.height * scale));
                         canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
-                        const data = canvas.toDataURL("image/jpeg", 0.8);
+                        const data = canvas.toDataURL("image/webp", 0.8);
                         window._postImageData = data;
                         document.getElementById("post-image-preview").src = data;
                         document.getElementById("post-image-preview").style.display = "block";

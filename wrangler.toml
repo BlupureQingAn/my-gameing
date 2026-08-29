@@ -11,6 +11,10 @@ name = "my-openai-proxy"
 main = "worker.js"
 compatibility_date = "2025-01-01"
 
+# 社区动态 30 天自动清理（北京时间每天 12:10）
+[triggers]
+crons = ["10 4 * * *"]
+
 # 封面图持久缓存（Agnes 出图 URL 转 base64 后存 KV，TTL 7 天，前端不落 localStorage）
 [[kv_namespaces]]
 binding = "COVER_CACHE"
