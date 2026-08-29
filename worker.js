@@ -89,9 +89,29 @@ const MODEL_POOL = [
     // ---- DeepSeek 官方（池内禁用，等流量大了再启用）----
     { id: "ds-deepseek-chat",     url: "https://api.deepseek.com/v1", apiKeyEnv: "DEEPSEEK_KEY",     model: "deepseek-chat",     dailyCap: Infinity, tier: 40, enabled: false },
     { id: "ds-deepseek-reasoner", url: "https://api.deepseek.com/v1", apiKeyEnv: "DEEPSEEK_KEY",     model: "deepseek-reasoner", dailyCap: Infinity, tier: 40, enabled: false },
-    // ---- NVIDIA（2026-08-24 实测 12s+ 无响应疑似额度耗尽,禁用防拖慢 fallback;key 恢复后启用）----
-    // NVIDIA:原 qwen3.5-122b-a10b 已于 2026-07-20 EOL(HTTP 410),换 llama-3.3-70b-instruct(实测 TTFB 27ms)
-    { id: "nv-llama-3.3-70b", url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY",  model: "meta/llama-3.3-70b-instruct", dailyCap: Infinity, tier: 90, enabled: false },
+    // ---- NVIDIA（平台按 credits 计费,2026-08-29 候选批量入池 enabled:false,pool: 后门逐个实测通过后启用）----
+    // 原 qwen3.5-122b-a10b 已 EOL(HTTP 410);llama-3.3-70b-instruct 已从平台下架(8-24 实测 12s+ 无响应即额度耗尽)
+    { id: "nv-llama-3.3-70b",        url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "meta/llama-3.3-70b-instruct",        dailyCap: 100, tier: 90, enabled: false },
+    { id: "nv-deepseek-v4-flash",    url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "deepseek-ai/deepseek-v4-flash-0731", dailyCap: 100, tier: 90, enabled: false },
+    { id: "nv-deepseek-v4-pro",      url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "deepseek-ai/deepseek-v4-pro-0813",   dailyCap: 100, tier: 90, enabled: false },
+    { id: "nv-kimi-k2.6",            url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "moonshotai/kimi-k2.6",               dailyCap: 100, tier: 90, enabled: false },
+    { id: "nv-kimi-k3",              url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "moonshotai/kimi-k3",                 dailyCap: 100, tier: 90, enabled: false },
+    { id: "nv-minimax-m3",           url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "minimaxai/minimax-m3",               dailyCap: 100, tier: 90, enabled: false },
+    { id: "nv-nemotron-super",       url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/nemotron-3-super-120b-a12b",  dailyCap: 100, tier: 90, enabled: false },
+    { id: "nv-nemotron-ultra",       url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/nemotron-3-ultra-550b-a55b",  dailyCap: 100, tier: 90, enabled: false },
+    { id: "nv-nemotron-4-340b",      url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/nemotron-4-340b-instruct",    dailyCap: 100, tier: 90, enabled: false },
+    { id: "nv-nemotron-nano-30b",    url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/nemotron-3-nano-30b-a3b",     dailyCap: 100, tier: 90, enabled: false },
+    { id: "nv-nemotron-lightning",   url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/nemotron-3.5-lightning-30b-a3b", dailyCap: 100, tier: 90, enabled: false },
+    { id: "nv-gpt-oss-120b",         url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "openai/gpt-oss-120b",                dailyCap: 100, tier: 90, enabled: false },
+    { id: "nv-gpt-oss-20b",          url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "openai/gpt-oss-20b",                 dailyCap: 100, tier: 90, enabled: false },
+    { id: "nv-mistral-large2",       url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "mistralai/mistral-large-2-instruct", dailyCap: 100, tier: 90, enabled: false },
+    { id: "nv-mistral-nemotron",     url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "mistralai/mistral-nemotron",         dailyCap: 100, tier: 90, enabled: false },
+    { id: "nv-nemotron-70b",         url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/llama-3.1-nemotron-70b-instruct", dailyCap: 100, tier: 90, enabled: false },
+    { id: "nv-nemotron-ultra-253b",  url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/llama-3.1-nemotron-ultra-253b-v1", dailyCap: 100, tier: 90, enabled: false },
+    { id: "nv-gemma-4-31b",          url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "google/gemma-4-31b-it",              dailyCap: 100, tier: 90, enabled: false },
+    { id: "nv-gemma-3-12b",          url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "google/gemma-3-12b-it",              dailyCap: 100, tier: 90, enabled: false },
+    { id: "nv-phi-3.5-moe",          url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "microsoft/phi-3.5-moe-instruct",     dailyCap: 100, tier: 90, enabled: false },
+    { id: "nv-yi-large",             url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "01-ai/yi-large",                     dailyCap: 100, tier: 90, enabled: false },
     // ---- SiliconFlow Qwen3-8B（免费，最后兜底）----
     { id: "sf-qwen3-8b",      url: "https://api.siliconflow.cn/v1",      apiKeyEnv: "SILICONFLOW_KEY", model: "Qwen/Qwen3-8B",     dailyCap: Infinity, tier: 99, enabled: true },
 ];
