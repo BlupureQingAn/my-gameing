@@ -18420,6 +18420,15 @@ function openNpcProfile(npcId) {
         let _feedItems = [];
         let _commentsTargetPostId = "";
         function escapeForHtml(s) { return MarkdownService.escapeHtml(String(s ?? "")); }
+        function feedCardTitle(p) {
+            if (p?.card_title) return p.card_title;
+            const id = p?.card_id || "";
+            if (id && Array.isArray(window.SCENARIO_LIBRARY)) {
+                const c = window.SCENARIO_LIBRARY.find((x) => x.id === id);
+                if (c && c.title) return c.title;
+            }
+            return id;
+        }
         function feedTime(iso) {
             const d = new Date(iso || Date.now());
             const diff = Date.now() - d.getTime();
@@ -18441,7 +18450,7 @@ function openNpcProfile(npcId) {
                 ? `<button class="follow-btn${p.following ? " following" : ""}" onclick="Controller.toggleFollow('${escapeForHtml(p.author.id)}', this)">${p.following ? "已关注" : "关注"}</button>`
                 : "";
             const ref = p.card_id
-                ? `<div class="feed-ref" onclick="Controller.openFeedCard('${escapeForHtml(p.card_id)}')">🃏 ${escapeForHtml(p.card_title || p.card_id)}</div>`
+                ? `<div class="feed-ref" onclick="Controller.openFeedCard('${escapeForHtml(p.card_id)}')">🃏 ${escapeForHtml(feedCardTitle(p))}</div>`
                 : "";
             const img = p.image_data
                 ? `<img class="feed-img" src="${escapeForHtml(p.image_data)}" alt="帖子图片">`
@@ -18784,7 +18793,7 @@ function openNpcProfile(npcId) {
         }
         function openFeedCard(cardId) {
             const list = _feedItems.find(p => p.card_id === cardId);
-            NoticeModalService.showInfo({ title: "剧本引用", descHtml: `该动态引用了剧本「${escapeForHtml(list?.card_title || cardId)}」，可在剧本库查找后游玩。` });
+            NoticeModalService.showInfo({ title: "剧本引用", descHtml: `该动态引用了剧本「${escapeForHtml(feedCardTitle(list) || cardId)}」，可在剧本库查找后游玩。` });
         }
         async function loadCommunityCardsBrowse() {
             const container = document.getElementById("community-cards-browse");
@@ -19811,7 +19820,7 @@ function openNpcProfile(npcId) {
                 closePanel();
                 NoticeModalService.showInfo({
                     title: "🎁 签到成功",
-                    descHtml: `+${data.reward} 云币（连续 ${data.streak} 天）！当前余额 ${data.coins}，去解锁剧本卡吧～`
+                    descHtml: `+${data.reward} 云币（连续 ${data.streak} 天）！当前余额 ${data.coins}，去体验新剧本吧～`
                 });
             } catch (e) {
                 const msg = e.message || "签到失败";
