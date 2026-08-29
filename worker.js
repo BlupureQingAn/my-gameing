@@ -619,11 +619,14 @@ export default {
                 // 模型池路由
                 const today = getTodayStr();
                 const usageMap = await readModelUsageMap(env, today);
-                const picked = pickModel(usageMap, today, isMemberUser);
+                // 测试后门：model 传 "pool:<模型id>" 可指定池内模型（仅认证用户可用，探针/兼容性实测用）
+                const forcedModel = requestJson.model && typeof requestJson.model === "string" && requestJson.model.indexOf("pool:") === 0
+                    ? MODEL_POOL.find(m => m.id === requestJson.model.slice(5)) : null;
+                const picked = forcedModel || pickModel(usageMap, today, isMemberUser);
                 if (!picked) {
                     return errorResponse("今日全部模型配额已用尽，请明天再试", 429, null, "QUOTA_EXCEEDED");
                 }
-                const candidates = [
+                const candidates = forcedModel ? [forcedModel] : [
                     picked,
                     ...MODEL_POOL.filter(m => m.enabled && m.id !== picked.id && (usageMap[m.id] || 0) < m.dailyCap)
                         .sort((a, b) => a.tier - b.tier)

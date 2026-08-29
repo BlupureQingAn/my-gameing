@@ -7425,7 +7425,8 @@ function rebuildChoicesBlock(body, labels = []) {
             if (!src) return false;
             if (src.startsWith("{{")) return true;
             // 裸 JSON 对象（AI 未按 {{}} 协议输出标准 JSON）→ 完整合法 JSON + 六字段校验通过才算结构化
-            if (src.charAt(0) === "{") return !!parseFull(src);
+            // 容忍 ```json 围栏前缀（部分模型偶发）
+            if (src.charAt(0) === "{" || /^```(?:json)?\s*\{/.test(src)) return !!parseFull(src);
             return false;
         }
         // JSON 字符串值转义还原（\" → "、\\ → \、\n → 换行 等）
@@ -7435,7 +7436,10 @@ function rebuildChoicesBlock(body, labels = []) {
         // 完整解析：JSON 六字段（title/time/story 非空 + options 至少 1 项非空）全部必填；任一缺失或非法返回 null（走重试/兜底链）
         // 兼容两种形态：协议双花括号 {{...}} 与 AI 直接输出的裸 JSON 对象 {...}
         function parseFull(text) {
-            const src = String(text || "").trim();
+            let src = String(text || "").trim();
+            // 容错3：```json 代码围栏包裹（部分模型偶发）→ 剥掉围栏再解析
+            const fence = src.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+            if (fence) src = fence[1].trim();
             let jsonStr;
             if (src.startsWith("{{")) {
                 const endIdx = src.lastIndexOf("}}");
@@ -8943,7 +8947,7 @@ function rebuildChoicesBlock(body, labels = []) {
             // bug6: 固定 6 字段结构化协议 → 字段级流式渲染（打字机，字段切换上个节点定型）
             // 裸 JSON 流式（AI 未按 {{}} 协议直接输出标准 JSON，以 {"title"/{"time"/{"story" 开头）→ 同样挂骨架打字机渲染
             const isBareJsonStream = !StructuredCardProtocolService.isStructured(normalizedText)
-                && /^\{\s*"(title|time|story)"\s*:/.test(normalizedText);
+                && /^(```[^\n]*\n)?\{\s*"(title|time|story)"\s*:/.test(normalizedText);
             if (StructuredCardProtocolService.isStructured(normalizedText) || isBareJsonStream) {
                 renderStructuredStreamingFrame(normalizedText);
                 streamLastRenderAt = Date.now();
@@ -9126,8 +9130,8 @@ function rebuildChoicesBlock(body, labels = []) {
                     // 清洗: 历史中若存过结构化协议源码(标准 JSON 或旧 {{}} 双花括号, 残缺/旧数据), 提取 title/story 展示, 日记/事件不显示代码
                     let t = String(msg.text);
                     const ts = t.trim();
-                    if (ts.startsWith("{{") || /^\{\s*"/.test(ts)) {
-                        const sp = StructuredCardProtocolService.parseStreaming(t);
+                    if (ts.startsWith("{{") || /^(```[^\n]*\n)?\{\s*"/.test(ts)) {
+                        const sp = StructuredCardProtocolService.parseStreaming(t.replace(/^```(?:json)?\s*\n?/, ""));
                         t = (sp.title ? `【${sp.title}】${sp.story ? "\n" : ""}` : "") + sp.story;
                     }
                     cur.texts.push(t);
@@ -9569,7 +9573,7 @@ function rebuildChoicesBlock(body, labels = []) {
                     AiResponseLayoutService.injectStatsIntoCard(node);
                     VisualEffects.decorateAiCardBears(node);
                 }
-            } else if (StructuredCardProtocolService.isStructured(normalizedText) || /^\{\s*"/.test(normalizedText)) {
+            } else if (StructuredCardProtocolService.isStructured(normalizedText) || /^(```[^\n]*\n)?\{\s*"/.test(normalizedText)) {
                 // 残缺结构化 JSON({{ 前缀或裸 { 开头但六字段不齐/解析失败) → 兜底结构化卡(提取已定型的 title/time/story), 杜绝源码上屏与入历史
                 const sp = StructuredCardProtocolService.parseStreaming(normalizedText);
                 const fb = {
@@ -14402,7 +14406,7 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
                 response = await fetch(fetchUrl, {
                     method: "POST",
                     headers,
-                    body: JSON.stringify({ model, messages, stream: true, temperature, max_tokens: 8192, ...payloadBody }),
+                    body: JSON.stringify({ model, messages, stream: true, temperature, max_tokens: 8192, response_format: { type: "json_object" }, ...payloadBody }),
                     signal: controller.signal
                 });
             } catch (e) {
@@ -14511,7 +14515,7 @@ const token = delta.content || "";
                 response = await fetch(fetchUrl, {
                     method: "POST",
                     headers,
-                    body: JSON.stringify({ model, messages, stream: false, temperature, max_tokens: 8192, ...payloadBody }),
+                    body: JSON.stringify({ model, messages, stream: false, temperature, max_tokens: 8192, response_format: { type: "json_object" }, ...payloadBody }),
                     signal: controller.signal
                 });
             } catch (e) {
