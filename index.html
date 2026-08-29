@@ -7469,7 +7469,10 @@ function rebuildChoicesBlock(body, labels = []) {
             const title = String(obj.title || "").trim();
             const time = String(obj.time || "").trim();
             const story = String(obj.story || "").trim();
-            const options = Array.isArray(obj.options) ? obj.options.map((o) => String(o || "").trim()).filter(Boolean) : [];
+            // 选项清洗：剥掉 AI 自带的序号前缀（①②、1.、1、1）、【1】、选项1：等），模板自带序号 icon，双序号影响观感
+            const options = Array.isArray(obj.options)
+                ? obj.options.map((o) => String(o || "").trim().replace(/^\s*(?:[①②③④⑤⑥⑦⑧⑨⑩]\s*|\d+\s*[.)、）\]]\s*|[（(]\s*\d+\s*[）)]\s*|【?\s*\d+\s*】\s*|选项\s*[:：]?\s*\d*\s*[.、:：]?\s*)/, "")).filter(Boolean)
+                : [];
             // 六字段全部必填：title/time/story 非空，options 至少 1 项非空（数量不限，AI 可给 1-6 个）
             if (!title || !time || !story || !options.length) return null;
             return { title, time, story, options };
