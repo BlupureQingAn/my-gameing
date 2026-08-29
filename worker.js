@@ -72,14 +72,28 @@ const MODEL_POOL = [
     { id: "xf-spark-pro128k",  url: "https://spark-api-open.xf-yun.com/v1",       apiKeyEnv: "XFSPARK_PRO128_KEY",    model: "pro-128k",       dailyCap: 20,     tier: 5, enabled: true },
     // ---- 智谱（实测从 CF 边缘 TTFB 0.3s 池内最快;官方按 RPM/TPM 限流无日次硬限,dailyCap 为自设保险）----
     // 小徐 2026-08-29 新注册账号新 key(ZHIPU_KEY2)双 key 并行:新 key 条目在前优先用,旧 key 超限/失败后 fallback
-    { id: "zp2-glm-4-air",  url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4-air",   dailyCap: 1000, tier: 3,  enabled: true },
-    { id: "zp-glm-4-air",   url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY", model: "glm-4-air",   dailyCap: 1000, tier: 3,  enabled: true },
+    // 2026-08-29 小徐补充免费模型:GLM-Z1-Flash(推理 128K 免费)/GLM-4.7(500 万 tokens)/GLM-4.5-Air(1200 万 tokens)
+    //   GLM-4.7-Flash/GLM-4.6V-Flash(视觉,不入池)/GLM-4-Flash-250414;实测 6 名全通(4.7-flash 热限流 429 照常入池自愈)
+    //   额度地图:4.5-Air 1200 万 > 4.7 500 万 > 4-Air/Flash 无硬限(免费档)
+    // z1-flash 推理内嵌 content 的 <think> 标签且 thinking:{type:disabled} 无效(实测),前端未剥离 think 会吃满 max_tokens 致 JSON 截断+流式渲染思考过程 → 暂禁用,待前端 think 剥离后启用
+    { id: "zp2-glm-z1-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-z1-flash",   dailyCap: 1500, tier: 2, enabled: false },
+    { id: "zp-glm-z1-flash",  url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-z1-flash",   dailyCap: 1500, tier: 2, enabled: false },
+    { id: "zp2-glm-4.7",      url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4.7",         dailyCap: 300,  tier: 3, enabled: true },
+    { id: "zp-glm-4.7",       url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4.7",         dailyCap: 300,  tier: 3, enabled: true },
+    { id: "zp2-glm-4.5-air",  url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4.5-air",     dailyCap: 600,  tier: 3, enabled: true },
+    { id: "zp-glm-4.5-air",   url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4.5-air",     dailyCap: 600,  tier: 3, enabled: true },
+    { id: "zp2-glm-4-air",    url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4-air",       dailyCap: 1000, tier: 3, enabled: true },
+    { id: "zp-glm-4-air",     url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4-air",       dailyCap: 1000, tier: 3, enabled: true },
     // ---- Agnes（免费:apihub.agnes-ai.com,2026-08-25 实测可用）----
     { id: "agnes-2.0-flash", url: "https://apihub.agnes-ai.com/v1", apiKeyEnv: "AGNES_KEY", model: "agnes-2.0-flash", dailyCap: 500, tier: 4, enabled: true },
     // ---- OpenRouter 免费模型（2026-08-25 实测:glm-5.2 共享池偶发 429 属正常,自动 fallback;gemma-4 系列因 Google 地区限制从 CF 出口必然失败,不入池）----
     { id: "or-glm-5.2",            url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "z-ai/glm-5.2:free",                dailyCap: 500, tier: 5, enabled: true },
     { id: "or-minimax-m3",         url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "minimax/minimax-m3:free",          dailyCap: 500, tier: 6, enabled: true },
     { id: "or-nemotron-3-super",   url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "nvidia/nemotron-3-super-120b-a12b:free", dailyCap: 500, tier: 6, enabled: true },
+    { id: "zp2-glm-4.7-flash",    url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4.7-flash",     dailyCap: 5000, tier: 7,  enabled: true },
+    { id: "zp-glm-4.7-flash",     url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4.7-flash",     dailyCap: 5000, tier: 7,  enabled: true },
+    { id: "zp2-glm-4-flash-250414", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4-flash-250414", dailyCap: 5000, tier: 7,  enabled: true },
+    { id: "zp-glm-4-flash-250414", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4-flash-250414", dailyCap: 5000, tier: 7,  enabled: true },
     { id: "zp2-glm-4-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4-flash", dailyCap: 5000, tier: 7,  enabled: true },
     { id: "zp-glm-4-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY", model: "glm-4-flash", dailyCap: 5000, tier: 7,  enabled: true },
     { id: "or-minimax-m2.7",       url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "minimax/minimax-m2.7:free",        dailyCap: 500, tier: 8, enabled: true },
@@ -129,8 +143,15 @@ const MODEL_POOL = [
     { id: "nv-gemma-3-12b",          url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "google/gemma-3-12b-it",              dailyCap: 5000, tier: 90, enabled: true },
     { id: "nv-phi-3.5-moe",          url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "microsoft/phi-3.5-moe-instruct",     dailyCap: 5000, tier: 90, enabled: true },
     { id: "nv-yi-large",             url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "01-ai/yi-large",                     dailyCap: 5000, tier: 90, enabled: true },
-    // ---- SiliconFlow Qwen3-8B（免费，最后兜底）----
-    { id: "sf-qwen3-8b",      url: "https://api.siliconflow.cn/v1",      apiKeyEnv: "SILICONFLOW_KEY", model: "Qwen/Qwen3-8B",     dailyCap: Infinity, tier: 99, enabled: true },
+    // ---- SiliconFlow 免费模型（2026-08-29 小徐补充:L0 档 1000 RPM / 50000 TPM,最后兜底）----
+    // 思考系(GLM-Z1/R1)强制 enable_thinking:false 提速(见调用处);R1-0528 是 R1 蒸馏到 Qwen3-8B,关思考后普通输出
+    // Qwen3.5-4B 实测 enable_thinking 无效(reasoning_content 吃满 max_tokens 致 content 空,前端重试循环) → 禁用
+    { id: "sf-glm-z1-9b",    url: "https://api.siliconflow.cn/v1", apiKeyEnv: "SILICONFLOW_KEY", model: "THUDM/GLM-Z1-9B-0414",         dailyCap: 1000, tier: 95, enabled: true },
+    { id: "sf-glm-4-9b",     url: "https://api.siliconflow.cn/v1", apiKeyEnv: "SILICONFLOW_KEY", model: "THUDM/GLM-4-9B-0414",          dailyCap: 1000, tier: 95, enabled: true },
+    { id: "sf-r1-qwen3-8b",  url: "https://api.siliconflow.cn/v1", apiKeyEnv: "SILICONFLOW_KEY", model: "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B", dailyCap: 1000, tier: 95, enabled: true },
+    { id: "sf-qwen3.5-4b",   url: "https://api.siliconflow.cn/v1", apiKeyEnv: "SILICONFLOW_KEY", model: "Qwen/Qwen3.5-4B",             dailyCap: 1000, tier: 96, enabled: false },
+    { id: "sf-qwen2.5-7b",   url: "https://api.siliconflow.cn/v1", apiKeyEnv: "SILICONFLOW_KEY", model: "Qwen/Qwen2.5-7B-Instruct",    dailyCap: 1000, tier: 96, enabled: true },
+    { id: "sf-qwen3-8b",     url: "https://api.siliconflow.cn/v1", apiKeyEnv: "SILICONFLOW_KEY", model: "Qwen/Qwen3-8B",               dailyCap: Infinity, tier: 99, enabled: true },
 ];
 
 // ==================== 上游限流管理(防 429) ====================
@@ -738,8 +759,8 @@ export default {
                             const timeout = setTimeout(() => controller.abort(), timeoutMs);
                             try {
                                 const payload = { ...requestJson, model: target.model };
-                                // Qwen3-8B 默认开启思考模式(reasoning 占 87% token,耗时 28-37s),强制关闭提速 ~20 倍
-                                if (target.id === "sf-qwen3-8b") payload.enable_thinking = false;
+                                // Qwen3 系/Qwen3.5/GLM-Z1/DeepSeek-R1 默认思考模式(reasoning 占 87% token,耗时 28-37s),强制关闭提速 ~20 倍
+                                if (["sf-qwen3-8b", "sf-qwen3.5-4b", "sf-glm-z1-9b", "sf-r1-qwen3-8b"].includes(target.id)) payload.enable_thinking = false;
                                 // 注意：不修改请求体其它字段（如 stream_options），部分上游模型不支持会报错或改变输出行为
                                 const r = await fetch(`${base}/chat/completions`, {
                                     method: "POST",
