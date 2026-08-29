@@ -324,6 +324,19 @@
             flex: 1;
             min-width: 0;
         }
+        .history-panel .hp-main.swipe-main {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+        }
+        .history-panel .hp-main-inner {
+            flex: 1;
+            min-width: 0;
+        }
+        .history-panel .hp-row .swipe-actions .swipe-delete-btn {
+            border-radius: 0 10px 10px 0;
+        }
         .history-panel .hp-name {
             font-size: 0.8rem;
             font-weight: 700;
@@ -1887,6 +1900,7 @@
             --ct-body-size: 0.95rem;
             --ct-opt-size: 0.92rem;
             --ct-meta-size: 0.78rem;
+            color: var(--ct-text);
             display: flex;
             flex-direction: column;
             gap: 0;
@@ -7310,6 +7324,10 @@ function rebuildChoicesBlock(body, labels = []) {
             // 主题库接管主视觉:移除 AI 根节点内联背景/边框/文字色/字体(beautyRules 已指示 AI 无需输出样式;
             // font-family 不删会绕过主题字体,导致 AI 卡字体与预制卡不一致)
             ["background", "background-color", "background-image", "border", "color", "font-family"].forEach((p) => card.style.removeProperty(p));
+            // AI 直出 HTML 卡正文/标题内联 color 穿透主题(与预制卡颜色不一致),统一清除回退 CSS 变量
+            card.querySelectorAll("*").forEach((el) => {
+                if (el instanceof HTMLElement && el.style && el.style.color) el.style.removeProperty("color");
+            });
         }
         return { renderAiMessage, bindHtmlChoiceEvents, formatQuotedDialogueLines, injectStatsIntoCard, applyCardTheme };
     })();
@@ -9435,7 +9453,9 @@ function rebuildChoicesBlock(body, labels = []) {
                 // view-main 内部独立滚动(状态栏/tab 固定),滚当前可见的剧情/事件容器
                 const chat = document.getElementById("play-chat-area");
                 const evt = document.getElementById("play-event-area");
-                const target = evt && evt.style.display !== "none" ? evt : chat;
+                // 事件区 display 恒不为 none,不能作判据;有实际事件卡才滚它,否则滚剧情卡区
+                const hasEventCards = !!evt && !!evt.querySelector(".event-card");
+                const target = hasEventCards ? evt : chat;
                 if (target) target.scrollTop = target.scrollHeight;
                 return;
             }
@@ -16643,13 +16663,18 @@ const token = delta.content || "";
                     UIRenderer.markUserScrolledUp(content.scrollTop);
                 });
                 content.addEventListener("wheel", (e) => {
-                    if (e.deltaY !== 0) UIRenderer.cancelAutoFollowByUserGesture();
+                    // 仅向上滚(离开底部)取消跟随;向下滚/底部翻看不打断,避免点选项后不滚底
+                    if (e.deltaY < 0) UIRenderer.cancelAutoFollowByUserGesture();
                 }, { passive: true });
                 content.addEventListener("touchmove", () => {
                     UIRenderer.markUserScrolledUp(content.scrollTop);
-                    UIRenderer.cancelAutoFollowByUserGesture();
                 }, { passive: true });
             }
+            // view-main 的实际滚动容器是 play-chat-area/play-event-area(scroll 不冒泡,需单独挂监听)
+            ["play-chat-area", "play-event-area"].forEach((id) => {
+                const box = document.getElementById(id);
+                if (box) box.addEventListener("scroll", () => UIRenderer.markUserScrolledUp(box.scrollTop));
+            });
             const npcEmojiBar = document.getElementById("npc-emoji-bar");
             if (npcEmojiBar && npcInput) {
                 npcEmojiBar.querySelectorAll("[data-emoji]").forEach((btn) => {
@@ -18996,21 +19021,47 @@ function openNpcProfile(npcId) {
             const games = list.filter((e) => e.type === "game");
             const chars = list.filter((e) => e.type === "char");
             const rowHtml = (e, emoji) => `
-                <div class="hp-row" data-hp="${e.type}" data-id="${MarkdownService.escapeHtml(String(e.id))}">
-                    <span class="hp-emoji">${emoji}</span>
-                    <div class="hp-main">
-                        <div class="hp-name">${MarkdownService.escapeHtml(e.title || "未命名")}</div>
-                        ${e.sub ? `<div class="hp-sub">${MarkdownService.escapeHtml(e.sub)}</div>` : ""}
+                <div class="hp-row swipe-row" data-hp="${e.type}" data-id="${MarkdownService.escapeHtml(String(e.id))}">
+                    <div class="hp-main swipe-main">
+                        <span class="hp-emoji">${emoji}</span>
+                        <div class="hp-main-inner">
+                            <div class="hp-name">${MarkdownService.escapeHtml(e.title || "未命名")}</div>
+                            ${e.sub ? `<div class="hp-sub">${MarkdownService.escapeHtml(e.sub)}</div>` : ""}
+                        </div>
+                        <span class="hp-time">${historyTimeText(e.ts)}</span>
                     </div>
-                    <span class="hp-time">${historyTimeText(e.ts)}</span>
+                    <div class="swipe-actions">
+                        <button class="swipe-delete-btn" data-op="hp-delete">删除</button>
+                    </div>
                 </div>`;
             body.innerHTML =
                 (games.length ? `<div class="hp-group-title">🎮 剧本卡</div>${games.map((e) => rowHtml(e, "🎮")).join("")}` : "") +
                 (chars.length ? `<div class="hp-group-title"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M2 22V4q0-.825.588-1.412T4 2h16q.825 0 1.413.588T22 4v12q0 .825-.587 1.413T20 18H6z"/></svg> 人物卡</div>${chars.map((e) => rowHtml(e, "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M2 22V4q0-.825.588-1.412T4 2h16q.825 0 1.413.588T22 4v12q0 .825-.587 1.413T20 18H6z'/></svg>")).join("")}` : "");
             body.querySelectorAll(".hp-row").forEach((el) => {
-                el.addEventListener("click", () => {
-                    const type = el.dataset.hp;
-                    const id = el.dataset.id;
+                const type = el.dataset.hp;
+                const id = el.dataset.id;
+                // 左滑手势(与列表页 swipe 一致,但点击主体=打开/收起,不触发 toggle 打开卡冲突)
+                let startX = 0, moved = false, dragging = false;
+                const begin = (x) => { startX = x; moved = false; dragging = true; };
+                const onMove = (x) => {
+                    if (!dragging) return;
+                    const dx = x - startX;
+                    if (Math.abs(dx) > 24) moved = true;
+                    if (dx < -24) el.classList.add("swiped");
+                    if (dx > 24) el.classList.remove("swiped");
+                };
+                const onEnd = () => { dragging = false; };
+                el.addEventListener("touchstart", (e) => begin(e.touches?.[0]?.clientX || 0), { passive: true });
+                el.addEventListener("touchmove", (e) => onMove(e.touches?.[0]?.clientX || 0), { passive: true });
+                el.addEventListener("touchend", onEnd, { passive: true });
+                el.addEventListener("mousedown", (e) => begin(e.clientX));
+                el.addEventListener("mousemove", (e) => onMove(e.clientX));
+                el.addEventListener("mouseup", onEnd);
+                el.addEventListener("mouseleave", onEnd);
+                const main = el.querySelector(".hp-main");
+                main.addEventListener("click", (e) => {
+                    if (moved) { if (el.classList.contains("swiped")) el.classList.remove("swiped"); return; } // 滑动手势后的点击不打开,已展开则收起
+                    if (el.classList.contains("swiped")) { el.classList.remove("swiped"); return; } // 已展开先收起
                     closeHistoryPanel();
                     if (type === "char") {
                         const item = chars.find((c) => String(c.id) === id);
@@ -19018,6 +19069,14 @@ function openNpcProfile(npcId) {
                     } else {
                         playScenarioCard(id);
                     }
+                });
+                // 左滑删除:仅移除该条历史记录,不动存档/游戏进度
+                el.querySelector('[data-op="hp-delete"]').addEventListener("click", () => {
+                    let list = [];
+                    try { list = StorageService.readJson(HISTORY_KEY, []); } catch (err) {}
+                    list = list.filter((e2) => !(String(e2.type) === type && String(e2.id) === id));
+                    StorageService.writeJson(HISTORY_KEY, list);
+                    renderHistoryPanel();
                 });
             });
         }
