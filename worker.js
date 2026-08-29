@@ -63,6 +63,7 @@ const MODEL_POOL = [
     { id: "xf-spark-x2b",      url: "https://spark-api-open.xf-yun.com/x2",       apiKeyEnv: "XFSPARK_X2_KEY2",       model: "spark-x", dailyCap: 20,     tier: 2, enabled: true },
     { id: "xf-spark-x1",       url: "https://spark-api-open.xf-yun.com/v2",       apiKeyEnv: "XFSPARK_X2_KEY2",       model: "spark-x", dailyCap: 20,     tier: 2, enabled: true },
     { id: "xf-spark-x2",       url: "https://spark-api-open.xf-yun.com/x2",       apiKeyEnv: "XFSPARK_X2_KEY",        model: "spark-x", dailyCap: Infinity, tier: 2, enabled: true },
+    { id: "xf-spark-ultra",    url: "https://spark-api-open.xf-yun.com/v1",       apiKeyEnv: "XFSPARK_ULTRA_KEY",     model: "4.0Ultra",       dailyCap: 20,     tier: 4, enabled: true },
     { id: "xf-spark-lite",     url: "https://spark-api-open.xf-yun.com/v1",       apiKeyEnv: "XFSPARK_LITE_KEY",      model: "lite",           dailyCap: Infinity, tier: 4, enabled: true },
     { id: "xf-spark-pro",      url: "https://spark-api-open.xf-yun.com/v1",       apiKeyEnv: "XFSPARK_PRO_KEY",       model: "generalv3.5",    dailyCap: 20,     tier: 5, enabled: true },
     { id: "xf-spark-pro128k",  url: "https://spark-api-open.xf-yun.com/v1",       apiKeyEnv: "XFSPARK_PRO128_KEY",    model: "pro-128k",       dailyCap: 20,     tier: 5, enabled: true },
@@ -140,6 +141,7 @@ const RATE_LIMIT_OVERRIDES = {
     "XFSPARK_X2_KEY":       { concurrency: 8, maxPerWindow: 60 },
     "XFSPARK_X2_KEY2":      { concurrency: 8, maxPerWindow: 60 },
     "XFSPARK_LITE_KEY":     { concurrency: 8, maxPerWindow: 60 },
+    "XFSPARK_ULTRA_KEY":    { concurrency: 8, maxPerWindow: 60 },
 };
 // 模型级门控(优先于 key 级):NVIDIA 免费层按模型独立限流(2026-08 查证)
 // 大模型 ~40 RPM / 1000 req/天 → 门控取平台 75% 余量(30/min,并发 3);小模型 ~60 RPM / 14400 req/天 → 45/min,并发 5
