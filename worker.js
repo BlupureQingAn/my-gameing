@@ -53,13 +53,14 @@ async function settleTokenDeduction(env, userId, record, inputTokens, outputToke
 // 模型池：Worker 自动路由（tier 越小越优先；dailyCap 为当日全局调用上限；enabled=false 池内禁用）
 // ChatAnywhere 免费版（gpt_api_free）：每日 10000 点平台额度 + 各模型每日次数上限
 const MODEL_POOL = [
-    // ---- 讯飞（2026-08-25 实测通过:均为深度推理模型,先输出 reasoning 再出内容;官方并发 20,无日次硬限,dailyCap 设 Infinity）----
+    // ---- 讯飞（2026-08-25 实测通过:均为深度推理模型,先输出 reasoning 再出内容;官方并发 20）----
     // X2 主端点(200k tokens): model 名 "spark-x";X2-Flash agent 端点(2M tokens): model 名 "spark-x"
+    // X2-Flash 非无限:2M token 免费包(2026-08-29 小徐报剩 1,723,155),实测剧情轮 ~1000-2500 tokens/轮 → dailyCap 150/天≈40 万 tokens/天≈撑 4 天,超额自动 fallback 后续模型
     // 小徐 2026-08-29 新授权 HTTP 服务(每服务独立系统默认 key,除 Lite 无限量外均 <20w token/年,dailyCap 20 限额度):
     //   X2/X1.5 共用 XFSPARK_X2_KEY2(***REMOVED***):x2 端点 model=spark-x、v2 端点 model=spark-x(实测出内容)
     //   Flash=Ctzg...(agent 端点,现有 key 在用);Lite=Amtvr...(v1 端点 model=lite,无限量);Pro=GxiG...(v1 端点 model=generalv3.5);Pro-128K=uZBk...(v1 端点 model=pro-128k)
     //   Ultra-32K 的 v1 端点 model 名未确认(17 候选全 invalid),暂不入池
-    { id: "xf-spark-x2-flash", url: "https://spark-api-open.xf-yun.com/agent/v1", apiKeyEnv: "XFSPARK_X2_FLASH_KEY", model: "spark-x", dailyCap: Infinity, tier: 1, enabled: true },
+    { id: "xf-spark-x2-flash", url: "https://spark-api-open.xf-yun.com/agent/v1", apiKeyEnv: "XFSPARK_X2_FLASH_KEY", model: "spark-x", dailyCap: 150, tier: 1, enabled: true },
     { id: "xf-spark-x2b",      url: "https://spark-api-open.xf-yun.com/x2",       apiKeyEnv: "XFSPARK_X2_KEY2",       model: "spark-x", dailyCap: 20,     tier: 2, enabled: true },
     { id: "xf-spark-x1",       url: "https://spark-api-open.xf-yun.com/v2",       apiKeyEnv: "XFSPARK_X2_KEY2",       model: "spark-x", dailyCap: 20,     tier: 2, enabled: true },
     { id: "xf-spark-x2",       url: "https://spark-api-open.xf-yun.com/x2",       apiKeyEnv: "XFSPARK_X2_KEY",        model: "spark-x", dailyCap: Infinity, tier: 2, enabled: true },
