@@ -8916,10 +8916,10 @@ function rebuildChoicesBlock(body, labels = []) {
         function renderStructuredStreamingFrame(text) {
             if (!currentStreamingTarget) return;
             const parsed = StructuredCardProtocolService.parseStreaming(text);
-            if (!parsed.title && !parsed.time && !parsed.story) return;
             let ss = structuredStreaming;
             if (!ss) {
-                // 首帧：挂载基础卡骨架（title/time 若已定型直接写入），后续帧只更新内容节点
+                // 首帧：{{ 出现即挂载主题卡骨架（title/time 已定型直接写入，未定型留空由流式填充），
+                // 杜绝「源码文本先渲染、终版才突然变卡」的观感
                 const theme = FillProtocolService.getCardTheme();
                 currentStreamingTarget.classList.add("html-host");
                 currentStreamingTarget.innerHTML = StructuredCardProtocolService.fillStructuredFrame(
@@ -9069,7 +9069,13 @@ function rebuildChoicesBlock(body, labels = []) {
                     cur = { date: msg.date, userText: String(msg.text || ""), texts: [] };
                     rounds.push(cur);
                 } else if (cur && msg.text) {
-                    cur.texts.push(String(msg.text));
+                    // 清洗: 历史中若存过结构化协议源码(残缺/旧数据), 提取 title/story 展示, 日记/事件不显示代码
+                    let t = String(msg.text);
+                    if (t.trim().startsWith("{{")) {
+                        const sp = StructuredCardProtocolService.parseStreaming(t);
+                        t = (sp.title ? `【${sp.title}】${sp.story ? "\n" : ""}` : "") + sp.story;
+                    }
+                    cur.texts.push(t);
                 }
             });
             return rounds;
@@ -9506,6 +9512,24 @@ function rebuildChoicesBlock(body, labels = []) {
                     AiResponseLayoutService.bindHtmlChoiceEvents(node);
                     AiResponseLayoutService.injectStatsIntoCard(node);
                     VisualEffects.decorateAiCardBears(node);
+                }
+            } else if (StructuredCardProtocolService.isStructured(normalizedText)) {
+                // 残缺结构化 JSON({{ 前缀但六字段不齐/解析失败) → 兜底结构化卡(提取已定型的 title/time/story), 杜绝源码上屏与入历史
+                const sp = StructuredCardProtocolService.parseStreaming(normalizedText);
+                const fb = {
+                    title: String(sp.title || "剧情推进"),
+                    time: String(sp.time || Utils.nowDateStr(StateService.get())),
+                    story: String(sp.story || normalizedText || text || "AI 暂时卡住了，请再对我说一次吧喵～"),
+                    options: ["继续推进剧情", "查看当前状态", "换个方向探索"]
+                };
+                node = mountCardNode(document.getElementById("play-chat-area"), StructuredCardProtocolService.fillStructuredCard(fb, FillProtocolService.getCardTheme()));
+                if (node) {
+                    oldNode.replaceWith(node);
+                    HtmlCardService.applyReadableTextColors(node);
+                    AiResponseLayoutService.bindHtmlChoiceEvents(node);
+                    AiResponseLayoutService.injectStatsIntoCard(node);
+                    VisualEffects.decorateAiCardBears(node);
+                    mountedHtml = node.outerHTML;
                 }
             } else {
                 oldNode.classList.remove("html-host");
@@ -13300,10 +13324,12 @@ function rebuildChoicesBlock(body, labels = []) {
                 return normalized;
             }
             // 兜底: 非结构化/非 HTML 文本转结构化协议渲染（新卡），六字段必填（选项用 AI 提取项补通用项）
+            // 残缺 JSON({{ 前缀但解析失败)先提取 title/story, 避免协议源码进正文与历史(日记/事件显示代码)
+            const sp = StructuredCardProtocolService.parseStreaming(text);
             const fallbackObj = {
-                title: String(titleHint || "剧情推进"),
-                time: String(nowText || ""),
-                story: String(normalized || text || "AI 暂时卡住了，请再对我说一次吧喵～"),
+                title: String(sp.title || titleHint || "剧情推进"),
+                time: String(sp.time || nowText || ""),
+                story: String(sp.story || normalized || text || "AI 暂时卡住了，请再对我说一次吧喵～"),
                 options: [
                     String(preferredChoices[0] || "继续推进剧情"),
                     String(preferredChoices[1] || "查看当前状态"),
