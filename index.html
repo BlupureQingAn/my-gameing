@@ -3929,6 +3929,11 @@
         }
         .scenario-card-cover.has-cover .scc-emoji { display: none; }
         .scenario-card-cover.has-cover { box-shadow: none; }
+        /* 夸克等暗夜模式若对封面容器压透明度/滤镜导致图片不可见, 强制还原原图直出 */
+        .scenario-card-cover, .hb-cover, .rank-cover {
+            opacity: 1 !important;
+            filter: none !important;
+        }
         body[data-theme="dark"]
         #scenario-card-list .list-title {
             font-size: 0.88rem;
