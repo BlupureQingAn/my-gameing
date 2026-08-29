@@ -19,6 +19,37 @@
     <meta property="og:title" content="云吞吞文游 - AI 互动剧情游戏平台">
     <meta property="og:description" content="20+ 题材 AI 互动剧本，自由改写主角命运。">
     <meta property="og:url" content="https://bitlife.blupure.cn/">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "WebSite",
+                "name": "云吞吞文游",
+                "alternateName": "Yuntuntun AI Story Game",
+                "url": "https://bitlife.blupure.cn/",
+                "description": "AI 互动剧情游戏平台：恋爱、ABO、修仙、都市、悬疑、西幻等 20+ 题材原创剧本，自由选择开局、改写主角命运，与 NPC 深度互动聊天。",
+                "inLanguage": "zh-CN"
+            },
+            {
+                "@type": "VideoGame",
+                "name": "云吞吞文游",
+                "url": "https://bitlife.blupure.cn/",
+                "description": "AI 驱动的互动文字剧情游戏，恋爱、ABO、修仙、都市、悬疑、西幻 20+ 题材剧本，每个选择都推动故事走向，与 NPC 深度互动聊天，经营好感度与人生属性。",
+                "applicationCategory": "Game",
+                "operatingSystem": "Web",
+                "inLanguage": "zh-CN",
+                "genre": ["恋爱", "修仙", "都市", "悬疑", "西幻", "ABO"],
+                "offers": {
+                    "@type": "Offer",
+                    "price": "0",
+                    "priceCurrency": "CNY",
+                    "availability": "https://schema.org/InStock"
+                }
+            }
+        ]
+    }
+    </script>
     <style>
         /* ==================== 变量层（Design Tokens） ==================== */
         :root {
@@ -4590,6 +4621,9 @@
     #boot-screen.boot-done{opacity:0;pointer-events:none}
     .boot-logo{font-size:1.65rem;font-weight:800;letter-spacing:3px;color:#ffd66b;text-shadow:0 0 20px rgba(255,214,107,.45);animation:bootPulse 1.6s ease-in-out infinite}
     .boot-sub{font-size:.85rem;color:rgba(255,255,255,.55);letter-spacing:2px;animation:bootPulse 1.6s ease-in-out infinite;animation-delay:.2s}
+    .boot-seo{margin-top:14px;max-width:min(560px,82vw);text-align:center;color:rgba(255,255,255,.66)}
+    .boot-seo-title{font-size:.82rem;font-weight:700;color:rgba(255,255,255,.85);letter-spacing:1px;margin:0 0 6px}
+    .boot-seo-text{font-size:.74rem;line-height:1.7;margin:0;opacity:.85}
     .boot-cards{width:min(620px,86vw);display:flex;flex-direction:column;gap:14px;margin-top:6px}
     .boot-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden}
     .boot-card::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.09),transparent);animation:bootShimmer 1.4s ease-in-out infinite}
@@ -4642,6 +4676,10 @@
 <div id="boot-screen" role="status" aria-label="页面加载中">
     <div class="boot-logo"><img src="icons/android-chrome-192x192.png" alt="" style="width:36px;height:36px;vertical-align:-7px;margin-right:10px;border-radius:8px;filter:drop-shadow(0 0 10px rgba(255,214,107,.45))">云吞吞文游</div>
     <div class="boot-sub">正在加载云吞吞世界…</div>
+    <div class="boot-seo">
+        <p class="boot-seo-title">AI 互动剧情游戏 · 你的命运你来写</p>
+        <p class="boot-seo-text">云吞吞文游是 AI 驱动的互动文字剧情游戏平台，恋爱、ABO、修仙、都市、悬疑、西幻 20+ 题材原创剧本。每个选择都推动故事走向，与 NPC 深度互动聊天，经营好感度与人生属性，自由改写主角命运。</p>
+    </div>
     <div class="boot-cards" aria-hidden="true">
         <div class="boot-card"><div class="boot-bar w"></div><div class="boot-bar l"></div><div class="boot-row"><div class="boot-opt"></div><div class="boot-opt"></div><div class="boot-opt"></div></div></div>
         <div class="boot-card"><div class="boot-bar w"></div><div class="boot-bar m"></div><div class="boot-bar l"></div><div class="boot-row"><div class="boot-opt"></div><div class="boot-opt"></div></div></div>
