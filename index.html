@@ -7405,7 +7405,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const storyHtml = MarkdownService.render((fields.options || []).length ? stripChoiceLines(fields.story) : fields.story);
             const optionsHtml = (fields.options || []).length
                 ? `<footer class="card-options" data-block="choices">${(fields.options || []).map((o, i) =>
-                    `<div class="wy-option-btn card-option-btn" data-choice="${MarkdownService.escapeHtml(o)}"><span class="wy-opt-icon">${["①", "②", "③", "④"][i] || String(i + 1)}</span><span class="wy-opt-text">${MarkdownService.escapeHtml(o)}</span></div>`).join("")}</footer>`
+                    `<div class="wy-option-btn card-option-btn" data-choice="${MarkdownService.escapeHtml(o)}"><span class="wy-opt-icon">${["①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩"][i] || String(i + 1)}</span><span class="wy-opt-text">${MarkdownService.escapeHtml(o)}</span></div>`).join("")}</footer>`
                 : "";
             return [
                 `<article class="ai-beauty-card card ${themeClass}" data-theme="${safeTheme}" data-fill-card="1">`,
@@ -7516,7 +7516,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const storyHtml = MarkdownService.render(fields.story);
             const optionsHtml = (fields.options || []).length
                 ? `<footer class="card-options" data-block="choices">${(fields.options || []).map((o, i) =>
-                    `<div class="wy-option-btn card-option-btn" data-choice="${MarkdownService.escapeHtml(o)}"><span class="wy-opt-icon">${["①", "②", "③"][i] || String(i + 1)}</span><span class="wy-opt-text">${MarkdownService.escapeHtml(o)}</span></div>`).join("")}</footer>`
+                    `<div class="wy-option-btn card-option-btn" data-choice="${MarkdownService.escapeHtml(o)}"><span class="wy-opt-icon">${["①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩"][i] || String(i + 1)}</span><span class="wy-opt-text">${MarkdownService.escapeHtml(o)}</span></div>`).join("")}</footer>`
                 : "";
             return [
                 `<article class="ai-beauty-card card ${themeClass}" data-theme="${safeTheme}" data-structured-card="1">`,
