@@ -55,9 +55,14 @@ async function settleTokenDeduction(env, userId, record, inputTokens, outputToke
 const MODEL_POOL = [
     // ---- 讯飞（2026-08-25 实测通过:均为深度推理模型,先输出 reasoning 再出内容;官方并发 20,无日次硬限,dailyCap 设 Infinity）----
     // X2 主端点(200k tokens): model 名 "spark-x";X2-Flash agent 端点(2M tokens): model 名 "spark-x"(x1 亦可)
+    // 小徐 2026-08-29 新授权(每模型 20w token/年)凭据 XFSPARK_X2_KEY2 = 系统默认 key(Bearer Ctzg...:Ialc...,X2 端点实测出内容);
+    // X1.5/Pro/Pro-128K/Ultra-32K 仅 WebSocket 接入(HTTP 404),暂不入池;dailyCap 20 限 20w token/年额度
     { id: "xf-spark-x2-flash", url: "https://spark-api-open.xf-yun.com/agent/v1", apiKeyEnv: "XFSPARK_X2_FLASH_KEY", model: "spark-x", dailyCap: Infinity, tier: 1, enabled: true },
+    { id: "xf-spark-x2b",      url: "https://spark-api-open.xf-yun.com/x2",       apiKeyEnv: "XFSPARK_X2_KEY2",       model: "spark-x", dailyCap: 20,     tier: 2, enabled: true },
     { id: "xf-spark-x2",       url: "https://spark-api-open.xf-yun.com/x2",       apiKeyEnv: "XFSPARK_X2_KEY",        model: "spark-x", dailyCap: Infinity, tier: 2, enabled: true },
     // ---- 智谱（实测从 CF 边缘 TTFB 0.3s 池内最快;官方按 RPM/TPM 限流无日次硬限,dailyCap 为自设保险）----
+    // 小徐 2026-08-29 新注册账号新 key(ZHIPU_KEY2)双 key 并行:新 key 条目在前优先用,旧 key 超限/失败后 fallback
+    { id: "zp2-glm-4-air",  url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4-air",   dailyCap: 1000, tier: 3,  enabled: true },
     { id: "zp-glm-4-air",   url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY", model: "glm-4-air",   dailyCap: 1000, tier: 3,  enabled: true },
     // ---- Agnes（免费:apihub.agnes-ai.com,2026-08-25 实测可用）----
     { id: "agnes-2.0-flash", url: "https://apihub.agnes-ai.com/v1", apiKeyEnv: "AGNES_KEY", model: "agnes-2.0-flash", dailyCap: 500, tier: 4, enabled: true },
@@ -65,6 +70,7 @@ const MODEL_POOL = [
     { id: "or-glm-5.2",            url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "z-ai/glm-5.2:free",                dailyCap: 500, tier: 5, enabled: true },
     { id: "or-minimax-m3",         url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "minimax/minimax-m3:free",          dailyCap: 500, tier: 6, enabled: true },
     { id: "or-nemotron-3-super",   url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "nvidia/nemotron-3-super-120b-a12b:free", dailyCap: 500, tier: 6, enabled: true },
+    { id: "zp2-glm-4-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4-flash", dailyCap: 5000, tier: 7,  enabled: true },
     { id: "zp-glm-4-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY", model: "glm-4-flash", dailyCap: 5000, tier: 7,  enabled: true },
     { id: "or-minimax-m2.7",       url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "minimax/minimax-m2.7:free",        dailyCap: 500, tier: 8, enabled: true },
     { id: "or-nemotron-3-ultra",   url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "nvidia/nemotron-3-ultra-550b-a55b:free", dailyCap: 500, tier: 8, enabled: true },
