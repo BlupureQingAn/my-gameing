@@ -75,9 +75,9 @@ const MODEL_POOL = [
     // 2026-08-29 小徐补充免费模型:GLM-Z1-Flash(推理 128K 免费)/GLM-4.7(500 万 tokens)/GLM-4.5-Air(1200 万 tokens)
     //   GLM-4.7-Flash/GLM-4.6V-Flash(视觉,不入池)/GLM-4-Flash-250414;实测 6 名全通(4.7-flash 热限流 429 照常入池自愈)
     //   额度地图:4.5-Air 1200 万 > 4.7 500 万 > 4-Air/Flash 无硬限(免费档)
-    // z1-flash 推理内嵌 content 的 <think> 标签且 thinking:{type:disabled} 无效(实测),前端未剥离 think 会吃满 max_tokens 致 JSON 截断+流式渲染思考过程 → 暂禁用,待前端 think 剥离后启用
-    { id: "zp2-glm-z1-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-z1-flash",   dailyCap: 1500, tier: 2, enabled: false },
-    { id: "zp-glm-z1-flash",  url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-z1-flash",   dailyCap: 1500, tier: 2, enabled: false },
+    // z1-flash 推理内嵌 content 的 <think> 标签且 thinking:{type:disabled} 无效(实测) → 前端已加 stripThink 统一剥离(2026-08-29)后启用
+    { id: "zp2-glm-z1-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-z1-flash",   dailyCap: 1500, tier: 2, enabled: true },
+    { id: "zp-glm-z1-flash",  url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-z1-flash",   dailyCap: 1500, tier: 2, enabled: true },
     { id: "zp2-glm-4.7",      url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4.7",         dailyCap: 300,  tier: 3, enabled: true },
     { id: "zp-glm-4.7",       url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4.7",         dailyCap: 300,  tier: 3, enabled: true },
     { id: "zp2-glm-4.5-air",  url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4.5-air",     dailyCap: 600,  tier: 3, enabled: true },

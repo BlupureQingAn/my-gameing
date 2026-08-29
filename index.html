@@ -7323,6 +7323,11 @@ function rebuildChoicesBlock(body, labels = []) {
     })();
 
     // ==================== 填空协议服务（M3：AI 只回 JSON，前端套模板渲染） ====================
+    // AI 推理模型(GLM-Z1-Flash 实测)把思考过程内嵌 content 的 <think>…</think> 标签(未闭合时剥到末尾),
+    // 解析/渲染前统一剥离,避免思考文本进正文/卡面与 JSON 解析失败;两个协议服务入口都调用
+    function stripThink(text) {
+        return String(text || "").replace(/<think(?:ing)?[^>]*>[\s\S]*?(?:<\/think(?:ing)?>|$)/gi, "");
+    }
     const FillProtocolService = (() => {
         function stripFence(text) {
             const src = String(text || "").trim();
@@ -7330,7 +7335,7 @@ function rebuildChoicesBlock(body, labels = []) {
             return m ? m[1].trim() : src;
         }
         function parse(text) {
-            const raw = stripFence(text);
+            const raw = stripFence(stripThink(text));
             if (!raw.startsWith("{") && !raw.startsWith("[")) return null;
             let obj;
             try { obj = JSON.parse(raw); } catch { return null; }
@@ -7421,7 +7426,7 @@ function rebuildChoicesBlock(body, labels = []) {
     // ==================== 结构化卡片协议（JSON 内嵌双花括号 {{"title":..,"time":..,"story":..,"options":[...]}}，六字段全部必填） ====================
     const StructuredCardProtocolService = (() => {
         function isStructured(text) {
-            const src = String(text || "").trim();
+            const src = stripThink(text).trim();
             if (!src) return false;
             if (src.startsWith("{{")) return true;
             // 裸 JSON 对象（AI 未按 {{}} 协议输出标准 JSON）→ 完整合法 JSON + 六字段校验通过才算结构化
@@ -7436,7 +7441,7 @@ function rebuildChoicesBlock(body, labels = []) {
         // 完整解析：JSON 六字段（title/time/story 非空 + options 至少 1 项非空）全部必填；任一缺失或非法返回 null（走重试/兜底链）
         // 兼容两种形态：协议双花括号 {{...}} 与 AI 直接输出的裸 JSON 对象 {...}
         function parseFull(text) {
-            let src = String(text || "").trim();
+            let src = stripThink(text).trim();
             // 容错3：```json 代码围栏包裹（部分模型偶发）→ 剥掉围栏再解析
             const fence = src.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
             if (fence) src = fence[1].trim();
@@ -7479,7 +7484,7 @@ function rebuildChoicesBlock(body, labels = []) {
         }
         // 流式部分解析：正则提取对截断文本鲁棒（字段内转义 \\. 还原）；返回 { complete, title, time, story, options }
         function parseStreaming(text) {
-            const src = String(text || "").trim();
+            const src = stripThink(text).trim();
             const out = { complete: false, title: "", time: "", story: "", options: [] };
             if (!src || src.charAt(0) !== "{") return out;
             const grab = (key) => {
@@ -8946,7 +8951,7 @@ function rebuildChoicesBlock(body, labels = []) {
         }
         function renderStreamingFrame(text) {
             if (!currentStreamingTarget) return;
-            const normalizedText = HtmlCardService.normalizeHtmlCard(text);
+            const normalizedText = HtmlCardService.normalizeHtmlCard(stripThink(text));
             // bug6: 固定 6 字段结构化协议 → 字段级流式渲染（打字机，字段切换上个节点定型）
             // 裸 JSON 流式（AI 未按 {{}} 协议直接输出标准 JSON，以 {"title"/{"time"/{"story" 开头）→ 同样挂骨架打字机渲染
             const isBareJsonStream = !StructuredCardProtocolService.isStructured(normalizedText)
@@ -8966,9 +8971,9 @@ function rebuildChoicesBlock(body, labels = []) {
                 AiResponseLayoutService.applyCardTheme(currentStreamingTarget);
                 HtmlCardService.applyReadableTextColors(currentStreamingTarget);
             } else {
-                // JSON 填空(半截 JSON 不稳,结束才 fillCardTemplate)/纯文本:保持文本渲染
+                // JSON 填空(半截 JSON 不稳,结束才 fillCardTemplate)/纯文本:保持文本渲染(think 已在 stripThink 剥离)
                 currentStreamingTarget.classList.remove("html-host");
-                currentStreamingTarget.innerHTML = AiResponseLayoutService.renderAiMessage(text, true);
+                currentStreamingTarget.innerHTML = AiResponseLayoutService.renderAiMessage(normalizedText, true);
             }
             AiResponseLayoutService.bindHtmlChoiceEvents(currentStreamingTarget);
             streamLastRenderAt = Date.now();
@@ -9132,7 +9137,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 } else if (cur && msg.text) {
                     // 清洗: 历史中若存过结构化协议源码(标准 JSON 或旧 {{}} 双花括号, 残缺/旧数据), 提取 title/story 展示, 日记/事件不显示代码
                     let t = String(msg.text);
-                    const ts = t.trim();
+                    const ts = stripThink(t).trim();
                     if (ts.startsWith("{{") || /^(```[^\n]*\n)?\{\s*"/.test(ts)) {
                         const sp = StructuredCardProtocolService.parseStreaming(t.replace(/^```(?:json)?\s*\n?/, ""));
                         t = (sp.title ? `【${sp.title}】${sp.story ? "\n" : ""}` : "") + sp.story;
@@ -9533,7 +9538,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const prefix = options.conflictDetected
                 ? "**⚠️ 检测到设定冲突，已自动纠偏重试一次。**\n\n"
                 : "";
-            const normalizedText = HtmlCardService.normalizeHtmlCard(text);
+            const normalizedText = HtmlCardService.normalizeHtmlCard(stripThink(text));
             const structuredFields = StructuredCardProtocolService.parseFull(normalizedText);
             // 裸 JSON 结构化协议(顶层含 title 键)与 fill 填空协议(无 title)区分, 防结构化残缺 JSON 误入 fill 卡
             const fillFields = /\{\s*"title"\s*:/.test(normalizedText) ? null : FillProtocolService.parse(normalizedText);
@@ -9596,7 +9601,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 }
             } else {
                 oldNode.classList.remove("html-host");
-                oldNode.innerHTML = AiResponseLayoutService.renderAiMessage(`${prefix}${text}`, false);
+                oldNode.innerHTML = AiResponseLayoutService.renderAiMessage(`${prefix}${stripThink(text)}`, false);
             }
             if (options.conflictDetected) node.classList.add("conflict");
             currentStreamingTarget = null;
@@ -13365,7 +13370,8 @@ function rebuildChoicesBlock(body, labels = []) {
             return ScenarioPlayMetaService.getLockedSkeleton(cardId);
         }
         function finalizeCardLayout({ text, beautySetting, titleHint, nowText, policyConfig, cardId, preferredChoices = [], choiceSource = "turn", lockedSkeleton = null }) {
-            const normalized = HtmlCardService.normalizeHtmlCard(text);
+            const cleanText = stripThink(text);
+            const normalized = HtmlCardService.normalizeHtmlCard(cleanText);
             // bug6: 结构化协议直通（finishStreaming 负责套模板渲染）
             if (StructuredCardProtocolService.parseFull(normalized)) return normalized;
             if (HtmlCardService.isRenderableHtmlCard(normalized)) {
@@ -13392,7 +13398,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const fallbackObj = {
                 title: String(sp.title || titleHint || "剧情推进"),
                 time: String(sp.time || nowText || ""),
-                story: String(sp.story || normalized || text || "AI 暂时卡住了，请再对我说一次吧喵～"),
+                story: String(sp.story || normalized || cleanText || "AI 暂时卡住了，请再对我说一次吧喵～"),
                 options: [
                     String(preferredChoices[0] || "继续推进剧情"),
                     String(preferredChoices[1] || "查看当前状态"),
