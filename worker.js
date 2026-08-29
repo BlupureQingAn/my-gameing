@@ -100,6 +100,17 @@ const MODEL_POOL = [
 // 智谱按"并发数"限流(免费档并发极低,第三方实测 ~5RPM),会员绕过 dailyCap 后洪峰更需客户端自限速
 // 策略(openai-cookbook 最佳实践):并发信号量 + 滑动窗口,本地近似(CF 多实例叠加后仍留余量)
 const RATE_LIMIT = { concurrency: 2, windowMs: 60 * 1000, maxPerWindow: 12, acquireTimeoutMs: 8000 };
+// 按 key 放宽门控:讯飞官方并发 20 且无日次硬限,自设 8 并发/60min 仍有 2.5 倍余量,承载翻倍;
+// 其余平台(智谱免费档 ~5RPM / OpenRouter 免费模型 50 次/天)保持保守默认防 429
+const RATE_LIMIT_OVERRIDES = {
+    "XFSPARK_X2_FLASH_KEY": { concurrency: 8, maxPerWindow: 60 },
+    "XFSPARK_X2_KEY":       { concurrency: 8, maxPerWindow: 60 },
+};
+function rateLimitFor(envName) {
+    return RATE_LIMIT_OVERRIDES[envName]
+        ? { ...RATE_LIMIT, ...RATE_LIMIT_OVERRIDES[envName] }
+        : RATE_LIMIT;
+}
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const upstreamGates = new Map(); // apiKeyEnv -> { active, timestamps }
 function gateFor(envName) {
@@ -109,16 +120,17 @@ function gateFor(envName) {
 }
 async function gateAcquire(envName) {
     const g = gateFor(envName);
+    const lim = rateLimitFor(envName);
     const start = Date.now();
     while (true) {
         const now = Date.now();
-        g.timestamps = g.timestamps.filter(t => now - t < RATE_LIMIT.windowMs);
-        if (g.active < RATE_LIMIT.concurrency && g.timestamps.length < RATE_LIMIT.maxPerWindow) {
+        g.timestamps = g.timestamps.filter(t => now - t < lim.windowMs);
+        if (g.active < lim.concurrency && g.timestamps.length < lim.maxPerWindow) {
             g.active++;
             g.timestamps.push(now);
             return true;
         }
-        if (Date.now() - start > RATE_LIMIT.acquireTimeoutMs) return false;
+        if (Date.now() - start > lim.acquireTimeoutMs) return false;
         await sleep(50);
     }
 }
