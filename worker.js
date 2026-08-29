@@ -59,11 +59,13 @@ const MODEL_POOL = [
     // 小徐 2026-08-29 新授权 HTTP 服务(每服务独立系统默认 key,除 Lite 无限量外均 <20w token/年,dailyCap 20 限额度):
     //   X2/X1.5 共用 XFSPARK_X2_KEY2(***REMOVED***):x2 端点 model=spark-x、v2 端点 model=spark-x(实测出内容)
     //   Flash=Ctzg...(agent 端点,现有 key 在用);Lite=Amtvr...(v1 端点 model=lite,无限量);Pro=GxiG...(v1 端点 model=generalv3.5);Pro-128K=uZBk...(v1 端点 model=pro-128k)
-    //   Ultra-32K 的 v1 端点 model 名未确认(17 候选全 invalid),暂不入池
+    //   X2 系三个条目共享同一额度池(旧 XFSPARK_X2_KEY + 新 XFSPARK_X2_KEY2 的 x2/v2 端点):2026-08-29 小徐报合计剩 196,242 tokens
+    //   → 三条目各 dailyCap 10(每天最多 30 次 ≈ 6 万 tokens,撑 ~3 天),超额自动 fallback 智谱/Lite;优质额度当补充不当主力
+    //   主力保护:X2-Flash(agent 端点)剩 1,723,155(2M 免费包)dailyCap 150/天 ≈ 40 万 tokens/天;Lite 无限量是长期后盾
     { id: "xf-spark-x2-flash", url: "https://spark-api-open.xf-yun.com/agent/v1", apiKeyEnv: "XFSPARK_X2_FLASH_KEY", model: "spark-x", dailyCap: 150, tier: 1, enabled: true },
-    { id: "xf-spark-x2b",      url: "https://spark-api-open.xf-yun.com/x2",       apiKeyEnv: "XFSPARK_X2_KEY2",       model: "spark-x", dailyCap: 20,     tier: 2, enabled: true },
-    { id: "xf-spark-x1",       url: "https://spark-api-open.xf-yun.com/v2",       apiKeyEnv: "XFSPARK_X2_KEY2",       model: "spark-x", dailyCap: 20,     tier: 2, enabled: true },
-    { id: "xf-spark-x2",       url: "https://spark-api-open.xf-yun.com/x2",       apiKeyEnv: "XFSPARK_X2_KEY",        model: "spark-x", dailyCap: Infinity, tier: 2, enabled: true },
+    { id: "xf-spark-x2b",      url: "https://spark-api-open.xf-yun.com/x2",       apiKeyEnv: "XFSPARK_X2_KEY2",       model: "spark-x", dailyCap: 10,     tier: 2, enabled: true },
+    { id: "xf-spark-x1",       url: "https://spark-api-open.xf-yun.com/v2",       apiKeyEnv: "XFSPARK_X2_KEY2",       model: "spark-x", dailyCap: 10,     tier: 2, enabled: true },
+    { id: "xf-spark-x2",       url: "https://spark-api-open.xf-yun.com/x2",       apiKeyEnv: "XFSPARK_X2_KEY",        model: "spark-x", dailyCap: 10,     tier: 2, enabled: true },
     { id: "xf-spark-ultra",    url: "https://spark-api-open.xf-yun.com/v1",       apiKeyEnv: "XFSPARK_ULTRA_KEY",     model: "4.0Ultra",       dailyCap: 20,     tier: 4, enabled: true },
     { id: "xf-spark-lite",     url: "https://spark-api-open.xf-yun.com/v1",       apiKeyEnv: "XFSPARK_LITE_KEY",      model: "lite",           dailyCap: Infinity, tier: 4, enabled: true },
     { id: "xf-spark-pro",      url: "https://spark-api-open.xf-yun.com/v1",       apiKeyEnv: "XFSPARK_PRO_KEY",       model: "generalv3.5",    dailyCap: 20,     tier: 5, enabled: true },
