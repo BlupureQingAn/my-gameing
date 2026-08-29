@@ -7421,23 +7421,36 @@ function rebuildChoicesBlock(body, labels = []) {
     // ==================== 结构化卡片协议（JSON 内嵌双花括号 {{"title":..,"time":..,"story":..,"options":[...]}}，六字段全部必填） ====================
     const StructuredCardProtocolService = (() => {
         function isStructured(text) {
-            return String(text || "").trim().startsWith("{{");
+            const src = String(text || "").trim();
+            if (!src) return false;
+            if (src.startsWith("{{")) return true;
+            // 裸 JSON 对象（AI 未按 {{}} 协议输出标准 JSON）→ 完整合法 JSON + 六字段校验通过才算结构化
+            if (src.charAt(0) === "{") return !!parseFull(src);
+            return false;
         }
         // JSON 字符串值转义还原（\" → "、\\ → \、\n → 换行 等）
         function jsonUnescape(s) {
             return String(s || "").replace(/\\(.)/g, (m, c) => c === "n" ? "\n" : c === "r" ? "\r" : c === "t" ? "\t" : c);
         }
         // 完整解析：JSON 六字段（title/time/story 非空 + options 至少 1 项非空）全部必填；任一缺失或非法返回 null（走重试/兜底链）
+        // 兼容两种形态：协议双花括号 {{...}} 与 AI 直接输出的裸 JSON 对象 {...}
         function parseFull(text) {
             const src = String(text || "").trim();
-            if (!src.startsWith("{{")) return null;
-            const endIdx = src.lastIndexOf("}}");
-            if (endIdx < 2) return null;
-            let jsonStr = src.slice(2, endIdx).trim();
-            // 容错1：{{"title":...}} 内直接内嵌字段（无内层对象花括号）→ 补花括号还原成合法 JSON
-            if (jsonStr.charAt(0) !== "{") jsonStr = "{" + jsonStr;
-            if (jsonStr.charAt(jsonStr.length - 1) !== "}") jsonStr = jsonStr + "}";
-            // 容错2：AI 在 {{ 后 / }} 前多打了字符或空格时，裁剪到最外层 {…} 子串再试
+            let jsonStr;
+            if (src.startsWith("{{")) {
+                const endIdx = src.lastIndexOf("}}");
+                if (endIdx < 2) return null;
+                jsonStr = src.slice(2, endIdx).trim();
+                // 容错1：{{"title":...}} 内直接内嵌字段（无内层对象花括号）→ 补花括号还原成合法 JSON
+                if (jsonStr.charAt(0) !== "{") jsonStr = "{" + jsonStr;
+                if (jsonStr.charAt(jsonStr.length - 1) !== "}") jsonStr = jsonStr + "}";
+            } else if (src.charAt(0) === "{") {
+                // 裸 JSON 对象：整体即 JSON，直接走下方最外层裁剪解析
+                jsonStr = src;
+            } else {
+                return null;
+            }
+            // 容错2：{{ 后 / }} 前或首尾有多余字符/空格时，裁剪到最外层 {…} 子串再试
             const firstBrace = jsonStr.indexOf("{");
             const lastBrace = jsonStr.lastIndexOf("}");
             if (firstBrace > 0 || lastBrace < jsonStr.length - 1) {
@@ -7461,7 +7474,7 @@ function rebuildChoicesBlock(body, labels = []) {
         function parseStreaming(text) {
             const src = String(text || "").trim();
             const out = { complete: false, title: "", time: "", story: "", options: [] };
-            if (!src.startsWith("{{")) return out;
+            if (!src || src.charAt(0) !== "{") return out;
             const grab = (key) => {
                 const m = src.match(new RegExp('"' + key + '"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)'));
                 return m ? jsonUnescape(m[1]) : "";
@@ -8928,7 +8941,10 @@ function rebuildChoicesBlock(body, labels = []) {
             if (!currentStreamingTarget) return;
             const normalizedText = HtmlCardService.normalizeHtmlCard(text);
             // bug6: 固定 6 字段结构化协议 → 字段级流式渲染（打字机，字段切换上个节点定型）
-            if (StructuredCardProtocolService.isStructured(normalizedText)) {
+            // 裸 JSON 流式（AI 未按 {{}} 协议直接输出标准 JSON，以 {"title"/{"time"/{"story" 开头）→ 同样挂骨架打字机渲染
+            const isBareJsonStream = !StructuredCardProtocolService.isStructured(normalizedText)
+                && /^\{\s*"(title|time|story)"\s*:/.test(normalizedText);
+            if (StructuredCardProtocolService.isStructured(normalizedText) || isBareJsonStream) {
                 renderStructuredStreamingFrame(normalizedText);
                 streamLastRenderAt = Date.now();
                 scrollToBottom();
@@ -9107,9 +9123,10 @@ function rebuildChoicesBlock(body, labels = []) {
                     cur = { date: msg.date, userText: String(msg.text || ""), texts: [] };
                     rounds.push(cur);
                 } else if (cur && msg.text) {
-                    // 清洗: 历史中若存过结构化协议源码(残缺/旧数据), 提取 title/story 展示, 日记/事件不显示代码
+                    // 清洗: 历史中若存过结构化协议源码(标准 JSON 或旧 {{}} 双花括号, 残缺/旧数据), 提取 title/story 展示, 日记/事件不显示代码
                     let t = String(msg.text);
-                    if (t.trim().startsWith("{{")) {
+                    const ts = t.trim();
+                    if (ts.startsWith("{{") || /^\{\s*"/.test(ts)) {
                         const sp = StructuredCardProtocolService.parseStreaming(t);
                         t = (sp.title ? `【${sp.title}】${sp.story ? "\n" : ""}` : "") + sp.story;
                     }
@@ -9464,7 +9481,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const state = StateService.get();
             const board = document.getElementById("play-chat-area");
             const normalizedText = role === "ai" ? HtmlCardService.normalizeHtmlCard(text) : text;
-            const fillFields = role === "ai" && !streaming ? FillProtocolService.parse(normalizedText) : null;
+            const fillFields = role === "ai" && !streaming && !/\{\s*"title"\s*:/.test(normalizedText) ? FillProtocolService.parse(normalizedText) : null;
             const canUseHtmlCard = !fillFields && role === "ai" && !streaming && HtmlCardService.isRenderableHtmlCard(normalizedText);
             if (fillFields || canUseHtmlCard) {
                 const cardHtml = fillFields
@@ -9511,7 +9528,8 @@ function rebuildChoicesBlock(body, labels = []) {
                 : "";
             const normalizedText = HtmlCardService.normalizeHtmlCard(text);
             const structuredFields = StructuredCardProtocolService.parseFull(normalizedText);
-            const fillFields = FillProtocolService.parse(normalizedText);
+            // 裸 JSON 结构化协议(顶层含 title 键)与 fill 填空协议(无 title)区分, 防结构化残缺 JSON 误入 fill 卡
+            const fillFields = /\{\s*"title"\s*:/.test(normalizedText) ? null : FillProtocolService.parse(normalizedText);
             const hasHtmlCard = !fillFields && HtmlCardService.isRenderableHtmlCard(normalizedText);
             const oldNode = currentStreamingTarget;
             let node = oldNode;
@@ -9551,8 +9569,8 @@ function rebuildChoicesBlock(body, labels = []) {
                     AiResponseLayoutService.injectStatsIntoCard(node);
                     VisualEffects.decorateAiCardBears(node);
                 }
-            } else if (StructuredCardProtocolService.isStructured(normalizedText)) {
-                // 残缺结构化 JSON({{ 前缀但六字段不齐/解析失败) → 兜底结构化卡(提取已定型的 title/time/story), 杜绝源码上屏与入历史
+            } else if (StructuredCardProtocolService.isStructured(normalizedText) || /^\{\s*"/.test(normalizedText)) {
+                // 残缺结构化 JSON({{ 前缀或裸 { 开头但六字段不齐/解析失败) → 兜底结构化卡(提取已定型的 title/time/story), 杜绝源码上屏与入历史
                 const sp = StructuredCardProtocolService.parseStreaming(normalizedText);
                 const fb = {
                     title: String(sp.title || "剧情推进"),
@@ -9607,7 +9625,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const node = aiRows.length ? aiRows[aiRows.length - 1] : null;
             if (!(node instanceof HTMLElement)) return false;
             const normalizedText = HtmlCardService.normalizeHtmlCard(text);
-            const fillFields = FillProtocolService.parse(normalizedText);
+            const fillFields = /\{\s*"title"\s*:/.test(normalizedText) ? null : FillProtocolService.parse(normalizedText);
             const hasHtmlCard = !fillFields && HtmlCardService.isRenderableHtmlCard(normalizedText);
             if (fillFields) {
                 const next = mountCardNode(board, FillProtocolService.fillCardTemplate(FillProtocolService.getCardTheme(), fillFields));
@@ -13362,7 +13380,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 return normalized;
             }
             // 兜底: 非结构化/非 HTML 文本转结构化协议渲染（新卡），六字段必填（选项用 AI 提取项补通用项）
-            // 残缺 JSON({{ 前缀但解析失败)先提取 title/story, 避免协议源码进正文与历史(日记/事件显示代码)
+            // 残缺 JSON({ 前缀但解析失败)先提取 title/story, 避免协议源码进正文与历史(日记/事件显示代码)
             const sp = StructuredCardProtocolService.parseStreaming(text);
             const fallbackObj = {
                 title: String(sp.title || titleHint || "剧情推进"),
@@ -13374,7 +13392,7 @@ function rebuildChoicesBlock(body, labels = []) {
                     String(preferredChoices[2] || "换个方向探索")
                 ]
             };
-            return "{{" + JSON.stringify(fallbackObj) + "}}";
+            return JSON.stringify(fallbackObj);
         }
         return { finalizeCardLayout };
     })();
@@ -13977,11 +13995,12 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
 
             return [
                 "【输出格式——最高优先级：固定 JSON 结构化协议】",
-                "本次回复必须严格输出如下格式，只需输出这一条内容，禁止任何额外文字：",
-                '{{"title":"本回合场景名","time":"本回合剧情时间","story":"剧情正文","options":["选项一","选项二","选项三"]}}',
+                "本次回复必须只输出一个标准 JSON 对象，禁止任何额外文字：",
+                '{"title":"本回合场景名","time":"本回合剧情时间","story":"剧情正文","options":["选项一","选项二","选项三"]}',
                 "六项字段全部必填，不得省略或留空：title=本回合场景名（20字内）；time=本回合剧情时间（如 第3年·5月·雨夜，按剧情推进输出，不要写系统日期）；story=剧情正文 300-500字、多段、对话写成 XXX 对你说：\"...\"、段落用换行分隔；options=推进选项数组（数量不限，通常 2-4 个，至少 1 个，每项不得为空）。",
-                "JSON 内字符串中的双引号必须转义为 \\\"（正文里的引号也可用「」代替）；严禁输出 HTML 标签、Markdown 标记或任何解释文字；禁止用 ``` 包裹；双花括号 {{ }} 之外不得输出任何内容。",
+                "JSON 内字符串中的双引号必须转义为 \\\"（正文里的引号也可用「」代替）；严禁输出 HTML 标签、Markdown 标记或任何解释文字；禁止用 ``` 或任何符号包裹 JSON，禁止在 JSON 之外输出任何内容（不得添加「```json」、不得加解释语、不得用双花括号 {{ }} 包裹）。",
                 "若你更习惯旧格式，也可输出 JSON 填空协议（前端会同样渲染成卡片）：",
+                "（注意：JSON 填空协议与上方 JSON 对象的区别是填空协议以 story 开头、不含 title 字段；两者都是标准 JSON 对象，都不需要任何包裹）",
                 '{"story": "剧情正文（纯文本，可多段；对话写成 XXX 对你说："..."），300-500字", "time": {"year": 2026, "month": 8, "day": 15}, "stats": [{"key": "健康", "value": "78/100"}], "items": ["本轮新增物品"], "options": ["选项一", "选项二", "选项三"], "scene": "环境标签（如 夜晚/雨中/酒馆）"}',
                 "JSON 填空协议必填字段：story、options（2-4 个选项）；可选字段：time/stats/items/scene（无变化可整体省略）。",
                 "stats 键名必须来自白名单：健康/体力/生命/心情/情绪/精神/学识/智力/智慧/魅力/声望/名望/财富/金钱/武力/修为/灵力/权势/人脉/事业/饱食/饥饿/好感/体魄/才学/威望/体质/敏捷/力量/耐力/感知/意志/运气。",
@@ -14021,7 +14040,7 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             const prevStructured = /data-structured-card/.test(String(latestHtmlCard || ""));
             const latestCardBlock = latestSkeleton
                 ? (prevStructured
-                    ? `\n\n最近一次剧情卡（仅作连贯性与主题参考，本轮输出必须仍用固定 JSON 结构化协议 {{"title":"...","time":"...","story":"...","options":["...","...","..."]}}，六项全部必填，不要输出 HTML）：\n${latestSkeleton.slice(0, 500)}\n\n【连贯性铁律】剧情必须紧接「上一轮剧情结尾」继续推进：延续上一轮的地点/时间/人物/事件与叙事人称，围绕上一轮结尾的悬念或处境展开新进展，禁止另起炉灶、禁止复述或改写上一轮已发生的内容。`
+                    ? `\n\n最近一次剧情卡（仅作连贯性与主题参考，本轮输出必须仍用固定 JSON 结构化协议 {"title":"...","time":"...","story":"...","options":["...","...","..."]}（标准 JSON 对象，不需要任何包裹符号），六项全部必填，不要输出 HTML）：\n${latestSkeleton.slice(0, 500)}\n\n【连贯性铁律】剧情必须紧接「上一轮剧情结尾」继续推进：延续上一轮的地点/时间/人物/事件与叙事人称，围绕上一轮结尾的悬念或处境展开新进展，禁止另起炉灶、禁止复述或改写上一轮已发生的内容。`
                     : `\n\n最近一次HTML卡片结构骨架（必须沿用其样式与结构，仅替换内容；正文不需要输出）：\n${latestSkeleton}\n注意：选项按钮（data-choice 元素）内必须写可见文字，且须为新剧情生成的新选项内容，不可留空。\n\n【连贯性铁律】剧情必须紧接「上一轮剧情结尾」继续推进：延续上一轮的地点/时间/人物/事件与叙事人称，围绕上一轮结尾的悬念或处境展开新进展，禁止另起炉灶、禁止复述或改写上一轮已发生的内容。`)
                 : "";
             return `玩家最新输入：${userText}\n\n最近记录：\n${recentHistory}${latestCardBlock}${colorWarning}`;
@@ -14102,10 +14121,10 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             return [
                 "【⚠️ 格式错误——必须重新输出固定 JSON 结构化协议】",
                 "你上一次的回复输出了纯文本、Markdown 或 HTML 卡片，这是严重格式错误。",
-                "本次必须严格输出如下格式，且只输出这一条：",
-                '{{"title":"本回合场景名","time":"本回合剧情时间","story":"剧情正文","options":["选项一","选项二","选项三"]}}',
+                "本次必须只输出一个标准 JSON 对象，且只输出这一条：",
+                '{"title":"本回合场景名","time":"本回合剧情时间","story":"剧情正文","options":["选项一","选项二","选项三"]}',
                 "六项字段全部必填：title/time/story 非空，options 至少 1 个选项（数量不限，通常 2-4 个）；正文 300-500 字。",
-                "JSON 内双引号必须转义为 \\\"（或用「」代替）；严禁输出 HTML 标签、Markdown 标记或解释文字；禁止用 ``` 包裹。",
+                "JSON 内双引号必须转义为 \\\"（或用「」代替）；严禁输出 HTML 标签、Markdown 标记或解释文字；禁止用 ``` 或双花括号 {{ }} 包裹，禁止在 JSON 前后添加任何字符。",
                 "若原回复带有 ```state-patch``` 数据块，请原样保留在协议之后。",
                 latestCardBlock,
                 `玩家最新输入：${userText}`,
@@ -15678,12 +15697,12 @@ const token = delta.content || "";
                         UIRenderer.updateStreaming(visibleText);
                         return !EndMarkerService.hasMarker(text);
                     }
-                })).trim() || `{{"title":"剧情提示","time":"${Utils.nowDateStr(StateService.get())}","story":"AI 暂时卡住了，请再对我说一次吧喵～","options":["重新说一次吧","换个说法继续","先跳过这轮"]}}`;
+                })).trim() || `{"title":"剧情提示","time":"${Utils.nowDateStr(StateService.get())}","story":"AI 暂时卡住了，请再对我说一次吧喵～","options":["重新说一次吧","换个说法继续","先跳过这轮"]}`;
 
 
                 const rawPatchResult = StatePatchService.extractPatch(rawText);
                 const rawVisibleText = rawPatchResult.cleaned || rawText;
-                const turnFill = FillProtocolService.parse(rawVisibleText);
+                const turnFill = /\{\s*"title"\s*:/.test(rawVisibleText) ? null : FillProtocolService.parse(rawVisibleText);
                 // M3:顶层 fill 协议与 state-patch 合并,统一走单一写路径(校验+保存)
                 const rawPatchChanged = StateSyncService.applyWorldPatch(StateSyncService.mergeProtocolPatch(rawPatchResult.patch, turnFill), { render: false });
                 let displayText = rawVisibleText;
@@ -15711,7 +15730,7 @@ const token = delta.content || "";
                                 ],
                                 temperature: policyConfig.temperature,
                                 onToken: (text) => {
-                                    if (!retryEarlyStopped && text.length > 150 && !text.includes("{{")) {
+                                    if (!retryEarlyStopped && text.length > 150 && !/\{\s*"(title|time|story)"\s*:/.test(text)) {
                                         retryEarlyStopped = true;
                                         return false;
                                     }
