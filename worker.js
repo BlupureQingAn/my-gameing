@@ -54,12 +54,18 @@ async function settleTokenDeduction(env, userId, record, inputTokens, outputToke
 // ChatAnywhere 免费版（gpt_api_free）：每日 10000 点平台额度 + 各模型每日次数上限
 const MODEL_POOL = [
     // ---- 讯飞（2026-08-25 实测通过:均为深度推理模型,先输出 reasoning 再出内容;官方并发 20,无日次硬限,dailyCap 设 Infinity）----
-    // X2 主端点(200k tokens): model 名 "spark-x";X2-Flash agent 端点(2M tokens): model 名 "spark-x"(x1 亦可)
-    // 小徐 2026-08-29 新授权(每模型 20w token/年)凭据 XFSPARK_X2_KEY2 = 系统默认 key(Bearer Ctzg...:Ialc...,X2 端点实测出内容);
-    // X1.5/Pro/Pro-128K/Ultra-32K 仅 WebSocket 接入(HTTP 404),暂不入池;dailyCap 20 限 20w token/年额度
+    // X2 主端点(200k tokens): model 名 "spark-x";X2-Flash agent 端点(2M tokens): model 名 "spark-x"
+    // 小徐 2026-08-29 新授权 HTTP 服务(每服务独立系统默认 key,除 Lite 无限量外均 <20w token/年,dailyCap 20 限额度):
+    //   X2/X1.5 共用 XFSPARK_X2_KEY2(***REMOVED***):x2 端点 model=spark-x、v2 端点 model=spark-x(实测出内容)
+    //   Flash=Ctzg...(agent 端点,现有 key 在用);Lite=Amtvr...(v1 端点 model=lite,无限量);Pro=GxiG...(v1 端点 model=generalv3.5);Pro-128K=uZBk...(v1 端点 model=pro-128k)
+    //   Ultra-32K 的 v1 端点 model 名未确认(17 候选全 invalid),暂不入池
     { id: "xf-spark-x2-flash", url: "https://spark-api-open.xf-yun.com/agent/v1", apiKeyEnv: "XFSPARK_X2_FLASH_KEY", model: "spark-x", dailyCap: Infinity, tier: 1, enabled: true },
     { id: "xf-spark-x2b",      url: "https://spark-api-open.xf-yun.com/x2",       apiKeyEnv: "XFSPARK_X2_KEY2",       model: "spark-x", dailyCap: 20,     tier: 2, enabled: true },
+    { id: "xf-spark-x1",       url: "https://spark-api-open.xf-yun.com/v2",       apiKeyEnv: "XFSPARK_X2_KEY2",       model: "spark-x", dailyCap: 20,     tier: 2, enabled: true },
     { id: "xf-spark-x2",       url: "https://spark-api-open.xf-yun.com/x2",       apiKeyEnv: "XFSPARK_X2_KEY",        model: "spark-x", dailyCap: Infinity, tier: 2, enabled: true },
+    { id: "xf-spark-lite",     url: "https://spark-api-open.xf-yun.com/v1",       apiKeyEnv: "XFSPARK_LITE_KEY",      model: "lite",           dailyCap: Infinity, tier: 4, enabled: true },
+    { id: "xf-spark-pro",      url: "https://spark-api-open.xf-yun.com/v1",       apiKeyEnv: "XFSPARK_PRO_KEY",       model: "generalv3.5",    dailyCap: 20,     tier: 5, enabled: true },
+    { id: "xf-spark-pro128k",  url: "https://spark-api-open.xf-yun.com/v1",       apiKeyEnv: "XFSPARK_PRO128_KEY",    model: "pro-128k",       dailyCap: 20,     tier: 5, enabled: true },
     // ---- 智谱（实测从 CF 边缘 TTFB 0.3s 池内最快;官方按 RPM/TPM 限流无日次硬限,dailyCap 为自设保险）----
     // 小徐 2026-08-29 新注册账号新 key(ZHIPU_KEY2)双 key 并行:新 key 条目在前优先用,旧 key 超限/失败后 fallback
     { id: "zp2-glm-4-air",  url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4-air",   dailyCap: 1000, tier: 3,  enabled: true },
@@ -132,6 +138,8 @@ const RATE_LIMIT = { concurrency: 2, windowMs: 60 * 1000, maxPerWindow: 12, acqu
 const RATE_LIMIT_OVERRIDES = {
     "XFSPARK_X2_FLASH_KEY": { concurrency: 8, maxPerWindow: 60 },
     "XFSPARK_X2_KEY":       { concurrency: 8, maxPerWindow: 60 },
+    "XFSPARK_X2_KEY2":      { concurrency: 8, maxPerWindow: 60 },
+    "XFSPARK_LITE_KEY":     { concurrency: 8, maxPerWindow: 60 },
 };
 // 模型级门控(优先于 key 级):NVIDIA 免费层按模型独立限流(2026-08 查证)
 // 大模型 ~40 RPM / 1000 req/天 → 门控取平台 75% 余量(30/min,并发 3);小模型 ~60 RPM / 14400 req/天 → 45/min,并发 5
