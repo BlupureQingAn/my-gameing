@@ -76,30 +76,33 @@ const MODEL_POOL = [
     //   GLM-4.7-Flash/GLM-4.6V-Flash(视觉,不入池)/GLM-4-Flash-250414;实测 6 名全通(4.7-flash 热限流 429 照常入池自愈)
     //   额度地图:4.5-Air 1200 万 > 4.7 500 万 > 4-Air/Flash 无硬限(免费档)
     // z1-flash 推理内嵌 content 的 <think> 标签且 thinking:{type:disabled} 无效(实测) → 前端已加 stripThink 统一剥离(2026-08-29)后启用
-    { id: "zp2-glm-z1-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-z1-flash",   dailyCap: 1500, tier: 2, enabled: true },
-    { id: "zp-glm-z1-flash",  url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-z1-flash",   dailyCap: 1500, tier: 2, enabled: true },
+    // z1-flash ×2 禁用:流式 think 推理 >120s 仍无正文(实测 129s),前端 90s 读超时必断
+    { id: "zp2-glm-z1-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-z1-flash",   dailyCap: 1500, tier: 2, enabled: false },
+    { id: "zp-glm-z1-flash",  url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-z1-flash",   dailyCap: 1500, tier: 2, enabled: false },
+    // zp 老 key 全线禁用(2026-08-29 实测 7 条全 503/坏/超时,仅 zp2 新 key 可用)
     { id: "zp2-glm-4.7",      url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4.7",         dailyCap: 300,  tier: 3, enabled: true },
-    { id: "zp-glm-4.7",       url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4.7",         dailyCap: 300,  tier: 3, enabled: true },
-    { id: "zp2-glm-4.5-air",  url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4.5-air",     dailyCap: 600,  tier: 3, enabled: true },
-    { id: "zp-glm-4.5-air",   url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4.5-air",     dailyCap: 600,  tier: 3, enabled: true },
     { id: "zp2-glm-4-air",    url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4-air",       dailyCap: 1000, tier: 3, enabled: true },
-    { id: "zp-glm-4-air",     url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4-air",       dailyCap: 1000, tier: 3, enabled: true },
+    { id: "zp2-glm-4.5-air",  url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4.5-air",     dailyCap: 600,  tier: 3, enabled: true }, // 流式慢(102s),tier3 内垫底
+    { id: "zp-glm-4.7",       url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4.7",         dailyCap: 300,  tier: 3, enabled: false },
+    { id: "zp-glm-4.5-air",   url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4.5-air",     dailyCap: 600,  tier: 3, enabled: false },
+    { id: "zp-glm-4-air",     url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4-air",       dailyCap: 1000, tier: 3, enabled: false },
     // ---- Agnes（免费:apihub.agnes-ai.com,2026-08-25 实测可用）----
     { id: "agnes-2.0-flash", url: "https://apihub.agnes-ai.com/v1", apiKeyEnv: "AGNES_KEY", model: "agnes-2.0-flash", dailyCap: 500, tier: 4, enabled: true },
     // ---- OpenRouter 免费模型（2026-08-25 实测:glm-5.2 共享池偶发 429 属正常,自动 fallback;gemma-4 系列因 Google 地区限制从 CF 出口必然失败,不入池）----
-    { id: "or-glm-5.2",            url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "z-ai/glm-5.2:free",                dailyCap: 500, tier: 5, enabled: true },
+    // or-glm-5.2 / or-ox-alpha / or-lfm 禁用:2026-08-29 实测 503(免费档限额)/503/2.6B 质量差
+    { id: "or-glm-5.2",            url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "z-ai/glm-5.2:free",                dailyCap: 500, tier: 5, enabled: false },
     { id: "or-minimax-m3",         url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "minimax/minimax-m3:free",          dailyCap: 500, tier: 6, enabled: true },
     { id: "or-nemotron-3-super",   url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "nvidia/nemotron-3-super-120b-a12b:free", dailyCap: 500, tier: 6, enabled: true },
     { id: "zp2-glm-4.7-flash",    url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4.7-flash",     dailyCap: 5000, tier: 7,  enabled: true },
-    { id: "zp-glm-4.7-flash",     url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4.7-flash",     dailyCap: 5000, tier: 7,  enabled: true },
+    { id: "zp-glm-4.7-flash",     url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4.7-flash",     dailyCap: 5000, tier: 7,  enabled: false },
     { id: "zp2-glm-4-flash-250414", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4-flash-250414", dailyCap: 5000, tier: 7,  enabled: true },
-    { id: "zp-glm-4-flash-250414", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4-flash-250414", dailyCap: 5000, tier: 7,  enabled: true },
+    { id: "zp-glm-4-flash-250414", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4-flash-250414", dailyCap: 5000, tier: 7,  enabled: false },
     { id: "zp2-glm-4-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4-flash", dailyCap: 5000, tier: 7,  enabled: true },
-    { id: "zp-glm-4-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY", model: "glm-4-flash", dailyCap: 5000, tier: 7,  enabled: true },
+    { id: "zp-glm-4-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY", model: "glm-4-flash", dailyCap: 5000, tier: 7,  enabled: false },
     { id: "or-minimax-m2.7",       url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "minimax/minimax-m2.7:free",        dailyCap: 500, tier: 8, enabled: true },
     { id: "or-nemotron-3-ultra",   url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "nvidia/nemotron-3-ultra-550b-a55b:free", dailyCap: 500, tier: 8, enabled: true },
-    { id: "or-ox-alpha",           url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "stealth/ox-alpha",                 dailyCap: 500, tier: 8, enabled: true },
-    { id: "or-lfm-2.5-2.6b",       url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "liquid/lfm-2.5-2.6b:free",          dailyCap: 500, tier: 9, enabled: true },
+    { id: "or-ox-alpha",           url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "stealth/ox-alpha",                 dailyCap: 500, tier: 8, enabled: false },
+    { id: "or-lfm-2.5-2.6b",       url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "liquid/lfm-2.5-2.6b:free",          dailyCap: 500, tier: 9, enabled: false },
     // ---- ChatAnywhere（2026-08-25 实测:403 "请求客户端IP不支持访问,请勿使用Cloudflare等反向代理"= 永久拒绝 CF 出口,key 再对也白耗,整池禁用;若换非 CF 出口部署可恢复）----
     { id: "ca-gpt-4o-mini",   url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-4o-mini",    dailyCap: 100, tier: 10, enabled: false },
     { id: "ca-gpt-3.5-turbo", url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-3.5-turbo",  dailyCap: 100, tier: 10, enabled: false },
@@ -123,18 +126,19 @@ const MODEL_POOL = [
     // 原 qwen3.5-122b-a10b 已 EOL(HTTP 410);llama-3.3-70b-instruct 已从平台下架(8-24 实测 12s+ 无响应即额度耗尽)
     // llama-3.3-70b-instruct 已从平台下架(实测 503),保留条目但禁用防误测
     { id: "nv-llama-3.3-70b",        url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "meta/llama-3.3-70b-instruct",        dailyCap: 100, tier: 90, enabled: false },
-    { id: "nv-deepseek-v4-flash",    url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "deepseek-ai/deepseek-v4-flash-0731", dailyCap: 800, tier: 90, enabled: true },
-    { id: "nv-deepseek-v4-pro",      url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "deepseek-ai/deepseek-v4-pro-0813",   dailyCap: 800, tier: 90, enabled: true },
-    { id: "nv-kimi-k2.6",            url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "moonshotai/kimi-k2.6",               dailyCap: 800, tier: 90, enabled: true },
+    // 2026-08-29 全量实测:前 5 个流式稳定(8-26s),其余波动 503 熔断自愈,排后兜底
+    { id: "nv-gpt-oss-120b",         url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "openai/gpt-oss-120b",                dailyCap: 800, tier: 90, enabled: true },
+    { id: "nv-gpt-oss-20b",          url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "openai/gpt-oss-20b",                 dailyCap: 5000, tier: 90, enabled: true },
     { id: "nv-kimi-k3",              url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "moonshotai/kimi-k3",                 dailyCap: 800, tier: 90, enabled: true },
     { id: "nv-minimax-m3",           url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "minimaxai/minimax-m3",               dailyCap: 800, tier: 90, enabled: true },
     { id: "nv-nemotron-super",       url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/nemotron-3-super-120b-a12b",  dailyCap: 800, tier: 90, enabled: true },
+    { id: "nv-deepseek-v4-flash",    url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "deepseek-ai/deepseek-v4-flash-0731", dailyCap: 800, tier: 90, enabled: true },
+    { id: "nv-deepseek-v4-pro",      url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "deepseek-ai/deepseek-v4-pro-0813",   dailyCap: 800, tier: 90, enabled: true },
+    { id: "nv-kimi-k2.6",            url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "moonshotai/kimi-k2.6",               dailyCap: 800, tier: 90, enabled: true },
     { id: "nv-nemotron-ultra",       url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/nemotron-3-ultra-550b-a55b",  dailyCap: 800, tier: 90, enabled: true },
     { id: "nv-nemotron-4-340b",      url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/nemotron-4-340b-instruct",    dailyCap: 800, tier: 90, enabled: true },
     { id: "nv-nemotron-nano-30b",    url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/nemotron-3-nano-30b-a3b",     dailyCap: 5000, tier: 90, enabled: true },
     { id: "nv-nemotron-lightning",   url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/nemotron-3.5-lightning-30b-a3b", dailyCap: 5000, tier: 90, enabled: true },
-    { id: "nv-gpt-oss-120b",         url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "openai/gpt-oss-120b",                dailyCap: 800, tier: 90, enabled: true },
-    { id: "nv-gpt-oss-20b",          url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "openai/gpt-oss-20b",                 dailyCap: 5000, tier: 90, enabled: true },
     { id: "nv-mistral-large2",       url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "mistralai/mistral-large-2-instruct", dailyCap: 800, tier: 90, enabled: true },
     { id: "nv-mistral-nemotron",     url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "mistralai/mistral-nemotron",         dailyCap: 5000, tier: 90, enabled: true },
     { id: "nv-nemotron-70b",         url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/llama-3.1-nemotron-70b-instruct", dailyCap: 800, tier: 90, enabled: true },
@@ -151,7 +155,17 @@ const MODEL_POOL = [
     { id: "sf-r1-qwen3-8b",  url: "https://api.siliconflow.cn/v1", apiKeyEnv: "SILICONFLOW_KEY", model: "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B", dailyCap: 1000, tier: 95, enabled: true },
     { id: "sf-qwen3.5-4b",   url: "https://api.siliconflow.cn/v1", apiKeyEnv: "SILICONFLOW_KEY", model: "Qwen/Qwen3.5-4B",             dailyCap: 1000, tier: 96, enabled: false },
     { id: "sf-qwen2.5-7b",   url: "https://api.siliconflow.cn/v1", apiKeyEnv: "SILICONFLOW_KEY", model: "Qwen/Qwen2.5-7B-Instruct",    dailyCap: 1000, tier: 96, enabled: true },
-    { id: "sf-qwen3-8b",     url: "https://api.siliconflow.cn/v1", apiKeyEnv: "SILICONFLOW_KEY", model: "Qwen/Qwen3-8B",               dailyCap: Infinity, tier: 99, enabled: true },
+    // qwen3-8b 流式实测 35 字即停(转非流式后仍慢),禁用
+    { id: "sf-qwen3-8b",     url: "https://api.siliconflow.cn/v1", apiKeyEnv: "SILICONFLOW_KEY", model: "Qwen/Qwen3-8B",               dailyCap: Infinity, tier: 99, enabled: false },
+];
+
+// 流式坏平台（2026-08-29 全 55 模型实测）:stream + response_format json_object 下 content 恒空/断流/超慢,
+// 但非流式全部正常出 JSON。前端请求恒为流式 → 这些模型实际不可用。worker 收到流式请求时对此类模型
+// 强制上游非流式,单块 SSE 回吐（打字机一次性显示完整卡,parseStreaming/finishStreaming 已兼容整卡替换）
+const STREAM_BROKEN = [
+    "xf-spark-x1", "xf-spark-ultra", "xf-spark-lite", "xf-spark-pro", "xf-spark-pro128k",
+    "or-minimax-m3", "or-minimax-m2.7", "or-nemotron-3-super", "or-nemotron-3-ultra",
+    "sf-glm-z1-9b", "sf-glm-4-9b", "sf-r1-qwen3-8b", "sf-qwen2.5-7b"
 ];
 
 // ==================== 上游限流管理(防 429) ====================
@@ -753,12 +767,15 @@ export default {
                     try {
                         // 429(账户/模型限流)可恢复:尊重 Retry-After 短等待后同模型重试 1 次,不触发熔断
                         // 网络抖动也重试 1 次;超时/其他错误直接换候选
+                        // 流式坏模型(见 STREAM_BROKEN)收到流式请求时强制上游非流式:等完整响应头需放宽到 120s
+                        const converted = isStream && STREAM_BROKEN.includes(target.id);
                         for (let retry = 0; retry <= 1; retry++) {
                             const controller = new AbortController();
-                            const timeoutMs = isStream ? 15000 : 120000; // 流式仅等响应头(15s),body 透传由前端控制;慢模型快速 fallback
+                            const timeoutMs = converted ? 120000 : (isStream ? 15000 : 120000); // 流式仅等响应头(15s),body 透传由前端控制;慢模型快速 fallback
                             const timeout = setTimeout(() => controller.abort(), timeoutMs);
                             try {
                                 const payload = { ...requestJson, model: target.model };
+                                if (converted) payload.stream = false;
                                 // Qwen3 系/Qwen3.5/GLM-Z1/DeepSeek-R1 默认思考模式(reasoning 占 87% token,耗时 28-37s),强制关闭提速 ~20 倍
                                 if (["sf-qwen3-8b", "sf-qwen3.5-4b", "sf-glm-z1-9b", "sf-r1-qwen3-8b"].includes(target.id)) payload.enable_thinking = false;
                                 // 注意：不修改请求体其它字段（如 stream_options），部分上游模型不支持会报错或改变输出行为
@@ -831,6 +848,41 @@ export default {
                     "X-Model-Attempts": attempts.join("|")
                 };
                 if (isStream) {
+                    // 流式坏模型:上游已按非流式返回,读完整 content 组装单块 SSE(打字机整卡显示,前端 finishStreaming 整卡替换)
+                    if (STREAM_BROKEN.includes(usedModel.id)) {
+                        const encoder = new TextEncoder();
+                        const text = await aiResponse.text();
+                        let outText = "";
+                        let convNote = `len=${text.length}`;
+                        try {
+                            const j = JSON.parse(text);
+                            outText = j?.choices?.[0]?.message?.content || "";
+                            convNote += ` parsed=${j.choices?.[0]?.message?.role || "?"}`;
+                        } catch (e) { outText = text; convNote += " raw-fallback"; } // 解析失败:原样回吐,前端兜底解析
+                        convNote += ` out=${outText.length} nl=${(outText.match(/\n/g) || []).length}`;
+                        const body = new ReadableStream({
+                            start(controller) {
+                                if (outText) {
+                                    // 上游非流式 content 可能是带真实换行的格式化 JSON,直接塞 SSE data 行会断行 → 压成空格(JSON 语义不变)
+                                    const safe = outText.replace(/\r?\n/g, " ");
+                                    convNote += ` safe=${safe.length} safenl=${(safe.match(/\n/g) || []).length}`;
+                                    const chunk = JSON.stringify({ choices: [{ delta: { content: safe }, index: 0 }] });
+                                    controller.enqueue(encoder.encode(`data: ${chunk}\n\n`));
+                                }
+                                controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+                                controller.close();
+                                if (!isMemberUser) {
+                                    const inputTokens = estimateInputTokens(requestJson.messages);
+                                    const outputTokens = estimateTokens(outText);
+                                    ctx.waitUntil(settleTokenDeduction(env, userId, record, inputTokens, outputTokens)
+                                        .catch(e => console.error("settle token deduction failed:", e.message)));
+                                }
+                            }
+                        });
+                        return new Response(body, {
+                            headers: { ...corsHeaders(), ...diagHeaders, "X-Convert": convNote, "Content-Type": "text/event-stream", "Cache-Control": "no-cache" }
+                        });
+                    }
                     // token 计费：透传转发 SSE 并统计输出字符（不做任何请求体/响应体修改，仅按字符估算 token）；
                     // 仅流完整结束时结算扣费，客户端中断/上游断流视为失败不扣（玩家重试时不会重复计费）
                     const reader = aiResponse.body.getReader();
