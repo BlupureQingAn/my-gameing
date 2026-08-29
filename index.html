@@ -3929,8 +3929,20 @@
         }
         .scenario-card-cover.has-cover .scc-emoji { display: none; }
         .scenario-card-cover.has-cover { box-shadow: none; }
+        /* 封面图用 img 标签(background-image 更易被夸克暗色引擎压暗/消失); img 直接防御透明度/滤镜 */
+        .scc-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+            pointer-events: none;
+        }
+        .scenario-card-cover.has-cover .scc-img,
+        .hb-cover.has-cover .scc-img { display: block; }
         /* 夸克等暗夜模式若对封面容器压透明度/滤镜导致图片不可见, 强制还原原图直出 */
-        .scenario-card-cover, .hb-cover, .rank-cover {
+        .scenario-card-cover, .hb-cover, .rank-cover, .scc-img {
             opacity: 1 !important;
             filter: none !important;
         }
@@ -10085,6 +10097,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 row.innerHTML = `
                     <div class="scenario-card-main">
                         <div class="scenario-card-cover theme-${themeKey}" id="cc-cover-${CoverService.safeId(card.id)}">
+                            <img class="scc-img" alt="" loading="lazy">
                             <span class="scc-emoji">${ScenarioCardViewService.cardEmoji(card.theme)}</span>
                             </div>
                         <div class="list-title">${lock.locked ? '<span style="color:#e67e22;margin-right:4px;"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6 22q-.825 0-1.412-.587T4 20V10q0-.825.588-1.412T6 8h1V6q0-2.075 1.463-3.537T12 1t3.538 1.463T17 6v2h1q.825 0 1.413.588T20 10v10q0 .825-.587 1.413T18 22zm7.413-5.587Q14 15.825 14 15t-.587-1.412T12 13t-1.412.588T10 15t.588 1.413T12 17t1.413-.587M9 8h6V6q0-1.25-.875-2.125T12 3t-2.125.875T9 6z"/></svg></span>' : ""}${card.title}</div>
@@ -12950,7 +12963,12 @@ function rebuildChoicesBlock(body, labels = []) {
             const el = document.getElementById(elId);
             if (!el) return;
             if (url) {
-                el.style.backgroundImage = `url("${url}")`;
+                const img = el.querySelector(".scc-img");
+                if (img) {
+                    img.src = url;
+                } else {
+                    el.style.backgroundImage = `url("${url}")`;
+                }
                 el.classList.add("has-cover");
             }
         }
@@ -13014,6 +13032,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 const sid = CoverService.safeId(c.id);
                 return `<div class="hb-card" onclick="Controller.playScenarioCard('${c.id}')">
                     <div class="hb-cover" id="hb-cover-${sid}">
+                        <img class="scc-img" alt="" loading="lazy">
                         <span class="scc-emoji">${ScenarioCardViewService.cardEmoji(c.theme)}</span>
                         </div>
                     <div class="hb-tag">${MarkdownService.escapeHtml(String(c.category || "其他"))}</div>
