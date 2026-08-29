@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="color-scheme" content="only light">
     <title>云吞吞文游</title>
     <link rel="icon" href="icons/favicon.ico" sizes="any">
     <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
@@ -21,7 +22,7 @@
     <style>
         /* ==================== 变量层（Design Tokens） ==================== */
         :root {
-            color-scheme: light;
+            color-scheme: only light;
             --base-font-size: 16px;
             --bg-main: #efe3cf;
             --bg-soft: #f7eedf;
@@ -67,7 +68,7 @@
         }
 
         body[data-theme="dark"] {
-            color-scheme: dark;
+            color-scheme: only dark;
             --bg-main: #111723;
             --bg-soft: #182130;
             --card: #182131;
@@ -5785,6 +5786,8 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
         function apply(mode) {
             const safe = normalize(mode);
             document.body.dataset.theme = safe;
+            // 浏览器强制暗夜模式只认根元素 color-scheme: only 声明=拒绝强制反色
+            document.documentElement.style.colorScheme = safe === "dark" ? "only dark" : "only light";
             return safe;
         }
         function setMode(mode) {
