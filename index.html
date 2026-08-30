@@ -17512,6 +17512,13 @@ ${recent || "（无）"}
             if (viewId === "view-phone" && !silent) {
                 UIRenderer.renderPhone(StateService.get());
                 fitPhoneShell();
+                // 重置外层滚动:事件回顾 scrollIntoView 会滚动 #app(overflow:hidden 也可被滚),
+                // 残留会把手机壳顶部(应用商店 × 等)顶出视口,导致点击落空
+                const appEl = document.getElementById("app");
+                if (appEl) appEl.scrollTop = 0;
+                const content = document.getElementById("main-content");
+                if (content) content.scrollTop = 0;
+                if (typeof window.scrollTo === "function") window.scrollTo(0, 0);
             }
             if (viewId === "view-home") {
                 // 从卡片/游玩页回到主页时，强制刷新主页列表，避免看到旧缓存视图
