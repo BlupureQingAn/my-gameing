@@ -6343,7 +6343,11 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 : generateNearbyLocations(next.location);
             const ageYears = Math.max(0, Number(preset.ageYears || 0));
             next.age = ageYears * 12;
-            if (Number.isFinite(Number(preset.currentYear))) next.currentYear = Number(preset.currentYear);
+            if (Number.isFinite(Number(preset.currentYear))) {
+                const py = Number(preset.currentYear);
+                // 故事历:现实公历年(>999)归一为第1年,1~999 原样
+                next.currentYear = (py >= 1 && py <= 999) ? Math.floor(py) : 1;
+            }
             if (Number.isFinite(Number(preset.currentMonth))) next.currentMonth = Number(preset.currentMonth);
             if (Number.isFinite(Number(preset.currentDay))) next.currentDay = Number(preset.currentDay);
             if (preset.timeEra) next.timeEra = String(preset.timeEra || "").trim().slice(0, 40);
@@ -6393,6 +6397,10 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             if (!Number.isFinite(Number(gameState.weekIndex))) gameState.weekIndex = 1;
             if (!Number.isFinite(Number(gameState.currentDay)) || gameState.currentDay < 1) gameState.currentDay = 1;
             if (typeof gameState.weekdayIndex !== "number") gameState.weekdayIndex = 0;
+            // 故事历防御:旧存档/预制剧本写死的现实公历年(>999)统一归一为第1年,1~999 原样;无年份走开局兜底
+            const storyY = Number(gameState.currentYear);
+            if (Number.isFinite(storyY)) gameState.currentYear = (storyY >= 1 && storyY <= 999) ? Math.floor(storyY) : 1;
+            else gameState.currentYear = null;
             // 固定事件/周期收入状态(旧存档防御)
             if (!Array.isArray(gameState.triggeredEvents)) gameState.triggeredEvents = [];
             if (!Array.isArray(gameState.eventQueue)) gameState.eventQueue = [];
@@ -11696,7 +11704,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 world: { era: "", genre: "", summary: String(text || "").trim(), rules: [], atmosphere: "" },
                 identity: { name: "", gender: "", age: "", background: "" },
                 npcs: [],
-                timeline: { start: { year: 2026, month: 1, day: 1 }, note: "" },
+                timeline: { start: { year: 1, month: 1, day: 1 }, note: "" },
                 scene_style: { env_templates: [], option_style: "" },
                 first_scene: { story: "", options: [] },
                 map: { bg: "", bgUrl: "", places: [] },
@@ -12082,7 +12090,8 @@ function rebuildChoicesBlock(body, labels = []) {
                 const n = Number(val(id));
                 return Number.isFinite(n) && n > 0 ? n : fallback;
             };
-            const y = numVal("sf-year", 2026);
+            const yRaw = numVal("sf-year", 1);
+            const y = Number.isFinite(yRaw) && yRaw >= 1 && yRaw <= 999 ? Math.floor(yRaw) : 1;
             const m = Math.min(Math.max(numVal("sf-month", 1), 1), 12);
             const day = Math.min(Math.max(numVal("sf-day", 1), 1), 31);
             const npcs = [];
@@ -15136,7 +15145,7 @@ const token = delta.content || "";
                 timeEra: String(ensured.timeEra || "").trim(),
                 weekIndex: sanitizeTime(ensured.weekIndex, 1, 999),
                 weekdayIndex: sanitizeTime(ensured.weekdayIndex, 0, 6),
-                currentYear: sanitizeTime(ensured.currentYear, 1, 9999),
+                currentYear: (() => { const t = sanitizeTime(ensured.currentYear, 1, 9999); return Number.isFinite(t) && t > 999 ? 1 : t; })(),
                 currentMonth: sanitizeTime(ensured.currentMonth, 1, 12),
                 currentDay: sanitizeTime(ensured.currentDay, 1, 31),
                 // keepCollections=true 时保留 AI 返回的 npcs/inventory，避免触发不必要的兜底请求
@@ -15163,6 +15172,7 @@ const token = delta.content || "";
                 "  name(string), englishName(string), ageYears(number), forcedGender(string),",
                 "  nationality(string), location(string), timeEra(string),",
                 "  weekIndex(number), weekdayIndex(number), currentYear(number), currentMonth(number), currentDay(number),",
+                "currentYear 为故事历年份(1~999,从故事开始第1年累积),禁止写现实公历年份(如2026);历史题材也从第1年开始。",
                 "  rebornReason(string), openingChoices(array),",
                 "  npcs(array，每项含 id,name,gender,relation,favor,status,mood,traits,profile{age,identity,personality}),",
                 "  inventory(array，每项含 id,name,type,desc,effect,count)"
@@ -15422,7 +15432,8 @@ const token = delta.content || "";
                 ].join("\n"),
                 time: [
                     "仅返回 JSON 对象，且只能含字段：timeEra,currentYear,currentMonth,currentDay,weekIndex,weekdayIndex。",
-                    "格式示例：{\"timeEra\":\"北宋时期\",\"currentYear\":1101,\"currentMonth\":3,\"currentDay\":1,\"weekIndex\":1,\"weekdayIndex\":0}",
+                    "格式示例：{\"timeEra\":\"北宋时期\",\"currentYear\":1,\"currentMonth\":3,\"currentDay\":1,\"weekIndex\":1,\"weekdayIndex\":0}",
+                    "currentYear 只写故事历年份(1~999),历史题材从第1年开始,禁止写现实公历年(如 2026/1101)。",
                     "至少提供 timeEra 或 currentYear 其中之一。"
                 ].join("\n"),
                 stats: [
@@ -15670,7 +15681,7 @@ const token = delta.content || "";
                 family: String(identity.family || "").trim().slice(0, 40),
                 locations: initLocations,
                 timeEra: era,
-                currentYear: Number.isFinite(tlYear) ? tlYear : null,
+                currentYear: Number.isFinite(tlYear) ? (tlYear >= 1 && tlYear <= 999 ? Math.floor(tlYear) : 1) : null,
                 currentMonth: Number.isFinite(tlMonth) ? tlMonth : null,
                 currentDay: Number.isFinite(tlDay) && tlDay >= 1 ? tlDay : 1,
                 weekIndex: 1,
