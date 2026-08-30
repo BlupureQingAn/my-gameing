@@ -3877,6 +3877,33 @@
             animation: blink 1s infinite;
             vertical-align: middle;
         }
+        /* 卡片已渲染但正文文字尚未到达/未渲出时的占位提示 */
+        .stream-loading {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            padding: 10px 2px;
+            opacity: 0.85;
+            animation: loadingPulse 1.2s ease-in-out infinite;
+        }
+        .stream-loading::after {
+            content: "";
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            margin-left: 4px;
+            border-radius: 50%;
+            background: currentColor;
+            box-shadow: 8px 0 0 currentColor, 16px 0 0 currentColor;
+            animation: loadingDots 1.2s ease-in-out infinite;
+            vertical-align: middle;
+        }
+        @keyframes loadingPulse {
+            50% { opacity: 0.45; }
+        }
+        @keyframes loadingDots {
+            0%, 60%, 100% { opacity: 0.35; }
+            30% { opacity: 1; }
+        }
 
         @keyframes blink {
             50% { opacity: 0; }
@@ -7439,7 +7466,8 @@ function rebuildChoicesBlock(body, labels = []) {
                     : [],
                 items: Array.isArray(obj.items) ? obj.items.map((i) => (i && typeof i === "object") ? i : String(i).trim()).filter(Boolean).slice(0, 8) : [],
                 options: Array.isArray(obj.options) ? obj.options.map((o) => String(o).trim().replace(/^\s*(\d+[.)、]\s*|[①②③④⑤⑥⑦⑧⑨⑩]\s*|【?选项[:：]?\s*\d*】?\s*)/, "")).filter(Boolean).slice(0, 4) : [],
-                scene: String(obj.scene || "").trim().slice(0, 40)
+                scene: String(obj.scene || "").trim().slice(0, 40),
+                location: String(obj.location || "").trim().slice(0, 40)
             };
         }
         // 卡片头时间区 = 场景名:第X周 星期X(由卡片标题/协议scene + state 周次动态拼接,不硬编码)
@@ -7567,7 +7595,9 @@ function rebuildChoicesBlock(body, labels = []) {
                 : [];
             // 六字段全部必填：title/time/story 非空，options 至少 1 项非空（数量不限，AI 可给 1-6 个）
             if (!title || !time || !story || !options.length) return null;
-            return { title, time, story, options };
+            // location 为可选第七字段：仅同步状态(顶部面板/地图)，不参与必填校验，也不上卡片
+            const location = String(obj.location || "").trim();
+            return { title, time, story, options, location };
         }
         // 流式部分解析：正则提取对截断文本鲁棒（字段内转义 \\. 还原）；返回 { complete, title, time, story, options }
         function parseStreaming(text) {
@@ -7589,21 +7619,26 @@ function rebuildChoicesBlock(body, labels = []) {
         function fillStructuredFrame(title, time, theme) {
             const safeTheme = MarkdownService.escapeHtml(String(theme || "").slice(0, 30));
             const themeClass = `card-theme-${safeTheme.replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase() || "default"}`;
-            const timeHtml = `<div class="card-time" data-block="time">${time ? MarkdownService.escapeHtml(time) : ""}</div>`;
+            // 时间统一显示系统时间(防 AI 照抄/乱写年份);正文未到达时挂加载占位,流式首帧文字到达即替换
+            let st = null;
+            try { st = StateService.get(); } catch { }
+            const coreTime = st ? Utils.nowDateStr(st) : "";
+            const timeHtml = `<div class="card-time" data-block="time">${coreTime ? MarkdownService.escapeHtml(coreTime) : ""}</div>`;
             return [
                 `<article class="ai-beauty-card card ${themeClass}" data-theme="${safeTheme}" data-structured-card="1">`,
                 `<header class="card-meta"><div class="card-title">${MarkdownService.escapeHtml(title || "")}</div>${timeHtml}</header>`,
-                `<section class="card-body"><section class="card-story" data-block="event"></section></section>`,
+                `<section class="card-body"><section class="card-story" data-block="event"><div class="stream-loading">AI 正在生成文字</div></section></section>`,
                 `<footer class="card-options" data-block="choices"><div class="wy-option-btn card-option-btn opt-1"></div><div class="wy-option-btn card-option-btn opt-2"></div><div class="wy-option-btn card-option-btn opt-3"></div></footer>`,
                 `</article>`
             ].join("");
         }
-        // 终版卡片（与 fillCardTemplate 同构；时间为 AI 输出字段而非系统时间）
+        // 终版卡片（与 fillCardTemplate 同构；时间统一为系统时间，AI 的 time 字段仅用于同步状态，防"跳第三年"类错乱）
         function fillStructuredCard(fields, theme) {
             const safeTheme = MarkdownService.escapeHtml(String(theme || "").slice(0, 30));
             const themeClass = `card-theme-${safeTheme.replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase() || "default"}`;
-            const timeHtml = fields.time
-                ? `<div class="card-time" data-block="time">${MarkdownService.escapeHtml(fields.time)}</div>`
+            const cardTime = FillProtocolService.timeTitle(fields);
+            const timeHtml = cardTime
+                ? `<div class="card-time" data-block="time">${MarkdownService.escapeHtml(cardTime)}</div>`
                 : "";
             const storyHtml = MarkdownService.render(fields.story);
             const optionsHtml = (fields.options || []).length
@@ -8207,7 +8242,15 @@ function rebuildChoicesBlock(body, labels = []) {
             });
             if (patch.time && typeof patch.time === "object") {
                 const t = patch.time;
-                if (t.year !== undefined) state.currentYear = Number(t.year) || state.currentYear;
+                // 防时间错乱:协议年份必须"不早于当前"(相对年/照抄示例年 3 会被拒绝),与 syncFromAiText 语义一致
+                if (t.year !== undefined && Number.isFinite(Number(t.year))) {
+                    const y = Number(t.year);
+                    const curNum = (state.currentYear ? Number(state.currentYear) * 372 : 0)
+                        + (Number(state.currentMonth) || 1) * 31
+                        + (Number(state.currentDay) || 1);
+                    const newNum = y * 372 + (Number(t.month) || 1) * 31 + (Number(t.day) || 1);
+                    if (!state.currentYear || newNum >= curNum) state.currentYear = y;
+                }
                 if (t.month !== undefined) state.currentMonth = Number(t.month) || state.currentMonth;
                 if (t.day !== undefined) state.currentDay = Number(t.day) || state.currentDay;
                 changed = true;
@@ -8353,20 +8396,31 @@ function rebuildChoicesBlock(body, labels = []) {
             }
             const ymd = extractLatestYmd(content);
             if (ymd) {
-                state.currentYear = ymd.y;
-                state.currentMonth = ymd.mo;
-                state.currentDay = ymd.d;
-
-                // weekdayIndex: 若文本未给出周几，则用日期推导
-                if (typeof fromText !== "number") {
-                    const derived = weekdayIndexFromDate(ymd.y, ymd.mo, ymd.d);
-                    if (typeof derived === "number") state.weekdayIndex = derived;
+                // 防污染:回忆/角色生日等过去的日期只应出现在文本里,不允许回退系统时间
+                // (与 conflict 检测的"时间回退冲突"语义一致;开局无基准时间时接受任何日期)
+                const curNum = (state.currentYear ? Number(state.currentYear) * 372 : 0)
+                    + (state.currentMonth ? Number(state.currentMonth) * 31 : 0)
+                    + (Number(state.currentDay) || 0);
+                const ymdNum = ymd.y * 372 + ymd.mo * 31 + ymd.d;
+                if (!state.currentYear || ymdNum >= curNum) {
+                    state.currentYear = ymd.y;
+                    state.currentMonth = ymd.mo;
+                    state.currentDay = ymd.d;
+                    // weekdayIndex: 若文本未给出周几，则用日期推导
+                    if (typeof fromText !== "number") {
+                        const derived = weekdayIndexFromDate(ymd.y, ymd.mo, ymd.d);
+                        if (typeof derived === "number") state.weekdayIndex = derived;
+                    }
                 }
             }
             // 时间推进钩子:固定事件(日期) + 周期收入
             StoryEventService.checkTimeEvents(state, prevKey);
         }
-        return { syncFromAiText };
+        // 流式面板预览:仅读取不写状态,供 UIRenderer 判断是否刷新面板
+        function extractYmdOnly(text) {
+            return extractLatestYmd(String(text || ""));
+        }
+        return { syncFromAiText, extractYmdOnly };
     })();
 
     const AiPanelSyncService = (() => {
@@ -9061,7 +9115,9 @@ function rebuildChoicesBlock(body, labels = []) {
             } else {
                 // JSON 填空(半截 JSON 不稳,结束才 fillCardTemplate)/纯文本:保持文本渲染(think 已在 stripThink 剥离)
                 currentStreamingTarget.classList.remove("html-host");
-                currentStreamingTarget.innerHTML = AiResponseLayoutService.renderAiMessage(normalizedText, true);
+                currentStreamingTarget.innerHTML = String(normalizedText).trim()
+                    ? AiResponseLayoutService.renderAiMessage(normalizedText, true)
+                    : '<div class="stream-loading">AI 正在生成文字</div><span class="streaming-cursor"></span>';
             }
             AiResponseLayoutService.bindHtmlChoiceEvents(currentStreamingTarget);
             streamLastRenderAt = Date.now();
@@ -9097,11 +9153,13 @@ function rebuildChoicesBlock(body, labels = []) {
             }
             // JSON 流式：正则逐字段提取（打字机累积），options 仅完整解析时由 finishStreaming 整卡替换
             if (ss.titleEl) ss.titleEl.textContent = parsed.title;
-            if (ss.timeEl) {
-                ss.timeEl.textContent = parsed.time;
-                ss.timeEl.style.display = parsed.time ? "" : "none";
+            // time 节点已定型为系统时间,不随 AI 字段覆写(防"第3年"示例照抄污染卡片)
+            if (ss.storyEl) {
+                // 正文文字到达即替换加载占位
+                ss.storyEl.innerHTML = parsed.story
+                    ? MarkdownService.render(parsed.story)
+                    : '<div class="stream-loading">AI 正在生成文字</div>';
             }
-            if (ss.storyEl) ss.storyEl.innerHTML = MarkdownService.render(parsed.story);
         }
         function flushStreamingRender() {
             if (streamThrottleTimer) {
@@ -9128,6 +9186,8 @@ function rebuildChoicesBlock(body, labels = []) {
         }
         function renderTop(state) {
             document.getElementById("site-title").innerHTML = '<img src="icons/android-chrome-192x192.png" alt="" style="width:1.25em;height:1.25em;vertical-align:-0.22em;margin-right:6px;border-radius:6px;">云吞吞文游';
+            // 游玩页顶部角色面板并入:时间/地点/属性随剧情同步(showStatus=false 与空元素守卫在 renderPlayStatusBar 内)
+            try { renderPlayStatusBar(state); } catch (e) {}
         }
         function avatarColor(name) {
             let h = 0;
@@ -9190,7 +9250,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const energy = stats.find(isEnergy);
             const coreStats = stats.filter((s) => !isEnergy(s));
             const timeText = state.currentYear
-                ? `第${state.currentYear}年${state.currentMonth ? "·" + state.currentMonth + "月" : ""}`
+                ? `${state.currentYear}年${state.currentMonth ? "·" + state.currentMonth + "月" : ""}`
                 : "";
             const name = state.name || "未命名";
             const chips = [];
@@ -9443,7 +9503,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const state = StateService.get();
             const npcs = Array.isArray(state.npcs) ? state.npcs : [];
             const memory = state.npcMemoryMap || {};
-            const now = state.currentYear ? `第${state.currentYear}年·${state.currentMonth || 1}月` : "当前";
+            const now = state.currentYear ? `${state.currentYear}年·${state.currentMonth || 1}月` : "当前";
             const isOn = (n) => Boolean(memory[n.id] && Object.keys(memory[n.id]).length) || Boolean(String(n.status || "").trim());
             const on = npcs.filter(isOn);
             const off = npcs.filter((n) => !isOn(n));
@@ -9579,7 +9639,10 @@ function rebuildChoicesBlock(body, labels = []) {
             }
             const bubble = document.createElement("div");
             bubble.className = `bubble ${role === "user" ? "user" : "ai"}`;
-            bubble.innerHTML = MarkdownService.render(text) + (streaming ? '<span class="streaming-cursor"></span>' : "");
+            // 流式首帧文字未到达时挂加载占位,文字到达后由 renderStreamingFrame 覆盖替换
+            bubble.innerHTML = (role === "ai" && streaming && !String(text || "").trim())
+                ? '<div class="stream-loading">AI 正在生成文字</div><span class="streaming-cursor"></span>'
+                : MarkdownService.render(text) + (streaming ? '<span class="streaming-cursor"></span>' : "");
             board.appendChild(bubble);
             if (streaming) {
                 currentStreamingTarget = bubble;
@@ -9597,6 +9660,26 @@ function rebuildChoicesBlock(body, labels = []) {
         function updateStreaming(text) {
             if (!currentStreamingTarget) return;
             scheduleStreamingRender(text);
+            syncStreamingPanel(text);
+        }
+        // 流式轻量同步:文本中出现"前进"的绝对日期时即时刷新顶部面板(仅预览不保存,
+        // 不触发 checkTimeEvents,结束后的 TimeSyncService.syncFromAiText 才做完整同步)
+        function syncStreamingPanel(text) {
+            try {
+                const st = StateService.get();
+                if (!st || !st.currentYear) return;
+                const ymd = TimeSyncService.extractYmdOnly(String(text || ""));
+                if (!ymd) return;
+                const curNum = Number(st.currentYear) * 372 + (Number(st.currentMonth) || 1) * 31 + (Number(st.currentDay) || 1);
+                const ymdNum = ymd.y * 372 + ymd.mo * 31 + ymd.d;
+                if (ymdNum <= curNum) return; // 拒绝回退/回忆日期,防面板闪跳
+                if (st.currentYear !== ymd.y || st.currentMonth !== ymd.mo || st.currentDay !== ymd.d) {
+                    st.currentYear = ymd.y;
+                    st.currentMonth = ymd.mo;
+                    st.currentDay = ymd.d;
+                    renderPlayStatusBar(st);
+                }
+            } catch (e) {}
         }
         function finishStreaming(text, options = {}) {
             if (!currentStreamingTarget) return;
@@ -9610,6 +9693,18 @@ function rebuildChoicesBlock(body, labels = []) {
             // 裸 JSON 结构化协议(顶层含 title 键)与 fill 填空协议(无 title)区分, 防结构化残缺 JSON 误入 fill 卡
             const fillFields = /\{\s*"title"\s*:/.test(normalizedText) ? null : FillProtocolService.parse(normalizedText);
             const hasHtmlCard = !fillFields && HtmlCardService.isRenderableHtmlCard(normalizedText);
+            // 第七字段 location(填空/结构化协议均可选输出):主角地点变化 → 同步状态与顶部面板(卡片不渲染该字段)
+            const protoLocation = String(
+                (structuredFields && structuredFields.location) || (fillFields && fillFields.location) || ""
+            ).trim();
+            if (protoLocation && protoLocation !== "待生成") {
+                const st = StateService.get();
+                if (st && st.location !== protoLocation) {
+                    st.location = protoLocation;
+                    StateService.save();
+                    renderPlayStatusBar(st);
+                }
+            }
             const oldNode = currentStreamingTarget;
             let node = oldNode;
             let mountedHtml = "";
@@ -13562,7 +13657,8 @@ function rebuildChoicesBlock(body, labels = []) {
         function getBeautyCoreRules() {
             return [
                 "你必须在回复中输出且仅输出一个 JSON 对象（填空协议），禁止 HTML、Markdown 符号与解释文字。",
-                'JSON 结构：{"story": "剧情正文", "time": {"year": 2026, "month": 8, "day": 15}, "stats": [{"key": "健康", "value": "78/100"}], "items": ["物品"], "options": ["选项"], "scene": "环境标签"}',
+                'JSON 结构：{"story": "剧情正文", "time": {"year": 当前年份, "month": 当前月份, "day": 当前日}, "stats": [{"key": "健康", "value": "78/100"}], "items": ["物品"], "options": ["选项"], "scene": "环境标签", "location": "当前地点"}',
+                "time 必须与系统当前时间一致，只可随剧情推进，禁止写死示例年份。",
                 "story 与 options 必填（options 2-4 个）；time/stats/items/scene 可选。",
                 "stats 键名必须在白名单内（健康/体力/心情/金钱/修为/灵力/魅力/声望/好感等常见属性），值用数字或 数字/上限。",
                 "剧情必须推进且有实质变化，不得复述上一轮内容。"
@@ -14117,17 +14213,26 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
                 ? HtmlCardTemplateService.getRichThemeName()
                 : beautyCardSetting;
             const isDark = ThemeService.getMode() === "dark";
+            // 注入系统当前时间:时间以系统为准,AI 的 time 必须与之一致,禁止照抄示例年份
+            const nowText = (state && state.currentYear) ? Utils.nowDateStr(state) : "";
+            const nowYear = state && state.currentYear ? Number(state.currentYear) : 2026;
+            const nowMonth = state && state.currentMonth ? Number(state.currentMonth) : 8;
+            const nowDay = state && state.currentDay ? Number(state.currentDay) : 15;
+            const timeGuide = nowText
+                ? `time=本回合剧情时间（必须与当前系统时间一致：${nowText}；只可随剧情推进到之后的日期，禁止写死示例时间、禁止跳转到其他年份）`
+                : "time=本回合剧情时间（按剧情推进输出，不要写系统日期）";
 
             return [
                 "【输出格式——最高优先级：固定 JSON 结构化协议】",
                 "本次回复必须只输出一个标准 JSON 对象，禁止任何额外文字：",
                 '{"title":"本回合场景名","time":"本回合剧情时间","story":"剧情正文","options":["选项一","选项二","选项三"]}',
-                "六项字段全部必填，不得省略或留空：title=本回合场景名（20字内）；time=本回合剧情时间（如 第3年·5月·雨夜，按剧情推进输出，不要写系统日期）；story=剧情正文 300-500字、多段、对话写成 XXX 对你说：\"...\"、段落用换行分隔；options=推进选项数组（数量不限，通常 2-4 个，至少 1 个，每项不得为空）。",
+                `六项字段全部必填，不得省略或留空：title=本回合场景名（20字内）；${timeGuide}；story=剧情正文 300-500字、多段、对话写成 XXX 对你说：\"...\"、段落用换行分隔；options=推进选项数组（数量不限，通常 2-4 个，至少 1 个，每项不得为空）。`,
                 "JSON 内字符串中的双引号必须转义为 \\\"（正文里的引号也可用「」代替）；严禁输出 HTML 标签、Markdown 标记或任何解释文字；禁止用 ``` 或任何符号包裹 JSON，禁止在 JSON 之外输出任何内容（不得添加「```json」、不得加解释语、不得用双花括号 {{ }} 包裹）。",
                 "若你更习惯旧格式，也可输出 JSON 填空协议（前端会同样渲染成卡片）：",
                 "（注意：JSON 填空协议与上方 JSON 对象的区别是填空协议以 story 开头、不含 title 字段；两者都是标准 JSON 对象，都不需要任何包裹）",
-                '{"story": "剧情正文（纯文本，可多段；对话写成 XXX 对你说："..."），300-500字", "time": {"year": 2026, "month": 8, "day": 15}, "stats": [{"key": "健康", "value": "78/100"}], "items": ["本轮新增物品"], "options": ["选项一", "选项二", "选项三"], "scene": "环境标签（如 夜晚/雨中/酒馆）"}',
-                "JSON 填空协议必填字段：story、options（2-4 个选项）；可选字段：time/stats/items/scene（无变化可整体省略）。",
+                `{"story": "剧情正文（纯文本，可多段；对话写成 XXX 对你说："..."），300-500字", "time": {"year": ${nowYear}, "month": ${nowMonth}, "day": ${nowDay}}, "stats": [{"key": "健康", "value": "78/100"}], "items": ["本轮新增物品"], "options": ["选项一", "选项二", "选项三"], "scene": "环境标签（如 夜晚/雨中/酒馆）", "location": "主角当前所在地点"}${nowText ? `（当前系统时间：${nowText}，time 必须与之一致，只可推进）` : ""}`,
+                "JSON 填空协议必填字段：story、options（2-4 个选项）；可选字段：time/stats/items/scene/location（无变化可整体省略）。",
+                "location=主角当前所在地点（第七字段，地点变化时填写，须与剧情一致；前端同步到顶部面板与地图）。",
                 "stats 键名必须来自白名单：健康/体力/生命/心情/情绪/精神/学识/智力/智慧/魅力/声望/名望/财富/金钱/武力/修为/灵力/权势/人脉/事业/饱食/饥饿/好感/体魄/才学/威望/体质/敏捷/力量/耐力/感知/意志/运气。",
                 "stats 值格式为数字或 数字/上限（如 78/100）；只列出本轮有变化或玩家最关心的 2-5 项。",
                 "items 只列本轮新获得或失去的物品名；无变化则省略该字段。",
