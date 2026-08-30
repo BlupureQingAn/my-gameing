@@ -5842,8 +5842,10 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
         },
         nowDateStr(state) {
             if (!state) return "";
+            // AI 日期原文优先原样显示(开局/协议/正文三路写入 timeText);无原文走故事历数值兜底
+            if (state.timeText) return state.timeText;
             const weekPart = Number.isFinite(Number(state.weekIndex)) ? `第${Number(state.weekIndex)}周` : "";
-            // 故事历优先:第X年·X月·X日(从故事开局第1年累积,AI 只能推进不能回退);无年份走时代/周数兜底
+            // 故事历兜底:第X年·X月·X日(从故事开局第1年累积);无年份走时代/周数兜底
             if (state.currentYear) {
                 return `第${Number(state.currentYear)}年·${Number(state.currentMonth) || 1}月·${Number(state.currentDay) || 1}日`;
             }
@@ -6302,7 +6304,6 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             currentDay: null,
             timeEra: "",
             weekIndex: 1,
-            weekdayIndex: 0,
             age: 0,
             stats: [],
             // 开局空背包:物品全部由剧情协议(items upsert)动态获得,不再硬编码默认物品
@@ -6344,6 +6345,8 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             }
             if (Number.isFinite(Number(preset.currentMonth))) next.currentMonth = Number(preset.currentMonth);
             if (Number.isFinite(Number(preset.currentDay))) next.currentDay = Number(preset.currentDay);
+            // 开局时间原文(与数值一致,AI 后续写日期后原样替换)
+            if (next.currentYear) next.timeText = `第${next.currentYear}年·${Number(next.currentMonth) || 1}月·${Number(next.currentDay) || 1}日`;
             if (preset.timeEra) next.timeEra = String(preset.timeEra || "").trim().slice(0, 40);
             if (Number.isFinite(Number(preset.weekIndex))) next.weekIndex = Math.max(1, Math.floor(Number(preset.weekIndex)));
             next.inventory = Array.isArray(preset.inventory) && preset.inventory.length
@@ -6390,11 +6393,16 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             if (typeof gameState.timeEra !== "string") gameState.timeEra = "";
             if (!Number.isFinite(Number(gameState.weekIndex))) gameState.weekIndex = 1;
             if (!Number.isFinite(Number(gameState.currentDay)) || gameState.currentDay < 1) gameState.currentDay = 1;
-            if (typeof gameState.weekdayIndex !== "number") gameState.weekdayIndex = 0;
             // 故事历防御:旧存档/预制剧本写死的现实公历年(>999)统一归一为第1年,1~999 原样;无年份走开局兜底
             const storyY = Number(gameState.currentYear);
             if (Number.isFinite(storyY)) gameState.currentYear = (storyY >= 1 && storyY <= 999) ? Math.floor(storyY) : 1;
             else gameState.currentYear = null;
+            // 旧存档无 timeText:用数值兜底生成,保证显示与数值一致
+            if (typeof gameState.timeText !== "string" || !gameState.timeText.trim()) {
+                gameState.timeText = gameState.currentYear
+                    ? `第${gameState.currentYear}年·${Number(gameState.currentMonth) || 1}月·${Number(gameState.currentDay) || 1}日`
+                    : "";
+            }
             // 固定事件/周期收入状态(旧存档防御)
             if (!Array.isArray(gameState.triggeredEvents)) gameState.triggeredEvents = [];
             if (!Array.isArray(gameState.eventQueue)) gameState.eventQueue = [];
@@ -6407,7 +6415,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             }
         }
 
-        function resetWithPreset({ selectedGender, forcedGender, forcedOrientation, forcedRole, name, englishName, ageYears, nationality, location, locations, currentYear, currentMonth, currentDay, timeEra, weekIndex, weekdayIndex, inventory, npcs, stats, panelStatusTags, rebornReason, avatar, appearance, personality, family, genderIdentity }) {
+        function resetWithPreset({ selectedGender, forcedGender, forcedOrientation, forcedRole, name, englishName, ageYears, nationality, location, locations, currentYear, currentMonth, currentDay, timeEra, weekIndex, inventory, npcs, stats, panelStatusTags, rebornReason, avatar, appearance, personality, family, genderIdentity }) {
             const finalGender = forcedGender || selectedGender || baseState.gender;
             gameState = buildInitialState(finalGender, {
                 gender: forcedGender,
@@ -6424,7 +6432,6 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 currentDay,
                 timeEra,
                 weekIndex,
-                weekdayIndex,
                 inventory,
                 npcs,
                 stats,
@@ -7454,10 +7461,13 @@ function rebuildChoicesBlock(body, labels = []) {
             try { obj = JSON.parse(raw); } catch { return null; }
             if (!obj || typeof obj !== "object" || Array.isArray(obj)) return null;
             if (typeof obj.story !== "string" || !obj.story.trim()) return null;
-            const t = obj.time && typeof obj.time === "object" ? obj.time : null;
+            // time 兼容两种形态:数值对象({"year":3,"month":5,"day":15})与字符串日期原文("5月15日"/"第3年5月15日"等)
+            const t = obj.time;
+            const time = (t && typeof t === "object") ? { year: Number(t.year) || 0, month: Number(t.month) || 0, day: Number(t.day) || 0 }
+                : (typeof t === "string" && String(t).trim()) ? String(t).trim().slice(0, 60) : null;
             return {
                 story: String(obj.story).trim(),
-                time: t ? { year: Number(t.year) || 0, month: Number(t.month) || 0, day: Number(t.day) || 0 } : null,
+                time,
                 stats: Array.isArray(obj.stats)
                     ? obj.stats.filter((s) => s && typeof s === "object" && s.key)
                         .map((s) => ({ key: String(s.key).trim().slice(0, 20), value: String(s.value ?? "").trim().slice(0, 60) }))
@@ -7618,7 +7628,7 @@ function rebuildChoicesBlock(body, labels = []) {
         function fillStructuredFrame(title, time, theme) {
             const safeTheme = MarkdownService.escapeHtml(String(theme || "").slice(0, 30));
             const themeClass = `card-theme-${safeTheme.replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase() || "default"}`;
-            // 时间统一显示系统时间(防 AI 照抄/乱写年份);正文未到达时挂加载占位,流式首帧文字到达即替换
+            // 时间显示 AI 日期原文(state.timeText 优先,开局为故事历文本);正文未到达时挂加载占位,流式首帧文字到达即替换
             let st = null;
             try { st = StateService.get(); } catch { }
             const coreTime = st ? Utils.nowDateStr(st) : "";
@@ -7676,7 +7686,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const endMarker = EndMarkerService.getMarker();
             const patchExample = JSON.stringify({
                 protagonist: { name: "(可选)", ageYears: 18, location: "(可选)", nationality: "(可选)" },
-                time: { year: 1990, month: 3, day: 5 },
+                time: "5月15日",
                 stats: [{ key: "health", label: "健康", icon: "❤️", value: 80 }],
                 npcs: [{
                     id: "npc_id", name: "NPC名", relation: "关系", favor: 70,
@@ -7708,7 +7718,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 "14) 【视觉对比】卡片背景与文字必须保持极高对比度，严禁深色背景配深色文字或浅色背景配白字。",
                 "15) 若生成过程中遇到错误或无法继续，请立即停止输出，不要尝试修复不完整的标签或重复输出任何字符。",
                 "16) 严禁照抄复述：不得逐字复制「最近记录」「上一轮剧情结尾」「前情」中给出的剧情原文；新剧情必须直接承接上一轮结局并向前推进，禁止以复述上一轮内容作为开头。",
-                "说明：stats 若有变化需写全部属性。inventory op=upsert 为新增/更新，op=remove 为移除。NPC 用 id 定位，不存在则新建；status 含\"死亡/已故/去世/逝世/过世\"时视为人物死亡，进入已故状态。"
+                "说明：stats 若有变化需写全部属性。inventory op=upsert 为新增/更新，op=remove 为移除。NPC 用 id 定位，不存在则新建；status 含\"死亡/已故/去世/逝世/过世\"时视为人物死亡，进入已故状态。time 写本轮剧情实际发生的日期（如\"5月15日\"或\"第3年5月15日\"，必须含具体月日，禁止照抄示例日期）。"
             ].join("\n");
         }
         function buildStateFactLock(state) {
@@ -8239,29 +8249,28 @@ function rebuildChoicesBlock(body, labels = []) {
                 location: state.location,
                 ageYears: Math.floor((state.age || 0) / 12)
             });
-            if (patch.time && typeof patch.time === "object") {
-                const t = patch.time;
-                // 故事历:协议年份须为 1~999(拒绝现实年份如 2026)且"不早于当前";年份被拒时整块跳过(防月/日裸写污染)
-                if (t.year !== undefined && Number.isFinite(Number(t.year))) {
-                    const y = Number(t.year);
-                    const curNum = (state.currentYear ? Number(state.currentYear) * 372 : 0)
-                        + (Number(state.currentMonth) || 1) * 31
-                        + (Number(state.currentDay) || 1);
-                    const newNum = y * 372 + (Number(t.month) || 1) * 31 + (Number(t.day) || 1);
-                    if (!state.currentYear) {
-                        state.currentYear = 1;
-                        state.currentMonth = state.currentMonth || 1;
-                        state.currentDay = state.currentDay || 1;
+            if (patch.time && typeof patch.time === "string") {
+                // AI 日期原文:原样显示(timeText);月日数值用于固定事件/周期收入;年份无限制不校验
+                const txt = String(patch.time).trim();
+                if (txt) {
+                    state.timeText = txt;
+                    const dt = TimeSyncService.parseDateText(txt);
+                    if (dt) {
+                        if (dt.y !== undefined) state.currentYear = dt.y;
+                        if (dt.mo !== undefined) state.currentMonth = dt.mo;
+                        if (dt.d !== undefined) state.currentDay = dt.d;
                     }
-                    if (y >= 1 && y <= 999 && newNum >= curNum) {
-                        state.currentYear = y;
-                        if (t.month !== undefined) state.currentMonth = Number(t.month) || state.currentMonth;
-                        if (t.day !== undefined) state.currentDay = Number(t.day) || state.currentDay;
-                    }
-                } else {
-                    if (t.month !== undefined) state.currentMonth = Number(t.month) || state.currentMonth;
-                    if (t.day !== undefined) state.currentDay = Number(t.day) || state.currentDay;
                 }
+                changed = true;
+            } else if (patch.time && typeof patch.time === "object") {
+                const t = patch.time;
+                // 数值协议:年份不限制不校验不防回退,直接写入;timeText 同步为故事历文本保持显示/数值一致
+                if (t.year !== undefined && Number.isFinite(Number(t.year))) {
+                    state.currentYear = Number(t.year);
+                }
+                if (t.month !== undefined) state.currentMonth = Number(t.month) || state.currentMonth;
+                if (t.day !== undefined) state.currentDay = Number(t.day) || state.currentDay;
+                state.timeText = `第${Number(state.currentYear) || 1}年·${Number(state.currentMonth) || 1}月·${Number(state.currentDay) || 1}日`;
                 changed = true;
             }
             if (Array.isArray(patch.stats) && patch.stats.length > 0) {
@@ -8303,8 +8312,9 @@ function rebuildChoicesBlock(body, labels = []) {
         function mergeProtocolPatch(patch, fill) {
             if (!fill) return patch;
             const out = { ...(patch || {}) };
-            if (fill.time && (!out.time || typeof out.time !== "object")) {
-                out.time = { ...fill.time };
+            // time 直接透传(字符串日期原文或数值对象均可,applyPatch 各自处理)
+            if (fill.time && !out.time) {
+                out.time = fill.time;
             }
             if (Array.isArray(fill.stats) && fill.stats.length) {
                 out.stats = [...(Array.isArray(out.stats) ? out.stats : []), ...fill.stats];
@@ -8356,21 +8366,49 @@ function rebuildChoicesBlock(body, labels = []) {
             if (!Number.isFinite(n)) return null;
             return Math.max(1, Math.min(999, Math.floor(n)));
         }
-        function extractLatestYmd(content) {
-            // 故事历:只认"第X年·X月·X日"(月/日可缺省,缺省取 1),现实年份(如 2026 年)不提取,防回忆/照抄污染
-            const re = /第(\d{1,4})年(?:[·．.、\s]*(\d{1,2})月(?:[·．.、\s]*(\d{1,2})日)?)?/g;
+        // 中文数字转阿拉伯(十/十五/二十一/两);"元"按 1 处理
+        const CN_DIGITS = { 零: 0, 一: 1, 二: 2, 两: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 正: 1 };
+        function cnNumToInt(s) {
+            s = String(s || "").replace(/\s/g, "");
+            if (!s) return NaN;
+            if (s === "十") return 10;
+            if (s === "元") return 1;
+            // "初X"仅用于日(初一到初十)
+            if (s.charAt(0) === "初") s = s.slice(1);
+            // 朝代词前缀(如"雍正元"/"洪武三十一")取尾部数字词
+            const tail = s.match(/([零一二两三四五六七八九十元]+)$/);
+            const core = tail ? tail[1] : s;
+            if (core === "十") return 10;
+            if (core === "元") return 1;
+            let total = 0, num = 0;
+            for (const ch of core) {
+                if (ch === "十") { total += (num || 1) * 10; num = 0; }
+                else if (ch in CN_DIGITS) { num = CN_DIGITS[ch]; }
+                else return NaN;
+            }
+            return total + num;
+        }
+        // 提取正文中最后一次出现的绝对日期(阿拉伯/中文数字均可,混合也可):年可省略,但必须含"几月几日"
+        // 返回 { text, y?, mo?, d? }(text=AI 日期原文原样;y 年份无限制;mo/d 数值供固定事件/周期收入)
+        function parseDateText(content) {
+            const src = String(content || "");
+            // 阿拉伯:"第3年5月15日" / "2026年5月15日" / "3年5月15日" / "5月15日"
+            const ar = /(?:第?(\d{1,5})年)?\s*(\d{1,2})月\s*(\d{1,2})日/g;
+            // 中文:"元年五月十五日" / "十五年五月十五日" / "五月十五日" / "雍正元年三月十五日"(0-2 汉字朝代前缀,前缀后必须紧跟数字词+年)
+            // 月可写"正月"(=1月);日可无"日"字("正月初一"/"五月十五"后接非数字即收)
+            const cn = /(?:第?(?:[一-龥]{0,2})([零一二两三四五六七八九十元]+)年)?\s*([正零一二两三四五六七八九十两]+)月\s*([初零一二两三四五六七八九十两]+)(?:日)?(?![零一二两三四五六七八九十两初])/g;
             let m;
             let last = null;
-            while ((m = re.exec(String(content || ""))) !== null) {
-                last = { y: Number(m[1]), mo: Number(m[2]) || 1, d: Number(m[3]) || 1 };
-            }
+            while ((m = ar.exec(src)) !== null) last = { text: m[0], y: m[1] !== undefined ? Number(m[1]) : undefined, mo: Number(m[2]), d: Number(m[3]) };
+            while ((m = cn.exec(src)) !== null) last = { text: m[0], y: m[1] !== undefined ? cnNumToInt(m[1]) : undefined, mo: cnNumToInt(m[2]), d: cnNumToInt(m[3]) };
             if (!last) return null;
-            if (last.y >= 1 && last.y <= 999 && last.mo >= 1 && last.mo <= 12 && last.d >= 1 && last.d <= 31) return last;
-            return null;
+            if (!(last.mo >= 1 && last.mo <= 12) || !(last.d >= 1 && last.d <= 31)) return null;
+            if (last.y !== undefined && !Number.isFinite(last.y)) last.y = undefined;
+            return last;
         }
         function syncFromAiText(state, text) {
             if (!state) return;
-            // 故事历开局基准:无时间时从第1年·1月·1日起算,防 AI 乱写年份
+            // 开局基准:无时间时从第1年·1月·1日起算
             if (!state.currentYear) {
                 state.currentYear = 1;
                 if (!state.currentMonth) state.currentMonth = 1;
@@ -8382,28 +8420,23 @@ function rebuildChoicesBlock(body, labels = []) {
             if (era) state.timeEra = era;
             const w = extractWeekIndex(content);
             if (typeof w === "number") state.weekIndex = w;
-            const ymd = extractLatestYmd(content);
-            if (ymd) {
-                // 防污染:回忆/角色生日等过去的日期只应出现在文本里,不允许回退系统时间
-                // (与 conflict 检测的"时间回退冲突"语义一致;开局无基准时间时接受任何日期)
-                const curNum = (state.currentYear ? Number(state.currentYear) * 372 : 0)
-                    + (state.currentMonth ? Number(state.currentMonth) * 31 : 0)
-                    + (Number(state.currentDay) || 0);
-                const ymdNum = ymd.y * 372 + ymd.mo * 31 + ymd.d;
-                if (!state.currentYear || ymdNum >= curNum) {
-                    state.currentYear = ymd.y;
-                    state.currentMonth = ymd.mo;
-                    state.currentDay = ymd.d;
-                }
+            const dt = parseDateText(content);
+            if (dt) {
+                // AI 日期原样显示:timeText 取原文;月日为数值基准(固定事件/周期收入);年份无限制不校验不防回退
+                state.timeText = dt.text;
+                if (dt.y !== undefined) state.currentYear = dt.y;
+                if (dt.mo !== undefined) state.currentMonth = dt.mo;
+                if (dt.d !== undefined) state.currentDay = dt.d;
             }
             // 时间推进钩子:固定事件(日期) + 周期收入
             StoryEventService.checkTimeEvents(state, prevKey);
         }
         // 流式面板预览:仅读取不写状态,供 UIRenderer 判断是否刷新面板
         function extractYmdOnly(text) {
-            return extractLatestYmd(String(text || ""));
+            const dt = parseDateText(String(text || ""));
+            return dt ? { y: dt.y, mo: dt.mo, d: dt.d } : null;
         }
-        return { syncFromAiText, extractYmdOnly };
+        return { syncFromAiText, extractYmdOnly, parseDateText };
     })();
 
     const AiPanelSyncService = (() => {
@@ -9232,9 +9265,10 @@ function rebuildChoicesBlock(body, labels = []) {
             const isEnergy = (s) => /体力|精力|能量/.test(s.label || "");
             const energy = stats.find(isEnergy);
             const coreStats = stats.filter((s) => !isEnergy(s));
-            const timeText = state.currentYear
-                ? `第${Number(state.currentYear)}年·${Number(state.currentMonth) || 1}月·${Number(state.currentDay) || 1}日`
-                : "";
+            const timeText = (state && state.timeText) ? state.timeText
+                : (state.currentYear
+                    ? `第${Number(state.currentYear)}年·${Number(state.currentMonth) || 1}月·${Number(state.currentDay) || 1}日`
+                    : "");
             const name = state.name || "未命名";
             const chips = [];
             if (energy) chips.push(`<span class="psb-chip energy"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="m8 22l1-7H4l9-13h2l-1 8h6L10 22z"/></svg>${MarkdownService.escapeHtml(energy.value)}</span>`);
@@ -9658,11 +9692,12 @@ function rebuildChoicesBlock(body, labels = []) {
                 }
                 const ymd = TimeSyncService.extractYmdOnly(String(text || ""));
                 if (!ymd) return;
-                const curNum = Number(st.currentYear) * 372 + (Number(st.currentMonth) || 1) * 31 + (Number(st.currentDay) || 1);
-                const ymdNum = ymd.y * 372 + ymd.mo * 31 + ymd.d;
+                const baseYear = Number(st.currentYear) || 1;
+                const curNum = baseYear * 372 + (Number(st.currentMonth) || 1) * 31 + (Number(st.currentDay) || 1);
+                const ymdNum = (ymd.y !== undefined ? ymd.y : baseYear) * 372 + ymd.mo * 31 + ymd.d;
                 if (ymdNum <= curNum) return; // 拒绝回退/回忆日期,防面板闪跳
-                if (st.currentYear !== ymd.y || st.currentMonth !== ymd.mo || st.currentDay !== ymd.d) {
-                    st.currentYear = ymd.y;
+                if ((ymd.y !== undefined && st.currentYear !== ymd.y) || st.currentMonth !== ymd.mo || st.currentDay !== ymd.d) {
+                    if (ymd.y !== undefined) st.currentYear = ymd.y;
                     st.currentMonth = ymd.mo;
                     st.currentDay = ymd.d;
                     renderPlayStatusBar(st);
@@ -14202,24 +14237,21 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
                 ? HtmlCardTemplateService.getRichThemeName()
                 : beautyCardSetting;
             const isDark = ThemeService.getMode() === "dark";
-            // 注入当前故事时间:故事历从第1年开始累积,AI 的 time 只能推进(回忆/现实年份一律拒绝)
+            // 注入当前故事时间:AI 日期原文优先(开局为故事历文本),time 字段写本轮剧情实际日期
             const nowText = (state && state.currentYear) ? Utils.nowDateStr(state) : "";
-            const nowYear = state && state.currentYear ? Number(state.currentYear) : 1;
-            const nowMonth = state && state.currentMonth ? Number(state.currentMonth) : 1;
-            const nowDay = state && state.currentDay ? Number(state.currentDay) : 1;
             const timeGuide = nowText
-                ? `time=本回合剧情时间（故事历格式"第X年·X月·X日"，从故事开始第1年累积；当前故事时间：${nowText}；只能写等于或晚于当前的故事时间，"三日后/三年后"等相对词请换算成具体故事历日期写入；禁止写现实年份如"2026年"、禁止写死示例时间、禁止跳回更早的时间）`
-                : 'time=本回合剧情时间（故事历格式"第X年·X月·X日"，从故事开始第1年累积，按剧情推进输出，禁止写现实年份）';
+                ? `time=本轮剧情实际发生的日期（格式自由，直接写日期原文即可，阿拉伯数字或中文汉字数字均可，如"5月15日"、"第3年5月15日"、"雍正元年三月十五日"；年份不限制不校验；但必须写清"几月几日"——固定日期事件与周期收入依赖月日数值；当前故事时间：${nowText}；只写本轮剧情实际发生的日期，禁止照抄本提示或示例中的日期文字，禁止写现实系统时间；剧情时间无推进时可沿用当前时间）`
+                : 'time=本轮剧情实际发生的日期（格式自由，直接写日期原文即可，阿拉伯数字或中文汉字数字均可，如"5月15日"、"第3年5月15日"、"雍正元年三月十五日"；年份不限制；但必须写清"几月几日"；禁止照抄示例日期）';
 
             return [
                 "【输出格式——最高优先级：固定 JSON 结构化协议】",
                 "本次回复必须只输出一个标准 JSON 对象，禁止任何额外文字：",
-                '{"title":"本回合场景名","time":"本回合剧情时间","story":"剧情正文","options":["选项一","选项二","选项三"]}',
+                '{"title":"本回合场景名","time":"5月15日","story":"剧情正文","options":["选项一","选项二","选项三"]}',
                 `六项字段全部必填，不得省略或留空：title=本回合场景名（20字内）；${timeGuide}；story=剧情正文 300-500字、多段、对话写成 XXX 对你说：\"...\"、段落用换行分隔；options=推进选项数组（数量不限，通常 2-4 个，至少 1 个，每项不得为空）。`,
                 "JSON 内字符串中的双引号必须转义为 \\\"（正文里的引号也可用「」代替）；严禁输出 HTML 标签、Markdown 标记或任何解释文字；禁止用 ``` 或任何符号包裹 JSON，禁止在 JSON 之外输出任何内容（不得添加「```json」、不得加解释语、不得用双花括号 {{ }} 包裹）。",
                 "若你更习惯旧格式，也可输出 JSON 填空协议（前端会同样渲染成卡片）：",
                 "（注意：JSON 填空协议与上方 JSON 对象的区别是填空协议以 story 开头、不含 title 字段；两者都是标准 JSON 对象，都不需要任何包裹）",
-                `{"story": "剧情正文（纯文本，可多段；对话写成 XXX 对你说："..."），300-500字", "time": {"year": ${nowYear}, "month": ${nowMonth}, "day": ${nowDay}}, "stats": [{"key": "健康", "value": "78/100"}], "items": ["本轮新增物品"], "options": ["选项一", "选项二", "选项三"], "scene": "环境标签（如 夜晚/雨中/酒馆）", "location": "主角当前所在地点"}${nowText ? `（当前故事时间：${nowText}，time 只可写等于或晚于它的故事历日期）` : ""}`,
+                `{"story": "剧情正文（纯文本，可多段；对话写成 XXX 对你说："..."），300-500字", "time": "5月15日", "stats": [{"key": "健康", "value": "78/100"}], "items": ["本轮新增物品"], "options": ["选项一", "选项二", "选项三"], "scene": "环境标签（如 夜晚/雨中/酒馆）", "location": "主角当前所在地点"}${nowText ? `（time 示例日期仅供格式演示，禁止照抄——必须写本轮剧情实际发生的日期，格式可参考上方 time= 说明）` : ""}`,
                 "JSON 填空协议必填字段：story、options（2-4 个选项）；可选字段：time/stats/items/scene/location（无变化可整体省略）。",
                 "location=主角当前所在地点（第七字段，地点变化时填写，须与剧情一致；前端同步到顶部面板与地图）。",
                 "stats 键名必须来自白名单：健康/体力/生命/心情/情绪/精神/学识/智力/智慧/魅力/声望/名望/财富/金钱/武力/修为/灵力/权势/人脉/事业/饱食/饥饿/好感/体魄/才学/威望/体质/敏捷/力量/耐力/感知/意志/运气。",
@@ -14341,7 +14373,7 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
                 "【⚠️ 格式错误——必须重新输出固定 JSON 结构化协议】",
                 "你上一次的回复输出了纯文本、Markdown 或 HTML 卡片，这是严重格式错误。",
                 "本次必须只输出一个标准 JSON 对象，且只输出这一条：",
-                '{"title":"本回合场景名","time":"本回合剧情时间","story":"剧情正文","options":["选项一","选项二","选项三"]}',
+                '{"title":"本回合场景名","time":"5月15日","story":"剧情正文","options":["选项一","选项二","选项三"]}',
                 "六项字段全部必填：title/time/story 非空，options 至少 1 个选项（数量不限，通常 2-4 个）；正文 300-500 字。",
                 "JSON 内双引号必须转义为 \\\"（或用「」代替）；严禁输出 HTML 标签、Markdown 标记或解释文字；禁止用 ``` 或双花括号 {{ }} 包裹，禁止在 JSON 前后添加任何字符。",
                 "若原回复带有 ```state-patch``` 数据块，请原样保留在协议之后。",
@@ -15105,7 +15137,6 @@ const token = delta.content || "";
                 location: String(ensured.location || "").trim(),
                 timeEra: String(ensured.timeEra || "").trim(),
                 weekIndex: sanitizeTime(ensured.weekIndex, 1, 999),
-                weekdayIndex: sanitizeTime(ensured.weekdayIndex, 0, 6),
                 currentYear: (() => { const t = sanitizeTime(ensured.currentYear, 1, 9999); return Number.isFinite(t) && t > 999 ? 1 : t; })(),
                 currentMonth: sanitizeTime(ensured.currentMonth, 1, 12),
                 currentDay: sanitizeTime(ensured.currentDay, 1, 31),
@@ -15132,7 +15163,7 @@ const token = delta.content || "";
                 "输出字段（全部必填）：",
                 "  name(string), englishName(string), ageYears(number), forcedGender(string),",
                 "  nationality(string), location(string), timeEra(string),",
-                "  weekIndex(number), weekdayIndex(number), currentYear(number), currentMonth(number), currentDay(number),",
+                "  weekIndex(number), currentYear(number), currentMonth(number), currentDay(number),",
                 "currentYear 为故事历年份(1~999,从故事开始第1年累积),禁止写现实公历年份(如2026);历史题材也从第1年开始。",
                 "  rebornReason(string), openingChoices(array),",
                 "  npcs(array，每项含 id,name,gender,relation,favor,status,mood,traits,profile{age,identity,personality}),",
@@ -15202,7 +15233,7 @@ const token = delta.content || "";
                 const userPrompt = [
                     `用户选择角色性别：${selectedGender}`,
                     `当前是第 ${i + 1}/${chunks.length} 个片段。`,
-                    "输出字段：name,englishName,ageYears,forcedGender,nationality,location,timeEra,weekIndex,weekdayIndex,currentYear,currentMonth,currentDay,rebornReason,stats,inventory,npcs,openingChoices,evidence。",
+                    "输出字段：name,englishName,ageYears,forcedGender,nationality,location,timeEra,weekIndex,currentYear,currentMonth,currentDay,rebornReason,stats,inventory,npcs,openingChoices,evidence。",
                     `设定片段：\n${chunk}`
                 ].join("\n\n");
                 return AIRequestService.requestCompletionWithFallback({
@@ -15285,7 +15316,7 @@ const token = delta.content || "";
                         { role: "system", content: [
                             "你是文游初始化-主角基础生成器。",
                             "只输出 JSON 对象，不要解释。",
-                            "字段：forcedGender,ageYears,nationality,location,timeEra,weekIndex,weekdayIndex,currentYear,currentMonth,currentDay,rebornReason,openingChoices。"
+                            "字段：forcedGender,ageYears,nationality,location,timeEra,weekIndex,currentYear,currentMonth,currentDay,rebornReason,openingChoices。"
                         ].join("\n") },
                         { role: "user", content: sharedUserContext }
                     ],
@@ -15392,8 +15423,8 @@ const token = delta.content || "";
                     "ageYears 必须是 0-120 的整数。"
                 ].join("\n"),
                 time: [
-                    "仅返回 JSON 对象，且只能含字段：timeEra,currentYear,currentMonth,currentDay,weekIndex,weekdayIndex。",
-                    "格式示例：{\"timeEra\":\"北宋时期\",\"currentYear\":1,\"currentMonth\":3,\"currentDay\":1,\"weekIndex\":1,\"weekdayIndex\":0}",
+                    "仅返回 JSON 对象，且只能含字段：timeEra,currentYear,currentMonth,currentDay,weekIndex。",
+                    "格式示例：{\"timeEra\":\"北宋时期\",\"currentYear\":1,\"currentMonth\":3,\"currentDay\":1,\"weekIndex\":1}",
                     "currentYear 只写故事历年份(1~999),历史题材从第1年开始,禁止写现实公历年(如 2026/1101)。",
                     "至少提供 timeEra 或 currentYear 其中之一。"
                 ].join("\n"),
@@ -15645,8 +15676,8 @@ const token = delta.content || "";
                 currentYear: Number.isFinite(tlYear) ? (tlYear >= 1 && tlYear <= 999 ? Math.floor(tlYear) : 1) : null,
                 currentMonth: Number.isFinite(tlMonth) ? tlMonth : null,
                 currentDay: Number.isFinite(tlDay) && tlDay >= 1 ? tlDay : 1,
+                timeText: Number.isFinite(tlYear) ? `第${(tlYear >= 1 && tlYear <= 999 ? Math.floor(tlYear) : 1)}年·${Number.isFinite(tlMonth) ? tlMonth : 1}月·${(Number.isFinite(tlDay) && tlDay >= 1 ? tlDay : 1)}日` : "",
                 weekIndex: 1,
-                weekdayIndex: 0,
                 rebornReason: "",
                 openingChoices: (Array.isArray(firstScene.options) ? firstScene.options : []).map((o, i) => ({ label: String(o).trim().slice(0, 40), key: `o${i + 1}` })),
                 npcs,
