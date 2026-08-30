@@ -5834,7 +5834,6 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
     };
 
     const Utils = {
-        weekdays: ["周一", "周二", "周三", "周四", "周五", "周六", "周日"],
         deepClone(obj) {
             return JSON.parse(JSON.stringify(obj));
         },
@@ -5843,29 +5842,24 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
         },
         nowDateStr(state) {
             if (!state) return "";
-            const weekName = typeof state.weekdayIndex === "number" ? this.weekdays[(state.weekdayIndex + 7) % 7] : "";
             const weekPart = Number.isFinite(Number(state.weekIndex)) ? `第${Number(state.weekIndex)}周` : "";
             // 故事历优先:第X年·X月·X日(从故事开局第1年累积,AI 只能推进不能回退);无年份走时代/周数兜底
             if (state.currentYear) {
-                const base = `第${Number(state.currentYear)}年·${Number(state.currentMonth) || 1}月·${Number(state.currentDay) || 1}日`;
-                return weekName ? `${base} ${weekName}` : base;
+                return `第${Number(state.currentYear)}年·${Number(state.currentMonth) || 1}月·${Number(state.currentDay) || 1}日`;
             }
             if (state.timeEra) {
-                const base = `${state.timeEra}：${weekPart || "第1周"}`;
-                return weekName ? `${base} ${weekName}` : base;
+                return `${state.timeEra}：${weekPart || "第1周"}`;
             }
-            return weekPart || weekName || "";
+            return weekPart || "";
         },
         shiftDays(state, deltaDays) {
             if (!Number.isFinite(deltaDays) || !state) return;
             if (!state.currentYear || !state.currentMonth || !state.currentDay) return;
             state.currentDay = state.currentDay || 1;
-            state.weekdayIndex = state.weekdayIndex || 0;
             let remain = deltaDays;
             const step = remain > 0 ? 1 : -1;
             while (remain !== 0) {
                 state.currentDay += step;
-                state.weekdayIndex = (state.weekdayIndex + step + 7) % 7;
                 if (state.currentDay > 30) {
                     state.currentDay = 1;
                     state.currentMonth += 1;
@@ -8362,30 +8356,6 @@ function rebuildChoicesBlock(body, labels = []) {
             if (!Number.isFinite(n)) return null;
             return Math.max(1, Math.min(999, Math.floor(n)));
         }
-        function weekdayIndexFromDate(y, m, d) {
-            try {
-                const dt = new Date(Number(y), Number(m) - 1, Number(d));
-                if (Number.isNaN(dt.getTime())) return null;
-                // JS: 0=Sun..6=Sat  -> 我们: 0=周一..6=周日
-                return (dt.getDay() + 6) % 7;
-            } catch (e) {
-                return null;
-            }
-        }
-        function extractWeekdayIndex(content) {
-            const map = {
-                "周一": 0, "星期一": 0,
-                "周二": 1, "星期二": 1,
-                "周三": 2, "星期三": 2,
-                "周四": 3, "星期四": 3,
-                "周五": 4, "星期五": 4,
-                "周六": 5, "星期六": 5,
-                "周日": 6, "星期日": 6, "星期天": 6
-            };
-            const m = String(content || "").match(/(周一|周二|周三|周四|周五|周六|周日|星期一|星期二|星期三|星期四|星期五|星期六|星期日|星期天)/);
-            if (!m) return null;
-            return map[m[1]] ?? null;
-        }
         function extractLatestYmd(content) {
             // 故事历:只认"第X年·X月·X日"(月/日可缺省,缺省取 1),现实年份(如 2026 年)不提取,防回忆/照抄污染
             const re = /第(\d{1,4})年(?:[·．.、\s]*(\d{1,2})月(?:[·．.、\s]*(\d{1,2})日)?)?/g;
@@ -8412,10 +8382,6 @@ function rebuildChoicesBlock(body, labels = []) {
             if (era) state.timeEra = era;
             const w = extractWeekIndex(content);
             if (typeof w === "number") state.weekIndex = w;
-            const fromText = extractWeekdayIndex(content);
-            if (typeof fromText === "number") {
-                state.weekdayIndex = fromText;
-            }
             const ymd = extractLatestYmd(content);
             if (ymd) {
                 // 防污染:回忆/角色生日等过去的日期只应出现在文本里,不允许回退系统时间
@@ -8428,11 +8394,6 @@ function rebuildChoicesBlock(body, labels = []) {
                     state.currentYear = ymd.y;
                     state.currentMonth = ymd.mo;
                     state.currentDay = ymd.d;
-                    // weekdayIndex: 若文本未给出周几，则用日期推导
-                    if (typeof fromText !== "number") {
-                        const derived = weekdayIndexFromDate(ymd.y, ymd.mo, ymd.d);
-                        if (typeof derived === "number") state.weekdayIndex = derived;
-                    }
                 }
             }
             // 时间推进钩子:固定事件(日期) + 周期收入
