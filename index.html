@@ -20438,6 +20438,8 @@ function openNpcProfile(npcId) {
             const screen = document.getElementById("appstore-screen");
             if (screen) screen.style.display = "none";
         }
+        // HTML 关闭按钮 onclick 直接引用全局,必须暴露(与 closeForumApp/closeWechatApp 全局转发一致)
+        window.closeAppStore = closeAppStore;
         function renderAppStoreList() {
             const box = document.getElementById("appstore-list");
             if (!box) return;
