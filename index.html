@@ -17267,6 +17267,9 @@ ${recent || "（无）"}
             if (!silent && viewId === "view-main") {
                 const content = document.getElementById("main-content");
                 content.scrollTop = content.scrollHeight;
+                // 剧情区是内部独立滚动容器,外层滚动够不到;进入游玩页有卡片时自动滚底
+                const chat = document.getElementById("play-chat-area");
+                if (chat) chat.scrollTop = chat.scrollHeight;
             }
             if (viewId === "view-community" && !silent) {
                 loadCommunityFeed();
