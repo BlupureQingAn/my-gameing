@@ -4878,6 +4878,10 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <button class="pay-method-btn" data-pay="wxpay" onclick="MembershipService.selectPayType('wxpay')"><img src="icons/wechat-pay.svg" alt="微信支付">微信支付</button>
         </div>
         <div id="membership-pay-area" style="margin-top:10px;text-align:center;"></div>
+        <label style="display:flex;align-items:flex-start;gap:6px;margin:10px 2px 0;font-size:0.75rem;color:var(--sub);cursor:pointer;text-align:left;">
+            <input type="checkbox" id="adult-confirm-box" style="margin-top:1px;accent-color:#2e7d32;">
+            <span>我已满 18 周岁，或已获得监护人同意。云币为虚拟商品，充值成功后不支持无理由退款；未成年人充值需监护人同意，如有疑问请联系客服。</span>
+        </label>
         <button id="membership-pay-btn" class="mini-btn primary" style="width:100%;margin-top:10px;" onclick="MembershipService.startPay()">立即支付</button>
     </div>
 </div>
@@ -20343,6 +20347,12 @@ function openNpcProfile(npcId) {
             const user = AuthService.getUserData();
             if (!user) { NoticeModalService.showInfo({ title: "提示", descHtml: "请先登录" }); return; }
             if (selectedPayType === "alipay") { NoticeModalService.showInfo({ title: "提示", descHtml: "尚未开通支付宝支付" }); return; }
+            // 合规确认:每次充值须勾选 18 岁/监护人确认与虚拟商品条款
+            const adultBox = document.getElementById("adult-confirm-box");
+            if (!adultBox || !adultBox.checked) {
+                NoticeModalService.showInfo({ title: "请先确认", descHtml: "请先勾选「我已满 18 周岁，或已获得监护人同意」及虚拟商品条款后再充值。" });
+                return;
+            }
             const payArea = document.getElementById("membership-pay-area");
             // 已有同套餐同支付方式的未完成订单:直接复用,不重复创建
             if (_currentOrder && _currentOrder.payType === selectedPayType && _currentOrder.planId === selectedPlan) {

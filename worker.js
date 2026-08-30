@@ -707,6 +707,7 @@ async function settlePaidOrder(env, orderNo, tradeNo, amountCents) {
     const user = await userRes.json();
 
     const patch = {};
+    let isFirst = false;
     if (isLifetime) {
         patch.membership_type = "lifetime";
         patch.membership_expires_at = LIFETIME_EXPIRY;
@@ -715,7 +716,7 @@ async function settlePaidOrder(env, orderNo, tradeNo, amountCents) {
         const paidFilter = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(order.user_id)}'&&status='paid'&&id!='${order.id}'`);
         const pq = await pbAdminFetch(env, `/api/collections/pay_orders/records?perPage=1&skipTotal=true&filter=${paidFilter}`);
         const pd = await pq.json().catch(() => ({}));
-        const isFirst = !(pd.items || []).length;
+        isFirst = !(pd.items || []).length;
         patch.coins = Number(user.coins || 0) + (isFirst ? plan.base * 2 : plan.base + plan.bonus);
     }
     const patchRes = await pbAdminFetch(env, `/api/collections/users/records/${order.user_id}`, {
@@ -724,6 +725,15 @@ async function settlePaidOrder(env, orderNo, tradeNo, amountCents) {
     });
     if (!patchRes.ok) return "fail";
 
+    // 余额变动快照(coin_ledger):before/after 落库留证;失败不影响发货
+    const before = Number(user.coins || 0);
+    if (isLifetime) {
+        await logCoinLedger(env, order.user_id, orderNo, 0, before, before, "lifetime_membership");
+    } else {
+        const delta = patch.coins - before;
+        await logCoinLedger(env, order.user_id, orderNo, delta, before, patch.coins, isFirst ? "首充双倍到账" : "充值到账");
+    }
+
     await pbAdminFetch(env, `/api/collections/pay_orders/records/${order.id}`, {
         method: "PATCH",
         body: JSON.stringify({ status: "paid", trade_no: tradeNo || "", paid_at: now })
@@ -731,10 +741,43 @@ async function settlePaidOrder(env, orderNo, tradeNo, amountCents) {
     return "success";
 }
 
-// h5zhifu 回调处理：验签 → trade_status 校验 → 公共发货
-async function handlePayNotify(env, params) {
+// 回调原文留档(pay_notify_log):验签结果+原始报文,审计留证用;留档失败不影响主流程
+async function logNotify(env, gateway, orderNo, raw, signValid, status, amount, tradeNo) {
     try {
-        if (!verifyH5Sign(params, env.H5_APP_SECRET)) return "fail";
+        await pbAdminFetch(env, `/api/collections/pay_notify_log/records`, {
+            method: "POST",
+            body: JSON.stringify({
+                gateway, order_no: String(orderNo || ""),
+                raw: String(raw || "").slice(0, 8000),
+                sign_valid: !!signValid,
+                status: String(status || ""),
+                amount: String(amount || ""),
+                trade_no: String(tradeNo || "")
+            })
+        });
+    } catch (e) {
+        console.error("logNotify error:", e.message);
+    }
+}
+
+// 余额变动快照(coin_ledger):before/after 落库留证;失败不影响主流程
+async function logCoinLedger(env, userId, orderNo, delta, before, after, reason) {
+    try {
+        await pbAdminFetch(env, `/api/collections/coin_ledger/records`, {
+            method: "POST",
+            body: JSON.stringify({ user_id: String(userId || ""), order_no: String(orderNo || ""), delta, before, after, reason: String(reason || "") })
+        });
+    } catch (e) {
+        console.error("logCoinLedger error:", e.message);
+    }
+}
+
+// h5zhifu 回调处理：验签 → trade_status 校验 → 公共发货；原文留档(含验签失败)
+async function handlePayNotify(env, params, raw = "") {
+    try {
+        const signValid = verifyH5Sign(params, env.H5_APP_SECRET);
+        await logNotify(env, "h5zhifu", params.out_trade_no || "", raw, signValid, params.trade_status || "notify", params.amount || "", params.trade_no || "");
+        if (!signValid) return "fail";
         // 回调文档参数表无 trade_status(能收到回调即已支付);旧版带该字段则校验,缺省放行
         if (params.trade_status && !["paid", "success"].includes(params.trade_status)) return "fail";
         return await settlePaidOrder(env, params.out_trade_no || "", params.trade_no || "", params.amount);
@@ -745,9 +788,11 @@ async function handlePayNotify(env, params) {
 }
 
 // 虎皮椒回调处理：form 表单验签 → status=OD → 公共发货；回复 "success" 确认，否则网关重试 6 次
-async function handleXunhuNotify(env, params) {
+async function handleXunhuNotify(env, params, raw = "") {
     try {
-        if (!verifyXunhuSign(params, env.XUNHU_APP_SECRET)) return "fail";
+        const signValid = verifyXunhuSign(params, env.XUNHU_APP_SECRET);
+        await logNotify(env, "xunhu", params.trade_order_id || "", raw, signValid, String(params.status || ""), params.total_fee || "", params.transaction_id || params.open_order_id || "");
+        if (!signValid) return "fail";
         // 退款等非支付事件：确认收到但不发货
         if (String(params.status) !== "OD") return "success";
         const amountCents = Math.round(parseFloat(String(params.total_fee || "0")) * 100);
@@ -2665,8 +2710,10 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
             // ---- 路由：支付回调（易支付异步通知，GET/POST 均可）----
             if (url.pathname === "/api/pay/notify") {
                 let params;
+                let raw = "";
                 if (request.method === "POST") {
                     const text = await request.text();
+                    raw = text;
                     // h5zhifu 回调文档为 application/json;兼容易支付旧版表单格式——先 JSON 后表单
                     try {
                         const obj = JSON.parse(text);
@@ -2677,8 +2724,9 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                     }
                 } else {
                     params = Object.fromEntries(url.searchParams);
+                    raw = new URLSearchParams(params).toString();
                 }
-                const result = await handlePayNotify(env, params);
+                const result = await handlePayNotify(env, params, raw);
                 return new Response(result, { headers: corsHeaders() }); // "success"/"fail" 纯文本
             }
 
@@ -2687,7 +2735,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const text = await request.text();
                 let params = {};
                 try { params = Object.fromEntries(new URLSearchParams(text)); } catch (e) {}
-                const result = await handleXunhuNotify(env, params);
+                const result = await handleXunhuNotify(env, params, text);
                 return new Response(result, { headers: corsHeaders() });
             }
 
