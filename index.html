@@ -1108,12 +1108,12 @@
             position: relative;
             border-radius: 22px;
             padding: 12px 12px 14px;
-            background: linear-gradient(160deg, rgba(255,255,255,.96), rgba(246,244,252,.9));
+            background: rgba(255,255,255,.45);
             border: 5px solid var(--phone-accent);
             box-shadow: 0 10px 30px rgba(0,0,0,.10);
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             width: 360px;
             height: 640px;
             flex: 0 0 auto;
@@ -1125,7 +1125,7 @@
             background-position: center;
             background-repeat: no-repeat;
         }
-        body[data-theme="dark"] .phone-shell { background: linear-gradient(160deg, rgba(30,26,40,.97), rgba(38,32,50,.93)); }
+        body[data-theme="dark"] .phone-shell { background: rgba(20,16,32,.55); }
         .phone-statusbar { display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: 700; color: var(--text-muted); }
         .phone-set-row {
             display: flex;
@@ -1178,61 +1178,58 @@
         .phone-theme-dot.active { border-color: var(--text-strong, #3a2b1a); box-shadow: 0 0 0 2px var(--card-strong, #fff); }
         #ps-font-size .mini-btn.active { background: var(--primary, #6b3f00); color: #fff; }
         .phone-status-icons { letter-spacing: 3px; }
-        .phone-user-card {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px;
-            border-radius: 14px;
-            background: rgba(123,92,214,.08);
-            border: 1px solid rgba(123,92,214,.2);
+        /* iOS 桌面风:毛玻璃小组件(玩家信息 + BGM) */
+        .phone-widgets { display: flex; flex-direction: column; gap: 8px; }
+        .phone-widget {
+            background: rgba(255,255,255,.40);
+            backdrop-filter: blur(18px) saturate(1.4);
+            -webkit-backdrop-filter: blur(18px) saturate(1.4);
+            border: 1px solid rgba(255,255,255,.35);
+            border-radius: 16px;
+            padding: 8px 12px;
         }
+        body[data-theme="dark"] .phone-widget { background: rgba(20,16,32,.38); border-color: rgba(255,255,255,.12); }
+        .phone-player-widget { display: flex; align-items: center; gap: 10px; }
         .phone-avatar {
-            width: 48px;
-            height: 48px;
+            width: 40px;
+            height: 40px;
             border-radius: 10px;
             overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 800;
             color: #fff;
             box-shadow: 0 2px 8px rgba(123,92,214,.35);
             flex-shrink: 0;
         }
-        .phone-user-name { font-size: 0.95rem; font-weight: 800; color: var(--text-dark); }
-        .phone-user-sig { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
-        .phone-bgm {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 9px 12px;
-            border-radius: 14px;
-            background: rgba(255,255,255,.65);
-            border: 1px solid var(--line);
-        }
-        body[data-theme="dark"] .phone-bgm { background: rgba(30,26,40,.6); }
-        .phone-bgm-icon { font-size: 1.1rem; }
-        .phone-bgm-main { flex: 1; min-width: 0; }
-        .phone-bgm-title { font-size: 0.78rem; font-weight: 800; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .phone-bgm-track { height: 5px; border-radius: 999px; background: rgba(120,120,120,.2); margin-top: 5px; overflow: hidden; }
+        .phone-widget-body { flex: 1; min-width: 0; }
+        .phone-user-name { font-size: 0.9rem; font-weight: 800; color: var(--text-dark); }
+        .phone-user-sig { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .phone-user-sig:hover { color: #7b5cd6; }
+        /* BGM 小组件:两行(控制行 + 进度条行) */
+        .phone-bgm-row { display: flex; align-items: center; gap: 8px; }
+        .phone-bgm-icon { font-size: 1.05rem; flex-shrink: 0; }
+        .phone-bgm-title { flex: 1; min-width: 0; font-size: 0.72rem; font-weight: 800; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .phone-bgm-track { height: 4px; border-radius: 999px; background: rgba(120,120,120,.25); margin-top: 6px; overflow: hidden; }
         .phone-bgm-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #7b5cd6, #9d7bf0); transition: width .3s linear; }
-        .phone-bgm-btns { display: flex; gap: 4px; }
+        .phone-bgm-btns { display: flex; gap: 3px; flex-shrink: 0; }
         .phone-bgm-btns button {
-            width: 30px; height: 30px;
+            width: 26px; height: 26px;
             border-radius: 50%;
-            border: 1px solid var(--line);
-            background: var(--input-bg);
+            border: 1px solid rgba(255,255,255,.4);
+            background: rgba(255,255,255,.35);
             color: var(--text-dark);
-            font-size: 0.78rem;
+            font-size: 0.7rem;
             cursor: pointer;
             transition: all .2s;
         }
-        .phone-bgm-btns button:hover { color: #7b5cd6; border-color: rgba(123,92,214,.4); }
+        .phone-bgm-btns button:hover { color: #7b5cd6; border-color: rgba(123,92,214,.4); background: rgba(255,255,255,.6); }
         .phone-bgm-btns button:disabled { opacity: .35; cursor: default; }
-        .phone-apps-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-        .phone-apps-row.wide { grid-template-columns: repeat(3, 1fr); }
+        /* 应用网格:4 列统一 */
+        .phone-apps-grid { display: flex; flex-direction: column; gap: 10px; margin-top: auto; }
+        .phone-apps-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
         .phone-app-btn {
             display: flex;
             flex-direction: column;
@@ -1248,60 +1245,93 @@
             transition: all .2s;
             position: relative;
         }
-        /* 手机壳图标未读角标(微信) */
+        /* 手机壳图标未读角标(微信):锚定图标右上角 */
         .phone-app-badge {
             position: absolute;
-            top: -4px;
-            right: 6px;
-            min-width: 16px;
-            height: 16px;
-            border-radius: 8px;
+            top: -6px;
+            right: -6px;
+            min-width: 17px;
+            height: 17px;
+            border-radius: 9px;
             background: #e64340;
             color: #fff;
             font-size: 10px;
-            line-height: 16px;
+            line-height: 17px;
             text-align: center;
             padding: 0 4px;
             box-sizing: border-box;
-            border: 1px solid #fff;
+            border: 2px solid rgba(255,255,255,.9);
             font-style: normal;
             font-weight: 700;
-            z-index: 2;
+            z-index: 3;
         }
+        /* 无底悬浮图标:直接浮在壁纸上,白字 + 阴影保证任意壁纸可读 */
         .phone-app-btn .app-icon {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 46px;
-            height: 46px;
-            border-radius: 14px;
-            font-size: 1.4rem;
-            background: rgba(255,255,255,.6);
-            border: 1px solid rgba(255,255,255,.75);
-            box-shadow: 0 2px 6px rgba(0,0,0,.1);
+            width: 54px;
+            height: 54px;
+            border-radius: 16px;
+            font-size: 1.55rem;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            color: #fff;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,.5));
+            position: relative;
             transition: transform .2s;
         }
-        .phone-app-btn:hover .app-icon { transform: translateY(-1px) scale(1.05); }
-        body[data-theme="dark"] .phone-app-btn .app-icon { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.2); }
+        .phone-app-btn .app-icon svg { color: #fff; filter: drop-shadow(0 1px 2px rgba(0,0,0,.5)); }
+        .phone-app-btn:hover .app-icon { transform: translateY(-1px) scale(1.06); }
+        .phone-app-label {
+            background: rgba(0,0,0,.28);
+            color: #fff;
+            border-radius: 6px;
+            padding: 1px 6px;
+            font-size: 0.66rem;
+            font-weight: 700;
+            white-space: nowrap;
+            text-shadow: 0 1px 2px rgba(0,0,0,.5);
+        }
+        /* Dock:毛玻璃吸底条 */
         .phone-dock {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            padding-top: 10px;
-            border-top: 1px dashed var(--line);
+            gap: 6px;
+            margin-top: auto;
+            padding: 8px 6px 6px;
+            border-radius: 20px;
+            background: rgba(255,255,255,.35);
+            backdrop-filter: blur(20px) saturate(1.5);
+            -webkit-backdrop-filter: blur(20px) saturate(1.5);
+            border: 1px solid rgba(255,255,255,.3);
         }
+        body[data-theme="dark"] .phone-dock { background: rgba(20,16,32,.35); border-color: rgba(255,255,255,.1); }
         .phone-dock-btn {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
-            padding: 8px 2px;
+            gap: 3px;
+            padding: 5px 2px 3px;
             border: none;
             background: transparent;
             color: var(--text-dark);
-            font-size: 1.05rem;
             cursor: pointer;
         }
+        .dock-icon {
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            color: var(--text-dark);
+            position: relative;
+            background: rgba(255,255,255,.45);
+            border-radius: 11px;
+        }
+        body[data-theme="dark"] .dock-icon { background: rgba(255,255,255,.12); }
         .phone-dock-btn span { font-size: 0.68rem; font-weight: 700; color: var(--text-muted); }
         .phone-dock-btn:hover span { color: #7b5cd6; }
         /* 世界页增强：工具栏 + NPC 分组 + 简介 */
@@ -5204,34 +5234,39 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <span id="phone-clock">00:00</span>
                     <span class="phone-status-icons"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M2 20v-8h4v8H2zm6 0v-12h4v12H8zm6 0V4h4v16h-4zm6 0v-4h4v4h-4z"/></svg><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg></span>
                 </div>
-                <div class="phone-user-card">
-                    <div class="phone-avatar" id="phone-avatar"></div>
-                    <div class="phone-user-info">
-                        <div class="phone-user-name" id="phone-user-name"></div>
-                        <div class="phone-user-sig" id="phone-user-sig" onclick="phoneEditSignature()">点击这里编辑你的个性签名</div>
+                <div class="phone-widgets">
+                    <div class="phone-widget phone-player-widget">
+                        <div class="phone-avatar" id="phone-avatar"></div>
+                        <div class="phone-widget-body">
+                            <div class="phone-user-name" id="phone-user-name"></div>
+                            <div class="phone-user-sig" id="phone-user-sig" onclick="phoneEditSignature()">点击这里编辑你的个性签名</div>
+                        </div>
                     </div>
-                </div>
-                <div class="phone-bgm">
-                    <div class="phone-bgm-icon"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M7.175 19.825Q6 18.65 6 17t1.175-2.825T10 13q.575 0 1.063.138t.937.412V3h6v4h-4v10q0 1.65-1.175 2.825T10 21t-2.825-1.175"/></svg></div>
-                    <div class="phone-bgm-main">
-                        <div class="phone-bgm-title" id="phone-bgm-title">背景音乐 · 游戏原声</div>
+                    <div class="phone-widget phone-bgm-widget">
+                        <div class="phone-bgm-row">
+                            <div class="phone-bgm-icon"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M7.175 19.825Q6 18.65 6 17t1.175-2.825T10 13q.575 0 1.063.138t.937.412V3h6v4h-4v10q0 1.65-1.175 2.825T10 21t-2.825-1.175"/></svg></div>
+                            <div class="phone-bgm-title" id="phone-bgm-title">背景音乐 · 游戏原声</div>
+                            <div class="phone-bgm-btns">
+                                <button type="button" onclick="bgmPrev()" title="上一曲">⏮</button>
+                                <button type="button" onclick="bgmToggle()" id="phone-bgm-play" title="播放/暂停">▶</button>
+                                <button type="button" onclick="bgmNext()" title="下一曲">⏭</button>
+                                <button type="button" class="phone-bgm-import-btn" onclick="bgmImport()" title="导入本地音乐">📂</button>
+                                <button type="button" id="phone-bgm-clear" onclick="bgmClearImport()" title="移除导入的音乐" style="display:none">🗑</button>
+                            </div>
+                        </div>
                         <div class="phone-bgm-track"><div class="phone-bgm-fill" id="phone-bgm-fill" style="width:0%"></div></div>
+                        <input type="file" id="phone-bgm-file" accept="audio/*" style="display:none;">
                     </div>
-                    <div class="phone-bgm-btns">
-                        <button type="button" onclick="bgmPrev()" title="上一曲">⏮</button>
-                        <button type="button" onclick="bgmToggle()" id="phone-bgm-play" title="播放/暂停">▶</button>
-                        <button type="button" onclick="bgmNext()" title="下一曲">⏭</button>
-                        <button type="button" class="phone-bgm-import-btn" onclick="bgmImport()" title="导入本地音乐">📂</button>
-                        <button type="button" id="phone-bgm-clear" onclick="bgmClearImport()" title="移除导入的音乐" style="display:none">🗑</button>
-                    </div>
-                    <input type="file" id="phone-bgm-file" accept="audio/*" style="display:none;">
                 </div>
-                <div class="phone-apps-row" id="phone-apps-func"></div>
-                <div class="phone-apps-row wide" id="phone-apps-more"></div>
+                <div class="phone-apps-grid">
+                    <div class="phone-apps-row" id="phone-apps-func"></div>
+                    <div class="phone-apps-row" id="phone-apps-more"></div>
+                </div>
                 <div class="phone-dock">
-                    <button type="button" class="phone-dock-btn" onclick="phoneAppTap('backpack')"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6 22q-.825 0-1.412-.587T4 20V8q0-1.4.85-2.45T7 4.15V2h3v2h4V2h3v2.15q1.3.35 2.15 1.4T20 8v12q0 .825-.587 1.413T18 22zm8.5-6h2v-4h-9v2h7z"/></svg><span>你的背包</span></button>
-                    <button type="button" class="phone-dock-btn" onclick="phoneAppTap('jobs')"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="m18.9 21l-5.475-5.475l2.1-2.1L21 18.9zM5.1 21L3 18.9L9.9 12l-1.7-1.7l-.7.7l-1.275-1.275v2.05l-.7.7L2.5 9.45l.7-.7h2.05L4 7.5l3.55-3.55q.5-.5 1.075-.725T9.8 3t1.175.225t1.075.725l-2.3 2.3L11 7.5l-.7.7L12 9.9l2.25-2.25q-.1-.275-.162-.575t-.063-.6q0-1.475 1.013-2.488t2.487-1.012q.375 0 .713.075t.687.225L16.45 5.75l1.8 1.8l2.475-2.475q.175.35.238.687t.062.713q0 1.475-1.012 2.488t-2.488 1.012q-.3 0-.6-.05t-.575-.175z"/></svg><span>找点活干</span></button>
-                    <button type="button" class="phone-dock-btn" onclick="phoneAppTap('settings')"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="m9.25 22l-.4-3.2q-.325-.125-.612-.3t-.563-.375L4.7 19.375l-2.75-4.75l2.575-1.95Q4.5 12.5 4.5 12.338v-.675q0-.163.025-.338L1.95 9.375l2.75-4.75l2.975 1.25q.275-.2.575-.375t.6-.3l.4-3.2h5.5l.4 3.2q.325.125.613.3t.562.375l2.975-1.25l2.75 4.75l-2.575 1.95q.025.175.025.338v.674q0 .163-.05.338l2.575 1.95l-2.75 4.75l-2.95-1.25q-.275.2-.575.375t-.6.3l-.4 3.2zm2.8-6.5q1.45 0 2.475-1.025T15.55 12t-1.025-2.475T12.05 8.5q-1.475 0-2.488 1.025T8.55 12t1.013 2.475T12.05 15.5"/></svg><span>设置</span></button>
+                    <button type="button" class="phone-dock-btn" onclick="phoneAppTap('backpack')"><span class="dock-icon"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6 22q-.825 0-1.412-.587T4 20V8q0-1.4.85-2.45T7 4.15V2h3v2h4V2h3v2.15q1.3.35 2.15 1.4T20 8v12q0 .825-.587 1.413T18 22zm8.5-6h2v-4h-9v2h7z"/></svg></span><span>你的背包</span></button>
+                    <button type="button" class="phone-dock-btn" onclick="phoneAppTap('jobs')"><span class="dock-icon"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="m18.9 21l-5.475-5.475l2.1-2.1L21 18.9zM5.1 21L3 18.9L9.9 12l-1.7-1.7l-.7.7l-1.275-1.275v2.05l-.7.7L2.5 9.45l.7-.7h2.05L4 7.5l3.55-3.55q.5-.5 1.075-.725T9.8 3t1.175.225t1.075.725l-2.3 2.3L11 7.5l-.7.7L12 9.9l2.25-2.25q-.1-.275-.162-.575t-.063-.6q0-1.475 1.013-2.488t2.487-1.012q.375 0 .713.075t.687.225L16.45 5.75l1.8 1.8l2.475-2.475q.175.35.238.687t.062.713q0 1.475-1.012 2.488t-2.488 1.012q-.3 0-.6-.05t-.575-.175z"/></svg></span><span>找点活干</span></button>
+                    <button type="button" class="phone-dock-btn" onclick="phoneAppTap('chat')" id="phone-dock-wechat"><span class="dock-icon"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M2 22V4q0-.825.588-1.412T4 2h16q.825 0 1.413.588T22 4v12q0 .825-.587 1.413T20 18H6z"/></svg></span><span>微信</span></button>
+                    <button type="button" class="phone-dock-btn" onclick="phoneAppTap('settings')"><span class="dock-icon"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="m9.25 22l-.4-3.2q-.325-.125-.612-.3t-.563-.375L4.7 19.375l-2.75-4.75l2.575-1.95Q4.5 12.5 4.5 12.338v-.675q0-.163.025-.338L1.95 9.375l2.75-4.75l2.975 1.25q.275-.2.575-.375t.6-.3l.4-3.2h5.5l.4 3.2q.325.125.613.3t.562.375l2.975-1.25l2.75 4.75l-2.575 1.95q.025.175.025.338v.674q0 .163-.05.338l2.575 1.95l-2.75 4.75l-2.95-1.25q-.275.2-.575.375t-.6.3l-.4 3.2zm2.8-6.5q1.45 0 2.475-1.025T15.55 12t-1.025-2.475T12.05 8.5q-1.475 0-2.488 1.025T8.55 12t1.013 2.475T12.05 15.5"/></svg></span><span>设置</span></button>
                 </div>
                 <!-- 手机内微信 app（世界页×社交融合） -->
                 <div class="wx-screen" id="wx-screen" style="display:none;">
@@ -9871,23 +9906,31 @@ function rebuildChoicesBlock(body, labels = []) {
                 const readTs = Number(readMap[key]) || 0;
                 total += msgs.filter((m) => m.from === "npc" && Number(m.ts || 0) > readTs).length;
             });
+            // person-card 聊天(独立存储,经 window 桥接)
+            total += (window.personChatUnreadCount ? window.personChatUnreadCount() : 0);
             return total;
         }
         function updatePhoneBadge(state) {
-            const btn = document.querySelector('.phone-app-btn[onclick*="\'chat\'"]');
-            if (!btn) return;
             const total = computePhoneUnreadTotal(state);
-            let b = btn.querySelector(".phone-app-badge");
-            if (total > 0) {
-                if (!b) {
-                    b = document.createElement("span");
-                    b.className = "phone-app-badge";
-                    btn.appendChild(b);
+            const sync = (iconEl) => {
+                if (!iconEl) return;
+                let b = iconEl.querySelector(".phone-app-badge");
+                if (total > 0) {
+                    if (!b) {
+                        b = document.createElement("span");
+                        b.className = "phone-app-badge";
+                        iconEl.appendChild(b);
+                    }
+                    b.textContent = total > 99 ? "99+" : String(total);
+                } else if (b) {
+                    b.remove();
                 }
-                b.textContent = total > 99 ? "99+" : String(total);
-            } else if (b) {
-                b.remove();
-            }
+            };
+            // 双锚点:网格微信图标 + Dock 微信图标(badge 必须挂图标内,挂按钮会飘到空白处)
+            const chatBtn = document.querySelector('.phone-app-btn[onclick*="\'chat\'"]');
+            if (chatBtn) sync(chatBtn.querySelector(".app-icon"));
+            const dockBtn = document.getElementById("phone-dock-wechat");
+            if (dockBtn) sync(dockBtn.querySelector(".dock-icon"));
         }
         function renderWechatSessions(state) {
             const list = document.getElementById("wx-session-list");
@@ -10192,10 +10235,10 @@ function rebuildChoicesBlock(body, labels = []) {
             func: [
                 { icon: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M2 22V4q0-.825.588-1.412T4 2h16q.825 0 1.413.588T22 4v12q0 .825-.587 1.413T20 18H6z'/></svg>", label: "微信", action: "chat" },
                 { icon: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M18 13v-2h4v2zm1.2 7L16 17.6l1.2-1.6l3.2 2.4zm-2-12L16 6.4L19.2 4l1.2 1.6zM5 19v-4H4q-.825 0-1.412-.587T2 13v-2q0-.825.588-1.412T4 9h4l5-3v12l-5-3H7v4zm9-3.65v-6.7q.675.6 1.088 1.463T15.5 12t-.413 1.888T14 15.35'/></svg>", label: "论坛", action: "forum" },
+                { icon: "📦", label: "应用商店", action: "store" },
                 { icon: "🛒", label: "商店", action: "shop" }
             ],
             more: [
-                { icon: "📦", label: "应用商店", action: "store" },
                 { icon: "🎭", label: "平行小剧场", action: "play" },
                 { icon: "💘", label: "姻缘一线牵", action: "date" }
             ]
@@ -10351,7 +10394,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 if (!el) return;
                 const arr = list && list.length ? list : fallback;
                 const badge = unreadTotal > 0 ? `<span class="phone-app-badge">${unreadTotal > 99 ? "99+" : unreadTotal}</span>` : "";
-                el.innerHTML = arr.map((a) => `<button type="button" class="phone-app-btn" onclick="phoneAppTap('${String(a.action || "").replace(/'/g, "\\'")}')"><span class="app-icon">${a.icon || "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M7 23q-.825 0-1.412-.587T5 21V3q0-.825.588-1.412T7 1h10q.825 0 1.413.588T19 3v3.1q.45.175.725.55T20 7.5v2q0 .475-.275.85T19 10.9V21q0 .825-.587 1.413T17 23zm5.713-17.287Q13 5.424 13 5t-.288-.712T12 4t-.712.288T11 5t.288.713T12 6t.713-.288'/></svg>"}</span>${MarkdownService.escapeHtml(a.label || "")}${a.action === "chat" ? badge : ""}</button>`).join("");
+                el.innerHTML = arr.map((a) => `<button type="button" class="phone-app-btn" onclick="phoneAppTap('${String(a.action || "").replace(/'/g, "\\'")}')"><span class="app-icon">${a.icon || "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M7 23q-.825 0-1.412-.587T5 21V3q0-.825.588-1.412T7 1h10q.825 0 1.413.588T19 3v3.1q.45.175.725.55T20 7.5v2q0 .475-.275.85T19 10.9V21q0 .825-.587 1.413T17 23zm5.713-17.287Q13 5.424 13 5t-.288-.712T12 4t-.712.288T11 5t.288.713T12 6t.713-.288'/></svg>"}${a.action === "chat" ? badge : ""}</span><span class="phone-app-label">${MarkdownService.escapeHtml(a.label || "")}</span></button>`).join("");
             };
             fillApps(apps && apps.func, DEFAULT_PHONE_APPS.func, document.getElementById("phone-apps-func"));
             fillApps(apps && apps.more, DEFAULT_PHONE_APPS.more, document.getElementById("phone-apps-more"));
@@ -17654,6 +17697,36 @@ function openNpcProfile(npcId) {
         }
         // ==================== 人物卡聊天（person-card 模式：card_id + npc_id，AI 扮演角色，不走剧本剧情） ====================
         const PERSON_CHAT_KEY = "person_card_chats_v1";
+        const PERSON_READ_KEY = "person_card_read_v1";
+        // 手机壳微信角标未读计数(经 window 桥接给 UIRenderer.computePhoneUnreadTotal)
+        function personChatUnreadCount() {
+            try {
+                const map = StorageService.readJson(PERSON_CHAT_KEY, {});
+                const readMap = StorageService.readJson(PERSON_READ_KEY, {});
+                let total = 0;
+                Object.keys(map).forEach((k) => {
+                    const msgs = Array.isArray(map[k]) ? map[k] : [];
+                    const readTs = Number(readMap[k]) || 0;
+                    total += msgs.filter((m) => m.from === "npc" && Number(m.ts || 0) > readTs).length;
+                });
+                return total;
+            } catch (e) { return 0; }
+        }
+        function personChatReadMark() {
+            try {
+                if (!_personChat || !_personChat.cardId || !_personChat.npcId) return;
+                const readMap = StorageService.readJson(PERSON_READ_KEY, {});
+                const key = _personChat.cardId + "::" + _personChat.npcId;
+                const msgs = Array.isArray(_personChat.messages) ? _personChat.messages : [];
+                const lastTs = msgs.reduce((m, x) => Math.max(m, Number(x.ts) || 0), 0);
+                if (lastTs > (Number(readMap[key]) || 0)) {
+                    readMap[key] = lastTs;
+                    StorageService.writeJson(PERSON_READ_KEY, readMap);
+                }
+            } catch (e) {}
+        }
+        window.personChatUnreadCount = personChatUnreadCount;
+        window.personChatReadMark = personChatReadMark;
         let _personChat = null; // { cardId, npcId, npcName, avatar, desc, messages: [] }
         function loadPersonChats(cardId, npcId) {
             try {
@@ -17799,6 +17872,8 @@ function openNpcProfile(npcId) {
             renderWxEmojiBar();
             renderPersonCardChat();
             pushPlayHistory({ type: "char", id: _personChat.cardId + "::" + _personChat.npcId, cardId: _personChat.cardId, npcId: _personChat.npcId, title: _personChat.npcName });
+            personChatReadMark(); // 打开即已读
+            UIRenderer.updatePhoneBadge(StateService.get());
             const input = document.getElementById("wx-chat-input");
             if (input) input.focus();
         }
@@ -17886,6 +17961,8 @@ function openNpcProfile(npcId) {
                 _wxSending = false;
                 updateWxSendState();
                 renderPersonCardChat();
+                personChatReadMark(); // 聊天页仍显示 → 新回复即时已读
+                UIRenderer.updatePhoneBadge(StateService.get());
             }
         }
         function backToWechatList() {
@@ -18095,6 +18172,7 @@ function openNpcProfile(npcId) {
                     state.wechatRead[chatKey] = Date.now();
                     StateService.save();
                 }
+                UIRenderer.updatePhoneBadge(state); // 新回复实时刷新手机壳角标
                 if (input) input.focus();
             }
         }
