@@ -631,7 +631,8 @@ async function createPayOrder(env, userId, planId, payType) {
 async function handlePayNotify(env, params) {
     try {
         if (!verifyH5Sign(params, env.H5_APP_SECRET)) return "fail";
-        if (!["paid", "success"].includes(params.trade_status)) return "fail";
+        // 回调文档参数表无 trade_status(能收到回调即已支付);旧版带该字段则校验,缺省放行
+        if (params.trade_status && !["paid", "success"].includes(params.trade_status)) return "fail";
 
         const filter = encodeURIComponent(`order_no='${escapePocketBaseFilterValue(params.out_trade_no || "")}'`);
         const q = await pbAdminFetch(env, `/api/collections/pay_orders/records?perPage=1&skipTotal=true&filter=${filter}`);
@@ -2592,8 +2593,14 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 let params;
                 if (request.method === "POST") {
                     const text = await request.text();
-                    try { params = Object.fromEntries(new URLSearchParams(text)); }
-                    catch (e) { params = {}; }
+                    // h5zhifu 回调文档为 application/json;兼容易支付旧版表单格式——先 JSON 后表单
+                    try {
+                        const obj = JSON.parse(text);
+                        params = (obj && typeof obj === "object" && !Array.isArray(obj)) ? obj : {};
+                    } catch (e) {
+                        try { params = Object.fromEntries(new URLSearchParams(text)); }
+                        catch (e2) { params = {}; }
+                    }
                 } else {
                     params = Object.fromEntries(url.searchParams);
                 }
