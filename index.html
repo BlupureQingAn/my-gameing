@@ -20318,6 +20318,15 @@ function openNpcProfile(npcId) {
             if (!payArea) return;
             const payMethodName = order.payType === "alipay" ? "支付宝" : "微信";
             const tip = order.planId === "lifetime" ? "支付完成后将自动开通会员（1-2 分钟内生效）" : "支付完成后云币自动到账（1-2 分钟内生效）";
+            // PC 扫码模式：虎皮椒返回 url_qrcode 二维码图片地址，直接展示扫码
+            if (order.qrUrl) {
+                payArea.innerHTML = `<div class="list-sub" style="margin:8px 0;color:var(--accent-dark);font-weight:700;">✅ 订单创建成功，请使用微信扫码支付</div>
+                    <div class="list-sub" style="margin-top:6px;">订单号：${order.orderNo}</div>
+                    <img src="${order.qrUrl}" alt="微信支付二维码" style="width:180px;height:180px;margin:10px auto;display:block;border-radius:8px;background:#fff;padding:4px;">
+                    <div class="list-sub" style="margin-top:6px;">二维码 5 分钟内有效，扫码后请在手机上完成支付</div>
+                    <div class="list-sub" style="margin-top:8px;">${tip}</div>`;
+                return;
+            }
             // H5 支付：jump_url 收银台跳转
             if (autoRedirect) {
                 payArea.innerHTML = `<div class="list-sub" style="margin:8px 0;color:var(--accent-dark);font-weight:700;">✅ 订单创建成功，正在跳转${payMethodName}收银台…</div>
@@ -20355,9 +20364,9 @@ function openNpcProfile(npcId) {
                     signal: controller.signal
                 });
                 const data = await res.json();
-                // H5 支付返回 jump_url 收银台跳转链接
-                if (!res.ok || !data.jumpUrl) throw new Error(data.error || "创建订单失败");
-                _currentOrder = { orderNo: data.orderNo, jumpUrl: data.jumpUrl || "", payType: selectedPayType, planId: selectedPlan };
+                // 支付返回 jump_url 收银台跳转链接或 qr_url PC 扫码二维码
+                if (!res.ok || (!data.jumpUrl && !data.qrUrl)) throw new Error(data.error || "创建订单失败");
+                _currentOrder = { orderNo: data.orderNo, jumpUrl: data.jumpUrl || "", qrUrl: data.qrUrl || "", payType: selectedPayType, planId: selectedPlan };
                 // 跳转收银台会离开页面,订单持久化以便返回时自动查单
                 localStorage.setItem(PENDING_KEY, JSON.stringify({ orderNo: data.orderNo, planId: selectedPlan, payType: selectedPayType, ts: Date.now() }));
                 renderOrder(_currentOrder, true);

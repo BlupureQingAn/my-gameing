@@ -7,6 +7,7 @@
 #   XFSPARK_X2_KEY / XFSPARK_X2_FLASH_KEY / OPENROUTER_KEY / AGNES_KEY
 #   H5_APP_ID / H5_APP_SECRET / PAY_NOTIFY_URL
 #   MAPAY_API_URL / MAPAY_APPID / MAPAY_APPKEY
+#   XUNHU_APP_ID=201906186933 / XUNHU_APP_SECRET(签约后发) / XUNHU_NOTIFY_URL=https://ai.blupure.cn/api/xunhu/notify
 name = "my-openai-proxy"
 main = "worker.js"
 compatibility_date = "2025-01-01"

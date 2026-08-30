@@ -567,6 +567,51 @@ function verifyH5Sign(params, secret) {
     return h5BuildSign(params, secret) === sign.toUpperCase();
 }
 
+// 虎皮椒签名：非空参数（除 hash）ASCII 升序 key=value 拼接后直接追加 APPSECRET（无连接符），MD5 32 位小写
+function xunhuBuildSign(params, secret) {
+    const keys = Object.keys(params)
+        .filter(k => k !== "hash" && params[k] !== "" && params[k] != null)
+        .sort();
+    const str = keys.map(k => `${k}=${params[k]}`).join("&");
+    return md5(str + secret);
+}
+
+function verifyXunhuSign(params, secret) {
+    const hash = String(params.hash || "");
+    if (!hash) return false;
+    return xunhuBuildSign(params, secret) === hash.toLowerCase();
+}
+
+// 虎皮椒下单：POST form 到 api.xunhupay.com/payment/do.html；返回 { jumpUrl(手机跳转), qrUrl(PC 二维码图片) }
+async function xunhuPlaceOrder(env, orderNo, title, price, userId) {
+    const params = {
+        version: "1.1",
+        appid: env.XUNHU_APP_ID,
+        trade_order_id: orderNo,
+        total_fee: String(Number(price).toFixed(2)), // 元，最多两位小数
+        title: String(title).replace(/%/g, "").slice(0, 40), // 虎皮椒限制：无 % 无表情
+        time: String(Math.floor(Date.now() / 1000)),
+        notify_url: env.XUNHU_NOTIFY_URL,
+        attach: userId,
+        nonce_str: Date.now().toString(16) + Math.random().toString(16).slice(2, 8),
+        type: "WAP",
+        wap_url: env.SITE_URL || "https://bitlife.blupure.cn",
+        wap_name: "云吞吞数字故事平台"
+    };
+    params.hash = xunhuBuildSign(params, env.XUNHU_APP_SECRET);
+    const apiBase = (env.XUNHU_API_URL || "https://api.xunhupay.com").replace(/\/$/, "");
+    const res = await fetch(`${apiBase}/payment/do.html`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams(params),
+        signal: AbortSignal.timeout(15000)
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || json.errcode !== 0) throw new Error(json.errmsg || `支付网关返回异常(HTTP ${res.status})`);
+    if (!json.url && !json.url_qrcode) throw new Error("支付网关未返回支付链接");
+    return { jumpUrl: json.url || "", qrUrl: json.url_qrcode || "", tradeNo: String(json.openid || json.oderid || "") };
+}
+
 // 创建订单：本地落库 pay_orders → 调 H5 支付 open.h5zhifu.com/api/h5 → 返回 { orderNo, jumpUrl }
 async function createPayOrder(env, userId, planId, payType) {
     const plan = CHARGE_PLANS[planId] || (planId === "lifetime" ? LIFETIME_PLAN : null);
@@ -589,6 +634,16 @@ async function createPayOrder(env, userId, planId, payType) {
         })
     });
     if (!orderRes.ok) throw new Error("订单创建失败");
+
+    // 微信支付：优先虎皮椒（已配置密钥），下单失败自动回退 h5zhifu 网关
+    if (payType === "wxpay" && env.XUNHU_APP_SECRET) {
+        try {
+            const xh = await xunhuPlaceOrder(env, orderNo, plan.name, price, userId);
+            return { orderNo, jumpUrl: xh.jumpUrl, qrUrl: xh.qrUrl, tradeNo: xh.tradeNo };
+        } catch (e) {
+            console.error("xunhuPlaceOrder error:", e.message);
+        }
+    }
 
     const params = {
         app_id: Number(env.H5_APP_ID),
@@ -627,59 +682,78 @@ async function createPayOrder(env, userId, planId, payType) {
     throw lastErr || new Error("支付网关连接失败");
 }
 
-// 回调处理：验签 → paid/success → 订单/金额校验 → 幂等 → 充值档发云币(首充双倍)/lifetime 开通会员
+// 公共发货：查单 → 幂等 → 金额校验(分) → 充值档发云币(首充双倍)/lifetime 开通会员 → PATCH 订单
+async function settlePaidOrder(env, orderNo, tradeNo, amountCents) {
+    const filter = encodeURIComponent(`order_no='${escapePocketBaseFilterValue(orderNo)}'`);
+    const q = await pbAdminFetch(env, `/api/collections/pay_orders/records?perPage=1&skipTotal=true&filter=${filter}`);
+    if (!q.ok) return "fail";
+    const data = await q.json();
+    const order = (data.items || [])[0];
+    if (!order) return "fail";
+    if (order.status === "paid") return "success"; // 幂等：重复回调不重复发放
+
+    const expectAmount = Math.round(parseFloat(order.amount) * 100);
+    if (String(amountCents) !== String(expectAmount)) return "fail"; // 金额(分)校验防伪造
+
+    const now = new Date().toISOString();
+    const isLifetime = order.plan_id === "lifetime";
+
+    const plan = isLifetime ? LIFETIME_PLAN : CHARGE_PLANS[order.plan_id];
+    if (!plan) return "fail";
+
+    // 读当前余额（PocketBase 无原子自增，先读后写）
+    const userRes = await pbAdminFetch(env, `/api/collections/users/records/${order.user_id}`);
+    if (!userRes.ok) return "fail";
+    const user = await userRes.json();
+
+    const patch = {};
+    if (isLifetime) {
+        patch.membership_type = "lifetime";
+        patch.membership_expires_at = LIFETIME_EXPIRY;
+    } else {
+        // 首充判定：该用户除本订单外无已支付记录 → 双倍(基础×2)；否则 基础+赠送
+        const paidFilter = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(order.user_id)}'&&status='paid'&&id!='${order.id}'`);
+        const pq = await pbAdminFetch(env, `/api/collections/pay_orders/records?perPage=1&skipTotal=true&filter=${paidFilter}`);
+        const pd = await pq.json().catch(() => ({}));
+        const isFirst = !(pd.items || []).length;
+        patch.coins = Number(user.coins || 0) + (isFirst ? plan.base * 2 : plan.base + plan.bonus);
+    }
+    const patchRes = await pbAdminFetch(env, `/api/collections/users/records/${order.user_id}`, {
+        method: "PATCH",
+        body: JSON.stringify(patch)
+    });
+    if (!patchRes.ok) return "fail";
+
+    await pbAdminFetch(env, `/api/collections/pay_orders/records/${order.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: "paid", trade_no: tradeNo || "", paid_at: now })
+    });
+    return "success";
+}
+
+// h5zhifu 回调处理：验签 → trade_status 校验 → 公共发货
 async function handlePayNotify(env, params) {
     try {
         if (!verifyH5Sign(params, env.H5_APP_SECRET)) return "fail";
         // 回调文档参数表无 trade_status(能收到回调即已支付);旧版带该字段则校验,缺省放行
         if (params.trade_status && !["paid", "success"].includes(params.trade_status)) return "fail";
-
-        const filter = encodeURIComponent(`order_no='${escapePocketBaseFilterValue(params.out_trade_no || "")}'`);
-        const q = await pbAdminFetch(env, `/api/collections/pay_orders/records?perPage=1&skipTotal=true&filter=${filter}`);
-        if (!q.ok) return "fail";
-        const data = await q.json();
-        const order = (data.items || [])[0];
-        if (!order) return "fail";
-        if (order.status === "paid") return "success"; // 幂等：重复回调不重复发放
-
-        const expectAmount = Math.round(parseFloat(order.amount) * 100);
-        if (String(params.amount) !== String(expectAmount)) return "fail"; // 金额(分)校验防伪造
-
-        const now = new Date().toISOString();
-        const isLifetime = order.plan_id === "lifetime";
-        const plan = isLifetime ? LIFETIME_PLAN : CHARGE_PLANS[order.plan_id];
-        if (!plan) return "fail";
-
-        // 读当前余额（PocketBase 无原子自增，先读后写）
-        const userRes = await pbAdminFetch(env, `/api/collections/users/records/${order.user_id}`);
-        if (!userRes.ok) return "fail";
-        const user = await userRes.json();
-
-        const patch = {};
-        if (isLifetime) {
-            patch.membership_type = "lifetime";
-            patch.membership_expires_at = LIFETIME_EXPIRY;
-        } else {
-            // 首充判定：该用户除本订单外无已支付记录 → 双倍(基础×2)；否则 基础+赠送
-            const paidFilter = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(order.user_id)}'&&status='paid'&&id!='${order.id}'`);
-            const pq = await pbAdminFetch(env, `/api/collections/pay_orders/records?perPage=1&skipTotal=true&filter=${paidFilter}`);
-            const pd = await pq.json().catch(() => ({}));
-            const isFirst = !(pd.items || []).length;
-            patch.coins = Number(user.coins || 0) + (isFirst ? plan.base * 2 : plan.base + plan.bonus);
-        }
-        const patchRes = await pbAdminFetch(env, `/api/collections/users/records/${order.user_id}`, {
-            method: "PATCH",
-            body: JSON.stringify(patch)
-        });
-        if (!patchRes.ok) return "fail";
-
-        await pbAdminFetch(env, `/api/collections/pay_orders/records/${order.id}`, {
-            method: "PATCH",
-            body: JSON.stringify({ status: "paid", trade_no: params.trade_no || "", paid_at: now })
-        });
-        return "success";
+        return await settlePaidOrder(env, params.out_trade_no || "", params.trade_no || "", params.amount);
     } catch (e) {
         console.error("handlePayNotify error:", e.message);
+        return "fail";
+    }
+}
+
+// 虎皮椒回调处理：form 表单验签 → status=OD → 公共发货；回复 "success" 确认，否则网关重试 6 次
+async function handleXunhuNotify(env, params) {
+    try {
+        if (!verifyXunhuSign(params, env.XUNHU_APP_SECRET)) return "fail";
+        // 退款等非支付事件：确认收到但不发货
+        if (String(params.status) !== "OD") return "success";
+        const amountCents = Math.round(parseFloat(String(params.total_fee || "0")) * 100);
+        return await settlePaidOrder(env, params.trade_order_id || "", params.transaction_id || params.open_order_id || "", amountCents);
+    } catch (e) {
+        console.error("handleXunhuNotify error:", e.message);
         return "fail";
     }
 }
@@ -2563,8 +2637,8 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const payType = ["alipay", "wxpay"].includes(body.payType) ? body.payType : "alipay";
                 if (!CHARGE_PLANS[planId] && planId !== "lifetime") return errorResponse("无效的充值档位", 400, null, "INVALID_PLAN");
                 try {
-                    const { orderNo, jumpUrl } = await createPayOrder(env, auth.record.id, planId, payType);
-                    return new Response(JSON.stringify({ orderNo, jumpUrl }), {
+                    const { orderNo, jumpUrl, qrUrl } = await createPayOrder(env, auth.record.id, planId, payType);
+                    return new Response(JSON.stringify({ orderNo, jumpUrl, qrUrl }), {
                         headers: { ...corsHeaders(), "Content-Type": "application/json" }
                     });
                 } catch (e) {
@@ -2606,6 +2680,15 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 }
                 const result = await handlePayNotify(env, params);
                 return new Response(result, { headers: corsHeaders() }); // "success"/"fail" 纯文本
+            }
+
+            // ---- 路由：虎皮椒支付回调（form 表单 POST，回复纯文本 success/fail）----
+            if (url.pathname === "/api/xunhu/notify" && request.method === "POST") {
+                const text = await request.text();
+                let params = {};
+                try { params = Object.fromEntries(new URLSearchParams(text)); } catch (e) {}
+                const result = await handleXunhuNotify(env, params);
+                return new Response(result, { headers: corsHeaders() });
             }
 
             // ---- 路由：查询订单状态（前端轮询兜底）----
