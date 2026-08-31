@@ -18626,8 +18626,8 @@ function openNpcProfile(npcId) {
                 removed += cards.length - kept.length;
             }
             StateService.init();
-            renderAll();
-            NoticeModalService.showInfo({ title: "已清除", descHtml: `已清除 ${removed} 个本地存档缓存（含未上传的创作草稿）。下次游玩将重新开局。` });
+            NoticeModalService.showInfo({ title: "已清除", descHtml: `已清除 ${removed} 个本地存档缓存（含未上传的创作草稿）。页面即将刷新。` });
+            setTimeout(() => location.reload(), 1500); // 清理后强制刷新,避免残留旧页面状态
         }
         function saveSettings() {
             SettingsService.saveFromUI();
