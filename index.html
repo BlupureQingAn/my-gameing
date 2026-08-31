@@ -15706,12 +15706,22 @@ const token = delta.content || "";
                     return { ...s, init, min: 0, max, value: Math.min(Math.max(init, 0), max) };
                 }))
                 : StatsService.normalizeStats(buildFallbackStatsFromScenario(card.text || "", { ageYears: Number.isFinite(ageRaw) ? ageRaw : 18 }));
+            // 身份推断:先句式(封X妃/身为/担任),再职业词兜底(剔除亲属他人句),称谓词(皇帝/王爷等)不参与兜底,防"皇帝震怒"误配
+            const roleFromBg = (bg) => {
+                const m1 = bg.match(/封(?:为)?([^，。封]{1,4}(?:妃|贵人|答应|才人|昭仪|贵妃|嫔))/);
+                if (m1) return m1[1];
+                const m2 = bg.match(/(?:身为|担任|就职于|从业于)([^，。]{1,6})/);
+                if (m2) return m2[1];
+                return "";
+            };
+            const ROLE_TITLE_SET = new Set(["皇帝", "王爷", "公主", "太子", "皇子", "妃嫔"]);
+            const bgSelf = bgText.split(/[，。；]/).filter((s) => !/(?:父亲|母亲|爹|娘|父王|母后|哥哥|姐姐|弟弟|妹妹|丈夫|妻子|老公|老婆|恋人|青梅竹马|前任|王妃|驸马|夫君|兄长)/.test(s)).join("");
             return {
                 name,
                 englishName: String(identity.englishName || fallbackIdentity.englishName || "PendingName").trim().slice(0, 32),
                 forcedGender: String(identity.gender || "").trim() || selectedGender || "女",
                 forcedOrientation: String(identity.orientation || "").trim().slice(0, 12) || "异性恋",
-                forcedRole: String(identity.role || "").trim().slice(0, 12) || ROLE_DICT.find((r) => bgText.includes(r)) || themeRole || "",
+                forcedRole: String(identity.role || "").trim().slice(0, 12) || roleFromBg(bgText) || ROLE_DICT.find((r) => !ROLE_TITLE_SET.has(r) && bgSelf.includes(r)) || themeRole || "",
                 ageYears: Number.isFinite(ageRaw) && ageRaw >= 0 ? ageRaw : 18,
                 nationality: nationMatch ? nationMatch[1] : (String(identity.nationality || "").trim().slice(0, 12) || (/现代|都市|校园|职场|娱乐圈/.test(era) || /古代|古风|历史|宫斗|武侠/.test(era) ? "中国" : "")),
                 location: locationRaw || (initLocations[0] && initLocations[0].name) || "",

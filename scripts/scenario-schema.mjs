@@ -14,7 +14,7 @@ export function emptyData() {
     return {
         theme: "retro-paper",
         world: { era: "", genre: "", summary: "", rules: [], atmosphere: "" },
-        identity: { name: "", gender: "", age: "", background: "" },
+        identity: { name: "", gender: "", age: "", role: "", background: "" },
         npcs: [],
         timeline: { start: { year: 2026, month: 1, day: 1 }, note: "" },
         scene_style: { env_templates: [], option_style: "" },
@@ -47,6 +47,7 @@ export function validateStructured(data) {
     out.identity.name = str(idn.name, 40);
     out.identity.gender = str(idn.gender, 20);
     out.identity.age = str(idn.age, 20);
+    out.identity.role = str(idn.role, 20);
     out.identity.background = str(idn.background, 1000);
     if (!out.identity.name) errors.push("identity.name 必填");
 
@@ -110,6 +111,7 @@ export function renderScenarioText(data) {
     lines.push(`姓名：${d.identity.name}`);
     if (d.identity.gender) lines.push(`性别：${d.identity.gender}`);
     if (d.identity.age) lines.push(`年龄：${d.identity.age}`);
+    if (d.identity.role) lines.push(`身份：${d.identity.role}`);
     lines.push(`背景：${d.identity.background || "（由故事发展决定）"}`);
 
     if (d.npcs.length) {
