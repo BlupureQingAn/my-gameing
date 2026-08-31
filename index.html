@@ -20364,8 +20364,10 @@ function openNpcProfile(npcId) {
             if (!payArea) return;
             const payMethodName = order.payType === "alipay" ? "支付宝" : "微信";
             const tip = order.planId === "lifetime" ? "支付完成后将自动开通会员（1-2 分钟内生效）" : "支付完成后云币自动到账（1-2 分钟内生效）";
-            // PC 扫码模式：虎皮椒返回 url_qrcode 二维码图片地址，直接展示扫码
-            if (order.qrUrl) {
+            // 设备区分:移动端必须跳 H5 收银台,若显示 url_qrcode 会与 PC 同码且手机无法扫码
+            const isMobile = /Android|iPhone|iPad|iPod|Mobile|Windows Phone/i.test(navigator.userAgent || "");
+            // PC 扫码模式：仅桌面端展示虎皮椒 url_qrcode 二维码
+            if (!isMobile && order.qrUrl) {
                 payArea.innerHTML = `<div class="list-sub" style="margin:8px 0;color:var(--accent-dark);font-weight:700;">✅ 订单创建成功，请使用微信扫码支付</div>
                     <div class="list-sub" style="margin-top:6px;">订单号：${order.orderNo}</div>
                     <img src="${order.qrUrl}" alt="微信支付二维码" style="width:180px;height:180px;margin:10px auto;display:block;border-radius:8px;background:#fff;padding:4px;">
