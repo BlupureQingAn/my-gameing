@@ -19213,7 +19213,7 @@ function openNpcProfile(npcId) {
                 return;
             }
             document.getElementById("comment-input").value = "";
-            openPostComments(_commentsTargetPostId);
+            closeCommentsModal();
             loadCommunityFeed();
         }
         async function toggleFollow(authorId, btn) {
