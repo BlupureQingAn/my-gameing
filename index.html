@@ -20390,7 +20390,7 @@ function openNpcProfile(npcId) {
         async function startPay() {
             const user = AuthService.getUserData();
             if (!user) { NoticeModalService.showInfo({ title: "提示", descHtml: "请先登录" }); return; }
-            if (selectedPayType === "alipay") { NoticeModalService.showInfo({ title: "提示", descHtml: "尚未开通支付宝支付" }); return; }
+            if (selectedPayType === "alipay") { NoticeModalService.showInfo({ title: "提示", descHtml: "尚未开通支付宝支付，如实在需要支付宝支付，请联系小红书官方账号「云吞吞在努力」" }); return; }
             // 合规确认:每次充值须勾选 18 岁/监护人确认与虚拟商品条款
             const adultBox = document.getElementById("adult-confirm-box");
             if (!adultBox || !adultBox.checked) {
