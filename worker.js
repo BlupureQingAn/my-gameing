@@ -1,3 +1,21 @@
+import { BANNED_WORDS } from "./banned_words.js";
+
+// 违禁词过滤:命中返回首个命中词,否则 null;纯字母/数字词要求边界(避免误伤 obsessed 等含 sb 的正常词)
+function checkBanned(text) {
+    if (!text) return null;
+    for (const w of BANNED_WORDS) {
+        const idx = text.indexOf(w);
+        if (idx === -1) continue;
+        if (/^[A-Za-z0-9]+$/.test(w)) {
+            const before = idx > 0 ? text[idx - 1] : "";
+            const after = text[idx + w.length] || "";
+            if (/[A-Za-z0-9]/.test(before) || /[A-Za-z0-9]/.test(after)) continue;
+        }
+        return w;
+    }
+    return null;
+}
+
 // ==================== 1. 配置中心 ====================
 
 // 云币经济：AI 对话按 token 计费（输入 4 币/千 token、输出 12 币/千 token，向上取整，最低 1 币/轮，失败不扣费；典型对话约 10 币）、解锁 5000 币/张、签到 300 币/天（每连续满 7 天额外 +700，如第 7/14/21 天；首次签到与每日一致）
@@ -2359,6 +2377,8 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 try { body = await request.json(); } catch (e) {}
                 const content = String(body.content || "").trim().slice(0, 500);
                 if (!content) return errorResponse("内容不能为空", 400, null, "EMPTY_POST");
+                const hit = checkBanned(content);
+                if (hit) return errorResponse(`内容包含违禁词「${hit}」，请修改后重发`, 400, null, "BANNED_WORD");
                 const now = Date.now();
                 if (now - (postRateMap.get(auth.record.id) || 0) < POST_RATE_LIMIT_MS) {
                     return errorResponse("发帖太频繁，请稍后再试", 429, null, "POST_TOO_FREQUENT");
@@ -2424,6 +2444,8 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const postId = String(body.post_id || "");
                 const content = String(body.content || "").trim().slice(0, 200);
                 if (!postId || !content) return errorResponse("参数不完整", 400, null, "INVALID_COMMENT");
+                const hit = checkBanned(content);
+                if (hit) return errorResponse(`评论包含违禁词「${hit}」，请修改后重发`, 400, null, "BANNED_WORD");
                 const pQ = await pbAdminFetch(env, `/api/collections/posts/records/${encodeURIComponent(postId)}`);
                 const pD = await pQ.json().catch(() => ({}));
                 if (!pD || !pD.id) return errorResponse("帖子不存在", 404, null, "POST_NOT_FOUND");
@@ -2488,6 +2510,8 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const cardId = String(body.card_id || "").trim();
                 const content = String(body.content || "").trim().slice(0, 200);
                 if (!cardId || !content) return errorResponse("参数不完整", 400, null, "INVALID_REVIEW");
+                const hit = checkBanned(content);
+                if (hit) return errorResponse(`评论包含违禁词「${hit}」，请修改后重发`, 400, null, "BANNED_WORD");
                 const now = Date.now();
                 if (now - (postRateMap.get("review:" + auth.record.id) || 0) < DONATE_RATE_LIMIT_MS) {
                     return errorResponse("评论太频繁，请稍后再试", 429, null, "REVIEW_TOO_FREQUENT");
