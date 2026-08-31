@@ -311,7 +311,7 @@ async function clearModelCooldown(modelId) {
 
 // 充值档位（金额与 worker 校验共用，前端仅展示）：币值 = 基础 + 赠送；首充 = 基础 ×2
 const CHARGE_PLANS = {
-    c6:  { id: "c6",  name: "6000 云币", price: "6",  base: 6000,  bonus: 600 },
+    c6:  { id: "c6",  name: "6000 云币", price: "0.01",  base: 6000,  bonus: 600 }, // TODO 测试价,测完恢复 6
     c18: { id: "c18", name: "18000 云币", price: "18", base: 18000, bonus: 1800 },
     c30: { id: "c30", name: "30000 云币", price: "30", base: 30000, bonus: 4500 },
     c68: { id: "c68", name: "68000 云币", price: "68", base: 68000, bonus: 13600 },
