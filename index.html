@@ -5835,6 +5835,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             uiThemeMode: "bitlife_ui_theme_mode_v1"
         },
         chargePlans: {
+            c1:  { id: "c1",  name: "1000 云币", price: "1",  coins: 2000, desc: "首充双倍 2000 · 新用户专属（复充 1100）", tag: "首充双倍" },
             c6:  { id: "c6",  name: "6000 云币", price: "6",  coins: 12000, desc: "首充双倍 12000 · 新用户专属（复充 6600）", tag: "首充双倍" },
             c18: { id: "c18", name: "18000 云币", price: "18", coins: 19800, desc: "加赠 1800 云币", tag: "" },
             c30: { id: "c30", name: "30000 云币", price: "30", coins: 34500, desc: "加赠 4500 云币", tag: "" },
@@ -20192,7 +20193,7 @@ function openNpcProfile(npcId) {
 
     // ==================== MembershipService (会员开通/续费) ====================
     const MembershipService = (() => {
-        let selectedPlan = "c6";
+        let selectedPlan = "c1";
         let selectedPayType = "wxpay"; // 支付宝未开通,统一默认微信
         let _pollTimer = null;
         let _currentOrder = null;   // 当前进行中的订单:重复点击立即支付时复用,不重复创建
