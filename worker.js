@@ -2788,7 +2788,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 if (!order || order.user_id !== auth.record.id) return errorResponse("订单不存在", 404, null, "INVALID_ORDER");
                 let status = Array.isArray(order.status) ? order.status[0] : order.status; // PocketBase JSON 字段可能返回数组
                 // 只查本地订单状态（H5 网关查询接口严禁轮询，500 次/天黑名单）
-                return new Response(JSON.stringify({ status, outTradeNo: orderNo }), {
+                return new Response(JSON.stringify({ status, outTradeNo: orderNo, planId: order.plan_id || "" }), {
                     headers: { ...corsHeaders(), "Content-Type": "application/json" }
                 });
             }

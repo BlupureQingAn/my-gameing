@@ -20447,7 +20447,8 @@ function openNpcProfile(npcId) {
                     // PocketBase JSON 字段可能返回数组,兼容两种形态
                     const st = Array.isArray(data.status) ? data.status[0] : data.status;
                     if (st === "paid") {
-                        const paidPlanId = _currentOrder?.planId || "";
+                        // 优先用服务器返回的 plan_id(权威),本地 _currentOrder 可能因面板关闭/重载丢失
+                        const paidPlanId = data.planId || _currentOrder?.planId || "";
                         stopPoll();
                         localStorage.removeItem(PENDING_KEY);
                         closePanel();
