@@ -653,12 +653,8 @@ async function createPayOrder(env, userId, planId, payType, isMobile) {
     });
     if (!orderRes.ok) throw new Error("订单创建失败");
 
-    // 支付路由(按设备+方式选网关):电脑端微信=虎皮椒扫码(失败回退 h5zhifu)；手机端微信+h5zhifu；
-    // 支付宝仅手机端 h5 可用——电脑端打开 H5 收银台会被支付宝按 UA 拦截，直接提示去手机端
-    if (payType === "alipay") {
-        if (!isMobile) throw new Error("请在手机端登录网站使用支付宝");
-        return h5PlaceOrder(env, orderNo, plan, price, payType, userId);
-    }
+    // 支付路由(按设备+方式选网关):电脑端微信=虎皮椒扫码(失败回退 h5zhifu)；手机端微信=h5zhifu；支付宝未开通
+    if (payType === "alipay") throw new Error("尚未开通支付宝支付");
     if (isMobile) return h5PlaceOrder(env, orderNo, plan, price, payType, userId);
     if (env.XUNHU_APP_SECRET) {
         try {
