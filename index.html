@@ -8086,18 +8086,46 @@ function rebuildChoicesBlock(body, labels = []) {
         const m = t.match(/```(?:json)?\s*([\s\S]*?)```/);
         if (m) t = m[1].trim();
         if (/^[[{]/.test(t)) {
-            try {
-                const parsed = JSON.parse(t);
-                const obj = Array.isArray(parsed) ? parsed[0] : parsed;
-                if (obj && typeof obj === "object") {
-                    let v = null;
-                    for (const k of ["reply", "text", "msg", "content", "response", "回复", "message"]) {
-                        if (obj[k] != null && typeof obj[k] === "string") { v = obj[k]; break; }
-                    }
-                    if (v == null) v = Object.values(obj).find((x) => typeof x === "string") || null;
-                    if (typeof v === "string" && v.trim()) t = v.trim();
+            const extractReply = (obj) => {
+                if (!obj || typeof obj !== "object") return null;
+                for (const k of ["reply", "text", "msg", "content", "response", "回复", "message"]) {
+                    const v = obj[k];
+                    if (v != null && typeof v === "string" && v.trim()) return v.trim();
                 }
-            } catch (e) {}
+                return Object.values(obj).find((x) => typeof x === "string" && x.trim()) || null;
+            };
+            // 字符串内裸换行 → \n 转义(格式化 JSON 的结构换行不受影响)
+            const fixJsonNewlines = (s) => {
+                let out = "", inStr = false;
+                for (let i = 0; i < s.length; i++) {
+                    const c = s[i];
+                    if (inStr) {
+                        if (c === "\\") { out += c + (s[i + 1] || ""); i++; continue; }
+                        if (c === "\"") inStr = false;
+                        else if (c === "\n") { out += "\\n"; continue; }
+                    } else if (c === "\"") inStr = true;
+                    out += c;
+                }
+                return out;
+            };
+            const tryExtract = (src) => {
+                const parsed = JSON.parse(src);
+                const obj = Array.isArray(parsed) ? parsed[0] : parsed;
+                const v = extractReply(obj);
+                if (v) t = v;
+            };
+            try {
+                tryExtract(t);
+            } catch (e) {
+                // 模型输出残缺/带裸引号或裸换行的 JSON 时,截取 {…} 子串修复后重试(response/action/state-patch 等自创结构常见)
+                const l = t.indexOf("{");
+                const r = t.lastIndexOf("}");
+                if (l >= 0 && r > l) {
+                    const sub = t.slice(l, r + 1);
+                    try { tryExtract(sub); }
+                    catch (e2) { try { tryExtract(fixJsonNewlines(sub)); } catch (e3) {} }
+                }
+            }
         }
         t = t.replace(/[（(]?\s*(?:心声|内心独白|心里话|内心|心里想|心想)\s*[：:][^）)]{0,40}[）)]?/g, "");
         return t.trim();
