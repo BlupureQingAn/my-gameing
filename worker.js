@@ -2493,8 +2493,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                     return errorResponse("评论太频繁，请稍后再试", 429, null, "REVIEW_TOO_FREQUENT");
                 }
                 postRateMap.set("review:" + auth.record.id, now);
-                const cQ = await pbAdminFetch(env, `/api/collections/community_cards/records/${encodeURIComponent(cardId)}`);
-                if (!cQ.ok) return errorResponse("作品不存在", 404, null, "CARD_NOT_FOUND");
+                // 论坛=当前剧本评论区,官方剧本卡是前端本地数据(不在 community_cards 集合),卡查不到不拦截
                 const res = await pbAdminFetch(env, `/api/collections/reviews/records`, {
                     method: "POST",
                     body: JSON.stringify({
