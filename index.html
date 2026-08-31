@@ -20155,7 +20155,8 @@ function openNpcProfile(npcId) {
     // ==================== MembershipService (会员开通/续费) ====================
     const MembershipService = (() => {
         let selectedPlan = "c6";
-        let selectedPayType = "alipay";
+        // 支付路由:手机端支付宝/微信都走 h5zhifu(默认支付宝)；电脑端支付宝不可用(默认微信走虎皮椒扫码)
+        let selectedPayType = /Android|iPhone|iPad|iPod|Mobile|Windows Phone/i.test(navigator.userAgent || "") ? "alipay" : "wxpay";
         let _pollTimer = null;
         let _currentOrder = null;   // 当前进行中的订单:重复点击立即支付时复用,不重复创建
         let _creatingOrder = false; // 创建中锁,防双击产生两个订单
@@ -20390,7 +20391,8 @@ function openNpcProfile(npcId) {
         async function startPay() {
             const user = AuthService.getUserData();
             if (!user) { NoticeModalService.showInfo({ title: "提示", descHtml: "请先登录" }); return; }
-            if (selectedPayType === "alipay") { NoticeModalService.showInfo({ title: "提示", descHtml: "尚未开通支付宝支付" }); return; }
+            // 支付宝仅手机端可用(电脑端 H5 收银台被支付宝拦截),电脑端直接提示去手机端
+            if (selectedPayType === "alipay" && !/Android|iPhone|iPad|iPod|Mobile|Windows Phone/i.test(navigator.userAgent || "")) { NoticeModalService.showInfo({ title: "提示", descHtml: "请在手机端登录网站使用支付宝" }); return; }
             // 合规确认:每次充值须勾选 18 岁/监护人确认与虚拟商品条款
             const adultBox = document.getElementById("adult-confirm-box");
             if (!adultBox || !adultBox.checked) {

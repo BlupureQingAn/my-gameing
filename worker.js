@@ -630,8 +630,8 @@ async function xunhuPlaceOrder(env, orderNo, title, price, userId) {
     return { jumpUrl: json.url || "", qrUrl: json.url_qrcode || "", tradeNo: String(json.openid || json.oderid || "") };
 }
 
-// 创建订单：本地落库 pay_orders → 调 H5 支付 open.h5zhifu.com/api/h5 → 返回 { orderNo, jumpUrl }
-async function createPayOrder(env, userId, planId, payType) {
+// 创建订单：本地落库 pay_orders → 按设备/支付方式选网关 → 返回 { orderNo, jumpUrl, qrUrl? }
+async function createPayOrder(env, userId, planId, payType, isMobile) {
     const plan = CHARGE_PLANS[planId] || (planId === "lifetime" ? LIFETIME_PLAN : null);
     if (!plan) throw new Error("无效的充值档位");
     // 终身会员按 offer 状态定价:24h 优惠期内 188,过期恢复 249
@@ -653,8 +653,14 @@ async function createPayOrder(env, userId, planId, payType) {
     });
     if (!orderRes.ok) throw new Error("订单创建失败");
 
-    // 微信支付：优先虎皮椒（已配置密钥），下单失败自动回退 h5zhifu 网关
-    if (payType === "wxpay" && env.XUNHU_APP_SECRET) {
+    // 支付路由(按设备+方式选网关):电脑端微信=虎皮椒扫码(失败回退 h5zhifu)；手机端微信+h5zhifu；
+    // 支付宝仅手机端 h5 可用——电脑端打开 H5 收银台会被支付宝按 UA 拦截，直接提示去手机端
+    if (payType === "alipay") {
+        if (!isMobile) throw new Error("请在手机端登录网站使用支付宝");
+        return h5PlaceOrder(env, orderNo, plan, price, payType, userId);
+    }
+    if (isMobile) return h5PlaceOrder(env, orderNo, plan, price, payType, userId);
+    if (env.XUNHU_APP_SECRET) {
         try {
             const xh = await xunhuPlaceOrder(env, orderNo, plan.name, price, userId);
             return { orderNo, jumpUrl: xh.jumpUrl, qrUrl: xh.qrUrl, tradeNo: xh.tradeNo };
@@ -662,7 +668,11 @@ async function createPayOrder(env, userId, planId, payType) {
             console.error("xunhuPlaceOrder error:", e.message);
         }
     }
+    return h5PlaceOrder(env, orderNo, plan, price, payType, userId);
+}
 
+// h5zhifu 网关下单：open.h5zhifu.com/api/h5 → 返回 { orderNo, jumpUrl }（H5 收银台跳转，仅移动端可靠）
+async function h5PlaceOrder(env, orderNo, plan, price, payType, userId) {
     const params = {
         app_id: Number(env.H5_APP_ID),
         out_trade_no: orderNo,
@@ -2704,8 +2714,10 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const planId = String(body.planId || "");
                 const payType = ["alipay", "wxpay"].includes(body.payType) ? body.payType : "alipay";
                 if (!CHARGE_PLANS[planId] && planId !== "lifetime") return errorResponse("无效的充值档位", 400, null, "INVALID_PLAN");
+                const ua = request.headers.get("user-agent") || "";
+                const isMobile = /Android|iPhone|iPad|iPod|Mobile|Windows Phone/i.test(ua);
                 try {
-                    const { orderNo, jumpUrl, qrUrl } = await createPayOrder(env, auth.record.id, planId, payType);
+                    const { orderNo, jumpUrl, qrUrl } = await createPayOrder(env, auth.record.id, planId, payType, isMobile);
                     return new Response(JSON.stringify({ orderNo, jumpUrl, qrUrl }), {
                         headers: { ...corsHeaders(), "Content-Type": "application/json" }
                     });
