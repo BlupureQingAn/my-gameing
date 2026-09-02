@@ -5994,15 +5994,20 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             const modal = document.getElementById("decision-modal");
             if (modal) modal.style.display = "none";
         }
+        // 文本优先；含 <svg 图标字面量的串按 HTML 渲染（与 NoticeModalService.showInfo 一致，全站按钮/标题图标传参惯例）
+        function setSmart(el, v) {
+            const s = String(v == null ? "" : v);
+            if (s.indexOf("<svg") >= 0) el.innerHTML = s; else el.innerText = s;
+        }
         function show({ title, descHtml, okText = "重试", cancelText = "跳过" }) {
             return new Promise((resolve) => {
                 pendingResolve = resolve;
-                document.getElementById("decision-modal-title").innerText = String(title || "需要确认");
+                setSmart(document.getElementById("decision-modal-title"), String(title || "需要确认"));
                 document.getElementById("decision-modal-desc").innerHTML = String(descHtml || "");
                 const okBtn = document.getElementById("decision-modal-ok-btn");
                 const cancelBtn = document.getElementById("decision-modal-cancel-btn");
-                okBtn.innerText = okText;
-                cancelBtn.innerText = cancelText;
+                setSmart(okBtn, okText);
+                setSmart(cancelBtn, cancelText);
                 okBtn.onclick = () => {
                     close();
                     const r = pendingResolve;
