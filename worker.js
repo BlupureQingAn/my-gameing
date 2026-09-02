@@ -619,10 +619,10 @@ function pickModel(usageMap, today, isMember, pool = MODEL_POOL) {
 
 // ==================== 5. H5 支付（h5zhifu.com） ====================
 
-// h5zhifu 网关多节点：默认 open.h5zhifu.com，网络不佳时自动切换国内备用节点（北京/上海/广州/成都）
-// 仅后端程序调用，浏览器不可直接打开；env.PAY_API_URL 显式配置时只走该域名（禁用自动切换）
+// h5zhifu 网关多节点（北京/上海/广州/成都）；env.PAY_API_URL 显式配置时只走该域名（禁用自动切换）
+// 2026-09-02:原首节点 open.h5zhifu.com 实测 TLS 不可达(直连与海外出口均失败,曾致每单白等 15s 超时),
+// 已移除;平台主域若恢复需连通性验证后再回添首位。仅后端程序调用，浏览器不可直接打开。
 const PAY_GATEWAY_BASES = [
-    "https://open.h5zhifu.com",
     "https://bj.open.serverapi.work",
     "https://sh.open.serverapi.work",
     "https://gz.open.serverapi.work",
@@ -681,7 +681,7 @@ async function xunhuPlaceOrder(env, orderNo, title, price, userId) {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams(params),
-        signal: AbortSignal.timeout(15000)
+        signal: AbortSignal.timeout(8000)
     });
     const json = await res.json().catch(() => ({}));
     if (!res.ok || json.errcode !== 0) throw new Error(json.errmsg || `支付网关返回异常(HTTP ${res.status})`);
@@ -749,7 +749,7 @@ async function h5PlaceOrder(env, orderNo, plan, price, payType, userId) {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(params),
-                signal: AbortSignal.timeout(15000)
+                signal: AbortSignal.timeout(4000)
             });
         } catch (e) {
             lastErr = new Error(e.name === "TimeoutError" ? "支付网关响应超时，请稍后重试" : "支付网关连接失败");
