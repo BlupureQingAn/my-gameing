@@ -19979,6 +19979,10 @@ function openNpcProfile(npcId) {
                 const okEdit = window.confirm(`检测到 ${drafts.length} 份未上传的创作草稿${drafts.length > 1 ? "" : `《${String(first.title || "未命名")}》`}。要继续编辑草稿吗？（取消则新建空白创作）`);
                 if (okEdit) {
                     ScenarioCardService.setSelectedId(first.id);
+                    PlayViewStateService.leavePlay();
+                    StateService.init();
+                    SettingsService.loadToUI();
+                    renderAll();
                     switchView("view-scenario-editor");
                     ScenarioEditorService.focusEditor();
                     return;
@@ -20084,9 +20088,19 @@ function openNpcProfile(npcId) {
             } else if (flags.summary || flags.rules || flags.stats || flags.identity || flags.npcs || flags.opening) {
                 NoticeModalService.showInfo({ title: "AI 生成失败", descHtml: "已创建空白卡，可在编辑器中手动填写设定。" });
             }
-            const rest = ScenarioCardService.loadCards().filter((c) => c.id !== card.id);
-            ScenarioCardService.saveCards([card, ...rest]);
+            let rest;
+            try {
+                rest = ScenarioCardService.loadCards().filter((c) => c.id !== card.id);
+                ScenarioCardService.saveCards([card, ...rest]);
+            } catch (e) {
+                NoticeModalService.showInfo({ title: "保存失败", descHtml: "浏览器本地存储已满或不可用，新卡未保存。<br>请删除一些旧卡后重新确认生成。" });
+                return; // 留在向导,绝不带着错误切走
+            }
             ScenarioCardService.setSelectedId(card.id);
+            PlayViewStateService.leavePlay();
+            StateService.init();
+            SettingsService.loadToUI();
+            renderAll();
             switchView("view-scenario-editor");
             ScenarioEditorService.focusEditor();
         }
