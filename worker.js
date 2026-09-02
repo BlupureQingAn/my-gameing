@@ -175,13 +175,21 @@ const MODEL_POOL = [
     { id: "sf-qwen2.5-7b",   url: "https://api.siliconflow.cn/v1", apiKeyEnv: "SILICONFLOW_KEY", model: "Qwen/Qwen2.5-7B-Instruct",    dailyCap: 1000, tier: 96, enabled: true },
     // qwen3-8b 流式实测 35 字即停(转非流式后仍慢),禁用
     { id: "sf-qwen3-8b",     url: "https://api.siliconflow.cn/v1", apiKeyEnv: "SILICONFLOW_KEY", model: "Qwen/Qwen3-8B",               dailyCap: Infinity, tier: 99, enabled: false },
+    // ---- 终极兜底(2026-08-31 小徐指定):智谱付费模型 GLM-5.3-Flash,不限额;tier 100 链尾,仅当全部免费模型
+    // 失败/熔断/限流后使用(pickModel 优先 tier1-99,候选链排序也在最后;实付按智谱账单计费)
+    // 2026-08-31 22:40 ZHIPU_KEY2 调用付费模型失败(503)→ 换用已验证可调付费模型的 ZHIPU_KEY3 ----
+    { id: "zp-glm-5.3-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY3", model: "glm-5.3-flash", dailyCap: Infinity, tier: 100, enabled: true },
 ];
 
-// 流式坏平台（2026-08-29 全 55 模型实测）:stream + response_format json_object 下 content 恒空/断流/超慢,
-// 但非流式全部正常出 JSON。前端请求恒为流式 → 这些模型实际不可用。worker 收到流式请求时对此类模型
-// 强制上游非流式,单块 SSE 回吐（打字机一次性显示完整卡,parseStreaming/finishStreaming 已兼容整卡替换）
+// 流式坏模型两类（2026-08-29 全 55 模型实测 + 2026-08-31 线上剥 format 实测定稿）:
+// 1. STREAM_NO_JSON:流式 + response_format json_object 下 content 恒空,但流式 + 去掉 format 后正常出 JSON
+//    (讯飞系实测 5/5 出内容,x1 裸 JSON,其余带 ```json 围栏——前端 stripFence 已容错)→ 保持流式仅剥 format
+// 2. STREAM_BROKEN:流式无论如何(带/不带 format)都零输出(content 恒空),仅非流式正常
+//    (OpenRouter 免费 4 个 + 硅基 4 个实测 chunks=0)→ 强制上游非流式,单块 SSE 回吐(前端 finishStreaming 整卡替换)
+const STREAM_NO_JSON = [
+    "xf-spark-x1", "xf-spark-ultra", "xf-spark-lite", "xf-spark-pro", "xf-spark-pro128k"
+];
 const STREAM_BROKEN = [
-    "xf-spark-x1", "xf-spark-ultra", "xf-spark-lite", "xf-spark-pro", "xf-spark-pro128k",
     "or-minimax-m3", "or-minimax-m2.7", "or-nemotron-3-super", "or-nemotron-3-ultra",
     "sf-glm-z1-9b", "sf-glm-4-9b", "sf-r1-qwen3-8b", "sf-qwen2.5-7b"
 ];
@@ -295,12 +303,13 @@ async function isModelInCooldown(modelId) {
     return false;
 }
 
-async function setModelCooldown(modelId, ms = MODEL_FAIL_COOLDOWN_MS) {
+function setModelCooldown(modelId, ms = MODEL_FAIL_COOLDOWN_MS) {
+    // 内存同步生效(本实例快路径);Cache API 跨实例广播异步不阻塞,失败链判定不因熔断写入变慢
     modelFailTimes.set(modelId, Date.now());
     try {
-        await caches.default.put(failCacheUrl(modelId), new Response("1", {
+        caches.default.put(failCacheUrl(modelId), new Response("1", {
             headers: { "Cache-Control": `max-age=${Math.floor(ms / 1000)}` }
-        }));
+        })).catch(() => {});
     } catch (e) { /* best-effort */ }
 }
 
@@ -310,7 +319,9 @@ async function clearModelCooldown(modelId) {
 }
 
 // 充值档位（金额与 worker 校验共用，前端仅展示）：币值 = 基础 + 赠送；首充 = 基础 ×2
+// 2026-08-31 新增 c1 ¥1 档:最低支持买 1 元(虎皮椒无最低限额),测试/小额体验门槛
 const CHARGE_PLANS = {
+    c1:  { id: "c1",  name: "1000 云币", price: "1",  base: 1000,  bonus: 100 },
     c6:  { id: "c6",  name: "6000 云币", price: "6",  base: 6000,  bonus: 600 },
     c18: { id: "c18", name: "18000 云币", price: "18", base: 18000, bonus: 1800 },
     c30: { id: "c30", name: "30000 云币", price: "30", base: 30000, bonus: 4500 },
@@ -318,7 +329,17 @@ const CHARGE_PLANS = {
     c89: { id: "c89", name: "89000 云币", price: "89", base: 89000, bonus: 17800 },
     c168: { id: "c168", name: "168000 云币", price: "168", base: 168000, bonus: 33600 },
 };
-// 终身会员（会员改革后唯一保留的会员档，非充值档）
+// 会员档位（金额/时长，前端仅展示；区别于 CHARGE_PLANS 云币档；2026-09-01 会员改革新增周/月/季/年）
+const MEMBER_PLANS = {
+    weekly:    { id: "weekly",    name: "周度会员", price: "9",   days: 7 },
+    monthly:   { id: "monthly",   name: "月度会员", price: "21",  days: 30 },
+    quarterly: { id: "quarterly", name: "季度会员", price: "49",  days: 90 },
+    yearly:    { id: "yearly",    name: "年度会员", price: "118", days: 365 },
+};
+// 免费用户每日免费 AI 次数(北京时间 08:00 刷新;额度内仅路由 NVIDIA 全部 + 硅基 sf-glm-4-9b,超限转云币计费)
+const FREE_QUOTA_PER_DAY = 50;
+const FREE_QUOTA_REFRESH_HOUR = 8;
+// 终身会员（会员改革后保留的会员档，非充值档）
 const LIFETIME_PLAN = { id: "lifetime", name: "终身会员", price: "188", days: 73000 };
 // 终身会员限时优惠:每用户从首次打开充值页起 24h 内 ¥188,过后恢复 ¥249
 const OFFER_MS = 24 * 3600 * 1000;
@@ -426,6 +447,33 @@ function errorResponse(msg, status = 500, detail = null, code = "") {
 
 function getTodayStr() {
     return new Date(Date.now() + TIMEZONE_OFFSET_MS).toISOString().slice(0, 10);
+}
+
+// 免费额度日期：北京时间 08:00 为界（00:00-07:59 归前一天 → 每天 08:00 自动刷新）
+function getFreeQuotaDateStr() {
+    const d = new Date(Date.now() + TIMEZONE_OFFSET_MS);
+    if (d.getUTCHours() < FREE_QUOTA_REFRESH_HOUR) d.setUTCDate(d.getUTCDate() - 1);
+    return d.toISOString().slice(0, 10);
+}
+// 免费额度：每用户每日计数存 KV（KV 非原子 read-modify-write，极端并发少计可接受）
+async function readFreeQuota(env, userId, date) {
+    try { return Number(await env.COVER_CACHE.get(`freequota:${userId}:${date}`) || 0); }
+    catch (e) { return 0; }
+}
+async function bumpFreeQuota(env, userId, date) {
+    const key = `freequota:${userId}:${date}`;
+    try {
+        const cur = Number(await env.COVER_CACHE.get(key) || 0);
+        await env.COVER_CACHE.put(key, String(cur + 1), { expirationTtl: 48 * 3600 });
+    } catch (e) { console.error("free quota bump failed:", e.message); }
+}
+// 会员剩余天数(终身/非会员返回 0;前端徽章/我的页展示用)
+function memberDaysLeft(record) {
+    const t = record.membership_type;
+    if (!t || t === "lifetime") return 0;
+    const exp = Date.parse(record.membership_expires_at || "");
+    if (!exp) return 0;
+    return Math.max(0, Math.ceil((exp - Date.now()) / 86400000));
 }
 
 // 标准 MD5（公共域算法，纯 JS 免依赖；Worker 运行时 WebCrypto 不支持 MD5）
@@ -550,9 +598,9 @@ function isMemberExpired(record) {
 }
 
 // 按 tier 升序选当日未超限的第一个 enabled 模型；全无返回 null
-function pickModel(usageMap, today, isMember) {
+function pickModel(usageMap, today, isMember, pool = MODEL_POOL) {
     // 会员不受池配额(dailyCap)限制:付费用户优先命中池内最优质模型,且不占用免费用户配额
-    return MODEL_POOL
+    return pool
         .filter(m => m.enabled)
         .sort((a, b) => a.tier - b.tier)
         .find(m => isMember || (usageMap[m.id] || 0) < m.dailyCap) || null;
@@ -632,7 +680,7 @@ async function xunhuPlaceOrder(env, orderNo, title, price, userId) {
 
 // 创建订单：本地落库 pay_orders → 按设备/支付方式选网关 → 返回 { orderNo, jumpUrl, qrUrl? }
 async function createPayOrder(env, userId, planId, payType, isMobile) {
-    const plan = CHARGE_PLANS[planId] || (planId === "lifetime" ? LIFETIME_PLAN : null);
+    const plan = CHARGE_PLANS[planId] || MEMBER_PLANS[planId] || (planId === "lifetime" ? LIFETIME_PLAN : null);
     if (!plan) throw new Error("无效的充值档位");
     // 终身会员按 offer 状态定价:24h 优惠期内 188,过期恢复 249
     let price = plan.price;
@@ -721,8 +769,9 @@ async function settlePaidOrder(env, orderNo, tradeNo, amountCents) {
 
     const now = new Date().toISOString();
     const isLifetime = order.plan_id === "lifetime";
+    const memberPlan = MEMBER_PLANS[order.plan_id];
 
-    const plan = isLifetime ? LIFETIME_PLAN : CHARGE_PLANS[order.plan_id];
+    const plan = isLifetime ? LIFETIME_PLAN : (memberPlan || CHARGE_PLANS[order.plan_id]);
     if (!plan) return "fail";
 
     // 读当前余额（PocketBase 无原子自增，先读后写）
@@ -735,6 +784,11 @@ async function settlePaidOrder(env, orderNo, tradeNo, amountCents) {
     if (isLifetime) {
         patch.membership_type = "lifetime";
         patch.membership_expires_at = LIFETIME_EXPIRY;
+    } else if (memberPlan) {
+        // 会员开通/续费：新到期 = max(现到期, 现在) + 时长，提前续费不吞时长
+        const baseMs = Math.max(Date.now(), Date.parse(user.membership_expires_at || "") || 0);
+        patch.membership_type = memberPlan.id;
+        patch.membership_expires_at = new Date(baseMs + memberPlan.days * 86400000).toISOString();
     } else {
         // 首充判定：该用户除本订单外无已支付记录 → 双倍(基础×2)；否则 基础+赠送
         const paidFilter = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(order.user_id)}'&&status='paid'&&id!='${order.id}'`);
@@ -753,6 +807,8 @@ async function settlePaidOrder(env, orderNo, tradeNo, amountCents) {
     const before = Number(user.coins || 0);
     if (isLifetime) {
         await logCoinLedger(env, order.user_id, orderNo, 0, before, before, "lifetime_membership");
+    } else if (memberPlan) {
+        await logCoinLedger(env, order.user_id, orderNo, 0, before, before, `membership_${memberPlan.id}`);
     } else {
         const delta = patch.coins - before;
         await logCoinLedger(env, order.user_id, orderNo, delta, before, patch.coins, isFirst ? "首充双倍到账" : "充值到账");
@@ -859,16 +915,19 @@ export default {
                 const record = auth.record;
                 const userId = record.id;
 
-                // 会员判定
-                if (isMemberExpired(record)) {
-                    return errorResponse("会员已到期，请续费", 402, { expiresAt: record.membership_expires_at }, "MEMBERSHIP_EXPIRED");
-                }
+                // 会员判定：会员到期自动回退免费用户（免费额度照常；membership_type 保留仅靠 expires_at 判定）
                 const isMemberUser = isMember(record);
-                // 云币计费：成功后按实际 token 结算（输入 1 币/千、输出 3 币/千）；请求开始仅校验最低余额，失败不扣费；终身会员免扣
-                if (!isMemberUser) {
+                // 三模式：免费模式（今日 50 次内，仅 NVIDIA 全部 + 硅基 sf-glm-4-9b，不扣币，成功后计数）
+                //          / 云币模式（超限，全池路由，成功后按 token 扣币）/ 会员模式（不限次不扣币）
+                const quotaDate = getFreeQuotaDateStr();
+                const freeUsed = isMemberUser ? FREE_QUOTA_PER_DAY : await readFreeQuota(env, userId, quotaDate);
+                const freeMode = !isMemberUser && freeUsed < FREE_QUOTA_PER_DAY;
+                const freeExhausted = !isMemberUser && !freeMode;
+                // 云币计费：成功后按实际 token 结算（输入 4 币/千、输出 12 币/千）；请求开始仅校验最低余额，失败不扣费；会员免扣
+                if (freeExhausted) {
                     const coin = Number(record.coins || 0);
                     if (coin < TOKEN_COST_MIN) {
-                        return errorResponse(`云币不足（AI 对话按 token 计费，余额至少需 ${TOKEN_COST_MIN} 云币），请充值或开通终身会员`, 402,
+                        return errorResponse(`云币不足（AI 对话按 token 计费，余额至少需 ${TOKEN_COST_MIN} 云币），今日免费额度已用完，请充值云币或开通会员`, 402,
                             { coins: coin, minCost: TOKEN_COST_MIN }, "INSUFFICIENT_COIN");
                     }
                 }
@@ -878,25 +937,28 @@ export default {
                 let requestJson = safeJsonParse(bodyText);
                 const isStream = requestJson.stream === true;
 
-                // 模型池路由
+                // 模型池路由：免费模式仅 NVIDIA 全部 + 硅基 sf-glm-4-9b，其余模式全池
                 const today = getTodayStr();
                 const usageMap = await readModelUsageMap(env, today);
+                const pool = freeMode ? MODEL_POOL.filter(m => m.enabled && (m.id.startsWith("nv-") || m.id === "sf-glm-4-9b")) : MODEL_POOL;
                 // 测试后门：model 传 "pool:<模型id>" 可指定池内模型（仅认证用户可用，探针/兼容性实测用）
                 const forcedModel = requestJson.model && typeof requestJson.model === "string" && requestJson.model.indexOf("pool:") === 0
                     ? MODEL_POOL.find(m => m.id === requestJson.model.slice(5)) : null;
-                const picked = forcedModel || pickModel(usageMap, today, isMemberUser);
+                const picked = forcedModel || pickModel(usageMap, today, isMemberUser, pool);
                 if (!picked) {
-                    return errorResponse("今日全部模型配额已用尽，请明天再试", 429, null, "QUOTA_EXCEEDED");
+                    return errorResponse(freeMode ? "免费模型暂时不可用，请稍后重试" : "今日全部模型配额已用尽，请明天再试", 429, null, "QUOTA_EXCEEDED");
                 }
                 const candidates = forcedModel ? [forcedModel] : [
                     picked,
-                    ...MODEL_POOL.filter(m => m.enabled && m.id !== picked.id && (usageMap[m.id] || 0) < m.dailyCap)
+                    ...pool.filter(m => m.enabled && m.id !== picked.id && (usageMap[m.id] || 0) < m.dailyCap)
                         .sort((a, b) => a.tier - b.tier)
                 ];
 
-                // 逐候选转发：非 2xx / 网络异常 → 换下一个
+                // 逐候选转发：非 2xx / 网络异常 → 换下一个（每个候选完整超时,不截断慢模型;
+                // 全挂场景首次判定可能较长,但失败模型即熔断,后续请求 <1s 直接跳过,前端 90s 读超时兜底）
                 let aiResponse = null;
                 let usedModel = null;
+                let upstreamNonStream = false; // 上游是否已被转为非流式(决定回吐方式)
                 const attempts = []; // 诊断:记录每个候选的尝试结果(模型:状态:耗时ms)
                 for (const target of candidates) {
                     const attemptStart = Date.now();
@@ -911,7 +973,7 @@ export default {
                     try {
                         // 429(账户/模型限流)可恢复:尊重 Retry-After 短等待后同模型重试 1 次,不触发熔断
                         // 网络抖动也重试 1 次;超时/其他错误直接换候选
-                        // 流式坏模型(见 STREAM_BROKEN)收到流式请求时强制上游非流式:等完整响应头需放宽到 120s
+                        // 流式坏模型两档:STREAM_NO_JSON 剥 format 保持流式(讯飞系实测可行);STREAM_BROKEN 强制非流式(实测零输出)
                         const converted = isStream && STREAM_BROKEN.includes(target.id);
                         for (let retry = 0; retry <= 1; retry++) {
                             const controller = new AbortController();
@@ -919,7 +981,8 @@ export default {
                             const timeout = setTimeout(() => controller.abort(), timeoutMs);
                             try {
                                 const payload = { ...requestJson, model: target.model };
-                                if (converted) payload.stream = false;
+                                if (isStream && STREAM_NO_JSON.includes(target.id)) delete payload.response_format;
+                                if (converted) { payload.stream = false; upstreamNonStream = true; }
                                 // Qwen3 系/Qwen3.5/GLM-Z1/DeepSeek-R1 默认思考模式(reasoning 占 87% token,耗时 28-37s),强制关闭提速 ~20 倍
                                 if (["sf-qwen3-8b", "sf-qwen3.5-4b", "sf-glm-z1-9b", "sf-r1-qwen3-8b"].includes(target.id)) payload.enable_thinking = false;
                                 // 注意：不修改请求体其它字段（如 stream_options），部分上游模型不支持会报错或改变输出行为
@@ -978,10 +1041,12 @@ export default {
                     return errorResponse("AI 服务暂时不可用，请稍后重试", 503, null, "POOL_UNAVAILABLE");
                 }
 
-                // 成功后才计模型级配额（会员绕过 dailyCap 不挤压免费用户；云币在成功后按 token 结算，失败不扣费）
+                // 成功后才计模型级配额（会员绕过 dailyCap 不挤压免费用户；云币在成功后按 token 结算，失败不扣费；
+                // 免费模式成功后计个人免费额度,第 50 次用完即转云币模式）
                 ctx.waitUntil((async () => {
                     try {
                         if (!isMemberUser) await bumpModelUsage(env, usedModel.id, today);
+                        if (freeMode) await bumpFreeQuota(env, userId, quotaDate);
                     } catch (e) {
                         console.error("usage bump failed:", e.message);
                     }
@@ -989,11 +1054,12 @@ export default {
 
                 const diagHeaders = {
                     "X-Model-Used": usedModel.id,
-                    "X-Model-Attempts": attempts.join("|")
+                    "X-Model-Attempts": attempts.join("|"),
+                    ...(freeExhausted ? { "X-Free-Exhausted": "1" } : {})
                 };
                 if (isStream) {
                     // 流式坏模型:上游已按非流式返回,读完整 content 组装单块 SSE(打字机整卡显示,前端 finishStreaming 整卡替换)
-                    if (STREAM_BROKEN.includes(usedModel.id)) {
+                    if (STREAM_BROKEN.includes(usedModel.id) && upstreamNonStream) {
                         const encoder = new TextEncoder();
                         const text = await aiResponse.text();
                         let outText = "";
@@ -1015,7 +1081,7 @@ export default {
                                 }
                                 controller.enqueue(encoder.encode("data: [DONE]\n\n"));
                                 controller.close();
-                                if (!isMemberUser) {
+                                if (freeExhausted) {
                                     const inputTokens = estimateInputTokens(requestJson.messages);
                                     const outputTokens = estimateTokens(outText);
                                     ctx.waitUntil(settleTokenDeduction(env, userId, record, inputTokens, outputTokens)
@@ -1035,7 +1101,7 @@ export default {
                     let tail = "";
                     let outText = "";
                     const settle = () => {
-                        if (!isMemberUser) {
+                        if (freeExhausted) {
                             const inputTokens = estimateInputTokens(requestJson.messages);
                             const outputTokens = estimateTokens(outText);
                             ctx.waitUntil(settleTokenDeduction(env, userId, record, inputTokens, outputTokens)
@@ -1105,15 +1171,15 @@ export default {
                     }
                     clearTimeout(to);
                 }
-                // 成功 → 按字符估算 token 结算扣费；失败不扣费
-                if (!isMemberUser && resJson) {
+                // 成功 → 按字符估算 token 结算扣费（仅云币模式）；失败不扣费
+                if (freeExhausted && resJson) {
                     const inputTokens = estimateInputTokens(requestJson.messages);
                     const outputTokens = estimateTokens(resJson?.choices?.[0]?.message?.content ?? "");
                     await settleTokenDeduction(env, userId, record, inputTokens, outputTokens)
                         .catch(e => console.error("settle token deduction failed:", e.message));
                 }
                 return new Response(JSON.stringify(resJson ?? { error: "AI 响应解析失败" }), {
-                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                    headers: { ...corsHeaders(), ...diagHeaders, "Content-Type": "application/json" }
                 });
             }
 
@@ -1122,17 +1188,23 @@ export default {
                 const auth = await authenticate(env, request);
                 if (auth.error) return auth.error;
                 const r = auth.record;
+                const isMem = isMember(r);
+                const quotaDate = getFreeQuotaDateStr();
+                const freeUsed = isMem ? FREE_QUOTA_PER_DAY : await readFreeQuota(env, r.id, quotaDate);
                 return new Response(JSON.stringify({
-                    isMember: isMember(r),
+                    isMember: isMem,
                     membershipType: r.membership_type || "",
                     membershipExpiresAt: r.membership_expires_at || "",
+                    memberDaysLeft: memberDaysLeft(r),
                     coins: Number(r.coins || 0),
                     checkinStreak: Number(r.checkin_streak || 0),
                     checkinDate: r.last_checkin_date || "",
                     pricing: { inputPerK: TOKEN_PRICE_INPUT, outputPerK: TOKEN_PRICE_OUTPUT, minCost: TOKEN_COST_MIN },
                     unlockCost: UNLOCK_COST,
                     // 会员不限量用 -1 表示（避免 Infinity 序列化为 null）；remaining 按普通对话约 10 币/轮粗估
-                    remaining: isMember(r) ? -1 : Math.floor(Number(r.coins || 0) / 10)
+                    remaining: isMem ? -1 : Math.floor(Number(r.coins || 0) / 10),
+                    // 免费额度只给布尔态（前端不展示数量），仅用于耗尽提示
+                    freeQuotaExhausted: !isMem && freeUsed >= FREE_QUOTA_PER_DAY
                 }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
 
@@ -2709,7 +2781,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 try { body = await request.json(); } catch (e) {}
                 const planId = String(body.planId || "");
                 const payType = ["alipay", "wxpay"].includes(body.payType) ? body.payType : "alipay";
-                if (!CHARGE_PLANS[planId] && planId !== "lifetime") return errorResponse("无效的充值档位", 400, null, "INVALID_PLAN");
+                if (!CHARGE_PLANS[planId] && !MEMBER_PLANS[planId] && planId !== "lifetime") return errorResponse("无效的充值档位", 400, null, "INVALID_PLAN");
                 const ua = request.headers.get("user-agent") || "";
                 const isMobile = /Android|iPhone|iPad|iPod|Mobile|Windows Phone/i.test(ua);
                 try {

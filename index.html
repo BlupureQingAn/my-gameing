@@ -4861,7 +4861,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <div class="list-title" id="membership-title" style="margin:0;">开通会员</div>
             <button onclick="MembershipService.closePanel()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--sub);"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z"/></svg></button>
         </div>
-        <div class="list-sub" id="membership-intro-text">充值云币解锁剧本卡、抵扣 AI 对话；终身会员 188 元免一切云币消耗。</div>
+        <div class="list-sub" id="membership-intro-text">会员期内 AI 对话不限次、不消耗云币；云币用于解锁剧本卡与免费额度超限后的 AI 对话。</div>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin:10px 0;padding:10px 12px;border-radius:12px;background:var(--card-bg,#fffdf8);border:1px solid var(--line);">
             <div style="font-size:0.9rem;font-weight:700;">云币余额：<span id="membership-coin-balance" style="color:var(--accent-dark,#c0392b);">--</span></div>
             <button id="membership-checkin-btn" class="mini-btn primary" style="margin:0;padding:6px 14px;" onclick="MembershipService.doCheckin()">每日签到</button>
@@ -5842,6 +5842,13 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             c68: { id: "c68", name: "68000 云币", price: "68", coins: 81600, desc: "加赠 13600 云币", tag: "" },
             c89: { id: "c89", name: "89000 云币", price: "89", coins: 106800, desc: "加赠 17800 云币", tag: "" },
             c168: { id: "c168", name: "168000 云币", price: "168", coins: 201600, desc: "加赠 33600 云币", tag: "" }
+        },
+        // 会员档位(周/月/季/年):期内 AI 对话不限次、不消耗云币
+        memberPlans: {
+            weekly:    { id: "weekly",    name: "周度会员", price: "9",   days: 7,   desc: "7 天 AI 不限次 · 免云币消耗" },
+            monthly:   { id: "monthly",   name: "月度会员", price: "21",  days: 30,  desc: "30 天 AI 不限次 · 免云币消耗", tag: "推荐" },
+            quarterly: { id: "quarterly", name: "季度会员", price: "49",  days: 90,  desc: "90 天 AI 不限次 · 免云币消耗" },
+            yearly:    { id: "yearly",    name: "年度会员", price: "118", days: 365, desc: "365 天 AI 不限次 · 免云币消耗", tag: "超值" }
         },
         lifetimePlan: { id: "lifetime", name: "终身会员", price: "188", originalPrice: "249", desc: "永久不限量 · 免所有云币消耗" },
         identityPools: {
@@ -14680,12 +14687,20 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
         // Worker 业务错误码 → 用户可读文案（无码返回空串，调用方回退 HTTP 状态文案）
         function formatAIErrorText(bodyText) {
             const code = parseWorkerCode(bodyText);
-            if (code === "QUOTA_EXCEEDED") return "今日免费次数已用完，开通会员后不限量畅玩";
-            if (code === "MEMBERSHIP_EXPIRED") return "会员已到期，请续费";
+            if (code === "QUOTA_EXCEEDED") return "AI 服务繁忙，请稍后重试";
+            if (code === "MEMBERSHIP_EXPIRED") return "会员已到期，已自动切换为免费额度";
             if (code === "POOL_UNAVAILABLE") return "AI 服务暂时不可用，请稍后重试";
-            if (code === "INSUFFICIENT_COIN") return "云币不足，请签到领取 300 云币或充值后再试";
+            if (code === "INSUFFICIENT_COIN") return "云币不足，请签到领取 300 云币或开通会员后再试";
             if (code === "NOT_LOGGED_IN" || code === "SESSION_EXPIRED") return "登录状态已失效，请重新登录";
             return "";
+        }
+        // 免费额度耗尽提示：后端在本次调用已转云币计费时返回 X-Free-Exhausted 头，每会话仅提示一次
+        function maybeNotifyFreeQuotaExhausted() {
+            try {
+                if (sessionStorage.getItem("bitlife_free_exhausted_notified")) return;
+                sessionStorage.setItem("bitlife_free_exhausted_notified", "1");
+                NoticeModalService.showInfo({ title: "提示", descHtml: "今日免费额度已耗尽，每日 08:00 刷新额度。超出的对话将消耗云币。" });
+            } catch (e) {}
         }
         function buildExtraBody(extraBody = null, cardId = "") {
             const base = extraBody && typeof extraBody === "object" ? { ...extraBody } : {};
@@ -14741,6 +14756,8 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
                 throw e;
             }
             clearTimeout(timer); // 连接成功后立即清除超时
+            // 免费额度耗尽提示：本次调用已开始消耗云币（每会话仅提示一次）
+            if (response.headers && response.headers.get("X-Free-Exhausted")) maybeNotifyFreeQuotaExhausted();
             if (!response.ok) {
                 const bodyText = await readResponseSnippet(response);
                 throw createHttpError(response.status, formatAIErrorText(bodyText) || `HTTP ${response.status}`, {
@@ -14857,6 +14874,8 @@ const token = delta.content || "";
                     workerCode: parseWorkerCode(bodyText)
                 });
             }
+            // 免费额度耗尽提示：本次调用已开始消耗云币（每会话仅提示一次）
+            if (response.headers && response.headers.get("X-Free-Exhausted")) maybeNotifyFreeQuotaExhausted();
             const data = await response.json();
             return EndMarkerService.trimToMarker(data?.choices?.[0]?.message?.content?.trim() || "");
             }, 2);
@@ -20307,7 +20326,16 @@ function openNpcProfile(npcId) {
             const current = AuthService.getUserData()?.membership_type || "";
             const lp = AppConfig.lifetimePlan;
             const cdActive = countdownActive();
-            let planCards = Object.values(AppConfig.chargePlans).map(p =>
+            // 会员档（周/月/季/年）：期内 AI 对话不限次、不消耗云币
+            let planCards = Object.values(AppConfig.memberPlans).map(p =>
+                `<div class="recharge-item ${selectedPlan === p.id ? "active" : ""}" onclick="MembershipService.selectPlan('${p.id}')">
+                    <div class="recharge-coins">${p.tag ? `<span style="font-size:0.65rem;color:#fff;background:linear-gradient(135deg,#8e44ad,#6c3483);padding:1px 6px;border-radius:8px;margin-right:4px;vertical-align:2px;">${p.tag}</span>` : ""}<span style="font-size:0.8rem;color:#7c3aed;font-weight:800;">¥${p.price}</span><span style="font-size:0.7rem;color:#a89580;margin-left:4px;">= ${p.days} 天</span></div>
+                    <div class="recharge-price">${p.name}${current === p.id ? "（当前）" : ""}</div>
+                    <div class="recharge-price">${p.desc}</div>
+                </div>`
+            ).join("");
+            // 云币档：解锁剧本卡 + 免费额度超限后的 AI 对话
+            planCards += Object.values(AppConfig.chargePlans).map(p =>
                 `<div class="recharge-item ${selectedPlan === p.id ? "active" : ""}" onclick="MembershipService.selectPlan('${p.id}')">
                     <div class="recharge-coins">${p.tag ? `<span style="font-size:0.65rem;color:#fff;background:linear-gradient(135deg,#f39c12,#e67e22);padding:1px 6px;border-radius:8px;margin-right:4px;vertical-align:2px;">${p.tag}</span>` : ""}¥${p.price}<span style="font-size:0.7rem;color:#a89580;margin-left:4px;">=${p.coins} 云币</span></div>
                     <div class="recharge-price">${p.name}</div>
@@ -20378,7 +20406,7 @@ function openNpcProfile(npcId) {
         function updateLifetimePriceTexts() {
             const active = countdownActive();
             const intro = document.getElementById("membership-intro-text");
-            if (intro) intro.textContent = `充值云币解锁剧本卡、抵扣 AI 对话；终身会员 ${active ? "¥188 限时" : "¥249"} 免一切云币消耗。`;
+            if (intro) intro.textContent = `会员期内 AI 对话不限次、不消耗云币；云币用于解锁剧本卡与免费额度超限后的 AI 对话。终身会员${active ? "（限时 ¥188）" : "（¥249）"}永久不限次。`;
             const banner = document.getElementById("membership-offer-banner");
             if (banner) {
                 banner.innerHTML = active
@@ -20386,7 +20414,7 @@ function openNpcProfile(npcId) {
                     : `<div style="font-size:0.9rem;font-weight:700;color:#8a4b00;">⏰ 限时优惠已结束，终身会员恢复原价 ¥249</div>`;
             }
             const st = document.getElementById("membership-settings-text");
-            if (st) st.textContent = `AI 对话按 token 计费（输入 4 币/千 token、输出 12 币/千 token，普通对话约 10 币），官方剧本卡全部免费游玩。开通终身会员${active ? "（限时 ¥188）" : "（¥249）"}后免一切云币消耗（AI 对话）+ 社区付费卡直接游玩。自备 AI 接口（BYOK）不消耗云币，但解锁社区付费卡仍需云币（会员可直接游玩）。`;
+            if (st) st.textContent = `免费用户每天可免费畅玩 AI 剧情，额度用完后按云币计费（输入 4 币/千 token、输出 12 币/千 token）；开通周/月/季/年/终身会员后 AI 对话不限次、不消耗云币。官方剧本卡全部免费游玩，解锁社区付费卡仍需云币（会员可直接游玩）。自备 AI 接口（BYOK）不消耗云币。`;
         }
         function selectPlan(id) {
             if (id !== selectedPlan) _currentOrder = null; // 套餐变了,旧订单作废
@@ -20402,7 +20430,8 @@ function openNpcProfile(npcId) {
             const payArea = document.getElementById("membership-pay-area");
             if (!payArea) return;
             const payMethodName = order.payType === "alipay" ? "支付宝" : "微信";
-            const tip = order.planId === "lifetime" ? "支付完成后将自动开通会员（1-2 分钟内生效）" : "支付完成后云币自动到账（1-2 分钟内生效）";
+            const isMemberPlan = order.planId === "lifetime" || !!AppConfig.memberPlans[order.planId];
+            const tip = isMemberPlan ? "支付完成后会员自动开通（1-2 分钟内生效）" : "支付完成后云币自动到账（1-2 分钟内生效）";
             // 设备区分:移动端必须跳 H5 收银台,若显示 url_qrcode 会与 PC 同码且手机无法扫码
             const isMobile = /Android|iPhone|iPad|iPod|Mobile|Windows Phone/i.test(navigator.userAgent || "");
             // PC 扫码模式：仅桌面端展示虎皮椒 url_qrcode 二维码
@@ -20490,7 +20519,8 @@ function openNpcProfile(npcId) {
                         localStorage.removeItem(PENDING_KEY);
                         closePanel();
                         const isCharge = !!AppConfig.chargePlans[paidPlanId];
-                        NoticeModalService.showInfo({ title: "🎉 支付成功", descHtml: isCharge ? "云币已到账，快去解锁社区作品或畅玩吧！" : "会员已开通，不限量畅玩！" });
+                        const isMemberPlan = paidPlanId === "lifetime" || !!AppConfig.memberPlans[paidPlanId];
+                        NoticeModalService.showInfo({ title: "🎉 支付成功", descHtml: isCharge ? "云币已到账，快去解锁社区作品或畅玩吧！" : (isMemberPlan ? "会员已开通，AI 对话不限次畅玩！" : "操作成功") });
                         await AuthService.refreshBalance();
                         AuthService.updateUsageStatusUI();
                     }
@@ -20758,7 +20788,7 @@ function openNpcProfile(npcId) {
             localStorage.removeItem(EMAIL_KEY);
         }
 
-        const MEMBER_NAMES = { monthly: "月度会员", quarterly: "季度会员", yearly: "年度会员", lifetime: "终身会员" };
+        const MEMBER_NAMES = { weekly: "周度会员", monthly: "月度会员", quarterly: "季度会员", yearly: "年度会员", lifetime: "终身会员" };
 
         function hasMembership() {
             const u = _userData;
@@ -20777,7 +20807,7 @@ function openNpcProfile(npcId) {
             const badgeEl = document.getElementById("display-membership-badge");
             if (badgeEl) {
                 if (!u || !u.membership_type) {
-                    badgeEl.textContent = "未开通";
+                    badgeEl.textContent = "免费用户";
                 } else if (isMember) {
                     let label = MEMBER_NAMES[u.membership_type] || u.membership_type;
                     if (u.membership_type !== "lifetime" && u.membership_expires_at) {
@@ -20785,17 +20815,18 @@ function openNpcProfile(npcId) {
                     }
                     badgeEl.textContent = label;
                 } else {
-                    badgeEl.textContent = "已过期";
+                    badgeEl.textContent = "免费用户";
                 }
             }
 
             const btn = document.getElementById("open-membership-btn");
-            if (btn) btn.textContent = isMember ? "会员权益" : "充值 / 云币";
+            if (btn) btn.textContent = isMember ? "会员权益" : "充值 / 开通会员";
 
+            // 首页顶部徽章只展示会员等级，不展示云币/免费额度数量（免费额度数量不告知用户）
             const usageBadge = document.getElementById("usage-badge");
             if (usageBadge) {
-                const memberName = (u && MEMBER_NAMES[u.membership_type]) || "会员";
-                usageBadge.textContent = isMember ? memberName : (u ? `${Number(u.coins || 0)} 云币` : "开通会员");
+                const memberName = (u && MEMBER_NAMES[u.membership_type]) || "";
+                usageBadge.textContent = isMember ? memberName : "免费用户";
                 usageBadge.style.display = "inline-flex";
             }
         }
@@ -21227,7 +21258,7 @@ function openNpcProfile(npcId) {
             const countEl = document.getElementById("display-remaining-count");
             if (countEl) countEl.textContent = "-";
             const badgeEl = document.getElementById("display-membership-badge");
-            if (badgeEl) badgeEl.textContent = "未开通";
+            if (badgeEl) badgeEl.textContent = "免费用户";
             const usageBadge = document.getElementById("usage-badge");
             if (usageBadge) usageBadge.style.display = "none";
             const emailEl = document.getElementById("display-user-email");
