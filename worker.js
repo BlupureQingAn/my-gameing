@@ -248,7 +248,7 @@ function gateFor(envName, modelId) {
     if (!g) { g = { active: 0, timestamps: [] }; upstreamGates.set(key, g); }
     return g;
 }
-async function gateAcquire(envName, modelId) {
+async function gateAcquire(envName, modelId, timeoutMs) {
     const g = gateFor(envName, modelId);
     const lim = rateLimitFor(envName, modelId);
     const start = Date.now();
@@ -260,13 +260,24 @@ async function gateAcquire(envName, modelId) {
             g.timestamps.push(now);
             return true;
         }
-        if (Date.now() - start > lim.acquireTimeoutMs) return false;
+        if (Date.now() - start > (timeoutMs ?? lim.acquireTimeoutMs)) return false;
         await sleep(50);
     }
 }
 function gateRelease(envName, modelId) {
     const g = upstreamGates.get(modelId ? envName + "#" + modelId : envName);
     if (g && g.active > 0) g.active--;
+}
+// 免费模式排队人数近似(本实例内存):userId -> 最近 QUEUE_BUSY 时间;CF 多实例各自计数,
+// 云吞吞并发规模(个位数)通常落同一热实例,跨实例误差可接受;不用 KV/Cache 计数(弱一致反而误导)
+const freeQueueSeen = new Map();
+function freeQueueLen(now = Date.now()) {
+    let n = 0;
+    for (const [uid, ts] of freeQueueSeen) {
+        if (now - ts <= 10000) n++;
+        else freeQueueSeen.delete(uid);
+    }
+    return Math.max(1, n); // 至少 1:自己正排在队里
 }
 // Retry-After 解析:优先毫秒(OpenAI 系 retry-after-ms),其次秒(HTTP 标准 retry-after)
 function parseRetryAfterMs(resp) {
@@ -967,7 +978,8 @@ export default {
                     if (!apiKey) { attempts.push(`${target.id}:nokey`); continue; }
                     const base = (modelUrlOverrides?.[target.id] || target.url).replace(/\/$/, "");
                     // 上游限流门控:并发/速率超限拿不到令牌 → 换候选(避免自触发 1302/1305)
-                    if (!(await gateAcquire(target.apiKeyEnv, target.id))) { attempts.push(`${target.id}:busy`); continue; }
+                    // 免费模式用 400ms 快速判定:16 候选最坏 8s×N 拖到 128s,缩短到 ~6.4s,全忙立刻转 429 排队反馈
+                    if (!(await gateAcquire(target.apiKeyEnv, target.id, freeMode ? 400 : undefined))) { attempts.push(`${target.id}:busy`); continue; }
                     let resp = null;
                     let respStatus = 0;
                     try {
@@ -1038,6 +1050,17 @@ export default {
                     console.warn(`model ${target.id} failed (${respStatus}), fallback next`);
                 }
                 if (!aiResponse) {
+                    // 免费模式并发/限流占满 → 立即返回排队状态(不等满 8s×候选),失败不扣额度,前端 3s 轮询重试;
+                    // 云币/会员保持 503,由既有 fetchWithRetry 兜底
+                    if (freeMode) {
+                        freeQueueSeen.set(userId, Date.now());
+                        const queueLen = freeQueueLen();
+                        const resp = errorResponse("AI 模型当前繁忙，已进入排队，请稍候自动重试", 429, { queueLen }, "QUEUE_BUSY");
+                        return new Response(resp.body, {
+                            status: 429,
+                            headers: { ...Object.fromEntries(resp.headers.entries()), "X-Queue-Len": String(queueLen), "Retry-After": "3" }
+                        });
+                    }
                     return errorResponse("AI 服务暂时不可用，请稍后重试", 503, null, "POOL_UNAVAILABLE");
                 }
 

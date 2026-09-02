@@ -14689,6 +14689,9 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
         function parseWorkerCode(bodyText) {
             try { return (JSON.parse(bodyText) || {}).code || ""; } catch (e) { return ""; }
         }
+        function parseQueueLen(bodyText) {
+            try { return Number(JSON.parse(bodyText)?.detail?.queueLen) || 0; } catch (e) { return 0; }
+        }
         // Worker 业务错误码 → 用户可读文案（无码返回空串，调用方回退 HTTP 状态文案）
         function formatAIErrorText(bodyText) {
             const code = parseWorkerCode(bodyText);
@@ -14722,6 +14725,8 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
                     return await fetchFn();
                 } catch (e) {
                     lastError = e;
+                    // 免费模式并发排队:QUEUE_BUSY 直通,不走 3 次快重试(交给外层 callWithQueueRetry 3s×20 排队循环)
+                    if (e.workerCode === "QUEUE_BUSY") throw e;
                     const retryable = e.status === 429 || e.status === 503 || e.status === 408
                         || String(e.message || "").toLowerCase().includes("timeout");
                     if (retryable && i < maxRetries - 1) {
@@ -14765,10 +14770,13 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             if (response.headers && response.headers.get("X-Free-Exhausted")) maybeNotifyFreeQuotaExhausted();
             if (!response.ok) {
                 const bodyText = await readResponseSnippet(response);
-                throw createHttpError(response.status, formatAIErrorText(bodyText) || `HTTP ${response.status}`, {
+                const workerCode = parseWorkerCode(bodyText);
+                throw createHttpError(response.status,
+                    formatAIErrorText(bodyText) || (workerCode === "QUEUE_BUSY" ? "AI 模型繁忙，正在排队" : `HTTP ${response.status}`), {
                     responseSnippet: bodyText.slice(0, 300),
                     endpoint: fetchUrl,
-                    workerCode: parseWorkerCode(bodyText)
+                    workerCode,
+                    queueLen: parseQueueLen(bodyText)
                 });
             }
             const reader = response.body.getReader();
@@ -14839,13 +14847,72 @@ const token = delta.content || "";
             return EndMarkerService.trimToMarker(fullText);
             }, 3);
         }
-        async function streamCompletionWithFallback({ config, fetchUrl, headers, model, messages, temperature, onToken, extraBody = null, cardId = "" }) {
-            let fullText = "";
-            try {
-                fullText = await streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken, extraBody, cardId });
-            } catch (proxyErr) {
-                throw proxyErr;
+        // ---- 免费模式并发排队：chat-input 上方黄条 "正在排队 · 前方 X 人" + 会员免排队入口 ----
+        // worker 在免费模式全忙时返回 429 QUEUE_BUSY(失败不扣费不计数),前端 3s 轮询重发同一请求,最多 60s;
+        // 只有 workerCode 为 QUEUE_BUSY 才排队,其它错误(503/402/超时)走原有错误路径
+        let queueBarEl = null;
+        let queueBarCancelled = false;
+        function ensureQueueBar() {
+            if (queueBarEl && queueBarEl.isConnected) return queueBarEl;
+            const input = document.getElementById("chat-input");
+            if (!input || !input.parentNode) return null;
+            queueBarEl = document.createElement("div");
+            queueBarEl.id = "queue-bar";
+            queueBarEl.style.cssText = "display:none;align-items:center;gap:8px;margin:0 0 8px;padding:8px 10px;border-radius:10px;background:linear-gradient(135deg,#fff3d6,#ffe9b8);border:1px solid #e8b84b;font-size:0.85rem;color:#6b3f00;flex-wrap:wrap;";
+            queueBarEl.innerHTML = '<span id="queue-bar-text">⚠ 模型繁忙，正在排队…</span>'
+                + '<button class="q-member" style="margin-left:auto;border:none;background:#e8b84b;color:#fff;border-radius:999px;padding:3px 10px;font-size:0.8rem;font-weight:700;cursor:pointer;">开通会员免排队 ></button>'
+                + '<button class="q-close" aria-label="关闭排队提示" style="border:none;background:none;cursor:pointer;color:#a07828;font-size:1rem;line-height:1;">×</button>';
+            queueBarEl.querySelector(".q-member").onclick = () => { try { MembershipService.openPanel(); } catch (e) {} };
+            queueBarEl.querySelector(".q-close").onclick = () => { queueBarCancelled = true; queueBarHide(); };
+            input.parentNode.insertBefore(queueBarEl, input);
+            return queueBarEl;
+        }
+        function queueBarShow(queueLen, waitedMs) {
+            const bar = ensureQueueBar();
+            if (!bar) return;
+            const t = bar.querySelector("#queue-bar-text");
+            const n = Math.max(1, Number(queueLen) || 1);
+            const waited = Math.floor((waitedMs || 0) / 1000);
+            t.textContent = `⚠ 模型繁忙，正在排队 · 前方 ${n} 人` + (waited > 0 ? `（已等待 ${waited}s）` : "…");
+            bar.style.display = "flex";
+        }
+        function queueBarFail(msg) {
+            const bar = ensureQueueBar();
+            if (!bar) return;
+            const t = bar.querySelector("#queue-bar-text");
+            t.textContent = `⚠ ${msg || "当前模型繁忙，请稍后再试"}`;
+            bar.style.background = "linear-gradient(135deg,#ffe8e6,#ffd5d0)";
+            bar.style.borderColor = "#e8a09a";
+            bar.style.color = "#8c2f28";
+            bar.style.display = "flex";
+        }
+        function queueBarHide() {
+            if (queueBarEl && queueBarEl.isConnected) queueBarEl.style.display = "none";
+        }
+        const QUEUE_MAX_MS = 60000;     // 免费模式排队上限 60s
+        const QUEUE_INTERVAL_MS = 3000; // 轮询间隔(±400ms 抖动防惊群)
+        async function callWithQueueRetry(fetchFn) {
+            const start = Date.now();
+            while (true) {
+                try {
+                    return await fetchFn();
+                } catch (e) {
+                    if (e.workerCode !== "QUEUE_BUSY") { queueBarHide(); throw e; }
+                    const waited = Date.now() - start;
+                    if (queueBarCancelled || waited >= QUEUE_MAX_MS) {
+                        queueBarFail("当前模型繁忙，请稍后再试");
+                        throw createHttpError(429, "当前模型繁忙，请稍后再试", { workerCode: "QUEUE_BUSY", queueLen: e.queueLen });
+                    }
+                    queueBarShow(e.queueLen, waited);
+                    await new Promise(r => setTimeout(r, Math.min(QUEUE_INTERVAL_MS, QUEUE_MAX_MS - waited) + Math.floor(Math.random() * 400)));
+                }
             }
+        }
+        async function streamCompletionWithFallback({ config, fetchUrl, headers, model, messages, temperature, onToken, extraBody = null, cardId = "" }) {
+            queueBarCancelled = false;
+            const fullText = await callWithQueueRetry(() =>
+                streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken, extraBody, cardId }));
+            queueBarHide();
             // 次数统计由 Worker 后端完成，成功后无条件刷新使用状态（fire-and-forget，不阻塞主链路）
             AuthService.refreshBalance().catch(() => {});
             return fullText;
@@ -14873,10 +14940,13 @@ const token = delta.content || "";
             }
             if (!response.ok) {
                 const bodyText = await readResponseSnippet(response);
-                throw createHttpError(response.status, formatAIErrorText(bodyText) || `HTTP ${response.status}`, {
+                const workerCode = parseWorkerCode(bodyText);
+                throw createHttpError(response.status,
+                    formatAIErrorText(bodyText) || (workerCode === "QUEUE_BUSY" ? "AI 模型繁忙，正在排队" : `HTTP ${response.status}`), {
                     responseSnippet: bodyText.slice(0, 300),
                     endpoint: fetchUrl,
-                    workerCode: parseWorkerCode(bodyText)
+                    workerCode,
+                    queueLen: parseQueueLen(bodyText)
                 });
             }
             // 免费额度耗尽提示：本次调用已开始消耗云币（每会话仅提示一次）
@@ -14886,12 +14956,10 @@ const token = delta.content || "";
             }, 2);
         }
         async function requestCompletionWithFallback({ config, fetchUrl, headers, model, messages, temperature, extraBody = null, cardId = "", timeoutMs = READ_TIMEOUT_MS }) {
-            let result = "";
-            try {
-                result = await requestCompletion({ fetchUrl, headers, model, messages, temperature, extraBody, cardId, timeoutMs });
-            } catch (proxyErr) {
-                throw proxyErr;
-            }
+            queueBarCancelled = false;
+            const result = await callWithQueueRetry(() =>
+                requestCompletion({ fetchUrl, headers, model, messages, temperature, extraBody, cardId, timeoutMs }));
+            queueBarHide();
             // 次数统计由 Worker 后端完成，成功后无条件刷新使用状态（fire-and-forget，不阻塞主链路）
             AuthService.refreshBalance().catch(() => {});
             return result;
