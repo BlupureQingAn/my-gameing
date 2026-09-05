@@ -65,6 +65,9 @@ const USERS_NEED = {
     "coins": F.number("coins"), "last_checkin_date": F.text("last_checkin_date"),
     "checkin_streak": F.number("checkin_streak"), "signature": F.text("signature", { max: 200 }),
     "membership_type": F.text("membership_type"), "membership_expires_at": F.text("membership_expires_at"),
+    // 防克隆「心脏锁定」BYOK 云端化:自备接口三字段(key 为 AES-GCM 密文,worker 专用)
+    "byok_url": F.text("byok_url", { max: 300 }), "byok_model": F.text("byok_model", { max: 80 }),
+    "byok_key_cipher": F.text("byok_key_cipher", { max: 600 }),
 };
 
 const seen = new Set();
