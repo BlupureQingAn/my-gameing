@@ -3037,6 +3037,19 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 await pbAdminFetch(env, `/api/collections/lang_vocab/records/${vid}`, { method: "PATCH", body: JSON.stringify({ status }) });
                 return new Response(JSON.stringify({ ok: true, id: vid, status }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
+            // M9E:生词删除(仅本人记录;lang_vocab 为 admin-only 集合,worker 代删)
+            if (url.pathname === "/api/lang/vocab" && request.method === "DELETE") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const uid = auth.record.id;
+                const vid = String(url.searchParams.get("id") || "");
+                if (!vid) return errorResponse("缺少记录 id", 400, null, "INVALID_ID");
+                const q = await pbAdminFetch(env, `/api/collections/lang_vocab/records/${vid}`);
+                const d = await q.json().catch(() => ({}));
+                if (!d.id || d.user_id !== uid) return errorResponse("记录不存在", 404, null, "NOT_FOUND");
+                await pbAdminFetch(env, `/api/collections/lang_vocab/records/${vid}`, { method: "DELETE" });
+                return new Response(JSON.stringify({ ok: true, id: vid }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+            }
 
             // ---- 路由:M6d5 词库进度词测(GET|PUT /api/lang/progress?band=x;lang_bank_progress 私有集合)----
             // GET:拉该档全量词态(weak 隔章重测/learned 出池用);PUT:词测批量提交 ok/fail

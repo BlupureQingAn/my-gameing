@@ -4809,14 +4809,16 @@
     .lg-word:hover{background:rgba(124,84,240,.22)}
     /* M6d4 本章目标词(候选命中):金色点线标记,点查徽标逻辑不变 */
     .lg-ch{border-bottom:1.5px dotted #e8a33d;background:rgba(232,163,61,.10)}
-    .lg-gloss{margin:5px 0 8px;padding:9px 12px;border-radius:12px;border:1px solid rgba(124,84,240,.38);background:rgba(124,84,240,.07);font-size:.82rem;line-height:1.5}
-    .lg-gloss-head{display:flex;align-items:center;gap:8px;color:#7c4fd8;font-size:.66rem;font-weight:800;letter-spacing:.4px}
-    .lg-gloss-close{margin-left:auto;border:none;background:rgba(124,84,240,.14);color:#7c4fd8;font-size:.68rem;font-weight:800;border-radius:7px;padding:2px 8px;cursor:pointer;flex-shrink:0}
-    .lg-gloss-zh{font-size:.9rem;color:var(--text);margin-top:4px;line-height:1.7;white-space:pre-wrap}
-    .lg-gloss-words{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
-    .lg-gloss-word{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;border:1px solid rgba(124,84,240,.4);background:var(--input-bg);font-size:.72rem;cursor:pointer;color:var(--text)}
-    .lg-gloss-word b{color:#7c4fd8;font-weight:800}
-    .lg-gloss-note{font-size:.68rem;color:var(--text);opacity:.55;margin-top:3px}
+    /* M9B/M9C(2026-09-06):译文统一行间(interlinear)——句下小字对照,auto-expand 卡式形态已删 */
+    .lg-gloss.lg-inter{margin:2px 0 7px;padding:1px 0 1px 10px;border:none;border-left:2px solid rgba(124,84,240,.32);background:transparent;border-radius:0;font-size:.78rem;line-height:1.6}
+    .lg-inter-zh{color:var(--text);opacity:.82;white-space:pre-wrap;word-break:break-word}
+    .lg-gloss-note{font-size:.68rem;color:var(--text);opacity:.55;margin-top:2px}
+    .lg-gloss-close{border:none;background:none;padding:0;color:#7c4fd8;font-size:.72rem;font-weight:800;cursor:pointer;text-decoration:underline}
+    .lg-gload{display:inline-flex;align-items:center;gap:3px;vertical-align:-2px}
+    .lg-gload i{width:5px;height:5px;border-radius:50%;background:rgba(124,84,240,.75);animation:lg-gload-b 1.1s ease-in-out infinite}
+    .lg-gload i:nth-child(2){animation-delay:.18s}
+    .lg-gload i:nth-child(3){animation-delay:.36s}
+    @keyframes lg-gload-b{0%,70%,100%{opacity:.22;transform:none}35%{opacity:1;transform:translateY(-2.5px)}}
     .lg-pop{position:fixed;z-index:300001;width:min(320px,calc(100vw - 28px));background:var(--input-bg,#fff);border:1px solid rgba(124,84,240,.5);border-radius:14px;box-shadow:0 10px 30px rgba(20,10,60,.28);padding:12px 14px;display:none;font-size:.82rem;line-height:1.55}
     .lg-pop.on{display:block}
     .lg-pop-badge{display:inline-block;margin-bottom:6px;padding:2px 8px;border-radius:8px;font-size:.64rem;font-weight:800;color:#fff;background:linear-gradient(135deg,#3f7ad8,#5f4fd8);letter-spacing:.02em}
@@ -4828,6 +4830,9 @@
     .lg-pop-foot{margin-top:8px;padding-top:7px;border-top:1px dashed rgba(124,84,240,.3);display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:.7rem;color:var(--sub,#806a55)}
     .lg-pop-foot .ok{color:#2f9e6e;font-weight:700}
     .lg-pop-foot .later{color:#b8863f;font-weight:700}
+    /* M9D:词双击查词(禁双击缩放)+ 弹层内「从生词本移除」 */
+    .lg-word,.lg-w,.lg-sentence{touch-action:manipulation}
+    .lg-pop-del{border:none;background:rgba(200,80,80,.12);color:#c05050;font-size:.68rem;font-weight:800;border-radius:7px;padding:3px 9px;cursor:pointer;flex-shrink:0}
     .lg-learn-sub{font-size:.7rem;color:var(--sub,#806a55);margin-top:2px;line-height:1.6}
     .lg-vr{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line,#e2ccb0);border-radius:12px;background:var(--input-bg,#fff8f0);margin-bottom:7px}
     .lg-vt{flex-shrink:0;font-size:.6rem;font-weight:800;border-radius:6px;padding:2px 6px;margin-top:2px}
@@ -22254,7 +22259,8 @@ function openNpcProfile(npcId) {
 /* ===== 语言文游 M4 辅助层(旁挂 play 引擎,零侵入主链):点句即译 GlossCard / 生词标色点查 WordPopover / 生词本视图 =====
    机制:①MutationObserver 盯 #play-chat-area 子级——语言会话中 AI 结构化卡挂载 → 句子 span 化(文本节点级切句,不破坏原有行内元素)
         ②词库(vocabMap∪gloss 关键表达 wordInfo)命中 → 句内词切 span.lg-word ③document 级点击委托:词→popover(自动入生词本),句→句下译卡
-        ④gloss 40ms 合批 ≤10 句/批 + 内存缓存(glossCache/glossFail)防重复请求 ⑤渐进沉浸前 2 轮:新卡整卡自动展开译文 ⑥「我的生词本」列表+三级状态划 */
+        ④gloss 40ms 合批 ≤10 句/批 + 内存缓存(glossCache/glossFail)防重复请求 ⑤渐进沉浸前 2 轮(scaffold):新卡整卡自动出「句下行间双语」(M9B,原 auto-expand 展开卡已删;单击句=收起/长按句=开, M9C) ⑥「我的生词本」列表+三级状态划
+        M9D:词改双击查词(单击不再弹)、弹层内可从生词本移除(worker DELETE)、滚动自动关闭弹层 */
 (function () {
     var PROFILE_KEY = "lang_profile_v1";
     var GLOSS_BATCH = 10;
@@ -22448,7 +22454,8 @@ function openNpcProfile(npcId) {
         for (var n = 0; n < nodeList.length; n++) wrapNode(nodeList[n].node, nodeList[n].parts);
         /* 词源就绪先切一遍(vocab 已加载时) */
         if (vocabLoaded) refreshCardSens(cardSens);
-        /* M7a 渐进沉浸状态机 scaffold 阶段:整卡自动展开(仅登录用户;≤10 句自动,其余点句再看);阶段判定与生成侧共用 LangEngine.immStage */
+        /* M7a/M9B 渐进沉浸状态机 scaffold 阶段:整卡自动出句下行间双语(interlinear)——仅登录用户、≤10 句自动,其余长按再看;
+           原 auto-expand 展开卡形态已删(2026-09-06);阶段判定与生成侧共用 LangEngine.immStage */
         var immStg = null;
         try { immStg = window.LangEngine && LangEngine.immStage ? LangEngine.immStage(roundNo()) : null; } catch (e) { immStg = null; }
         if (token() && cardSens.length && immStg && immStg.mode === "scaffold") {
@@ -22779,7 +22786,7 @@ function openNpcProfile(npcId) {
         if (sen.expanded) fillGloss(sen);
     }
 
-    /* ---- 句下译卡 ---- */
+    /* ---- 句下译区(M9B 行间 interlinear;M9C 长按开 + 加载动画)---- */
     function ensureCard(sen) {
         if (sen.glossEl && sen.glossEl.parentNode) return sen.glossEl;
         var card = document.createElement("div");
@@ -22795,46 +22802,41 @@ function openNpcProfile(npcId) {
         if (!sen || !sen.expanded) return;
         var card = ensureCard(sen);
         if (!card) return;
+        card.classList.add("lg-inter");
         var d = glossCache[sen.text];
         var noAuth = !token();
-        var zh = "", words = "", note = "";
+        var inner = "";
         if (d && d.zh) {
-            zh = String(d.zh);
-            for (var i = 0; i < (d.words || []).length; i++) {
-                var wd = d.words[i];
-                if (!wd || !wd.w) continue;
-                words += '<span class="lg-gloss-word" data-w="' + esc(String(wd.w)) + '"><b>' + esc(String(wd.w)) + "</b>" + (wd.zh ? esc(String(wd.zh)) : "") + "</span>";
-            }
+            inner = '<div class="lg-inter-zh">' + esc(String(d.zh)) + "</div>";
         } else if (glossFail[sen.text]) {
-            note = noAuth
-                ? '<span class="lg-gloss-note">登录后即可使用点句翻译</span>'
+            inner = '<div class="lg-gloss-note">' + (noAuth
+                ? "登录后即可使用点句翻译"
                 : (glossBlocked
-                    ? '<span class="lg-gloss-note">今天的点译次数用完啦，明天 08:00 刷新；开通会员可点更多</span>'
-                    : '<button type="button" class="lg-gloss-close" data-act="retry">译文没取到 · 点此重试</button>');
+                    ? "今天的点译次数用完啦，明天 08:00 刷新；开通会员可点更多"
+                    : '<button type="button" class="lg-gloss-close" data-act="retry">译文没取到 · 点此重试</button>')) + "</div>";
         } else {
-            note = noAuth
-                ? '<span class="lg-gloss-note">登录后即可使用点句翻译</span>'
-                : '<span class="lg-gloss-note">译文生成中…</span>';
+            inner = '<div class="lg-gloss-note">' + (noAuth
+                ? "登录后即可使用点句翻译"
+                : '<span class="lg-gload"><i></i><i></i><i></i></span><span style="margin-left:6px;">译文生成中…</span>') + "</div>";
         }
-        card.innerHTML =
-            '<div class="lg-gloss-head"><span>译文</span><span style="flex:1"></span>' +
-            '<button type="button" class="lg-gloss-close" data-act="close">收起</button></div>' +
-            (zh ? '<div class="lg-gloss-zh">' + esc(zh) + "</div>" : "") +
-            (words ? '<div class="lg-gloss-words">' + words + "</div>" : "") +
-            (note ? '<div style="margin-top:4px;">' + note + "</div>" : "");
+        card.innerHTML = inner;
     }
     function collapseSen(sen) {
         if (!sen) return;
         sen.expanded = false;
         if (sen.glossEl) { sen.glossEl.remove(); sen.glossEl = null; }
     }
+    // M9C:单击句子 = 收起已开译文(不开新译文);开译文走长按 openSen
     function toggleSen(sen) {
+        if (!sen || !sen.expanded) return;
+        collapseSen(sen);
+    }
+    function openSen(sen) {
         if (!sen) return;
-        if (sen.expanded) { collapseSen(sen); return; }
+        if (sen.expanded) { collapseSen(sen); return; }   // 已开:长按收起
         sen.expanded = true;
-        if (!token()) { fillGloss(sen); return; }
         if (glossCache[sen.text] || glossFail[sen.text]) fillGloss(sen);
-        else queueGloss([sen]);
+        else { fillGloss(sen); queueGloss([sen]); }   // 未取到:先占位(加载动画),批回后自动填充
     }
 
     /* ---- 词 popover(点击自动入生词本) ---- */
@@ -22912,9 +22914,12 @@ function openNpcProfile(npcId) {
         }
         html += '<div class="lg-pop-foot">';
         if (inVocab) {
-            html += '<span class="ok">✓ 已收进生词本</span><span class="lg-vr-origin">在大厅「我的生词本」里可以划状态</span>';
+            var vk = String(disp).toLowerCase(), vi = vocabMap[vk] || null;
+            html += '<span class="ok">✓ 已收进生词本</span>';
+            if (vi && vi.id) html += '<button type="button" class="lg-pop-del" data-act="del-vocab" data-vid="' + esc(vi.id) + '" data-key="' + esc(vk) + '">从生词本移除</button>';
+            html += '<span class="lg-vr-origin">在大厅「我的生词本」里可以划状态</span>';
         } else if (token()) {
-            html += '<span class="later">' + (hit ? "已收进生词本（按考纲原形收录）" : "已自动收进生词本") + "</span>";
+            html += '<span class="later">正在自动收进生词本…</span>';
         } else {
             html += '<span class="later">登录后，点查的词会自动收进生词本</span>';
         }
@@ -22942,9 +22947,14 @@ function openNpcProfile(npcId) {
             var disp = term;
             if (hit) { disp = hit.word; key = hit.word; info = null; markSeenWord(band, hit.word); }   // M6d4:点查词库词=seen(词状态机起点)
             var inVocab = !!vocabMap[key];
-            renderPop(p, term, disp, hit, info, inVocab);
             noteTapped(disp, hit ? { w: disp, zh: hit.it.zh } : (wordInfo[String(term).toLowerCase()] || null));
-            if (!inVocab && token()) saveVocabSilent(disp, hit ? { zh: hit.it.zh, en: "" } : info);
+            renderPop(p, term, disp, hit, info, inVocab);
+            // M9D:已进本=渲染即终态;未进本→静默保存,成功后再渲染成"已收进"(词库词按考纲原形收录)
+            if (inVocab || !token()) return;
+            saveVocabSilent(disp, hit ? { zh: hit.it.zh, en: "" } : info, function (saved) {
+                if (!saved || !p.classList.contains("on") || !vocabMap[key]) return;
+                renderPop(p, term, disp, hit, info, true);
+            });
         };
         if (langBankCache[band]) {
             done(bankLookup(band, term));
@@ -22956,20 +22966,7 @@ function openNpcProfile(npcId) {
             done(h);
         });
     }
-    function saveVocabSilent(term, info) {
-        var key = String(term).toLowerCase();
-        if (!token() || vocabMap[key]) return;
-        p.classList.add("on");
-        p.style.left = "-999px";
-        p.style.top = "-999px";
-        var pw = p.offsetWidth || 300, ph = p.offsetHeight || 120;
-        var vw = window.innerWidth || 390, vh = window.innerHeight || 700;
-        var lx = x + 10; if (lx + pw > vw - 8) lx = Math.max(8, x - pw - 10);
-        var ty = y + 14; if (ty + ph > vh - 8) ty = Math.max(8, y - ph - 12);
-        p.style.left = lx + "px";
-        p.style.top = ty + "px";
-    }
-    function saveVocabSilent(term, info) {
+    function saveVocabSilent(term, info, cb) {
         var key = String(term).toLowerCase();
         if (!token() || vocabMap[key]) return;
         var origin = "";
@@ -22992,13 +22989,71 @@ function openNpcProfile(npcId) {
         })
             .then(function (r) { return r.ok ? r.json() : null; })
             .then(function (d) {
-                if (!d) return;
+                if (!d) { if (cb) cb(false); return; }
                 vocabMap[key] = { id: d.id || "", type: "word", term: String(term).slice(0, 64), gloss_en: info && info.en ? String(info.en) : "", gloss_zh: info && info.zh ? String(info.zh) : "", origin: origin, status: 0, created_at: "" };
                 reDirty = true;
+                if (cb) cb(true);
+            }).catch(function () { if (cb) cb(false); });
+    }
+
+    // M9D:从生词本移除(worker DELETE /api/lang/vocab?id=)
+    function removeVocab(vid, key) {
+        if (!token() || !vid) return;
+        var k = String(key).toLowerCase();
+        fetch(API_BASE + "/api/lang/vocab?id=" + encodeURIComponent(vid), {
+            method: "DELETE",
+            headers: { "X-Auth-Token": "Bearer " + token() }
+        })
+            .then(function (r) { return r.ok ? true : null; })
+            .then(function (ok) {
+                if (!ok) return;
+                delete vocabMap[k];
+                reDirty = true;
+                hidePop();
+                try { if (window.LangAssist && window.LangAssist.refreshVocab) window.LangAssist.refreshVocab(); } catch (e) {}
             }).catch(function () {});
     }
 
-    /* ---- 点击委托 ---- */
+    /* ---- 点击/长按委托(M9C 句长按开译区+单击收起;M9D 词双击查词+滚动关弹层) ---- */
+    var lastDbl = { key: "", at: 0 };   // M9D 双击检测(同词 ≤320ms)
+    var PRESS_MS = 430;   // M9C 长按阈值
+    var press = { sen: null, x: 0, y: 0, timer: null, fired: false };
+    function clearPress() {
+        if (press.timer) { clearTimeout(press.timer); press.timer = null; }
+        press.sen = null; press.fired = false;
+    }
+    function firePress() {
+        if (!press.sen) return;
+        press.timer = null;
+        press.fired = true;
+        openSen(press.sen);
+    }
+    document.addEventListener("pointerdown", function (e) {
+        if (!langActive() || !e.target || !e.target.closest) return;
+        if (e.pointerType === "mouse" && e.button !== 0) return;   // 忽略右键
+        var sEl = e.target.closest(".lg-sentence");
+        if (!sEl) return;
+        clearPress();
+        press.sen = sentences[Number(sEl.getAttribute("data-sen"))] || null;
+        press.x = e.clientX; press.y = e.clientY;
+        press.timer = setTimeout(firePress, PRESS_MS);
+    }, true);
+    document.addEventListener("pointermove", function (e) {
+        if (press.timer && !press.fired && e.clientX != null &&
+            (Math.abs(e.clientX - press.x) > 12 || Math.abs(e.clientY - press.y) > 12)) clearPress();   // 位移=滚动,取消长按
+    }, true);
+    document.addEventListener("pointerup", function () {
+        if (press.fired) { setTimeout(function () { press.fired = false; }, 600); return; }   // 吞掉长按后的 click
+        clearPress();
+    }, true);
+    document.addEventListener("pointercancel", clearPress, true);
+    window.addEventListener("blur", clearPress, false);
+    document.addEventListener("contextmenu", function (e) {
+        var t = e.target;
+        if (press.sen && t && t.closest && t.closest(".lg-sentence")) e.preventDefault();   // 长按进行/已触发:禁系统选择菜单
+    }, true);
+    /* M9D:滚动自动收起查词弹层 */
+    document.addEventListener("scroll", function () { hidePop(); }, true);
     document.addEventListener("click", function (e) {
         var t = e.target;
         if (!t || !t.closest) return;
@@ -23016,6 +23071,7 @@ function openNpcProfile(npcId) {
                 e.preventDefault();
                 return;
             }
+            if (act === "del-vocab") { e.preventDefault(); e.stopPropagation(); removeVocab(String(actEl.getAttribute("data-vid") || ""), String(actEl.getAttribute("data-key") || "")); return; }
             if (act === "recap-open" || actEl.closest(".lg-rm-mask")) {
                 handleRecapAct(actEl, act);
                 e.stopPropagation();
@@ -23024,12 +23080,22 @@ function openNpcProfile(npcId) {
             }
         }
         if (!langActive()) { hidePop(); return; }
-        var wEl = t.closest(".lg-word, .lg-w");   // M6d3:池词+普通词全可点查
-        if (wEl) { e.preventDefault(); e.stopPropagation(); openPop(wEl.getAttribute("data-w") || wEl.textContent, e.clientX, e.clientY); return; }
-        var chip = t.closest(".lg-gloss-word");
-        if (chip) { e.preventDefault(); e.stopPropagation(); openPop(chip.getAttribute("data-w"), e.clientX, e.clientY); return; }
+        var wEl = t.closest(".lg-word, .lg-w");   // M6d3:池词+普通词全可点查;M9D:双击才弹查词(单击收起浮层,防误触)
+        if (wEl) {
+            e.preventDefault(); e.stopPropagation();
+            var wk = wEl.getAttribute("data-w") || wEl.textContent;
+            var nw = Date.now();
+            if (lastDbl.key === wk && nw - lastDbl.at <= 320) { lastDbl.key = ""; openPop(wk, e.clientX, e.clientY); }
+            else { lastDbl.key = wk; lastDbl.at = nw; hidePop(); }
+            return;
+        }
         var sEl = t.closest(".lg-sentence");
-        if (sEl) { e.preventDefault(); e.stopPropagation(); toggleSen(sentences[Number(sEl.getAttribute("data-sen"))]); return; }
+        if (sEl) {
+            e.preventDefault(); e.stopPropagation();
+            if (press.fired) { press.fired = false; return; }   // 长按触发后的抬起 click:忽略
+            toggleSen(sentences[Number(sEl.getAttribute("data-sen"))]);   // 单击 = 收起已开译文
+            return;
+        }
         hidePop();
     }, false);
 
