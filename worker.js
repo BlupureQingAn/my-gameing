@@ -3209,6 +3209,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                             category: String(r.category || ""),
                             category_zh: String(r.category_zh || ""),
                             theme: String(r.theme || ""),
+                            cover: String(r.cover || ""),
                             sourceType: "official",
                             text: String(r.data.text || ""),
                             structured: r.data.structured || {},
