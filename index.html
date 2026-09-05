@@ -5006,6 +5006,12 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <button class="mini-btn primary" onclick="LangController.goCards()">进入语言模式剧本库</button>
                 </div>
                 <div class="list-sub" id="lang-hint"></div>
+
+                <div id="lang-card-list" style="display:none;margin-top:6px;">
+                    <div class="list-title" style="margin-top:12px;">④ 语言剧本库 <span class="list-sub" style="margin-left:4px;">同一剧本，换种语言玩</span></div>
+                    <div class="list-sub" id="lang-cards-sub">点卡即玩；英语进度与中文进度互相独立，回中文从首页原入口进</div>
+                    <div id="lang-card-rows" style="margin-top:8px;"></div>
+                </div>
             </section>
         </section>
 
@@ -6161,7 +6167,10 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             return normalizeCardId(ScenarioCardService.getSelectedId());
         }
         function keyFor(cardId, base) {
-            return `${base}${normalizeCardId(cardId)}`;
+            // 语言文游 M3:英语会话期间存档键加 -lang 后缀,与中文档完全隔离(自动档/槽位共用此派生)
+            let suffix = "";
+            try { if (window.LangEngine && window.LangEngine.isLangSession()) suffix = "-lang"; } catch (e) {}
+            return `${base}${normalizeCardId(cardId)}${suffix}`;
         }
         function activeKey(base) {
             return keyFor(getActiveCardId(), base);
@@ -16217,13 +16226,16 @@ const token = delta.content || "";
                 const latestAiHtmlCard = PromptPolicyService.buildLatestAiHtmlCard(state);
                 const userMsgCount = (state.history || []).filter((h) => h.role === "user").length;
                 // M5 管线优化：首轮用全量设定保证开局一致性，后续轮用速查表压缩 payload
-                const scenarioSpec = userMsgCount <= 1
+                // 语言文游 M3:英语会话全程全量设定(保语气/规则,语言生成质量优先于 payload 压缩)
+                const isLangTurn = !!(window.LangEngine && window.LangEngine.isLangSession());
+                const scenarioSpec = (userMsgCount <= 1 || isLangTurn)
                     ? ScenarioSpecCompressService.applyProtagonistOverride(SettingsService.getScenarioTextForModel(), state)
                     : ScenarioSpecCompressService.buildQuickRef(ScenarioCardService.getSelectedCard(), state) || SettingsService.getScenarioTextForModel();
                 const beautyCardSetting = SettingsService.getBeautyCardSetting();
                 const beautyModeEnabled = HtmlCardService.isBeautyModeEnabled(beautyCardSetting);
                 const policyConfig = SettingsService.getChatPolicyConfig();
-                const systemPrompt = PromptPolicyService.buildSystemPrompt({ state, scenarioSpec, beautyCardSetting, beautyModeEnabled, extraText: userText });
+                const systemPrompt = PromptPolicyService.buildSystemPrompt({ state, scenarioSpec, beautyCardSetting, beautyModeEnabled, extraText: userText })
+                    + (isLangTurn ? "\n\n" + window.LangEngine.buildInjection() : "");
                 const mainUserPrompt = PromptPolicyService.buildMainUserPrompt(userText, recentHistory, latestAiHtmlCard);
                 const rawText = (await AIRequestService.streamCompletionWithFallback({
                     config,
@@ -17089,6 +17101,8 @@ const token = delta.content || "";
         }
         async function init() {
             ThemeService.applyStored();
+            // 语言文游 M3:启动时若上次会话是英语会话(选中卡=语言游玩卡且有 -lang 档)→ 恢复英语档
+            try { if (window.LangEngine && window.LangEngine.restoreIfNeeded) window.LangEngine.restoreIfNeeded(); } catch (e) {}
             StateService.init();
             SettingsService.loadToUI();
             renderAll();
@@ -19969,6 +19983,10 @@ function openNpcProfile(npcId) {
             };
         }
         async function playScenarioCard(cardId) {
+            // 语言文游 M3:任何中文入口进卡 = 退出英语会话(存档键恢复中文,内存档重载回中文进度)
+            if (window.LangEngine && window.LangEngine.isLangSession()) {
+                try { window.LangEngine.exitToChinese(); } catch (e) { console.warn("LangEngine.exitToChinese:", e); }
+            }
             // 云币解锁拦截：官方卡未解锁时引导解锁（列表按钮已拦截,此处防御直达入口）
             const card = ScenarioCardService.loadCards().find(c => c.id === cardId);
             if (card && ScenarioUnlockService.getLockInfo(card).locked) {
@@ -21468,9 +21486,167 @@ function openNpcProfile(npcId) {
         hideBootScreen();
         AuthService.init();
     };
+
+    /* ===== 语言文游 M3:英语生成引擎(旁挂 play 管线,零重构;英语档存档键 -lang 隔离) =====
+       职责:①英语会话开关(存档键偏移) ②systemPrompt 英语指令注入(难度档/语气词典/沉浸) ③大厅进卡:续玩英语档或英语 AI 开局 */
+    const LangEngine = (() => {
+        const SAVE_SUFFIX = "-lang";
+        const META_SUFFIX = "-lang";
+        const PROFILE_KEY = "lang_profile_v1";
+        const BAND_RULE = {
+            a: "player level = ADVANCED: natural fluent English prose; idioms and literary phrasing welcome; complex sentences are fine.",
+            b: "player level = INTERMEDIATE: natural everyday English; most sentences up to ~25 words; a familiar idiom is fine only when the context makes its meaning obvious.",
+            c: "player level = BEGINNER: simple sentences of at most ~15 words; high-frequency everyday words only; short paragraphs; avoid idioms entirely."
+        };
+        // 语气保真词典(按题材关键词 → 英语语气指令;中文世界观不变,只换"英语说法"的分寸)
+        const TONE_RULES = [
+            [/修仙|修真|仙侠|灵根|宗门|道侣/, "register: xianxia — poetic and elegant with light archaism; honorifics such as Master/Elder/Senior used naturally"],
+            [/宫斗|后宫|妃|宅斗|王府/, "register: imperial court — formal, polished and subtly veiled in every line; courtly honorifics kept"],
+            [/古代|历史|朝[代廷]|江湖|武侠|帝王/, "register: period drama — dignified measured narration, lightly archaic dialogue, polite on the surface and sharp beneath"],
+            [/末世|末日|废土|丧尸|变异|幸存者/, "register: post-apocalyptic — gritty and tense, terse urgent sentences, somber mood"],
+            [/科幻|赛博|机甲|星际|飞船|未来都市/, "register: science fiction — crisp precise prose with restrained technical flavor"],
+            [/娱乐圈|明星|偶像|爱豆|综艺|经纪/, "register: showbiz — glamorous contemporary energy, punchy gossipy dialogue"],
+            [/校园|高中|大学|青春|同桌|班长/, "register: campus — warm conversational English in an age-appropriate voice"],
+            [/恋|爱情|乙女|ABO/, "register: romance — emotionally expressive, tender and intimate when the scene calls for it"],
+            [/悬疑|推理|刑侦|密室|侦探/, "register: mystery — atmospheric and clipped, revelations drip out step by step"],
+            [/奇幻|冒险|勇者|魔法|巨龙|地下城/, "register: fantasy — vivid heroic prose with a playful epic tone"]
+        ];
+        let session = { cardId: "", at: 0 };
+        let busy = false;
+        function readProfile() { try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}"); } catch (e) { return {}; } }
+        function writeProfile(p) { try { localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); } catch (e) {} }
+        function normId(id) { return String(id || "").replace(/[^\w-]/g, "_"); }
+        function isLangSession() { return !!session.cardId; }
+        function langSaveKey(cardId) { return AppConfig.storageKeys.save + normId(cardId) + SAVE_SUFFIX; }
+        function hasLangSave(cardId) {
+            try {
+                const s = StorageService.readJson(langSaveKey(cardId), null);
+                return !!(s && Array.isArray(s.history) && s.history.length);
+            } catch (e) { return false; }
+        }
+        function toneHint(card) {
+            let g = "";
+            try { g = String(card?.structured?.world?.genre || "") + " " + String(card?.category || ""); } catch (e) {}
+            for (let i = 0; i < TONE_RULES.length; i++) { if (TONE_RULES[i][0].test(g)) return TONE_RULES[i][1]; }
+            return "register: match the mood your Chinese setting implies; when in doubt, prefer slightly literary over casual";
+        }
+        function buildInjection() {
+            if (!session.cardId) return "";
+            const p = readProfile();
+            const band = BAND_RULE[p.band === "a" || p.band === "c" ? p.band : "b"] || BAND_RULE.b;
+            const immersion = p.immersion === "full" ? "full" : "progressive";
+            let round = 1;
+            try {
+                const s = StateService.get();
+                round = ((s?.history || []).filter((h) => h && h.role === "user").length || 0) + 1;
+            } catch (e) {}
+            const tone = toneHint(ScenarioCardService.getSelectedCard());
+            const immText = immersion === "full"
+                ? "FULL IMMERSION — English only; absolutely no Chinese lines anywhere."
+                : (round <= 2
+                    ? "PROGRESSIVE — round " + round + "/2: after the story you MAY append ONE short Chinese recap line alone at the very end of \"story\", starting with 〔小译〕 (recast the key sentence in plain Chinese so the learner can check understanding). From round 3 onward never write Chinese."
+                    : "PROGRESSIVE — round " + round + " ≥ 3: English only from now on; no Chinese hints anymore.");
+            return [
+                "[ENGLISH LANGUAGE MODE — for language and output style these rules override the Chinese instructions above; story facts still come from the Chinese setting]",
+                "1) Write ALL narration, dialogue, scene title and options in natural English. Never output Chinese inside title / story / options.",
+                "2) The Chinese 【设定文本】 is the world bible (era, rules, characters, mood). Keep the world identical — translate it, don't rewrite it; " + tone + ".",
+                "3) The \"time\" field must keep the engine's numeric Chinese format with month and day characters, e.g. \"5月15日\" or \"第3年5月15日\" — never word-only English dates like \"May 15\".",
+                "4) " + band + ".",
+                "5) " + immText,
+                "6) Reply with the fixed JSON only: {\"title\":\"English scene name (short)\",\"time\":\"...\",\"story\":\"...\",\"options\":[\"...\",\"...\"]} — story ≈ 200-350 English words in several paragraphs, dialogue on its own lines; if the story is just starting, open in medias res with an immersive scene-setting paragraph, then give 2-3 options."
+            ].join("\n");
+        }
+        function restoreIfNeeded() {
+            const p = readProfile();
+            const playing = p && p.playing;
+            if (!playing || !playing.cardId) return false;
+            let sel = "";
+            try { sel = ScenarioCardService.getSelectedId(); } catch (e) {}
+            if (String(sel) !== String(playing.cardId)) return false;
+            if (!hasLangSave(playing.cardId)) return false;
+            session = { cardId: String(playing.cardId), at: playing.at || Date.now() };
+            return true;
+        }
+        function exitToChinese() {
+            if (!session.cardId) return;
+            const was = session.cardId;
+            session = {};
+            try {
+                const sel = ScenarioCardService.getSelectedId();
+                if (String(sel || "") === was) StateService.init(); // 重载该卡中文档,防英文内存档误写
+            } catch (e) {}
+        }
+        async function enter(cardId) {
+            const id = String(cardId || "");
+            if (busy) return;
+            busy = true;
+            try { return await doEnter(id); } finally { busy = false; }
+        }
+        async function doEnter(id) {
+            let card = null;
+            try { card = (ScenarioCardService.loadCards() || []).find((c) => String(c.id) === id) || null; } catch (e) {}
+            if (!card) { try { card = (window.SCENARIO_LIBRARY || []).find((c) => String(c.id) === id) || null; } catch (e) {} }
+            if (!card) {
+                try { NoticeModalService.showInfo({ title: "剧本未找到", descHtml: "这张剧本暂时找不到，请刷新后再试。" }); } catch (e) {}
+                return;
+            }
+            try {
+                if (ScenarioUnlockService.getLockInfo(card).locked) { ScenarioUnlockService.promptUnlock(card); return; }
+            } catch (e) {}
+            session = { cardId: id, at: Date.now() };
+            const p = readProfile();
+            p.playing = { cardId: id, title: String(card.title || "").slice(0, 40), category: String(card.category || ""), at: Date.now() };
+            writeProfile(p);
+            try { ScenarioCardService.setSelectedId(id); } catch (e) {}
+            try { ScenarioPlayMetaService.touchPlayed(id); } catch (e) {}
+            try {
+                const _tok = (typeof AuthService !== "undefined" && AuthService.getToken) ? AuthService.getToken() : "";
+                if (_tok) fetch(`${AppConfig.proxy.baseUrl}/api/play/report`, { method: "POST", headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + _tok }, body: JSON.stringify({ card_id: id }) }).catch(() => {});
+            } catch (e) {}
+            try { StateService.init(); } catch (e) {} // 会话已置位 → init 读 -lang 档
+            const st = StateService.get();
+            const metaId = id + META_SUFFIX;
+            let meta = { hasInitialized: false };
+            try { meta = ScenarioPlayMetaService.getMeta(metaId); } catch (e) {}
+            if (meta.hasInitialized && Array.isArray(st.history) && st.history.length) {
+                try { PlayViewStateService.enterPlay(id); } catch (e) {}
+                switchView("view-main");
+                try {
+                    UIRenderer.renderTop(st); UIRenderer.renderHistory(st);
+                    UIRenderer.renderInventory(st); UIRenderer.renderSocialList(st); UIRenderer.renderSaveSlots(st);
+                    if (UIRenderer.setAutoFollowBottom) UIRenderer.setAutoFollowBottom(true);
+                } catch (e) { console.warn("[LangEngine] 续玩渲染:", e); }
+                return { mode: "continue" };
+            }
+            // 英语开局:本地计划初始化(零 AI),英文第一轮由模型按 system 指令生成
+            let gender = "女";
+            try { gender = String(card?.structured?.identity?.gender || "女") || "女"; } catch (e) {}
+            let plan = null;
+            try { plan = ScenarioInitPlanService.buildLocalInitPlan(gender); } catch (e) {}
+            if (!plan) {
+                session = {};
+                try { NoticeModalService.showInfo({ title: "该剧本暂不支持语言模式", descHtml: "语言模式目前支持官方剧本库的剧本；自建/导入剧本请先玩中文版。" }); } catch (e) {}
+                return;
+            }
+            try { InitLoadingService.open("正在准备英语开局..."); } catch (e) {}
+            try { ScenarioPlayMetaService.setInitialized(metaId, true); } catch (e) {}
+            try { StateService.resetWithPreset(plan); } catch (e) {}
+            try { PlayViewStateService.enterPlay(id); } catch (e) {}
+            switchView("view-main");
+            try {
+                const st2 = StateService.get();
+                UIRenderer.renderTop(st2); UIRenderer.renderInventory(st2); UIRenderer.renderSocialList(st2); UIRenderer.renderSaveSlots(st2);
+            } catch (e) { console.warn("[LangEngine] 开局渲染:", e); }
+            try { InitLoadingService.close(); } catch (e) {}
+            try { await ChatService.requestAI("Begin the first scene of this story."); } catch (e) { console.warn("[LangEngine] 英语开局请求失败:", e); }
+            return { mode: "new" };
+        }
+        return { isLangSession, buildInjection, restoreIfNeeded, exitToChinese, enter, langSaveKey, hasLangSave };
+    })();
+    window.LangEngine = LangEngine;
 </script>
 <script>
-/* ===== 语言文游 LangPlay · 大厅 M1:语种/测档/沉浸模式(本地档案;云端档案与剧本库由后续模块接入) ===== */
+/* ===== 语言文游 LangPlay · 大厅 M1-M3:语种/测档(10题)/沉浸模式 + 档案云端同步(M2) + 语言剧本库入口(M3,经 window.LangEngine 旁挂 play 引擎) ===== */
 (function () {
     var PROFILE_KEY = "lang_profile_v1";
     /* 测档题库:10 题由易到难(第 1-4 题 d=1 / 第 5-7 题 d=2 / 第 8-10 题 d=3,总分 19)
@@ -21598,7 +21774,43 @@ function openNpcProfile(npcId) {
                 var b = $("lang-quiz-start"); if (b) b.scrollIntoView({ behavior: "smooth", block: "center" });
                 return;
             }
-            hint("剧本库接线中——下一批更新就能挑剧本开玩啦，你的档位与沉浸模式已存好" + (token() ? "并同步到云端" : "（登录后自动云端同步）") + "。");
+            api.showCards();
+        },
+        showCards: function () {
+            var list = $("lang-card-list"); if (!list) return;
+            var lib = null;
+            try { lib = window.SCENARIO_LIBRARY; } catch (e) {}
+            if (!lib || !Array.isArray(lib) || !lib.length) { hint("剧本库还在加载，稍等片刻再点一次～"); return; }
+            list.style.display = "block";
+            var rows = $("lang-card-rows"); if (!rows) return;
+            var eng = window.LangEngine, has = false, h = "", i, c;
+            for (i = 0; i < lib.length; i++) {
+                c = lib[i];
+                if (!c || !c.id || c.sourceType && c.sourceType !== "official") continue;
+                has = true;
+                var cont = (eng && eng.hasLangSave(c.id)) ? '<span class="lang-badge en" style="width:auto;height:auto;border-radius:8px;padding:1px 7px;font-size:.62rem;">继续</span>' : "";
+                h += '<div data-cid="' + String(c.id).replace(/"/g, "&quot;") + '" class="lang-play-row" style="display:flex;align-items:center;gap:8px;padding:9px 10px;margin-bottom:8px;background:var(--input-bg,#fff8f0);border:1px solid var(--line,#e2ccb0);border-radius:12px;cursor:pointer;">' +
+                     '<span class="lang-badge en">EN</span>' +
+                     '<div style="flex:1;min-width:0;"><div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + api.esc(String(c.title || "未命名剧本")) + '</div>' +
+                     '<div class="list-sub" style="margin:0;">' + api.esc(String(c.category || "")) + "</div></div>" +
+                     cont + '<span style="color:var(--sub,#806a55);">›</span></div>';
+            }
+            if (!has) { hint("剧本库暂时为空，刷新页面再试"); return; }
+            rows.innerHTML = h;
+            var btns = rows.querySelectorAll(".lang-play-row");
+            for (i = 0; i < btns.length; i++) {
+                btns[i].addEventListener("click", (function (cid) {
+                    return function () { api.enterCard(cid); };
+                })(btns[i].getAttribute("data-cid")));
+            }
+            hint("点卡即玩：玩过的接着英语进度；想回中文，从首页原来的入口进同一张卡即可");
+        },
+        esc: function (s) {
+            return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        },
+        enterCard: function (cid) {
+            if (!window.LangEngine) { hint("英语引擎还没就绪，刷新一下再试～"); return; }
+            window.LangEngine.enter(cid).catch(function () { hint("进入失败，请再点一次"); });
         }
     };
     window.LangController = api;
