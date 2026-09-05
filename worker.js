@@ -997,6 +997,59 @@ async function callGlossModel(env, sentences) {
     return { error: errorResponse("翻译服务暂时繁忙，稍后再试", 503, errs.join(","), "GLOSS_UNAVAILABLE") };
 }
 
+// ---- 语言文游 M5 recap:章末复盘生成(剧情→高频表达+仿写例句;直调模型不落库;收藏由前端写 lang_vocab)----
+const RECAP_STORY_LIMIT = 8000;
+const RECAP_RATE_LIMIT_MS = 6000;
+const recapRateMap = new Map();
+const RECAP_MODEL_IDS = GLOSS_MODEL_IDS; // 同 gloss 候选链:免费档优先,付费 glm-5.3-flash 兜底
+const RECAP_SYSTEM_PROMPT = [
+    "You are an English-learning recap coach for a Chinese player who just finished a chapter of an English interactive story game.",
+    "From the story excerpt, pick 3-6 high-value English expressions (phrases, sentence patterns, collocations, idioms — NOT single common words) worth remembering, tuned to the player band: band a = beginner-friendly plain phrasings; band b = natural everyday English; band c = richer idiomatic English.",
+    "For each expression give: en (the expression itself), zh (short natural Chinese explanation), example (a short original English sentence using it — never copy story lines verbatim).",
+    "Also write 2-3 short English sentences (writing) the player can imitate in the next chapter, each under 25 words, natural and story-flavored.",
+    'Reply ONLY with a single valid JSON object, no markdown fences, no extra text: {"expressions":[{"en":"...","zh":"...","example":"..."}],"writing":["...","..."]}'
+].join("\n");
+async function callRecapModel(env, story, band) {
+    const candidates = RECAP_MODEL_IDS.map((id) => MODEL_POOL.find((m) => m.id === id && m.enabled)).filter(Boolean);
+    const errs = [];
+    for (const t of candidates) {
+        const apiKey = env[t.apiKeyEnv];
+        if (!apiKey) { errs.push(t.id + ":nokey"); continue; }
+        try {
+            const res = await fetch((t.url || "").replace(/\/$/, "") + "/chat/completions", {
+                method: "POST",
+                headers: { "Authorization": "Bearer " + apiKey, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    model: t.model,
+                    temperature: 0.4,
+                    max_tokens: 4000,
+                    messages: [
+                        { role: "system", content: RECAP_SYSTEM_PROMPT },
+                        { role: "user", content: `Player band: ${band || "b"}\n\nStory excerpt:\n${story}` }
+                    ]
+                }),
+                signal: AbortSignal.timeout(45000)
+            });
+            if (!res.ok) { errs.push(t.id + ":http" + res.status); continue; }
+            const data = await res.json().catch(() => ({}));
+            const content = cleanJsonText(String((data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || ""));
+            if (!content) { errs.push(t.id + ":empty"); continue; }
+            const parsed = JSON.parse(content);
+            const expressions = (Array.isArray(parsed.expressions) ? parsed.expressions : []).slice(0, 6)
+                .map((x) => ({
+                    en: String(x && x.en || "").trim().slice(0, 120),
+                    zh: String(x && x.zh || "").trim().slice(0, 200),
+                    example: String(x && x.example || "").trim().slice(0, 300)
+                })).filter((x) => x.en);
+            const writing = (Array.isArray(parsed.writing) ? parsed.writing : []).slice(0, 3)
+                .map((s) => String(s || "").trim().slice(0, 300)).filter(Boolean);
+            if (expressions.length || writing.length) return { expressions, writing };
+            errs.push(t.id + ":emptyjson");
+        } catch (e) { errs.push(t.id + ":err"); }
+    }
+    return { error: errorResponse("复盘生成失败，请稍后重试", 503, errs.join(","), "RECAP_UNAVAILABLE") };
+}
+
 export default {
     async fetch(request, env, ctx) {
         if (!isAllowedOrigin(request.headers.get("Origin"))) {
@@ -2969,6 +3022,25 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const out = await callGlossModel(env, sentences);
                 if (out.error) return out.error;
                 return new Response(JSON.stringify({ ok: true, items: out.items }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+            }
+
+            // ---- 路由:语言文游 M5 章末复盘(POST /api/lang/recap;剧情+档位→高频表达+仿写例句,直调模型)----
+            if (url.pathname === "/api/lang/recap" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const uid = auth.record.id;
+                const now = Date.now();
+                if (now - (recapRateMap.get(uid) || 0) < RECAP_RATE_LIMIT_MS) {
+                    return errorResponse("刚生成过，先看看这份吧", 429, null, "RECAP_TOO_FREQUENT");
+                }
+                const body = await request.json().catch(() => ({}));
+                const story = String(body.story || "").replace(/\s+/g, " ").trim().slice(0, RECAP_STORY_LIMIT);
+                if (story.length < 200) return errorResponse("剧情内容太少，还没法复盘", 400, null, "RECAP_STORY_TOO_SHORT");
+                const band = ["a", "b", "c"].includes(body.band) ? String(body.band) : "b";
+                recapRateMap.set(uid, now);
+                const out = await callRecapModel(env, story, band);
+                if (out.error) return out.error;
+                return new Response(JSON.stringify({ ok: true, expressions: out.expressions, writing: out.writing }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
 
             // ---- 路由：热聊人物卡榜（GET /api/characters/hot，送笔芯人气 + 收藏数聚合）----

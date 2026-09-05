@@ -4840,6 +4840,36 @@
     .lg-st button.on-0{background:rgba(124,84,240,.16);border-color:#7c4fd8;color:#7c4fd8;font-weight:700}
     .lg-st button.on-1{background:rgba(63,111,216,.16);border-color:#3f6fd8;color:#3f6fd8;font-weight:700}
     .lg-st button.on-2{background:rgba(47,158,110,.18);border-color:#2f9e6e;color:#2f9e6e;font-weight:700}
+    /* ===== 语言文游 M5 章末复盘(入口条 + RecapModal + 收藏闭环) ===== */
+    .lg-recap-entry{display:flex;align-items:center;justify-content:center;gap:6px;margin:14px 6px 2px;padding:9px 14px;font-size:.78rem;font-weight:700;color:#7c4fd8;background:linear-gradient(115deg,rgba(124,84,216,.12),rgba(124,84,216,.05) 60%,rgba(63,111,216,.10));border:1px dashed rgba(124,84,216,.5);border-radius:999px;cursor:pointer;user-select:none;text-align:center}
+    .lg-recap-entry:active{transform:scale(.98)}
+    .lg-rm-mask{position:fixed;inset:0;z-index:300002;display:flex;align-items:center;justify-content:center;background:rgba(6,8,26,.62);padding:16px;box-sizing:border-box}
+    .lg-rm{width:min(600px,100%);max-height:88vh;display:flex;flex-direction:column;background:var(--card-bg,#fffdf8);border:1px solid var(--line,#e2ccb0);border-radius:20px;box-shadow:0 18px 55px rgba(8,8,40,.4);overflow:hidden}
+    .lg-rm-img{width:100%;height:auto;display:block;border-radius:19px 19px 0 0;flex-shrink:0}
+    .lg-rm-scroll{overflow-y:auto;padding:0 18px 16px;flex:1}
+    .lg-rm-head{display:flex;align-items:center;gap:8px;padding:13px 0 9px;position:sticky;top:0;background:var(--card-bg,#fffdf8);font-weight:800;font-size:.98rem;color:var(--text)}
+    .lg-rm-close{margin-left:auto;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(124,84,240,.1);color:#7c4fd8;cursor:pointer;font-weight:700;flex-shrink:0}
+    .lg-rm-sec{display:flex;align-items:baseline;gap:8px;margin:14px 0 8px;font-weight:800;font-size:.86rem;color:#7c4fd8}
+    .lg-rm-sec .list-sub{font-weight:400;font-size:.66rem;color:var(--sub,#806a55)}
+    .lg-rm-empty{font-size:.74rem;color:var(--sub,#806a55);padding:8px 12px;background:var(--input-bg,#fffbf5);border:1px dashed var(--line,#e2ccb0);border-radius:10px;line-height:1.6}
+    .lg-rm-words{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0}
+    .lg-rm-word{font-size:.72rem;line-height:1.5;padding:4px 10px;border-radius:999px;background:rgba(124,84,240,.1);border:1px solid rgba(124,84,240,.35);color:#7c4fd8}
+    .lg-rm-word b{font-weight:800;margin-right:5px}
+    .lg-rm-word span{color:var(--sub,#806a55);font-size:.66rem}
+    .lg-rm-gen{display:block;width:100%;margin:2px 0 4px;padding:11px 14px;border:none;border-radius:13px;background:linear-gradient(135deg,#7c4fd8,#3f6fd8);color:#fff;font-size:.86rem;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(124,84,216,.35)}
+    .lg-rm-gen:active{transform:scale(.99)}
+    .lg-rm-gen:disabled{opacity:.65;cursor:wait}
+    .lg-rm-gen.light{background:var(--input-bg,#fffbf5);color:#7c4fd8;border:1px solid rgba(124,84,240,.5);box-shadow:none}
+    .lg-rm-exp{display:flex;gap:10px;align-items:flex-start;padding:11px 12px;margin-bottom:8px;background:var(--input-bg,#fffbf5);border:1px solid var(--line,#e2ccb0);border-radius:13px}
+    .lg-rm-star{flex-shrink:0;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:rgba(124,84,240,.12);color:#7c4fd8;cursor:pointer;font-size:.92rem;user-select:none}
+    .lg-rm-star.saved{background:rgba(47,158,110,.16);color:#2f9e6e}
+    .lg-rm-exp-main{flex:1;min-width:0}
+    .lg-rm-exp-en{font-weight:800;font-size:.86rem;color:#5b3fce;word-break:break-word}
+    .lg-rm-exp-zh{font-size:.74rem;color:var(--text);opacity:.85;margin-top:2px}
+    .lg-rm-exp-ex{font-size:.7rem;color:var(--sub,#806a55);margin-top:5px;padding:6px 9px;background:rgba(124,84,240,.07);border-radius:8px;line-height:1.55;word-break:break-word}
+    .lg-rm-write{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;margin-bottom:7px;background:rgba(63,111,216,.07);border:1px solid rgba(63,111,216,.25);border-radius:11px}
+    .lg-rm-write-main{flex:1;min-width:0;font-size:.8rem;color:var(--text);line-height:1.6;word-break:break-word}
+    .lg-rm-note{font-size:.68rem;color:var(--sub,#806a55);margin:2px 0 10px;line-height:1.6}
 </style>
 <div id="boot-screen" role="status" aria-label="页面加载中">
     <div class="boot-logo"><img src="icons/android-chrome-192x192.png" alt="" style="width:36px;height:36px;vertical-align:-7px;margin-right:10px;border-radius:8px;filter:drop-shadow(0 0 10px rgba(255,214,107,.45))">云吞吞文游</div>
@@ -22069,6 +22099,18 @@ function openNpcProfile(npcId) {
                 }
             }
         }
+        /* M5 章末复盘入口:每 5 轮一小章,本轮卡尾挂轻量入口条(st.lgDone 保证每卡仅一次) */
+        var rn = roundNo();
+        if (rn === 1) sessionWords = {};   // 新会话开局:清空本局点查词(重新累积)
+        if (rn >= 5 && rn % 5 === 0) {
+            if (!st.querySelector(".lg-recap-entry")) {
+                var ce = document.createElement("div");
+                ce.className = "lg-recap-entry";
+                ce.setAttribute("data-act", "recap-open");
+                ce.textContent = "📋 第 " + Math.floor(rn / 5) + " 章小结 · 看看这 5 轮你学到啥 →";
+                st.appendChild(ce);
+            }
+        }
     }
     function refreshCardSens(list) { for (var i = 0; i < list.length; i++) highlightSen(list[i]); }
 
@@ -22241,6 +22283,7 @@ function openNpcProfile(npcId) {
         var key = String(term).toLowerCase();
         var info = wordInfo[key] || null;
         var inVocab = !!vocabMap[key];
+        noteTapped(term, info);          // M5:记入本局点查词(章末复盘回顾用)
         var p = ensurePop();
         var html = '<div class="lg-pop-w">' + esc(info ? info.w : term) + "</div>";
         if (info && info.en) html += '<div class="lg-pop-en">' + esc(info.en) + "</div>";
@@ -22300,6 +22343,8 @@ function openNpcProfile(npcId) {
     document.addEventListener("click", function (e) {
         var t = e.target;
         if (!t || !t.closest) return;
+        var maskEl = t.closest ? t.closest(".lg-rm-mask") : null;
+        if (maskEl && t === maskEl) { closeRecap(); return; }   // 复盘弹层:点空白关闭
         var actEl = t.closest("[data-act]");
         if (actEl) {
             var act = actEl.getAttribute("data-act");
@@ -22308,6 +22353,12 @@ function openNpcProfile(npcId) {
             if (sen) {
                 if (act === "close") collapseSen(sen);
                 else if (act === "retry") { delete glossFail[sen.text]; sen.expanded = true; fillGloss(sen); queueGloss([sen]); }
+                e.stopPropagation();
+                e.preventDefault();
+                return;
+            }
+            if (act === "recap-open" || actEl.closest(".lg-rm-mask")) {
+                handleRecapAct(actEl, act);
                 e.stopPropagation();
                 e.preventDefault();
                 return;
@@ -22371,13 +22422,15 @@ function openNpcProfile(npcId) {
         var arr = [], i, k;
         for (k = 0; k < keys.length; k++) arr.push(vocabMap[keys[k]]);
         arr.sort(function (a, b) { var ta = a.created_at || "", tb = b.created_at || ""; return ta === tb ? 0 : (ta > tb ? -1 : 1); });
-        var html = '<div class="list-sub" style="margin:2px 0 8px;">共 ' + arr.length + " 条（点词自动收藏；玩的过程里点蓝色虚线词即可）</div>";
+        var html = '<div class="list-sub" style="margin:2px 0 8px;">共 ' + arr.length + " 条（点剧情里的词 / 章末复盘里收藏的表达都会收进来）</div>";
         var ST = [["0", "新学"], ["1", "眼熟"], ["2", "已掌握"]];
         for (i = 0; i < arr.length; i++) {
             var it = arr[i];
             var cls = it.type === "expression" ? "expr" : "word";
             var tname = it.type === "expression" ? "表达" : "词";
-            var gl = String(it.gloss_zh || it.gloss_en || "（暂无释义）").slice(0, 140);
+            var gz = String(it.gloss_zh || "");
+            var ge = it.type === "expression" && String(it.gloss_en || "") ? " · 例: " + String(it.gloss_en) : "";
+            var gl = (gz + ge || "（暂无释义）").slice(0, 220);
             var btns = "", s;
             for (s = 0; s < ST.length; s++) {
                 var stv = Number(ST[s][0]);
@@ -22442,6 +22495,222 @@ function openNpcProfile(npcId) {
     }
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
     else init();
+
+    /* ============================================================
+       M5 章末复盘:本局点查词回顾 + AI 剧情高频表达/仿写例句 + ★收藏闭环
+       入口:attachStory 每 5 轮卡尾挂 .lg-recap-entry;生成走 POST /api/lang/recap;
+       收藏 type="expression" 落 lang_vocab(与点查词同表,生词本视图同列表)
+       ============================================================ */
+    var sessionWords = {};    // 本局(自最近一次进卡)点查过的词:term → {w,en,zh}
+    function noteTapped(term, info) {
+        var k = String(term || "").toLowerCase();
+        if (!k) return;
+        if (!sessionWords[k]) sessionWords[k] = { w: String(term), en: info && info.en ? String(info.en) : "", zh: info && info.zh ? String(info.zh) : "" };
+    }
+    function recapCardTitle() {
+        try {
+            if (typeof ScenarioCardService !== "undefined" && ScenarioCardService.getSelectedCard) {
+                var c = ScenarioCardService.getSelectedCard();
+                if (c && c.title) return String(c.title).slice(0, 40);
+            }
+        } catch (e) {}
+        return "";
+    }
+    function recapCardId() {
+        try {
+            var s = (typeof StateService !== "undefined") ? StateService.get() : null;
+            if (s && s.card_id) return String(s.card_id);
+            var c = typeof ScenarioCardService !== "undefined" ? ScenarioCardService.getSelectedCard() : null;
+            if (c && c.id) return String(c.id);
+        } catch (e) {}
+        return "";
+    }
+    function plainTextOf(html) {
+        try {
+            var d = document.createElement("div");
+            d.innerHTML = String(html || "");
+            return (d.textContent || "").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+        } catch (e) { return String(html || ""); }
+    }
+    /* 章剧情文本 = 历史里最近 ≤5 条 AI 回复(即本章窗口),HTML 转纯文本,跳过状态提示行 */
+    function chapterStoryText() {
+        var hs = [];
+        try {
+            var s = (typeof StateService !== "undefined") ? StateService.get() : null;
+            hs = (s && s.history) || [];
+        } catch (e) {}
+        var parts = [], i, m, t;
+        for (i = hs.length - 1; i >= 0 && parts.length < 5; i--) {
+            m = hs[i];
+            if (!m || m.role !== "ai") continue;
+            t = m.text || "";
+            if (/社交线|重试仍失败|^>/.test(t)) continue;
+            t = plainTextOf(t);
+            if (!t || /^[>⚠️]/.test(t)) continue;
+            var keep = [], ln;
+            t = t.split("\n");
+            for (var j = 0; j < t.length; j++) { ln = t[j].trim(); if (ln && !/^>/.test(ln)) keep.push(ln); }
+            t = keep.join("\n").slice(-1600);
+            if (t) parts.unshift(t);
+        }
+        return parts.join("\n\n").slice(0, 8000);
+    }
+    function recapChapterNo() { return Math.max(1, Math.floor((roundNo() - 1) / 5) + 1); }
+    function vocabKeyOfTerm(term) { return String(term || "").slice(0, 64).toLowerCase(); }
+
+    /* ---- 复盘弹层 ---- */
+    var recapMask = null;
+    var recapState = { mode: "idle", msg: "", expressions: [], writing: [] };   // mode: idle|busy|err|done
+    function openRecap() {
+        if (!langActive()) return;
+        if (!recapMask) {
+            recapMask = document.createElement("div");
+            recapMask.className = "lg-rm-mask";
+        }
+        if (!recapMask.parentNode) document.body.appendChild(recapMask);   // closeRecap 后复开:重新挂回
+        recapState = { mode: "idle", msg: "", expressions: [], writing: [] };
+        recapMask.innerHTML =
+            '<div class="lg-rm">' +
+                '<img class="lg-rm-img" src="lang/recap-top.jpg" alt="章末复盘" loading="lazy">' +
+                '<div class="lg-rm-scroll">' +
+                    '<div class="lg-rm-head">📋 第 ' + recapChapterNo() + " 章复盘<span class=\"lg-rm-close\" data-act=\"rm-close\">✕</span></div>" +
+                    '<div class="lg-rm-note">每 5 轮一小章:先看看你点查过的词,再让 AI 从剧情里提炼值得收藏的表达——全都会进大厅「⑤ 我的生词本」。</div>' +
+                    '<div id="lg-rm-sec1"></div><div id="lg-rm-sec2"></div><div id="lg-rm-sec3"></div>' +
+                "</div>" +
+            "</div>";
+        fillRecapWords();
+        fillRecapAi();
+        if (recapMask.dataset.esckey) document.removeEventListener("keydown", recapEsc);
+        document.addEventListener("keydown", recapEsc);
+        recapMask.dataset.esckey = "1";
+    }
+    function closeRecap() {
+        if (recapMask) {
+            recapMask.innerHTML = "";
+            if (recapMask.parentNode) recapMask.parentNode.removeChild(recapMask);
+            if (recapMask.dataset) delete recapMask.dataset.esckey;
+        }
+        document.removeEventListener("keydown", recapEsc);
+    }
+    function recapEsc(e) { if (e && e.key === "Escape") closeRecap(); }
+    function fillRecapWords() {
+        var box = document.getElementById("lg-rm-sec1");
+        if (!box) return;
+        var arr = [], k;
+        for (k in sessionWords) { if (Object.prototype.hasOwnProperty.call(sessionWords, k)) arr.push(sessionWords[k]); }
+        arr.reverse();
+        var h = '<div class="lg-rm-sec">① 本局点查过的词<span class="list-sub">进卡以来点过即自动收生词本</span></div>';
+        if (!arr.length) {
+            h += '<div class="lg-rm-empty">本局还没点查词——点剧情里 <span style="color:#7c4fd8;font-weight:800;">蓝色虚线</span> 的生词就会自动收进生词本,也会出现在这里。</div>';
+        } else {
+            h += '<div class="lg-rm-words">';
+            for (var i = 0; i < Math.min(arr.length, 30); i++) {
+                var w = arr[i];
+                h += '<span class="lg-rm-word"><b>' + esc(w.w) + "</b>" + (w.zh ? "<span>" + esc(String(w.zh).slice(0, 70)) + "</span>" : "") + "</span>";
+            }
+            h += "</div>";
+        }
+        box.innerHTML = h;
+    }
+    function fillRecapAi() {
+        var b2 = document.getElementById("lg-rm-sec2"), b3 = document.getElementById("lg-rm-sec3");
+        if (!b2 || !b3) return;
+        var st = recapState;
+        var h2 = '<div class="lg-rm-sec">② 剧情高频表达<span class="list-sub">AI 提炼本章 · 可收藏</span></div>';
+        var h3 = '<div class="lg-rm-sec">③ 仿写例句<span class="list-sub">下章练手 · 可收藏</span></div>';
+        if (!token()) {
+            h2 += '<div class="lg-rm-empty">登录后即可让 AI 读本章剧情,提炼 3-6 条高频表达与仿写句,一键收藏、云端同步。</div>';
+            h2 += '<button type="button" class="lg-rm-gen light" data-act="rm-login">先去登录</button>';
+        } else if (st.mode === "busy") {
+            h2 += '<button type="button" class="lg-rm-gen" disabled>⏳ AI 正在读这一章…（约 10 秒）</button>';
+        } else if (st.mode === "err") {
+            h2 += '<div class="lg-rm-empty" style="color:#c94857;">' + esc(st.msg || "生成失败") + "</div>";
+            h2 += '<button type="button" class="lg-rm-gen" data-act="rm-gen">↻ 重试生成</button>';
+        } else if (st.mode === "done") {
+            var i2, x;
+            for (i2 = 0; i2 < st.expressions.length; i2++) {
+                x = st.expressions[i2];
+                h2 += '<div class="lg-rm-exp"><span class="lg-rm-star' + (vocabMap[vocabKeyOfTerm(x.en)] ? " saved" : "") + '" data-act="rm-star" data-term="' + esc(x.en) + '" data-zh="' + esc(x.zh) + '" data-ex="' + esc(x.example) + '">' + (vocabMap[vocabKeyOfTerm(x.en)] ? "✓" : "★") + "</span>" +
+                    '<div class="lg-rm-exp-main"><div class="lg-rm-exp-en">' + esc(x.en) + '</div><div class="lg-rm-exp-zh">' + esc(x.zh) + '</div>' +
+                    (x.example ? '<div class="lg-rm-exp-ex">例: ' + esc(x.example) + "</div>" : "") + "</div></div>";
+            }
+            if (!st.expressions.length) h2 += '<div class="lg-rm-empty">这一章没有太值得单独收藏的表达,重点看看下面的仿写句吧。</div>';
+            for (i2 = 0; i2 < st.writing.length; i2++) {
+                var wx = st.writing[i2];
+                h3 += '<div class="lg-rm-write"><span class="lg-rm-star' + (vocabMap[vocabKeyOfTerm(wx)] ? " saved" : "") + '" data-act="rm-star" data-term="' + esc(wx) + '" data-zh="' + esc(wx) + '" data-ex="">' + (vocabMap[vocabKeyOfTerm(wx)] ? "✓" : "★") + "</span>" +
+                    '<div class="lg-rm-write-main">' + esc(wx) + "</div></div>";
+            }
+            if (!st.writing.length) h3 += '<div class="lg-rm-empty">本章仿写例句为空——把表达的例句当仿写模板也可以。</div>';
+        } else {
+            h2 += '<button type="button" class="lg-rm-gen" data-act="rm-gen">✨ 生成剧情高频表达 + 仿写例句（AI 读本章剧情）</button>';
+        }
+        b2.innerHTML = h2;
+        b3.innerHTML = h3;
+    }
+    function genRecap() {
+        if (!token()) { closeRecap(); openLoginSheet(); return; }
+        if (recapState.mode === "busy") return;
+        recapState = { mode: "busy", msg: "", expressions: [], writing: [] };
+        fillRecapAi();
+        var profile = readProfile();
+        fetch(API_BASE + "/api/lang/recap", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token() },
+            body: JSON.stringify({ story: chapterStoryText(), band: String(profile.band || "b") })
+        })
+            .then(function (r) { return r.json().catch(function () { return null; }); })
+            .then(function (d) {
+                if (d && d.ok) {
+                    recapState = { mode: "done", msg: "", expressions: d.expressions || [], writing: d.writing || [] };
+                } else {
+                    recapState.mode = "err";
+                    recapState.msg = (d && d.message) ? String(d.message) : "生成失败,请稍后重试";
+                }
+                fillRecapAi();
+            })
+            .catch(function () { recapState.mode = "err"; recapState.msg = "网络开小差了,请重试"; fillRecapAi(); });
+    }
+    /* 收藏(表达/仿写句)→ lang_vocab type=expression;服务端按 term 幂等,前端乐观置 ✓ */
+    function collectExp(term, zh, ex, btn) {
+        var k = vocabKeyOfTerm(term);
+        if (!k || !token() || vocabMap[k]) return;
+        var title = recapCardTitle();
+        var origin = (title ? "卡:「" + title + "」· " : "") + "第 " + recapChapterNo() + " 章复盘";
+        fetch(API_BASE + "/api/lang/vocab", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token() },
+            body: JSON.stringify({
+                lang: "en", type: "expression", term: String(term).slice(0, 64),
+                gloss_zh: String(zh || "").slice(0, 500),
+                gloss_en: String(ex || "").slice(0, 500),
+                origin: String(origin).slice(0, 200)
+            })
+        })
+            .then(function (r) { return r.json().catch(function () { return null; }); })
+            .then(function (d) {
+                if (!d || !d.ok) return;
+                vocabMap[k] = { id: d.id || "", type: "expression", term: String(term).slice(0, 64), gloss_zh: String(zh || ""), gloss_en: String(ex || ""), origin: origin, status: 0, created_at: "" };
+                noteWords([{ w: String(term), en: "", zh: String(zh || "") }], "gloss");   // 单字词回填正文高亮库
+                reDirty = true;
+                if (btn) { btn.classList.add("saved"); btn.textContent = "✓"; }
+            }).catch(function () {});
+    }
+    function openLoginSheet() {
+        var ov = document.getElementById("auth-overlay");
+        if (ov) ov.style.display = "flex";
+        else hint("请先登录账号");
+    }
+    function handleRecapAct(el, act) {
+        if (!el) return;
+        if (act === "rm-close") closeRecap();
+        else if (act === "rm-login") openLoginSheet();
+        else if (act === "rm-gen") genRecap();
+        else if (act === "rm-star") {
+            if (el.classList.contains("saved")) return;
+            collectExp(el.getAttribute("data-term") || "", el.getAttribute("data-zh") || "", el.getAttribute("data-ex") || "", el);
+        }
+        else if (act === "recap-open") openRecap();
+    }
     window.LangAssist = {};
 })();
 </script>
