@@ -4814,6 +4814,8 @@
     .lg-sentence:hover{background:rgba(124,84,240,.10);box-shadow:0 0 0 1px rgba(124,84,240,.22) inset}
     .lg-word{cursor:pointer;color:inherit;border-bottom:1.5px dotted #7c4fd8;background:rgba(124,84,240,.07);border-radius:4px;transition:background .15s}
     .lg-word:hover{background:rgba(124,84,240,.22)}
+    /* M6d4 本章目标词(候选命中):金色点线标记,点查徽标逻辑不变 */
+    .lg-ch{border-bottom:1.5px dotted #e8a33d;background:rgba(232,163,61,.10)}
     .lg-gloss{margin:5px 0 8px;padding:9px 12px;border-radius:12px;border:1px solid rgba(124,84,240,.38);background:rgba(124,84,240,.07);font-size:.82rem;line-height:1.5}
     .lg-gloss-head{display:flex;align-items:center;gap:8px;color:#7c4fd8;font-size:.66rem;font-weight:800;letter-spacing:.4px}
     .lg-gloss-close{margin-left:auto;border:none;background:rgba(124,84,240,.14);color:#7c4fd8;font-size:.68rem;font-weight:800;border-radius:7px;padding:2px 8px;cursor:pointer;flex-shrink:0}
@@ -21628,6 +21630,13 @@ function openNpcProfile(npcId) {
                 : (round <= 2
                     ? "PROGRESSIVE — round " + round + "/2: after the story you MAY append ONE short Chinese recap line alone at the very end of \"story\", starting with 〔小译〕 (recast the key sentence in plain Chinese so the learner can check understanding). From round 3 onward never write Chinese."
                     : "PROGRESSIVE — round " + round + " ≥ 3: English only from now on; no Chinese hints anymore.");
+            /* M6d4:本章候选词(卡档词库抽 ≤3)→ 随续写指令注入;LangAssist 已在上一卡渲染时预载词库并抽好 */
+            let cands = [];
+            try { const _la = window.LangAssist; if (_la && _la.getChapterWords) cands = _la.getChapterWords() || []; } catch (e) { cands = []; }
+            const candLine = cands.length
+                ? "Try to naturally bring some of these words into your story when they fit: " + cands.join(", ")
+                    + " — story and tone come first; tense and word form may change freely, and it is fine to use only one or two, or skip them entirely when the scene does not call for them."
+                : "";
             return [
                 "[ENGLISH LANGUAGE MODE — for language and output style these rules override the Chinese instructions above; story facts still come from the Chinese setting]",
                 "1) Write ALL narration, dialogue, scene title and options in natural English. Never output Chinese inside title / story / options.",
@@ -21635,8 +21644,9 @@ function openNpcProfile(npcId) {
                 "3) The \"time\" field must keep the engine's numeric Chinese format with month and day characters, e.g. \"5月15日\" or \"第3年5月15日\" — never word-only English dates like \"May 15\".",
                 "4) " + band + ".",
                 "5) " + immText,
-                "6) Reply with the fixed JSON only: {\"title\":\"English scene name (short)\",\"time\":\"...\",\"story\":\"...\",\"options\":[\"...\",\"...\"]} — story ≈ 200-350 English words in several paragraphs, dialogue on its own lines; if the story is just starting, open in medias res with an immersive scene-setting paragraph, then give 2-3 options."
-            ].join("\n");
+                (candLine ? "6) " + candLine : ""),
+                "7) Reply with the fixed JSON only: {\"title\":\"English scene name (short)\",\"time\":\"...\",\"story\":\"...\",\"options\":[\"...\",\"...\"]} — story ≈ 200-350 English words in several paragraphs, dialogue on its own lines; if the story is just starting, open in medias res with an immersive scene-setting paragraph, then give 2-3 options."
+            ].filter(Boolean).join("\n");
         }
         function restoreIfNeeded() {
             const p = readProfile();
@@ -22087,6 +22097,7 @@ function openNpcProfile(npcId) {
     function attachStory(st) {
         if (!st || st.dataset.lgDone) return;
         st.dataset.lgDone = "1";
+        ensureChWords();   // M6d4:先于切词执行——开局预载卡档词库、换章重抽候选,保证本章正文标记/seen 用当前候选
         var runs = collectRuns(st);
         if (!runs.length) return;
         var cardSens = [], nodeList = [];
@@ -22146,7 +22157,110 @@ function openNpcProfile(npcId) {
     }
     function refreshCardSens(list) { for (var i = 0; i < list.length; i++) highlightSen(list[i]); }
 
-    /* ---- M6d3 全词 span 化:正文任意词可点查(词池命中带标色 .lg-word,其余无色 .lg-w,防误亮) ---- */
+    /* ---- M6d4 剧情嵌词:每章开局从卡档词库抽候选词 ≤3 注入续写指令;正文词形命中 → 金标 + 记 seen ----
+       词状态机起点:unknown → seen(剧情自然遇见/点查过);seen 按档持久(lang_seen_v1),
+       候选优先级:本档未 seen 优先,不足补已 seen 复习;weak/learned 等 M6d5 lang_bank_progress 落库 */
+    var SEEN_KEY = "lang_seen_v1";
+    var seenCache = null;
+    var chWords = { no: -1, band: "", list: [], words: [], ready: false };   // no=章号(每5轮), words 带 zh 供 M6d5 小测
+    var chSeen = [];                                                           // 本章嵌词命中清单 {w,zh,at}(M6d5 章末词测数据源)
+    var chExpan = {};                                                          // 本章 token→原形 反查表
+    var STOPW = {};
+    (function () { var ws = "i,you,he,she,it,we,they,this,that,these,those,a,an,the,and,or,but,not,no,yes,is,am,are,was,were,be,been,being,do,does,did,done,doing,have,has,had,having,will,would,shall,should,can,could,may,might,must,of,in,on,at,to,for,with,by,from,up,down,off,over,under,again,then,there,here,when,where,why,how,all,any,each,every,both,few,more,most,other,some,such,only,own,same,so,than,too,very,just,because,if,about,into,out,as,after,before,between,during,without,through,while,once,since,until,whether,although,though,even,also,too,what,which,who,whom,whose,my,your,his,her,its,our,their,me,him,us,them,one,two,first,second,per,via,etc,upon,toward,towards,onto,within,among,against,along,across,behind,beside,beyond,below,above,near,far,ago,ever,never,always,often,sometimes,usually,already,still,yet,maybe,perhaps,indeed,rather,quite,almost,nearly,however,therefore,thus,hence,then,else,neither,either,nor,none,nothing,everything,something,anything,everybody,everyone,nobody,noone,someone,anybody,anyone,please,ok,okay,oh,ah,well,hmm,yeah,yes,sir,maam".split(","); for (var i = 0; i < ws.length; i++) STOPW[ws[i]] = 1; })();
+    var POS_NO_RE = /^(?:aux|prep|conj|pron|art|int|num|modal|det)\./;
+    var POS_OK_RE = /^(?:vt|vi|v|n|adj|ad|adv|a|d)\./;
+    function loadSeen() {
+        if (seenCache) return seenCache;
+        try { seenCache = JSON.parse(localStorage.getItem(SEEN_KEY) || "{}") || {}; } catch (e) { seenCache = {}; }
+        if (typeof seenCache !== "object") seenCache = {};
+        return seenCache;
+    }
+    function markSeenWord(band, w) {
+        if (!band || !w) return false;
+        var s = loadSeen();
+        var b = s[band] || (s[band] = {});
+        if (b[w]) return false;
+        b[w] = Date.now();
+        try { localStorage.setItem(SEEN_KEY, JSON.stringify(s)); } catch (e) {}
+        return true;
+    }
+    function noteChSeen(w) {
+        for (var i = 0; i < chSeen.length; i++) if (chSeen[i].w === w) return;
+        var zh = "";
+        for (var j = 0; j < chWords.words.length; j++) if (chWords.words[j].w === w) { zh = chWords.words[j].zh; break; }
+        chSeen.push({ w: w, zh: zh, at: Date.now() });
+    }
+    function bandChapterNo() { return Math.max(1, Math.floor((roundNo() - 1) / 5) + 1); }
+    function goodPos(zh) {
+        var s = String(zh || "").trim();
+        if (!s) return false;
+        if (POS_NO_RE.test(s)) return false;
+        if (POS_OK_RE.test(s)) return true;
+        return !/^[a-z]+\./.test(s);   // ky 等无词性前缀源:非词性标记开头即视为可嵌
+    }
+    function drawWords(band) {
+        var items = langBankCache[band];
+        if (!items || !items.length) return [];
+        var seen = loadSeen()[band] || {};
+        var fresh = [], old = [], i, it, w;
+        for (i = 0; i < items.length; i++) {
+            it = items[i];
+            w = it.w;
+            if (!w || w.length < 3 || w.length > 12 || !/^[a-z]+$/.test(w)) continue;
+            if (STOPW[w]) continue;
+            if (!goodPos(it.zh || "")) continue;
+            (seen[w] ? old : fresh).push(it);
+        }
+        function rndTake(arr, n) {
+            var a = arr.slice(), out = [], k, r;
+            for (k = 0; k < n && a.length; k++) { r = Math.floor(Math.random() * a.length); out.push(a[r]); a.splice(r, 1); }
+            return out;
+        }
+        var picks = [];
+        picks = picks.concat(rndTake(fresh, 2));
+        if (picks.length < 2) picks = picks.concat(rndTake(old, 2 - picks.length));   // 未seen不足补复习
+        else picks = picks.concat(rndTake(old, 1));
+        return picks;
+    }
+    function rebuildExpan(band) {
+        chExpan = {};
+        var i, w, it, al, j;
+        for (i = 0; i < chWords.list.length; i++) {
+            w = chWords.list[i];
+            chExpan[w] = w;
+            it = langBankItem(band, w);
+            al = it && it.al;
+            if (al) for (j = 0; j < al.length; j++) if (!chExpan[al[j]]) chExpan[al[j]] = w;
+        }
+    }
+    function ensureChWords() {
+        var band = currentLangBand();
+        var no = bandChapterNo();
+        if (chWords.no === no && chWords.band === band && chWords.ready) return chWords.list;
+        if (chWords.no !== no || chWords.band !== band) { chWords = { no: no, band: band, list: [], words: [], ready: false }; chSeen = []; }   // 换章/换档:旧章命中清单作废
+        if (!langBankCache[band]) {
+            if (!langBankLoading[band]) loadLangBank(band);   // fire:开局/换章即预载词库,保证注入前 ready
+            return [];
+        }
+        chWords.ready = true;
+        var picks = drawWords(band);
+        chWords.list = picks.map(function (p) { return String(p.w).toLowerCase(); });
+        chWords.words = picks.map(function (p) { return { w: String(p.w).toLowerCase(), zh: String(p.zh || "").slice(0, 80) }; });
+        rebuildExpan(band);
+        return chWords.list;
+    }
+    /* token → 本章候选原形(exact / ECDICT 词形 al / 尾 's 与简单复数兜底),未命中 null */
+    function chapterOwnerOf(tok) {
+        if (!chWords.ready || !chWords.list.length) return null;
+        var t = String(tok).toLowerCase();
+        if (chExpan[t]) return chExpan[t];
+        if (t.length > 4 && /'s$/.test(t)) { var s1 = t.slice(0, -2); if (chExpan[s1]) return chExpan[s1]; }
+        if (t.length > 4 && /[^s]s$/.test(t)) { var s2 = t.slice(0, -1); if (chExpan[s2]) return chExpan[s2]; }
+        return null;
+    }
+    function getChapterWords() { return ensureChWords(); }
+
+
     var WORD_TOK = /[A-Za-z][A-Za-z0-9'’-]*/g;
     function wrapWords(span) {
         var re = buildWordRe();
@@ -22171,6 +22285,9 @@ function openNpcProfile(npcId) {
                 var sp = document.createElement("span");
                 sp.className = hit ? "lg-word" : "lg-w";
                 sp.setAttribute("data-w", tok);
+                /* M6d4:候选词词形命中 → 金标;点查徽标/释义走原有词库逻辑 */
+                var cw = chapterOwnerOf(tok);
+                if (cw) { sp.className += " lg-ch"; markSeenWord(chWords.band, cw); noteChSeen(cw); }
                 sp.appendChild(document.createTextNode(tok));
                 frag.appendChild(sp);
                 pos = m.index + tok.length;
@@ -22179,9 +22296,21 @@ function openNpcProfile(npcId) {
             span.replaceChild(frag, node);
         }
     }
+    var pendSens = [];   // M6d3 补:M6d4 词库兜底切词——词池词库皆空时挂起,词库到后补切(非登录也能全词点查)
+    function queuePendSen(sen) {
+        for (var i = 0; i < pendSens.length; i++) if (pendSens[i] === sen) return;
+        pendSens.push(sen);
+    }
+    function flushPendSens() {
+        var a = pendSens; pendSens = [];
+        for (var i = 0; i < a.length; i++) if (a[i] && !a[i].hDone) highlightSen(a[i]);
+    }
     function highlightSen(sen) {
         if (!sen || sen.hDone) return;
-        if (!buildWordRe()) return;                       // 词库空:等词源(vocab 加载/gloss 到达)再切
+        if (!buildWordRe()) {                             // 词池空:词库已载则以词库兜底切(全 .lg-w 仍可点查),皆无则挂起
+            if (langBankCache[currentLangBand()]) { /* fall through:词库兜底切词 */ }
+            else { queuePendSen(sen); return; }
+        }
         for (var i = 0; i < sen.spans.length; i++) {
             var sp = sen.spans[i];
             if (sp && sp.parentNode) wrapWords(sp);
@@ -22409,7 +22538,7 @@ function openNpcProfile(npcId) {
         var done = function (hit) {
             if (!p.classList.contains("on")) return;    // 已被关闭/新词接管
             var disp = term;
-            if (hit) { disp = hit.word; key = hit.word; info = null; }
+            if (hit) { disp = hit.word; key = hit.word; info = null; markSeenWord(band, hit.word); }   // M6d4:点查词库词=seen(词状态机起点)
             var inVocab = !!vocabMap[key];
             renderPop(p, term, disp, hit, info, inVocab);
             noteTapped(disp, hit ? { w: disp, zh: hit.it.zh } : (wordInfo[String(term).toLowerCase()] || null));
@@ -22843,7 +22972,7 @@ function openNpcProfile(npcId) {
     var langBankCache = {};      // band -> items[]
     var langBankMapCache = {};   // band -> {word: item}
     var langBankLoading = {};    // band -> Promise(防并发)
-    function bankCacheKey(band) { return "lang_bank_v1_" + band; }
+    function bankCacheKey(band) { return "lang_bank_v2_" + band; }   // v2:M6d3+ 词形 al 随档缓存,旧 v1(无 al)自动弃用
     function loadLangBank(band, force) {
         band = String(band || "").trim();
         if (!band) return Promise.resolve(null);
@@ -22856,6 +22985,7 @@ function openNpcProfile(npcId) {
                     var obj = JSON.parse(saved);
                     if (obj && Array.isArray(obj.items) && obj.items.length) {
                         langBankCache[band] = obj.items;
+                        try { flushPendSens(); } catch (e) {}   // M6d3 补:本地缓存命中同样补切挂起句
                         return Promise.resolve(obj.items);
                     }
                 }
@@ -22868,6 +22998,8 @@ function openNpcProfile(npcId) {
                 if (!d || !d.ok || !Array.isArray(d.items)) return null;
                 langBankCache[band] = d.items;
                 try { localStorage.setItem(bankCacheKey(band), JSON.stringify({ band: band, total: d.total || d.items.length, items: d.items })); } catch (e) {}
+                try { if (chWords.band === band && !chWords.ready) ensureChWords(); } catch (e) {}   // M6d4:词库就绪补抽本章候选
+                try { flushPendSens(); } catch (e) {}   // M6d3 补:挂起的句子补切(词库兜底)
                 return d.items;
             })
             .catch(function () { langBankLoading[band] = null; return null; });
@@ -22888,7 +23020,10 @@ function openNpcProfile(npcId) {
         band = String(band || "").trim();
         return { loaded: !!langBankCache[band], loading: !!langBankLoading[band], total: langBankCache[band] ? langBankCache[band].length : 0 };
     }
-    window.LangAssist = { loadBank: loadLangBank, bankItem: langBankItem, bankStatus: langBankStatus };
+    window.LangAssist = {
+        loadBank: loadLangBank, bankItem: langBankItem, bankStatus: langBankStatus,
+        getChapterWords: getChapterWords   // M6d4:当前章候选词(供 LangEngine 续写注入;内部触发预载/抽词)
+    };
 })();
 </script>
 </body>
