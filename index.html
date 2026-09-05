@@ -11112,11 +11112,12 @@ function rebuildChoicesBlock(body, labels = []) {
             const selectedScenario = ScenarioCardService.getSelectedCard();
             if (!selectedScenario) return;
         }
-        function saveUserApiFromUI() {
+        // BYOK 保存为异步(登录态校验),loadToUI 回填旧值前须等它完成,否则会覆盖用户刚输入的内容
+        async function saveUserApiFromUI() {
             ThemeService.setMode(document.getElementById("ui-dark-mode-enabled")?.checked ? "dark" : "light");
             const sizeVal = document.getElementById("ui-font-size-range")?.value;
             if (sizeVal) applyFontSize(sizeVal);
-            saveByokFromUI();
+            await saveByokFromUI();
             loadToUI();
         }
         // 即时保存 BYOK（输入即存，无需"保存设置"按钮）
