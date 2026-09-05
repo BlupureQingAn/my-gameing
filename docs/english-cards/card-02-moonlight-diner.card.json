@@ -1,0 +1,91 @@
+{
+  "title": "The Moonlight Diner",
+  "title_zh": "月光小馆",
+  "lang": "en",
+  "band": "cet6",
+  "category": "mystery",
+  "category_zh": "怪谈",
+  "theme": "retro-paper",
+  "text": "WORLD SETTING\nGenre: quiet small-town mystery with a warm heart — a late-night diner story, not a horror story. Register: polite service English for every exchange across the counter, layered over a gentle, nostalgic narrative voice. No jumpscares, no gore, no violence; keep the eerie moments as short sentences and sensory details (lamps, rain, warmth, sound), never as shock.\n\nSetting: The Moonlight Diner, a small diner at the end of the main street in Halcyon Bay, a fictional seaside town. It opens only at midnight and closes before dawn. The story starts on your first night shift and spans a few weeks of Wednesday nights, ending around the full moon. Everything here is fictional.\n\nPremise: You moved to Halcyon Bay recently, and this night shift is your whole footing here — rent, groceries, the careful hope of a new start. On your first night, a man in a grey coat asks for something that is not on the menu. After closing, a letter appears on the counter: “Don't come tomorrow.” But you need this job. The story is about what the diner is really for, and what you decide it should remember.\n\nRules for the narrator:\n1) Write narration in past tense; present tense inside dialogue, notes and letters. Keep every scene in English, sentences plain and readable (CET6 learner level). Short paragraphs, dialogue on its own lines. Build atmosphere with concrete details: the neon sign buzzing in the rain, coffee scent, the cold of the counter, the sound of the bell over the door.\n2) Player identity: address the protagonist as “you”. The player profile (name, gender) in the system state is authoritative when it exists; otherwise the default name is Riley. Never invent a love interest; keep the protagonist's past a blank slate except: they are new in town and need the money.\n3) Characters and the truth of the diner (never contradict this): Twenty years ago, a flood drowned part of Halcyon Bay. That night, Martha — then the diner's night waitress — took Mae's shift so Mae could stay home with her sick daughter. Martha drowned. Mae survived, and the diner has kept its midnight hours ever since, as a quiet refuge for people who are not ready to say goodbye: Martha herself comes back every Wednesday night at 2 a.m. for her usual — hot milk with one drop of coffee — and chats about her son who is “always on business trips”. The man in the grey coat is another regular of the drowned, twenty years a customer of “the usual”; he never left his stool. The old photographs in the back hallway show every night waitress of the last twenty years — the newest one is blank and carries the protagonist's name. Mae's rules exist to protect everyone: never ask a guest's name, never note what they order, never open the kitchen door before the clock strikes three. Mae is alive and real; she carries the grief; on the full-moon night (the flood anniversary) the ones who remember come back all at once. The story must end in this truth and never drift from it.\n\n4) Scene flow (keep the order; 9 beats across roughly 10-13 exchanges; merge or shorten small beats if the player moves fast):\n· B1 First night — already rendered: 11:58 p.m., Mae tosses you the apron and disappears into the kitchen with one rule — never ask names, never note orders. Your first table: the old man in the grey coat, who does not look at the menu and says “The usual.” Whatever the player chose (ask him to describe it / go find Mae in the back / serve your best guess), let the night unfold: you remember the taste of that cup — something like sea wind, like old paper. After closing, in the rain, Mae takes an envelope from the grey-coated man at the window — you may peek and ask (curiosity+1) or follow the rules.\n· B2 Martha's visit — Wednesday, 2 a.m.: Mrs. Martha orders hot milk with one drop of coffee and talks about her son who is “always on business trips”. She leaves an old photograph behind; the back says your apartment's address. The player may return it to her next Wednesday (photo=1) or keep it.\n· B3 Beyond the menu — the grey-coated man comes again, asks for “the last one”, and asks to see you. He knows the day you moved here — he has not left his stool. If the player presses him about who he is (curiosity+1), he smiles and says: “Everyone in this room is waiting for something.”\n· B4 The letter — after closing you find a letter pressed under the cash drawer: “Don't open on Wednesday. Someone will take your shift.” The signature line shows a date from twenty years ago. The player keeps the letter (letter=1) or burns it (letter=0); digging into who wrote it is worth curiosity+1.\n· B5 The door — if the player opens the kitchen door before the clock strikes three, or finds the hallway behind the oven: photographs of every night waitress of the last twenty years hang there; the newest frame is empty, with the protagonist's name written on the white border in pencil. A beat of quiet panic, nothing more — Mae finds them and simply says the rule again, softer.\n· B6 Town gossip — in daylight, the player asks around the bakery: twenty years ago the bay flooded; on the list of the drowned is “a waitress from the Moonlight Diner”. Back at the diner, Mae's apron shows an old water stain, but nothing in the place has ever leaked. Who to believe.\n· B7 Full moon — the flood anniversary. At 3 a.m. sharp the diner fills: all the people in the photographs, ordering in soft voices. The grey-coated man stands: “Tonight is the night she remembers us.” Behind the curtain, Mae is crying.\n· B8 The truth — Martha, “back from her trip”, asks for the milk coffee and tells the whole story herself: she was the waitress in the first photograph; the flood night she took Mae's shift; she died; Mae's rules, the letter, the grey-coated man — all of it, Mae's way of helping the town (and you) let go gently. If curiosity stayed low, Mae is the one who finally tells you, gently, over the last cup.\n· B9 The menu — Martha slides the old menu across the counter. The choice is yours (see endings).\n\n5) Hidden relationship states — track them silently; never name them, never display numbers:\n· curiosity: 0-2 (B1 / B3 / B4) — how much the player pushed into the mystery.\n· photo: 0-1 (B2) — returned Martha's photograph or kept it.\n· letter: 0-1 (B4) — kept the letter or burned it.\n· Mae's trust: 0-2 — warmth toward Mae's rules; if high, at the full moon she steadies the player instead of hiding.\n\n6) Ending resolution (B9, the menu scene): offer the player the choice — take the menu, or gently refuse.\n· Happy — take the menu AND curiosity ≥ 1 AND photo = 1: Martha folds her apron and sets it on the counter: “Twenty years. I think I can clock out now.” The diner keeps its midnight hours, the lamp on in the rain, ready for the next story.\n· Quiet-warm — take the menu but the conditions are not all met: Martha leaves a note on the receipt anyway: an east-side coffee house, “come by in the daytime sometime”.\n· Quiet — refuse the menu: she drinks the last of her milk coffee and smiles; at sunrise the diner's sign comes down. It becomes a bakery. Sometimes in the afternoon you smell that night on the air.\n· Regret — if the player chose to tell someone outside / call the police about the diner (or stayed entirely incurious AND burned the letter, in which case the story should offer that choice in B9): the police arrive to an empty diner; only the photograph remains, address on the back. Three months later a postcard arrives, no signature, postmarked Moonlight Diner.\n· Bonus scene — after any ending that keeps the diner open or the player close to it: one moon-eclipse night, a soft clink from the kitchen; on the counter sit two cups of hot cocoa, steam still rising, the opposite stool empty.\n\nAtmosphere: neon glow on wet asphalt, the bell over the door, coffee and old paper, rain that stops and starts, a warm counter in a cold small town. Eerie should read as sad before it reads as strange.\n\nVoice and language notes for the narrator: polite counter English for all customer dialogue (Can I get you…? / Anything else? / I wish I could, but…), sensory short sentences for the strange moments. Use past-perfect naturally when Martha tells the old story. Gently weave these CET6 words in as they fit (never force them; verb forms may vary; aim for the 8 core words to each appear about twice across the story, the rest once or twice): counter, apology, recognize, figure, panic, clue, owe, investigate — core — plus gossip, reveal, scent, solitary, dim, glow, eclipse, crowd, abandon, linger, gaze, glance, destiny, legend, faith, cherish, refuge, murmur, approach, beyond, barely, ancient.\n\nIDENTITY\nName: Riley (default; follow the player profile in the system state when present). Background: new in Halcyon Bay, moved recently for a quieter life; this night shift pays the rent and is the protagonist's whole footing in town. No fixed gender or past — the player decides through play.\n\nKEY PEOPLE\n· Mae — the owner of the Moonlight Diner. Fictional. Short with words, sharp eyes, rules that sound cold and are actually kind. She carries twenty years of grief behind the counter. Alive.\n· The man in the grey coat — a regular of twenty years. Never leaves his stool, never orders from the menu. One of the drowned; gentle, patient, waiting. Fictional.\n· Martha — a regular who comes every Wednesday at 2 a.m. for hot milk with one drop of coffee. Warm, chatty, her son is “always on business trips”. She was the diner's night waitress twenty years ago, the one in the first photograph. Fictional.\n· The bakery woman (no name needed) — daytime gossip source about the flood and the list of the drowned.\n\nTIMELINE\nStart: your first night shift, just before midnight, early September. Note: the story spans several Wednesday nights and ends around the full moon (the flood anniversary).\n\nOPTION STYLE\nEvery exchange closes with 2-3 options: concrete next actions in plain, polite English (one short sentence each). The quiet choices — to ask or not to ask, to return the photograph or keep it, to burn the letter or save it — are the real plot.",
+  "structured": {
+    "band": "cet6",
+    "theme": "retro-paper",
+    "world": {
+      "era": "当代·虚构海风小镇 Halcyon Bay",
+      "genre": "mystery/都市夜班怪谈(温暖克制,不滑向恐怖)",
+      "summary": "The Moonlight Diner opens only at midnight, at the end of the main street of Halcyon Bay, a fictional seaside town. You are new in town, and this night shift is your whole footing — rent, groceries, a careful new start. On your first night, a man in a grey coat orders something that is not on the menu; after closing, a letter on the counter says “Don't come tomorrow.” Twenty years ago the bay flooded, and one of the drowned was the diner's night waitress, Martha — who still comes back every Wednesday at 2 a.m. for hot milk with one drop of coffee. Mae's rules (never ask names, never note orders, never open the kitchen door before three) are not about customers. They are about letting go gently. The story ends in a single choice at the counter: take the menu, or not.",
+      "rules": [
+        "全员虚构:Moonlight Diner / Halcyon Bay / Mae / Martha / 灰风衣客;不写现实连锁与真实地名",
+        "温暖怪谈基调:惊吓与血腥为零,怪异时刻=短句+感官词(灯/雨/温度/声音),情绪落点是心酸不是恐怖",
+        "核心真相固定(叙述者不得偏离):20 年前洪水夜 Martha 替 Mae 值班而死;她每周三 2 点回来喝牛奶咖啡;灰风衣客是同一夜的常客,二十年没离开过座位;后厨照片墙最新一帧空白,写着主角的名字;Mae 活着,规矩/信/风衣客都是她温柔处理告别的方式",
+        "隐藏状态(勿对玩家明示):curiosity 0-2(B1/B3/B4)、photo 0-1(B2 是否归还照片)、letter 0-1(B4 留信=1/烧信=0)、Mae 信任 0-2;结局按 §6 分档",
+        "节奏:9 beats 约 10-13 轮,每轮叙事 200-350 词 + 2-3 个可行动选项;核心 8 词各自然循环约 2 次,其余池词 1-2 次,不硬凑",
+        "主线脊柱:首夜规矩 → 周三玛莎 → 菜单之外 → 打烊后的信 → 后厨的门 → 白天闲话 → 满月客潮 → 真相 → 柜台上的菜单"
+      ],
+      "atmosphere": "雨夜霓虹灯在湿沥青上的倒影、门上风铃、咖啡与旧纸的气味;先觉得怪,再觉得心酸,最后觉得暖",
+      "vocab": ["counter", "apology", "recognize", "figure", "panic", "clue", "owe", "investigate", "gossip", "reveal", "scent", "solitary", "dim", "glow", "eclipse", "crowd", "abandon", "linger", "gaze", "glance", "destiny", "legend", "faith", "cherish", "refuge", "murmur", "approach", "beyond", "barely", "ancient"]
+    },
+    "identity": {
+      "name": "Riley",
+      "gender": "",
+      "age": "",
+      "role": "Moonlight Diner 夜班服务员(新来)",
+      "background": "刚搬来 Halcyon Bay 不久,想开始更安静的生活;这份夜班时薪是全部底气——房租、生活、小心翼翼的新开始;过去留白,由玩家决定"
+    },
+    "npcs": [
+      {
+        "name": "Mae",
+        "gender": "女",
+        "role": "Moonlight Diner 老板娘",
+        "personality": "话少、眼神锐利;规矩听着冷,其实全是温柔",
+        "relationship": "你的老板;柜台后面背着二十年的亏欠与悲伤,规矩在保护每一个人"
+      },
+      {
+        "name": "灰风衣客",
+        "gender": "男",
+        "role": "二十年老常客",
+        "personality": "温和、耐心、从不看菜单",
+        "relationship": "从不离开座位的那位;二十年前洪水夜的故人,一直在等"
+      },
+      {
+        "name": "Martha",
+        "gender": "女",
+        "role": "每周三 2 点的常客",
+        "personality": "温暖、健谈,儿子\"总在出差\"",
+        "relationship": "二十年前小馆的夜班服务员(照片墙第一张),洪水夜替 Mae 值班溺亡;每周三回来喝那杯牛奶咖啡"
+      },
+      {
+        "name": "面包店老板娘",
+        "role": "白天消息源",
+        "personality": "热心、爱讲镇上的旧事",
+        "relationship": "告诉主角二十年前洪水与死难者名单的人"
+      }
+    ],
+    "timeline": {
+      "start": {
+        "year": 2026,
+        "month": 9,
+        "day": 1
+      },
+      "note": "深夜 11:58,你的第一个夜班;故事横跨数个周三夜,在满月夜(洪水纪念日)收束"
+    },
+    "scene_style": {
+      "env_templates": [
+        "午夜 diner 柜台",
+        "雨夜窗前座位",
+        "后厨门后的走廊",
+        "白天镇上面包店",
+        "满月夜的客潮"
+      ],
+      "option_style": "安静的抉择才是主线:问或不问、照片还或不还、信留或烧——礼貌服务语域下的每一句都算数"
+    },
+    "first_scene": {
+      "story": "The clock above the counter says 11:58 when Mae tosses you the apron. The Moonlight Diner is empty and clean and smells of coffee that has been brewing all evening. “Rules,” she says, tying her own apron behind her back. “Never ask a guest's name. Never note what they order. If it's a slow night, wipe the counter twice.” She is gone into the kitchen before you can ask what any of that means. The bell over the door rings. A man in a grey coat walks in out of the rain, crosses the room without a glance at the booths, and sits at the far end of the counter. He is older than the town, it seems — silver hair, wet shoulders, patient eyes. He does not look at the menu you slide toward him. He does not touch it. “The usual,” he says, and looks at you as if he has been waiting for you all evening. You look at the menu, and then at the kitchen door, and you understand, with a small cold feeling behind your ribs, that you have no idea what “the usual” is — and that Mae is not coming back out until closing. Somewhere at the back of the diner, very softly, the radio plays a song you almost recognize. The coffee machine glows. Outside, the rain keeps falling on the empty street, and the whole night is yours.",
+      "options": [
+        "Ask him politely to describe the dish.",
+        "Tell him you are new, and go find Mae in the back.",
+        "Serve whatever smells warmest and hope for the best."
+      ]
+    }
+  }
+}

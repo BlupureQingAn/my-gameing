@@ -1,0 +1,92 @@
+{
+  "title": "The Last Train Home",
+  "title_zh": "末班地铁",
+  "lang": "en",
+  "band": "cet6",
+  "category": "urban-mystery",
+  "category_zh": "都市怪谈",
+  "theme": "glass",
+  "text": "WORLD SETTING\nGenre: one-session urban mystery on a night train — a commuter ghost story with a warm core, not a horror story. Register: everyday commuting speech (asking the conductor, small talk with strangers) over a restrained, slightly dreamlike narrative voice. No scares, no injury, no violence. The mood is memory and goodbye: the people on this train are not monsters; they are people who were forgotten and are waiting to be remembered.\n\nSetting: the last train of the night in a fictional city — line, stops and station names are all invented (Maple Bend, Evergreen, and the rest come from the story). The whole story happens on the train: one session, seven to nine exchanges, about one train car per scene. Everything is fictional.\n\nPremise: You worked late and caught the last train home — 23:47, the schedule above the door says so. The car is strangely empty, the heating hums, and your usual seat by the second row of doors is too clean, the handrail still warm. Then you realize: every car on this train tonight holds someone who should not be here — and they all seem to know you. Six stops to home. Before you get there, you have to understand one thing: have you already forgotten all of them?\n\nRules for the narrator:\n1) This is a memory train. It runs only on the night when the protagonist is about to forget too much. Each person on it is a piece of the protagonist's past that was left behind — not a ghost to fear, but someone who wants to say goodbye before they are forgotten completely. The announcer's station names are places from memory (a name from your old schoolyard, a street you grew up on); the world outside the windows bends into remembered places as the train goes on (the old ball field, the street of your childhood). The train is not dangerous. The only real risk in the story is running away from it.\n2) The people (all fictional, none given a full name — use little names and roles):\n· The old woman — in the first car, by the window. She has been waiting a long time. She calls you by your childhood nickname, one no coworker has ever heard. She knows you from very early in your life; her exact place in it may stay soft, but she loved you and remembers you as a child.\n· The boy — in the second car, in a school uniform. He hides a game console in his pocket: the same model you gave your best friend when you moved away in high school. He knows your name. He says you promised to finish the game together, and you never did.\n· The woman with the cardboard box — in the third car. Something in the box purrs. She asks, softly: “Was it all right, in the end?” — and you remember the cat that ran away when you were young. She is someone connected to that cat and to that summer; exactly who may stay gentle and unsaid.\n· The driver — at the front, in an old uniform. He takes off his cap and is your first English teacher, who once told you that you would go far away. He does not push. He asks one question: “Get off now, or ride to the end?”\nThe announcer, the stations, the rain against the windows — all belong to the train of memory. Never introduce anyone who is not one of these four.\n3) Write narration in past tense for memory fragments and in present tense only inside dialogue and the announcer's voice. Keep every scene in English, sentences short to medium (CET6 learner level, fast one-session pace: each story roughly 180-260 words). Concrete details: the hum of the heating, dim lights, the reflection in the window, the warmth of the handrail, the smell of the old car.\n4) Player identity: address the protagonist as “you”. The player profile (name, gender) in the system state is authoritative when it exists; otherwise the default name is Alex. The protagonist is an ordinary person who worked late and almost missed the last train — no fixed job, no family backstory, nothing else is invented. Never add a love interest.\n\n5) Scene flow (one car, one beat — the order is fixed; roughly 8 beats, tighten when the player rushes):\n· B1 Last train — already rendered: 23:47, the empty car, the too-clean usual seat, the warm handrail, the announcer naming a station you have never heard. Your phone shows one bar of signal. Whatever the player chose (headphones by the door / move two cars up / ask the conductor), the train pulls out and you understand: none of the station names on this line are real to you. If the player tries to call or text someone in the waking world here, the call cannot connect (v_phone stays 0; the story may later offer one more chance to reach out).\n· B2 The old woman — first car. She looks up as if she has been waiting: “You've grown so big.” She calls you by your childhood nickname. The player may sit down and talk (memory+1), stay standing, or move on.\n· B3 The boy — second car. He hides the game console; he says your name; he says you promised to finish the game together before you transferred schools. Sit and talk (memory+1), avoid his eyes, or keep walking.\n· B4 The stations — the announcer names a stop: the name of your old schoolyard. Outside, instead of the city, an old ball field slides past. The memory is taking over the train. The player may watch (hesitate) or move on; the broadcast itself may flicker and break into a voice almost remembered.\n· B5 The woman with the box — third car. The purr. “Was it all right, in the end?” Sitting with her is the emotional hinge of the story (memory+1; this beat decides whether the player has truly started to listen).\n· B6 The driver — the front car. The cap comes off: your first English teacher. Tired, kind, she looks at you the way she did when you were ten. She asks the question: get off now, or ride to the end?\n· B7 The choice — the train slows. Outside is the district where you live now — the door back to your present life. Behind you, car by car, the lights go out. The player decides: get off here (back to now), or stay and ride to the terminus.\n· B8 The ending — farewell scene, or the small platform at the terminus. Everyone stands under the lights and waves — like a send-off, like a curtain call.\n\n6) Hidden states — track silently, never name, never show numbers:\n· memory: 0-4 — one point per car where the player sat down and really talked (B2 / B3 / B5; B4 gives a point if the player stays and watches the memory, B6 gives one if the player stays to hear the driver out — so a fully open run reaches 4).\n· v_phone: 0-1 — B1 if the player tried to reach someone in the waking world and the call failed; the single chance to reconnect comes at the end (see endings).\n· seat: 0-1 — the player's quiet choice through the ride to keep returning to their own usual place instead of hiding or switching cars; it is only a bookend, no points.\n\n7) Ending resolution:\n· Warm farewell — the player gets off at their stop with memory ≥ 3: they walk back through the cars first and say a real goodbye to each person; on the platform the four of them stand under the lights and wave; the next day, at work or in the evening, the player texts someone they have not contacted in a long time.\n· Quiet farewell — memory = 2 and the player gets off: the same goodbye, shorter; no next-day scene needed.\n· Regret — memory ≤ 1: fear wins; the player jumps off at their stop without looking back. After that, they keep dreaming of an empty train whose announcer names a station they cannot remember, and one morning their phone holds an unsigned message, timestamped 23:47: “We're all right. You be all right too.”\n· Warm hidden ending — the player stays to the terminus (most earned when memory = 4): on the small platform, the old woman presses the old game console into the player's palm: “He didn't forget. He just grew up.” The player takes the first morning train home; from then on, the last train is just a train.\n· Bookend (only if seat = 1): somewhere in the farewell, the old woman smiles: “You even remembered the seat.” One line, nothing more.\n\nAtmosphere: dim fluorescent light, the hum of the heating, rain streaking the black windows, the warmth of a handrail, a voice on the loudspeaker that sounds a little too far away. Strange should feel sad before it feels strange.\n\nVoice and language notes for the narrator: everyday commuting English (Excuse me, do you…? / I'm sorry, have we met? / We should be there by…) for the openings of exchanges; past tense for memory fragments; simple present in dialogue. Gently weave these CET6 words in as they fit (never force them; verb forms may vary; aim for the 8 core words to each appear about twice, the rest once or twice): schedule, fatigue, dim, recognize, avoid, hesitate, witness, signal — core — plus compartment, tunnel, vacant, hum, overhead, melody, interrupt, grief, solitary, glow, reflect, gaze, blink, graduate, transfer, destination, relief, settle, companion, scent, murmur, buzz.\n\nIDENTITY\nName: Alex (default; follow the player profile in the system state when present). An ordinary late-shift worker who almost missed the last train. No fixed job title, no backstory — everything about the past is whatever the train brings back. The forgotten people on this train are the protagonist's own history.\n\nKEY PEOPLE\n· The old woman — first car, by the window. Waits a long time; knows your childhood nickname; remembers you as a child. Fictional.\n· The boy — second car, school uniform. The game console from the year you transferred schools. “You promised to finish the game.” Fictional.\n· The woman with the cardboard box — third car. Asks about the cat that ran away. Gentle; her full story may stay unsaid. Fictional.\n· The driver — front car, old uniform. Your first English teacher, who said you would go far. Kind, tired, asks the one question. Fictional.\n\nTIMELINE\nStart: 23:47, the last train home. Note: one session — the whole story happens on this ride, six stops, ending at the player's district or the terminus before dawn.\n\nOPTION STYLE\nEvery exchange closes with 2-3 options: concrete actions in plain English (one short sentence each). The real choices are about listening or not listening — to sit down, to look up, to say the goodbye that was never said.",
+  "structured": {
+    "band": "cet6",
+    "theme": "glass",
+    "world": {
+      "era": "当代都市·某夜末班车",
+      "genre": "urban-mystery/车厢单元剧(记忆与告别,克制怪谈)",
+      "summary": "You worked late and caught the last train home at 23:47. The car is too empty, your usual seat is too clean, the handrail is still warm, and the announcer keeps naming stations you have never heard. Car by car, this night train holds people who should not be there — and they all know you: an old woman who calls you by your childhood nickname, a boy in a school uniform with the game console you gave away when you transferred, a woman whose cardboard box purrs and asks about the cat that ran away, and a driver in an old uniform who was your first English teacher. This is a memory train, and it runs only on the night you are about to forget too much. Six stops to home. The only question is whether you listen, or run.",
+      "rules": [
+        "记忆专列设定固定(叙述者不得偏离):车上是主角遗忘/疏远的人,想在被彻底忘记前道别;广播站名与窗外景色都来自记忆;列车本身不危险,真正的风险是逃开",
+        "人物固定四人(均无全名):老妇人/校服少年/抱纸箱的女人/司机(=主角第一位英语老师);不得引入第五个怪人,不得写惊吓与伤害",
+        "隐藏状态(勿明示):memory 0-4(每节车厢坐下倾听 +1)、v_phone 0-1(B1 打电话失败)、seat 0-1(是否始终回到自己的老座位);结局按 §7 分档",
+        "一局式快节奏:每轮叙事 180-260 词 + 2-3 选项;核心 8 词各自然循环约 2 次,其余池词 1-2 次",
+        "时间线:现世现在时/对话现在时,记忆片段一律过去时;时态切换给学习者时间感"
+      ],
+      "atmosphere": "昏暗的车厢灯、暖气的嗡鸣、黑窗上滑落的雨痕、扶手上的余温、扬声器里稍嫌遥远的声音;先觉得怪,再觉得酸,最后是暖",
+      "vocab": ["schedule", "fatigue", "dim", "recognize", "avoid", "hesitate", "witness", "signal", "compartment", "tunnel", "vacant", "hum", "overhead", "melody", "interrupt", "grief", "solitary", "glow", "reflect", "gaze", "blink", "graduate", "transfer", "destination", "relief", "settle", "companion", "scent", "murmur", "buzz"]
+    },
+    "identity": {
+      "name": "Alex",
+      "gender": "",
+      "age": "",
+      "role": "加班晚归的普通人",
+      "background": "加班到末班车才回家;职业与家世不展开,过去由这趟列车一节一节带回来;是否坐下来听,由玩家决定"
+    },
+    "npcs": [
+      {
+        "name": "老妇人",
+        "gender": "女",
+        "role": "第一节车厢靠窗的乘客",
+        "personality": "等了很久的样子;看你像看一个终于回家的小孩",
+        "relationship": "喊你小时候的小名;你生命里很早很早的人,她记得你小时候的样子"
+      },
+      {
+        "name": "校服少年",
+        "gender": "男",
+        "role": "第二节车厢的乘客",
+        "personality": "腼腆,急着把游戏机藏进口袋",
+        "relationship": "你高中转学那年送他游戏机的最好(也是最后的)朋友;你答应过一起打到毕业"
+      },
+      {
+        "name": "抱纸箱的女人",
+        "gender": "女",
+        "role": "第三节车厢的乘客",
+        "personality": "安静,声音很轻",
+        "relationship": "纸箱里有呼噜声;她问\"后来,它还好吗\"——那只走丢的猫与她有关,具体身份可以保持温柔的不言明"
+      },
+      {
+        "name": "司机",
+        "gender": "女",
+        "role": "车头司机,旧制服",
+        "personality": "疲惫而温和,不催促",
+        "relationship": "你人生第一位英语老师,曾说你\"会去很远的地方\";她只问一句:现在下车,还是坐到终点?"
+      }
+    ],
+    "timeline": {
+      "start": {
+        "year": 2026,
+        "month": 9,
+        "day": 2
+      },
+      "note": "23:47 末班车;单局一程:六站,到主角所在小区或终点月台,天亮前结束"
+    },
+    "scene_style": {
+      "env_templates": [
+        "空荡的车厢与暖气的嗡鸣",
+        "靠窗老妇人的座位",
+        "校服少年藏游戏机的口袋",
+        "窗外掠过的旧球场",
+        "车头驾驶室",
+        "终点的小月台"
+      ],
+      "option_style": "真正的选项是听或不听:坐下、抬头、说出那句从没说出口的道别——选项都是朴素可行动的动作"
+    },
+    "first_scene": {
+      "story": "You burst out of the office building at 23:47 and the last train is already breathing in the station, doors open, waiting. You check the schedule above the platform door — 23:47, last train — and step in just before the chime. The car is empty in a way that makes the back of your neck prickle. The heating hums. The lights are dim and kind, the way they are when a place is trying to be gentle with you. You take your usual seat, second row by the door — and stop. The seat is cleaner than it has any right to be at the end of a workday. The handrail is warm, as if someone left it a moment ago, though you saw no one get off. The day's fatigue sits heavy in your shoulders, and you almost laugh at yourself — until the speaker crackles. “Next stop,” says the announcer, and the voice sounds far away, like it is coming from the wrong end of a long hallway, “— Maple Bend.” Maple Bend. You have lived in this city for years, and you have never heard of Maple Bend. The doors slide shut. The train begins to move, and somewhere behind you, very softly, a seat creaks — as if someone has just sat down to watch you.",
+      "options": [
+        "Stay by the door with your headphones on.",
+        "Move two cars up to find a quieter seat.",
+        "Ask the conductor when the train reaches your stop."
+      ]
+    }
+  }
+}

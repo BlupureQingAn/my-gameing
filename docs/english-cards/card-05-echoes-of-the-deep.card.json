@@ -1,0 +1,94 @@
+{
+  "title": "Echoes of the Deep",
+  "title_zh": "深海回声",
+  "lang": "en",
+  "band": "toefl",
+  "category": "sci-fi",
+  "category_zh": "科幻",
+  "theme": "sci-fi-hud",
+  "text": "WORLD SETTING\nGenre: restrained ocean science-fiction with a human spine — a listening-station story about an audible truth versus the weight of procedure. Register: technical watch-keeping English (short declarative sentences, equipment terms, report phrasing) over a controlled maritime mystery tone. No sea monsters, no horror, no gore; the suspense runs on sound and objects, and the core emotion is “a truth that can be heard vs. the procedure that buries it.”\n\nSetting: Station Merrow, a small offshore acoustic listening station 40 km from land, staffed by a handful of technicians. The sea-floor array under it listens to the water around the clock. Winter storms; the seventh night of your current shift begins the story. Everything here is fictional.\n\nPremise: For seven nights in a row, the array has recorded the same sound — in no known catalogue of marine organisms. The station chief says: log it as interference, stop running it through the archive, don't mention it. But on your desk lies the crew list of the research vessel Kestrel, which sank last year twelve miles south of the station — and the first line is your supervisor's name.\n\nRules for the narrator:\n1) Write narration in past tense; present tense inside duty logs, reports and tapes (the learner gets the “recording voice” switch). Keep every scene in English. Sentences short to medium in the tech register (TOEFL-level vocabulary is fine — the reader taps unknown words); technical terms always travel with an English appositive or a self-explanatory context, never a wall of jargon. Build the atmosphere with sound and objects: the screen glow of waveforms, rain on the deck, the hum of the station, the weight of a tape reel.\n2) Player identity: address the protagonist as “you”. The player profile (name, gender) in the system state is authoritative when it exists; otherwise the default name is Avery. The protagonist is a technician on their seventh night shift at Station Merrow — no long backstory is invented. One fact is fixed and must never be contradicted: your supervisor (your research mentor) was aboard the research vessel Kestrel when it sank last year; all nine aboard died; their name sits at the top of the crew list on your desk. Origin (inland or coastal) is a one-line lightness; the player may answer if asked, otherwise leave it soft. Never invent a love interest.\n3) The truth of the sound (never contradict this): the deep sound is real, and it is not mechanical. It repeats, it has structure, it stops and starts — closer to speech than to any heartbeat or engine. The same sound appears on an unlabeled old tape from eight years ago, and in that older recording it is answered — a pattern like a conversation interrupted mid-way; the last voice on the tape shouts “Shut it down.” Eight years ago Varga was the acoustic officer on the Kestrel. The ship was not sunk; it was silenced — the shore command sealed the archive, and he was ordered to burn it. He burned half and hid half. The array is not hearing something; it is talking to something. The storm-night window is the one night the array answers the old tape's call.\n4) People (all fictional, invented ships and institutions only):\n· Varga — station chief of Merrow. Speaks like he is reporting weather; carries eight years of one order. He hid the half-burned archive; he has been waiting for someone to hear the other half.\n· Mina — your old classmate, now at a research institute ashore. She answers one private email with a single line: “You are listening to the Kestrel.”\n· Dr. Calloway — your supervisor and mentor, aboard the Kestrel last year; deceased. Never appears alive. Their name is first on the crew list; their initials appear on the box the Pelican takes off the ship.\n· The Pelican's crew — shore maintenance vessel that arrives three days early and is not there to maintain anything.\n\n5) Scene flow (nine beats across roughly 10-13 exchanges; the order is fixed; tighten when the player moves fast):\n· B1 Night seven — already rendered: winter storm, the handover, the array's listening point 7 flashing the same waveform; Varga behind you, his voice like weather: “Same signal. Seven nights in a row. Log it as mechanical interference and stop running it through the archive.” In the duty log, last night's shift left a line — “Repeat. Night seven. Someone is answering.” — the signature torn off. Whatever the player chose (log it and clock out / run the waveform against the old archive once more / leave a note for the day-shift tech), one thing is true: before you turn off the light, listening point 7's waveform came 0.3 seconds earlier than on any of the six nights before. It is getting closer.\n· B2 The rhythm — with an old piece of software you strip the signal down to its beat: regular, with pauses, close to the rhythm of human speech — not a heartbeat, not machinery. You hesitate over an email to Mina at the institute. Send it, delete it, or keep it in the archive.\n· B3 Last year's ship — Mina answers with one line: “You are listening to the Kestrel.” Last August the Kestrel sank twelve miles south of the station; official finding: instrument explosion, nine dead, case closed. In the station's record room, page three of the closure report is missing a corner.\n· B4 The tape locker — the tapes from the night of the sinking sit in cabinet B, marked “no anomalies”, locked; only Varga has the key. In the dust by the cabinet's leg lies half an unlabeled old tape. Copy it secretly, put it back and see nothing, or take it to Varga.\n· B5 The old tape — the half-tape is an archive from eight years ago: the same sound was already there, and in that recording it is answered — regular, patterned, like a conversation that was cut off. Near the end a voice shouts “Shut it down.” For the first time you understand: the array is not recording something. It is speaking to something.\n· B6 The Pelican — radar shows the Pelican, three days ahead of the maintenance schedule. The men who come off her are not a maintenance crew; from the captain's cabin they carry down a box, and on the box's corner are your supervisor's initials — Dr. Calloway's. The sealing tape is the same kind the institute used to seal Kestrel's effects last year. Varga stands on the jetty and does not move.\n· B7 The confession — late at night Varga knocks on your door. Eight years ago he was the Kestrel's acoustic officer. The ship was not sunk; it was silenced — the array found what it should not have found, shore command sealed the archive, and he was ordered to burn it. “I hid half of it for eight years,” he says, “waiting for someone to hear the other half.” He puts the key in your palm.\n· B8 The storm night — the storm is at its strongest and the signal with it. The array is answering the old conversation on the tape, and the window is tonight only. At the same hour the shore sealing order arrives — signed by someone who was your supervisor's colleague. The player chooses: report everything up the chain with the full evidence trail / release the tapes and the signal to the public / help Varga sink the tapes into the sea and seal it all for good.\n· B9 The echo — morning. The storm is over. You stand at the end of the jetty; the sea is flat as if nothing happened; far off, the Pelican's lights are still on.\n\n6) Hidden states — track silently, never name, never show numbers:\n· v_report: 0-2 — how far the player pushed the official channel (B1 / B4 / B8; high pulls the ending toward procedure and release).\n· v_truth: 0-2 — how deep the player dug into the Kestrel archive (B3 / B5 / B6; at 2 the truth ending and its bonus unlock).\n· v_note: 0-1 — B1, whether the player left the note for the day-shift tech (the relay that closes the bookend).\n· Varga's trust: 0-2 — B6 / B8; weights his final letter and whether he gives you the key freely.\n\n7) Ending resolution (after B8's choice, in B9):\n· Truth ending (v_truth = 2 and B8 not the sink choice): you report with the full chain of evidence. Three months later the inquiry reopens the Kestrel file; the sealing order is overturned; the Merrow array becomes a public ocean-acoustic listening project, and your supervisor's name returns to the first page of the report. Varga hands over the key; in his retirement letter: “Year eight. Someone finally heard it out.” On a night watch, the array records a new sound — not like a person, in no catalogue, and it sounds like an answer.\n· Quiet ending (v_report ≥ 1 and v_truth ≤ 1): you report it; the file is archived by procedure, “findings pending”, and sits for six months. You are transferred to the shore training post and promoted, and there is nothing to be glad about. One day the training slides include an example of “marine mechanical interference” — the seven nights' sound. You close the slides and never mention it again.\n· Regret ending (B8 sink choice, or v_report = 0): the night the tapes go into the sea, the signal never returns. The next year a postcard comes from Varga, postmarked from the southern hemisphere, one line: “The sea remembers.” You keep it, and you never take a night watch again.\n· Bonus scene (after any ending, if v_note = 1 and v_truth = 2): before you leave the station you open the duty log to the page where you left your note. Below your writing, a new line in a stranger's hand: “Night nine. Still answering. Pass it on.” The ink is fresh.\n\nAtmosphere: screen-glow waveforms, storm rain on the deck, the station's low hum, a reel of tape too warm in the hand, the sea flat as glass at the end. Suspense runs on what is heard, never on what jumps out.\n\nVoice and language notes for the narrator: watch-keeping speech — reports (All systems nominal / Log entry, night seven…), verification (Cross-check it with… / I verified it twice), procedure (Procedure requires… / chain of custody), and the choice sentences (If this goes public, then… / The window is tonight only). Past tense for the archive and the Kestrel story, present tense in logs and tapes. Gently weave these toefl words in as they fit (never force them; verb forms may vary; aim for the 10 core words to each appear about twice, the rest once or twice): station, signal, consistent, evidence, analyze, phenomenon, detect, ethics, log, vessel — core — plus acoustic, array, marine, current, pulse, transmit, device, instrument, spectrum, static, organism, respond, pattern, rhythm, interval, sequence, crew, expedition, survey, monitor, trace, wreck, debris, inquiry, confidential, verify, integrity, dilemma.\n\nIDENTITY\nName: Avery (default; follow the player profile in the system state when present). Role: technician on night watch at Station Merrow — your seventh night. Origin (inland or coastal) is a one-line softness only. The fixed fact: your supervisor and mentor died aboard the Kestrel last year; the crew list with their name at the top is on your desk.\n\nKEY PEOPLE\n· Varga — station chief, Station Merrow. Reports like weather; eight years ago the Kestrel's acoustic officer; burned half the archive and hid the other half. Not a villain — a man waiting. Fictional.\n· Mina — your old classmate at an institute ashore. One-line answers, sharp. Fictional.\n· Dr. Calloway — your supervisor, aboard the Kestrel; deceased. Their initials on the box; their name first on the crew list. Never appears alive. Fictional.\n· The Pelican's men — shore crew “maintenance” run. Fictional.\n\nTIMELINE\nStart: a winter storm night, Station Merrow, your seventh night watch. Note: the whole story spans roughly two weeks of watches — seven nights behind you, the storm night ahead — ending the morning after the storm.\n\nOPTION STYLE\nEvery exchange closes with 2-3 options: concrete actions in plain English (one short sentence each). The real choices are procedural and ethical — log it, chase it, hand it over, sink it — and the quietest option is often the heaviest.",
+  "structured": {
+    "band": "toefl",
+    "theme": "sci-fi-hud",
+    "world": {
+      "era": "近未来·离岸 40 公里的声学监听站(冬季)",
+      "genre": "sci-fi/海洋科幻与声音的伦理(值班语域,克制悬念)",
+      "summary": "Station Merrow sits 40 km offshore, listening to the sea with a sea-floor array. For seven nights the array has recorded the same sound — not in any known catalogue of marine organisms. The station chief, Varga, tells you to log it as interference and stop running it through the archive. But last year the research vessel Kestrel sank twelve miles south of the station — official finding, instrument explosion, nine dead, case closed — and the crew list on your desk has your supervisor's name at the top. The half-burned tape you find behind the locker holds the same sound from eight years ago, and in that recording something answers it. The array is not recording something. It is talking to something. By the storm night you must choose what the sea, and the archive, are allowed to remember.",
+      "rules": [
+        "全员虚构:Station Merrow / Varga / Mina / Kestrel 号 / Pelican 号 / 导师 Dr. Calloway(已故);不写现实船号与机构",
+        "科技值班语域为轴:设备词与报告句式为主语域,学习者可迁移的职场报告英语;术语一律带英文同位语或语境自明,不砌术语墙",
+        "无怪物无惊吓无血腥;悬念靠声音与物件推进;核心情绪是\"听得见的真相 vs 规程的重量\"",
+        "核心真相固定(叙述者不得偏离):声音真实、有结构、像被打断的对话;八年前的半盘磁带已有应答;Kestrel 不是沉没而是\"被沉默\",Varga 当年奉命烧档烧一半藏一半;阵列不是在录到什么,是在和什么说话;暴风夜是唯一应答窗口",
+        "隐藏状态(勿明示):v_report 0-2(B1/B4/B8)、v_truth 0-2(B3/B5/B6)、v_note 0-1(B1 是否留条子)、Varga 信任 0-2(B6/B8);结局按 §7 分档",
+        "节奏:9 beats 约 10-13 轮,每轮叙事 200-340 词 + 2-3 选项;核心 10 词各循环约 2 次,其余池词 1-2 次",
+        "时态:值班日志与报告现在时,档案回叙与 Kestrel 往事过去时/过去完成"
+      ],
+      "atmosphere": "屏幕波形的微光、甲板上的暴风雨、监听站低沉的嗡鸣、手里过热的磁带盘、风暴过后平如玻璃的海面;悬念靠听得见的东西,不靠跳出来的东西",
+      "vocab": ["station", "signal", "consistent", "evidence", "analyze", "phenomenon", "detect", "ethics", "log", "vessel", "acoustic", "array", "marine", "current", "pulse", "transmit", "device", "instrument", "spectrum", "static", "organism", "respond", "pattern", "rhythm", "interval", "sequence", "crew", "expedition", "survey", "monitor", "trace", "wreck", "debris", "inquiry", "confidential", "verify", "integrity", "dilemma"]
+    },
+    "identity": {
+      "name": "Avery",
+      "gender": "",
+      "age": "",
+      "role": "回声站夜班技术员(第七个夜班)",
+      "background": "离岸声学监听站 Merrow 的值班技术员,开场即第七个夜班;来自内陆还是沿海可一句带过;桌上压着去年沉没的 Kestrel 号全员名单,第一行是导师的名字;对规程的认真度由剧情选择决定"
+    },
+    "npcs": [
+      {
+        "name": "Varga",
+        "gender": "男",
+        "role": "Merrow 站长",
+        "personality": "语气像在报天气;八年扛着一条命令,沉默里全是等待",
+        "relationship": "八年前 Kestrel 号的声学官;奉命烧档,烧了一半藏了一半——\"我藏了八年,等的就是有人把另一半听出来\""
+      },
+      {
+        "name": "Mina",
+        "gender": "女",
+        "role": "岸基研究所老同学",
+        "personality": "回信简短、敏锐、一句见血",
+        "relationship": "你在研究所时的老同学;她的回信把 Kestrel 拉回你的世界"
+      },
+      {
+        "name": "Dr. Calloway",
+        "gender": "",
+        "role": "你的导师(已故)",
+        "personality": "不再出现于对话;只存在于名单、遗物与你的记忆里",
+        "relationship": "去年随 Kestrel 号沉没,九人无一还生;名字在名单第一行,姓名缩写出现在 Pelican 号抬下的箱角"
+      },
+      {
+        "name": "Pelican 号的人",
+        "role": "提前三天的\"维护队\"",
+        "personality": "不像是来维护的",
+        "relationship": "从船长室抬出一只印着研究所封条的箱子;他们的到访把风暴夜提前了"
+      }
+    ],
+    "timeline": {
+      "start": {
+        "year": 2026,
+        "month": 12,
+        "day": 7
+      },
+      "note": "冬季暴风夜,你值第七个夜班;故事横跨约两周的夜班,在暴风夜的抉择与次日清晨收束"
+    },
+    "scene_style": {
+      "env_templates": [
+        "暴风夜的主控室交接班",
+        "监听屏上第 7 号点的波形",
+        "档案室的结案报告",
+        "B 柜锁着的磁带库",
+        "雾夜栈桥与 Pelican 号的灯",
+        "风暴夜最密的信号",
+        "清晨平如玻璃的海面"
+      ],
+      "option_style": "每轮 2-3 个具体动作;真正的抉择是规程与伦理——记档、追查、上交、封存,最安静的那项往往最重"
+    },
+    "first_scene": {
+      "story": "The storm has been chewing at Station Merrow since dusk, and the handover at 23:00 is the shortest of your seven nights. The day-shift tech is already pulling on his coat when you sit down at the console, and for a moment you think he is about to say something — then he only nods at the screen. Listening point 7, out on the sea-floor array, is showing the same waveform it has shown every night you have worked here: the same shape, the same seven-second rise, the same pause. Consistent, the way machinery is never quite consistent. Varga's voice comes from behind you, quiet as weather: “Same signal. Seven nights in a row. Log it as mechanical interference, and stop running it through the archive.” He does not wait for an answer, and you do not give one. When he is gone you open the duty log to make the entry — and stop. Last night's shift left a line at the bottom of the page, in handwriting you do not recognize: “Repeat. Night seven. Someone is answering.” The signature has been torn off, carefully, leaving a clean edge. The screen flickers. Outside, the rain hits the deck like a second storm inside the first. You look at the line again. Then you look at the waveform, and you feel, for the first time in seven nights, that the shape on the screen is not a thing being recorded. It is a thing waiting for you to answer it back.",
+      "options": [
+        "Log it as instructed and end your shift.",
+        "Run the waveform against the old archive once more.",
+        "Leave a note for the day-shift tech to double-check it."
+      ]
+    }
+  }
+}
