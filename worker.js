@@ -493,6 +493,25 @@ async function bumpFreeQuota(env, userId, date) {
         await env.COVER_CACHE.put(key, String(cur + 1), { expirationTtl: 48 * 3600 });
     } catch (e) { console.error("free quota bump failed:", e.message); }
 }
+
+// M7c 语言辅助日配额:点译 gloss / 复盘 recap 直调模型不计币,但须封日上限防已登录零余额用户刷付费兜底模型
+// 分桶键 langaux:{kind}:{uid}:{date}(与剧情 freequota 分桶互不占用);返回 -1 = 用尽,其余 = 当日已用次数
+const LANG_AUX_DAILY = { gloss: { free: 60, vip: 300 }, recap: { free: 20, vip: 60 } };
+async function langAuxUsed(env, uid, kind, isVip) {
+    try {
+        const limit = (LANG_AUX_DAILY[kind] || {})[isVip ? "vip" : "free"];
+        if (!limit) return 0;
+        const cur = Number(await env.COVER_CACHE.get(`langaux:${kind}:${uid}:${getFreeQuotaDateStr()}`) || 0);
+        return cur >= limit ? -1 : cur;
+    } catch (e) { return 0; }
+}
+async function langAuxBump(env, uid, kind) {
+    try {
+        const key = `langaux:${kind}:${uid}:${getFreeQuotaDateStr()}`;
+        const cur = Number(await env.COVER_CACHE.get(key) || 0);
+        await env.COVER_CACHE.put(key, String(cur + 1), { expirationTtl: 48 * 3600 });
+    } catch (e) {}
+}
 // 会员剩余天数(终身/非会员返回 0;前端徽章/我的页展示用)
 function memberDaysLeft(record) {
     const t = record.membership_type;
@@ -3086,6 +3105,10 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 if (now - (glossRateMap.get(uid) || 0) < GLOSS_RATE_LIMIT_MS) {
                     return errorResponse("翻译有点快，歇一下再点吧", 429, null, "GLOSS_TOO_FREQUENT");
                 }
+                // M7c:日配额检查(不计数,调用成功后才 bump)
+                if ((await langAuxUsed(env, uid, "gloss", isMember(auth.record))) < 0) {
+                    return errorResponse("今天的点译次数用完啦，明天 08:00 刷新；开通会员可点更多", 429, null, "GLOSS_DAILY_LIMIT");
+                }
                 const body = await request.json().catch(() => ({}));
                 const raw = Array.isArray(body.sentences) ? body.sentences : [];
                 const sentences = [];
@@ -3097,6 +3120,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 glossRateMap.set(uid, now);
                 const out = await callGlossModel(env, sentences);
                 if (out.error) return out.error;
+                await langAuxBump(env, uid, "gloss");
                 return new Response(JSON.stringify({ ok: true, items: out.items }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
 
@@ -3109,6 +3133,9 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 if (now - (recapRateMap.get(uid) || 0) < RECAP_RATE_LIMIT_MS) {
                     return errorResponse("刚生成过，先看看这份吧", 429, null, "RECAP_TOO_FREQUENT");
                 }
+                if ((await langAuxUsed(env, uid, "recap", isMember(auth.record))) < 0) {
+                    return errorResponse("今天的复盘次数用完啦，明天 08:00 刷新；开通会员可复盘更多", 429, null, "RECAP_DAILY_LIMIT");
+                }
                 const body = await request.json().catch(() => ({}));
                 const story = String(body.story || "").replace(/\s+/g, " ").trim().slice(0, RECAP_STORY_LIMIT);
                 if (story.length < 200) return errorResponse("剧情内容太少，还没法复盘", 400, null, "RECAP_STORY_TOO_SHORT");
@@ -3116,6 +3143,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 recapRateMap.set(uid, now);
                 const out = await callRecapModel(env, story, band);
                 if (out.error) return out.error;
+                await langAuxBump(env, uid, "recap");
                 return new Response(JSON.stringify({ ok: true, expressions: out.expressions, writing: out.writing }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
 

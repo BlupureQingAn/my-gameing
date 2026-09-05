@@ -21752,10 +21752,24 @@ function openNpcProfile(npcId) {
             [/校园|高中|大学|青春|同桌|班长/, "register: campus — warm conversational English in an age-appropriate voice"],
             [/恋|爱情|乙女|ABO/, "register: romance — emotionally expressive, tender and intimate when the scene calls for it"],
             [/悬疑|推理|刑侦|密室|侦探/, "register: mystery — atmospheric and clipped, revelations drip out step by step"],
-            [/奇幻|冒险|勇者|魔法|巨龙|地下城/, "register: fantasy — vivid heroic prose with a playful epic tone"]
+            [/奇幻|冒险|勇者|魔法|巨龙|地下城/, "register: fantasy — vivid heroic prose with a playful epic tone"],
+            // M7b 扩充(总 13 类):覆盖 v2 英语原生卡生态常用题材;英文卡 genre 多带中文题材词时会命中对应 register,与卡内 voice notes 天然同向
+            [/温馨|治愈|小馆|杂货|甜品|面包|慢生活/, "register: cozy warm slice-of-life — gentle everyday English, soft humor, small moments told with affection"],
+            [/海洋|深海|海事|港口|航海|鲸/, "register: nautical — restrained watch-keeping cadence, technical terms used precisely and sparingly"],
+            [/职场|办公室|都市|北漂|创业|社畜/, "register: contemporary urban — sharp modern conversational English, wry and quick"]
         ];
         let session = { cardId: "", at: 0 };
         let busy = false;
+        // M7a 渐进沉浸状态机:scaffold(前 IMM_SCAFFOLD_ROUNDS 轮,生成侧可附〔小译〕+ 辅助侧译卡自动展开)
+        //                    → fade(第 3 轮起,纯英语,辅助手动)             [一处定义,生成侧/辅助侧共用;round 由档历史推导,切设备随云档一致]
+        const IMM_SCAFFOLD_ROUNDS = 2;
+        function immStage(round) {
+            const p = readProfile();
+            const imm = p.immersion === "full" ? "full" : "progressive";
+            if (imm === "full") return { mode: "full" };
+            if (round <= IMM_SCAFFOLD_ROUNDS) return { mode: "scaffold", round, limit: IMM_SCAFFOLD_ROUNDS };
+            return { mode: "fade", round };
+        }
         function readProfile() { try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}"); } catch (e) { return {}; } }
         function writeProfile(p) { try { localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); } catch (e) {} }
         function normId(id) { return String(id || "").replace(/[^\w-]/g, "_"); }
@@ -21779,7 +21793,6 @@ function openNpcProfile(npcId) {
             if (!session.cardId) return "";
             const p = readProfile();
             const band = BAND_RULE[p.band || "cet6"] || BAND_RULE.cet6;
-            const immersion = p.immersion === "full" ? "full" : "progressive";
             let round = 1;
             try {
                 const s = StateService.get();
@@ -21789,11 +21802,12 @@ function openNpcProfile(npcId) {
             // M6b:语言专属卡(structured.band 存在)→ 设定已全英文,续写而非翻译
             let englishSetting = false;
             try { englishSetting = !!(ScenarioCardService.getSelectedCard()?.structured?.band); } catch (e) {}
-            const immText = immersion === "full"
+            const stg = immStage(round);
+            const immText = stg.mode === "full"
                 ? "FULL IMMERSION — English only; absolutely no Chinese lines anywhere."
-                : (round <= 2
-                    ? "PROGRESSIVE — round " + round + "/2: after the story you MAY append ONE short Chinese recap line alone at the very end of \"story\", starting with 〔小译〕 (recast the key sentence in plain Chinese so the learner can check understanding). From round 3 onward never write Chinese."
-                    : "PROGRESSIVE — round " + round + " ≥ 3: English only from now on; no Chinese hints anymore.");
+                : (stg.mode === "scaffold"
+                    ? "PROGRESSIVE — round " + stg.round + "/" + stg.limit + ": after the story you MAY append ONE short Chinese recap line alone at the very end of \"story\", starting with 〔小译〕 (recast the key sentence in plain Chinese so the learner can check understanding). From round " + (stg.limit + 1) + " onward never write Chinese."
+                    : "PROGRESSIVE — round " + stg.round + " ≥ " + (IMM_SCAFFOLD_ROUNDS + 1) + ": English only from now on; no Chinese hints anymore.");
             /* M6d4:本章候选词(卡档词库抽 ≤3)→ 随续写指令注入;LangAssist 已在上一卡渲染时预载词库并抽好 */
             let cands = [];
             try { const _la = window.LangAssist; if (_la && _la.getChapterWords) cands = _la.getChapterWords() || []; } catch (e) { cands = []; }
@@ -21878,13 +21892,15 @@ function openNpcProfile(npcId) {
                 return { mode: "continue" };
             }
             // 英语开局:本地计划初始化(零 AI),英文第一轮由模型按 system 指令生成
+            // M7d 旧英语档处置(D8):本分支保留(SCENARIO_LIBRARY 官方卡可续旧英语档,防回滚成本),UI 无入口——老档默认隐藏、数据不删;
+            // 语言页(首页/剧本库/继续学习)仅列 lang_cards,官方卡 id(含下划线)与 lang_cards id 命名空间隔离,不会被推荐/继续行误拾
             let gender = "女";
             try { gender = String(card?.structured?.identity?.gender || "女") || "女"; } catch (e) {}
             let plan = null;
             try { plan = ScenarioInitPlanService.buildLocalInitPlan(gender); } catch (e) {}
             if (!plan) {
                 session = {};
-                try { NoticeModalService.showInfo({ title: "该剧本暂不支持语言模式", descHtml: "语言模式目前支持官方剧本库的剧本；自建/导入剧本请先玩中文版。" }); } catch (e) {}
+                try { NoticeModalService.showInfo({ title: "这张剧本暂不支持英语模式", descHtml: "英语原生剧本请在「学语言 → 剧本库」里挑选；想玩中文剧本点主站顶部的「首页」即可。" }); } catch (e) {}
                 return;
             }
             try { InitLoadingService.open("正在准备英语开局..."); } catch (e) {}
@@ -21926,7 +21942,7 @@ function openNpcProfile(npcId) {
             }
             return { mode: "new" };
         }
-        return { isLangSession, buildInjection, restoreIfNeeded, exitToChinese, enter, langSaveKey, hasLangSave };
+        return { isLangSession, buildInjection, restoreIfNeeded, exitToChinese, enter, langSaveKey, hasLangSave, immStage };
     })();
     window.LangEngine = LangEngine;
 </script>
@@ -22086,7 +22102,7 @@ function openNpcProfile(npcId) {
         renderPicker: function () {
             var box = $("lang-immersion-picker"); if (!box) return;
             var btns = box.querySelectorAll(".lang-lang-card");
-            for (var i = 0; i < btns.length; i++) btns[i].classList.toggle("active", btns[i].getAttribute("data-m") === profile.immersion);
+            for (var i = 0; i < btns.length; i++) btns[i].classList.toggle("active", btns[i].getAttribute("data-m") === (profile.immersion || "progressive"));
         },
         selectLang: function (code) {
             if (code !== "en") {
@@ -22492,16 +22508,15 @@ function openNpcProfile(npcId) {
         for (var n = 0; n < nodeList.length; n++) wrapNode(nodeList[n].node, nodeList[n].parts);
         /* 词源就绪先切一遍(vocab 已加载时) */
         if (vocabLoaded) refreshCardSens(cardSens);
-        /* 渐进沉浸前 2 轮:整卡自动展开(仅登录用户;≤10 句自动,其余点句再看) */
-        if (token() && cardSens.length) {
-            var p = readProfile();
-            if ((p.immersion || "progressive") !== "full" && roundNo() <= 2) {
-                for (var a = 0; a < cardSens.length && a < GLOSS_BATCH; a++) {
-                    var as = cardSens[a];
-                    as.expanded = true;
-                    if (glossCache[as.text] || glossFail[as.text]) fillGloss(as);
-                    else queueGloss([as]);
-                }
+        /* M7a 渐进沉浸状态机 scaffold 阶段:整卡自动展开(仅登录用户;≤10 句自动,其余点句再看);阶段判定与生成侧共用 LangEngine.immStage */
+        var immStg = null;
+        try { immStg = window.LangEngine && LangEngine.immStage ? LangEngine.immStage(roundNo()) : null; } catch (e) { immStg = null; }
+        if (token() && cardSens.length && immStg && immStg.mode === "scaffold") {
+            for (var a = 0; a < cardSens.length && a < GLOSS_BATCH; a++) {
+                var as = cardSens[a];
+                as.expanded = true;
+                if (glossCache[as.text] || glossFail[as.text]) fillGloss(as);
+                else queueGloss([as]);
             }
         }
         /* M5 章末复盘入口:每 5 轮一小章,本轮卡尾挂轻量入口条(st.lgDone 保证每卡仅一次) */
@@ -22764,6 +22779,7 @@ function openNpcProfile(npcId) {
     /* ---- gloss 缓存 + 合批 ---- */
     var glossCache = {};    // 句文本 → {zh, words}
     var glossFail = {};     // 句文本 → true
+    var glossBlocked = false;   // M7c:当日点译额度用尽(worker 429 GLOSS_DAILY_LIMIT),句下译卡改显专属提示
     var batchQueue = [], batchTimer = null, batchBusy = false;
     function queueGloss(arr) {
         var need = [], i, s;
@@ -22791,6 +22807,7 @@ function openNpcProfile(npcId) {
         })
             .then(function (r) { return r.json().catch(function () { return null; }); })
             .then(function (d) {
+                if (d && d.code === "GLOSS_DAILY_LIMIT") glossBlocked = true;   // M7c:日配额用尽(明天 08:00 刷新)
                 var ok = !!(d && d.ok && Array.isArray(d.items));
                 for (var i = 0; i < take.length; i++) {
                     var s = take[i];
@@ -22851,7 +22868,9 @@ function openNpcProfile(npcId) {
         } else if (glossFail[sen.text]) {
             note = noAuth
                 ? '<span class="lg-gloss-note">登录后即可使用点句翻译</span>'
-                : '<button type="button" class="lg-gloss-close" data-act="retry">译文没取到 · 点此重试</button>';
+                : (glossBlocked
+                    ? '<span class="lg-gloss-note">今天的点译次数用完啦，明天 08:00 刷新；开通会员可点更多</span>'
+                    : '<button type="button" class="lg-gloss-close" data-act="retry">译文没取到 · 点此重试</button>');
         } else {
             note = noAuth
                 ? '<span class="lg-gloss-note">登录后即可使用点句翻译</span>'
