@@ -925,6 +925,78 @@ async function authenticate(env, request) {
     return { record: authData.record };
 }
 
+// ---- 语言文游 M4 gloss:点句翻译+难词释义合批(直调模型不落库、不进主站计费/配额;独立轻量候选链)----
+const GLOSS_MAX_SENTENCES = 10;   // 前端亦按 ≤10 合批
+const GLOSS_RATE_LIMIT_MS = 6000; // 单实例内存限频即可(与 POST_RATE_LIMIT_MS 同理)
+const glossRateMap = new Map();
+// 候选优先免费档(智谱 flash 系/NVIDIA oss),终兜底付费 glm-5.3-flash(与 MODEL_POOL 末位 tier 一致)
+const GLOSS_MODEL_IDS = ["zp-glm-4.7-flash", "zp2-glm-4-flash", "zp-glm-4-flash", "zp-glm-4.5-air", "nv-gpt-oss-20b", "zp-glm-5.3-flash"];
+const GLOSS_SYSTEM_PROMPT = [
+    "You are a friendly English→Chinese tutor for a Chinese learner reading English game-story scenes.",
+    "Task: for each numbered English sentence provide (a) a natural, fluent Chinese translation (zh) — not word-for-word literal; (b) 1-3 most valuable words/phrases for this learner to notice (prefer what an intermediate learner may not know; include phrasal verbs/idioms when present), each with a SHORT English explanation (en, under 20 words) and a short Chinese gloss (zh).",
+    "Rules: w should be the base form when possible (breathed → breathe); keep multi-word phrases as-is. Do not translate character or place names — keep them as-is inside the translation.",
+    'Reply ONLY with a single valid JSON object, no markdown fences, no extra text: {"items":[{"idx":0,"sentence":"exact input sentence","zh":"...","words":[{"w":"...","en":"...","zh":"..."}]}]}',
+    '"idx" must match the input numbering; "sentence" must echo the input sentence exactly.'
+].join("\n");
+function cleanJsonText(s) {
+    s = String(s || "").trim();
+    if (s.startsWith("```")) s = s.replace(/^```[a-zA-Z]*\s*/i, "").replace(/```\s*$/i, "").trim();
+    const a = s.indexOf("{"), b = s.lastIndexOf("}");
+    return a >= 0 && b > a ? s.slice(a, b + 1) : s;
+}
+async function callGlossModel(env, sentences) {
+    const userMsg = "Sentences to translate:\n" + sentences.map((s, i) => `[${i}] ${s}`).join("\n");
+    const candidates = GLOSS_MODEL_IDS.map((id) => MODEL_POOL.find((m) => m.id === id && m.enabled)).filter(Boolean);
+    const errs = [];
+    for (const t of candidates) {
+        const apiKey = env[t.apiKeyEnv];
+        if (!apiKey) { errs.push(t.id + ":nokey"); continue; }
+        try {
+            const res = await fetch((t.url || "").replace(/\/$/, "") + "/chat/completions", {
+                method: "POST",
+                headers: { "Authorization": "Bearer " + apiKey, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    model: t.model,
+                    temperature: 0.2,
+                    max_tokens: Math.min(8000, Math.max(3000, sentences.length * 400)),
+                    messages: [
+                        { role: "system", content: GLOSS_SYSTEM_PROMPT },
+                        { role: "user", content: userMsg }
+                    ]
+                }),
+                signal: AbortSignal.timeout(45000)
+            });
+            if (!res.ok) { errs.push(t.id + ":http" + res.status); continue; }
+            const data = await res.json().catch(() => ({}));
+            const content = cleanJsonText(String((data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || ""));
+            if (!content) { errs.push(t.id + ":empty"); continue; }
+            const parsed = JSON.parse(content);
+            const raw = Array.isArray(parsed.items) ? parsed.items : [];
+            const slots = [];
+            for (const it of raw) {
+                const idx = Number(it && it.idx);
+                if (!(idx >= 0 && idx < sentences.length)) continue;
+                const words = (Array.isArray(it.words) ? it.words : []).slice(0, 5)
+                    .map((wd) => ({
+                        w: String(wd && (wd.w || wd.word) || "").trim().slice(0, 64),
+                        en: String(wd && wd.en || "").trim().slice(0, 200),
+                        zh: String(wd && wd.zh || "").trim().slice(0, 200)
+                    })).filter((x) => x.w);
+                slots[idx] = { sentence: sentences[idx], zh: String(it.zh || "").trim().slice(0, 600), words };
+            }
+            const items = [];
+            for (let i = 0; i < sentences.length; i++) {
+                const s = slots[i] || { sentence: sentences[i], zh: "", words: [] };
+                if (s.words.length > 3) s.words = s.words.slice(0, 3); // 每句最多 3 个关键表达
+                items.push(s);
+            }
+            if (items.some((x) => x.zh)) return { items };
+            errs.push(t.id + ":nozh");
+        } catch (e) { errs.push(t.id + ":err"); }
+    }
+    return { error: errorResponse("翻译服务暂时繁忙，稍后再试", 503, errs.join(","), "GLOSS_UNAVAILABLE") };
+}
+
 export default {
     async fetch(request, env, ctx) {
         if (!isAllowedOrigin(request.headers.get("Origin"))) {
@@ -2874,6 +2946,29 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 if (!d.id || d.user_id !== uid) return errorResponse("记录不存在", 404, null, "NOT_FOUND");
                 await pbAdminFetch(env, `/api/collections/lang_vocab/records/${vid}`, { method: "PATCH", body: JSON.stringify({ status }) });
                 return new Response(JSON.stringify({ ok: true, id: vid, status }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+            }
+
+            // ---- 路由:语言文游 M4 点句翻译合批(POST /api/lang/gloss,直调模型不落库;同句重复由前端内存缓存兜住)----
+            if (url.pathname === "/api/lang/gloss" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const uid = auth.record.id;
+                const now = Date.now();
+                if (now - (glossRateMap.get(uid) || 0) < GLOSS_RATE_LIMIT_MS) {
+                    return errorResponse("翻译有点快，歇一下再点吧", 429, null, "GLOSS_TOO_FREQUENT");
+                }
+                const body = await request.json().catch(() => ({}));
+                const raw = Array.isArray(body.sentences) ? body.sentences : [];
+                const sentences = [];
+                for (let i = 0; i < raw.length && sentences.length < GLOSS_MAX_SENTENCES; i++) {
+                    const s = String(raw[i] || "").replace(/\s+/g, " ").trim().slice(0, 300);
+                    if (s) sentences.push(s);
+                }
+                if (!sentences.length) return errorResponse("没有可翻译的句子", 400, null, "INVALID_SENTENCES");
+                glossRateMap.set(uid, now);
+                const out = await callGlossModel(env, sentences);
+                if (out.error) return out.error;
+                return new Response(JSON.stringify({ ok: true, items: out.items }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
 
             // ---- 路由：热聊人物卡榜（GET /api/characters/hot，送笔芯人气 + 收藏数聚合）----

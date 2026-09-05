@@ -4773,7 +4773,7 @@
     .stat-roll-btn{width:22px;height:22px;border-radius:6px;border:1px solid var(--line);background:var(--input-bg);color:var(--text);font-weight:800;cursor:pointer;line-height:1;flex-shrink:0}
     .stat-roll-btn:hover{border-color:var(--accent)}
     /* ===== 语言文游 LangPlay · 入口横幅 + 语言大厅 ===== */
-    .lang-entry-banner{display:flex;align-items:center;gap:10px;margin:10px 0;padding:13px 14px;border-radius:14px;background:linear-gradient(120deg,#3d3488,#3f6fd8 60%,#6a4fd8);color:#fff;cursor:pointer;box-shadow:0 3px 10px rgba(63,111,216,.35)}
+    .lang-entry-banner{display:flex;align-items:center;gap:10px;margin:10px 0;padding:16px 14px;border-radius:14px;background:linear-gradient(115deg,rgba(30,24,88,.92),rgba(49,58,150,.78) 55%,rgba(106,79,216,.82)),url("lang/banner-entry.jpg") center/cover no-repeat #3d3488;color:#fff;cursor:pointer;box-shadow:0 3px 10px rgba(63,111,216,.35);text-shadow:0 1px 10px rgba(15,10,50,.65)}
     .lang-entry-banner:active{transform:scale(.99)}
     .leb-badge{flex-shrink:0;background:#fff;color:#3f4fd8;font-weight:900;font-size:.82rem;letter-spacing:.5px;padding:3px 8px;border-radius:8px}
     .leb-main{flex:1;min-width:0}
@@ -4803,6 +4803,43 @@
     .lang-band-chip.band-c{background:linear-gradient(135deg,#2f9e6e,#3fb4d8)}
     .lang-band-t{font-weight:800;font-size:.92rem;color:var(--text)}
     .lang-band-d{font-size:.76rem;color:var(--text);opacity:.72;margin-top:3px;line-height:1.5}
+    /* ---- 语言文游 M4:点句即译 / 生词标色点查 / 生词本(学习态色 #7c4fd8 系) ---- */
+    .lang-hall-img{width:100%;aspect-ratio:16/5;object-fit:cover;border-radius:14px;margin:8px 0 2px;border:1px solid var(--line)}
+    .lg-learn-head{width:100%;aspect-ratio:16/4;object-fit:cover;border-radius:14px;margin:8px 0 2px;border:1px solid var(--line)}
+    .lg-sentence{cursor:pointer;border-radius:6px;transition:background .15s}
+    .lg-sentence:hover{background:rgba(124,84,240,.10);box-shadow:0 0 0 1px rgba(124,84,240,.22) inset}
+    .lg-word{cursor:pointer;color:inherit;border-bottom:1.5px dotted #7c4fd8;background:rgba(124,84,240,.07);border-radius:4px;transition:background .15s}
+    .lg-word:hover{background:rgba(124,84,240,.22)}
+    .lg-gloss{margin:5px 0 8px;padding:9px 12px;border-radius:12px;border:1px solid rgba(124,84,240,.38);background:rgba(124,84,240,.07);font-size:.82rem;line-height:1.5}
+    .lg-gloss-head{display:flex;align-items:center;gap:8px;color:#7c4fd8;font-size:.66rem;font-weight:800;letter-spacing:.4px}
+    .lg-gloss-close{margin-left:auto;border:none;background:rgba(124,84,240,.14);color:#7c4fd8;font-size:.68rem;font-weight:800;border-radius:7px;padding:2px 8px;cursor:pointer;flex-shrink:0}
+    .lg-gloss-zh{font-size:.9rem;color:var(--text);margin-top:4px;line-height:1.7;white-space:pre-wrap}
+    .lg-gloss-words{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+    .lg-gloss-word{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;border:1px solid rgba(124,84,240,.4);background:var(--input-bg);font-size:.72rem;cursor:pointer;color:var(--text)}
+    .lg-gloss-word b{color:#7c4fd8;font-weight:800}
+    .lg-gloss-note{font-size:.68rem;color:var(--text);opacity:.55;margin-top:3px}
+    .lg-pop{position:fixed;z-index:300001;width:min(320px,calc(100vw - 28px));background:var(--input-bg,#fff);border:1px solid rgba(124,84,240,.5);border-radius:14px;box-shadow:0 10px 30px rgba(20,10,60,.28);padding:12px 14px;display:none;font-size:.82rem;line-height:1.55}
+    .lg-pop.on{display:block}
+    .lg-pop-w{font-size:.95rem;font-weight:800;color:#7c4fd8;word-break:break-word}
+    .lg-pop-en{font-size:.76rem;color:var(--text);opacity:.85;margin-top:3px}
+    .lg-pop-zh{font-size:.84rem;color:var(--text);margin-top:5px}
+    .lg-pop-foot{margin-top:8px;padding-top:7px;border-top:1px dashed rgba(124,84,240,.3);display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:.7rem;color:var(--sub,#806a55)}
+    .lg-pop-foot .ok{color:#2f9e6e;font-weight:700}
+    .lg-pop-foot .later{color:#b8863f;font-weight:700}
+    .lg-learn-sub{font-size:.7rem;color:var(--sub,#806a55);margin-top:2px;line-height:1.6}
+    .lg-vr{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line,#e2ccb0);border-radius:12px;background:var(--input-bg,#fff8f0);margin-bottom:7px}
+    .lg-vt{flex-shrink:0;font-size:.6rem;font-weight:800;border-radius:6px;padding:2px 6px;margin-top:2px}
+    .lg-vt.word{background:rgba(124,84,240,.15);color:#7c4fd8}
+    .lg-vt.expr{background:rgba(216,124,63,.16);color:#b06a1f}
+    .lg-vr-main{flex:1;min-width:0}
+    .lg-vr-term{font-weight:700;font-size:.85rem;color:var(--text);word-break:break-word}
+    .lg-vr-gl{font-size:.72rem;color:var(--text);opacity:.78;margin-top:2px;line-height:1.5}
+    .lg-vr-origin{font-size:.62rem;color:var(--sub,#806a55);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .lg-st{display:flex;gap:5px;margin-top:6px}
+    .lg-st button{border:1px solid var(--line,#e2ccb0);background:transparent;color:var(--sub,#806a55);font-size:.64rem;border-radius:999px;padding:2px 9px;cursor:pointer}
+    .lg-st button.on-0{background:rgba(124,84,240,.16);border-color:#7c4fd8;color:#7c4fd8;font-weight:700}
+    .lg-st button.on-1{background:rgba(63,111,216,.16);border-color:#3f6fd8;color:#3f6fd8;font-weight:700}
+    .lg-st button.on-2{background:rgba(47,158,110,.18);border-color:#2f9e6e;color:#2f9e6e;font-weight:700}
 </style>
 <div id="boot-screen" role="status" aria-label="页面加载中">
     <div class="boot-logo"><img src="icons/android-chrome-192x192.png" alt="" style="width:36px;height:36px;vertical-align:-7px;margin-right:10px;border-radius:8px;filter:drop-shadow(0 0 10px rgba(255,214,107,.45))">云吞吞文游</div>
@@ -4980,6 +5017,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <button class="mini-btn ghost" onclick="switchView('view-home')">返回</button>
                 </div>
                 <div class="list-sub">把云吞吞当语言教练——115 个剧本的英语版本，边玩边学，中文只在需要时出现。</div>
+                <img class="lang-hall-img" src="lang/hall-top.jpg" alt="语言文游大厅" loading="lazy">
 
                 <div class="list-title" style="margin-top:12px;">① 选择语言</div>
                 <div class="lang-picker" id="lang-picker">
@@ -5012,6 +5050,11 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <div class="list-sub" id="lang-cards-sub">点卡即玩；英语进度与中文进度互相独立，回中文从首页原入口进</div>
                     <div id="lang-card-rows" style="margin-top:8px;"></div>
                 </div>
+
+                <div class="list-title" style="margin-top:16px;">⑤ 我的生词本 <span class="list-sub" style="margin-left:4px;">游戏里点过的词自动收进来</span></div>
+                <img class="lg-learn-head" src="lang/vocab-head.jpg" alt="生词本" loading="lazy">
+                <div class="lg-learn-sub">玩英语剧本时：轻点句子看整句译文，点蓝色虚线的生词看释义——点过的词会收进这里，可在「新学 → 眼熟 → 已掌握」之间手动划。</div>
+                <div id="lang-learn-box" style="margin-top:8px;"></div>
             </section>
         </section>
 
@@ -21815,6 +21858,591 @@ function openNpcProfile(npcId) {
     };
     window.LangController = api;
     api.init();
+})();
+</script>
+<script>
+/* ===== 语言文游 M4 辅助层(旁挂 play 引擎,零侵入主链):点句即译 GlossCard / 生词标色点查 WordPopover / 生词本视图 =====
+   机制:①MutationObserver 盯 #play-chat-area 子级——语言会话中 AI 结构化卡挂载 → 句子 span 化(文本节点级切句,不破坏原有行内元素)
+        ②词库(vocabMap∪gloss 关键表达 wordInfo)命中 → 句内词切 span.lg-word ③document 级点击委托:词→popover(自动入生词本),句→句下译卡
+        ④gloss 40ms 合批 ≤10 句/批 + 内存缓存(glossCache/glossFail)防重复请求 ⑤渐进沉浸前 2 轮:新卡整卡自动展开译文 ⑥「我的生词本」列表+三级状态划 */
+(function () {
+    var PROFILE_KEY = "lang_profile_v1";
+    var GLOSS_BATCH = 10;
+    var API_BASE = /blupure\.cn$/i.test(location.hostname) ? location.origin : "https://ai.blupure.cn";
+    function $(id) { return document.getElementById(id); }
+    function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
+    function token() { try { return localStorage.getItem("pb_auth_token") || ""; } catch (e) { return ""; } }
+    function readProfile() { try { return JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}"); } catch (e) { return {}; } }
+    function langActive() { try { return !!window.LangEngine && window.LangEngine.isLangSession(); } catch (e) { return false; } }
+    function roundNo() {
+        try {
+            var s = (typeof StateService !== "undefined") ? StateService.get() : null;
+            var hs = s && s.history || [];
+            return hs.filter(function (h) { return h && h.role === "user"; }).length + 1;
+        } catch (e) { return 1; }
+    }
+
+    /* ---- 词库(释义总表 wordInfo:gloss 关键表达 ∪ 生词本)+ 生词本(vocabMap) ---- */
+    var wordInfo = {};      // lower(w) → {w, en, zh}
+    var vocabMap = {};      // lower(term) → {id,type,term,gloss_en,gloss_zh,origin,status,created_at}
+    var vocabLoaded = false;
+    var wordRe = null, reDirty = true;
+    function noteWords(list, kind) {
+        for (var i = 0; i < (list || []).length; i++) {
+            var w = list[i];
+            if (!w || !w.w) continue;
+            var key = String(w.w).toLowerCase();
+            var en = kind === "vocab" ? String(w.gloss_en || "") : String(w.en || "");
+            var zh = kind === "vocab" ? String(w.gloss_zh || "") : String(w.zh || "");
+            if (!wordInfo[key]) wordInfo[key] = { w: String(w.w), en: en, zh: zh };
+            else { if (!wordInfo[key].en && en) wordInfo[key].en = en; if (!wordInfo[key].zh && zh) wordInfo[key].zh = zh; }
+        }
+        reDirty = true;
+    }
+    function buildWordRe() {
+        if (!reDirty) return wordRe;
+        reDirty = false;
+        var terms = [], k, w;
+        for (k in wordInfo) {
+            if (!Object.prototype.hasOwnProperty.call(wordInfo, k)) continue;
+            w = wordInfo[k].w;
+            if (!w || w.length < 2 || /\s/.test(w)) continue;            // 短语(含空格)不在正文切词,走译卡 chips
+            if (/[^A-Za-z0-9'\-]/.test(w)) continue;
+            terms.push(w);
+        }
+        if (!terms.length) { wordRe = null; return null; }
+        terms.sort(function (a, b) { return b.length - a.length; });
+        var src = "\\b(?:" + terms.map(function (s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }).join("|") + ")\\b";
+        try { wordRe = new RegExp(src, "gi"); } catch (e) { wordRe = null; }
+        return wordRe;
+    }
+    function loadVocab(cb) {
+        if (!token()) { vocabLoaded = true; if (cb) cb(); return; }
+        fetch(API_BASE + "/api/lang/vocab", { headers: { "X-Auth-Token": "Bearer " + token() } })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) {
+                if (d && d.items) {
+                    var nm = {}, i, it, key;
+                    for (i = 0; i < d.items.length; i++) {
+                        it = d.items[i];
+                        key = String(it.term || "").toLowerCase();
+                        if (key) { nm[key] = it; }
+                    }
+                    vocabMap = nm;
+                    noteWords(d.items, "vocab");
+                }
+                vocabLoaded = true;
+                refreshAll();
+                if (cb) cb();
+            }).catch(function () { vocabLoaded = true; if (cb) cb(); });
+    }
+    function refreshAll() {
+        var k;
+        for (k in sentences) {
+            if (Object.prototype.hasOwnProperty.call(sentences, k)) {
+                var s = sentences[k];
+                if (s && !s.hDone) highlightSen(s);
+            }
+        }
+    }
+
+    /* ---- 句子注册表 + 切句 ---- */
+    var senSeq = 0;
+    var sentences = {};    // senId → sen{id,text,spans[],expanded,glossEl,gotGloss,hDone}
+    var BLOCK_TAGS = { H1: 1, H2: 1, H3: 1, H4: 1, H5: 1, H6: 1, P: 1, DIV: 1, UL: 1, OL: 1, LI: 1, BLOCKQUOTE: 1, PRE: 1, HR: 1 };
+    function collectRuns(root) {
+        var runs = [], cur = null;
+        function flush() { if (cur && cur.text.trim()) runs.push(cur); cur = null; }
+        function walk(el) {
+            for (var i = 0; i < el.childNodes.length; i++) {
+                var ch = el.childNodes[i];
+                if (ch.nodeType === 3) {
+                    var t = ch.nodeValue || "";
+                    if (!t.length) continue;
+                    if (!cur) cur = { text: "", ranges: [] };
+                    cur.ranges.push({ node: ch, start: cur.text.length, end: cur.text.length + t.length });
+                    cur.text += t;
+                } else if (ch.nodeType === 1) {
+                    var tag = ch.tagName;
+                    if (tag === "BR" || ch.classList && ch.classList.contains("lg-gloss")) { flush(); continue; }
+                    if (tag === "SCRIPT" || tag === "STYLE") continue;
+                    if (BLOCK_TAGS[tag]) { flush(); walk(ch); flush(); }
+                    else walk(ch);
+                }
+            }
+        }
+        walk(root);
+        flush();
+        return runs;
+    }
+    var ABBR = { "mr": 1, "mrs": 1, "ms": 1, "dr": 1, "st": 1, "vs": 1, "etc": 1, "e.g": 1, "i.e": 1, "no": 1, "inc": 1, "ltd": 1, "co": 1, "jr": 1, "sr": 1, "prof": 1, "capt": 1, "jan": 1, "feb": 1, "mar": 1, "apr": 1, "jun": 1, "jul": 1, "aug": 1, "sep": 1, "sept": 1, "oct": 1, "nov": 1, "dec": 1, "mt": 1, "rd": 1, "ave": 1, "approx": 1 };
+    function cutSentences(text) {
+        var cuts = [], s = 0, i, j, nx, len = text.length;
+        for (i = 0; i < len; i++) {
+            var c = text.charAt(i);
+            if (c === "." || c === "!" || c === "?" || c === "…") {
+                j = i + 1;
+                while (j < len && ('"\'”’)]}»'.indexOf(text.charAt(j)) >= 0)) j++;
+                if (j >= len) { cuts.push([s, j]); return cuts; }
+                if (/\s/.test(text.charAt(j))) {
+                    nx = j; while (nx < len && /\s/.test(text.charAt(nx))) nx++;
+                    if (nx < len && /[a-z0-9,;:（]/.test(text.charAt(nx))) { i = j - 1; continue; }   // 后随小写 → 缩写尾巴,非句界
+                    if (c === ".") {   // 常见缩写表豁免
+                        var ws = text.lastIndexOf(" ", i - 1) + 1;
+                        if (ws < s) ws = s;
+                        var tail = text.slice(ws, i + 1).replace(/[^A-Za-z.]/g, "").toLowerCase();
+                        if (ABBR[tail]) { i = j - 1; continue; }
+                    }
+                    cuts.push([s, j]);
+                    s = j;
+                    i = j - 1;
+                }
+            }
+        }
+        if (s < len) cuts.push([s, len]);
+        return cuts;
+    }
+    function wrapNode(node, parts) {
+        var parent = node.parentNode;
+        if (!parent) return;
+        var frag = document.createDocumentFragment();
+        var pos = 0, val = node.nodeValue || "";
+        for (var i = 0; i < parts.length; i++) {
+            var p = parts[i];
+            if (p.s > pos) frag.appendChild(document.createTextNode(val.slice(pos, p.s)));
+            var span = document.createElement("span");
+            span.className = "lg-sentence";
+            span.setAttribute("data-sen", p.senId);
+            span.appendChild(document.createTextNode(val.slice(p.s, p.e)));
+            frag.appendChild(span);
+            var sen = sentences[p.senId];
+            if (sen) sen.spans.push(span);
+            pos = p.e;
+        }
+        if (pos < val.length) frag.appendChild(document.createTextNode(val.slice(pos)));
+        parent.replaceChild(frag, node);
+    }
+    function attachStory(st) {
+        if (!st || st.dataset.lgDone) return;
+        st.dataset.lgDone = "1";
+        var runs = collectRuns(st);
+        if (!runs.length) return;
+        var cardSens = [], nodeList = [];
+        function partsFor(node) {
+            for (var i = 0; i < nodeList.length; i++) if (nodeList[i].node === node) return nodeList[i];
+            var e = { node: node, parts: [] };
+            nodeList.push(e);
+            return e;
+        }
+        for (var r = 0; r < runs.length; r++) {
+            var run = runs[r];
+            var cuts = cutSentences(run.text);
+            for (var ci = 0; ci < cuts.length; ci++) {
+                var cs = cuts[ci][0], ce = cuts[ci][1];
+                if (ce - cs < 1) continue;
+                var t = run.text.slice(cs, ce).replace(/\s+/g, " ").trim();
+                if (!t) continue;
+                var id = ++senSeq;
+                var sen = { id: id, text: t, spans: [], expanded: false, glossEl: null, gotGloss: false, hDone: false };
+                sentences[id] = sen;
+                cardSens.push(sen);
+                for (var m = 0; m < run.ranges.length; m++) {
+                    var rg = run.ranges[m];
+                    var o1 = Math.max(rg.start, cs), o2 = Math.min(rg.end, ce);
+                    if (o2 <= o1) continue;
+                    partsFor(rg.node).parts.push({ s: o1 - rg.start, e: o2 - rg.start, senId: id });
+                }
+            }
+        }
+        for (var n = 0; n < nodeList.length; n++) wrapNode(nodeList[n].node, nodeList[n].parts);
+        /* 词源就绪先切一遍(vocab 已加载时) */
+        if (vocabLoaded) refreshCardSens(cardSens);
+        /* 渐进沉浸前 2 轮:整卡自动展开(仅登录用户;≤10 句自动,其余点句再看) */
+        if (token() && cardSens.length) {
+            var p = readProfile();
+            if ((p.immersion || "progressive") !== "full" && roundNo() <= 2) {
+                for (var a = 0; a < cardSens.length && a < GLOSS_BATCH; a++) {
+                    var as = cardSens[a];
+                    as.expanded = true;
+                    if (glossCache[as.text] || glossFail[as.text]) fillGloss(as);
+                    else queueGloss([as]);
+                }
+            }
+        }
+    }
+    function refreshCardSens(list) { for (var i = 0; i < list.length; i++) highlightSen(list[i]); }
+
+    /* ---- 词级高亮(仅同形命中,防误亮变体/跨词) ---- */
+    function wrapWords(span) {
+        var re = buildWordRe();
+        if (!re) return;
+        var kids = [], i, j, node;
+        for (i = 0; i < span.childNodes.length; i++) kids.push(span.childNodes[i]);
+        for (i = 0; i < kids.length; i++) {
+            node = kids[i];
+            if (node.nodeType !== 3) continue;
+            var val = node.nodeValue || "";
+            if (!val) continue;
+            var ranges = [], m;
+            re.lastIndex = 0;
+            while ((m = re.exec(val))) ranges.push([m.index, m.index + m[0].length]);
+            if (!ranges.length) continue;
+            var frag = document.createDocumentFragment(), pos = 0, wt;
+            for (j = 0; j < ranges.length; j++) {
+                if (ranges[j][0] > pos) frag.appendChild(document.createTextNode(val.slice(pos, ranges[j][0])));
+                wt = val.slice(ranges[j][0], ranges[j][1]);
+                var sp = document.createElement("span");
+                sp.className = "lg-word";
+                sp.setAttribute("data-w", wt);
+                sp.appendChild(document.createTextNode(wt));
+                frag.appendChild(sp);
+                pos = ranges[j][1];
+            }
+            if (pos < val.length) frag.appendChild(document.createTextNode(val.slice(pos)));
+            span.replaceChild(frag, node);
+        }
+    }
+    function highlightSen(sen) {
+        if (!sen || sen.hDone) return;
+        if (!buildWordRe()) return;                       // 词库空:等词源(vocab 加载/gloss 到达)再切
+        for (var i = 0; i < sen.spans.length; i++) {
+            var sp = sen.spans[i];
+            if (sp && sp.parentNode) wrapWords(sp);
+        }
+        sen.hDone = true;
+    }
+
+    /* ---- gloss 缓存 + 合批 ---- */
+    var glossCache = {};    // 句文本 → {zh, words}
+    var glossFail = {};     // 句文本 → true
+    var batchQueue = [], batchTimer = null, batchBusy = false;
+    function queueGloss(arr) {
+        var need = [], i, s;
+        for (i = 0; i < arr.length; i++) {
+            s = arr[i];
+            if (!s || s.inFlight) continue;
+            if (glossCache[s.text] || glossFail[s.text]) continue;
+            s.inFlight = true;
+            need.push(s);
+        }
+        if (!need.length) return;
+        batchQueue = batchQueue.concat(need);
+        if (batchTimer) clearTimeout(batchTimer);
+        batchTimer = setTimeout(flushBatch, 40);
+    }
+    function flushBatch() {
+        batchTimer = null;
+        if (batchBusy || !batchQueue.length) return;
+        var take = batchQueue.splice(0, GLOSS_BATCH);
+        batchBusy = true;
+        fetch(API_BASE + "/api/lang/gloss", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token() },
+            body: JSON.stringify({ sentences: take.map(function (s) { return s.text.slice(0, 300); }) })
+        })
+            .then(function (r) { return r.json().catch(function () { return null; }); })
+            .then(function (d) {
+                var ok = !!(d && d.ok && Array.isArray(d.items));
+                for (var i = 0; i < take.length; i++) {
+                    var s = take[i];
+                    delete s.inFlight;
+                    if (ok && d.items[i] && d.items[i].zh) okGloss(s, { zh: String(d.items[i].zh), words: d.items[i].words || [] });
+                    else { glossFail[s.text] = true; if (s.expanded) fillGloss(s); }
+                }
+            })
+            .catch(function () {
+                for (var i = 0; i < take.length; i++) {
+                    var s = take[i];
+                    delete s.inFlight;
+                    glossFail[s.text] = true;
+                    if (s.expanded) fillGloss(s);
+                }
+            })
+            .then(function () {
+                batchBusy = false;
+                if (batchQueue.length) { if (batchTimer) clearTimeout(batchTimer); batchTimer = setTimeout(flushBatch, 60); }
+            });
+    }
+    function okGloss(sen, d) {
+        glossCache[sen.text] = d;
+        delete glossFail[sen.text];
+        sen.gotGloss = true;
+        noteWords(d.words, "gloss");
+        sen.hDone = false;
+        highlightSen(sen);   // 词源更全后再切一次(已切间隙不会重复包词)
+        if (sen.expanded) fillGloss(sen);
+    }
+
+    /* ---- 句下译卡 ---- */
+    function ensureCard(sen) {
+        if (sen.glossEl && sen.glossEl.parentNode) return sen.glossEl;
+        var card = document.createElement("div");
+        card.className = "lg-gloss";
+        card.setAttribute("data-sen", sen.id);
+        var anchor = sen.spans[sen.spans.length - 1];
+        if (!anchor || !anchor.parentNode) { sen.expanded = false; return null; }
+        anchor.parentNode.insertBefore(card, anchor.nextSibling);
+        sen.glossEl = card;
+        return card;
+    }
+    function fillGloss(sen) {
+        if (!sen || !sen.expanded) return;
+        var card = ensureCard(sen);
+        if (!card) return;
+        var d = glossCache[sen.text];
+        var noAuth = !token();
+        var zh = "", words = "", note = "";
+        if (d && d.zh) {
+            zh = String(d.zh);
+            for (var i = 0; i < (d.words || []).length; i++) {
+                var wd = d.words[i];
+                if (!wd || !wd.w) continue;
+                words += '<span class="lg-gloss-word" data-w="' + esc(String(wd.w)) + '"><b>' + esc(String(wd.w)) + "</b>" + (wd.zh ? esc(String(wd.zh)) : "") + "</span>";
+            }
+        } else if (glossFail[sen.text]) {
+            note = noAuth
+                ? '<span class="lg-gloss-note">登录后即可使用点句翻译</span>'
+                : '<button type="button" class="lg-gloss-close" data-act="retry">译文没取到 · 点此重试</button>';
+        } else {
+            note = noAuth
+                ? '<span class="lg-gloss-note">登录后即可使用点句翻译</span>'
+                : '<span class="lg-gloss-note">译文生成中…</span>';
+        }
+        card.innerHTML =
+            '<div class="lg-gloss-head"><span>译文</span><span style="flex:1"></span>' +
+            '<button type="button" class="lg-gloss-close" data-act="close">收起</button></div>' +
+            (zh ? '<div class="lg-gloss-zh">' + esc(zh) + "</div>" : "") +
+            (words ? '<div class="lg-gloss-words">' + words + "</div>" : "") +
+            (note ? '<div style="margin-top:4px;">' + note + "</div>" : "");
+    }
+    function collapseSen(sen) {
+        if (!sen) return;
+        sen.expanded = false;
+        if (sen.glossEl) { sen.glossEl.remove(); sen.glossEl = null; }
+    }
+    function toggleSen(sen) {
+        if (!sen) return;
+        if (sen.expanded) { collapseSen(sen); return; }
+        sen.expanded = true;
+        if (!token()) { fillGloss(sen); return; }
+        if (glossCache[sen.text] || glossFail[sen.text]) fillGloss(sen);
+        else queueGloss([sen]);
+    }
+
+    /* ---- 词 popover(点击自动入生词本) ---- */
+    var pop = null;
+    function ensurePop() {
+        if (!pop) { pop = document.createElement("div"); pop.className = "lg-pop"; document.body.appendChild(pop); }
+        return pop;
+    }
+    function hidePop() { if (pop) { pop.classList.remove("on"); pop.style.left = "-999px"; pop.style.top = "-999px"; } }
+    function openPop(term, x, y) {
+        if (!term) return;
+        var key = String(term).toLowerCase();
+        var info = wordInfo[key] || null;
+        var inVocab = !!vocabMap[key];
+        var p = ensurePop();
+        var html = '<div class="lg-pop-w">' + esc(info ? info.w : term) + "</div>";
+        if (info && info.en) html += '<div class="lg-pop-en">' + esc(info.en) + "</div>";
+        if (info && info.zh) html += '<div class="lg-pop-zh">' + esc(info.zh) + "</div>";
+        if (!info) html += '<div class="lg-pop-zh" style="opacity:.62;">这个词还没有单独释义——点它所在的句子，看整句译文里怎么理解。</div>';
+        html += '<div class="lg-pop-foot">';
+        if (inVocab) {
+            html += '<span class="ok">✓ 已收进生词本</span><span class="lg-vr-origin">在大厅「我的生词本」里可以划状态</span>';
+        } else if (token()) {
+            html += '<span class="later">已自动收进生词本</span>';
+            saveVocabSilent(term, info);
+        } else {
+            html += '<span class="later">登录后，点查的词会自动收进生词本</span>';
+        }
+        html += "</div>";
+        p.innerHTML = html;
+        p.classList.add("on");
+        p.style.left = "-999px";
+        p.style.top = "-999px";
+        var pw = p.offsetWidth || 300, ph = p.offsetHeight || 120;
+        var vw = window.innerWidth || 390, vh = window.innerHeight || 700;
+        var lx = x + 10; if (lx + pw > vw - 8) lx = Math.max(8, x - pw - 10);
+        var ty = y + 14; if (ty + ph > vh - 8) ty = Math.max(8, y - ph - 12);
+        p.style.left = lx + "px";
+        p.style.top = ty + "px";
+    }
+    function saveVocabSilent(term, info) {
+        var key = String(term).toLowerCase();
+        if (!token() || vocabMap[key]) return;
+        var origin = "";
+        try {
+            if (typeof ScenarioCardService !== "undefined" && ScenarioCardService.getSelectedCard) {
+                var c = ScenarioCardService.getSelectedCard();
+                if (c && c.title) origin = "卡:「" + String(c.title).slice(0, 40) + "」";
+            }
+        } catch (e) {}
+        if (!origin) origin = "英语剧本";
+        fetch(API_BASE + "/api/lang/vocab", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token() },
+            body: JSON.stringify({
+                lang: "en", type: "word", term: String(term).slice(0, 64),
+                gloss_en: info && info.en ? String(info.en).slice(0, 500) : "",
+                gloss_zh: info && info.zh ? String(info.zh).slice(0, 500) : "",
+                origin: origin.slice(0, 200)
+            })
+        })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) {
+                if (!d) return;
+                vocabMap[key] = { id: d.id || "", type: "word", term: String(term).slice(0, 64), gloss_en: info && info.en ? String(info.en) : "", gloss_zh: info && info.zh ? String(info.zh) : "", origin: origin, status: 0, created_at: "" };
+                reDirty = true;
+            }).catch(function () {});
+    }
+
+    /* ---- 点击委托 ---- */
+    document.addEventListener("click", function (e) {
+        var t = e.target;
+        if (!t || !t.closest) return;
+        var actEl = t.closest("[data-act]");
+        if (actEl) {
+            var act = actEl.getAttribute("data-act");
+            var g = actEl.closest(".lg-gloss");
+            var sen = g ? sentences[Number(g.getAttribute("data-sen"))] : null;
+            if (sen) {
+                if (act === "close") collapseSen(sen);
+                else if (act === "retry") { delete glossFail[sen.text]; sen.expanded = true; fillGloss(sen); queueGloss([sen]); }
+                e.stopPropagation();
+                e.preventDefault();
+                return;
+            }
+        }
+        if (!langActive()) { hidePop(); return; }
+        var wEl = t.closest(".lg-word");
+        if (wEl) { e.preventDefault(); e.stopPropagation(); openPop(wEl.getAttribute("data-w") || wEl.textContent, e.clientX, e.clientY); return; }
+        var chip = t.closest(".lg-gloss-word");
+        if (chip) { e.preventDefault(); e.stopPropagation(); openPop(chip.getAttribute("data-w"), e.clientX, e.clientY); return; }
+        var sEl = t.closest(".lg-sentence");
+        if (sEl) { e.preventDefault(); e.stopPropagation(); toggleSen(sentences[Number(sEl.getAttribute("data-sen"))]); return; }
+        hidePop();
+    }, false);
+
+    /* ---- 观察 #play-chat-area:AI 结构化卡挂载 → 句子化 ---- */
+    function tryAttach(node) {
+        if (!node || node.nodeType !== 1) return;
+        if (!langActive()) return;
+        var st = node.querySelector ? node.querySelector(".card-story") : null;
+        if (!st || st.dataset.lgDone) return;
+        if (st.querySelector(".stream-loading, .streaming-cursor")) {
+            setTimeout(function () { tryAttach(node); }, 700);   // 流式中骨架:等终版卡(mutation 再触发)
+            return;
+        }
+        attachStory(st);
+    }
+    var chatMo = null;
+    function initChatWatch() {
+        var board = $("play-chat-area");
+        if (!board || chatMo) return;
+        chatMo = new MutationObserver(function (muts) {
+            if (!langActive()) return;
+            for (var i = 0; i < muts.length; i++) {
+                var adds = muts[i].addedNodes;
+                for (var j = 0; j < adds.length; j++) tryAttach(adds[j]);
+            }
+        });
+        chatMo.observe(board, { childList: true });
+    }
+
+    /* ---- 「我的生词本」视图(view-lang ⑤) ---- */
+    var lastLearnAt = 0;
+    function renderLearn() {
+        var box = $("lang-learn-box");
+        if (!box) return;
+        if (!token()) {
+            box.innerHTML = '<div class="lg-vr"><div class="lg-vr-main"><div class="lg-vr-term">登录后，生词本随账号同步</div><div class="lg-vr-gl">玩英语剧本时点查的单词会自动收进这里，换设备也不丢。</div></div></div>';
+            return;
+        }
+        if (!vocabLoaded) {
+            box.innerHTML = '<div class="list-sub">生词加载中…</div>';
+            loadVocab(function () { renderLearn(); });
+            return;
+        }
+        var keys = Object.keys(vocabMap);
+        if (!keys.length) {
+            box.innerHTML = '<div class="lg-vr"><div class="lg-vr-main"><div class="lg-vr-term">还没有生词</div><div class="lg-vr-gl">去玩一个英语剧本吧——游戏里点查过的词和关键表达会自动出现在这里。</div></div></div>';
+            return;
+        }
+        var arr = [], i, k;
+        for (k = 0; k < keys.length; k++) arr.push(vocabMap[keys[k]]);
+        arr.sort(function (a, b) { var ta = a.created_at || "", tb = b.created_at || ""; return ta === tb ? 0 : (ta > tb ? -1 : 1); });
+        var html = '<div class="list-sub" style="margin:2px 0 8px;">共 ' + arr.length + " 条（点词自动收藏；玩的过程里点蓝色虚线词即可）</div>";
+        var ST = [["0", "新学"], ["1", "眼熟"], ["2", "已掌握"]];
+        for (i = 0; i < arr.length; i++) {
+            var it = arr[i];
+            var cls = it.type === "expression" ? "expr" : "word";
+            var tname = it.type === "expression" ? "表达" : "词";
+            var gl = String(it.gloss_zh || it.gloss_en || "（暂无释义）").slice(0, 140);
+            var btns = "", s;
+            for (s = 0; s < ST.length; s++) {
+                var stv = Number(ST[s][0]);
+                btns += '<button type="button" data-act="st" data-vid="' + esc(String(it.id || "")) + '" data-status="' + stv + '" class="' + (Number(it.status) === stv ? "on-" + stv : "") + '">' + ST[s][1] + "</button>";
+            }
+            html += '<div class="lg-vr"><span class="lg-vt ' + cls + '">' + tname + "</span>" +
+                '<div class="lg-vr-main"><div class="lg-vr-term">' + esc(it.term) + "</div>" +
+                '<div class="lg-vr-gl">' + esc(gl) + "</div>" +
+                (it.origin ? '<div class="lg-vr-origin">' + esc(String(it.origin).slice(0, 80)) + "</div>" : "") +
+                '<div class="lg-st">' + btns + "</div></div></div>";
+        }
+        box.innerHTML = html;
+    }
+    function changeStatus(vid, st) {
+        if (!vid || !token()) return;
+        fetch(API_BASE + "/api/lang/vocab/status", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token() },
+            body: JSON.stringify({ id: vid, status: st })
+        })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) {
+                if (!d || !d.ok) return;
+                for (var k in vocabMap) {
+                    if (Object.prototype.hasOwnProperty.call(vocabMap, k) && String(vocabMap[k].id) === vid) {
+                        vocabMap[k].status = st;
+                        break;
+                    }
+                }
+                renderLearn();
+            }).catch(function () {});
+    }
+    var learnMo = null;
+    function initLearnWatch() {
+        var main = $("main-content");
+        var box = $("lang-learn-box");
+        if (!main || !box) return;
+        var boxClick = box.addEventListener("click", function (e) {
+            var b = e.target && e.target.closest ? e.target.closest('[data-act="st"]') : null;
+            if (b && token()) changeStatus(b.getAttribute("data-vid"), Number(b.getAttribute("data-status")));
+        });
+        if (learnMo) return;
+        learnMo = new MutationObserver(function () {
+            var vl = $("view-lang");
+            if (!vl || !vl.classList || !vl.classList.contains("active")) return;
+            var now = Date.now();
+            if (now - lastLearnAt < 1500) return;
+            lastLearnAt = now;
+            loadVocab(function () { renderLearn(); });
+        });
+        learnMo.observe(main, { attributes: true, attributeFilter: ["class"], subtree: true });
+    }
+
+    /* ---- 初始化 ---- */
+    function init() {
+        if (!window.LangEngine) return;
+        initChatWatch();
+        initLearnWatch();
+        document.addEventListener("visibilitychange", function () {
+            if (!document.hidden && langActive()) hidePop();
+        });
+    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+    else init();
+    window.LangAssist = {};
 })();
 </script>
 </body>
