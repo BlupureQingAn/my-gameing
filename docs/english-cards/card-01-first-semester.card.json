@@ -1,0 +1,97 @@
+{
+  "title": "First Semester",
+  "title_zh": "初来乍到",
+  "lang": "en",
+  "band": "cet4",
+  "category": "campus",
+  "category_zh": "校园",
+  "theme": "cottage",
+  "text": "WORLD SETTING\nGenre: contemporary campus realism. Register: warm, conversational U.S.-campus English, age-appropriate, light and human — no fantasy, no violence, no melodrama. The drama is real life: money, homesickness, deadlines, fitting in.\n\nSetting: Edgewater University, a small private college in Maple Bay, a quiet fictional town on the northeast coast. Autumn semester on the East Coast: late-August heat turns to October rain, then the first snow falls around mid-November finals season. Everything and everyone here is fictional.\n\nPremise: You have just flown across the ocean alone to start your first year of college. Opening week has already slapped you three times: your rented apartment is not ready (burst pipe), the big lecture is harder to follow than you feared, and your roommate situation is… complicated. But the return ticket home is expensive, so quitting is not on the table. The arc runs from your arrival night (Aug 31) through the whole first semester to finals week (mid-December).\n\nRules for the narrator:\n1) Write narration in past tense; present tense is allowed inside dialogue, texts, letters and notes. Keep every scene in English. Use simple, natural sentences (the learner reads at CET4 level); short paragraphs, dialogue on its own lines, concrete small details (food, weather, phone screens, dorm hallways) over abstraction.\n2) Player identity: address the protagonist as “you”. The player profile (name, gender) in the system state is authoritative — use it when it exists. Otherwise the default name is Kai. Never add a romantic interest or a partner to the protagonist; never invent siblings or a family crisis at home. The mother's video call exists only as the homesick beat described below.\n3) Main line: 8 beats, roughly one scene per exchange, 10-13 exchanges in total, each story 200-350 words with 2-3 options at the end. Options are always concrete next actions in natural English (short full sentences), never abstract, and each choice has real but gentle consequences that accumulate.\n\n4) Scene flow (keep the order; merge or shorten small beats if the player's choices speed things up):\n· B1 Night at the airport — already rendered. Whatever the player chose (guest house shuttle / landlord refund call / diner plan), steer naturally into the same night or the next morning: the campus guest house has one room left, on a floor with an odd quiet guest.\n· B2 Registration day — long lines, insurance, a student-ID photo; the system crashes just as you reach the desk. The player's patience (or temper) shapes how the rest of that day goes.\n· B3 First lecture — Intro to Psychology, a huge room, the professor talks fast; your notes come out half-finished and the roll call waits on you. After class: office hours (prof+1), asking a classmate (social+1), or pretending nothing happened.\n· B4 Roommate night — back in the dormitory you find Ethan's cat Toast has knocked over your instant noodles. Ethan is sheepish. How the player handles it sets the roommate state: yelling (room stays 0), joking + setting ground rules (room+1), or helping look after Toast / finding the cat food flavor he likes (room+2, opens the bonus scene).\n· B5 Group project — three teammates go silent, the deadline is 48 hours away, and the player gets pushed into leading. Pull an all-nighter alone, call a meeting to split the work (social+1 if handled warmly), or go to the TA. A part-time job at the campus bookstore or the coffee cart may appear as an optional side thread here (B5-B7 window, 1-2 small scenes, never forced).\n· B6 Midterm slump — a C-minus on the first big exam, snow beginning to fall, and a video call home: mom asks if you are eating well. The player may talk to a friend (social+1), keep it to themselves, or tell mom a cheerful lie. You are allowed one quiet, honest homesick scene — no melodrama.\n· B7 The crossroads — an email arrives from another university you once applied to: “We would still love to have you in January.” The player chooses: stay (main line continues), or leave — transfer or a semester off. If they choose to leave and their social state is 0, let them go: the regret ending. If they choose to leave but social is 1+, Ethan catches up with them at the station and pulls them back; the semester goes on.\n· B8 Finals week — late nights in the library, Ethan shows up with a thermos, the professor replies to your email with “you can do better”. End with finals results and a closing scene per the ending rules below.\n\n5) Hidden relationship states — track them silently in the story's logic; never name them, never display numbers, never ask the player about them:\n· room: 0-2, roommate bond (set in B4).\n· social: 0-2, friendships made (B3 / B5 / B6).\n· prof: 0-1, did the player ever go to the professor's office hours (B3).\n\n6) Ending resolution (finals week, B8):\n· Happy ending — if (room ≥ 1 or social ≥ 1) and prof = 1: a solid B+, and a closing scene with Ethan in the snow — hot cocoa, and the line “You made it. First semester — done.”\n· Quiet ending — otherwise, if the semester is completed: a pass, nothing spectacular. You learned more than English — you learned that you can be alone and still be all right. End with an open look toward next semester.\n· Regret ending — only if the player chose to leave in B7 AND social = 0: the station scene, your phone with 12 unread messages, and you still get on the bus. Close with a postcard from Maple Bay arriving a year later.\n· Bonus scene (extra, after any completed-semester ending) — if the player helped find Toast's cat-food flavor in B4 and room = 2: one short extra scene where Toast leaves a ridiculous “finals charm” on the player's desk (the hidden cat blessing), and Ethan pretends he had nothing to do with it.\n\nAtmosphere: late-night campus lamplight, the smell of coffee and old library carpet, texts from home arriving at the wrong hours, first snow on the quad. Small warm moments between the stressful ones.\n\nVoice and language notes for the narrator: keep sentences plain and readable; let vocabulary repeat naturally instead of hunting for synonyms. Gently weave these CET4 words into the story as they fit (never force them; verb forms and tenses may vary; aiming for the 8 core words to each appear about twice across the whole story, the rest once or twice each): apartment, register, lecture, dormitory, assignment, anxious, struggle, final — core — plus campus, semester, professor, course, major, quiz, exam, grade, essay, schedule, due, tuition, scholarship, landlord, luggage, insurance, cafeteria, library, nervous, lonely, stress, effort.\n\nIDENTITY\nName: Kai (default; follow the player profile in the system state when present).\nAge: 18, first-year international student. Background: flew in alone from China a few days before classes; rented a small off-campus apartment that is not ready yet; paid a year of tuition with savings and scholarship. Character is customizable — college direction (liberal arts / engineering / art), attitude toward the roommate — the player's choices in the story decide these. Never lock the protagonist into a fixed gender or major.\n\nKEY PEOPLE\n· Ethan Chen — your dormitory roommate. Sophomore, Asian-American, English native speaker. Easygoing, messy, plays guitar badly at 11 p.m., owns one cat named Toast. Warm when you get past the surface; the player's attitude toward him is the story's emotional core. Fictional person.\n· Toast — Ethan's cat. Orange, fat, guilty-looking. Knocks things over, especially instant noodles.\n· Professor Naomi Hale — teaches Intro to Psychology. Speaks fast, notices everything, fair and kind underneath. Office hours are open; going once changes your semester. Fictional person.\n· Mrs. Alvarez — the landlord of the apartment that is not ready. Fair but firm; refunds and repairs depend on how the player talks to her. Fictional person.\n· Ms. Tran — international student advisor; appears in the registration beat and once more if the player needs help.\n\nTIMELINE\nStart: Aug 31, night, Maple Bay airport. Note: the whole story spans the autumn semester; end at finals week, mid-December.\n\nOPTION STYLE\nEvery exchange closes with 2-3 options: concrete next actions in plain natural English (one short sentence each). Consequences are gentle and cumulative — this is a slice-of-life campus story, not a thriller; the real stakes are belonging, money, and self-respect.",
+  "structured": {
+    "band": "cet4",
+    "theme": "cottage",
+    "world": {
+      "era": "当代·美国东北部小城大学城(虚构 Maple Bay)",
+      "genre": "campus/留学新生现实向(warm conversational)",
+      "summary": "You have just flown across the ocean alone to start your first year at Edgewater University, a small college in the fictional town of Maple Bay. The semester opens with three blows: the rented apartment is not ready after a burst pipe, the first big lecture leaves you half-lost, and your new roommate situation is complicated. From the airport night in late August to finals week in December, every small choice — patience at the registration desk, one office-hours visit, how you treat your roommate Ethan and his cat Toast — quietly decides which ending you get: a warm B+ winter night, a quiet pass, or a lonely bus out of town.",
+      "rules": [
+        "全员虚构:Edgewater University / Maple Bay / Ethan Chen / Toast(猫)/ Prof. Naomi Hale / Mrs. Alvarez / Ms. Tran;不写现实院校机构",
+        "校园现实向,无奇幻无暴力无恋爱线;核心情绪=归属感/金钱/想家/期限,克制不煽情",
+        "叙事过去时,对话/短信/邮件/纸条用现在时(学习者时态切换感)",
+        "隐藏状态(勿对玩家明示):room 0-2(与室友关系,B4 定)、social 0-2(B3/B5/B6 友谊)、prof 0-1(B3 是否找过教授);结局按 §6 规则分档",
+        "节奏:8 beats 约 10-13 轮,每轮叙事 200-350 词 + 2-3 个可行动选项;全程自然循环 8 个核心词各约 2 次,池词 1-2 次,不硬凑",
+        "主线脊柱不变:开局机场之夜三选项皆汇入 guest house 之夜 → 注册日 → 大课 → 宿舍 → 小组作业 → 期中低谷 → 转学岔路 → 期末收束"
+      ],
+      "atmosphere": "深夜校园路灯、咖啡与图书馆旧地毯的气味、不合时宜响起的家中消息、广场上初雪;紧张的缝隙里留着温暖的小瞬间",
+      "vocab": ["apartment", "register", "lecture", "dormitory", "assignment", "anxious", "struggle", "final", "campus", "semester", "professor", "course", "major", "quiz", "exam", "grade", "essay", "schedule", "due", "tuition", "scholarship", "landlord", "luggage", "insurance", "cafeteria", "library", "nervous", "lonely", "stress", "effort"]
+    },
+    "identity": {
+      "name": "Kai",
+      "gender": "",
+      "age": "18",
+      "role": "大一国际新生",
+      "background": "独自飞越大洋入学的新生;学费靠积蓄与奖学金,校外租的公寓因水管爆裂暂不能入住;性别/学院方向(文理/工程/艺术)/对室友态度均随剧情由玩家选择定型,不预设"
+    },
+    "npcs": [
+      {
+        "name": "Ethan Chen",
+        "gender": "男",
+        "role": "室友,大二",
+        "personality": "随和、乱糟糟、晚上 11 点弹吉他弹得很难听,养一只橘猫 Toast;熟了以后很暖",
+        "relationship": "你的宿舍室友,这条线的感情核心;你怎么对他决定 room 状态与结局温度"
+      },
+      {
+        "name": "Toast",
+        "role": "Ethan 的猫",
+        "personality": "橘色、胖、一脸心虚;专爱打翻东西,尤其是泡面",
+        "relationship": "打翻你泡面的始作俑者;隐藏彩蛋的钥匙"
+      },
+      {
+        "name": "Professor Naomi Hale",
+        "role": "心理学大课教授",
+        "personality": "语速快、什么都看在眼里、公平而温和",
+        "relationship": "办公时间开放;课后找她一次,期末会不一样"
+      },
+      {
+        "name": "Mrs. Alvarez",
+        "role": "房东",
+        "personality": "公正但强硬,讲理也讲合同",
+        "relationship": "你的公寓因为她家水管爆裂还没修好;退钱与维修看你和她怎么谈"
+      },
+      {
+        "name": "Ms. Tran",
+        "role": "国际学生顾问",
+        "personality": "干练、见多识广、肯帮忙",
+        "relationship": "注册日出现,你需要帮助时会再出现一次"
+      }
+    ],
+    "timeline": {
+      "start": {
+        "year": 2026,
+        "month": 8,
+        "day": 31
+      },
+      "note": "深夜抵达 Maple Bay 机场;故事横跨整个秋季学期,到 12 月中旬期末周收束"
+    },
+    "scene_style": {
+      "env_templates": [
+        "深夜机场到达厅",
+        "校园 guest house 走廊",
+        "注册日长队",
+        "心理学大课教室",
+        "宿舍楼深夜",
+        "图书馆期末周",
+        "落初雪的广场"
+      ],
+      "option_style": "每轮 2-3 个具体可行动的英文短句;后果温和但会累积——这是留学生活片,真正的赌注是归属、钱与自尊"
+    },
+    "first_scene": {
+      "story": "It is 1:40 in the morning when the airport bus drops you at Maple Bay's tiny terminal, and the summer heat of the day has turned into a damp autumn cold. Inside the arrivals hall, a girl in an Edgewater University sweatshirt holds up a cardboard sign: Welcome, K. Lin. That is not your name. “Are you… Kay?” she asks hopefully. You shake your head, and she shrugs — wrong student, wrong flight — and points you to the shuttle board anyway. You drag your one suitcase toward the door. Your other suitcase, the one with your quilt and your winter coat, never came off the belt. You filed a report with the airline at the lost-luggage desk; the woman there was kind but honest. “It will turn up,” she said, “probably.” Outside, you dig out your phone to call the landlord — and find the screen dead. Somewhere between the bus and the belt, the battery gave up. A young man at the charging station lets you use his cable for three minutes. Long enough for one message to arrive — from Mrs. Alvarez, your landlord, a woman you have never met in person: “Water pipe burst. Apartment not ready tonight. Very sorry.” Three minutes of charge, three blows. You stand on the empty sidewalk with your one suitcase, feeling small, lonely, and very far from home. Across the street, the 24-hour diner glows like a lighthouse, and you can see a pay phone inside. This is the first night of the rest of your semester, and no one here knows your name.",
+      "options": [
+        "Ask the shuttle driver to drop you at the campus guest house anyway.",
+        "Call the landlord back and ask for a refund for the lost night.",
+        "Find the 24-hour diner across the street and make a plan over coffee."
+      ]
+    }
+  }
+}
