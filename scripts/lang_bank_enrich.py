@@ -20,8 +20,26 @@ ECDICT = r"F:\Claude\ecdict\ecdict.csv"
 BANDS = ["hs", "cet4", "cet6", "ky", "toefl"]
 
 
+EX_TYPES = "pd3isrt"  # exchange 变形类型:过去式/过去分词/三单/现在分词/复数/比较级/最高级
+
+
+def parse_exchange(ex):
+    """ECDICT exchange 列 'd:perceived/p:perceived/...' -> 该词形变集合(小写,去重)。"""
+    al, seen = [], set()
+    for seg in (ex or "").split("/"):
+        if len(seg) < 3 or seg[1] != ":":
+            continue
+        if seg[0] not in EX_TYPES:
+            continue
+        v = seg[2:].strip().lower()
+        if re.fullmatch(r"[a-z][a-z'\-]*", v) and v not in seen and len(v) <= 30:
+            seen.add(v)
+            al.append(v)
+    return al
+
+
 def load_ecdict(path):
-    """word.lower() -> (phonetic, frq, bnc);同名首条优先;跳过词组/超长拼写。"""
+    """word.lower() -> (phonetic, frq, bnc, aliases);同名首条优先;跳过词组/超长拼写。"""
     idx = {}
     t0 = time.time()
     with open(path, "r", encoding="utf-8", newline="") as f:
@@ -43,7 +61,10 @@ def load_ecdict(path):
                 bnc = int(row[8]) if row[8] else 0
             except ValueError:
                 pass
-            idx[key] = (ph, frq, bnc)
+            al = parse_exchange(row[10] if len(row) > 10 else "")
+            if key in al:
+                al.remove(key)
+            idx[key] = (ph, frq, bnc, al)
     print(f"ECDICT 索引载入 {len(idx)} 词({time.time()-t0:.1f}s)")
     return idx
 
@@ -52,13 +73,13 @@ def enrich_band(band, idx):
     path = os.path.join(OUT_DIR, band + ".json")
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
-    n_ph = n_frq = n_bnc = 0
+    n_ph = n_frq = n_bnc = n_al = 0
     for it in data["items"]:
         w = it.get("w", "")
         e = idx.get(w)
         if not e:
             continue
-        ph, frq, bnc = e
+        ph, frq, bnc, al = e
         if ph and not it.get("ph"):
             it["ph"] = ph
             n_ph += 1
@@ -68,13 +89,16 @@ def enrich_band(band, idx):
         if bnc and not it.get("bnc"):
             it["bnc"] = bnc
             n_bnc += 1
+        if al and not it.get("al"):
+            it["al"] = al
+            n_al += len(al)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False)
-    return n_ph, n_frq, n_bnc, len(data["items"])
+    return n_ph, n_frq, n_bnc, n_al, len(data["items"])
 
 
 if __name__ == "__main__":
     idx = load_ecdict(ECDICT)
     for band in BANDS:
-        n_ph, n_frq, n_bnc, total = enrich_band(band, idx)
-        print(f"enrich {band}: {total} 词,补音标 {n_ph} / 补frq {n_frq} / 补bnc {n_bnc}")
+        n_ph, n_frq, n_bnc, n_al, total = enrich_band(band, idx)
+        print(f"enrich {band}: {total} 词,补音标 {n_ph} / 补frq {n_frq} / 补bnc {n_bnc} / 词形变体 {n_al}")

@@ -4824,7 +4824,10 @@
     .lg-gloss-note{font-size:.68rem;color:var(--text);opacity:.55;margin-top:3px}
     .lg-pop{position:fixed;z-index:300001;width:min(320px,calc(100vw - 28px));background:var(--input-bg,#fff);border:1px solid rgba(124,84,240,.5);border-radius:14px;box-shadow:0 10px 30px rgba(20,10,60,.28);padding:12px 14px;display:none;font-size:.82rem;line-height:1.55}
     .lg-pop.on{display:block}
+    .lg-pop-badge{display:inline-block;margin-bottom:6px;padding:2px 8px;border-radius:8px;font-size:.64rem;font-weight:800;color:#fff;background:linear-gradient(135deg,#3f7ad8,#5f4fd8);letter-spacing:.02em}
+    .lg-pop-badge.g{background:linear-gradient(135deg,#2f9e6e,#2fc4b0)}
     .lg-pop-w{font-size:.95rem;font-weight:800;color:#7c4fd8;word-break:break-word}
+    .lg-pop-ph{font-size:.78rem;color:var(--sub,#806a55);font-weight:400;margin-left:6px}
     .lg-pop-en{font-size:.76rem;color:var(--text);opacity:.85;margin-top:3px}
     .lg-pop-zh{font-size:.84rem;color:var(--text);margin-top:5px}
     .lg-pop-foot{margin-top:8px;padding-top:7px;border-top:1px dashed rgba(124,84,240,.3);display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:.7rem;color:var(--sub,#806a55)}
@@ -22143,10 +22146,10 @@ function openNpcProfile(npcId) {
     }
     function refreshCardSens(list) { for (var i = 0; i < list.length; i++) highlightSen(list[i]); }
 
-    /* ---- 词级高亮(仅同形命中,防误亮变体/跨词) ---- */
+    /* ---- M6d3 全词 span 化:正文任意词可点查(词池命中带标色 .lg-word,其余无色 .lg-w,防误亮) ---- */
+    var WORD_TOK = /[A-Za-z][A-Za-z0-9'’-]*/g;
     function wrapWords(span) {
         var re = buildWordRe();
-        if (!re) return;
         var kids = [], i, j, node;
         for (i = 0; i < span.childNodes.length; i++) kids.push(span.childNodes[i]);
         for (i = 0; i < kids.length; i++) {
@@ -22154,20 +22157,23 @@ function openNpcProfile(npcId) {
             if (node.nodeType !== 3) continue;
             var val = node.nodeValue || "";
             if (!val) continue;
-            var ranges = [], m;
-            re.lastIndex = 0;
-            while ((m = re.exec(val))) ranges.push([m.index, m.index + m[0].length]);
-            if (!ranges.length) continue;
-            var frag = document.createDocumentFragment(), pos = 0, wt;
-            for (j = 0; j < ranges.length; j++) {
-                if (ranges[j][0] > pos) frag.appendChild(document.createTextNode(val.slice(pos, ranges[j][0])));
-                wt = val.slice(ranges[j][0], ranges[j][1]);
+            var frag = document.createDocumentFragment(), pos = 0, m;
+            WORD_TOK.lastIndex = 0;
+            while ((m = WORD_TOK.exec(val))) {
+                var tok = m[0];
+                if (m.index > pos) frag.appendChild(document.createTextNode(val.slice(pos, m.index)));
+                var hit = false;
+                if (re) {
+                    re.lastIndex = 0;
+                    var hm = re.exec(tok);
+                    hit = !!(hm && hm[0].toLowerCase() === tok.toLowerCase());
+                }
                 var sp = document.createElement("span");
-                sp.className = "lg-word";
-                sp.setAttribute("data-w", wt);
-                sp.appendChild(document.createTextNode(wt));
+                sp.className = hit ? "lg-word" : "lg-w";
+                sp.setAttribute("data-w", tok);
+                sp.appendChild(document.createTextNode(tok));
                 frag.appendChild(sp);
-                pos = ranges[j][1];
+                pos = m.index + tok.length;
             }
             if (pos < val.length) frag.appendChild(document.createTextNode(val.slice(pos)));
             span.replaceChild(frag, node);
@@ -22307,28 +22313,121 @@ function openNpcProfile(npcId) {
         return pop;
     }
     function hidePop() { if (pop) { pop.classList.remove("on"); pop.style.left = "-999px"; pop.style.top = "-999px"; } }
-    function openPop(term, x, y) {
-        if (!term) return;
-        var key = String(term).toLowerCase();
-        var info = wordInfo[key] || null;
-        var inVocab = !!vocabMap[key];
-        noteTapped(term, info);          // M5:记入本局点查词(章末复盘回顾用)
-        var p = ensurePop();
-        var html = '<div class="lg-pop-w">' + esc(info ? info.w : term) + "</div>";
-        if (info && info.en) html += '<div class="lg-pop-en">' + esc(info.en) + "</div>";
-        if (info && info.zh) html += '<div class="lg-pop-zh">' + esc(info.zh) + "</div>";
-        if (!info) html += '<div class="lg-pop-zh" style="opacity:.62;">这个词还没有单独释义——点它所在的句子，看整句译文里怎么理解。</div>';
+    /* ---- M6d3 点查考纲化:当前档词库命中 → 考纲徽标+词库标准释义;未命中 → AI info/整句引导 ---- */
+    var BAND_NAMES = { hs: "高中", cet4: "四级", cet6: "六级", ky: "考研", toefl: "托福" };
+    var BAND_ORDER = ["hs", "cet4", "cet6", "ky", "toefl"];
+    var bandAliasIdx = {};   // band -> {词形变体: 原形}
+    function currentLangBand() {
+        try {
+            var c = (typeof ScenarioCardService !== "undefined" && ScenarioCardService.getSelectedCard) ? ScenarioCardService.getSelectedCard() : null;
+            var sb = c && c.structured && String(c.structured.band || "");
+            if (sb) return sb;
+        } catch (e) {}
+        var p = readProfile();
+        return (p && p.band) || "cet4";
+    }
+    function bankAliasItem(band, w) {
+        var items = langBankCache[band];
+        if (!items || !items.length) return null;
+        var idx = bandAliasIdx[band];
+        if (!idx) {
+            idx = bandAliasIdx[band] = {};
+            for (var i = 0; i < items.length; i++) {
+                var al = items[i].al;
+                if (!al) continue;
+                for (var j = 0; j < al.length; j++) if (!idx[al[j]]) idx[al[j]] = items[i].w;
+            }
+        }
+        var w2 = idx[w];
+        return w2 ? langBankItem(band, w2) : null;
+    }
+    function bankStemCandidates(w) {
+        var c = [];
+        if (w.length <= 3) return c;
+        if (/ies$/.test(w)) c.push(w.slice(0, -3) + "y");
+        if (/(ss|sh|ch|x|z)es$/.test(w)) c.push(w.slice(0, -2));
+        if (/[a-z]s$/.test(w) && !/ss$/.test(w)) c.push(w.slice(0, -1));
+        var s1 = w.replace(/ing$/, "");
+        if (s1 !== w) { c.push(s1); c.push(s1 + "e"); }
+        var s2 = w.replace(/ed$/, "");
+        if (s2 !== w) { c.push(s2); c.push(s2 + "e"); if (s2.length > 3) c.push(s2.slice(0, -1)); }
+        return c;
+    }
+    function bankLookup(band, term) {
+        var w = String(term).toLowerCase();
+        var it = langBankItem(band, w);
+        if (it && it.zh) return { it: it, word: w, band: band };
+        it = bankAliasItem(band, w);
+        if (it && it.zh) return { it: it, word: String(it.w).toLowerCase(), band: band };
+        var cs = bankStemCandidates(w), k;
+        for (k = 0; k < cs.length; k++) {
+            it = langBankItem(band, cs[k]);
+            if (it && it.zh) return { it: it, word: cs[k], band: band };
+        }
+        return null;
+    }
+    function renderPop(p, term, disp, hit, info, inVocab) {
+        var html = "";
+        if (hit) html += '<div class="lg-pop-badge">【' + (BAND_NAMES[hit.band] || "") + "考纲词】</div>";
+        html += '<div class="lg-pop-w">' + esc(disp);
+        if (hit && hit.it.ph) html += '<span class="lg-pop-ph">' + esc(hit.it.ph) + "</span>";
+        html += "</div>";
+        if (hit) {
+            html += '<div class="lg-pop-zh">' + esc(hit.it.zh) + "</div>";
+        } else {
+            if (info && info.en) html += '<div class="lg-pop-en">' + esc(info.en) + "</div>";
+            if (info && info.zh) html += '<div class="lg-pop-zh">' + esc(info.zh) + "</div>";
+            if (!info) html += '<div class="lg-pop-zh" style="opacity:.62;">这个词不在当前档考纲词库里，也没有单独释义——点它所在的句子，看整句译文里怎么理解。</div>';
+        }
         html += '<div class="lg-pop-foot">';
         if (inVocab) {
             html += '<span class="ok">✓ 已收进生词本</span><span class="lg-vr-origin">在大厅「我的生词本」里可以划状态</span>';
         } else if (token()) {
-            html += '<span class="later">已自动收进生词本</span>';
-            saveVocabSilent(term, info);
+            html += '<span class="later">' + (hit ? "已收进生词本（按考纲原形收录）" : "已自动收进生词本") + "</span>";
         } else {
             html += '<span class="later">登录后，点查的词会自动收进生词本</span>';
         }
         html += "</div>";
         p.innerHTML = html;
+    }
+    function openPop(term, x, y) {
+        if (!term) return;
+        var key = String(term).toLowerCase();
+        var info = wordInfo[key] || null;
+        var p = ensurePop();
+        p.innerHTML = '<div class="lg-pop-w">' + esc(String(term)) + '</div><div class="lg-pop-zh" style="opacity:.62;">查词中…</div>';
+        p.classList.add("on");
+        p.style.left = "-999px";
+        p.style.top = "-999px";
+        var pw = p.offsetWidth || 300, ph = p.offsetHeight || 120;
+        var vw = window.innerWidth || 390, vh = window.innerHeight || 700;
+        var lx = x + 10; if (lx + pw > vw - 8) lx = Math.max(8, x - pw - 10);
+        var ty = y + 14; if (ty + ph > vh - 8) ty = Math.max(8, y - ph - 12);
+        p.style.left = lx + "px";
+        p.style.top = ty + "px";
+        var band = currentLangBand();
+        var done = function (hit) {
+            if (!p.classList.contains("on")) return;    // 已被关闭/新词接管
+            var disp = term;
+            if (hit) { disp = hit.word; key = hit.word; info = null; }
+            var inVocab = !!vocabMap[key];
+            renderPop(p, term, disp, hit, info, inVocab);
+            noteTapped(disp, hit ? { w: disp, zh: hit.it.zh } : (wordInfo[String(term).toLowerCase()] || null));
+            if (!inVocab && token()) saveVocabSilent(disp, hit ? { zh: hit.it.zh, en: "" } : info);
+        };
+        if (langBankCache[band]) {
+            done(bankLookup(band, term));
+            return;
+        }
+        loadLangBank(band).then(function (items) {
+            if (!items) { done(null); return; }
+            var h = bankLookup(band, term);
+            done(h);
+        });
+    }
+    function saveVocabSilent(term, info) {
+        var key = String(term).toLowerCase();
+        if (!token() || vocabMap[key]) return;
         p.classList.add("on");
         p.style.left = "-999px";
         p.style.top = "-999px";
@@ -22394,7 +22493,7 @@ function openNpcProfile(npcId) {
             }
         }
         if (!langActive()) { hidePop(); return; }
-        var wEl = t.closest(".lg-word");
+        var wEl = t.closest(".lg-word, .lg-w");   // M6d3:池词+普通词全可点查
         if (wEl) { e.preventDefault(); e.stopPropagation(); openPop(wEl.getAttribute("data-w") || wEl.textContent, e.clientX, e.clientY); return; }
         var chip = t.closest(".lg-gloss-word");
         if (chip) { e.preventDefault(); e.stopPropagation(); openPop(chip.getAttribute("data-w"), e.clientX, e.clientY); return; }
