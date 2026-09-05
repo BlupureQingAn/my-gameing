@@ -3022,7 +3022,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const d = await q.json().catch(() => ({}));
                 const items = (d.items || []).map((i) => ({
                     word: String(i.word || ""), state: ["seen", "weak", "learned"].includes(String(i.state)) ? String(i.state) : "seen",
-                    ok_count: Number(i.ok_count || 0), fail_count: Number(i.fail_count || 0), updated_at: i.updated_at || ""
+                    ok_count: Number(i.ok_count || 0), fail_count: Number(i.fail_count || 0), updated_at: i.updated || ""
                 }));
                 return new Response(JSON.stringify({ items, total: items.length }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
