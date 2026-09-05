@@ -2892,9 +2892,10 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
         }
     },
     // 社区动态 30 天自动清理：每天 04:10 UTC（北京时间 12:10）删除 created 超过 30 天的动态及其点赞/评论
+    // seed 预制动态（seed 字段非空）永久保留，不入清理
     async scheduled(event, env, ctx) {
         const cutoff = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
-        const filter = encodeURIComponent(`created<'${cutoff}'`);
+        const filter = encodeURIComponent(`created<'${cutoff}' && seed=''`);
         let deleted = 0;
         try {
             while (true) {

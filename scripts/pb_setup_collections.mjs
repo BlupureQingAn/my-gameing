@@ -35,7 +35,7 @@ const ADMIN_WRITE = { createRule: null, updateRule: null, deleteRule: null };
 
 // 业务集合定义（字段对应 worker.js 读写）
 const COLLECTIONS = [
-    { name: "posts", type: "base", fields: [F.text("content", { req: true, max: 500 }), F.text("author_id", { req: true }), F.text("card_id", { max: 64 }), F.text("image_data", { max: 500000 }), F.number("likes_count"), F.number("comments_count"), F.autodate()], ...READ_PUBLIC, ...ADMIN_WRITE },
+    { name: "posts", type: "base", fields: [F.text("content", { req: true, max: 500 }), F.text("author_id", { req: true }), F.text("card_id", { max: 64 }), F.text("image_data", { max: 500000 }), F.text("seed", { max: 16 }), F.number("likes_count"), F.number("comments_count"), F.autodate()], ...READ_PUBLIC, ...ADMIN_WRITE },
     { name: "post_likes", type: "base", fields: [F.text("post_id", { req: true }), F.text("user_id", { req: true }), F.autodate()], ...READ_PUBLIC, ...ADMIN_WRITE },
     { name: "post_comments", type: "base", fields: [F.text("post_id", { req: true }), F.text("user_id", { req: true }), F.text("content", { req: true, max: 200 }), F.autodate()], ...READ_PUBLIC, ...ADMIN_WRITE },
     { name: "follows", type: "base", fields: [F.text("follower_id", { req: true }), F.text("user_id", { req: true }), F.autodate()], ...READ_PUBLIC, ...ADMIN_WRITE },
@@ -92,7 +92,19 @@ async function main() {
         console.log("✓ users 集合字段齐全（coins/last_checkin_date/checkin_streak/signature/membership_*）");
     }
 
-    // 3. 创建业务集合
+    // 3. posts 集合补 seed 字段（预制动态标记，清理任务豁免用）
+    const postsCol = await api("/api/collections/posts").catch(() => null);
+    if (postsCol) {
+        const pHave = new Set((postsCol.fields || []).map(f => f.name));
+        if (!pHave.has("seed")) {
+            await api("/api/collections/posts", { method: "PATCH", body: JSON.stringify({ fields: [...(postsCol.fields || []), F.text("seed", { max: 16 })] }) });
+            console.log("✓ posts 集合补字段: seed");
+        } else {
+            console.log("✓ posts 集合字段齐全（含 seed）");
+        }
+    }
+
+    // 4. 创建业务集合
     for (const col of COLLECTIONS) await createOrSkip(col);
 
     console.log(`\n---- 完成: 新创建 ${seen.size}/${COLLECTIONS.length} 个集合, 其余已存在 ----`);
