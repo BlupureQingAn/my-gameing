@@ -11002,6 +11002,14 @@ function rebuildChoicesBlock(body, labels = []) {
             if (cfg && cfg.url && cfg.key && cfg.model) localStorage.setItem(BYOK_KEY, JSON.stringify(cfg));
             else localStorage.removeItem(BYOK_KEY);
         }
+        function loadByokInputs(cfg) {
+            const urlInput = document.getElementById("ui-byok-url");
+            const keyInput = document.getElementById("ui-byok-key");
+            const modelInput = document.getElementById("ui-byok-model");
+            if (urlInput) urlInput.value = cfg?.url || "";
+            if (keyInput) keyInput.value = cfg?.key || "";
+            if (modelInput) modelInput.value = cfg?.model || "";
+        }
         function applyFontSize(size) {
             const px = Math.min(20, Math.max(12, Math.round(Number(size) || DEFAULT_FONT_SIZE)));
             document.documentElement.style.setProperty("--base-font-size", px + "px");
@@ -11067,13 +11075,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 const valEl = document.getElementById("ui-font-size-val");
                 if (valEl) valEl.textContent = current + "px";
             }
-            const byok = getByok();
-            const urlInput = document.getElementById("ui-byok-url");
-            const keyInput = document.getElementById("ui-byok-key");
-            const modelInput = document.getElementById("ui-byok-model");
-            if (urlInput) urlInput.value = byok?.url || "";
-            if (keyInput) keyInput.value = byok?.key || "";
-            if (modelInput) modelInput.value = byok?.model || "";
+            loadByokInputs(getByok());
 
             // 更新账户信息
             const user = AuthService.getUserData();
@@ -11118,14 +11120,53 @@ function rebuildChoicesBlock(body, labels = []) {
             loadToUI();
         }
         // 即时保存 BYOK（输入即存，无需"保存设置"按钮）
+        // 防克隆门槛：BYOK 让克隆站"填任意 key 开箱即用"。保存前必须通过登录态服务端校验，
+        // 未登录/会话失效不写入 localStorage——BYOK 保留给官方账号用户
         let _byokTimer = null;
-        function saveByokFromUI() {
-            const byok = {
+        let _byokSaving = false;
+        let _byokDirty = false;
+        function collectByokFromUI() {
+            return {
                 url: String(document.getElementById("ui-byok-url")?.value || "").trim().replace(/\/+$/, ""),
                 key: String(document.getElementById("ui-byok-key")?.value || "").trim(),
                 model: String(document.getElementById("ui-byok-model")?.value || "").trim()
             };
-            saveByok(byok);
+        }
+        async function saveByokFromUI() {
+            const byok = collectByokFromUI();
+            // 未填全 = 清除既有配置（与旧逻辑一致），不触发门槛
+            if (!(byok.url && byok.key && byok.model)) { saveByok(null); return; }
+            if (_byokSaving) { _byokDirty = true; return; }
+            _byokSaving = true;
+            try {
+                const user = typeof AuthService?.getUserData === "function" ? AuthService.getUserData() : null;
+                const token = typeof AuthService?.getToken === "function" ? AuthService.getToken() : "";
+                if (!user?.id || !token) {
+                    NoticeModalService.showInfo({ title: "请先登录", descHtml: "自备 AI 接口（BYOK）需登录官方账号后使用，登录后回来重新填写即可保存。" });
+                    return;
+                }
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/byok/check`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "X-Auth-Token": token.startsWith("Bearer ") ? token : "Bearer " + token },
+                    body: "{}"
+                });
+                if (!res.ok) {
+                    const code = ((await res.json().catch(() => ({}))) || {}).code || "";
+                    NoticeModalService.showInfo({
+                        title: "请先登录",
+                        descHtml: (code === "NOT_LOGGED_IN" || code === "SESSION_EXPIRED")
+                            ? "登录状态已失效，请重新登录后保存 BYOK 配置。"
+                            : "校验失败（" + res.status + "），请稍后重试。"
+                    });
+                    return;
+                }
+                saveByok(byok);
+            } catch (e) {
+                NoticeModalService.showInfo({ title: "保存失败", descHtml: "网络异常，BYOK 配置暂未保存，请稍后重试。" });
+            } finally {
+                _byokSaving = false;
+                if (_byokDirty) { _byokDirty = false; saveByokFromUI(); }
+            }
         }
         function bindByokAutoSave() {
             ["ui-byok-url", "ui-byok-key", "ui-byok-model"].forEach(id => {

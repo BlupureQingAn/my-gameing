@@ -399,6 +399,24 @@ function corsHeaders() {
     };
 }
 
+// ==================== 防克隆：来源闸门 ====================
+// 前端是公开 H5，可被第三方整体搬运（套壳 APK/克隆站换 key）。浏览器跨域请求必带 Origin，
+// 非白名单来源直接 403，挡住克隆站直连官方 worker 白嫖模型池/业务 API。
+// 无 Origin 的请求（同源访问、服务端回调如支付 notify、curl 探针）不受此闸门约束，
+// 业务安全由 X-Auth-Token 登录校验与支付回调验签承担。
+const ORIGIN_DEV_HOSTS = ["localhost", "127.0.0.1"];
+const ORIGIN_ALLOWED_SUFFIXES = [".blupure.cn"];
+function isAllowedOrigin(origin) {
+    if (!origin) return true;
+    try {
+        const host = new URL(origin).hostname;
+        if (ORIGIN_DEV_HOSTS.includes(host)) return true;
+        return ORIGIN_ALLOWED_SUFFIXES.some((s) => host.endsWith(s));
+    } catch (e) {
+        return false;
+    }
+}
+
 function safeJsonParse(text) {
     try {
         return JSON.parse(text);
@@ -911,6 +929,9 @@ async function authenticate(env, request) {
 
 export default {
     async fetch(request, env, ctx) {
+        if (!isAllowedOrigin(request.headers.get("Origin"))) {
+            return errorResponse("来源校验失败", 403, null, "FORBIDDEN_ORIGIN");
+        }
         if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders() });
 
         const url = new URL(request.url);
@@ -2831,6 +2852,15 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                     startedAt: offer.startedAt,
                     price: offer.active ? LIFETIME_PLAN.price : LIFETIME_REGULAR_PRICE
                 }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+            }
+
+            // ---- 路由：BYOK 激活校验（自备 AI 接口需登录官方账号，防克隆站开箱即用）----
+            if (url.pathname === "/api/byok/check" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                return new Response(JSON.stringify({ ok: true }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
             }
 
             // ---- 路由：支付回调（易支付异步通知，GET/POST 均可）----
