@@ -57,7 +57,7 @@ const COLLECTIONS = [
     { name: "lang_profiles", type: "base", fields: [F.text("user_id", { req: true }), F.text("lang", { req: true }), F.select("band", ["a", "b", "c"], { req: false }), F.select("immersion", ["progressive", "full"], { req: false }), F.autodate(), F.autodate("updated_at", true)], ...READ_PUBLIC, ...ADMIN_WRITE },
     { name: "lang_vocab", type: "base", fields: [F.text("user_id", { req: true }), F.text("lang", { req: true }), F.select("type", ["word", "expression"], { req: true }), F.text("term", { req: true, max: 64 }), F.text("gloss_en", { max: 500 }), F.text("gloss_zh", { max: 500 }), F.text("origin", { max: 200 }), F.number("status", { req: false }), F.autodate(), F.autodate("updated_at", true)], ...READ_PUBLIC, ...ADMIN_WRITE },
     // M6b 语言卡官方库:英语专属卡(结构化 data{text,structured},band 声明词域);仅 worker/超管代访
-    { name: "lang_cards", type: "base", fields: [F.text("title", { req: true, max: 80 }), F.text("title_zh", { max: 40 }), F.select("lang", ["en", "ja", "ko"], { req: true }), F.select("band", ["hs", "cet4", "cet6", "ky", "toefl"], { req: true }), F.text("category", { max: 30 }), F.text("category_zh", { max: 30 }), F.text("theme", { max: 30 }), F.json("data", { req: true }), F.select("status", ["draft", "online", "offline"], { req: true }), F.number("play_count", { req: false }), F.number("unlock_count", { req: false }), F.number("order", { req: false }), F.autodate(), F.autodate("updated_at", true)], ...ADMIN_ONLY },
+    { name: "lang_cards", type: "base", fields: [F.text("title", { req: true, max: 80 }), F.text("title_zh", { max: 40 }), F.select("lang", ["en", "ja", "ko"], { req: true }), F.select("band", ["hs", "cet4", "cet6", "ky", "toefl"], { req: true }), F.text("category", { max: 30 }), F.text("category_zh", { max: 30 }), F.text("theme", { max: 30 }), F.text("cover", { max: 120 }), F.json("data", { req: true }), F.select("status", ["draft", "online", "offline"], { req: true }), F.number("play_count", { req: false }), F.number("unlock_count", { req: false }), F.number("order", { req: false }), F.autodate(), F.autodate("updated_at", true)], ...ADMIN_ONLY },
 ];
 
 // users 集合需要确保存在的字段（auth 集合，缺了才补，不动规则）
@@ -108,6 +108,18 @@ async function main() {
             console.log("✓ posts 集合补字段: seed");
         } else {
             console.log("✓ posts 集合字段齐全（含 seed）");
+        }
+    }
+
+    // 3.5 lang_cards 集合补 cover 字段(M8a 官方卡封面静态化;已存在集合缺了才补)
+    const lcCol = await api("/api/collections/lang_cards").catch(() => null);
+    if (lcCol) {
+        const lcHave = new Set((lcCol.fields || []).map(f => f.name));
+        if (!lcHave.has("cover")) {
+            await api("/api/collections/lang_cards", { method: "PATCH", body: JSON.stringify({ fields: [...(lcCol.fields || []), F.text("cover", { max: 120 })] }) });
+            console.log("✓ lang_cards 集合补字段: cover");
+        } else {
+            console.log("✓ lang_cards 集合字段齐全（含 cover）");
         }
     }
 
