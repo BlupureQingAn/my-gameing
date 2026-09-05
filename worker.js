@@ -2942,7 +2942,6 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 return new Response(JSON.stringify({
                     profile: rec ? {
                         lang: String(rec.lang || "en"), band: normLangBand(String(rec.band || "")), immersion: String(rec.immersion || ""),
-                        suggest_band: normLangBand(String(rec.suggest_band || "")),
                         created_at: rec.created_at || "", updated_at: rec.updated_at || ""
                     } : null
                 }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
@@ -2954,7 +2953,6 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const body = await request.json().catch(() => ({}));
                 const lang = String(body.lang || "en").slice(0, 8);
                 const band = normLangBand(body.band); // 五档值域;旧 a/b/c 也映射写入
-                const suggestBand = normLangBand(body.suggest_band);
                 const immersion = ["progressive", "full"].includes(body.immersion) ? String(body.immersion) : "";
                 const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'`);
                 const q = await pbAdminFetch(env, `/api/collections/lang_profiles/records?perPage=1&skipTotal=true&filter=${f}`);
@@ -2962,7 +2960,6 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const exist = (d.items || [])[0];
                 const data = { user_id: uid, lang };
                 if (band) data.band = band;
-                if (suggestBand) data.suggest_band = suggestBand;
                 if (immersion) data.immersion = immersion;
                 let out = {};
                 if (exist) {
@@ -2972,7 +2969,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                     const r = await pbAdminFetch(env, `/api/collections/lang_profiles/records`, { method: "POST", body: JSON.stringify(data) });
                     out = await r.json().catch(() => ({}));
                 }
-                return new Response(JSON.stringify({ ok: true, profile: { lang: String(out.lang || lang), band: normLangBand(String(out.band || "")), immersion: String(out.immersion || ""), suggest_band: normLangBand(String(out.suggest_band || "")), updated_at: out.updated_at || "" } }), {
+                return new Response(JSON.stringify({ ok: true, profile: { lang: String(out.lang || lang), band: normLangBand(String(out.band || "")), immersion: String(out.immersion || ""), updated_at: out.updated_at || "" } }), {
                     headers: { ...corsHeaders(), "Content-Type": "application/json" }
                 });
             }
