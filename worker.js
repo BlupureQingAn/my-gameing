@@ -3009,6 +3009,62 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 return new Response(JSON.stringify({ ok: true, id: vid, status }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
 
+            // ---- 路由:M6d5 词库进度词测(GET|PUT /api/lang/progress?band=x;lang_bank_progress 私有集合)----
+            // GET:拉该档全量词态(weak 隔章重测/learned 出池用);PUT:词测批量提交 ok/fail
+            if (url.pathname === "/api/lang/progress" && request.method === "GET") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const uid = auth.record.id;
+                const band = normLangBand(url.searchParams.get("band"));
+                if (!band) return errorResponse("无效档位", 400, null, "INVALID_BAND");
+                const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'&&band='${band}'`);
+                const q = await pbAdminFetch(env, `/api/collections/lang_bank_progress/records?perPage=200&sort=word&filter=${f}`);
+                const d = await q.json().catch(() => ({}));
+                const items = (d.items || []).map((i) => ({
+                    word: String(i.word || ""), state: ["seen", "weak", "learned"].includes(String(i.state)) ? String(i.state) : "seen",
+                    ok_count: Number(i.ok_count || 0), fail_count: Number(i.fail_count || 0), updated_at: i.updated_at || ""
+                }));
+                return new Response(JSON.stringify({ items, total: items.length }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+            }
+            if (url.pathname === "/api/lang/progress" && request.method === "PUT") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const uid = auth.record.id;
+                const body = await request.json().catch(() => ({}));
+                const band = normLangBand(body.band);
+                if (!band) return errorResponse("无效档位", 400, null, "INVALID_BAND");
+                const raws = Array.isArray(body.items) ? body.items.slice(0, 20) : [];
+                const items = [];
+                for (const r of raws) {
+                    const word = String((r && r.word) || "").trim().toLowerCase();
+                    if (!word || !/^[a-z][a-z0-9'-]*$/.test(word) || word.length > 40) continue;
+                    items.push({ word, ok: !!r.ok });
+                }
+                if (!items.length) return errorResponse("没有可提交的词", 400, null, "INVALID_ITEMS");
+                const out = [];
+                for (const it of items) {
+                    const wf = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'&&band='${band}'&&word='${escapePocketBaseFilterValue(it.word)}'`);
+                    const q = await pbAdminFetch(env, `/api/collections/lang_bank_progress/records?perPage=1&skipTotal=true&filter=${wf}`);
+                    const d = await q.json().catch(() => ({}));
+                    const rec = (d.items || [])[0];
+                    let state, okc, flc;
+                    if (rec) {
+                        okc = Number(rec.ok_count || 0); flc = Number(rec.fail_count || 0);
+                        if (it.ok) { okc += 1; state = "learned"; }   // 答对:任意态 → learned(weak 再对 1 次即掌握)
+                        else { flc += 1; state = "weak"; }             // 答错:回炉 weak(learned 答错也降)
+                        await pbAdminFetch(env, `/api/collections/lang_bank_progress/records/${rec.id}`, { method: "PATCH", body: JSON.stringify({ state, ok_count: okc, fail_count: flc }) }).catch(() => {});
+                    } else {
+                        state = it.ok ? "learned" : "weak";
+                        okc = it.ok ? 1 : 0; flc = it.ok ? 0 : 1;
+                        const cr = await pbAdminFetch(env, "/api/collections/lang_bank_progress/records", { method: "POST", body: JSON.stringify({ user_id: uid, band, word: it.word, state, ok_count: okc, fail_count: flc }) });
+                        const cd = await cr.json().catch(() => ({}));
+                        if (!cd.id) continue;   // 建失败(如并发已建)跳过,下次提交再收敛
+                    }
+                    out.push({ word: it.word, state });
+                }
+                return new Response(JSON.stringify({ ok: true, items: out }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+            }
+
             // ---- 路由:语言文游 M4 点句翻译合批(POST /api/lang/gloss,直调模型不落库;同句重复由前端内存缓存兜住)----
             if (url.pathname === "/api/lang/gloss" && request.method === "POST") {
                 const auth = await authenticate(env, request);

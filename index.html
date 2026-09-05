@@ -4879,6 +4879,21 @@
     .lg-rm-write{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;margin-bottom:7px;background:rgba(63,111,216,.07);border:1px solid rgba(63,111,216,.25);border-radius:11px}
     .lg-rm-write-main{flex:1;min-width:0;font-size:.8rem;color:var(--text);line-height:1.6;word-break:break-word}
     .lg-rm-note{font-size:.68rem;color:var(--sub,#806a55);margin:2px 0 10px;line-height:1.6}
+    /* M6d5:章末词测 */
+    .lg-qz{margin:2px 0 6px}
+    .lg-qz-bar{font-size:.66rem;color:var(--sub,#806a55);margin-bottom:8px;font-weight:600}
+    .lg-qz-word{font-size:1.3rem;font-weight:800;color:#e8a33d;margin-bottom:1px;word-break:break-all}
+    .lg-qz-tip{font-size:.68rem;color:var(--sub,#806a55);margin-bottom:10px}
+    .lg-qz-opt{display:block;width:100%;text-align:left;padding:9px 12px;margin-bottom:8px;border:1px solid var(--line,#e2ccb0);border-radius:10px;background:var(--input-bg,#fffbf5);color:var(--text);font-size:.8rem;cursor:pointer;transition:all .15s}
+    .lg-qz-opt:active{transform:scale(.985)}
+    .lg-qz-opt.ok{border-color:#2fbf71;background:rgba(47,191,113,.12);color:#1a8a4a;font-weight:700}
+    .lg-qz-opt.bad{border-color:#e0505f;background:rgba(224,80,95,.1);color:#c03a49}
+    .lg-qz-opt:disabled{opacity:.8;cursor:default}
+    .lg-qz-feed{min-height:1.1rem;font-size:.76rem;margin:2px 0 4px}
+    .lg-qz-feed .ok-t{color:#1a8a4a;font-weight:700}
+    .lg-qz-feed .bad-t{color:#c03a49}
+    .lg-qz-done{padding:10px 12px;background:var(--input-bg,#fffbf5);border:1px dashed var(--line,#e2ccb0);border-radius:11px;font-size:.76rem;color:var(--text);line-height:1.65}
+    .lg-qz-sync{margin-top:8px;font-size:.66rem;color:var(--sub,#806a55)}
 </style>
 <div id="boot-screen" role="status" aria-label="页面加载中">
     <div class="boot-logo"><img src="icons/android-chrome-192x192.png" alt="" style="width:36px;height:36px;vertical-align:-7px;margin-right:10px;border-radius:8px;filter:drop-shadow(0 0 10px rgba(255,214,107,.45))">云吞吞文游</div>
@@ -22162,7 +22177,11 @@ function openNpcProfile(npcId) {
        候选优先级:本档未 seen 优先,不足补已 seen 复习;weak/learned 等 M6d5 lang_bank_progress 落库 */
     var SEEN_KEY = "lang_seen_v1";
     var seenCache = null;
-    var chWords = { no: -1, band: "", list: [], words: [], ready: false };   // no=章号(每5轮), words 带 zh 供 M6d5 小测
+    var PROG_KEY = "lang_prog_v1";    // M6d5:词态服务端镜像(本地缓存,启动免拉)
+    var PROG_PEND_KEY = "lang_prog_pend_v1";   // 提交失败的待同步队列 [{band,word,ok}]
+    var progByBand = {};              // band -> {word: {state,ok,fail,up}}  weak 词=隔章重测优先
+    var progLoading = {};             // band -> bool(防并发)
+    var chWords = { no: -1, band: "", list: [], words: [], ready: false, pushed: false };   // no=章号(每5轮), words 带 zh 供 M6d5 小测
     var chSeen = [];                                                           // 本章嵌词命中清单 {w,zh,at}(M6d5 章末词测数据源)
     var chExpan = {};                                                          // 本章 token→原形 反查表
     var STOPW = {};
@@ -22202,24 +22221,27 @@ function openNpcProfile(npcId) {
         var items = langBankCache[band];
         if (!items || !items.length) return [];
         var seen = loadSeen()[band] || {};
-        var fresh = [], old = [], i, it, w;
+        var prog = progByBand[band] || {};
+        var fresh = [], weak = [], old = [], i, it, w;
         for (i = 0; i < items.length; i++) {
             it = items[i];
             w = it.w;
             if (!w || w.length < 3 || w.length > 12 || !/^[a-z]+$/.test(w)) continue;
             if (STOPW[w]) continue;
             if (!goodPos(it.zh || "")) continue;
-            (seen[w] ? old : fresh).push(it);
+            if (!seen[w]) fresh.push(it);
+            else if (prog[w] && prog[w].state === "weak") weak.push(it);   // M6d5:答错弱词 → 隔章优先重测
+            else old.push(it);
         }
         function rndTake(arr, n) {
             var a = arr.slice(), out = [], k, r;
             for (k = 0; k < n && a.length; k++) { r = Math.floor(Math.random() * a.length); out.push(a[r]); a.splice(r, 1); }
             return out;
         }
-        var picks = [];
-        picks = picks.concat(rndTake(fresh, 2));
-        if (picks.length < 2) picks = picks.concat(rndTake(old, 2 - picks.length));   // 未seen不足补复习
-        else picks = picks.concat(rndTake(old, 1));
+        var want = 3, picks = [];
+        picks = rndTake(fresh, want);                                   // 本档未 seen 优先
+        if (picks.length < want) picks = picks.concat(rndTake(weak, want - picks.length));   // 弱词复习
+        if (picks.length < want) picks = picks.concat(rndTake(old, want - picks.length));    // 已 seen 兜底
         return picks;
     }
     function rebuildExpan(band) {
@@ -22237,17 +22259,91 @@ function openNpcProfile(npcId) {
         var band = currentLangBand();
         var no = bandChapterNo();
         if (chWords.no === no && chWords.band === band && chWords.ready) return chWords.list;
-        if (chWords.no !== no || chWords.band !== band) { chWords = { no: no, band: band, list: [], words: [], ready: false }; chSeen = []; }   // 换章/换档:旧章命中清单作废
+        if (chWords.no !== no || chWords.band !== band) { chWords = { no: no, band: band, list: [], words: [], ready: false, pushed: false }; chSeen = []; }   // 换章/换档:旧章命中清单作废
         if (!langBankCache[band]) {
             if (!langBankLoading[band]) loadLangBank(band);   // fire:开局/换章即预载词库,保证注入前 ready
             return [];
         }
+        if (token() && !progByBand[band] && !progLoading[band]) loadProg(band);   // M6d5:弱词状态拉到本地,注入前可回池(异步兜底 afterProgReload)
         chWords.ready = true;
         var picks = drawWords(band);
         chWords.list = picks.map(function (p) { return String(p.w).toLowerCase(); });
         chWords.words = picks.map(function (p) { return { w: String(p.w).toLowerCase(), zh: String(p.zh || "").slice(0, 80) }; });
         rebuildExpan(band);
         return chWords.list;
+    }
+    /* ---- M6d5:词态进度(服务端 lang_bank_progress 镜像 + 失败重试队列) ---- */
+    function readProgLocal() {
+        try { return JSON.parse(localStorage.getItem(PROG_KEY) || "{}") || {}; } catch (e) { return {}; }
+    }
+    function writeProgLocal() { try { localStorage.setItem(PROG_KEY, JSON.stringify(progByBand)); } catch (e) {} }
+    function loadProg(band, cb) {
+        if (!token() || !band) return;
+        if (progLoading[band]) return;
+        var cached = readProgLocal()[band];
+        if (cached) { progByBand[band] = cached; if (cb) cb(); }
+        progLoading[band] = true;
+        fetch(API_BASE + "/api/lang/progress?band=" + encodeURIComponent(band), { headers: { "X-Auth-Token": "Bearer " + token() } })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) {
+                progLoading[band] = false;
+                var nm = {};
+                if (d && d.items) for (var i = 0; i < d.items.length; i++) {
+                    var it = d.items[i];
+                    nm[String(it.word).toLowerCase()] = { state: String(it.state || "seen"), ok: Number(it.ok_count || 0), fail: Number(it.fail_count || 0), up: it.updated_at || "" };
+                }
+                progByBand[band] = nm;
+                writeProgLocal();
+                flushPendingProg(band);
+                afterProgReload(band);   // 弱词回池:本章尚未注入则重抽(隔章重测闭环)
+                if (cb) cb();
+            })
+            .catch(function () { progLoading[band] = false; if (cb) cb(); });
+    }
+    function flushPendingProg(band) {
+        var arr = [];
+        try { arr = JSON.parse(localStorage.getItem(PROG_PEND_KEY) || "[]") || []; } catch (e) {}
+        var pend = arr.filter(function (p) { return p && p.band === band; });
+        if (!pend.length) return;
+        fetch(API_BASE + "/api/lang/progress", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token() },
+            body: JSON.stringify({ band: band, items: pend.map(function (p) { return { word: p.word, ok: p.ok }; }) })
+        })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) {
+                if (!d || !d.ok) return;
+                try { localStorage.setItem(PROG_PEND_KEY, JSON.stringify(arr.filter(function (p) { return p.band !== band; }))); } catch (e) {}
+            }).catch(function () {});
+    }
+    function pushProgPending(band, word, ok) {
+        var arr = [];
+        try { arr = JSON.parse(localStorage.getItem(PROG_PEND_KEY) || "[]") || []; } catch (e) {}
+        arr.push({ band: band, word: word, ok: ok });
+        try { localStorage.setItem(PROG_PEND_KEY, JSON.stringify(arr.slice(-200))); } catch (e) {}
+    }
+    function progStateOf(band, w) { var b = progByBand[band]; return (b && b[w]) ? b[w].state : ""; }
+    function isLearned(band, w) { return progStateOf(band, w) === "learned"; }
+    function applyProgResult(band, word, state) {   // 词测提交成功后的本地落位
+        var b = progByBand[band] || (progByBand[band] = {});
+        var old = b[word] || { ok: 0, fail: 0 };
+        if (state === "learned") old.ok += 1; else if (state === "weak") old.fail += 1;
+        old.state = state;
+        old.up = new Date().toISOString().slice(0, 19).replace("T", " ");
+        b[word] = old;
+        writeProgLocal();
+    }
+    function afterProgReload(band) {
+        try {
+            if (chWords.band !== band || !chWords.ready || chWords.pushed) return;
+            if (chWords.no !== bandChapterNo()) return;
+            var p = drawWords(band);
+            if (!p.length) return;
+            chWords.list = p.map(function (x) { return String(x.w).toLowerCase(); });
+            chWords.words = p.map(function (x) { return { w: String(x.w).toLowerCase(), zh: String(x.zh || "").slice(0, 80) }; });
+            chSeen = [];
+            rebuildExpan(band);
+        } catch (e) {}
     }
     /* token → 本章候选原形(exact / ECDICT 词形 al / 尾 's 与简单复数兜底),未命中 null */
     function chapterOwnerOf(tok) {
@@ -22258,7 +22354,7 @@ function openNpcProfile(npcId) {
         if (t.length > 4 && /[^s]s$/.test(t)) { var s2 = t.slice(0, -1); if (chExpan[s2]) return chExpan[s2]; }
         return null;
     }
-    function getChapterWords() { return ensureChWords(); }
+    function getChapterWords() { var l = ensureChWords(); if (l && l.length) chWords.pushed = true; return l; }   // 注入即推送:prog 迟到不再换词
 
 
     var WORD_TOK = /[A-Za-z][A-Za-z0-9'’-]*/g;
@@ -22850,9 +22946,146 @@ function openNpcProfile(npcId) {
         document.removeEventListener("keydown", recapEsc);
     }
     function recapEsc(e) { if (e && e.key === "Escape") closeRecap(); }
+    /* ---- M6d5:章末词测(recap ①区 · 登录用户;题源:剧情金标命中词 > 本章候选 > 本局点查) ---- */
+    var quizState = null;   // {band, qs:[{word,zh,corr,opts,pick}], idx, done, subm}
+    var quizDone = {};      // band -> {word:1} 本章已测过(重开复盘不再考)
+    function optTxt(z) {
+        z = String(z || "").split(/[；;]/)[0].trim();
+        return z.length > 28 ? z.slice(0, 28) + "…" : z;
+    }
+    function quizDistractors(band, word, corr) {
+        var items = langBankCache[band] || [], n = items.length;
+        var start = Math.floor(Math.random() * Math.max(n, 1)), arr = [], i, it, z;
+        for (i = 0; i < n && arr.length < 3; i++) {
+            it = items[(start + i) % n];
+            if (!it || it.w === word) continue;
+            z = optTxt(it.zh);
+            if (!z || z === corr || arr.indexOf(z) >= 0) continue;
+            arr.push(z);
+        }
+        return arr;
+    }
+    function buildQuiz(band) {
+        var items = langBankCache[band];
+        if (!items || !items.length) return null;
+        var words = [], i, k, it, done = quizDone[band] || {};
+        function pushW(wd) {
+            var j;
+            if (words.length >= 5) return;
+            wd = String(wd || "").toLowerCase();
+            if (!wd || done[wd]) return;
+            for (j = 0; j < words.length; j++) if (words[j].word === wd) return;
+            if (isLearned(band, wd)) return;   // 已掌握的词不再考
+            it = langBankItem(band, wd);
+            if (!it || !it.zh) return;   // 词库无释义的词不参与词测
+            words.push({ word: wd, zh: String(it.zh).slice(0, 80) });
+        }
+        for (i = 0; i < chSeen.length; i++) pushW(chSeen[i]);                  // 1) 本章剧情里金标命中过的
+        for (i = 0; i < chWords.words.length; i++) pushW(chWords.words[i].w);  // 2) 本章候选(没嵌进剧情也当学习词)
+        for (k in sessionWords) if (Object.prototype.hasOwnProperty.call(sessionWords, k)) pushW(sessionWords[k].w);   // 3) 本局点查兜底
+        if (words.length < 3) return null;   // 词太少:回落点查词表
+        var qs = [], q, ds, pos;
+        for (i = 0; i < words.length; i++) {
+            q = { word: words[i].word, zh: words[i].zh, corr: optTxt(words[i].zh), opts: [], pick: -1 };
+            ds = quizDistractors(band, q.word, q.corr);
+            q.opts = ds.slice(0, 3);
+            pos = Math.floor(Math.random() * (q.opts.length + 1));
+            q.opts.splice(pos, 0, q.corr);
+            qs.push(q);
+        }
+        return { band: band, qs: qs, idx: 0, done: false, subm: false };
+    }
+    function renderQuizInto(box) {
+        if (!box) return;
+        var st = quizState;
+        if (!st || st.done) return;
+        var q = st.qs[st.idx], h = "", j;
+        h = '<div class="lg-rm-sec">① 本章词测<span class="list-sub">剧情金标词 · 错词下章优先再出现</span></div>';
+        h += '<div class="lg-qz"><div class="lg-qz-bar">第 ' + (st.idx + 1) + " / " + st.qs.length + " 题</div>";
+        h += '<div class="lg-qz-word">' + esc(q.word) + '</div><div class="lg-qz-tip">选出这个词的中文释义</div>';
+        for (j = 0; j < q.opts.length; j++) {
+            h += '<button type="button" class="lg-qz-opt" data-act="qz-opt" data-idx="' + st.idx + '" data-opt="' + j + '">' + esc(q.opts[j]) + "</button>";
+        }
+        h += '<div class="lg-qz-feed"></div></div>';
+        box.innerHTML = h;
+    }
+    function qzPick(el) {
+        var st = quizState;
+        if (!st || st.done || !el) return;
+        var idx = parseInt(el.getAttribute("data-idx") || "-1", 10);
+        var opt = parseInt(el.getAttribute("data-opt") || "-1", 10);
+        if (idx !== st.idx || opt < 0) return;
+        var q = st.qs[st.idx];
+        if (!q || opt >= q.opts.length || q.pick >= 0) return;   // 本题已答:防双击
+        q.pick = opt;
+        var right = q.opts[opt] === q.corr;
+        var box = el.parentNode, btns = box.querySelectorAll(".lg-qz-opt"), i, b;
+        for (i = 0; i < btns.length; i++) btns[i].disabled = true;
+        el.classList.add(right ? "ok" : "bad");
+        if (!right) {
+            for (i = 0; i < q.opts.length; i++) if (q.opts[i] === q.corr) { b = box.querySelector('[data-opt="' + i + '"]'); if (b) b.classList.add("ok"); }
+        }
+        var feed = box.querySelector(".lg-qz-feed");
+        if (feed) feed.innerHTML = right ? '<span class="ok-t">✓ 答对了</span>' : '<span class="bad-t">✗ 记一下:' + esc(q.word) + ' = ' + esc(q.zh.slice(0, 60)) + "</span>";
+        setTimeout(function () { qzNext(); }, right ? 620 : 2100);   // 答错多停留读释义
+    }
+    function qzNext() {
+        var st = quizState;
+        if (!st || st.done) return;
+        if (st.idx + 1 < st.qs.length) { st.idx += 1; renderQuizInto(document.getElementById("lg-rm-sec1")); }
+        else finishQuiz();
+    }
+    function finishQuiz() {
+        var st = quizState;
+        if (!st || st.done) return;
+        st.done = true;
+        var okN = 0, i, q, done = quizDone[st.band] || (quizDone[st.band] = {});
+        for (i = 0; i < st.qs.length; i++) {
+            q = st.qs[i];
+            done[q.word] = 1;
+            if (q.pick >= 0 && q.opts[q.pick] === q.corr) okN += 1;
+        }
+        var all = okN === st.qs.length;
+        var box = document.getElementById("lg-rm-sec1");
+        if (!box) return;
+        box.innerHTML = '<div class="lg-rm-sec">① 本章词测<span class="list-sub">' + esc(String(st.band).toUpperCase()) + ' · 掌握 ' + okN + '/' + st.qs.length + '</span></div>' +
+            '<div class="lg-qz-done">' + (all ? '🎉 全对,本章学习词都掌握了!下章继续遇见新词。' : '答对 ' + okN + '/' + st.qs.length + ' 题。答错的词已标为弱词,下一章剧情会优先安排它们重逢,留意金标词就好。') + '</div>' +
+            '<div class="lg-qz-sync">⏳ 学习进度同步中…</div>';
+        submitQuiz(box.querySelector(".lg-qz-sync"));
+    }
+    function submitQuiz(syncEl) {
+        var st = quizState;
+        if (!st || !st.qs.length) return;
+        var items = [], i, q;
+        for (i = 0; i < st.qs.length; i++) {
+            q = st.qs[i];
+            if (q.pick < 0) continue;
+            items.push({ word: q.word, ok: q.opts[q.pick] === q.corr });
+        }
+        if (!items.length) return;
+        function pendAll() { for (i = 0; i < items.length; i++) pushProgPending(st.band, items[i].word, items[i].ok); }
+        fetch(API_BASE + "/api/lang/progress", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token() },
+            body: JSON.stringify({ band: st.band, items: items })
+        })
+            .then(function (r) { return r.json().catch(function () { return null; }); })
+            .then(function (d) {
+                if (d && d.ok) {
+                    for (i = 0; i < items.length; i++) applyProgResult(st.band, items[i].word, items[i].ok ? "learned" : "weak");
+                    if (syncEl) syncEl.textContent = "✓ 学习进度已同步云端(错词进入下章重测队列)";
+                } else { pendAll(); if (syncEl) syncEl.textContent = "⚠ 同步失败,进度已暂存本地,联网后自动补交"; }
+            })
+            .catch(function () { pendAll(); if (syncEl) syncEl.textContent = "⚠ 同步失败,进度已暂存本地,联网后自动补交"; });
+    }
     function fillRecapWords() {
         var box = document.getElementById("lg-rm-sec1");
         if (!box) return;
+        /* M6d5:登录用户先出词测;游客/题不足回落点查词表 */
+        if (token()) {
+            quizState = buildQuiz(currentLangBand());
+            if (quizState) { renderQuizInto(box); return; }
+        }
         var arr = [], k;
         for (k in sessionWords) { if (Object.prototype.hasOwnProperty.call(sessionWords, k)) arr.push(sessionWords[k]); }
         arr.reverse();
@@ -22966,6 +23199,7 @@ function openNpcProfile(npcId) {
             if (el.classList.contains("saved")) return;
             collectExp(el.getAttribute("data-term") || "", el.getAttribute("data-zh") || "", el.getAttribute("data-ex") || "", el);
         }
+        else if (act === "qz-opt") qzPick(el);   // M6d5:章末词测选项
         else if (act === "recap-open") openRecap();
     }
     /* ---- M6d1 五档考试词库:按档懒加载(/api/lang/bank + localStorage 缓存),点查考纲化/嵌词/词测共用 ---- */
