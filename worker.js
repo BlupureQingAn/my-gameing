@@ -542,6 +542,7 @@ function md5(str) {
 // ==================== 3. 数据库服务层（PocketBase） ====================
 
 async function getAdminToken(env) {
+    if (getAdminToken.cache) return getAdminToken.cache; // 单次 invocation 内复用,免每请求都登录 PB
     const pbUrl = (env.PB_URL || "").replace(/\/$/, "");
     const credentials = { identity: env.PB_ADMIN_EMAIL, password: env.PB_ADMIN_PASSWORD };
     const res = await fetch(`${pbUrl}/api/collections/_superusers/auth-with-password`, {
@@ -549,13 +550,13 @@ async function getAdminToken(env) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials)
     });
-    if (res.ok) return (await res.json()).token;
+    if (res.ok) return (getAdminToken.cache = (await res.json()).token);
     const resOld = await fetch(`${pbUrl}/api/collections/admins/auth-with-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials)
     });
-    if (resOld.ok) return (await resOld.json()).token;
+    if (resOld.ok) return (getAdminToken.cache = (await resOld.json()).token);
     throw new Error("PocketBase 身份验证失败");
 }
 
@@ -2136,55 +2137,97 @@ export default {
                 const page = Math.max(1, Number(url.searchParams.get("page") || 1));
                 const q = await pbAdminFetch(env, `/api/collections/posts/records?perPage=${perPage}&page=${page}&sort=-created`);
                 const d = await q.json().catch(() => ({}));
-                const items = await Promise.all((d.items || []).map(async (p) => {
-                    let author = { id: p.author_id };
-                    if (p.author_id) {
-                        const aQ = await pbAdminFetch(env, `/api/collections/users/records/${encodeURIComponent(p.author_id)}`);
-                        const aD = await aQ.json().catch(() => ({}));
-                        if (aD && aD.id) author = { id: aD.id, nickname: aD.nickname || "", faceimg: aD.faceimg || "" };
+                const postItems = d.items || [];
+                const meId = auth.record.id;
+                // feed 装配改为批量 join:CF 单次调用子请求上限 50,逐帖 join 在 perPage≥10 时直接 500
+                const postIds = postItems.map(p => p.id).filter(Boolean);
+                const cardIds = [...new Set(postItems.map(p => (p.card_id || "").trim()).filter(Boolean))];
+                const postsAuthorIds = [...new Set(postItems.map(p => (p.author_id || "").trim()).filter(Boolean))];
+                const allAuthorIds = new Set(postsAuthorIds);
+                const orChain = (ids, field) => [...ids].map(id => `${field}='${escapePocketBaseFilterValue(id)}'`).join("||");
+
+                const usersMap = {};
+                const commentsMap = new Map();
+                const likedByMeSet = new Set();
+                const followingSet = new Set();
+                const cardMap = {};
+                const usersLoadedIds = new Set();
+
+                // 按 id 批量拉记录(60 个/块防 URL 超长),返回行数组
+                const batchFetch = async (coll, field, ids, fields) => {
+                    const out = [];
+                    for (let i = 0; i < ids.length; i += 60) {
+                        const chunk = ids.slice(i, i + 60);
+                        const url = `/api/collections/${coll}/records?perPage=200&skipTotal=true&fields=${fields}&filter=${encodeURIComponent(orChain(chunk, field))}`;
+                        const r = await pbAdminFetch(env, url);
+                        const rd = await r.json().catch(() => ({}));
+                        out.push(...(rd.items || []));
                     }
-                    let following = false;
-                    if (author.id && author.id !== auth.record.id) {
-                        const fQ = await pbAdminFetch(env, `/api/collections/follows/records?perPage=1&skipTotal=true&filter=${encodeURIComponent(`follower_id='${escapePocketBaseFilterValue(auth.record.id)}'&&user_id='${escapePocketBaseFilterValue(author.id)}'`)}`);
-                        const fD = await fQ.json().catch(() => ({}));
-                        following = (fD.items || []).length > 0;
-                    }
-                    let cardTitle = "";
-                    if (p.card_id) {
-                        const cQ = await pbAdminFetch(env, `/api/collections/community_cards/records/${encodeURIComponent(p.card_id)}`);
-                        const cD = await cQ.json().catch(() => ({}));
-                        if (cD && cD.id) cardTitle = String(cD.title || "");
-                    }
-                    let likedByMe = false;
-                    const lQ = await pbAdminFetch(env, `/api/collections/post_likes/records?perPage=1&skipTotal=true&filter=${encodeURIComponent(`post_id='${escapePocketBaseFilterValue(p.id)}'&&user_id='${escapePocketBaseFilterValue(auth.record.id)}'`)}`);
-                    const lD = await lQ.json().catch(() => ({}));
-                    likedByMe = (lD.items || []).length > 0;
-                    const cQ = await pbAdminFetch(env, `/api/collections/post_comments/records?perPage=2&sort=created&filter=${encodeURIComponent(`post_id='${escapePocketBaseFilterValue(p.id)}'`)}`);
-                    const cD = await cQ.json().catch(() => ({}));
-                    const comments = await Promise.all((cD.items || []).map(async (cm) => {
-                        let cAuthor = { id: cm.user_id };
-                        if (cm.user_id) {
-                            const aQ = await pbAdminFetch(env, `/api/collections/users/records/${encodeURIComponent(cm.user_id)}`);
-                            const aD = await aQ.json().catch(() => ({}));
-                            if (aD && aD.id) cAuthor = { id: aD.id, nickname: aD.nickname || "", faceimg: aD.faceimg || "" };
+                    return out;
+                };
+                // 增量拉用户:后续并入的评论作者也补齐,已请求过的 id 不重复拉
+                const loadUsers = async () => {
+                    const pending = [...allAuthorIds].filter(id => !usersLoadedIds.has(id));
+                    if (!pending.length) return;
+                    for (const id of pending) usersLoadedIds.add(id);
+                    const us = await batchFetch("users", "id", pending, "id,nickname,faceimg");
+                    for (const u of us) usersMap[u.id] = u;
+                };
+                await loadUsers();
+                if (postIds.length) {
+                    // 评论:全页帖子一次拉回,按帖取时间升序前 2;评论作者并入用户集合
+                    const cms = await batchFetch("post_comments", "post_id", postIds, "id,post_id,user_id,content,created_at");
+                    cms.sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
+                    for (const cm of cms) {
+                        const list = commentsMap.get(cm.post_id) || [];
+                        if (list.length < 2) {
+                            list.push(cm);
+                            commentsMap.set(cm.post_id, list);
+                            if (cm.user_id) allAuthorIds.add(cm.user_id);
                         }
-                        return { id: cm.id, content: cm.content, created_at: cm.created_at, author: cAuthor };
-                    }));
+                    }
+                    await loadUsers();
+                    // 我赞过的本页帖子
+                    if (meId) {
+                        const lUrl = `/api/collections/post_likes/records?perPage=200&skipTotal=true&fields=post_id&filter=${encodeURIComponent(`user_id='${escapePocketBaseFilterValue(meId)}'&&(${orChain(postIds, "post_id")})`)}`;
+                        const lr = await pbAdminFetch(env, lUrl);
+                        const lrd = await lr.json().catch(() => ({}));
+                        for (const x of (lrd.items || [])) likedByMeSet.add(x.post_id);
+                        // 我关注了哪些帖子作者(仅统计帖作者,不含评论作者)
+                        const authorIds = postsAuthorIds.filter(id => id !== meId);
+                        if (authorIds.length) {
+                            const fUrl = `/api/collections/follows/records?perPage=200&skipTotal=true&fields=user_id&filter=${encodeURIComponent(`follower_id='${escapePocketBaseFilterValue(meId)}'&&(${orChain(authorIds, "user_id")})`)}`;
+                            const fr = await pbAdminFetch(env, fUrl);
+                            const frd = await fr.json().catch(() => ({}));
+                            for (const x of (frd.items || [])) followingSet.add(x.user_id);
+                        }
+                    }
+                }
+                if (cardIds.length) {
+                    const cards = await batchFetch("community_cards", "id", cardIds, "id,title");
+                    for (const c of cards) cardMap[c.id] = String(c.title || "");
+                }
+                const items = postItems.map(p => {
+                    const u = usersMap[p.author_id] || {};
+                    const comments = (commentsMap.get(p.id) || []).map(cm => {
+                        const cu = usersMap[cm.user_id] || {};
+                        return { id: cm.id, content: cm.content, created_at: cm.created_at, author: { id: cm.user_id, nickname: cu.nickname || "", faceimg: cu.faceimg || "" } };
+                    });
                     return {
                         id: p.id,
                         content: String(p.content || ""),
                         card_id: p.card_id || "",
-                        card_title: cardTitle,
+                        card_title: cardMap[p.card_id] || "",
                         image_data: String(p.image_data || ""),
-                        author,
-                        following,
+                        author: u.id ? { id: u.id, nickname: u.nickname || "", faceimg: u.faceimg || "" } : { id: p.author_id },
+                        following: !!u.id && u.id !== meId && followingSet.has(u.id),
                         likes_count: Number(p.likes_count || 0),
                         comments_count: Number(p.comments_count || 0),
-                        liked_by_me: likedByMe,
-                        comments: comments.slice(0, 2),
+                        liked_by_me: likedByMeSet.has(p.id),
+                        comments,
                         created_at: p.created_at
                     };
-                }));
+                });
                 return new Response(JSON.stringify({ items, total: d.totalItems || 0 }), {
                     headers: { ...corsHeaders(), "Content-Type": "application/json" }
                 });
@@ -2555,15 +2598,20 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 if (!postId) return errorResponse("缺少 post_id", 400, null, "INVALID_POST");
                 const q = await pbAdminFetch(env, `/api/collections/post_comments/records?perPage=100&sort=created&filter=${encodeURIComponent(`post_id='${escapePocketBaseFilterValue(postId)}'`)}`);
                 const d = await q.json().catch(() => ({}));
-                const items = await Promise.all((d.items || []).map(async (cm) => {
-                    let author = { id: cm.user_id };
-                    if (cm.user_id) {
-                        const aQ = await pbAdminFetch(env, `/api/collections/users/records/${encodeURIComponent(cm.user_id)}`);
-                        const aD = await aQ.json().catch(() => ({}));
-                        if (aD && aD.id) author = { id: aD.id, nickname: aD.nickname || "", faceimg: aD.faceimg || "" };
-                    }
-                    return { id: cm.id, content: cm.content, created_at: cm.created_at, author };
-                }));
+                const cms = d.items || [];
+                // 批量拉评论作者(逐条 join 会撞 CF 单次 50 子请求上限)
+                const cAuthorIds = [...new Set(cms.map(cm => cm.user_id).filter(Boolean))];
+                const cUsers = {};
+                if (cAuthorIds.length) {
+                    const orC = cAuthorIds.map(id => `id='${escapePocketBaseFilterValue(id)}'`).join("||");
+                    const uQ = await pbAdminFetch(env, `/api/collections/users/records?perPage=200&skipTotal=true&fields=id,nickname,faceimg&filter=${encodeURIComponent(orC)}`);
+                    const uD = await uQ.json().catch(() => ({}));
+                    for (const u of (uD.items || [])) cUsers[u.id] = u;
+                }
+                const items = cms.map(cm => {
+                    const cu = cUsers[cm.user_id] || {};
+                    return { id: cm.id, content: cm.content, created_at: cm.created_at, author: { id: cm.user_id, nickname: cu.nickname || "", faceimg: cu.faceimg || "" } };
+                });
                 return new Response(JSON.stringify({ items }), {
                     headers: { ...corsHeaders(), "Content-Type": "application/json" }
                 });
