@@ -4906,6 +4906,20 @@
     .l6-row-t{font-weight:700;font-size:.88rem;color:var(--text,#2c2c2c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .l6-row-sub{font-size:.68rem;color:var(--sub,#806a55);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .l6-row-go{color:var(--sub,#806a55);flex-shrink:0}
+    /* M8c:剧本库封面网格(文游首页同款 scenario-card 卡) + 语言卡详情弹层 */
+    #lang-lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:8px;align-items:stretch}
+    #lang-lib-grid .scenario-card{margin-bottom:0}
+    .lgd-cover{width:100%;aspect-ratio:4/3;border-radius:12px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#ffe8c0,#f3c98b 55%,#e2b26b);background-size:cover;background-position:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+    body[data-theme="dark"] .lgd-cover{background:linear-gradient(135deg,#3a3355,#2c2a4a 55%,#232140)}
+    .lgd-cover .scc-emoji{font-size:2.6rem;filter:drop-shadow(0 3px 8px rgba(0,0,0,.18))}
+    .lgd-cover.has-cover .scc-emoji{display:none}
+    .lgd-cover.has-cover{box-shadow:none}
+    .lgd-title{font-size:1.05rem;font-weight:800;margin-top:10px}
+    .lgd-en{font-size:.74rem;color:var(--sub,#806a55);margin-top:1px}
+    .lgd-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+    .lgd-desc{font-size:.74rem;color:var(--sub,#806a55);line-height:1.65;margin-top:10px;max-height:150px;overflow-y:auto;background:var(--input-bg,#fffbf5);border:1px solid var(--line,#e2ccb0);border-radius:11px;padding:10px 12px}
+    .lgd-desc b{color:#7c4fd8}
+    .lgd-play{width:100%;margin-top:12px}
     .lg-rm-gen:active{transform:scale(.99)}
     .lg-rm-gen:disabled{opacity:.65;cursor:wait}
     .lg-rm-gen.light{background:var(--input-bg,#fffbf5);color:#7c4fd8;border:1px solid rgba(124,84,240,.5);box-shadow:none}
@@ -5124,6 +5138,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <button type="button" class="top-nav-btn active" data-view="view-lang" onclick="switchView('view-lang')">语言首页</button>
                     <button type="button" class="top-nav-btn" data-view="view-lang-library" onclick="LangController.goLibrary()">剧本库</button>
                     <button type="button" class="top-nav-btn" data-view="view-lang-learn" onclick="LangController.goLearn()">学习中心</button>
+                    <button type="button" class="top-nav-btn" data-view="view-lang-vocab" onclick="LangController.goVocab()">生词本</button>
                 </div>
 
                 <img class="lang-hall-img" src="lang/hall-top.jpg" alt="语言文游" loading="lazy">
@@ -5153,7 +5168,10 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <button type="button" class="mini-btn ghost" onclick="LangController.goLibrary()">查看全部 ›</button>
                 </div>
                 <div class="list-sub" id="lang-home-reco-sub">难度按你的学习档匹配</div>
-                <div id="lang-home-reco" style="margin-top:6px;"></div>
+                <div class="home-banner-wrap" id="lang-reco-wrap" style="margin-top:6px;">
+                    <div class="home-banner-swiper" id="lang-home-reco"></div>
+                    <div class="home-banner-dots" id="lang-reco-dots"></div>
+                </div>
 
                 <div id="lang-home-continue-wrap" style="display:none;margin-top:6px;">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
@@ -5173,6 +5191,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <button type="button" class="top-nav-btn" data-view="view-lang" onclick="switchView('view-lang')">语言首页</button>
                     <button type="button" class="top-nav-btn active" data-view="view-lang-library" onclick="LangController.goLibrary()">剧本库</button>
                     <button type="button" class="top-nav-btn" data-view="view-lang-learn" onclick="LangController.goLearn()">学习中心</button>
+                    <button type="button" class="top-nav-btn" data-view="view-lang-vocab" onclick="LangController.goVocab()">生词本</button>
                 </div>
                 <div class="list-title" style="margin:0;">英语剧本库</div>
                 <div class="list-sub" id="lang-lib-sub">英语原生剧本：按卡的档位学对应词库，点卡即玩（第一次玩 = 英语开局）</div>
@@ -5187,7 +5206,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 </div>
                 <div class="l6-chips" id="lang-lib-cats"></div>
                 <div class="list-sub" id="lang-lib-hint" style="margin-top:2px;"></div>
-                <div id="lang-lib-rows" style="margin-top:8px;"></div>
+                <div id="lang-lib-grid"></div>
             </section>
         </section>
 
@@ -5197,6 +5216,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <button type="button" class="top-nav-btn" data-view="view-lang" onclick="switchView('view-lang')">语言首页</button>
                     <button type="button" class="top-nav-btn" data-view="view-lang-library" onclick="LangController.goLibrary()">剧本库</button>
                     <button type="button" class="top-nav-btn active" data-view="view-lang-learn" onclick="LangController.goLearn()">学习中心</button>
+                    <button type="button" class="top-nav-btn" data-view="view-lang-vocab" onclick="LangController.goVocab()">生词本</button>
                 </div>
 
                 <div class="list-title" style="margin:0;" id="lang-learn-test">📝 我的测档 <span class="list-sub" style="margin-left:4px;">10 题由易到难，答完自动定档，可重测/改档</span></div>
@@ -5214,11 +5234,6 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <button type="button" class="lang-lang-card" data-m="full" onclick="LangController.setImmersion('full')"><span style="font-size:1.35rem;">🌊</span><span>全沉浸</span><span class="list-sub" style="margin:0;">纯英语体验，辅助全部手动触发</span></button>
                 </div>
 
-                <div class="list-title" style="margin-top:18px;" id="lang-learn-vocab">📖 我的生词本 <span class="list-sub" style="margin-left:4px;">游戏里点过的词自动收进来</span></div>
-                <img class="lg-learn-head" src="lang/vocab-head.jpg" alt="生词本" loading="lazy">
-                <div class="lg-learn-sub">玩英语剧本时：轻点句子看整句译文，点蓝色虚线的生词看释义——点过的词会收进这里，可在「新学 → 眼熟 → 已掌握」之间手动划。</div>
-                <div id="lang-learn-box" style="margin-top:8px;"></div>
-
                 <div class="list-title" style="margin-top:18px;" id="lang-learn-drill">🔁 考纲词刷词 <span class="list-sub" style="margin-left:4px;">10 词/轮 · 弱词优先 · 翻卡自评</span></div>
                 <div class="list-sub">按你的当前档词库出词：先看英文想释义，翻面核对——记住的收进「已掌握」，没记住的自动排进下轮（词测与刷词共用一份进度）。</div>
                 <div id="lang-drill-box" style="margin-top:8px;">
@@ -5228,6 +5243,23 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     </div>
                     <div class="list-sub" id="lang-drill-stat" style="margin-top:6px;">刷词与章末词测共用一份进度：弱词优先、错词下轮重逢、掌握即出池</div>
                 </div>
+            </section>
+        </section>
+
+        <section id="view-lang-vocab" class="view-section">
+            <section class="card">
+                <div class="lang-sub-nav">
+                    <button type="button" class="top-nav-btn" data-view="view-lang" onclick="switchView('view-lang')">语言首页</button>
+                    <button type="button" class="top-nav-btn" data-view="view-lang-library" onclick="LangController.goLibrary()">剧本库</button>
+                    <button type="button" class="top-nav-btn" data-view="view-lang-learn" onclick="LangController.goLearn()">学习中心</button>
+                    <button type="button" class="top-nav-btn active" data-view="view-lang-vocab" onclick="LangController.goVocab()">生词本</button>
+                </div>
+
+                <div class="list-title" style="margin:0;" id="lang-learn-vocab">📖 我的生词本 <span class="list-sub" style="margin-left:4px;">游戏里点过的词自动收进来</span></div>
+                <img class="lg-learn-head" src="lang/vocab-head.jpg" alt="生词本" loading="lazy">
+                <div class="lg-learn-sub">玩英语剧本时：轻点句子看整句译文，点蓝色虚线的生词看释义——点过的词会收进这里，可在「新学 → 眼熟 → 已掌握」之间手动划。</div>
+                <div class="list-sub" style="margin-top:6px;">点「返回大厅」可以继续学——生词本、刷词与章末复盘收藏的表达都在这里管理。</div>
+                <div id="lang-learn-box" style="margin-top:8px;"></div>
             </section>
         </section>
 
@@ -5906,6 +5938,17 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <div id="gd-content"><span class="list-sub">加载中...</span></div>
             <div class="gender-actions">
                 <button class="mini-btn primary" onclick="Controller.closeGameDetail()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="lang-card-modal">
+        <div class="modal-card gd-modal-card">
+            <div class="modal-title">剧本详情</div>
+            <div id="lang-gd-content"><span class="list-sub">加载中...</span></div>
+            <div class="gender-actions">
+                <button class="mini-btn ghost" onclick="LangController.closeLangDetail()">返回剧本库</button>
+                <button class="mini-btn primary" id="lang-gd-play-btn" onclick="LangController.playLangDetail()">立即游玩</button>
             </div>
         </div>
     </div>
@@ -13672,6 +13715,7 @@ function rebuildChoicesBlock(body, labels = []) {
         }
         return { ensure, paint, safeId, ensureSelf };
     })();
+    window.CoverService = CoverService;
 
     // ---- 发现页：轮播推荐 + 榜单聚合（对齐 uugame 发现页，简化交互） ----
     const DiscoverService = (() => {
@@ -18027,8 +18071,8 @@ ${recent || "（无）"}
             document.querySelectorAll(".view-section").forEach((el) => el.classList.remove("active"));
             const target = document.getElementById(viewId);
             if (target) target.classList.add("active");
-            // M6a:语言页组(view-lang/-library/-learn)共用一个主站 tab「学语言」高亮;页内语言子导航由 LangController.onShow 单独高亮
-            const LANG_VIEWS = ["view-lang", "view-lang-library", "view-lang-learn"];
+            // M6a/M8d:语言页组(view-lang/-library/-learn/-vocab)共用一个主站 tab「学语言」高亮;页内语言子导航由 LangController.onShow 单独高亮
+            const LANG_VIEWS = ["view-lang", "view-lang-library", "view-lang-learn", "view-lang-vocab"];
             const inLangGroup = LANG_VIEWS.includes(viewId);
             document.querySelectorAll(".nav-btn, .top-nav-btn").forEach((btn) => {
                 if (btn.closest && btn.closest(".lang-sub-nav")) return;
@@ -22018,25 +22062,41 @@ function openNpcProfile(npcId) {
             els[i].addEventListener("click", (function (cid) { return function () { api.enterCard(cid); }; })(els[i].getAttribute("data-cid")));
         }
     }
-    function miniCardHtml(c) {
+    /* M8b:语言首页推荐区 = 文游首页同款 hb-card 大图轮播(4:3 封面 + 档/题材 tag + 轮次 + 播放按钮);点击卡任意处进入播放 */
+    var langBanner = { idx: 0, timer: null };
+    function langBannerHtml(c) {
         var icon = THEME_ICON[String(c.theme || "")] || "📖";
-        var tag = cardSaveOf(c)
-            ? '<span class="l6-mc-continue">▶ 继续</span>'
-            : '<span class="l6-mc-tag">' + api.esc(String(c.category_zh || c.category || "")) + "</span>";
-        return '<div data-cid="' + cardCid(c) + '" class="l6-mc"><div class="l6-mc-top ' + bandCls(c.band) + '"><span class="l6-mc-band">' + api.esc(bandShort(c.band)) + "</span>" + icon + "</div>" +
-            '<div class="l6-mc-body"><div class="l6-mc-t">' + api.esc(String(c.title_zh || c.title || "英语剧本")) + "</div>" +
-            '<div class="l6-mc-en">' + api.esc(String(c.title || "")) + "</div>" +
-            '<div class="l6-mc-sub"><span>EN 原生</span>' + tag + "</div></div></div>";
+        var has = cardSaveOf(c), r = cardRoundOf(c);
+        var tagTxt = api.esc(bandShort(c.band)) + (String(c.category_zh || "") ? " · " + api.esc(String(c.category_zh)) : "");
+        var playTxt = has ? "▶ 继续 · 第 " + (r || 1) + " 轮" : "立即游玩";
+        return '<div data-cid="' + cardCid(c) + '" class="hb-card">' +
+            '<div class="hb-cover" id="lb-cover-' + window.CoverService.safeId(c.id) + '"><img class="scc-img" alt="" loading="lazy"><span class="scc-emoji">' + icon + "</span></div>" +
+            '<div class="hb-tag">' + tagTxt + "</div>" +
+            '<div class="hb-title">' + api.esc(String(c.title_zh || c.title || "英语剧本")) + "</div>" +
+            '<div class="hb-sub">' + api.esc(String(c.title || "")) + (has ? " · 英语进度已到第 " + (r || 1) + " 轮" : "") + "</div>" +
+            '<div class="hb-foot"><span class="hb-plays">EN 原生 · 五档词库</span>' +
+            '<span class="hb-play-btn mini-btn primary">' + playTxt + "</span></div></div>";
     }
-    function libRowHtml(c) {
-        var r = cardRoundOf(c);
-        var right = cardSaveOf(c)
-            ? '<span class="lang-badge en" style="width:auto;height:auto;border-radius:8px;padding:2px 8px;font-size:.6rem;">▶ 继续 · 第 ' + (r || 1) + " 轮</span>"
-            : '<span class="l6-mc-tag" style="margin:0;">' + api.esc(bandShort(c.band)) + " · " + api.esc(String(c.category_zh || c.category || "")) + "</span>";
-        return '<div data-cid="' + cardCid(c) + '" class="l6-row"><div class="l6-row-band ' + bandCls(c.band) + '">' + api.esc(bandShort(c.band)) + "</div>" +
-            '<div class="l6-row-main"><div class="l6-row-t">' + api.esc(String(c.title_zh || c.title || "英语剧本")) + "</div>" +
-            '<div class="l6-row-sub">' + api.esc(String(c.title || "")) + "</div></div>" +
-            right + '<span class="l6-row-go">›</span></div>';
+    /* M8c:剧本库网格卡(文游首页同款 scenario-card:4:3 封面 + 徽标 + 详情/播放按钮);卡主体点击=播放,详情按钮单独弹层 */
+    function langGridCardHtml(c) {
+        var icon = THEME_ICON[String(c.theme || "")] || "📖";
+        var has = cardSaveOf(c), r = cardRoundOf(c);
+        var themeKey = String(c.theme || "").replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase();
+        var playTxt = has ? "▶ 继续 · 第 " + (r || 1) + " 轮" : "立即游玩";
+        return '<div data-cid="' + cardCid(c) + '" class="scenario-card"><div class="scenario-card-main">' +
+            '<div class="scenario-card-cover theme-' + themeKey + '" id="llc-cover-' + window.CoverService.safeId(c.id) + '">' +
+            '<img class="scc-img" alt="" loading="lazy"><span class="scc-emoji">' + icon + "</span></div>" +
+            '<div class="list-title">' + api.esc(String(c.title_zh || c.title || "英语剧本")) + "</div>" +
+            '<div class="scenario-badges">' +
+            '<span class="scenario-badge">' + api.esc(bandShort(c.band)) + "</span>" +
+            '<span class="scenario-badge">' + api.esc(String(c.category_zh || c.category || "")) + "</span>" +
+            (has ? '<span class="scenario-badge" style="border-color:rgba(47,158,110,.6);color:#2f9e6e;background:rgba(47,158,110,.08);">第 ' + (r || 1) + " 轮</span>" : "") +
+            "</div>" +
+            '<div class="list-sub" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + api.esc(String(c.title || "")) + "</div>" +
+            '<div class="scenario-card-btns">' +
+            '<button class="tiny-btn" onclick="event.stopPropagation();LangController.openLangDetail(\'' + cardCid(c) + '\')">详情</button>' +
+            '<button class="tiny-btn primary">' + playTxt + "</button>" +
+            "</div></div></div>";
     }
     function contRowHtml(c) {
         var r = cardRoundOf(c);
@@ -22069,12 +22129,17 @@ function openNpcProfile(npcId) {
             if (profile.band) api.showBand();
             api.renderHome();
         },
-        /* M6a:语言页组视图进入钩子(switchView 调用) */
+        /* M6a/M8d:语言页组视图进入钩子(switchView 调用);生词本独立子页进入即刷词表 */
         onShow: function (viewId) {
             api.syncSubNav(viewId);
             if (viewId === "view-lang") { api.renderHome(); return; }
             if (viewId === "view-lang-library") { api.renderLibrary(); return; }
-            if (viewId === "view-lang-learn") { api.refresh(); }
+            if (viewId === "view-lang-learn") { api.refresh(); return; }
+            if (viewId === "view-lang-vocab") { api.refreshVocab(); }
+        },
+        /* M8d:进入生词本子页并立即重绘词表(直接调绕开 1.5s MutationObserver 节流) */
+        refreshVocab: function () {
+            try { if (window.LangAssist && window.LangAssist.refreshVocab) window.LangAssist.refreshVocab(); } catch (e) {}
         },
         syncSubNav: function (viewId) {
             document.querySelectorAll(".lang-sub-nav .top-nav-btn").forEach(function (btn) {
@@ -22169,6 +22234,29 @@ function openNpcProfile(npcId) {
         },
         setImmersion: function (m) { profile.immersion = m; save(); saveRemote(); api.renderPicker(); hint(""); },
         goCards: function () { api.goLibrary(); },
+        /* M8b:语言首页推荐轮播控制(5s 自动 + dots 手动,点击 dot 后重新计时) */
+        startLangBanner: function (n) {
+            api.stopLangBanner();
+            if (!n || n < 2) return;
+            langBanner.timer = setInterval(function () {
+                api.goLangBanner((langBanner.idx + 1) % n, true);
+            }, 5000);
+        },
+        stopLangBanner: function () {
+            if (langBanner.timer) { clearInterval(langBanner.timer); langBanner.timer = null; }
+        },
+        goLangBanner: function (i, silent) {
+            var box = $("lang-home-reco");
+            if (!box || !box.children.length) return;
+            langBanner.idx = (i + box.children.length) % box.children.length;
+            box.style.transform = "translateX(-" + (langBanner.idx * 100) + "%)";
+            var dotsBox = $("lang-reco-dots");
+            if (dotsBox) {
+                var ds = dotsBox.querySelectorAll(".dot"), k;
+                for (k = 0; k < ds.length; k++) ds[k].classList.toggle("active", k === langBanner.idx);
+            }
+            if (!silent) api.startLangBanner(box.children.length);
+        },
         goLibrary: function () {
             switchView("view-lang-library");
             api.renderLibrary();
@@ -22177,6 +22265,10 @@ function openNpcProfile(npcId) {
             switchView("view-lang-learn");
             api.refresh();
         },
+        goVocab: function () {
+            switchView("view-lang-vocab");
+            api.refreshVocab();
+        },
         anchor: function (sel) {
             setTimeout(function () {
                 try { var el = document.querySelector(sel); if (el && el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {}
@@ -22184,7 +22276,7 @@ function openNpcProfile(npcId) {
         },
         goQuizAnchor: function () { api.goLearn(); api.anchor("#lang-learn-test"); },
         goImmAnchor: function () { api.goLearn(); api.anchor("#lang-learn-imm"); },
-        goVocabAnchor: function () { api.goLearn(); api.anchor("#lang-learn-vocab"); },
+        goVocabAnchor: function () { api.goVocab(); api.anchor("#lang-learn-vocab"); },
         goDrillAnchor: function () { api.goLearn(); api.anchor("#lang-learn-drill"); },
         setLibFilter: function (k, v) { libFilter[k] = v; api.renderLibrary(); },
         recommendFor: function (lcs) {
@@ -22220,15 +22312,25 @@ function openNpcProfile(npcId) {
             }
             var sub = $("lang-home-reco-sub");
             if (sub) sub.textContent = profile.band ? ("已按你的学习档 " + bandShort(profile.band) + " 匹配推荐，点卡即玩") : "按最新上架推荐；测档后难度会按你的档位匹配";
+            var wrap = $("lang-reco-wrap");
+            api.stopLangBanner();
             if (!window.__LANG_CARDS_READY) {
-                box.innerHTML = '<div class="list-sub">推荐剧本加载中…</div>';
+                if (wrap) wrap.style.display = "none";
                 if (!window.__LANG_CARDS_LOADING) api.loadLangCards();
             } else if (!lcs.length) {
-                box.innerHTML = '<div class="list-sub">英语原生剧本还在上架中，稍后再来看看～</div>';
+                if (wrap) wrap.style.display = "none";
+                if (sub) sub.textContent = "英语原生剧本还在上架中，稍后再来看看～";
             } else {
-                var cards = api.recommendFor(lcs).slice(0, 8);
-                box.innerHTML = '<div class="l6-hs">' + cards.map(miniCardHtml).join("") + "</div>";
+                if (wrap) wrap.style.display = "block";
+                var cards = api.recommendFor(lcs).slice(0, 6);
+                langBanner.idx = 0;
+                box.innerHTML = cards.map(langBannerHtml).join("");
+                var bi;
+                for (bi = 0; bi < cards.length; bi++) window.CoverService.paint("lb-cover-" + window.CoverService.safeId(cards[bi].id), cards[bi]);
+                var dotsBox = $("lang-reco-dots");
+                if (dotsBox) dotsBox.innerHTML = cards.map(function (_, di) { return '<span class="dot' + (di === 0 ? " active" : "") + '" onclick="LangController.goLangBanner(' + di + ')"></span>'; }).join("");
                 bindCardClicks(box);
+                api.startLangBanner(cards.length);
             }
             api.renderContinue();
         },
@@ -22245,7 +22347,7 @@ function openNpcProfile(npcId) {
             bindCardClicks(box);
         },
         renderLibrary: function () {
-            var rows = $("lang-lib-rows"); if (!rows) return;
+            var rows = $("lang-lib-grid"); if (!rows) return;
             var cats = $("lang-lib-cats"); if (!cats) return;
             var lcs = window.LANG_CARDS_ONLINE || [];
             /* 题材 chips(动态取自库) */
@@ -22262,11 +22364,11 @@ function openNpcProfile(npcId) {
             for (bi = 0; bi < bts.length; bi++) bts[bi].classList.toggle("active", (bts[bi].getAttribute("data-band") || "") === libFilter.band);
             /* 列表 */
             if (!window.__LANG_CARDS_READY) {
-                rows.innerHTML = '<div class="list-sub">剧本加载中…</div>';
+                rows.innerHTML = '<div class="list-sub" style="grid-column:1/-1;">剧本加载中…</div>';
                 if (!window.__LANG_CARDS_LOADING) api.loadLangCards();
                 return;
             }
-            if (!lcs.length) { rows.innerHTML = '<div class="list-sub">英语剧本库还是空的，稍后再来刷新看看～</div>'; hint("", "lang-lib-hint"); return; }
+            if (!lcs.length) { rows.innerHTML = '<div class="list-sub" style="grid-column:1/-1;">英语剧本库还是空的，稍后再来刷新看看～</div>'; hint("", "lang-lib-hint"); return; }
             var list = [], i, c;
             for (i = 0; i < lcs.length; i++) {
                 c = lcs[i]; if (!c || !c.id) continue;
@@ -22275,14 +22377,56 @@ function openNpcProfile(npcId) {
                 list.push(c);
             }
             if (!list.length) {
-                rows.innerHTML = '<div style="padding:18px 0;text-align:center;" class="list-sub">没有符合筛选的剧本——换个难度或题材看看</div>';
+                rows.innerHTML = '<div class="list-sub" style="grid-column:1/-1;text-align:center;">没有符合筛选的剧本——换个难度或题材看看</div>';
                 hint("", "lang-lib-hint");
                 return;
             }
             list.sort(function (a, b) { return (a.order || 9) - (b.order || 9); });
-            rows.innerHTML = list.map(libRowHtml).join("");
+            rows.innerHTML = list.map(langGridCardHtml).join("");
+            for (i = 0; i < list.length; i++) window.CoverService.paint("llc-cover-" + window.CoverService.safeId(list[i].id), list[i]);
             bindCardClicks(rows);
             hint(profile.band ? "" : "点卡即玩：英语原生剧本自带档位，词库随卡走——建议先「测档」让推荐更准。", "lang-lib-hint");
+        },
+        /* M8c:语言卡详情弹层(封面大图 + 中英标题 + 档/题材 + 英文简介 + 主角;播放按钮从弹层进入) */
+        openLangDetail: function (cid) {
+            var lcs = window.LANG_CARDS_ONLINE || [], i, c = null;
+            for (i = 0; i < lcs.length; i++) if (lcs[i] && String(lcs[i].id) === String(cid)) { c = lcs[i]; break; }
+            if (!c) return;
+            window._langDetailCid = String(c.id);
+            var modal = $("lang-card-modal");
+            if (!modal) return;
+            modal.style.display = "flex";
+            var st = (c.structured && typeof c.structured === "object") ? c.structured : {};
+            var w = st.world || {};
+            var idn = st.identity || {};
+            var has = cardSaveOf(c), r = cardRoundOf(c);
+            var heroTxt = [String(idn.role || ""), String(idn.background || "")].filter(function (x) { return x; }).join("；").slice(0, 160);
+            var summary = String(w.summary || "").replace(/\s+/g, " ").trim().slice(0, 340);
+            var html =
+                '<div class="lgd-cover" id="lgd-cover-' + window.CoverService.safeId(c.id) + '"><img class="scc-img" alt="" loading="lazy"><span class="scc-emoji">' + (THEME_ICON[String(c.theme || "")] || "📖") + "</span></div>" +
+                '<div class="lgd-title">' + api.esc(String(c.title_zh || c.title || "英语剧本")) + "</div>" +
+                '<div class="lgd-en">' + api.esc(String(c.title || "")) + " · 英语原生剧本</div>" +
+                '<div class="lgd-badges">' +
+                '<span class="scenario-badge">' + api.esc(bandShort(c.band)) + "</span>" +
+                '<span class="scenario-badge">' + api.esc(String(c.category_zh || c.category || "")) + "</span>" +
+                '<span class="scenario-badge">' + api.esc(String(w.genre || "").slice(0, 20)) + "</span>" +
+                "</div>" +
+                (heroTxt ? '<div class="lgd-desc"><b>你扮演：</b>' + api.esc(heroTxt) + "</div>" : "") +
+                (summary ? '<div class="lgd-desc"><b>故事预览（English）：</b>' + api.esc(summary) + "</div>" : "") +
+                (has ? '<div class="lgd-desc"><b>进度：</b>已到第 ' + (r || 1) + " 轮——接着上次的英语进度玩，词库随卡走。</div>" : "");
+            $("lang-gd-content").innerHTML = html;
+            $("lang-gd-play-btn").textContent = has ? "▶ 继续 · 第 " + (r || 1) + " 轮" : "立即游玩";
+            window.CoverService.paint("lgd-cover-" + window.CoverService.safeId(c.id), c);
+        },
+        closeLangDetail: function () {
+            var modal = $("lang-card-modal");
+            if (modal) modal.style.display = "none";
+            window._langDetailCid = null;
+        },
+        playLangDetail: function () {
+            var cid = window._langDetailCid;
+            api.closeLangDetail();
+            if (cid) api.enterCard(cid);
         },
         enterCard: function (cid) {
             if (!window.LangEngine) { hint("英语引擎还没就绪，刷新一下再试～", "lang-lib-hint"); return; }
@@ -23193,8 +23337,8 @@ function openNpcProfile(npcId) {
         });
         if (learnMo) return;
         learnMo = new MutationObserver(function () {
-            /* M6a:生词本在语言页组的学习中心;语言首页 view-lang 或学习中心 active 时兜底刷新 */
-            var on = false, i, ids = ["view-lang", "view-lang-learn"];
+            /* M6a/M8d:生词本挂语言页组任一子页(view-lang/-learn/-vocab)active 时兜底刷新 */
+            var on = false, i, ids = ["view-lang", "view-lang-learn", "view-lang-vocab"];
             for (i = 0; i < ids.length; i++) {
                 var vl = $(ids[i]);
                 if (vl && vl.classList && vl.classList.contains("active")) { on = true; break; }
@@ -23765,7 +23909,9 @@ function openNpcProfile(npcId) {
     window.LangAssist = {
         loadBank: loadLangBank, bankItem: langBankItem, bankStatus: langBankStatus,
         getChapterWords: getChapterWords,   // M6d4:当前章候选词(供 LangEngine 续写注入;内部触发预载/抽词)
-        startDrill: startDrill, drillFlip: drillFlip, drillJudge: drillJudge   // M6d6:考纲词刷词(学习中心⑥)
+        startDrill: startDrill, drillFlip: drillFlip, drillJudge: drillJudge,  // M6d6:考纲词刷词(学习中心⑥)
+        /* M8d:生词本独立子页 — 切页钩子直接调,绕开 MutationObserver 1.5s 节流 */
+        refreshVocab: function () { loadVocab(function () { renderLearn(); }); }
     };
 })();
 </script>
