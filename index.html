@@ -4864,9 +4864,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
         <div class="list-sub" id="membership-intro-text">会员期内 AI 对话不限次、不消耗云币；云币用于解锁剧本卡与免费额度超限后的 AI 对话。</div>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin:10px 0;padding:10px 12px;border-radius:12px;background:var(--card-bg,#fffdf8);border:1px solid var(--line);">
             <div style="font-size:0.9rem;font-weight:700;">云币余额：<span id="membership-coin-balance" style="color:var(--accent-dark,#c0392b);">--</span></div>
-            <button id="membership-checkin-btn" class="mini-btn primary" style="margin:0;padding:6px 14px;" onclick="MembershipService.doCheckin()">每日签到</button>
         </div>
-        <div id="membership-checkin-msg" class="list-sub" style="margin:-4px 0 10px;"></div>
         <div id="membership-offer-banner" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:10px 0;padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,#fff3d6,#ffe3b3);border:1px solid #e8b84b;">
             <div style="font-size:0.9rem;font-weight:700;color:#8a4b00;"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M4 14q0-2.625 1.25-4.675T8 5.875t2.75-2.138L12 3v3.3q0 .925.625 1.462t1.4.538q.425 0 .813-.175t.712-.575L16 7q1.8 1.05 2.9 2.912T20 14q0 2.2-1.075 4.013T16.1 20.874q.425-.6.663-1.312T17 18.05q0-1-.375-1.888t-1.075-1.587L12 11.1l-3.525 3.475q-.725.725-1.1 1.6T7 18.05q0 .8.238 1.513t.662 1.312q-1.75-1.05-2.825-2.863T4 14m8-.1l2.125 2.075q.425.425.65.95T15 18.05q0 1.225-.875 2.088T12 21t-2.125-.862T9 18.05q0-.575.225-1.112t.65-.963z"/></svg> 限时优惠进行中</div>
             <div style="font-size:0.9rem;font-weight:700;color:#d63031;">距优惠结束 <span id="membership-countdown" style="font-variant-numeric:tabular-nums;background:#fff;padding:2px 8px;border-radius:6px;border:1px solid #e8b84b;">23:59:59</span></div>
@@ -14740,7 +14738,7 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             if (code === "QUOTA_EXCEEDED") return "AI 服务繁忙，请稍后重试";
             if (code === "MEMBERSHIP_EXPIRED") return "会员已到期，已自动切换为免费额度";
             if (code === "POOL_UNAVAILABLE") return "AI 服务暂时不可用，请稍后重试";
-            if (code === "INSUFFICIENT_COIN") return "云币不足，请签到领取 300 云币或开通会员后再试";
+            if (code === "INSUFFICIENT_COIN") return "云币不足，请充值或开通会员后继续（开通会员可 AI 不限次）";
             if (code === "NOT_LOGGED_IN" || code === "SESSION_EXPIRED") return "登录状态已失效，请重新登录";
             return "";
         }
@@ -16319,7 +16317,7 @@ const token = delta.content || "";
                     let extraHint = "";
                     if (error?.workerCode === "QUOTA_EXCEEDED") extraHint = "\n\n点击右上角「当前会员类型」可开通会员，立即不限量。";
                     else if (error?.workerCode === "MEMBERSHIP_EXPIRED") extraHint = "\n\n会员已到期，点击右上角「当前会员类型」可立即续费。";
-                    else if (error?.workerCode === "INSUFFICIENT_COIN") extraHint = "\n\n「我的」→ 充值/云币 → 每日签到可领取 300 云币，或直接充值。";
+                    else if (error?.workerCode === "INSUFFICIENT_COIN") extraHint = "\n\n「我的」→ 充值/云币可购买云币，或开通会员解锁 AI 不限次。";
                     // 网络层 reject 可能是裸对象/字符串/无 message，兜底显示可读文案,杜绝 "undefined"
                     const errText = error?.message || (typeof error === "string" ? error : "网络连接中断，请稍后重试");
                     UIRenderer.finishStreaming(`⚠️ 连接失败：${errText}${extraHint}\n\n请检查网络后重试。`, { conflictDetected: false });
@@ -20364,63 +20362,10 @@ function openNpcProfile(npcId) {
             document.getElementById("membership-pay-area").innerHTML = "";
             refreshStatus();
         }
-        // 余额 + 签到按钮状态（今日已签则置灰；连续天数提示）
         function renderCoinBalance() {
             const u = AuthService.getUserData();
             const balanceEl = document.getElementById("membership-coin-balance");
             if (balanceEl) balanceEl.textContent = u ? String(Number(u.coins || 0)) : "--";
-            const btn = document.getElementById("membership-checkin-btn");
-            const msg = document.getElementById("membership-checkin-msg");
-            if (!btn) return;
-            const today = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
-            const streak = Number(u?.checkin_streak || 0);
-            if (u && u.last_checkin_date === today) {
-                btn.textContent = "今日已签 ✓";
-                btn.disabled = true;
-                if (msg) msg.textContent = streak > 0 ? `已连续签到 ${streak} 天，明天继续领 300 币` : "";
-            } else {
-                btn.textContent = u && !u.last_checkin_date ? "首次签到 +300 币" : "每日签到 +300 币";
-                btn.disabled = false;
-                if (msg) msg.textContent = !u ? "登录后每日签到领云币" : (streak > 0 ? `已连续签到 ${streak} 天，今日签到领 300 币${streak % 7 === 6 ? "，明天触发 7 天大奖 +700 币" : ""}` : "每天签到领 300 币，每满 7 天再 +700");
-            }
-        }
-        // 每日签到：POST /api/checkin → 加币 → 刷新余额
-        async function doCheckin() {
-            if (!AuthService.getToken()) {
-                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后即可每日签到领取云币" });
-                return;
-            }
-            const btn = document.getElementById("membership-checkin-btn");
-            if (btn) btn.disabled = true;
-            TopLoader.show("签到中...");
-            try {
-                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/checkin`, {
-                    method: "POST",
-                    headers: { "X-Auth-Token": AuthService.getToken() }
-                });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error || "签到失败");
-                await AuthService.refreshBalance().catch(() => {});
-                AuthService.applyCheckin(Number(data.coins), Number(data.streak), new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10));
-                renderCoinBalance();
-                closePanel();
-                NoticeModalService.showInfo({
-                    title: "🎁 签到成功",
-                    descHtml: `+${data.reward} 云币（连续 ${data.streak} 天）！当前余额 ${data.coins}，去体验新剧本吧～`
-                });
-            } catch (e) {
-                const msg = e.message || "签到失败";
-                if (msg.includes("已签到")) {
-                    await AuthService.refreshBalance();
-                    renderCoinBalance();
-                    NoticeModalService.showInfo({ title: "提示", descHtml: "今天已经签到过啦，明天再来吧～" });
-                } else {
-                    NoticeModalService.showInfo({ title: "签到失败", descHtml: msg });
-                }
-                if (btn) btn.disabled = false;
-            } finally {
-                TopLoader.hide();
-            }
         }
         function closePanel() {
             const modal = document.getElementById("membership-modal");
@@ -20662,7 +20607,7 @@ function openNpcProfile(npcId) {
             await AuthService.refreshBalance();
             AuthService.updateUsageStatusUI();
         }
-        return { openPanel, closePanel, selectPlan, selectPayType, startPay, pollPayStatus: startPoll, hasMembership, refreshStatus, doCheckin, renderCoinBalance, updateLifetimePriceTexts };
+        return { openPanel, closePanel, selectPlan, selectPayType, startPay, pollPayStatus: startPoll, hasMembership, refreshStatus, renderCoinBalance, updateLifetimePriceTexts };
     })();
 
     // ==================== AppStoreService (手机应用商店:安装应用到主屏) ====================
@@ -20830,7 +20775,7 @@ function openNpcProfile(npcId) {
             if (lock.needLogin) {
                 const ok = await DecisionModalService.show({
                     title: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M6 22q-.825 0-1.412-.587T4 20V10q0-.825.588-1.412T6 8h1V6q0-2.075 1.463-3.537T12 1t3.538 1.463T17 6v2h1q.825 0 1.413.588T20 10v10q0 .825-.587 1.413T18 22zm7.413-5.587Q14 15.825 14 15t-.587-1.412T12 13t-1.412.588T10 15t.588 1.413T12 17t1.413-.587M9 8h6V6q0-1.25-.875-2.125T12 3t-2.125.875T9 6z'/></svg> 请先登录",
-                    descHtml: `该作品解锁需 <b>${price} 云币</b>（永久拥有）。<br>登录后即可解锁，每日签到还能领云币！`,
+                    descHtml: `该作品解锁需 <b>${price} 云币</b>（永久拥有）。<br>登录后即可解锁，云币不足可充值或开通会员。`,
                     okText: "去登录", cancelText: "取消"
                 });
                 if (!ok) return false;
@@ -20879,7 +20824,6 @@ function openNpcProfile(npcId) {
                     id: u.id, email: getEmail(),
                     coins: u.coins, membership_type: u.membership_type || "",
                     membership_expires_at: u.membership_expires_at || "",
-                    checkin_streak: u.checkin_streak || 0, last_checkin_date: u.last_checkin_date || "",
                     nickname: u.nickname || "", signature: u.signature || "", faceimg: u.faceimg || "",
                     ts: Date.now()
                 }));
@@ -20895,7 +20839,6 @@ function openNpcProfile(npcId) {
                     id: c.id, email: c.email,
                     coins: Number(c.coins ?? c.coin ?? 0), membership_type: c.membership_type || "",
                     membership_expires_at: c.membership_expires_at || "",
-                    checkin_streak: c.checkin_streak || 0, last_checkin_date: c.last_checkin_date || "",
                     nickname: c.nickname || "", signature: c.signature || "", faceimg: c.faceimg || ""
                 };
             } catch (e) {}
@@ -20977,15 +20920,6 @@ function openNpcProfile(npcId) {
             } catch (e) {
                 console.error("刷新使用状态失败", e);
             }
-        }
-        // 签到接口已返回权威余额,直接本地写入立即刷新(不依赖 PB 直读是否放行)
-        function applyCheckin(coin, streak, checkinDate) {
-            if (!_userData) return;
-            _userData.coins = coin;
-            _userData.checkin_streak = streak;
-            _userData.last_checkin_date = checkinDate;
-            cacheUser();
-            updateUsageStatusUI();
         }
 
         function showOverlay() {
@@ -21443,7 +21377,7 @@ function openNpcProfile(npcId) {
             if (e.key === "Enter") handleSubmit();
         });
 
-        return { init, handleSubmit, toggleMode, enterResetMode, sendCode, register, resetPassword, logout, getToken, getEmail, getUserData, refreshBalance, applyCheckin, updateUsageStatusUI, hasMembership, socialLogin, showDoc, refreshCache: cacheUser };
+        return { init, handleSubmit, toggleMode, enterResetMode, sendCode, register, resetPassword, logout, getToken, getEmail, getUserData, refreshBalance, updateUsageStatusUI, hasMembership, socialLogin, showDoc, refreshCache: cacheUser };
     })();
 
     function hideBootScreen() {

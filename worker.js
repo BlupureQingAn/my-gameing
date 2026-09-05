@@ -18,14 +18,11 @@ function checkBanned(text) {
 
 // ==================== 1. 配置中心 ====================
 
-// 云币经济：AI 对话按 token 计费（输入 4 币/千 token、输出 12 币/千 token，向上取整，最低 1 币/轮，失败不扣费；典型对话约 10 币）、解锁 5000 币/张、签到 300 币/天（每连续满 7 天额外 +700，如第 7/14/21 天；首次签到与每日一致）
+// 云币经济：AI 对话按 token 计费（输入 4 币/千 token、输出 12 币/千 token，向上取整，最低 1 币/轮，失败不扣费；典型对话约 10 币）、解锁 5000 币/张
 const TOKEN_PRICE_INPUT = 4;   // 云币/千 token（输入）
 const TOKEN_PRICE_OUTPUT = 12; // 云币/千 token（输出）
 const TOKEN_COST_MIN = 1;      // 每轮最低消费
 const UNLOCK_COST = 5000;
-const CHECKIN_BASE = 300;
-const CHECKIN_STREAK_BONUS = 700;
-const CHECKIN_FIRST_BONUS = 300; // 官方卡免费后取消首签加成，与每日一致
 // 创作者分佣：别人玩你的社区卡 30 币/轮（单卡单用户每日最多计 10 轮），解锁分成 1000 币
 const COMMUNITY_REWARD_PER_PLAY = 30;
 const COMMUNITY_DAILY_PLAY_LIMIT = 10;
@@ -348,7 +345,7 @@ const MEMBER_PLANS = {
     yearly:    { id: "yearly",    name: "年度会员", price: "118", days: 365 },
 };
 // 免费用户每日免费 AI 次数(北京时间 08:00 刷新;额度内仅路由 NVIDIA 全部 + 硅基 sf-glm-4-9b,超限转云币计费)
-const FREE_QUOTA_PER_DAY = 50;
+const FREE_QUOTA_PER_DAY = 10;
 const FREE_QUOTA_REFRESH_HOUR = 8;
 // 终身会员（会员改革后保留的会员档，非充值档）
 const LIFETIME_PLAN = { id: "lifetime", name: "终身会员", price: "188", days: 73000 };
@@ -1241,8 +1238,6 @@ export default {
                     membershipExpiresAt: r.membership_expires_at || "",
                     memberDaysLeft: memberDaysLeft(r),
                     coins: Number(r.coins || 0),
-                    checkinStreak: Number(r.checkin_streak || 0),
-                    checkinDate: r.last_checkin_date || "",
                     pricing: { inputPerK: TOKEN_PRICE_INPUT, outputPerK: TOKEN_PRICE_OUTPUT, minCost: TOKEN_COST_MIN },
                     unlockCost: UNLOCK_COST,
                     // 会员不限量用 -1 表示（避免 Infinity 序列化为 null）；remaining 按普通对话约 10 币/轮粗估
@@ -1437,30 +1432,6 @@ export default {
                 const loginData = await loginRes.json().catch(() => ({}));
                 if (!loginData.token) return errorResponse("密码已重置，请重新登录", 200, null, "");
                 return new Response(JSON.stringify({ token: loginData.token, record: loginData.record }), {
-                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
-                });
-            }
-
-            // ---- 路由：每日签到（300 币/天；每连续满 7 天额外 +700；断签重置；首次与每日一致）----
-            if (url.pathname === "/api/checkin" && request.method === "POST") {
-                const auth = await authenticate(env, request);
-                if (auth.error) return auth.error;
-                const r = auth.record;
-                const today = getTodayStr();
-                if (r.last_checkin_date === today) {
-                    return errorResponse("今日已签到", 400, { coins: Number(r.coins || 0) }, "ALREADY_CHECKED_IN");
-                }
-                const yesterday = new Date(Date.now() + TIMEZONE_OFFSET_MS - 86400000).toISOString().slice(0, 10);
-                const streak = r.last_checkin_date === yesterday ? Number(r.checkin_streak || 0) + 1 : 1;
-                const isFirst = !r.last_checkin_date;
-                const reward = isFirst ? CHECKIN_FIRST_BONUS : (CHECKIN_BASE + (streak % 7 === 0 ? CHECKIN_STREAK_BONUS : 0));
-                const coin = Number(r.coins || 0) + reward;
-                const patchRes = await pbAdminFetch(env, `/api/collections/users/records/${r.id}`, {
-                    method: "PATCH",
-                    body: JSON.stringify({ coins: coin, last_checkin_date: today, checkin_streak: streak })
-                });
-                if (!patchRes.ok) return errorResponse("签到失败，请重试", 500, null, "CHECKIN_FAILED");
-                return new Response(JSON.stringify({ coins: coin, streak, reward }), {
                     headers: { ...corsHeaders(), "Content-Type": "application/json" }
                 });
             }
