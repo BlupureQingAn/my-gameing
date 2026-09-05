@@ -13151,7 +13151,15 @@ function rebuildChoicesBlock(body, labels = []) {
         function getSelectedCard() {
             const cards = loadCards();
             const id = getSelectedId();
-            return cards.find((c) => c.id === id) || cards[0];
+            const hit = cards.find((c) => c.id === id);
+            if (hit) return hit;
+            // M6b:语言专属卡(在线 lang_cards)不在本地卡池,按选中 id 回查后标准化返回(带 structured.band)
+            try {
+                const lc = window.LANG_CARDS_ONLINE || [];
+                const l = lc.find((c) => String(c.id) === id);
+                if (l) return normalizeCard(l);
+            } catch (e) {}
+            return cards[0];
         }
         function updateSelectedCard(payload) {
             const cards = loadCards();
@@ -21650,6 +21658,8 @@ function openNpcProfile(npcId) {
             let g = "";
             try { g = String(card?.structured?.world?.genre || "") + " " + String(card?.category || ""); } catch (e) {}
             for (let i = 0; i < TONE_RULES.length; i++) { if (TONE_RULES[i][0].test(g)) return TONE_RULES[i][1]; }
+            // M6b:语言专属卡设定本身全英文,语域照设定走,不做中文题材推断
+            try { if (card?.structured?.band) return "register: the English world bible below already sets its own register and mood — follow it exactly, keeping names and terms intact"; } catch (e) {}
             return "register: match the mood your Chinese setting implies; when in doubt, prefer slightly literary over casual";
         }
         function buildInjection() {
@@ -21663,6 +21673,9 @@ function openNpcProfile(npcId) {
                 round = ((s?.history || []).filter((h) => h && h.role === "user").length || 0) + 1;
             } catch (e) {}
             const tone = toneHint(ScenarioCardService.getSelectedCard());
+            // M6b:语言专属卡(structured.band 存在)→ 设定已全英文,续写而非翻译
+            let englishSetting = false;
+            try { englishSetting = !!(ScenarioCardService.getSelectedCard()?.structured?.band); } catch (e) {}
             const immText = immersion === "full"
                 ? "FULL IMMERSION — English only; absolutely no Chinese lines anywhere."
                 : (round <= 2
@@ -21676,9 +21689,11 @@ function openNpcProfile(npcId) {
                     + " — story and tone come first; tense and word form may change freely, and it is fine to use only one or two, or skip them entirely when the scene does not call for them."
                 : "";
             return [
-                "[ENGLISH LANGUAGE MODE — for language and output style these rules override the Chinese instructions above; story facts still come from the Chinese setting]",
+                "[ENGLISH LANGUAGE MODE — for language and output style these rules override the Chinese instructions above; story facts come from the world bible below]",
                 "1) Write ALL narration, dialogue, scene title and options in natural English. Never output Chinese inside title / story / options.",
-                "2) The Chinese 【设定文本】 is the world bible (era, rules, characters, mood). Keep the world identical — translate it, don't rewrite it; " + tone + ".",
+                "2) " + (englishSetting
+                    ? "The 【设定文本】 world bible below is already written in English — it is the source of truth for era, rules, characters and mood. Keep the world exactly as it is: keep every name, term and rule; continue the story in the same register; never translate, summarize or rewrite the setting itself. " + tone + "."
+                    : "The Chinese 【设定文本】 is the world bible (era, rules, characters, mood). Keep the world identical — translate it, don't rewrite it; " + tone + "."),
                 "3) The \"time\" field must keep the engine's numeric Chinese format with month and day characters, e.g. \"5月15日\" or \"第3年5月15日\" — never word-only English dates like \"May 15\".",
                 "4) " + band + ".",
                 "5) " + immText,
@@ -21716,6 +21731,7 @@ function openNpcProfile(npcId) {
             let card = null;
             try { card = (ScenarioCardService.loadCards() || []).find((c) => String(c.id) === id) || null; } catch (e) {}
             if (!card) { try { card = (window.SCENARIO_LIBRARY || []).find((c) => String(c.id) === id) || null; } catch (e) {} }
+            if (!card) { try { card = (window.LANG_CARDS_ONLINE || []).find((c) => String(c.id) === id) || null; } catch (e) {} }
             if (!card) {
                 try { NoticeModalService.showInfo({ title: "剧本未找到", descHtml: "这张剧本暂时找不到，请刷新后再试。" }); } catch (e) {}
                 return;
@@ -21768,7 +21784,33 @@ function openNpcProfile(npcId) {
                 UIRenderer.renderTop(st2); UIRenderer.renderInventory(st2); UIRenderer.renderSocialList(st2); UIRenderer.renderSaveSlots(st2);
             } catch (e) { console.warn("[LangEngine] 开局渲染:", e); }
             try { InitLoadingService.close(); } catch (e) {}
-            try { await ChatService.requestAI("Begin the first scene of this story."); } catch (e) { console.warn("[LangEngine] 英语开局请求失败:", e); }
+            // M6b:语言专属卡(带 structured.band + 写死全英文 first_scene)首轮本地渲染,零 AI 请求
+            let nativeScene = null;
+            try {
+                const _st = card?.structured;
+                if (_st && String(_st.band || "").trim() && _st.first_scene && String(_st.first_scene.story || "").trim()) nativeScene = _st.first_scene;
+            } catch (e) {}
+            if (nativeScene) {
+                try {
+                    const st2 = StateService.get();
+                    const w = card?.structured?.world || {};
+                    const presetName = String(card?.structured?.identity?.name || "").trim();
+                    const stateName = String(st2?.name || "").trim();
+                    let fsStory = String(nativeScene.story || "").trim();
+                    if (presetName && stateName && stateName !== presetName) fsStory = fsStory.split(presetName).join(stateName);
+                    const fsHtml = FillProtocolService.fillCardTemplate(FillProtocolService.getCardTheme(), {
+                        story: fsStory,
+                        options: (Array.isArray(nativeScene.options) ? nativeScene.options : []).slice(0, 4),
+                        scene: String(w.genre || w.era || "Opening").slice(0, 40)
+                    });
+                    UIRenderer.appendMessage("ai", fsHtml, Utils.nowDateStr(st2), false);
+                    StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(st2), text: fsHtml });
+                    StateService.save();
+                    UIRenderer.renderTop(StateService.get());
+                } catch (e) { console.warn("[LangEngine] 语言卡本地首轮失败:", e); }
+            } else {
+                try { await ChatService.requestAI("Begin the first scene of this story."); } catch (e) { console.warn("[LangEngine] 英语开局请求失败:", e); }
+            }
             return { mode: "new" };
         }
         return { isLangSession, buildInjection, restoreIfNeeded, exitToChinese, enter, langSaveKey, hasLangSave };
@@ -21803,6 +21845,10 @@ function openNpcProfile(npcId) {
     };
     var profile = { lang: "en" };
     try { var _p = JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}"); if (_p && typeof _p === "object") profile = _p; } catch (e) { }
+    /* M6b:在线英语专属卡(lang_cards 官方库)缓存,供列表渲染/选中卡 overlay/播放进入用 */
+    window.LANG_CARDS_ONLINE = window.LANG_CARDS_ONLINE || [];
+    window.__LANG_CARDS_READY = window.__LANG_CARDS_READY || false;
+    window.__LANG_CARDS_LOADING = window.__LANG_CARDS_LOADING || false;
     /* M6d2 旧值迁移:本地 a/b/c → a→cet4/b→cet6/c→ky(云端读侧由 worker 迁移) */
     (function () {
         var legacy = { a: "cet4", b: "cet6", c: "ky" };
@@ -21832,6 +21878,7 @@ function openNpcProfile(npcId) {
             if (profile.immersion) api.renderPicker();
             if (!profile.band) hint("玩前花 1 分钟测个档（10 题由易到难），难度会自动匹配你（不测也能直接开玩）。");
             api.loadRemote();
+            api.loadLangCards();
         },
         refresh: function () {
             api.renderPicker();
@@ -21923,6 +21970,8 @@ function openNpcProfile(npcId) {
         setImmersion: function (m) { profile.immersion = m; save(); saveRemote(); api.renderPicker(); hint(""); },
         goCards: function () {
             if (!profile.band) {
+                // M6b:英语专属卡自带档位(词库随卡档),在线库已就绪时可免测档直接开玩
+                if ((window.LANG_CARDS_ONLINE || []).length) { api.showCards(); return; }
                 hint("建议先测个档（10 题约 3 分钟），难度会自动匹配你。");
                 var b = $("lang-quiz-start"); if (b) b.scrollIntoView({ behavior: "smooth", block: "center" });
                 return;
@@ -21948,6 +21997,24 @@ function openNpcProfile(npcId) {
                      '<div class="list-sub" style="margin:0;">' + api.esc(String(c.category || "")) + "</div></div>" +
                      cont + '<span style="color:var(--sub,#806a55);">›</span></div>';
             }
+            // M6b:英语专属卡段(在线 lang_cards 官方英语卡;按卡档位学对应词库)
+            var lcs = window.LANG_CARDS_ONLINE || [];
+            if (lcs.length) {
+                for (i = 0; i < lcs.length; i++) {
+                    c = lcs[i];
+                    if (!c || !c.id) continue;
+                    has = true;
+                    var bName = (BAND_INFO[c.band] && BAND_INFO[c.band][0]) ? BAND_INFO[c.band][0] : String(c.band || "").toUpperCase();
+                    var subTxt = (c.category_zh || c.category || "") + (c.title ? (c.category_zh ? " · " : "") + c.title : "");
+                    var cont2 = (eng && eng.hasLangSave(c.id)) ? '<span class="lang-badge en" style="width:auto;height:auto;border-radius:8px;padding:1px 7px;font-size:.62rem;">继续</span>' : "";
+                    h += '<div data-cid="' + String(c.id).replace(/"/g, "&quot;") + '" class="lang-play-row" style="display:flex;align-items:center;gap:8px;padding:9px 10px;margin-bottom:8px;background:var(--input-bg,#fff8f0);border:1px solid var(--line,#e2ccb0);border-radius:12px;cursor:pointer;">' +
+                         '<span class="lang-badge en">EN</span>' +
+                         '<div style="flex:1;min-width:0;"><div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + api.esc(String(c.title_zh || c.title || "英语专属卡")) +
+                         (bName ? ' <span class="list-sub">[' + api.esc(bName) + "]</span>" : "") + '</div>' +
+                         '<div class="list-sub" style="margin:0;">' + api.esc(subTxt) + "</div></div>" +
+                         cont2 + '<span style="color:var(--sub,#806a55);">›</span></div>';
+                }
+            }
             if (!has) { hint("剧本库暂时为空，刷新页面再试"); return; }
             rows.innerHTML = h;
             var btns = rows.querySelectorAll(".lang-play-row");
@@ -21956,7 +22023,24 @@ function openNpcProfile(npcId) {
                     return function () { api.enterCard(cid); };
                 })(btns[i].getAttribute("data-cid")));
             }
-            hint("点卡即玩：玩过的接着英语进度；想回中文，从首页原来的入口进同一张卡即可");
+            hint("点卡即玩：玩过的接着英语进度；英语专属卡按卡的档位学对应词库；想回中文，从首页原来的入口进中文卡即可");
+            // M6b:语言卡在线库首次未拉 → 拉完整表重绘一次(失败静默,列表只剩中文官方段)
+            if (!window.__LANG_CARDS_READY && !window.__LANG_CARDS_LOADING) api.loadLangCards();
+        },
+        loadLangCards: function () {
+            if (window.__LANG_CARDS_LOADING) return;
+            window.__LANG_CARDS_LOADING = true;
+            fetch(API_BASE + "/api/lang/cards?lang=en")
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (d) {
+                    window.LANG_CARDS_ONLINE = (d && Array.isArray(d.items)) ? d.items : [];
+                    window.__LANG_CARDS_LOADING = false;
+                    window.__LANG_CARDS_READY = true;
+                    // 列表若已打开则自动补绘英语专属卡段
+                    var lst = $("lang-card-list");
+                    if (lst && lst.style.display === "block") api.showCards();
+                })
+                .catch(function () { window.__LANG_CARDS_LOADING = false; });
         },
         esc: function (s) {
             return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");

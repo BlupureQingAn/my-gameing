@@ -1002,6 +1002,7 @@ const RECAP_STORY_LIMIT = 8000;
 const RECAP_RATE_LIMIT_MS = 6000;
 const recapRateMap = new Map();
 let bankCache = { t: 0, data: null }; // M6d1 五档考试词库内存缓存(单 isolate,10min TTL)
+let langCardsCache = { t: 0, data: null }; // M6b 语言卡库内存缓存(单 isolate,60s TTL)
 // M6d2 档位化:五档值域 + 旧 a/b/c 迁移(a→cet4/b→cet6/c→ky);空/未知返回 ""
 const LANG_BANDS = ["hs", "cet4", "cet6", "ky", "toefl"];
 const LANG_BAND_LEGACY = { a: "cet4", b: "cet6", c: "ky" };
@@ -2223,6 +2224,17 @@ export default {
                         method: "POST",
                         body: JSON.stringify({ card_id: cardId, user_id: auth.record.id, created_at: new Date().toISOString() })
                     }).catch(() => {});
+                    // M6b:语言卡(lang_cards)命中则累计 play_count,便于上架后看数据
+                    try {
+                        const lq = await pbAdminFetch(env, `/api/collections/lang_cards/records/${encodeURIComponent(cardId)}`);
+                        const ld = await lq.json().catch(() => ({}));
+                        if (ld && ld.id) {
+                            await pbAdminFetch(env, `/api/collections/lang_cards/records/${ld.id}`, {
+                                method: "PATCH", body: JSON.stringify({ play_count: Number(ld.play_count || 0) + 1 })
+                            });
+                            if (langCardsCache.data) langCardsCache = { t: 0, data: null }; // 计数刷新后失效缓存
+                        }
+                    } catch (e) {}
                     return new Response(JSON.stringify({ ok: true, rewarded: false }), {
                         headers: { ...corsHeaders(), "Content-Type": "application/json" }
                     });
@@ -3142,6 +3154,45 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                     return new Response(JSON.stringify({ ok: true, band: out.band, total: out.total, items: out.items }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
                 } catch (e) {
                     return errorResponse("词库服务暂不可用", 503, null, "BANK_UNAVAILABLE");
+                }
+            }
+
+            // ---- 路由：M6b 语言卡官方库（GET /api/lang/cards?lang=en&band=cet6；公开只读 online；内存缓存 60s）----
+            // 返回记录即前端卡对象（text/data.structured 平铺），播放与词库档位直接可用
+            if (url.pathname === "/api/lang/cards" && request.method === "GET") {
+                const lang = String(url.searchParams.get("lang") || "en").trim();
+                const band = String(url.searchParams.get("band") || "").trim();
+                const nowMs = Date.now();
+                if (langCardsCache.t > nowMs - 60000 && langCardsCache.data) {
+                    let items = langCardsCache.data.filter((c) => c.lang === lang && (!band || c.band === band));
+                    return new Response(JSON.stringify({ ok: true, items }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+                }
+                try {
+                    const q = await pbAdminFetch(env, `/api/collections/lang_cards/records?perPage=200&sort=order&filter=${encodeURIComponent(`status='online' && lang='${lang}'`)}`);
+                    const d = await q.json().catch(() => ({}));
+                    const items = (d.items || [])
+                        .filter((r) => r && r.data && typeof r.data === "object")
+                        .map((r) => ({
+                            id: r.id,
+                            title: String(r.title || ""),
+                            title_zh: String(r.title_zh || ""),
+                            lang: String(r.lang || lang),
+                            band: String(r.band || "cet4"),
+                            category: String(r.category || ""),
+                            category_zh: String(r.category_zh || ""),
+                            theme: String(r.theme || ""),
+                            sourceType: "official",
+                            text: String(r.data.text || ""),
+                            structured: r.data.structured || {},
+                            play_count: Number(r.play_count || 0),
+                            unlock_count: Number(r.unlock_count || 0)
+                        }))
+                        .filter((c) => c.title && c.text && c.structured && typeof c.structured === "object");
+                    langCardsCache = { t: nowMs, data: items };
+                    const out = items.filter((c) => c.lang === lang && (!band || c.band === band));
+                    return new Response(JSON.stringify({ ok: true, items: out }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+                } catch (e) {
+                    return errorResponse("语言卡库服务暂不可用", 503, null, "LANG_CARDS_UNAVAILABLE");
                 }
             }
 

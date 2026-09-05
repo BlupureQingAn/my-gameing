@@ -32,6 +32,8 @@ const F = {
 };
 const READ_PUBLIC = { listRule: "", viewRule: "" };
 const ADMIN_WRITE = { createRule: null, updateRule: null, deleteRule: null };
+// 语言文游敏感集合:M6d5 安全收紧后 lang_profiles/lang_vocab 同款 admin-only(worker 凭超管代访)
+const ADMIN_ONLY = { listRule: null, viewRule: null, createRule: null, updateRule: null, deleteRule: null };
 
 // 业务集合定义（字段对应 worker.js 读写）
 const COLLECTIONS = [
@@ -54,6 +56,8 @@ const COLLECTIONS = [
     // 语言文游(英语学习)集合:学习档案 + 生词本
     { name: "lang_profiles", type: "base", fields: [F.text("user_id", { req: true }), F.text("lang", { req: true }), F.select("band", ["a", "b", "c"], { req: false }), F.select("immersion", ["progressive", "full"], { req: false }), F.autodate(), F.autodate("updated_at", true)], ...READ_PUBLIC, ...ADMIN_WRITE },
     { name: "lang_vocab", type: "base", fields: [F.text("user_id", { req: true }), F.text("lang", { req: true }), F.select("type", ["word", "expression"], { req: true }), F.text("term", { req: true, max: 64 }), F.text("gloss_en", { max: 500 }), F.text("gloss_zh", { max: 500 }), F.text("origin", { max: 200 }), F.number("status", { req: false }), F.autodate(), F.autodate("updated_at", true)], ...READ_PUBLIC, ...ADMIN_WRITE },
+    // M6b 语言卡官方库:英语专属卡(结构化 data{text,structured},band 声明词域);仅 worker/超管代访
+    { name: "lang_cards", type: "base", fields: [F.text("title", { req: true, max: 80 }), F.text("title_zh", { max: 40 }), F.select("lang", ["en", "ja", "ko"], { req: true }), F.select("band", ["hs", "cet4", "cet6", "ky", "toefl"], { req: true }), F.text("category", { max: 30 }), F.text("category_zh", { max: 30 }), F.text("theme", { max: 30 }), F.json("data", { req: true }), F.select("status", ["draft", "online", "offline"], { req: true }), F.number("play_count"), F.number("unlock_count"), F.number("order"), F.autodate(), F.autodate("updated_at", true)], ...ADMIN_ONLY },
 ];
 
 // users 集合需要确保存在的字段（auth 集合，缺了才补，不动规则）
