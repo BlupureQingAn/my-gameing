@@ -51,6 +51,9 @@ const COLLECTIONS = [
     { name: "char_chat_unlocks", type: "base", fields: [F.text("user_id", { req: true }), F.text("card_id", { req: true }), F.text("npc_id", { req: true }), F.autodate(), F.autodate("updated_at", true)], ...READ_PUBLIC, ...ADMIN_WRITE },
     { name: "person_card_chats_v1", type: "base", fields: [F.text("user_id", { req: true }), F.text("card_id", { req: true }), F.text("npc_id", { req: true }), F.json("messages", { req: false, size: 2000000 }), F.autodate(), F.autodate("updated_at", true)], ...READ_PUBLIC, ...ADMIN_WRITE },
     { name: "cloud_saves", type: "base", fields: [F.text("user_id", { req: true }), F.text("card_id", { req: true }), F.number("slot_index"), F.text("data", { req: false, max: 2000000 }), F.autodate(), F.autodate("updated_at", true)], ...READ_PUBLIC, ...ADMIN_WRITE },
+    // 语言文游(英语学习)集合:学习档案 + 生词本
+    { name: "lang_profiles", type: "base", fields: [F.text("user_id", { req: true }), F.text("lang", { req: true }), F.select("band", ["a", "b", "c"], { req: false }), F.select("immersion", ["progressive", "full"], { req: false }), F.autodate(), F.autodate("updated_at", true)], ...READ_PUBLIC, ...ADMIN_WRITE },
+    { name: "lang_vocab", type: "base", fields: [F.text("user_id", { req: true }), F.text("lang", { req: true }), F.select("type", ["word", "expression"], { req: true }), F.text("term", { req: true, max: 64 }), F.text("gloss_en", { max: 500 }), F.text("gloss_zh", { max: 500 }), F.text("origin", { max: 200 }), F.number("status", { req: false }), F.autodate(), F.autodate("updated_at", true)], ...READ_PUBLIC, ...ADMIN_WRITE },
 ];
 
 // users 集合需要确保存在的字段（auth 集合，缺了才补，不动规则）

@@ -2769,6 +2769,113 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 });
             }
 
+            // ---- 语言文游 LangPlay：学习档案 / 生词本（GET|PUT /api/lang/profile、GET|POST /api/lang/vocab、PUT /api/lang/vocab/status）----
+            if (url.pathname === "/api/lang/profile" && request.method === "GET") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const uid = auth.record.id;
+                const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'`);
+                const pQ = await pbAdminFetch(env, `/api/collections/lang_profiles/records?perPage=1&skipTotal=true&filter=${f}`);
+                const pD = await pQ.json().catch(() => ({}));
+                const rec = (pD.items || [])[0];
+                return new Response(JSON.stringify({
+                    profile: rec ? {
+                        lang: String(rec.lang || "en"), band: String(rec.band || ""), immersion: String(rec.immersion || ""),
+                        created_at: rec.created_at || "", updated_at: rec.updated_at || ""
+                    } : null
+                }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+            }
+            if (url.pathname === "/api/lang/profile" && request.method === "PUT") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const uid = auth.record.id;
+                const body = await request.json().catch(() => ({}));
+                const lang = String(body.lang || "en").slice(0, 8);
+                const band = ["a", "b", "c"].includes(body.band) ? String(body.band) : "";
+                const immersion = ["progressive", "full"].includes(body.immersion) ? String(body.immersion) : "";
+                const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'`);
+                const q = await pbAdminFetch(env, `/api/collections/lang_profiles/records?perPage=1&skipTotal=true&filter=${f}`);
+                const d = await q.json().catch(() => ({}));
+                const exist = (d.items || [])[0];
+                const data = { user_id: uid, lang };
+                if (band) data.band = band;
+                if (immersion) data.immersion = immersion;
+                let out = {};
+                if (exist) {
+                    const r = await pbAdminFetch(env, `/api/collections/lang_profiles/records/${exist.id}`, { method: "PATCH", body: JSON.stringify(data) });
+                    out = await r.json().catch(() => ({}));
+                } else {
+                    const r = await pbAdminFetch(env, `/api/collections/lang_profiles/records`, { method: "POST", body: JSON.stringify(data) });
+                    out = await r.json().catch(() => ({}));
+                }
+                return new Response(JSON.stringify({ ok: true, profile: { lang: String(out.lang || lang), band: String(out.band || ""), immersion: String(out.immersion || ""), updated_at: out.updated_at || "" } }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+            if (url.pathname === "/api/lang/vocab" && request.method === "GET") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const uid = auth.record.id;
+                const status = String(url.searchParams.get("status") || "");
+                let f = `user_id='${escapePocketBaseFilterValue(uid)}'`;
+                if (status === "0" || status === "1" || status === "2") f += `&&status=${status}`;
+                const q = await pbAdminFetch(env, `/api/collections/lang_vocab/records?perPage=200&sort=-created&filter=${encodeURIComponent(f)}`);
+                const d = await q.json().catch(() => ({}));
+                const items = (d.items || []).map((i) => ({
+                    id: i.id, lang: String(i.lang || "en"), type: String(i.type || "word"), term: String(i.term || ""),
+                    gloss_en: String(i.gloss_en || ""), gloss_zh: String(i.gloss_zh || ""), origin: String(i.origin || ""),
+                    status: Number(i.status || 0), created_at: i.created_at || ""
+                }));
+                return new Response(JSON.stringify({ items, total: items.length }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+            }
+            if (url.pathname === "/api/lang/vocab" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const uid = auth.record.id;
+                const body = await request.json().catch(() => ({}));
+                const term = String(body.term || "").trim().slice(0, 64);
+                if (!term) return errorResponse("缺少生词内容", 400, null, "INVALID_TERM");
+                const lang = String(body.lang || "en").slice(0, 8);
+                const type = body.type === "expression" ? "expression" : "word";
+                const data = {
+                    user_id: uid, lang, type, term,
+                    gloss_en: String(body.gloss_en || "").slice(0, 500),
+                    gloss_zh: String(body.gloss_zh || "").slice(0, 500),
+                    origin: String(body.origin || "").slice(0, 200)
+                };
+                const dupF = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'&&term='${escapePocketBaseFilterValue(term)}'`);
+                const dupQ = await pbAdminFetch(env, `/api/collections/lang_vocab/records?perPage=1&skipTotal=true&filter=${dupF}`);
+                const dupD = await dupQ.json().catch(() => ({}));
+                const dup = (dupD.items || [])[0];
+                if (dup) {
+                    // 已存在：只补空缺释义，不动 status
+                    const patch = {};
+                    if (!dup.gloss_en && data.gloss_en) patch.gloss_en = data.gloss_en;
+                    if (!dup.gloss_zh && data.gloss_zh) patch.gloss_zh = data.gloss_zh;
+                    if (Object.keys(patch).length) await pbAdminFetch(env, `/api/collections/lang_vocab/records/${dup.id}`, { method: "PATCH", body: JSON.stringify(patch) }).catch(() => {});
+                    return new Response(JSON.stringify({ ok: true, existed: true, id: dup.id }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+                }
+                const r = await pbAdminFetch(env, `/api/collections/lang_vocab/records`, { method: "POST", body: JSON.stringify(data) });
+                if (!r.ok) return errorResponse("生词保存失败", 500, null, "VOCAB_CREATE_FAILED");
+                const created = await r.json().catch(() => ({}));
+                return new Response(JSON.stringify({ ok: true, existed: false, id: created.id }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+            }
+            if (url.pathname === "/api/lang/vocab/status" && request.method === "PUT") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const uid = auth.record.id;
+                const body = await request.json().catch(() => ({}));
+                const vid = String(body.id || "");
+                const status = Number(body.status);
+                if (!vid) return errorResponse("缺少记录 id", 400, null, "INVALID_ID");
+                if (![0, 1, 2].includes(status)) return errorResponse("状态值不合法（0/1/2）", 400, null, "INVALID_STATUS");
+                const q = await pbAdminFetch(env, `/api/collections/lang_vocab/records/${vid}`);
+                const d = await q.json().catch(() => ({}));
+                if (!d.id || d.user_id !== uid) return errorResponse("记录不存在", 404, null, "NOT_FOUND");
+                await pbAdminFetch(env, `/api/collections/lang_vocab/records/${vid}`, { method: "PATCH", body: JSON.stringify({ status }) });
+                return new Response(JSON.stringify({ ok: true, id: vid, status }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+            }
+
             // ---- 路由：热聊人物卡榜（GET /api/characters/hot，送笔芯人气 + 收藏数聚合）----
             if (url.pathname === "/api/characters/hot" && request.method === "GET") {
                 const auth = await authenticate(env, request);
