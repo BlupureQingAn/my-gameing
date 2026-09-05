@@ -4799,8 +4799,12 @@
     .quiz-opt:disabled{cursor:default}
     .lang-band-hero{display:flex;align-items:center;gap:14px;padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--input-bg);margin-top:8px}
     .lang-band-chip{width:58px;height:58px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:900;color:#fff;flex-shrink:0;background:linear-gradient(135deg,#3f6fd8,#7c4fd8)}
-    .lang-band-chip.band-a{background:linear-gradient(135deg,#d87c3f,#e05252)}
-    .lang-band-chip.band-c{background:linear-gradient(135deg,#2f9e6e,#3fb4d8)}
+    .lang-band-chip.band-hs{background:linear-gradient(135deg,#ffb347,#ff6b4a)}
+    .lang-band-chip.band-cet4{background:linear-gradient(135deg,#3f7ad8,#5f4fd8)}
+    .lang-band-chip.band-cet6{background:linear-gradient(135deg,#8a4fd8,#c04fd0)}
+    .lang-band-chip.band-ky{background:linear-gradient(135deg,#2f9e6e,#2fc4b0)}
+    .lang-band-chip.band-toefl{background:linear-gradient(135deg,#d84f9f,#e0505f)}
+    .lang-chip-s{border-radius:8px;padding:1px 7px;font-size:.62rem;color:#fff;background:#3f7ad8}
     .lang-band-t{font-weight:800;font-size:.92rem;color:var(--text)}
     .lang-band-d{font-size:.76rem;color:var(--text);opacity:.72;margin-top:3px;line-height:1.5}
     /* ---- 语言文游 M4:点句即译 / 生词标色点查 / 生词本(学习态色 #7c4fd8 系) ---- */
@@ -21567,9 +21571,11 @@ function openNpcProfile(npcId) {
         const META_SUFFIX = "-lang";
         const PROFILE_KEY = "lang_profile_v1";
         const BAND_RULE = {
-            a: "player level = ADVANCED: natural fluent English prose; idioms and literary phrasing welcome; complex sentences are fine.",
-            b: "player level = INTERMEDIATE: natural everyday English; most sentences up to ~25 words; a familiar idiom is fine only when the context makes its meaning obvious.",
-            c: "player level = BEGINNER: simple sentences of at most ~15 words; high-frequency everyday words only; short paragraphs; avoid idioms entirely."
+            hs: "player level = HS (China senior-high syllabus): simple sentences of at most ~12 words; the most everyday high-frequency words only; short paragraphs; avoid idioms entirely.",
+            cet4: "player level = CET-4: plain everyday English; clear sentences of at most ~18 words; common syllabus words; idioms only if the meaning is obvious.",
+            cet6: "player level = CET-6: natural everyday English; most sentences up to ~25 words; a familiar idiom is fine when the context makes its meaning obvious.",
+            ky: "player level = KY (考研 postgrad-exam syllabus): broader everyday English with moderate idioms and denser expression; sentences up to ~30 words are fine.",
+            toefl: "player level = TOEFL: natural fluent English prose; idioms and literary phrasing welcome; complex sentences are fine."
         };
         // 语气保真词典(按题材关键词 → 英语语气指令;中文世界观不变,只换"英语说法"的分寸)
         const TONE_RULES = [
@@ -21606,7 +21612,7 @@ function openNpcProfile(npcId) {
         function buildInjection() {
             if (!session.cardId) return "";
             const p = readProfile();
-            const band = BAND_RULE[p.band === "a" || p.band === "c" ? p.band : "b"] || BAND_RULE.b;
+            const band = BAND_RULE[p.band || "cet6"] || BAND_RULE.cet6;
             const immersion = p.immersion === "full" ? "full" : "progressive";
             let round = 1;
             try {
@@ -21722,27 +21728,37 @@ function openNpcProfile(npcId) {
 /* ===== 语言文游 LangPlay · 大厅 M1-M3:语种/测档(10题)/沉浸模式 + 档案云端同步(M2) + 语言剧本库入口(M3,经 window.LangEngine 旁挂 play 引擎) ===== */
 (function () {
     var PROFILE_KEY = "lang_profile_v1";
-    /* 测档题库:10 题由易到难(第 1-4 题 d=1 / 第 5-7 题 d=2 / 第 8-10 题 d=3,总分 19)
-       得分≥12 定 A 档,≥6 定 B 档,否则 C 档——正式题库从 Obsidian 03-测档题库定稿后替换 */
+    /* 测档题库:M6d2 五档化——10 题按五档词库各 2 题(d=档序 hs1..toefl5,由易到难),判级按答对数:
+       ≥9→toefl / ≥7→ky / ≥5→cet6 / ≥3→cet4 / ≤2→hs(词从五档词库档内特色词手工挑题,可重测/手动改档兜底) */
     var QUIZ = [
-        { d: 1, q: "「Nice to meet you.」的中文意思是？", opts: ["很高兴认识你。", "好久不见。", "明天见。", "请多关照。"], a: 0 },
-        { d: 1, q: "服务员问你需要什么，你说「Can I have a glass of water?」——你想要？", opts: ["一杯水", "一杯咖啡", "一块蛋糕", "一张地图"], a: 0 },
-        { d: 1, q: "想用英语问对方「你多大了？」，应该说？", opts: ["How old are you?", "How are you?", "Where are you from?", "What's your name?"], a: 0 },
-        { d: 1, q: "「I bought a gift for my friend.」中 gift 的意思是？", opts: ["礼物", "门票", "明信片", "优惠券"], a: 0 },
-        { d: 2, q: "选最合适的词填空：Look! The children ____ football in the yard.（看！孩子们正在院子里踢球）", opts: ["play", "are playing", "played", "will play"], a: 1 },
-        { d: 2, q: "「I get up at seven every morning.」中 get up 的意思是？", opts: ["起床", "上班", "睡觉", "出门"], a: 0 },
-        { d: 2, q: "外面雨下得很大。提醒朋友出门带伞，应该说：It's raining hard. You should take ____ with you.", opts: ["an umbrella", "a towel", "a flashlight", "a pair of sunglasses"], a: 0 },
-        { d: 3, q: "「The new phone cost an arm and a leg.」这句话的意思是？", opts: ["新手机非常便宜", "新手机非常贵", "打电话花了很久", "新手机组装很费力"], a: 1 },
-        { d: 3, q: "Although he studied hard, he was too nervous to answer the teacher's question.——下面哪个理解正确？", opts: ["他太紧张，没能答出老师的问题", "他不喜欢那位老师", "题目太难，他从没学过", "他迟到了，没听到问题"], a: 0 },
-        { d: 3, q: "晚会上他讲了个笑话来 break the ice。break the ice 的意思是？", opts: ["让气氛冷场", "打破僵局、让气氛活跃起来", "把一块冰打碎", "提前离开"], a: 1 }
+        { d: 1, q: "「insurance」的意思是？", opts: ["投资", "储蓄", "保险", "税收"], a: 2 },
+        { d: 1, q: "「abuse」的意思是？", opts: ["称赞，表扬", "滥用，虐待", "协商，谈判", "原谅，宽恕"], a: 1 },
+        { d: 2, q: "「reveal」的意思是？", opts: ["掩盖，隐瞒", "修订，校对", "奖励，奖赏", "揭示，揭露"], a: 3 },
+        { d: 2, q: "「respectively」的意思是？", opts: ["各自地，分别地", "尊重地，恭敬地", "相应地，因此", "反复地，再三地"], a: 0 },
+        { d: 3, q: "「distract」的意思是？", opts: ["使延期，推迟", "分发，分配", "收缩，缩小", "使分心，转移注意力"], a: 3 },
+        { d: 3, q: "「radiant」的意思是？", opts: ["放射性的", "发光的，容光焕发的", "腐烂的，变质的", "宽大的，仁慈的"], a: 1 },
+        { d: 4, q: "「concession」的意思是？", opts: ["机密，秘密", "一致性，共识", "让步，妥协", "特权，例外"], a: 2 },
+        { d: 4, q: "「custody」的意思是？", opts: ["监护（权），拘留", "关税，海关", "习惯，习俗", "风俗，惯例"], a: 0 },
+        { d: 5, q: "「prodigious」的意思是？", opts: ["巨大的，惊人的", "先知的，预言的", "节俭的，节省的", "犹豫的，迟疑的"], a: 0 },
+        { d: 5, q: "「allergy」的意思是？", opts: ["失眠症", "厌食症", "过敏（症）", "健忘症"], a: 2 }
     ];
+    var BAND_ORDER = ["hs", "cet4", "cet6", "ky", "toefl"];
     var BAND_INFO = {
-        a: ["A", "进阶水平", "band-a", "能读原版长句与俚语，剧情基本无障碍——挑战全沉浸也游刃有余"],
-        b: ["B", "中级水平", "", "常见表达都能读懂，偶尔碰到生词——渐进沉浸会陪你把不熟的表达啃下来"],
-        c: ["C", "入门水平", "band-c", "从短句和高频词开始——译文辅助会多陪你一段路，玩着玩着就熟了"]
+        hs: ["HS", "高中水平", "band-hs", "对应高中新课标 3500 词（词库 3395 词）——校园、日常生活题材的卡从这档打底"],
+        cet4: ["CET4", "四级水平", "band-cet4", "对应大学英语四级大纲（词库 4536 词）——校园日常、生活话题的卡正合适"],
+        cet6: ["CET6", "六级水平", "band-cet6", "对应六级词汇大纲（词库 2219 词）——都市生活、情感向的卡可挑战"],
+        ky: ["考研", "考研水平", "band-ky", "对应考研英语大纲 5530（词库 5529 词）——思辨、叙事厚重的卡挂这档"],
+        toefl: ["TOEFL", "托福水平", "band-toefl", "对应托福词汇（词库 4510 词）——科研、异域题材的高难卡在此"]
     };
     var profile = { lang: "en" };
     try { var _p = JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}"); if (_p && typeof _p === "object") profile = _p; } catch (e) { }
+    /* M6d2 旧值迁移:本地 a/b/c → a→cet4/b→cet6/c→ky(云端读侧由 worker 迁移) */
+    (function () {
+        var legacy = { a: "cet4", b: "cet6", c: "ky" };
+        if (profile.band && legacy[profile.band]) profile.band = legacy[profile.band];
+        if (profile.suggest_band && legacy[profile.suggest_band]) profile.suggest_band = legacy[profile.suggest_band];
+        save();
+    })();
     function $(id) { return document.getElementById(id); }
     function save() { try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch (e) { } }
     function hint(t) { var h = $("lang-hint"); if (h) h.textContent = t || ""; }
@@ -21754,7 +21770,7 @@ function openNpcProfile(npcId) {
         if (!token()) return;
         fetch(API_BASE + "/api/lang/profile", {
             method: "PUT", headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token() },
-            body: JSON.stringify({ lang: profile.lang || "en", band: profile.band || "", immersion: profile.immersion || "" })
+            body: JSON.stringify({ lang: profile.lang || "en", band: profile.band || "", suggest_band: profile.suggest_band || "", immersion: profile.immersion || "" })
         }).catch(function () { });
     }
     var api = {
@@ -21777,9 +21793,10 @@ function openNpcProfile(npcId) {
                 .then(function (d) {
                     if (!d) return;
                     var p = d.profile;
-                    if (p && p.band) {
+                    if (p && (p.band || p.suggest_band)) {
                         if (p.immersion) profile.immersion = p.immersion;
-                        profile.band = p.band;
+                        if (p.band) profile.band = p.band;
+                        profile.suggest_band = p.suggest_band || profile.band || "";
                         save();
                     } else if (profile.band || profile.immersion) {
                         saveRemote();
@@ -21820,11 +21837,12 @@ function openNpcProfile(npcId) {
         },
         nextQ: function () { quiz.i++; quiz.lock = false; api.renderQ(); },
         finishQuiz: function () {
-            var maxScore = 0, qi = 0; for (; qi < QUIZ.length; qi++) maxScore += QUIZ[qi].d;
-            /* 按占比定档:≥12/19 → A,≥6/19 → B,否则 C(题库更换后仍按比例) */
-            var band = quiz.score * 19 >= maxScore * 12 ? "a" : (quiz.score * 19 >= maxScore * 6 ? "b" : "c");
+            /* M6d2 判级五段:按 10 题答对数 ≥9→toefl / ≥7→ky / ≥5→cet6 / ≥3→cet4 / ≤2→hs */
+            var ok = quiz.ok;
+            var band = ok >= 9 ? "toefl" : ok >= 7 ? "ky" : ok >= 5 ? "cet6" : ok >= 3 ? "cet4" : "hs";
             profile.band = band;
-            profile.quizInfo = { ok: quiz.ok, total: QUIZ.length, score: quiz.score, max: maxScore, at: Date.now() };
+            profile.suggest_band = band;
+            profile.quizInfo = { ok: ok, total: QUIZ.length, score: ok, max: QUIZ.length, at: Date.now() };
             save(); saveRemote();
             $("lang-quiz-box").style.display = "none";
             var s = $("lang-quiz-start-row"); s.style.display = "block";
@@ -21832,14 +21850,25 @@ function openNpcProfile(npcId) {
             api.showBand();
         },
         showBand: function () {
-            var b = BAND_INFO[profile.band] || BAND_INFO.b, box = $("lang-band-result"); if (!box) return;
+            var b = BAND_INFO[profile.band] || BAND_INFO.cet4, box = $("lang-band-result"); if (!box) return;
             box.style.display = "block";
             var qiTxt = "";
-            if (profile.quizInfo) qiTxt = '<div class="list-sub" style="margin-top:6px;">最近测定：答对 ' + profile.quizInfo.ok + "/" + profile.quizInfo.total + " 题 · 得分 " + profile.quizInfo.score + "/" + profile.quizInfo.max + "（10 题由易到难，可随时重新测定）</div>";
-            box.innerHTML = '<div class="lang-band-hero"><div class="lang-band-chip ' + (b[2] || "") + '">' + b[0] + '</div><div><div class="lang-band-t">你的水平：英语 ' + b[0] + " 档 · " + b[1] + '</div><div class="lang-band-d">' + b[3] + '</div>' + qiTxt + '<div style="margin-top:8px;"><button type="button" class="mini-btn" onclick="LangController.setBand(1)">改 A</button> <button type="button" class="mini-btn" onclick="LangController.setBand(2)">改 B</button> <button type="button" class="mini-btn" onclick="LangController.setBand(3)">改 C</button> <span class="list-sub">手动改档随时可以</span></div></div></div>';
+            if (profile.quizInfo) qiTxt = '<div class="list-sub" style="margin-top:6px;">最近测定：答对 ' + profile.quizInfo.ok + "/" + profile.quizInfo.total + " 题（五档词库各 2 题由易到难，可随时重新测定）</div>";
+            var sugTxt = "";
+            if (profile.suggest_band && profile.suggest_band !== profile.band) sugTxt = '<div class="list-sub" style="margin-top:2px;">测定建议档：' + BAND_INFO[profile.suggest_band][0] + "（当前学习档为你手动选择）</div>";
+            var btns = "";
+            for (var bi = 0; bi < BAND_ORDER.length; bi++) {
+                var k = BAND_ORDER[bi], bk = BAND_INFO[k];
+                btns += '<button type="button" class="mini-btn' + (k === profile.band ? " primary" : "") + '" onclick="LangController.setBand(\'' + k + '\')">改 ' + bk[0] + "</button> ";
+            }
+            box.innerHTML = '<div class="lang-band-hero"><div class="lang-band-chip ' + (b[2] || "") + '">' + b[0] + '</div><div><div class="lang-band-t">你的学习档：英语 ' + b[0] + " · " + b[1] + '</div><div class="lang-band-d">' + b[3] + '</div>' + qiTxt + sugTxt + '<div style="margin-top:8px;">' + btns + '<span class="list-sub">手动改档随时可以，玩哪档卡就学哪档词库</span></div></div></div>';
             hint("");
         },
-        setBand: function (n) { var b = n === 1 ? "a" : n === 3 ? "c" : "b"; profile.band = b; save(); saveRemote(); api.showBand(); hint("档位已改为 " + BAND_INFO[b][0] + " 档（" + BAND_INFO[b][1] + "）。"); },
+        setBand: function (k) {
+            if (!BAND_INFO[k]) return;
+            profile.band = k; save(); saveRemote(); api.showBand();
+            hint("学习档已改为 " + BAND_INFO[k][0] + "（" + BAND_INFO[k][1] + "）——接下来玩的卡与词库按此档来。");
+        },
         setImmersion: function (m) { profile.immersion = m; save(); saveRemote(); api.renderPicker(); hint(""); },
         goCards: function () {
             if (!profile.band) {
@@ -22656,7 +22685,7 @@ function openNpcProfile(npcId) {
         fetch(API_BASE + "/api/lang/recap", {
             method: "POST",
             headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token() },
-            body: JSON.stringify({ story: chapterStoryText(), band: String(profile.band || "b") })
+            body: JSON.stringify({ story: chapterStoryText(), band: String(profile.band || "cet6") })
         })
             .then(function (r) { return r.json().catch(function () { return null; }); })
             .then(function (d) {

@@ -1002,10 +1002,14 @@ const RECAP_STORY_LIMIT = 8000;
 const RECAP_RATE_LIMIT_MS = 6000;
 const recapRateMap = new Map();
 let bankCache = { t: 0, data: null }; // M6d1 五档考试词库内存缓存(单 isolate,10min TTL)
+// M6d2 档位化:五档值域 + 旧 a/b/c 迁移(a→cet4/b→cet6/c→ky);空/未知返回 ""
+const LANG_BANDS = ["hs", "cet4", "cet6", "ky", "toefl"];
+const LANG_BAND_LEGACY = { a: "cet4", b: "cet6", c: "ky" };
+const normLangBand = (v) => (LANG_BANDS.includes(v) ? v : (LANG_BAND_LEGACY[v] || ""));
 const RECAP_MODEL_IDS = GLOSS_MODEL_IDS; // 同 gloss 候选链:免费档优先,付费 glm-5.3-flash 兜底
 const RECAP_SYSTEM_PROMPT = [
     "You are an English-learning recap coach for a Chinese player who just finished a chapter of an English interactive story game.",
-    "From the story excerpt, pick 3-6 high-value English expressions (phrases, sentence patterns, collocations, idioms — NOT single common words) worth remembering, tuned to the player band: band a = beginner-friendly plain phrasings; band b = natural everyday English; band c = richer idiomatic English.",
+    "From the story excerpt, pick 3-6 high-value English expressions (phrases, sentence patterns, collocations, idioms — NOT single common words) worth remembering, tuned to the player band: hs = China senior-high syllabus level (simplest plain phrasings, everyday words only); cet4 = CET-4 level (plain everyday English); cet6 = CET-6 level (natural everyday English, a familiar idiom is fine); ky = postgrad-exam (考研) level (broad everyday English with moderate idiom); toefl = TOEFL level (richer idiomatic and lightly academic English).",
     "For each expression give: en (the expression itself), zh (short natural Chinese explanation), example (a short original English sentence using it — never copy story lines verbatim).",
     "Also write 2-3 short English sentences (writing) the player can imitate in the next chapter, each under 25 words, natural and story-flavored.",
     'Reply ONLY with a single valid JSON object, no markdown fences, no extra text: {"expressions":[{"en":"...","zh":"...","example":"..."}],"writing":["...","..."]}'
@@ -1026,7 +1030,7 @@ async function callRecapModel(env, story, band) {
                     max_tokens: 4000,
                     messages: [
                         { role: "system", content: RECAP_SYSTEM_PROMPT },
-                        { role: "user", content: `Player band: ${band || "b"}\n\nStory excerpt:\n${story}` }
+                        { role: "user", content: `Player band: ${band || "cet6"}\n\nStory excerpt:\n${story}` }
                     ]
                 }),
                 signal: AbortSignal.timeout(45000)
@@ -2906,7 +2910,8 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const rec = (pD.items || [])[0];
                 return new Response(JSON.stringify({
                     profile: rec ? {
-                        lang: String(rec.lang || "en"), band: String(rec.band || ""), immersion: String(rec.immersion || ""),
+                        lang: String(rec.lang || "en"), band: normLangBand(String(rec.band || "")), immersion: String(rec.immersion || ""),
+                        suggest_band: normLangBand(String(rec.suggest_band || "")),
                         created_at: rec.created_at || "", updated_at: rec.updated_at || ""
                     } : null
                 }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
@@ -2917,7 +2922,8 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const uid = auth.record.id;
                 const body = await request.json().catch(() => ({}));
                 const lang = String(body.lang || "en").slice(0, 8);
-                const band = ["a", "b", "c"].includes(body.band) ? String(body.band) : "";
+                const band = normLangBand(body.band); // 五档值域;旧 a/b/c 也映射写入
+                const suggestBand = normLangBand(body.suggest_band);
                 const immersion = ["progressive", "full"].includes(body.immersion) ? String(body.immersion) : "";
                 const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'`);
                 const q = await pbAdminFetch(env, `/api/collections/lang_profiles/records?perPage=1&skipTotal=true&filter=${f}`);
@@ -2925,6 +2931,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const exist = (d.items || [])[0];
                 const data = { user_id: uid, lang };
                 if (band) data.band = band;
+                if (suggestBand) data.suggest_band = suggestBand;
                 if (immersion) data.immersion = immersion;
                 let out = {};
                 if (exist) {
@@ -2934,7 +2941,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                     const r = await pbAdminFetch(env, `/api/collections/lang_profiles/records`, { method: "POST", body: JSON.stringify(data) });
                     out = await r.json().catch(() => ({}));
                 }
-                return new Response(JSON.stringify({ ok: true, profile: { lang: String(out.lang || lang), band: String(out.band || ""), immersion: String(out.immersion || ""), updated_at: out.updated_at || "" } }), {
+                return new Response(JSON.stringify({ ok: true, profile: { lang: String(out.lang || lang), band: normLangBand(String(out.band || "")), immersion: String(out.immersion || ""), suggest_band: normLangBand(String(out.suggest_band || "")), updated_at: out.updated_at || "" } }), {
                     headers: { ...corsHeaders(), "Content-Type": "application/json" }
                 });
             }
@@ -3037,7 +3044,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const body = await request.json().catch(() => ({}));
                 const story = String(body.story || "").replace(/\s+/g, " ").trim().slice(0, RECAP_STORY_LIMIT);
                 if (story.length < 200) return errorResponse("剧情内容太少，还没法复盘", 400, null, "RECAP_STORY_TOO_SHORT");
-                const band = ["a", "b", "c"].includes(body.band) ? String(body.band) : "b";
+                const band = normLangBand(body.band) || "cet6"; // 五档;旧 a/b/c 读侧迁移
                 recapRateMap.set(uid, now);
                 const out = await callRecapModel(env, story, band);
                 if (out.error) return out.error;
