@@ -4790,13 +4790,6 @@
     .lang-badge.en{background:linear-gradient(135deg,#3f6fd8,#7c4fd8)}
     .lang-badge.ja{background:linear-gradient(135deg,#d83f5f,#d87c3f)}
     .lang-badge.ko{background:linear-gradient(135deg,#2f9e6e,#3fb4d8)}
-    .quiz-q{margin:10px 0;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--input-bg)}
-    .quiz-q-t{font-size:.88rem;line-height:1.55;color:var(--text)}
-    .quiz-opt{display:block;width:100%;text-align:left;margin:7px 0 0;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--input-bg);color:var(--text);font-size:.82rem;line-height:1.5;cursor:pointer}
-    .quiz-opt:hover{border-color:var(--accent)}
-    .quiz-opt.correct{border-color:#2f9e6e;background:rgba(47,158,110,.14)}
-    .quiz-opt.wrong{border-color:#e05252;background:rgba(224,82,82,.12)}
-    .quiz-opt:disabled{cursor:default}
     .lang-band-hero{display:flex;align-items:center;gap:14px;padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--input-bg);margin-top:8px}
     .lang-band-chip{width:58px;height:58px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:900;color:#fff;flex-shrink:0;background:linear-gradient(135deg,#3f6fd8,#7c4fd8)}
     .lang-band-chip.band-hs{background:linear-gradient(135deg,#ffb347,#ff6b4a)}
@@ -5157,7 +5150,6 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <div id="lang-home-band" style="margin-top:12px;"></div>
 
                 <div class="l6-cta-row">
-                    <button type="button" class="l6-cta" onclick="LangController.goQuizAnchor()"><span class="l6-cta-ic">📝</span><span>测档 / 改档</span></button>
                     <button type="button" class="l6-cta" onclick="LangController.goImmAnchor()"><span class="l6-cta-ic">🌊</span><span>沉浸设置</span></button>
                     <button type="button" class="l6-cta" onclick="LangController.goVocabAnchor()"><span class="l6-cta-ic">📖</span><span>生词本</span></button>
                     <button type="button" class="l6-cta" onclick="LangController.goDrillAnchor()"><span class="l6-cta-ic">🔁</span><span>刷词</span></button>
@@ -5219,14 +5211,10 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <button type="button" class="top-nav-btn" data-view="view-lang-vocab" onclick="LangController.goVocab()">生词本</button>
                 </div>
 
-                <div class="list-title" style="margin:0;" id="lang-learn-test">📝 我的测档 <span class="list-sub" style="margin-left:4px;">10 题由易到难，答完自动定档，可重测/改档</span></div>
-                <div class="list-sub">不知道从哪档开始？测一下，难度会自动匹配你。玩哪档卡就学哪档词库。</div>
+                <div class="list-title" style="margin:0;" id="lang-learn-band">🎯 我的学习档 <span class="list-sub" style="margin-left:4px;">五档按难度递进，点选即生效</span></div>
+                <div class="list-sub">玩哪档卡就学哪档词库——心里没底就从 HS / CET4 的校园生活卡起步，玩着吃力或太轻松，随时回来换一档。</div>
                 <div id="lang-hint"></div>
                 <div id="lang-band-result" style="display:none;"></div>
-                <div id="lang-quiz-box" style="display:none;margin-top:6px;"></div>
-                <div class="setting-actions" style="margin-top:8px;" id="lang-quiz-start-row">
-                    <button class="mini-btn primary" id="lang-quiz-start" onclick="LangController.startQuiz()">开始测定（10 题 · 约 3 分钟）</button>
-                </div>
 
                 <div class="list-title" style="margin-top:18px;" id="lang-learn-imm">🌊 学习设置 · 沉浸模式 <span class="list-sub" style="margin-left:4px;">游戏中可随时改</span></div>
                 <div class="lang-picker" id="lang-immersion-picker">
@@ -21991,23 +21979,9 @@ function openNpcProfile(npcId) {
     window.LangEngine = LangEngine;
 </script>
 <script>
-/* ===== 语言文游 LangPlay · 大厅 M1-M3:语种/测档(10题)/沉浸模式 + 档案云端同步(M2) + 语言剧本库入口(M3,经 window.LangEngine 旁挂 play 引擎) ===== */
+/* ===== 语言文游 LangPlay · 大厅 M1-M3:语种/手选档/沉浸模式(M8.5 起档位纯手动,测定流程已删) + 档案云端同步(M2) + 语言剧本库入口(M3,经 window.LangEngine 旁挂 play 引擎) ===== */
 (function () {
     var PROFILE_KEY = "lang_profile_v1";
-    /* 测档题库:M6d2 五档化——10 题按五档词库各 2 题(d=档序 hs1..toefl5,由易到难),判级按答对数:
-       ≥9→toefl / ≥7→ky / ≥5→cet6 / ≥3→cet4 / ≤2→hs(词从五档词库档内特色词手工挑题,可重测/手动改档兜底) */
-    var QUIZ = [
-        { d: 1, q: "「insurance」的意思是？", opts: ["投资", "储蓄", "保险", "税收"], a: 2 },
-        { d: 1, q: "「abuse」的意思是？", opts: ["称赞，表扬", "滥用，虐待", "协商，谈判", "原谅，宽恕"], a: 1 },
-        { d: 2, q: "「reveal」的意思是？", opts: ["掩盖，隐瞒", "修订，校对", "奖励，奖赏", "揭示，揭露"], a: 3 },
-        { d: 2, q: "「respectively」的意思是？", opts: ["各自地，分别地", "尊重地，恭敬地", "相应地，因此", "反复地，再三地"], a: 0 },
-        { d: 3, q: "「distract」的意思是？", opts: ["使延期，推迟", "分发，分配", "收缩，缩小", "使分心，转移注意力"], a: 3 },
-        { d: 3, q: "「radiant」的意思是？", opts: ["放射性的", "发光的，容光焕发的", "腐烂的，变质的", "宽大的，仁慈的"], a: 1 },
-        { d: 4, q: "「concession」的意思是？", opts: ["机密，秘密", "一致性，共识", "让步，妥协", "特权，例外"], a: 2 },
-        { d: 4, q: "「custody」的意思是？", opts: ["监护（权），拘留", "关税，海关", "习惯，习俗", "风俗，惯例"], a: 0 },
-        { d: 5, q: "「prodigious」的意思是？", opts: ["巨大的，惊人的", "先知的，预言的", "节俭的，节省的", "犹豫的，迟疑的"], a: 0 },
-        { d: 5, q: "「allergy」的意思是？", opts: ["失眠症", "厌食症", "过敏（症）", "健忘症"], a: 2 }
-    ];
     var BAND_ORDER = ["hs", "cet4", "cet6", "ky", "toefl"];
     var BAND_INFO = {
         hs: ["HS", "高中水平", "band-hs", "对应高中新课标 3500 词（词库 3395 词）——校园、日常生活题材的卡从这档打底"],
@@ -22026,13 +22000,11 @@ function openNpcProfile(npcId) {
     (function () {
         var legacy = { a: "cet4", b: "cet6", c: "ky" };
         if (profile.band && legacy[profile.band]) profile.band = legacy[profile.band];
-        if (profile.suggest_band && legacy[profile.suggest_band]) profile.suggest_band = legacy[profile.suggest_band];
         save();
     })();
     function $(id) { return document.getElementById(id); }
     function save() { try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch (e) { } }
     function hint(t, boxId) { var h = $(boxId || "lang-hint"); if (h) h.textContent = t || ""; }
-    var quiz = { i: 0, ok: 0, score: 0, lock: false };
     /* M6a:剧本库筛选状态与语言页渲染(库=英语原生卡;首页=推荐行+继续行) */
     var libFilter = { band: "", cat: "" };
     var THEME_ICON = { cottage: "🏡", "retro-paper": "🥛", glass: "🚇", fantasy: "🏰", "sci-fi-hud": "🌊", liquid: "💧", gothic: "🕯️", ink: "🖋️", cyber: "🌆", minimal: "▦" };
@@ -22105,28 +22077,28 @@ function openNpcProfile(npcId) {
             '<div class="l6-row-sub">' + api.esc(String(c.title || "")) + " · 英语进度已到第 " + (r || 1) + " 轮</div></div>" +
             '<span class="lang-badge en" style="width:auto;height:auto;border-radius:8px;padding:2px 8px;font-size:.6rem;">继续</span><span class="l6-row-go">›</span></div>';
     }
-    /* ---- 云端档案同步(M2):已登录用户测档/改档/沉浸模式存 PB lang_profiles,换设备不丢 ---- */
+    /* ---- 云端档案同步(M2):已登录用户手选档/沉浸模式存 PB lang_profiles,换设备不丢 ---- */
     var API_BASE = /blupure\.cn$/i.test(location.hostname) ? location.origin : "https://ai.blupure.cn";
     function token() { try { return localStorage.getItem("pb_auth_token") || ""; } catch (e) { return ""; } }
     function saveRemote() {
         if (!token()) return;
         fetch(API_BASE + "/api/lang/profile", {
             method: "PUT", headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token() },
-            body: JSON.stringify({ lang: profile.lang || "en", band: profile.band || "", suggest_band: profile.suggest_band || "", immersion: profile.immersion || "" })
+            body: JSON.stringify({ lang: profile.lang || "en", band: profile.band || "", immersion: profile.immersion || "" })
         }).catch(function () { });
     }
     var api = {
         init: function () {
             if (!$("view-lang")) return;
             api.renderPicker();
-            if (profile.band) api.showBand();
+            api.showBand();
             api.loadRemote();
             api.loadLangCards();
             api.renderHome();
         },
         refresh: function () {
             api.renderPicker();
-            if (profile.band) api.showBand();
+            api.showBand();
             api.renderHome();
         },
         /* M6a/M8d:语言页组视图进入钩子(switchView 调用);生词本独立子页进入即刷词表 */
@@ -22153,10 +22125,9 @@ function openNpcProfile(npcId) {
                 .then(function (d) {
                     if (!d) return;
                     var p = d.profile;
-                    if (p && (p.band || p.suggest_band)) {
+                    if (p && p.band) {
                         if (p.immersion) profile.immersion = p.immersion;
-                        if (p.band) profile.band = p.band;
-                        profile.suggest_band = p.suggest_band || profile.band || "";
+                        profile.band = p.band;
                         save();
                     } else if (profile.band || profile.immersion) {
                         saveRemote();
@@ -22176,56 +22147,24 @@ function openNpcProfile(npcId) {
             }
             profile.lang = "en"; save();
         },
-        startQuiz: function () {
-            quiz = { i: 0, ok: 0, score: 0, lock: false };
-            $("lang-quiz-box").style.display = "block";
-            $("lang-quiz-start-row").style.display = "none";
-            $("lang-band-result").style.display = "none";
-            api.renderQ();
-        },
-        renderQ: function () {
-            var q = QUIZ[quiz.i], h = '<div class="quiz-q"><div class="quiz-q-t">' + (quiz.i + 1) + "/" + QUIZ.length + " · " + q.q + "</div>";
-            for (var k = 0; k < q.opts.length; k++) h += '<button type="button" class="quiz-opt" onclick="LangController.answer(' + k + ')">' + (k + 1) + ". " + q.opts[k] + "</button>";
-            h += '<div class="quiz-nav" id="quiz-nav"></div></div>';
-            $("lang-quiz-box").innerHTML = h;
-        },
-        answer: function (k) {
-            if (quiz.lock) return;
-            var q = QUIZ[quiz.i]; quiz.lock = true;
-            var btns = $("lang-quiz-box").querySelectorAll(".quiz-opt");
-            for (var i = 0; i < btns.length; i++) { btns[i].disabled = true; if (i === q.a) btns[i].classList.add("correct"); }
-            if (k === q.a) { quiz.ok++; quiz.score += q.d; } else btns[k].classList.add("wrong");
-            var last = quiz.i >= QUIZ.length - 1;
-            $("quiz-nav").innerHTML = '<button type="button" class="mini-btn primary" onclick="LangController.' + (last ? "finishQuiz" : "nextQ") + '()">' + (last ? "查看测定结果" : "下一题") + "</button>";
-        },
-        nextQ: function () { quiz.i++; quiz.lock = false; api.renderQ(); },
-        finishQuiz: function () {
-            /* M6d2 判级五段:按 10 题答对数 ≥9→toefl / ≥7→ky / ≥5→cet6 / ≥3→cet4 / ≤2→hs */
-            var ok = quiz.ok;
-            var band = ok >= 9 ? "toefl" : ok >= 7 ? "ky" : ok >= 5 ? "cet6" : ok >= 3 ? "cet4" : "hs";
-            profile.band = band;
-            profile.suggest_band = band;
-            profile.quizInfo = { ok: ok, total: QUIZ.length, score: ok, max: QUIZ.length, at: Date.now() };
-            save(); saveRemote();
-            $("lang-quiz-box").style.display = "none";
-            var s = $("lang-quiz-start-row"); s.style.display = "block";
-            $("lang-quiz-start").textContent = "重新测定";
-            api.showBand();
-        },
+        /* M8.5:档位纯手动——五档 chips 直选,系统不再做任何测定/建议 */
         showBand: function () {
-            var b = BAND_INFO[profile.band] || BAND_INFO.cet4, box = $("lang-band-result"); if (!box) return;
+            var box = $("lang-band-result"); if (!box) return;
             box.style.display = "block";
-            var qiTxt = "";
-            if (profile.quizInfo) qiTxt = '<div class="list-sub" style="margin-top:6px;">最近测定：答对 ' + profile.quizInfo.ok + "/" + profile.quizInfo.total + " 题（五档词库各 2 题由易到难，可随时重新测定）</div>";
-            var sugTxt = "";
-            if (profile.suggest_band && profile.suggest_band !== profile.band) sugTxt = '<div class="list-sub" style="margin-top:2px;">测定建议档：' + BAND_INFO[profile.suggest_band][0] + "（当前学习档为你手动选择）</div>";
-            var btns = "";
+            var btns = "", act = profile.band ? "改 " : "选 ";
             for (var bi = 0; bi < BAND_ORDER.length; bi++) {
                 var k = BAND_ORDER[bi], bk = BAND_INFO[k];
-                btns += '<button type="button" class="mini-btn' + (k === profile.band ? " primary" : "") + '" onclick="LangController.setBand(\'' + k + '\')">改 ' + bk[0] + "</button> ";
+                btns += '<button type="button" class="mini-btn' + (k === profile.band ? " primary" : "") + '" onclick="LangController.setBand(\'' + k + '\')">' + act + bk[0] + "</button> ";
             }
-            box.innerHTML = '<div class="lang-band-hero"><div class="lang-band-chip ' + (b[2] || "") + '">' + b[0] + '</div><div><div class="lang-band-t">你的学习档：英语 ' + b[0] + " · " + b[1] + '</div><div class="lang-band-d">' + b[3] + '</div>' + qiTxt + sugTxt + '<div style="margin-top:8px;">' + btns + '<span class="list-sub">手动改档随时可以，玩哪档卡就学哪档词库</span></div></div></div>';
             hint("");
+            if (!profile.band) {
+                box.innerHTML = '<div class="lang-band-hero"><div class="lang-band-chip">🎯</div><div style="flex:1;min-width:0;"><div class="lang-band-t">还没选学习档</div>' +
+                    '<div class="lang-band-d">五档按难度递进：校园日常从 HS / CET4 起步，都市情感试试 CET6，思辨叙事往考研 / 托福挑——随时可换。</div>' +
+                    '<div style="margin-top:8px;">' + btns + "</div></div></div>";
+                return;
+            }
+            var b = BAND_INFO[profile.band] || BAND_INFO.cet4;
+            box.innerHTML = '<div class="lang-band-hero"><div class="lang-band-chip ' + (b[2] || "") + '">' + b[0] + '</div><div><div class="lang-band-t">你的学习档：英语 ' + b[0] + " · " + b[1] + '</div><div class="lang-band-d">' + b[3] + '</div><div style="margin-top:8px;">' + btns + '<span class="list-sub">选档随时可以，玩哪档卡就学哪档词库</span></div></div></div>';
         },
         setBand: function (k) {
             if (!BAND_INFO[k]) return;
@@ -22274,7 +22213,6 @@ function openNpcProfile(npcId) {
                 try { var el = document.querySelector(sel); if (el && el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {}
             }, 80);
         },
-        goQuizAnchor: function () { api.goLearn(); api.anchor("#lang-learn-test"); },
         goImmAnchor: function () { api.goLearn(); api.anchor("#lang-learn-imm"); },
         goVocabAnchor: function () { api.goVocab(); api.anchor("#lang-learn-vocab"); },
         goDrillAnchor: function () { api.goLearn(); api.anchor("#lang-learn-drill"); },
@@ -22305,13 +22243,13 @@ function openNpcProfile(npcId) {
                         '<div class="lang-band-d">' + api.esc(b[3]) + "</div></div></div>";
                 } else {
                     hb.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:12px 13px;border-radius:14px;border:1px dashed var(--line,#e2ccb0);background:var(--input-bg,#fff8f0);">' +
-                        '<span style="font-size:1.35rem;">🎯</span><div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:.85rem;">还没测学习档</div>' +
-                        '<div class="list-sub" style="margin-top:1px;">花 1 分钟测 10 题，推荐与词库会按你的档位匹配（不测也能直接开玩）</div></div>' +
-                        '<button type="button" class="mini-btn primary" onclick="LangController.goQuizAnchor()">去测定</button></div>';
+                        '<span style="font-size:1.35rem;">🎯</span><div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:.85rem;">还没选学习档</div>' +
+                        '<div class="list-sub" style="margin-top:1px;">挑一个档，推荐与词库会按它匹配；不选也能直接开玩</div></div>' +
+                        '<button type="button" class="mini-btn primary" onclick="LangController.goLearn()">去选档</button></div>';
                 }
             }
             var sub = $("lang-home-reco-sub");
-            if (sub) sub.textContent = profile.band ? ("已按你的学习档 " + bandShort(profile.band) + " 匹配推荐，点卡即玩") : "按最新上架推荐；测档后难度会按你的档位匹配";
+            if (sub) sub.textContent = profile.band ? ("已按你的学习档 " + bandShort(profile.band) + " 匹配推荐，点卡即玩") : "按最新上架推荐；在「学习中心」选好档后推荐按档匹配";
             var wrap = $("lang-reco-wrap");
             api.stopLangBanner();
             if (!window.__LANG_CARDS_READY) {
@@ -22385,7 +22323,7 @@ function openNpcProfile(npcId) {
             rows.innerHTML = list.map(langGridCardHtml).join("");
             for (i = 0; i < list.length; i++) window.CoverService.paint("llc-cover-" + window.CoverService.safeId(list[i].id), list[i]);
             bindCardClicks(rows);
-            hint(profile.band ? "" : "点卡即玩：英语原生剧本自带档位，词库随卡走——建议先「测档」让推荐更准。", "lang-lib-hint");
+            hint(profile.band ? "" : "点卡即玩：英语原生剧本自带档位，词库随卡走——建议先在「学习中心」选好档，推荐更准。", "lang-lib-hint");
         },
         /* M8c:语言卡详情弹层(封面大图 + 中英标题 + 档/题材 + 英文简介 + 主角;播放按钮从弹层进入) */
         openLangDetail: function (cid) {
@@ -23830,7 +23768,7 @@ function openNpcProfile(npcId) {
         if (!box) return;
         if (drillState && !drillState.done && drillState.band === band) return;   // loadProg 迟到回调:保留当前轮
         var deck = buildDrillDeck(band);
-        if (!deck || !deck.length) { box.innerHTML = '<div class="lg-drill-hint">这档还没有可刷的词——去 ② 测档/改档换一档试试</div>'; return; }
+        if (!deck || !deck.length) { box.innerHTML = '<div class="lg-drill-hint">这档还没有可刷的词——去「学习中心」顶部换个档再试</div>'; return; }
         drillState = { band: band, deck: deck, idx: 0, okN: 0, done: false, subm: false };
         renderDrillInto(box);
     }
