@@ -475,6 +475,17 @@ function getTodayStr() {
     return new Date(Date.now() + TIMEZONE_OFFSET_MS).toISOString().slice(0, 10);
 }
 
+// 排行榜切片起点(北京时间):day=今天 / week=本周一 / month=本月 1 号
+function getCnSliceStart(span) {
+    const d = new Date(Date.now() + TIMEZONE_OFFSET_MS);
+    if (span === "month") return d.toISOString().slice(0, 8) + "01";
+    if (span === "week") {
+        const dow = (d.getUTCDay() + 6) % 7;   // 0=周一
+        d.setUTCDate(d.getUTCDate() - dow);
+    }
+    return d.toISOString().slice(0, 10);
+}
+
 // 免费额度日期：北京时间 08:00 为界（00:00-07:59 归前一天 → 每天 08:00 自动刷新）
 function getFreeQuotaDateStr() {
     const d = new Date(Date.now() + TIMEZONE_OFFSET_MS);
@@ -3049,6 +3060,78 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 if (!d.id || d.user_id !== uid) return errorResponse("记录不存在", 404, null, "NOT_FOUND");
                 await pbAdminFetch(env, `/api/collections/lang_vocab/records/${vid}`, { method: "DELETE" });
                 return new Response(JSON.stringify({ ok: true, id: vid }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+            }
+            // ---- 排行榜:学习时长上报(PUT /api/lang/study)----
+            // 客户端每 ~60s 上报累计秒;单次 ≤600s;同一北京自然日 cap 14400s(4h)防挂机刷榜
+            if (url.pathname === "/api/lang/study" && request.method === "PUT") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const uid = auth.record.id;
+                const body = await request.json().catch(() => ({}));
+                const add = Math.min(600, Math.max(1, Math.floor(Number(body.seconds) || 0)));
+                const lang = String(body.lang || "en").slice(0, 8);
+                const day = getTodayStr();
+                const CAP = 14400;
+                const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'&&lang='${escapePocketBaseFilterValue(lang)}'&&day='${day}'`);
+                const q = await pbAdminFetch(env, `/api/collections/lang_study_days/records?perPage=1&skipTotal=true&filter=${f}`);
+                const d = await q.json().catch(() => ({}));
+                const exist = (d.items || [])[0];
+                let secs = add;
+                if (exist) {
+                    secs = Math.min(CAP, (Number(exist.seconds) || 0) + add);
+                    await pbAdminFetch(env, `/api/collections/lang_study_days/records/${exist.id}`, { method: "PATCH", body: JSON.stringify({ seconds: secs }) });
+                } else {
+                    const r = await pbAdminFetch(env, `/api/collections/lang_study_days/records`, { method: "POST", body: JSON.stringify({ user_id: uid, lang, day, seconds: secs }) });
+                    if (!r.ok) return errorResponse("学习时长上报失败", 500, null, "STUDY_SAVE_FAILED");
+                }
+                return new Response(JSON.stringify({ ok: true, day_seconds: secs }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+            }
+            // ---- 排行榜:日/周/月学习时长 Top100(GET /api/lang/leaderboard?span=&lang=)----
+            // 聚合 lang_study_days(按 user_id),并列同秒同 rank(跳跃式);登录时可带 me(自己秒数+名次,未进 100 也可显示)
+            if (url.pathname === "/api/lang/leaderboard" && request.method === "GET") {
+                const span = url.searchParams.get("span") === "week" || url.searchParams.get("span") === "month" ? url.searchParams.get("span") : "day";
+                const lang = String(url.searchParams.get("lang") || "en").slice(0, 8);
+                const start = getCnSliceStart(span);
+                const today = getTodayStr();
+                const f = encodeURIComponent(`lang='${escapePocketBaseFilterValue(lang)}'&&day>='${start}'&&day<='${today}'`);
+                const agg = {};
+                let page = 1;
+                for (;;) {
+                    const q = await pbAdminFetch(env, `/api/collections/lang_study_days/records?perPage=500&page=${page}&fields=user_id,seconds&filter=${f}`);
+                    const d = await q.json().catch(() => ({}));
+                    const items = d.items || [];
+                    for (const it of items) agg[it.user_id] = (agg[it.user_id] || 0) + Number(it.seconds || 0);
+                    if (items.length < 500 || !d.page || page >= (d.totalPages || page)) break;
+                    page++;
+                }
+                const rows = Object.keys(agg).map((uid) => ({ uid, sec: agg[uid] }))
+                    .sort((a, b) => b.sec - a.sec || (a.uid < b.uid ? -1 : 1));
+                const ranks = {};
+                let lastSec = -1, lastRank = 0;
+                rows.forEach((r, i) => { if (r.sec !== lastSec) { lastRank = i + 1; lastSec = r.sec; } ranks[r.uid] = lastRank; });
+                const top = rows.slice(0, 100);
+                const userMap = {};
+                if (top.length) {
+                    const orC = top.map((r) => `id='${escapePocketBaseFilterValue(r.uid)}'`).join("||");
+                    const uQ = await pbAdminFetch(env, `/api/collections/users/records?perPage=200&skipTotal=true&fields=id,nickname,username,faceimg&filter=${encodeURIComponent(orC)}`);
+                    const uD = await uQ.json().catch(() => ({}));
+                    for (const u of (uD.items || [])) userMap[u.id] = u;
+                }
+                const items = top.map((r) => ({
+                    user_id: r.uid, rank: ranks[r.uid],
+                    nickname: String((userMap[r.uid] && (userMap[r.uid].nickname || userMap[r.uid].username)) || "").slice(0, 30),
+                    faceimg: String((userMap[r.uid] && userMap[r.uid].faceimg) || "").slice(0, 500),
+                    seconds: r.sec
+                }));
+                let me = null;
+                try {
+                    const auth = await authenticate(env, request);
+                    if (auth && auth.record && agg[auth.record.id]) {
+                        const mid = auth.record.id;
+                        me = { user_id: mid, seconds: agg[mid], rank: ranks[mid] };
+                    }
+                } catch (e) {}
+                return new Response(JSON.stringify({ span, lang, start, items, me }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
 
             // ---- 路由:M6d5 词库进度词测(GET|PUT /api/lang/progress?band=x;lang_bank_progress 私有集合)----
