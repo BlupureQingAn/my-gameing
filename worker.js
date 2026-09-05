@@ -3022,7 +3022,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const d = await q.json().catch(() => ({}));
                 const items = (d.items || []).map((i) => ({
                     word: String(i.word || ""), state: ["seen", "weak", "learned"].includes(String(i.state)) ? String(i.state) : "seen",
-                    ok_count: Number(i.ok_count || 0), fail_count: Number(i.fail_count || 0), updated_at: i.updated || ""
+                    ok_count: Number(i.ok_count || 0), fail_count: Number(i.fail_count || 0), updated_at: i.updated_at || ""
                 }));
                 return new Response(JSON.stringify({ items, total: items.length }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
@@ -3052,11 +3052,11 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                         okc = Number(rec.ok_count || 0); flc = Number(rec.fail_count || 0);
                         if (it.ok) { okc += 1; state = "learned"; }   // 答对:任意态 → learned(weak 再对 1 次即掌握)
                         else { flc += 1; state = "weak"; }             // 答错:回炉 weak(learned 答错也降)
-                        await pbAdminFetch(env, `/api/collections/lang_bank_progress/records/${rec.id}`, { method: "PATCH", body: JSON.stringify({ state, ok_count: okc, fail_count: flc }) }).catch(() => {});
+                        await pbAdminFetch(env, `/api/collections/lang_bank_progress/records/${rec.id}`, { method: "PATCH", body: JSON.stringify({ state, ok_count: okc, fail_count: flc, updated_at: new Date().toISOString() }) }).catch(() => {});
                     } else {
                         state = it.ok ? "learned" : "weak";
                         okc = it.ok ? 1 : 0; flc = it.ok ? 0 : 1;
-                        const cr = await pbAdminFetch(env, "/api/collections/lang_bank_progress/records", { method: "POST", body: JSON.stringify({ user_id: uid, band, word: it.word, state, ok_count: okc, fail_count: flc }) });
+                        const cr = await pbAdminFetch(env, "/api/collections/lang_bank_progress/records", { method: "POST", body: JSON.stringify({ user_id: uid, band, word: it.word, state, ok_count: okc, fail_count: flc, updated_at: new Date().toISOString() }) });
                         const cd = await cr.json().catch(() => ({}));
                         if (!cd.id) continue;   // 建失败(如并发已建)跳过,下次提交再收敛
                     }
