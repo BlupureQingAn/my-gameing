@@ -1,7 +1,8 @@
-# 英语卡 01:First Semester(大一新生)分集大纲 v0.1
+# 英语卡 01:First Semester(大一新生)分集大纲 v0.2
 
-> 状态:样板待审(小点 2026-09-05)| 用途:写卡蓝本,审后按结构化卡协议成稿
+> 状态:样板待审(小点 2026-09-07)| 用途:写卡蓝本,审后按结构化卡协议成稿
 > 设计依据:docs/prds/bitlife-lang-card-design-proposal.md §1 原则
+> v0.2 修订(五档 PRD §6):band 行 b→cet4;§5 表达表按「从 CET4 库挑」升级为考纲词表(v0.1 习语保留见句型层注);骨架其余不动
 
 ---
 
@@ -11,7 +12,7 @@
 |---|---|
 | title | First Semester(中文名:初来乍到)|
 | lang | en |
-| band | A–B 双档可调(测档 A 入门默认文案,系统按档自动措辞;卡声明 band=b)|
+| band | cet4(词域上限 CET4,卡声明 band=cet4;适配玩家档 hs/cet4,系统措辞按档微调)|
 | category | campus(register:warm conversational, age-appropriate voice)|
 | theme | 留学新生/校园现实 |
 | 长度 | 主线 12 轮,可 8-14 轮波动(玩家选项少绕则短)|
@@ -52,20 +53,22 @@
 - v_prof(0-1):G3 是否课后找教授(期末 0.5 档缓冲,体感为结局评定加权)
 - v_cash(0-2):打工线可选穿插(书店/咖啡),触发 2 个独立小事件轮(可跳过不延长主线)
 
-## 5. 语言目标(6-8 个核心表达,剧情中自然重复 ≥2 次)
+## 5. 语言目标(词库核心词 8 组 + 句型层;剧情中自然重复 ≥2 次)
 
-| 表达 | 中文 | 首次出现 | 再暴露点 |
+写卡期嵌词池 = **CET4 词库同域词 25-40 个**(world.vocab),下表 8 组为其中必须覆盖/首轮优先出现者;释义以词库 zh 为准(展示层点查即考纲释义,零 AI 翻译)。
+
+| CET4 词(词性·库释义) | 中文 | 首次出现 | 再暴露点 |
 |---|---|---|---|
-| out of my depth | 力不从心 | G1 内心独白 | G6 低谷 |
-| get the hang of it | 渐渐上手 | G3 课后自语 | G5 组会 |
-| fall behind | 掉队 | G3 选课 | G6 期中 |
-| pull an all-nighter | 通宵肝 | G5 小组作业 | G8 期末 |
-| hit it off (with sb) | 一拍即合 | G4 室友破冰 | 支线 International Night |
-| make ends meet | 勉强糊口 | 打工支线 | G6 电话(妈妈语录)|
-| get back on track | 回到正轨 | G7 转折 | G8 教授邮件 |
-| it's not the end of the world | 天没塌 | G2 系统崩了 | G6 低谷对话 |
+| apartment n.一套公寓房间 | 公寓 | G1 房东短信/深夜校门 | G6 想家独白 |
+| register vt.登记，注册 | 注册登记 | G2 注册迷宫 | G8 期末周图书馆 |
+| lecture n.&vi.演讲，讲课 | 大课/讲座 | G3 第一节课 | G6 教授回邮 |
+| dormitory n.集体寝室；宿舍 | 宿舍 | G4 室友线 | G8 收束 |
+| assignment n.任务，指定的作业 | 作业/任务 | G5 小组作业 | G7 转学犹豫 |
+| anxious a.忧虑的；渴望的 | 焦虑不安 | G6 期中低谷 | G8 期末通宵 |
+| struggle n.&vi.斗争，奋斗 | 硬扛/挣扎 | G7 转折抉择 | 车站戏 |
+| final a.最后的；决定性的 | 期末/决定性的 | G8 期末收束 | 结局信 |
 
-句型层:A2-B1 重点反复 — "I'm not used to…" / "What am I supposed to do…?" / "It turns out…" / 条件句 If I …, I can …
+句型层(写作润色用,不作嵌词/词测目标):v0.1 习语 out of my depth / get the hang of it / fall behind / pull an all-nighter / hit it off / make ends meet / get back on track / it's not the end of the world 保留为**口语亮点**,按原表分布点缀;A2-B1 重点句型 — "I'm not used to…" / "What am I supposed to do…?" / "It turns out…" / 条件句 If I …, I can …
 
 ## 6. 轮数与难度曲线(倒 V)
 
@@ -87,4 +90,4 @@
 
 ## 9. 上架准备
 
-审过 → 按 editor 协议生成结构化 JSON(首轮 story 全英文写死,world 含 v_roommate/v_social/v_prof/v_cash 变量声明)→ 管理员 API 入 lang_cards(band=b, category=campus)→ 试玩清单(玩家 1 档/3 档各跑一遍,验表达暴露与轮长)。
+审过 → 按 editor 协议生成结构化 JSON(首轮 story 全英文写死,world 含 v_roommate/v_social/v_prof/v_cash 变量声明 + vocab 嵌词池 25-40 CET4 词)→ 管理员 API 入 lang_cards(band=cet4, category=campus)→ 试玩清单(hs/cet4 档各跑一遍,验词库词暴露 ≥2 次与轮长)。

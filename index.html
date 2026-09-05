@@ -4894,6 +4894,19 @@
     .lg-qz-feed .bad-t{color:#c03a49}
     .lg-qz-done{padding:10px 12px;background:var(--input-bg,#fffbf5);border:1px dashed var(--line,#e2ccb0);border-radius:11px;font-size:.76rem;color:var(--text);line-height:1.65}
     .lg-qz-sync{margin-top:8px;font-size:.66rem;color:var(--sub,#806a55)}
+    /* M6d6:考纲词刷词 */
+    .lg-drill-bar{font-size:.68rem;color:var(--sub,#806a55);margin-bottom:8px;font-weight:600}
+    .lg-drill-card{background:linear-gradient(150deg,var(--input-bg,#fffbf5),rgba(124,84,240,.07));border:1px solid var(--line,#e2ccb0);border-radius:14px;padding:18px 16px 14px;text-align:center}
+    .lg-drill-word{font-size:1.5rem;font-weight:800;color:var(--text);word-break:break-all;line-height:1.3}
+    .lg-drill-ph{display:block;font-size:.8rem;font-weight:400;color:var(--sub,#806a55);margin-top:4px}
+    .lg-drill-front-tip{font-size:.74rem;color:var(--sub,#806a55);margin-top:10px}
+    .lg-drill-zh{font-size:.9rem;color:#5b3fce;line-height:1.7;margin-top:8px;text-align:left;background:rgba(124,84,240,.07);border-radius:9px;padding:9px 11px}
+    .lg-drill-hint{font-size:.76rem;color:var(--sub,#806a55);padding:10px 4px;line-height:1.6}
+    .lg-drill-done-title{font-size:.98rem;font-weight:800;color:var(--text);margin-bottom:6px}
+    .lg-drill-done-sub{font-size:.76rem;color:var(--sub,#806a55);line-height:1.7}
+    .lg-drill-sync{margin-top:10px;font-size:.68rem;color:var(--sub,#806a55)}
+    .lg-drill-card .lg-drill-judge[data-j="1"]{background:linear-gradient(135deg,#2fbf71,#1f9a5a);color:#fff;border-color:transparent}
+    .lg-drill-card .lg-drill-judge[data-j="0"]{color:#c03a49;border-color:rgba(224,80,95,.5)}
 </style>
 <div id="boot-screen" role="status" aria-label="页面加载中">
     <div class="boot-logo"><img src="icons/android-chrome-192x192.png" alt="" style="width:36px;height:36px;vertical-align:-7px;margin-right:10px;border-radius:8px;filter:drop-shadow(0 0 10px rgba(255,214,107,.45))">云吞吞文游</div>
@@ -5109,6 +5122,16 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <img class="lg-learn-head" src="lang/vocab-head.jpg" alt="生词本" loading="lazy">
                 <div class="lg-learn-sub">玩英语剧本时：轻点句子看整句译文，点蓝色虚线的生词看释义——点过的词会收进这里，可在「新学 → 眼熟 → 已掌握」之间手动划。</div>
                 <div id="lang-learn-box" style="margin-top:8px;"></div>
+
+                <div class="list-title" style="margin-top:16px;">⑥ 考纲词刷词 <span class="list-sub" style="margin-left:4px;">10 词/轮 · 弱词优先 · 翻卡自评</span></div>
+                <div class="list-sub">按你的当前档词库出词：先看英文想释义，翻面核对——记住的收进「已掌握」，没记住的自动排进下轮（词测与刷词共用一份进度）。</div>
+                <div id="lang-drill-box" style="margin-top:8px;">
+                    <div class="setting-actions" style="margin-top:0;">
+                        <button class="mini-btn primary" onclick="LangAssist.startDrill(false)">▶ 开始刷词（10 词）</button>
+                        <button class="mini-btn" onclick="LangAssist.startDrill(true)">↻ 换一批</button>
+                    </div>
+                    <div class="list-sub" id="lang-drill-stat" style="margin-top:6px;">刷词与章末词测共用一份进度：弱词优先、错词下轮重逢、掌握即出池</div>
+                </div>
             </section>
         </section>
 
@@ -23254,9 +23277,147 @@ function openNpcProfile(npcId) {
         band = String(band || "").trim();
         return { loaded: !!langBankCache[band], loading: !!langBankLoading[band], total: langBankCache[band] ? langBankCache[band].length : 0 };
     }
+    /* ---- M6d6:考纲词刷词(view-lang ⑥;10 词/轮,出词 weak>seen>新词,翻卡自评 → lang_bank_progress 与词测同进度) ---- */
+    var drillState = null;   // {band, deck:[{w,zh,ph,ok?}], idx, okN, done, subm}
+    function drillRndTake(a, n) {
+        a = a.slice(); var out = [], k, r;
+        for (k = 0; k < n && a.length; k++) { r = Math.floor(Math.random() * a.length); out.push(a[r]); a.splice(r, 1); }
+        return out;
+    }
+    function drillBandName(band) { return (BAND_NAMES && BAND_NAMES[band]) ? BAND_NAMES[band] : String(band || "").toUpperCase(); }
+    function buildDrillDeck(band) {
+        var items = langBankCache[band];
+        if (!items || !items.length) return null;
+        var seen = loadSeen()[band] || {};
+        var prog = progByBand[band] || {};
+        var weak = [], seenn = [], nw = [], i, it, w, st;
+        for (i = 0; i < items.length; i++) {
+            it = items[i];
+            w = String(it.w || "");
+            if (!w || w.length < 3 || w.length > 12 || !/^[a-z]+$/.test(w)) continue;
+            if (STOPW[w]) continue;
+            if (!goodPos(String(it.zh || ""))) continue;
+            st = prog[w] ? prog[w].state : "";
+            if (st === "learned") continue;   // 已掌握出池(与词测共用)
+            if (st === "weak") weak.push(it);
+            else if (seen[w]) seenn.push(it);
+            else nw.push(it);
+        }
+        var deck = [], j;
+        function fillFrom(arr) {
+            var t = drillRndTake(arr, 10 - deck.length), k2;
+            for (k2 = 0; k2 < t.length; k2++) deck.push(t[k2]);
+        }
+        fillFrom(weak); fillFrom(seenn); fillFrom(nw);
+        var out = [];
+        for (j = 0; j < deck.length; j++) {
+            out.push({ w: String(deck[j].w).toLowerCase(), zh: String(deck[j].zh || "").slice(0, 120), ph: String(deck[j].ph || "") });
+        }
+        return out.length ? out : null;
+    }
+    function startDrill(force) {
+        var box = document.getElementById("lang-drill-box");
+        if (!box) return;
+        if (!token()) { openLoginSheet(); return; }
+        if (drillState && !drillState.done && !force) return;   // 刷词进行中:忽略重复点击
+        drillState = null;
+        var band = currentLangBand();
+        if (!langBankCache[band] || !langBankCache[band].length) {
+            box.innerHTML = '<div class="lg-drill-hint">⏳ 正在加载 ' + drillBandName(band) + " 词库…</div>";
+            loadLangBank(band).then(function (items) {
+                if (items) readyDrill(band, null);
+                else if (box) box.innerHTML = '<div class="lg-drill-hint">词库加载失败,检查网络后重试</div>';
+            });
+            return;
+        }
+        if (!progByBand[band] && !progLoading[band]) loadProg(band);   // 弱词/已掌握同步(迟到回调不打断当前轮)
+        readyDrill(band, box);
+    }
+    function readyDrill(band, box) {
+        if (!box) box = document.getElementById("lang-drill-box");
+        if (!box) return;
+        if (drillState && !drillState.done && drillState.band === band) return;   // loadProg 迟到回调:保留当前轮
+        var deck = buildDrillDeck(band);
+        if (!deck || !deck.length) { box.innerHTML = '<div class="lg-drill-hint">这档还没有可刷的词——去 ② 测档/改档换一档试试</div>'; return; }
+        drillState = { band: band, deck: deck, idx: 0, okN: 0, done: false, subm: false };
+        renderDrillInto(box);
+    }
+    function renderDrillInto(box) {
+        if (!box) return;
+        var st = drillState;
+        if (!st) return;
+        if (st.done) { renderDrillDone(box); return; }
+        var q = st.deck[st.idx];
+        var h = '<div class="lg-drill-bar">' + drillBandName(st.band) + "档 · 第 " + (st.idx + 1) + "/" + st.deck.length + " 词" + (st.okN ? ' · 已记住 <b style="color:#1a8a4a;">' + st.okN + "</b>" : "") + "</div>";
+        h += '<div class="lg-drill-card"><div class="lg-drill-word">' + esc(q.w) + (q.ph ? '<span class="lg-drill-ph">' + esc(q.ph) + "</span>" : "") + "</div>";
+        h += '<div class="lg-drill-front-tip">🤔 先想它的中文意思,再翻面核对</div>';
+        h += '<div class="lg-drill-zh" style="display:none;">' + esc(q.zh) + "</div>";
+        h += '<div class="setting-actions" style="margin-top:10px;">';
+        h += '<button type="button" class="lg-drill-flip mini-btn primary" onclick="LangAssist.drillFlip()">翻面看释义</button>';
+        h += '<button type="button" class="lg-drill-judge mini-btn" data-j="1" style="display:none;" onclick="LangAssist.drillJudge(true)">😊 记住了</button>';
+        h += '<button type="button" class="lg-drill-judge mini-btn" data-j="0" style="display:none;" onclick="LangAssist.drillJudge(false)">🔁 没记住</button>';
+        h += "</div></div>";
+        box.innerHTML = h;
+    }
+    function drillFlip() {
+        var st = drillState, box;
+        if (!st || st.done) return;
+        box = document.getElementById("lang-drill-box");
+        if (!box) return;
+        var zh = box.querySelector(".lg-drill-zh"), flip = box.querySelector(".lg-drill-flip"), j;
+        var jud = box.querySelectorAll(".lg-drill-judge"), tip = box.querySelector(".lg-drill-front-tip");
+        if (zh) zh.style.display = "block";
+        if (flip) flip.style.display = "none";
+        if (tip) tip.style.display = "none";
+        for (j = 0; j < jud.length; j++) jud[j].style.display = "";
+    }
+    function drillJudge(ok) {
+        var st = drillState, box;
+        if (!st || st.done) return;
+        box = document.getElementById("lang-drill-box");
+        if (!box) return;
+        st.deck[st.idx].ok = !!ok;
+        if (ok) st.okN += 1;
+        if (st.idx + 1 < st.deck.length) { st.idx += 1; renderDrillInto(box); }
+        else { st.done = true; renderDrillDone(box); }
+    }
+    function renderDrillDone(box) {
+        var st = drillState;
+        if (!st) return;
+        var okN = st.okN, tot = st.deck.length;
+        var h = '<div class="lg-drill-done-title">' + (okN === tot ? "🎉 全记住了!" : "本轮完成:" + okN + "/" + tot + " 已记住") + "</div>";
+        h += '<div class="lg-drill-done-sub">' + (okN === tot ? "本轮词全部收进「已掌握」,下一轮自动出更陌生的词。" : "没记住的词会优先排进下一轮刷词——多重逢几次,自然就记住了。") + "</div>";
+        h += '<div class="lg-drill-sync">⏳ 学习进度同步中…</div>';
+        h += '<div class="setting-actions" style="margin-top:10px;"><button type="button" class="mini-btn primary" onclick="LangAssist.startDrill(true)">▶ 再来一轮</button></div>';
+        box.innerHTML = h;
+        submitDrill(box.querySelector(".lg-drill-sync"));
+    }
+    function submitDrill(syncEl) {
+        var st = drillState;
+        if (!st || !st.deck.length || st.subm) return;
+        st.subm = true;
+        var items = [], i, q;
+        for (i = 0; i < st.deck.length; i++) { q = st.deck[i]; if (typeof q.ok === "boolean") items.push({ word: q.w, ok: q.ok }); }
+        if (!items.length) return;
+        function pendAll() { for (i = 0; i < items.length; i++) pushProgPending(st.band, items[i].word, items[i].ok); }
+        fetch(API_BASE + "/api/lang/progress", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token() },
+            body: JSON.stringify({ band: st.band, items: items })
+        })
+            .then(function (r) { return r.json().catch(function () { return null; }); })
+            .then(function (d) {
+                if (d && d.ok) {
+                    for (i = 0; i < items.length; i++) applyProgResult(st.band, items[i].word, items[i].ok ? "learned" : "weak");
+                    if (syncEl) syncEl.textContent = "✓ 学习进度已同步(没记住的已排进下轮)";
+                } else { pendAll(); if (syncEl) syncEl.textContent = "⚠ 同步失败,已暂存本地,联网后自动补交"; }
+            })
+            .catch(function () { pendAll(); if (syncEl) syncEl.textContent = "⚠ 同步失败,已暂存本地,联网后自动补交"; });
+    }
     window.LangAssist = {
         loadBank: loadLangBank, bankItem: langBankItem, bankStatus: langBankStatus,
-        getChapterWords: getChapterWords   // M6d4:当前章候选词(供 LangEngine 续写注入;内部触发预载/抽词)
+        getChapterWords: getChapterWords,   // M6d4:当前章候选词(供 LangEngine 续写注入;内部触发预载/抽词)
+        startDrill: startDrill, drillFlip: drillFlip, drillJudge: drillJudge   // M6d6:考纲词刷词(学习中心⑥)
     };
 })();
 </script>
