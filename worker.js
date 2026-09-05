@@ -1,4 +1,4 @@
-import { BANNED_WORDS } from "./banned_words.js";
+﻿import { BANNED_WORDS } from "./banned_words.js";
 
 // 违禁词过滤:命中返回首个命中词,否则 null;纯字母/数字词要求边界(避免误伤 obsessed 等含 sb 的正常词)
 function checkBanned(text) {
@@ -1075,118 +1075,6 @@ async function callRecapModel(env, story, band) {
     return { error: errorResponse("复盘生成失败，请稍后重试", 503, errs.join(","), "RECAP_UNAVAILABLE") };
 }
 
-// ==================== 防克隆「心脏锁定」BYOK 云端化(2026-09-06) ====================
-// 前端不再直连任何第三方模型;BYOK 用户的 url/model 明文、key 加密存 users 集合,
-// 由本 worker 代跑。克隆站无论配什么 key,请求都发到这里并被登录/Origin 闸门拦死。
-// 密文格式: "v1:<iv hex>:<ct hex>"(AES-GCM,key=env.BYOK_ENC_KEY 前 32 字节)
-const BYOK_CIPHER_VERSION = "v1";
-function byokHex(b) {
-    // crypto.subtle.encrypt 返回 ArrayBuffer(无 length 属性),统一转 Uint8Array 再逐字节 hex
-    const u = b instanceof Uint8Array ? b : new Uint8Array(b);
-    let s = "";
-    for (let i = 0; i < u.length; i++) s += u[i].toString(16).padStart(2, "0");
-    return s;
-}
-function byokUnhex(s) { const u = new Uint8Array(Math.floor(String(s).length / 2)); for (let i = 0; i < u.length; i++) u[i] = parseInt(String(s).slice(i * 2, i * 2 + 2), 16); return u; }
-async function byokCipherKey(env) {
-    const raw = String(env.BYOK_ENC_KEY || "").padEnd(32, "0").slice(0, 32);
-    return crypto.subtle.importKey("raw", new TextEncoder().encode(raw), { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
-}
-async function byokEncrypt(env, plain) {
-    const key = await byokCipherKey(env);
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(String(plain || "")));
-    return `${BYOK_CIPHER_VERSION}:${byokHex(iv)}:${byokHex(ct)}`;
-}
-async function byokDecrypt(env, blob) {
-    try {
-        const parts = String(blob || "").split(":");
-        if (parts.length !== 3 || parts[0] !== BYOK_CIPHER_VERSION) return "";
-        const key = await byokCipherKey(env);
-        const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: byokUnhex(parts[1]) }, key, byokUnhex(parts[2]));
-        return new TextDecoder().decode(pt);
-    } catch (e) { return ""; }
-}
-// SSRF/滥用防护:仅 https 公网端点;拒回打自己(blupure.cn)、localhost/内网/保留段/含 internal 域名
-function byokValidateUpstreamUrl(raw) {
-    let u = null;
-    try { u = new URL(String(raw || "").trim()); } catch (e) { return null; }
-    if (u.protocol !== "https:") return null;
-    const host = u.hostname.toLowerCase();
-    if (host === "ai.blupure.cn" || host.endsWith(".blupure.cn")) return null;
-    if (/^localhost$|\.local$|\.internal$/.test(host)) return null;
-    if (/^(\d{1,3}\.){3}\d{1,3}$/.test(host)) {
-        const ip = host.split(".").map(Number);
-        if (ip.some((n) => n > 255)) return null;
-        if (ip[0] === 10 || ip[0] === 127 || (ip[0] === 172 && ip[1] >= 16 && ip[1] <= 31) || (ip[0] === 192 && ip[1] === 168) || ip[0] >= 224) return null;
-    }
-    return u;
-}
-async function byokReadUserCfg(env, userId) {
-    try {
-        const q = await pbAdminFetch(env, `/api/collections/users/records/${encodeURIComponent(userId)}`);
-        if (!q.ok) return null;
-        const rec = await q.json();
-        const url = String(rec.byok_url || "").trim();
-        const model = String(rec.byok_model || "").trim();
-        const key = await byokDecrypt(env, rec.byok_key_cipher || "");
-        if (!url || !model || !key) return null;
-        return { url, model, key };
-    } catch (e) { return null; }
-}
-async function byokSaveUserCfg(env, userId, body) {
-    const url = String(body.url || "").trim().replace(/\/+$/, "");
-    const model = String(body.model || "").trim().slice(0, 80);
-    let key = String(body.key || "").trim().slice(0, 300);
-    if (!url || !model) return errorResponse("请完整填写 Base URL / 模型名", 400, null, "BYOK_INCOMPLETE");
-    if (!byokValidateUpstreamUrl(url)) return errorResponse("Base URL 不合法:仅支持 https 公网端点,且不能指向本站", 400, null, "BYOK_URL_INVALID");
-    if (!key) {
-        // Key 留空 = 保留已保存旧 Key(编辑 URL/模型时不必重输)
-        const prev = await byokReadUserCfg(env, userId);
-        if (!prev) return errorResponse("Key 不能为空(首次保存必须填写)", 400, null, "BYOK_KEY_REQUIRED");
-        key = prev.key;
-    }
-    const cipher = await byokEncrypt(env, key);
-    const res = await pbAdminFetch(env, `/api/collections/users/records/${encodeURIComponent(userId)}`, {
-        method: "PATCH",
-        body: JSON.stringify({ byok_url: url, byok_model: model, byok_key_cipher: cipher })
-    });
-    if (!res.ok) return errorResponse("云端保存失败,请稍后重试", 500, null, "BYOK_SAVE_FAILED");
-    return new Response(JSON.stringify({ ok: true, url, model, has_key: true }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
-}
-// 代跑一次对话(流式/非流式),不扣云币、不计免费额度/模型配额
-async function runByokChat(env, cfg, requestJson) {
-    const url = (cfg.url || "").replace(/\/$/, "") + "/chat/completions";
-    const payload = { ...requestJson };
-    delete payload.byok;
-    if (!payload.model) payload.model = cfg.model;
-    const isStream = payload.stream === true;
-    let resp;
-    try {
-        resp = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${cfg.key}` },
-            body: JSON.stringify(payload),
-            signal: AbortSignal.timeout(120000)
-        });
-    } catch (e) {
-        return errorResponse(`上游连接失败(${String(e.message || e).slice(0, 80)})`, 502, null, "BYOK_UPSTREAM_ERR");
-    }
-    if (!resp.ok) {
-        let reason = "";
-        try { reason = String((await resp.json()).error?.message || "").slice(0, 200); } catch (e) {}
-        const code = resp.status === 401 || resp.status === 403 ? "BYOK_KEY_INVALID" : "BYOK_UPSTREAM_ERR";
-        return errorResponse(reason || `上游返回 ${resp.status}`, resp.status, reason, code);
-    }
-    if (!isStream) {
-        const data = await resp.json().catch(() => ({}));
-        return new Response(JSON.stringify(data), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
-    }
-    return new Response(resp.body, {
-        headers: { ...corsHeaders(), "Content-Type": "text/event-stream", "Cache-Control": "no-cache" }
-    });
-}
-
 export default {
     async fetch(request, env, ctx) {
         if (!isAllowedOrigin(request.headers.get("Origin"))) {
@@ -1197,55 +1085,6 @@ export default {
         const url = new URL(request.url);
 
         try {
-            // ---- 防克隆「心脏锁定」:BYOK 云端存储/读取/清除 + 连通性测试(均需登录)----
-            if (url.pathname === "/api/byok" && request.method === "PUT") {
-                const auth = await authenticate(env, request);
-                if (auth.error) return auth.error;
-                const cfg = await byokSaveUserCfg(env, auth.record.id, await request.json().catch(() => ({})));
-                return cfg;
-            }
-            if (url.pathname === "/api/byok" && request.method === "GET") {
-                const auth = await authenticate(env, request);
-                if (auth.error) return auth.error;
-                const cfg = await byokReadUserCfg(env, auth.record.id);
-                if (!cfg) return new Response(JSON.stringify({ configured: false }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
-                return new Response(JSON.stringify({ configured: true, url: cfg.url, model: cfg.model, has_key: true }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
-            }
-            if (url.pathname === "/api/byok" && request.method === "DELETE") {
-                const auth = await authenticate(env, request);
-                if (auth.error) return auth.error;
-                const res = await pbAdminFetch(env, `/api/collections/users/records/${encodeURIComponent(auth.record.id)}`, {
-                    method: "PATCH",
-                    body: JSON.stringify({ byok_url: "", byok_model: "", byok_key_cipher: "" })
-                });
-                if (!res.ok) return errorResponse("清除失败,请稍后重试", 500, null, "BYOK_CLEAR_FAILED");
-                return new Response(JSON.stringify({ ok: true }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
-            }
-            if (url.pathname === "/api/byok/test" && request.method === "POST") {
-                const auth = await authenticate(env, request);
-                if (auth.error) return auth.error;
-                const cfg = await byokReadUserCfg(env, auth.record.id);
-                if (!cfg) return errorResponse("未配置云端 BYOK,请先保存", 400, null, "BYOK_NOT_CONFIGURED");
-                const start = Date.now();
-                try {
-                    const resp = await fetch(cfg.url.replace(/\/+$/, "") + "/chat/completions", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${cfg.key}` },
-                        body: JSON.stringify({ model: cfg.model, messages: [{ role: "user", content: "ping" }], max_tokens: 16, stream: false }),
-                        signal: AbortSignal.timeout(25000)
-                    });
-                    if (!resp.ok) {
-                        let reason = "";
-                        try { reason = String((await resp.json()).error?.message || "").slice(0, 200); } catch (e) {}
-                        return errorResponse(reason || `上游返回 ${resp.status}`, resp.status, reason,
-                            resp.status === 401 || resp.status === 403 ? "BYOK_KEY_INVALID" : "BYOK_UPSTREAM_ERR");
-                    }
-                    return new Response(JSON.stringify({ ok: true, latency_ms: Date.now() - start, model: cfg.model }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
-                } catch (e) {
-                    return errorResponse(`连接失败(${String(e.message || e).slice(0, 80)})`, 502, null, "BYOK_UPSTREAM_ERR");
-                }
-            }
-
             // ---- 路由：AI 对话（模型池自动路由 + 每日限额/会员校验）----
             if (url.pathname === "/chat/completions") {
                 // 测试后门：MODEL_URL_OVERRIDE 为 JSON {"模型id":"http://mock"}，仅探针把模型指向本地 mock，生产不配置
@@ -1256,17 +1095,9 @@ export default {
                 const record = auth.record;
                 const userId = record.id;
 
-                // 解析请求(body 只能消费一次,提前到免费额度校验与 BYOK 分支之前)
+                // 解析请求(body 只能消费一次,提前到免费额度/会员/云币校验之前)
                 const bodyText = await request.text();
                 const requestJson = safeJsonParse(bodyText);
-
-                // 防克隆「心脏锁定」:BYOK 代跑——自备 key 经 worker 转发,不走免费额度/云币/模型池;失败即返回,不落池不计费
-                if (requestJson.byok === true) {
-                    const cfg = await byokReadUserCfg(env, userId);
-                    if (!cfg) return errorResponse("未配置云端 BYOK,请在设置页先保存自备接口", 400, null, "BYOK_NOT_CONFIGURED");
-                    if (!byokValidateUpstreamUrl(cfg.url)) return errorResponse("BYOK 端点不合法(仅允许 https 公网端点)", 400, null, "BYOK_URL_INVALID");
-                    return runByokChat(env, cfg, requestJson);
-                }
 
                 // 会员判定：会员到期自动回退免费用户（免费额度照常；membership_type 保留仅靠 expires_at 判定）
                 const isMemberUser = isMember(record);
@@ -3494,15 +3325,6 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                     startedAt: offer.startedAt,
                     price: offer.active ? LIFETIME_PLAN.price : LIFETIME_REGULAR_PRICE
                 }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
-            }
-
-            // ---- 路由：BYOK 激活校验（自备 AI 接口需登录官方账号，防克隆站开箱即用）----
-            if (url.pathname === "/api/byok/check" && request.method === "POST") {
-                const auth = await authenticate(env, request);
-                if (auth.error) return auth.error;
-                return new Response(JSON.stringify({ ok: true }), {
-                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
-                });
             }
 
             // ---- 路由：支付回调（易支付异步通知，GET/POST 均可）----

@@ -5292,9 +5292,6 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     </label>
                 </div>
                 <div id="wizard-step-3" style="display:none;">
-                    <div class="sf-label" style="margin-top:4px;">引擎选择</div>
-                    <label style="display:flex;align-items:center;gap:6px;font-size:0.8rem;margin-top:4px;"><input type="radio" name="wz-engine" value="auto" checked style="width:auto;"> 自动（云端模型池）— 免费额度内推荐</label>
-                    <label style="display:flex;align-items:center;gap:6px;font-size:0.8rem;margin-top:4px;"><input type="radio" name="wz-engine" value="byok" style="width:auto;"> 手动（BYOK）— 使用自己的模型配置</label>
                     <div class="sf-label" style="margin-top:10px;">AI 生成项（勾选的由 AI 生成，全部不勾则直接创建空白卡）</div>
                     <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:4px;font-size:0.8rem;">
                         <label style="display:flex;align-items:center;gap:4px;"><input type="checkbox" id="wz-gen-summary" checked style="width:auto;"> 游戏简介</label>
@@ -5508,18 +5505,6 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <div class="list-sub">别人游玩你的卡：每轮 30 币；解锁你的卡：+1000 币（防刷上限 10 轮/卡/天）。</div>
                 <div id="my-community-cards" style="margin-top:8px;"><span class="list-sub">加载中...</span></div>
             </section>
-            <section class="card">
-                <div class="list-title"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6.175 19.825Q5 18.65 5 17V8.825Q4.125 8.5 3.563 7.738T3 6q0-1.25.875-2.125T6 3t2.125.875T9 6q0 .975-.562 1.738T7 8.825V17q0 .825.588 1.413T9 19t1.413-.587T11 17V7q0-1.65 1.175-2.825T15 3t2.825 1.175T19 7v8.175q.875.325 1.438 1.088T21 18q0 1.25-.875 2.125T18 21t-2.125-.875T15 18q0-.975.563-1.75T17 15.175V7q0-.825-.587-1.412T15 5t-1.412.588T13 7v10q0 1.65-1.175 2.825T9 21t-2.825-1.175"/></svg> 访问线路</div>
-                <div style="margin-top:10px;display:flex;flex-direction:column;gap:10px;">
-                    <div class="nc-row"><span class="nc-label">AI 线路</span>
-                        <select id="nc-route">
-                            <option value="auto">🔀 自动（优先 BYOK，否则云吞模型池）</option>
-                            <option value="byok"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M9.125 14.125Q10 13.25 10 12t-.875-2.125T7 9t-2.125.875T4 12t.875 2.125T7 15t2.125-.875M7 18q-2.5 0-4.25-1.75T1 12t1.75-4.25T7 6q2.025 0 3.538 1.15T12.65 10h8.375L23 11.975l-3.5 4L17 14l-2 2l-2-2h-.35q-.625 1.8-2.175 2.9T7 18"/></svg> 仅 BYOK（未配置则提示）</option>
-                        </select>
-                    </div>
-                    <div class="list-sub">BYOK 由云吞吞服务云端代跑（Key 加密存云端）不耗云币；云吞池由服务端模型池自动路由。</div>
-                </div>
-            </section>
             <section class="card" id="card-settings-ending-card" style="display:none;">
                 <div class="list-title"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="m4 4l2 4h3L7 4h2l2 4h3l-2-4h2l2 4h3l-2-4h3q.825 0 1.413.588T22 6v12q0 .825-.587 1.413T20 20H4q-.825 0-1.412-.587T2 18V6q0-.825.588-1.412T4 4"/></svg> 这段故事（AI 结局评定）</div>
                 <div class="list-sub">满足结局条件时可评定；随时可手动结束本剧获得 S~D 评级与复盘。</div>
@@ -5535,21 +5520,8 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <div class="list-sub">调整后全局字号即时生效，自动保存。</div>
             </section>
             <section class="card">
-                <div class="list-title"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M9.125 14.125Q10 13.25 10 12t-.875-2.125T7 9t-2.125.875T4 12t.875 2.125T7 15t2.125-.875M7 18q-2.5 0-4.25-1.75T1 12t1.75-4.25T7 6q2.025 0 3.538 1.15T12.65 10h8.375L23 11.975l-3.5 4L17 14l-2 2l-2-2h-.35q-.625 1.8-2.175 2.9T7 18"/></svg> 自备 AI 接口（BYOK）</div>
-                <div class="list-sub">填入你自己的 OpenAI 兼容 API（Base URL / Key / 模型）。Key 加密保存在云端，对话由云吞吞服务代跑——不直连第三方、不消耗云币；需登录官方账号后保存（防克隆安全策略）。</div>
-                <div style="margin-top:10px;">
-                    <div><label class="sf-label">Base URL（如 https://api.openai.com/v1）</label><input id="ui-byok-url" type="text" placeholder="https://api.openai.com/v1"></div>
-                    <div style="margin-top:8px;"><label class="sf-label">API Key（留空=沿用已保存的 Key）</label><input id="ui-byok-key" type="password" placeholder="sk-..."></div>
-                    <div style="margin-top:8px;"><label class="sf-label">模型名</label><input id="ui-byok-model" type="text" placeholder="如 gpt-4o-mini / glm-4-flash"></div>
-                    <div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
-                        <button class="mini-btn primary" onclick="SettingsService.testByokConnection()">测试连接</button>
-                        <span id="ui-byok-test-result" class="list-sub" style="margin:0;"></span>
-                    </div>
-                </div>
-            </section>
-            <section class="card">
                 <div class="list-title"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M5 20v-2h14v2zm0-3.5L3.725 8.475q-.05 0-.113.013T3.5 8.5q-.625 0-1.062-.438T2 7t.438-1.062T3.5 5.5t1.063.438T5 7q0 .175-.038.325t-.087.275L8 9l3.125-4.275q-.275-.2-.45-.525t-.175-.7q0-.625.438-1.063T12 2t1.063.438T13.5 3.5q0 .375-.175.7t-.45.525L16 9l3.125-1.4q-.05-.125-.088-.275T19 7q0-.625.438-1.063T20.5 5.5t1.063.438T22 7t-.437 1.063T20.5 8.5q-.05 0-.112-.012t-.113-.013L19 16.5z"/></svg> 会员服务</div>
-                <div class="list-sub" id="membership-settings-text">AI 对话按 token 计费（输入 4 币/千 token、输出 12 币/千 token，普通对话约 10 币），官方剧本卡全部免费游玩。开通终身会员（限时 ¥188）后免一切云币消耗（AI 对话）+ 社区付费卡直接游玩。自备 AI 接口（BYOK）不消耗云币，但解锁社区付费卡仍需云币（会员可直接游玩）。</div>
+                <div class="list-sub" id="membership-settings-text">AI 对话按 token 计费（输入 4 币/千 token、输出 12 币/千 token，普通对话约 10 币），官方剧本卡全部免费游玩。开通终身会员（限时 ¥188）后免一切云币消耗（AI 对话）+ 社区付费卡直接游玩。</div>
             </section>
             <button type="button" id="auth-logout-btn" class="logout-big-btn" onclick="AuthService.logout()" style="display:none;">退出登录</button>
         </section>
@@ -11321,194 +11293,8 @@ function rebuildChoicesBlock(body, labels = []) {
 
     const SettingsService = (() => {
         const FONT_KEY = "bitlife_font_size_v1";
-        const BYOK_KEY = "bitlife_byok_v1";
         const DEFAULT_FONT_SIZE = 16;
 
-        // ---- 心脏锁定(2026-09-06):BYOK 云端化 ----
-        // Key 只存云端(worker AES-GCM 加密),明文永不落 localStorage;本地仅存 url/model 元数据镜像,
-        // 引擎所有 AI 请求一律走 worker 代跑(登录+Origin 双闸),克隆站拿到前端也配不出可用的直连
-        function getByok() {
-            try {
-                const cfg = JSON.parse(localStorage.getItem(BYOK_KEY) || "null");
-                if (!cfg) return null;
-                return { url: String(cfg.url || ""), model: String(cfg.model || ""), key: "" };
-            } catch (e) { return null; }
-        }
-        function getByokV1() {
-            // 旧版(心脏锁定前)可能含明文 key:仅供一次性迁移检测,迁移后立即清除
-            try {
-                const cfg = JSON.parse(localStorage.getItem(BYOK_KEY) || "null");
-                return (cfg && cfg.key && cfg.url && cfg.model)
-                    ? { url: String(cfg.url), key: String(cfg.key), model: String(cfg.model) } : null;
-            } catch (e) { return null; }
-        }
-        function saveByokMeta(url, model) {
-            const cfg = { url: String(url || "").trim(), model: String(model || "").trim() };
-            if (cfg.url && cfg.model) localStorage.setItem(BYOK_KEY, JSON.stringify({ url: cfg.url, model: cfg.model, v: 2 }));
-            else localStorage.removeItem(BYOK_KEY);
-        }
-        function loadByokInputs(cfg, keySaved) {
-            const urlInput = document.getElementById("ui-byok-url");
-            const keyInput = document.getElementById("ui-byok-key");
-            const modelInput = document.getElementById("ui-byok-model");
-            if (urlInput) urlInput.value = cfg?.url || "";
-            if (keyInput) { keyInput.value = ""; keyInput.placeholder = keySaved ? "已加密存云端(留空=沿用)" : "sk-..."; }
-            if (modelInput) modelInput.value = cfg?.model || "";
-        }
-        async function saveByokToCloud(cfg) {
-            // PUT 云端保存(需登录);key 留空 = 服务端沿用已存值
-            const token = typeof AuthService?.getToken === "function" ? AuthService.getToken() : "";
-            if (!token) return { ok: false, code: "NOT_LOGGED_IN" };
-            try {
-                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/byok`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json", "X-Auth-Token": token.startsWith("Bearer ") ? token : "Bearer " + token },
-                    body: JSON.stringify({ url: cfg.url, model: cfg.model, key: String(cfg.key || "") })
-                });
-                const data = await res.json().catch(() => ({}));
-                if (!res.ok) return { ok: false, code: data.code || "", msg: String(data.error || `HTTP ${res.status}`) };
-                saveByokMeta(cfg.url, cfg.model);
-                return { ok: true };
-            } catch (e) {
-                return { ok: false, code: "NETWORK_ERR", msg: String(e.message || "网络异常") };
-            }
-        }
-        async function clearByokFromCloud() {
-            const token = typeof AuthService?.getToken === "function" ? AuthService.getToken() : "";
-            if (!token) return { ok: false, code: "NOT_LOGGED_IN" };
-            try {
-                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/byok`, {
-                    method: "DELETE",
-                    headers: { "X-Auth-Token": token.startsWith("Bearer ") ? token : "Bearer " + token }
-                });
-                saveByokMeta("", "");
-                return { ok: res.ok };
-            } catch (e) { return { ok: false, code: "NETWORK_ERR" }; }
-        }
-        async function refreshByokFromCloud() {
-            // 打开设置页/页面启动时拉取云端权威配置回填(key 不回填);游客跳过
-            const token = typeof AuthService?.getToken === "function" ? AuthService.getToken() : "";
-            try {
-                if (!token) {
-                    // 游客:旧版明文配置已随心脏锁定停用;提示一次(待登录后进本页一键迁移),不移除明文
-                    if (getByokV1() && !sessionStorage.getItem("bitlife_byok_v1_notice")) {
-                        sessionStorage.setItem("bitlife_byok_v1_notice", "1");
-                        loadByokInputs(null, false);
-                        NoticeModalService.showInfo({ title: "自备 AI 接口已升级", descHtml: "为防克隆,自备接口 Key 现改为「加密存云端、由云吞吞代跑」,需登录官方账号后迁移启用。登录后重新进入本页即可一键迁移。" });
-                    }
-                    return;
-                }
-                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/byok`, {
-                    method: "GET",
-                    headers: { "X-Auth-Token": token.startsWith("Bearer ") ? token : "Bearer " + token }
-                });
-                if (!res.ok) return;
-                const data = await res.json().catch(() => null);
-                if (!data) return;
-                if (data.configured) {
-                    saveByokMeta(data.url, data.model);
-                    loadByokInputs(data, true);
-                } else {
-                    saveByokMeta("", "");
-                    loadByokInputs(null, false);
-                    await migrateLegacyByok();
-                }
-            } catch (e) {}
-        }
-        async function migrateLegacyByok() {
-            // 心脏锁定前保存的本机明文 key:已登录且云端空 → 询问一键上传,无论结果先清除明文
-            const legacy = getByokV1();
-            if (!legacy) return;
-            const user = typeof AuthService?.getUserData === "function" ? AuthService.getUserData() : null;
-            if (!user?.id) return;
-            const safeUrl = String(legacy.url).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-            const go = await NoticeModalService.confirm({
-                title: "发现本机旧版 BYOK 配置",
-                descHtml: `安全升级:自备 AI 接口的 Key 改为「加密保存在云端、由云吞吞服务代跑」,本机不再保留明文。<br>是否把 <b>${safeUrl}</b> 的 Key 上传到云端启用?`,
-                okText: "上传并启用", cancelText: "不上传(停用旧配置)"
-            });
-            localStorage.removeItem(BYOK_KEY);
-            if (!go) { loadByokInputs(null, false); return; }
-            const r = await saveByokToCloud({ url: legacy.url, model: legacy.model, key: legacy.key });
-            if (r.ok) {
-                loadByokInputs({ url: legacy.url, model: legacy.model }, true);
-                NoticeModalService.showInfo({ title: "已迁移", descHtml: "BYOK 已切换为云端代跑:Key 加密存云端,每次对话由云吞吞服务转发,不直连第三方,不耗云币。" });
-            } else if (r.code === "NOT_LOGGED_IN" || r.code === "SESSION_EXPIRED") {
-                NoticeModalService.showInfo({ title: "请先登录", descHtml: "上传旧配置需要登录官方账号,登录后进入设置页即可再次迁移。" });
-            } else {
-                NoticeModalService.showInfo({ title: "迁移失败", descHtml: String(r.msg || "请稍后重试") + "<br>你可在下方输入框重新填写保存。" });
-            }
-        }
-        function applyFontSize(size) {
-            const px = Math.min(20, Math.max(12, Math.round(Number(size) || DEFAULT_FONT_SIZE)));
-            document.documentElement.style.setProperty("--base-font-size", px + "px");
-            localStorage.setItem(FONT_KEY, String(px));
-            return px;
-        }
-        function loadFontSize() {
-            const saved = Number(localStorage.getItem(FONT_KEY));
-            if (saved >= 12 && saved <= 20) applyFontSize(saved);
-            return saved >= 12 && saved <= 20 ? saved : DEFAULT_FONT_SIZE;
-        }
-        function onFontSizeInput(value) {
-            const px = applyFontSize(value);
-            const valEl = document.getElementById("ui-font-size-val");
-            if (valEl) valEl.textContent = px + "px";
-        }
-        async function testByokConnection() {
-            const resultEl = document.getElementById("ui-byok-test-result");
-            const url = String(document.getElementById("ui-byok-url")?.value || "").trim().replace(/\/+$/, "");
-            const key = String(document.getElementById("ui-byok-key")?.value || "").trim();
-            const model = String(document.getElementById("ui-byok-model")?.value || "").trim();
-            if (!url || !model) {
-                if (resultEl) { resultEl.textContent = "请先填写 Base URL / 模型(Key 可留空沿用)"; resultEl.style.color = "var(--accent-dark)"; }
-                return;
-            }
-            if (resultEl) { resultEl.textContent = "保存并测试中..."; resultEl.style.color = "var(--sub)"; }
-            // 心脏锁定:先保存到云端,再由 worker 用云端 Key 代测——前端不再直连任何第三方端点
-            const saved = await saveByokToCloud({ url, model, key });
-            if (!saved.ok) {
-                if (resultEl) {
-                    const hint = saved.code === "NOT_LOGGED_IN" ? "测试前需先登录(登录后回来即可)"
-                        : saved.code === "BYOK_KEY_REQUIRED" ? "Key 不能为空(首次保存必须填写)"
-                        : saved.code === "BYOK_URL_INVALID" ? "Base URL 不合法(仅支持 https 公网端点)"
-                        : String(saved.msg || "保存失败").slice(0, 60);
-                    resultEl.textContent = hint;
-                    resultEl.style.color = "#c0392b";
-                }
-                return;
-            }
-            const token = typeof AuthService?.getToken === "function" ? AuthService.getToken() : "";
-            if (!token) {
-                if (resultEl) { resultEl.textContent = "测试前需先登录"; resultEl.style.color = "#c0392b"; }
-                return;
-            }
-            if (resultEl) { resultEl.textContent = "云端代测中(最多 25 秒)..."; resultEl.style.color = "var(--sub)"; }
-            try {
-                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/byok/test`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json", "X-Auth-Token": token.startsWith("Bearer ") ? token : "Bearer " + token },
-                    body: "{}"
-                });
-                const data = await res.json().catch(() => ({}));
-                if (res.ok) {
-                    loadByokInputs({ url: data.url || url, model: data.model || model }, true);
-                    if (resultEl) { resultEl.textContent = `连接成功 ✓ ${data.model}(${data.latency_ms}ms) 云端代跑已生效`; resultEl.style.color = "#2e8b57"; }
-                    return;
-                }
-                const code = data.code || "";
-                if (resultEl) {
-                    const hint = (code === "NOT_LOGGED_IN" || code === "SESSION_EXPIRED") ? "登录状态已失效,请重新登录后再测试"
-                        : code === "BYOK_KEY_INVALID" ? "Key 无效或已过期(上游拒绝),请重填 Key"
-                        : code === "BYOK_NOT_CONFIGURED" ? "云端未保存成功,请先填写并保存"
-                        : "连接失败:" + String(data.error || `HTTP ${res.status}`).slice(0, 80);
-                    resultEl.textContent = hint;
-                    resultEl.style.color = "#c0392b";
-                }
-            } catch (e) {
-                if (resultEl) { resultEl.textContent = "测试失败(网络异常):" + String(e.message || e).slice(0, 60); resultEl.style.color = "#c0392b"; }
-            }
-        }
 
         function loadToUI() {
             const selectedScenario = ScenarioCardService.getSelectedCard();
@@ -11535,10 +11321,6 @@ function rebuildChoicesBlock(body, labels = []) {
                 const valEl = document.getElementById("ui-font-size-val");
                 if (valEl) valEl.textContent = current + "px";
             }
-            const byokMirror = getByok();
-            loadByokInputs(byokMirror, !!byokMirror);
-            // 云端为权威配置:异步拉取回填(含旧版明文 key 的一键迁移)
-            refreshByokFromCloud().catch(() => {});
 
             // 更新账户信息
             const user = AuthService.getUserData();
@@ -11575,90 +11357,13 @@ function rebuildChoicesBlock(body, labels = []) {
             const selectedScenario = ScenarioCardService.getSelectedCard();
             if (!selectedScenario) return;
         }
-        // BYOK 保存为异步(登录态校验),loadToUI 回填旧值前须等它完成,否则会覆盖用户刚输入的内容
-        async function saveUserApiFromUI() {
+        function saveUserApiFromUI() {
             ThemeService.setMode(document.getElementById("ui-dark-mode-enabled")?.checked ? "dark" : "light");
             const sizeVal = document.getElementById("ui-font-size-range")?.value;
             if (sizeVal) applyFontSize(sizeVal);
-            await saveByokFromUI();
             loadToUI();
         }
-        // 即时保存 BYOK（输入即存，无需"保存设置"按钮）
-        // 防克隆门槛：BYOK 让克隆站"填任意 key 开箱即用"。保存前必须通过登录态服务端校验，
-        // 未登录/会话失效不写入 localStorage——BYOK 保留给官方账号用户
-        let _byokTimer = null;
-        let _byokSaving = false;
-        let _byokDirty = false;
-        function collectByokFromUI() {
-            return {
-                url: String(document.getElementById("ui-byok-url")?.value || "").trim().replace(/\/+$/, ""),
-                key: String(document.getElementById("ui-byok-key")?.value || "").trim(),
-                model: String(document.getElementById("ui-byok-model")?.value || "").trim()
-            };
-        }
-        async function saveByokFromUI() {
-            const byok = collectByokFromUI();
-            const hasUrlModel = !!(byok.url && byok.model);
-            const anyInput = !!(byok.url || byok.key || byok.model);
-            // 防克隆门槛(云端化后保留):保存需登录官方账号,游客输入只提示不落盘
-            // 规则:url+model 齐 → 云端保存(key 可空=沿用已存);三项全空 → 确认后清除云端;部分填写 → 不动(避免中间态误删)
-            if (!anyInput) {
-                if (getByokV1()) { localStorage.removeItem(BYOK_KEY); loadByokInputs(null, false); return; }
-                if (!getByok()) return;
-                if (_byokSaving) { _byokDirty = true; return; }
-                _byokSaving = true;
-                try {
-                    const sure = await NoticeModalService.confirm({
-                        title: "清除自备 AI 接口配置?",
-                        descHtml: "将从云端删除加密保存的 Key 与本机配置,之后 BYOK 不再生效(不影响账号与云币;如误操作可在下方重新填写)。",
-                        okText: "删除配置", cancelText: "取消"
-                    });
-                    if (sure) {
-                        const r = await clearByokFromCloud();
-                        loadByokInputs(null, false);
-                        if (!r.ok && r.code !== "NOT_LOGGED_IN") {
-                            NoticeModalService.showInfo({ title: "清除失败", descHtml: "网络异常,请稍后重试。" });
-                        }
-                    } else {
-                        const mirror = getByok();
-                        loadByokInputs(mirror, !!mirror);
-                    }
-                } finally {
-                    _byokSaving = false;
-                }
-                return;
-            }
-            if (!hasUrlModel) return; // 缺 url/model 不动作,等待用户补全或清空
-            if (_byokSaving) { _byokDirty = true; return; }
-            _byokSaving = true;
-            try {
-                const r = await saveByokToCloud(byok);
-                if (r.ok) {
-                    if (byok.key) loadByokInputs({ url: byok.url, model: byok.model }, true); // 已上传明文,立即清 key 框
-                } else if (r.code === "NOT_LOGGED_IN" || r.code === "SESSION_EXPIRED") {
-                    NoticeModalService.showInfo({ title: "请先登录", descHtml: "自备 AI 接口（BYOK）的 Key 现改为加密保存在云端、由云吞吞服务代跑,需登录官方账号后保存。登录后回来重新填写即可。" });
-                } else if (r.code === "BYOK_KEY_REQUIRED") {
-                    NoticeModalService.showInfo({ title: "无法保存", descHtml: "首次保存必须填写 Key(已保存过 Key 后留空=沿用不变)。" });
-                } else if (r.code === "BYOK_URL_INVALID") {
-                    NoticeModalService.showInfo({ title: "无法保存", descHtml: "Base URL 不合法:仅支持 https 公网端点,不能指向本站。" });
-                } else {
-                    NoticeModalService.showInfo({ title: "保存失败", descHtml: String(r.msg || "网络异常,请稍后重试") });
-                }
-            } finally {
-                _byokSaving = false;
-                if (_byokDirty) { _byokDirty = false; saveByokFromUI(); }
-            }
-        }
-        function bindByokAutoSave() {
-            ["ui-byok-url", "ui-byok-key", "ui-byok-model"].forEach(id => {
-                const el = document.getElementById(id);
-                if (!el) return;
-                el.addEventListener("input", () => {
-                    clearTimeout(_byokTimer);
-                    _byokTimer = setTimeout(saveByokFromUI, 400);
-                });
-            });
-        }
+
         // 我的页:昵称/签名/头像 即时保存（PATCH 直连 PocketBase，PB users 集合默认允许用户改自己的记录）
         // 注意:PB_URL/COLLECTION 定义在 AuthService IIFE 内部,此处必须自行声明,否则引用抛 ReferenceError
         const PB_URL = "https://db.blupure.cn";
@@ -11817,13 +11522,8 @@ function rebuildChoicesBlock(body, labels = []) {
             });
         }
         function getApiConfig() {
-            // 心脏锁定:前端直连路径已删除。BYOK = 云端配置(元数据镜像)+ worker 代跑(body 带 byok 标志),
-            // Key 存云端由 worker 注入;未配置 BYOK 时走模型池自动路由
-            const byok = getByok();
-            if (byok && byok.url && byok.model) {
-                return { upstreamUrl: AppConfig.proxy.baseUrl, key: "", model: byok.model, byok: true };
-            }
-            return { upstreamUrl: AppConfig.proxy.baseUrl, key: "", model: "pool", byok: false };
+            // 心脏锁定(2026-09-06):AI 请求一律经 worker 代跑(登录+Origin 双闸),云端模型池自动路由
+            return { upstreamUrl: AppConfig.proxy.baseUrl, key: "", model: "pool" };
         }
         function getScenarioText() {
             const selected = ScenarioCardService.getSelectedCard();
@@ -11981,9 +11681,6 @@ function rebuildChoicesBlock(body, labels = []) {
             }
             const endingCard = document.getElementById("card-settings-ending-card");
             if (endingCard) endingCard.style.display = getSettingsContext() ? "" : "none";
-            const n = getNarrative(_settingsCardId === null ? null : _settingsCardId);
-            const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
-            set("nc-route", n.route);
         }
         const MAP_OVERRIDE_KEY = "bitlife_map_override_v1";
         function getMapOverride(cardId) {
@@ -11999,29 +11696,9 @@ function rebuildChoicesBlock(body, labels = []) {
             all[cardId] = { ...(all[cardId] || {}), ...patch };
             localStorage.setItem(MAP_OVERRIDE_KEY, JSON.stringify(all));
         }
-        function bindNarrativeAutoSave() {
-            // 「我的」页仅剩访问线路(nc-route)一项;叙事控制/主题与展示区块已移除
-            const bind = (id, key) => {
-                const el = document.getElementById(id);
-                if (!el) return;
-                const fn = () => {
-                    let val;
-                    if (el.type === "checkbox") val = el.checked;
-                    else if (el.type === "number" || el.type === "range") val = Number(el.value);
-                    else val = el.value;
-                    saveNarrative({ [key]: val });
-                    applyNarrativeUI();
-                };
-                el.addEventListener("change", fn);
-                el.addEventListener("input", fn);
-            };
-            bind("nc-route", "route");
-        }
-        return { loadToUI, saveFromUI, saveUserApiFromUI, getApiConfig, getByok, refreshByokFromCloud, applyFontSize, loadFontSize, onFontSizeInput, testByokConnection, getScenarioText, getScenarioTextForModel, getBeautyCardSetting, getChatPolicyConfig, getThinkingPayloadForCard, importScenarioFromFile, bindProfileAutoSave, bindByokAutoSave, setSettingsContext, getSettingsContext, getNarrative, saveNarrative, applyNarrativeUI, buildNarrativePrompt, openMemoryManager, clearNpcMemory, loadNarrativeToUI, bindNarrativeAutoSave, getMapOverride, setMapOverride };
+        return { loadToUI, saveFromUI, saveUserApiFromUI, getApiConfig, applyFontSize, loadFontSize, onFontSizeInput, getScenarioText, getScenarioTextForModel, getBeautyCardSetting, getChatPolicyConfig, getThinkingPayloadForCard, importScenarioFromFile, bindProfileAutoSave, setSettingsContext, getSettingsContext, getNarrative, saveNarrative, applyNarrativeUI, buildNarrativePrompt, openMemoryManager, clearNpcMemory, loadNarrativeToUI, getMapOverride, setMapOverride };
     })();
     SettingsService.loadFontSize();
-    // 心脏锁定:页面启动后静默拉一次云端 BYOK 镜像(登录态下),换设备/清缓存后不进设置页也能恢复自备接口
-    setTimeout(() => { try { SettingsService.refreshByokFromCloud && SettingsService.refreshByokFromCloud(); } catch (e) {} }, 1500);
 
     const ScenarioSpecSanitizerService = (() => {
         const IGNORE_PATTERNS = [
@@ -15266,8 +14943,6 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
         async function streamCompletion({ fetchUrl, headers, model, messages, temperature, onToken, extraBody = null, cardId = "" }) {
             return await fetchWithRetry(async () => {
             const payloadBody = buildExtraBody(extraBody, cardId);
-            // 心脏锁定:BYOK 已云端化,带标志让 worker 走代跑分支(key 在云端由 worker 注入)
-            const byokFlag = !!(SettingsService.getByok()?.url && SettingsService.getByok()?.model);
             const controller = new AbortController();
             // 只对连接阶段设超时，流读取不限时（长文本生成可能很慢）
             const timer = setTimeout(() => controller.abort(`connect timeout ${REQUEST_TIMEOUT_MS}ms`), REQUEST_TIMEOUT_MS);
@@ -15276,7 +14951,7 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
                 response = await fetch(fetchUrl, {
                     method: "POST",
                     headers,
-                    body: JSON.stringify({ model, messages, stream: true, temperature, max_tokens: 8192, response_format: { type: "json_object" }, ...payloadBody, ...(byokFlag ? { byok: true } : {}) }),
+                    body: JSON.stringify({ model, messages, stream: true, temperature, max_tokens: 8192, response_format: { type: "json_object" }, ...payloadBody }),
                     signal: controller.signal
                 });
             } catch (e) {
@@ -15442,8 +15117,6 @@ const token = delta.content || "";
         async function requestCompletion({ fetchUrl, headers, model, messages, temperature, extraBody = null, cardId = "", timeoutMs = READ_TIMEOUT_MS }) {
             return await fetchWithRetry(async () => {
             const payloadBody = buildExtraBody(extraBody, cardId);
-            // 心脏锁定:BYOK 已云端化,带标志让 worker 走代跑分支(key 在云端由 worker 注入)
-            const byokFlag = !!(SettingsService.getByok()?.url && SettingsService.getByok()?.model);
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(`request timeout ${timeoutMs}ms`), timeoutMs);
             let response;
@@ -15451,7 +15124,7 @@ const token = delta.content || "";
                 response = await fetch(fetchUrl, {
                     method: "POST",
                     headers,
-                    body: JSON.stringify({ model, messages, stream: false, temperature, max_tokens: 8192, response_format: { type: "json_object" }, ...payloadBody, ...(byokFlag ? { byok: true } : {}) }),
+                    body: JSON.stringify({ model, messages, stream: false, temperature, max_tokens: 8192, response_format: { type: "json_object" }, ...payloadBody }),
                     signal: controller.signal
                 });
             } catch (e) {
@@ -17626,10 +17299,8 @@ const token = delta.content || "";
                     ThemeService.setMode(darkModeInput.checked ? "dark" : "light");
                 });
             }
-            // 我的页:昵称/签名/头像即时保存;BYOK 输入即存
+            // 我的页:昵称/签名/头像即时保存
             try { SettingsService.bindProfileAutoSave(); } catch (e) {}
-            try { SettingsService.bindByokAutoSave(); } catch (e) {}
-            try { SettingsService.bindNarrativeAutoSave(); } catch (e) {}
             const input = document.getElementById("chat-input");
             input.addEventListener("keydown", (e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
@@ -20614,8 +20285,6 @@ function openNpcProfile(npcId) {
             if (promptInput) { promptInput.value = ""; wizardPromptCount(); }
             const polishEl = document.getElementById("wizard-polish");
             if (polishEl) polishEl.checked = false;
-            const auto = document.querySelector('input[name="wz-engine"][value="auto"]');
-            if (auto) auto.checked = true;
             ["summary", "rules", "stats", "identity", "npcs", "opening"].forEach((k) => {
                 const el = document.getElementById("wz-gen-" + k);
                 if (el) el.checked = true;
@@ -20645,7 +20314,6 @@ function openNpcProfile(npcId) {
             const title = String(document.getElementById("wizard-title-input")?.value || "").trim().slice(0, 20);
             const prompt = String(document.getElementById("wizard-prompt-input")?.value || "").trim().slice(0, 5000);
             const polish = !!document.getElementById("wizard-polish")?.checked;
-            const engine = document.querySelector('input[name="wz-engine"]:checked')?.value || "auto";
             const flags = {
                 summary: !!document.getElementById("wz-gen-summary")?.checked,
                 rules: !!document.getElementById("wz-gen-rules")?.checked,
@@ -20998,7 +20666,7 @@ function openNpcProfile(npcId) {
                     : `<div style="font-size:0.9rem;font-weight:700;color:#8a4b00;">⏰ 限时优惠已结束，终身会员恢复原价 ¥249</div>`;
             }
             const st = document.getElementById("membership-settings-text");
-            if (st) st.textContent = `免费用户每天可免费畅玩 AI 剧情，额度用完后按云币计费（输入 4 币/千 token、输出 12 币/千 token）；开通周/月/季/年/终身会员后 AI 对话不限次、不消耗云币。官方剧本卡全部免费游玩，解锁社区付费卡仍需云币（会员可直接游玩）。自备 AI 接口（BYOK）不消耗云币。`;
+            if (st) st.textContent = `免费用户每天可免费畅玩 AI 剧情，额度用完后按云币计费（输入 4 币/千 token、输出 12 币/千 token）；开通周/月/季/年/终身会员后 AI 对话不限次、不消耗云币。官方剧本卡全部免费游玩，解锁社区付费卡仍需云币（会员可直接游玩）。`;
         }
         function selectPlan(id) {
             if (id !== selectedPlan) _currentOrder = null; // 套餐变了,旧订单作废
