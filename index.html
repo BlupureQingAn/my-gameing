@@ -4772,6 +4772,37 @@
     .stat-roll-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent-dark));transition:width .25s ease}
     .stat-roll-btn{width:22px;height:22px;border-radius:6px;border:1px solid var(--line);background:var(--input-bg);color:var(--text);font-weight:800;cursor:pointer;line-height:1;flex-shrink:0}
     .stat-roll-btn:hover{border-color:var(--accent)}
+    /* ===== 语言文游 LangPlay · 入口横幅 + 语言大厅 ===== */
+    .lang-entry-banner{display:flex;align-items:center;gap:10px;margin:10px 0;padding:13px 14px;border-radius:14px;background:linear-gradient(120deg,#3d3488,#3f6fd8 60%,#6a4fd8);color:#fff;cursor:pointer;box-shadow:0 3px 10px rgba(63,111,216,.35)}
+    .lang-entry-banner:active{transform:scale(.99)}
+    .leb-badge{flex-shrink:0;background:#fff;color:#3f4fd8;font-weight:900;font-size:.82rem;letter-spacing:.5px;padding:3px 8px;border-radius:8px}
+    .leb-main{flex:1;min-width:0}
+    .leb-title{font-weight:800;font-size:.95rem}
+    .leb-sub{font-size:.72rem;opacity:.85;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .leb-arrow{font-size:1.05rem;opacity:.9;flex-shrink:0}
+    .lang-picker{display:flex;gap:10px;margin-top:8px}
+    .lang-lang-card{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;padding:14px 6px 10px;border-radius:14px;border:1px solid var(--line);background:var(--input-bg);cursor:pointer;font-size:.85rem;color:var(--text);line-height:1.4}
+    .lang-lang-card:hover{border-color:var(--accent)}
+    .lang-lang-card.active{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+    .lang-lang-card.locked{opacity:.55;cursor:not-allowed}
+    .lang-lang-card.locked:hover{border-color:var(--line)}
+    .lang-badge{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.8rem;color:#fff}
+    .lang-badge.en{background:linear-gradient(135deg,#3f6fd8,#7c4fd8)}
+    .lang-badge.ja{background:linear-gradient(135deg,#d83f5f,#d87c3f)}
+    .lang-badge.ko{background:linear-gradient(135deg,#2f9e6e,#3fb4d8)}
+    .quiz-q{margin:10px 0;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--input-bg)}
+    .quiz-q-t{font-size:.88rem;line-height:1.55;color:var(--text)}
+    .quiz-opt{display:block;width:100%;text-align:left;margin:7px 0 0;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--input-bg);color:var(--text);font-size:.82rem;line-height:1.5;cursor:pointer}
+    .quiz-opt:hover{border-color:var(--accent)}
+    .quiz-opt.correct{border-color:#2f9e6e;background:rgba(47,158,110,.14)}
+    .quiz-opt.wrong{border-color:#e05252;background:rgba(224,82,82,.12)}
+    .quiz-opt:disabled{cursor:default}
+    .lang-band-hero{display:flex;align-items:center;gap:14px;padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--input-bg);margin-top:8px}
+    .lang-band-chip{width:58px;height:58px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:900;color:#fff;flex-shrink:0;background:linear-gradient(135deg,#3f6fd8,#7c4fd8)}
+    .lang-band-chip.band-a{background:linear-gradient(135deg,#d87c3f,#e05252)}
+    .lang-band-chip.band-c{background:linear-gradient(135deg,#2f9e6e,#3fb4d8)}
+    .lang-band-t{font-weight:800;font-size:.92rem;color:var(--text)}
+    .lang-band-d{font-size:.76rem;color:var(--text);opacity:.72;margin-top:3px;line-height:1.5}
 </style>
 <div id="boot-screen" role="status" aria-label="页面加载中">
     <div class="boot-logo"><img src="icons/android-chrome-192x192.png" alt="" style="width:36px;height:36px;vertical-align:-7px;margin-right:10px;border-radius:8px;filter:drop-shadow(0 0 10px rgba(255,214,107,.45))">云吞吞文游</div>
@@ -4913,6 +4944,14 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <span class="hmb-text">产出优质作品，得云币分成！</span>
                     <span class="hmb-cta">去创作 ›</span>
                 </div>
+                <div id="lang-entry-banner" class="lang-entry-banner" onclick="switchView('view-lang')">
+                    <span class="leb-badge">EN</span>
+                    <div class="leb-main">
+                        <div class="leb-title">语言文游 · 边玩文游边学英语</div>
+                        <div class="leb-sub">115 个剧本的英语版 · 渐进沉浸 · 点句即译</div>
+                    </div>
+                    <span class="leb-arrow">›</span>
+                </div>
                 <div class="home-banner-wrap">
                     <div id="home-banner-swiper" class="home-banner-swiper"></div>
                     <div id="home-banner-dots" class="home-banner-dots"></div>
@@ -4931,6 +4970,42 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 </div>
                 <div id="scenario-card-list" style="margin-top:8px;"></div>
                 <input id="scenario-file-input" type="file" accept=".txt,.md,.text" style="display:none;">
+            </section>
+        </section>
+
+        <section id="view-lang" class="view-section">
+            <section class="card">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+                    <div class="list-title" style="margin:0;">语言文游</div>
+                    <button class="mini-btn ghost" onclick="switchView('view-home')">返回</button>
+                </div>
+                <div class="list-sub">把云吞吞当语言教练——115 个剧本的英语版本，边玩边学，中文只在需要时出现。</div>
+
+                <div class="list-title" style="margin-top:12px;">① 选择语言</div>
+                <div class="lang-picker" id="lang-picker">
+                    <button type="button" class="lang-lang-card active" onclick="LangController.selectLang('en')"><span class="lang-badge en">EN</span><span>英语</span><span class="list-sub" style="margin:0;">已上线</span></button>
+                    <button type="button" class="lang-lang-card locked" onclick="LangController.selectLang('ja')"><span class="lang-badge ja">JA</span><span>日语</span><span class="list-sub" style="margin:0;">即将上线</span></button>
+                    <button type="button" class="lang-lang-card locked" onclick="LangController.selectLang('ko')"><span class="lang-badge ko">KO</span><span>韩语</span><span class="list-sub" style="margin:0;">即将上线</span></button>
+                </div>
+
+                <div class="list-title" style="margin-top:14px;">② 水平测定 <span class="list-sub" style="margin-left:4px;">3 题定档，可重测/改档</span></div>
+                <div class="list-sub">不知道从哪档开始？测一下，难度会自动匹配你。</div>
+                <div id="lang-band-result" style="display:none;"></div>
+                <div id="lang-quiz-box" style="display:none;margin-top:6px;"></div>
+                <div class="setting-actions" style="margin-top:8px;" id="lang-quiz-start-row">
+                    <button class="mini-btn primary" id="lang-quiz-start" onclick="LangController.startQuiz()">开始测定（约 1 分钟）</button>
+                </div>
+
+                <div class="list-title" style="margin-top:14px;">③ 沉浸模式 <span class="list-sub" style="margin-left:4px;">游戏中可随时改</span></div>
+                <div class="lang-picker" id="lang-immersion-picker">
+                    <button type="button" class="lang-lang-card active" data-m="progressive" onclick="LangController.setImmersion('progressive')"><span style="font-size:1.35rem;">🌱</span><span>渐进沉浸 <span class="lang-badge en" style="width:auto;height:auto;border-radius:8px;padding:1px 7px;font-size:.62rem;">推荐</span></span><span class="list-sub" style="margin:0;">译文随剧情推进逐渐退场</span></button>
+                    <button type="button" class="lang-lang-card" data-m="full" onclick="LangController.setImmersion('full')"><span style="font-size:1.35rem;">🌊</span><span>全沉浸</span><span class="list-sub" style="margin:0;">纯英语体验，辅助全部手动触发</span></button>
+                </div>
+
+                <div class="setting-actions" style="margin-top:16px;">
+                    <button class="mini-btn primary" onclick="LangController.goCards()">进入语言模式剧本库</button>
+                </div>
+                <div class="list-sub" id="lang-hint"></div>
             </section>
         </section>
 
@@ -21393,6 +21468,96 @@ function openNpcProfile(npcId) {
         hideBootScreen();
         AuthService.init();
     };
+</script>
+<script>
+/* ===== 语言文游 LangPlay · 大厅 M1:语种/测档/沉浸模式(本地档案;云端档案与剧本库由后续模块接入) ===== */
+(function () {
+    var PROFILE_KEY = "lang_profile_v1";
+    /* 临时题库(3 题)——正式题库从 Obsidian 03-测档题库定稿后替换 */
+    var QUIZ = [
+        { q: "「我今天有点累，想早点休息」用英语说是哪句？", opts: ["I feel a bit tired today and want to rest early.", "I am very excited about today's plan.", "I just finished an important meeting.", "It is sunny today, perfect for a walk."], a: 0 },
+        { q: "选最合适的词填空：She ____ a book when I called her.（我打电话给她时，她正在看书）", opts: ["read", "was reading", "reads", "will read"], a: 1 },
+        { q: "「The test was a piece of cake.」中 a piece of cake 的意思是？", opts: ["非常难", "小菜一碟（很简单）", "很无聊", "价值不菲"], a: 1 }
+    ];
+    var BAND_INFO = {
+        a: ["A", "进阶水平", "band-a", "能读原版长句与俚语，剧情基本无障碍——挑战全沉浸也游刃有余"],
+        b: ["B", "中级水平", "", "常见表达都能读懂，偶尔碰到生词——渐进沉浸会陪你把不熟的表达啃下来"],
+        c: ["C", "入门水平", "band-c", "从短句和高频词开始——译文辅助会多陪你一段路，玩着玩着就熟了"]
+    };
+    var profile = { lang: "en" };
+    try { var _p = JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}"); if (_p && typeof _p === "object") profile = _p; } catch (e) { }
+    function $(id) { return document.getElementById(id); }
+    function save() { try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch (e) { } }
+    function hint(t) { var h = $("lang-hint"); if (h) h.textContent = t || ""; }
+    var quiz = { i: 0, ok: 0, lock: false };
+    var api = {
+        init: function () {
+            if (!$("view-lang")) return;
+            api.renderPicker();
+            if (profile.band) api.showBand();
+            if (profile.immersion) api.renderPicker();
+            if (!profile.band) hint("玩前花 1 分钟测个档，难度会自动匹配你（不测也能直接开玩）。");
+        },
+        renderPicker: function () {
+            var box = $("lang-immersion-picker"); if (!box) return;
+            var btns = box.querySelectorAll(".lang-lang-card");
+            for (var i = 0; i < btns.length; i++) btns[i].classList.toggle("active", btns[i].getAttribute("data-m") === profile.immersion);
+        },
+        selectLang: function (code) {
+            if (code !== "en") { hint("日语/韩语正在准备中，先玩英语版吧——同一个剧本，换一种语言。"); return; }
+            profile.lang = "en"; save(); hint("");
+        },
+        startQuiz: function () {
+            quiz = { i: 0, ok: 0, lock: false };
+            $("lang-quiz-box").style.display = "block";
+            $("lang-quiz-start-row").style.display = "none";
+            $("lang-band-result").style.display = "none";
+            api.renderQ();
+        },
+        renderQ: function () {
+            var q = QUIZ[quiz.i], h = '<div class="quiz-q"><div class="quiz-q-t">' + (quiz.i + 1) + "/" + QUIZ.length + " · " + q.q + "</div>";
+            for (var k = 0; k < q.opts.length; k++) h += '<button type="button" class="quiz-opt" onclick="LangController.answer(' + k + ')">' + (k + 1) + ". " + q.opts[k] + "</button>";
+            h += '<div class="quiz-nav" id="quiz-nav"></div></div>';
+            $("lang-quiz-box").innerHTML = h;
+        },
+        answer: function (k) {
+            if (quiz.lock) return;
+            var q = QUIZ[quiz.i]; quiz.lock = true;
+            var btns = $("lang-quiz-box").querySelectorAll(".quiz-opt");
+            for (var i = 0; i < btns.length; i++) { btns[i].disabled = true; if (i === q.a) btns[i].classList.add("correct"); }
+            if (k === q.a) quiz.ok++; else btns[k].classList.add("wrong");
+            var last = quiz.i >= QUIZ.length - 1;
+            $("quiz-nav").innerHTML = '<button type="button" class="mini-btn primary" onclick="LangController.' + (last ? "finishQuiz" : "nextQ") + '()">' + (last ? "查看测定结果" : "下一题") + "</button>";
+        },
+        nextQ: function () { quiz.i++; quiz.lock = false; api.renderQ(); },
+        finishQuiz: function () {
+            var band = quiz.ok === QUIZ.length ? "a" : (quiz.ok >= 2 ? "b" : "c");
+            profile.band = band; save();
+            $("lang-quiz-box").style.display = "none";
+            var s = $("lang-quiz-start-row"); s.style.display = "block";
+            $("lang-quiz-start").textContent = "重新测定";
+            api.showBand();
+        },
+        showBand: function () {
+            var b = BAND_INFO[profile.band] || BAND_INFO.b, box = $("lang-band-result"); if (!box) return;
+            box.style.display = "block";
+            box.innerHTML = '<div class="lang-band-hero"><div class="lang-band-chip ' + (b[2] || "") + '">' + b[0] + '</div><div><div class="lang-band-t">你的水平：英语 ' + b[0] + " 档 · " + b[1] + '</div><div class="lang-band-d">' + b[3] + '</div><div style="margin-top:8px;"><button type="button" class="mini-btn" onclick="LangController.setBand(1)">改 A</button> <button type="button" class="mini-btn" onclick="LangController.setBand(2)">改 B</button> <button type="button" class="mini-btn" onclick="LangController.setBand(3)">改 C</button> <span class="list-sub">手动改档随时可以</span></div></div></div>';
+            hint("");
+        },
+        setBand: function (n) { var b = n === 1 ? "a" : n === 3 ? "c" : "b"; profile.band = b; save(); api.showBand(); hint("档位已改为 " + BAND_INFO[b][0] + " 档（" + BAND_INFO[b][1] + "）。"); },
+        setImmersion: function (m) { profile.immersion = m; save(); api.renderPicker(); hint(""); },
+        goCards: function () {
+            if (!profile.band) {
+                hint("建议先测个档（约 1 分钟），难度会自动匹配你。");
+                var b = $("lang-quiz-start"); if (b) b.scrollIntoView({ behavior: "smooth", block: "center" });
+                return;
+            }
+            hint("剧本库接线中——下一批更新就能挑剧本开玩啦，先记住你的档位与沉浸模式。");
+        }
+    };
+    window.LangController = api;
+    api.init();
+})();
 </script>
 </body>
 </html>
