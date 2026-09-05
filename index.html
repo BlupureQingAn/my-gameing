@@ -20110,7 +20110,14 @@ function openNpcProfile(npcId) {
             ScenarioCardService.setSelectedId(cardId);
             await prepareInitPreview(StateService.get()?.gender || "", true);
         }
-        async function prepareInitPreview(defaultGender, loadingAlreadyOpen = false, retryOptions = {}) {
+        async function prepareInitPreview(defaultGender, loadingAlreadyOpen = false, retryOptions = {}, langCtx = null) {
+            // M9A(2026-09-06):语言卡(英语)开局确认——langCtx 携带 {cardId, metaId},applyInitPreviewAndStart 消费后启动英文开局;
+            // 语言入口不经过 playScenarioCard,取消恢复视图(pendingInitFromView)在此补设
+            window.__LANG_INIT_CTX = langCtx || null;
+            if (langCtx) {
+                pendingInitFromView = (activeView && activeView !== "view-main") ? activeView : "view-lang";
+                try { InitLoadingService.close(); } catch (e) {}
+            }
             if (ChatService.getIsGenerating()) {
                 // 防止 loading 已开却静默 return 导致永久转圈
                 if (loadingAlreadyOpen) InitLoadingService.close();
@@ -20121,6 +20128,15 @@ function openNpcProfile(npcId) {
             // M1:结构化卡本地构建初始化计划,零 AI 请求、秒弹预览
             const localPlan = ScenarioInitPlanService.buildLocalInitPlan(defaultGender || "女");
             if (localPlan) {
+                // M9A:语言卡(英语)身份修正——卡未声明性别 → 弹窗留空自选(不默认"女");卡无 englishName 且主角名即拉丁名时,英文名直接用主角名(防随机兜底英文名)
+                if (langCtx) {
+                    try {
+                        const _card = ScenarioCardService.getSelectedCard();
+                        const _idn = (_card && _card.structured) ? (_card.structured.identity || {}) : {};
+                        if (!String(_idn.gender || "").trim()) localPlan.forcedGender = "";
+                        if (!String(_idn.englishName || "").trim() && /^[A-Za-z][A-Za-z .'-]{0,31}$/.test(String(localPlan.name || "").trim())) localPlan.englishName = localPlan.name;
+                    } catch (e) {}
+                }
                 InitLoadingService.close();
                 pendingInitPlan = localPlan;
                 const desc = InitFlowService.buildPreviewDesc(localPlan);
@@ -20192,6 +20208,13 @@ function openNpcProfile(npcId) {
         }
         function applyInitPreviewAndStart() {
             if (!pendingInitPlan) return;
+            // M9A:语言卡(英语)开局确认 → 由 startLangNewGame 走英文启动(不入中文 InitIntroService)
+            const langCtx = window.__LANG_INIT_CTX || null;
+            if (langCtx) {
+                window.__LANG_INIT_CTX = null;
+                startLangNewGame(langCtx);
+                return;
+            }
             const edited = collectInitPreviewForm();
             const merged = { ...pendingInitPlan, ...edited };
             // collect 未编辑时返回 stats:undefined，spread 会覆盖计划属性 → 用计划值兜底
@@ -20221,6 +20244,62 @@ function openNpcProfile(npcId) {
                 selectedCardId: ScenarioCardService.getSelectedId(),
                 openingChoices: merged.openingChoices || []
             });
+        }
+        // M9A:语言卡(英语)开局确认后的正式启动——英文会话存储键已由 LangEngine 会话标志接管(StateService.init 读 -lang 档);
+        // 首轮沿用英语卡结构化 first_scene 本地渲染(零 AI),无则交模型按 system 指令生成;取消路径不在此处(closeInitPreviewModal 还原)
+        async function startLangNewGame(langCtx) {
+            const cardId = String(langCtx?.cardId || "");
+            const metaId = String(langCtx?.metaId || cardId + "_lang");
+            const edited = collectInitPreviewForm();
+            const merged = { ...pendingInitPlan, ...edited };
+            if (merged.stats === undefined) merged.stats = pendingInitPlan.stats;
+            if (!merged.name) {
+                NoticeModalService.showInfo({ title: "信息不完整", descHtml: "请填写主角姓名。" });
+                return;
+            }
+            if (!merged.englishName) merged.englishName = merged.name;
+            if (!Number.isFinite(Number(merged.ageYears)) || Number(merged.ageYears) < 0) {
+                NoticeModalService.showInfo({ title: "年龄无效", descHtml: "请填写有效年龄。" });
+                return;
+            }
+            try { ScenarioPlayMetaService.setInitialized(metaId, true); } catch (e) {}
+            try { StateService.init(); } catch (e) {} // 会话已置位 → 读该卡 -lang 英文档,防内存残留脏档
+            try { StateService.resetWithPreset(merged); } catch (e) {}
+            try { PlayViewStateService.enterPlay(cardId); } catch (e) {}
+            pendingInitFromView = null; // 已确认进入游玩,取消恢复不再生效
+            closeInitPreviewModal(true);
+            switchView("view-main");
+            try {
+                const st2 = StateService.get();
+                UIRenderer.renderTop(st2); UIRenderer.renderInventory(st2); UIRenderer.renderSocialList(st2); UIRenderer.renderSaveSlots(st2);
+            } catch (e) { console.warn("[LangEngine] 开局渲染:", e); }
+            // 英语专属卡(带 structured.band + 写死全英文 first_scene)首轮本地渲染,零 AI 请求
+            let nativeScene = null;
+            try {
+                const _st = ScenarioCardService.getSelectedCard()?.structured;
+                if (_st && String(_st.band || "").trim() && _st.first_scene && String(_st.first_scene.story || "").trim()) nativeScene = _st.first_scene;
+            } catch (e) {}
+            if (nativeScene) {
+                try {
+                    const st2 = StateService.get();
+                    const w = ScenarioCardService.getSelectedCard()?.structured?.world || {};
+                    const presetName = String(ScenarioCardService.getSelectedCard()?.structured?.identity?.name || "").trim();
+                    const stateName = String(st2?.name || "").trim();
+                    let fsStory = String(nativeScene.story || "").trim();
+                    if (presetName && stateName && stateName !== presetName) fsStory = fsStory.split(presetName).join(stateName);
+                    const fsHtml = FillProtocolService.fillCardTemplate(FillProtocolService.getCardTheme(), {
+                        story: fsStory,
+                        options: (Array.isArray(nativeScene.options) ? nativeScene.options : []).slice(0, 4),
+                        scene: String(w.genre || w.era || "Opening").slice(0, 40)
+                    });
+                    UIRenderer.appendMessage("ai", fsHtml, Utils.nowDateStr(st2), false);
+                    StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(st2), text: fsHtml });
+                    StateService.save();
+                    UIRenderer.renderTop(StateService.get());
+                } catch (e) { console.warn("[LangEngine] 语言卡本地首轮失败:", e); }
+            } else {
+                try { await ChatService.requestAI("Begin the first scene of this story."); } catch (e) { console.warn("[LangEngine] 英语开局请求失败:", e); }
+            }
         }
         function openGameDetail(cardId) { GameDetailService.openGameDetail(cardId); }
         function closeGameDetail() { GameDetailService.closeGameDetail(); }
@@ -20390,7 +20469,7 @@ function openNpcProfile(npcId) {
             switchView("view-scenario-editor");
             ScenarioEditorService.focusEditor();
         }
-        return { init, onSendClick, sendUserText, rerunEvent, getEndingDefs, buildEndingChecks, refreshEndingBadge, fallbackEnding, requestEnding, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, openCardSettings, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, autoDownloadAndPlay, openInitPreviewModal, closeInitPreviewModal, toggleHistoryPanel, renderPostRefPicker, clearPostRef, openPersonCardChat, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, toggleAvatarLibraryPanel, avatarPickLib, avatarPick, avatarUpload, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, openWechatApp, closeWechatApp, switchWechatTab, openWechatChat, backToWechatList, appendEmojiToInput, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, unlockCloudSlot, saveToCloudSlot, loadFromCloudSlot, deleteCloudSlot, clearLocalCache, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, closeFullMap, placeClick, placeGo, advanceStory, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate, renderHomeDiscovery, switchSortMode, openCreationWizard, wizardPickStyle, wizardTitleCount, wizardPromptCount, wizardNext, wizardPrev, wizardConfirm, closeUploadPriceModal, confirmUploadWithPrice };
+        return { init, onSendClick, sendUserText, rerunEvent, getEndingDefs, buildEndingChecks, refreshEndingBadge, fallbackEnding, requestEnding, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, openCardSettings, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, autoDownloadAndPlay, openInitPreviewModal, closeInitPreviewModal, toggleHistoryPanel, renderPostRefPicker, clearPostRef, openPersonCardChat, prepareInitPreview, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, toggleAvatarLibraryPanel, avatarPickLib, avatarPick, avatarUpload, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, openWechatApp, closeWechatApp, switchWechatTab, openWechatChat, backToWechatList, appendEmojiToInput, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, unlockCloudSlot, saveToCloudSlot, loadFromCloudSlot, deleteCloudSlot, clearLocalCache, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, closeFullMap, placeClick, placeGo, advanceStory, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate, renderHomeDiscovery, switchSortMode, openCreationWizard, wizardPickStyle, wizardTitleCount, wizardPromptCount, wizardNext, wizardPrev, wizardConfirm, closeUploadPriceModal, confirmUploadWithPrice };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
@@ -20476,6 +20555,7 @@ function openNpcProfile(npcId) {
     function collectInitPreviewForm() { return Controller.collectInitPreviewForm(); }
     function toggleCustomField(selectId, customId) { Controller.toggleCustomField(selectId, customId); }
     function applyInitPreviewAndStart() { Controller.applyInitPreviewAndStart(); }
+    function prepareInitPreview(defaultGender, loadingAlreadyOpen, retryOptions, langCtx) { return Controller.prepareInitPreview(defaultGender, loadingAlreadyOpen, retryOptions, langCtx); }
     function rollStats() { Controller.rollStats(); }
     function statAdjust(label, delta) { Controller.statAdjust(label, delta); }
     function toggleAvatarEmojiPanel() { Controller.toggleAvatarEmojiPanel(); }
@@ -21735,9 +21815,9 @@ function openNpcProfile(npcId) {
                 } catch (e) { console.warn("[LangEngine] 续玩渲染:", e); }
                 return { mode: "continue" };
             }
-            // 英语开局:本地计划初始化(零 AI),英文第一轮由模型按 system 指令生成
-            // M7d 旧英语档处置(D8):本分支保留(SCENARIO_LIBRARY 官方卡可续旧英语档,防回滚成本),UI 无入口——老档默认隐藏、数据不删;
-            // 语言页(首页/剧本库/继续学习)仅列 lang_cards,官方卡 id(含下划线)与 lang_cards id 命名空间隔离,不会被推荐/继续行误拾
+            // 英语开局:本地计划初始化(零 AI)弹角色确认(复用 init-preview-modal),确认后由 Controller.startLangNewGame 落地英文开局
+            // M9A(2026-09-06):新开局先确认角色(姓名/英文名/性别可改),取消 → 语言视图(不置 initialized,可再次进入)
+            // M7d 旧英语档处置(D8):官方卡旧英语档经上方 hasInitialized 分支续玩(UI 无入口,数据不删);此处只服务全新开局
             let gender = "女";
             try { gender = String(card?.structured?.identity?.gender || "女") || "女"; } catch (e) {}
             let plan = null;
@@ -21747,44 +21827,10 @@ function openNpcProfile(npcId) {
                 try { NoticeModalService.showInfo({ title: "这张剧本暂不支持英语模式", descHtml: "英语原生剧本请在「学语言 → 剧本库」里挑选；想玩中文剧本点主站顶部的「首页」即可。" }); } catch (e) {}
                 return;
             }
-            try { InitLoadingService.open("正在准备英语开局..."); } catch (e) {}
-            try { ScenarioPlayMetaService.setInitialized(metaId, true); } catch (e) {}
-            try { StateService.resetWithPreset(plan); } catch (e) {}
-            try { PlayViewStateService.enterPlay(id); } catch (e) {}
-            switchView("view-main");
-            try {
-                const st2 = StateService.get();
-                UIRenderer.renderTop(st2); UIRenderer.renderInventory(st2); UIRenderer.renderSocialList(st2); UIRenderer.renderSaveSlots(st2);
-            } catch (e) { console.warn("[LangEngine] 开局渲染:", e); }
+            // 弹确认 modal(内部走本地计划 + 语言卡性别/英文名修正);进入前先关掉可能残留的 loading
             try { InitLoadingService.close(); } catch (e) {}
-            // M6b:语言专属卡(带 structured.band + 写死全英文 first_scene)首轮本地渲染,零 AI 请求
-            let nativeScene = null;
-            try {
-                const _st = card?.structured;
-                if (_st && String(_st.band || "").trim() && _st.first_scene && String(_st.first_scene.story || "").trim()) nativeScene = _st.first_scene;
-            } catch (e) {}
-            if (nativeScene) {
-                try {
-                    const st2 = StateService.get();
-                    const w = card?.structured?.world || {};
-                    const presetName = String(card?.structured?.identity?.name || "").trim();
-                    const stateName = String(st2?.name || "").trim();
-                    let fsStory = String(nativeScene.story || "").trim();
-                    if (presetName && stateName && stateName !== presetName) fsStory = fsStory.split(presetName).join(stateName);
-                    const fsHtml = FillProtocolService.fillCardTemplate(FillProtocolService.getCardTheme(), {
-                        story: fsStory,
-                        options: (Array.isArray(nativeScene.options) ? nativeScene.options : []).slice(0, 4),
-                        scene: String(w.genre || w.era || "Opening").slice(0, 40)
-                    });
-                    UIRenderer.appendMessage("ai", fsHtml, Utils.nowDateStr(st2), false);
-                    StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(st2), text: fsHtml });
-                    StateService.save();
-                    UIRenderer.renderTop(StateService.get());
-                } catch (e) { console.warn("[LangEngine] 语言卡本地首轮失败:", e); }
-            } else {
-                try { await ChatService.requestAI("Begin the first scene of this story."); } catch (e) { console.warn("[LangEngine] 英语开局请求失败:", e); }
-            }
-            return { mode: "new" };
+            await prepareInitPreview(gender, false, {}, { cardId: id, metaId: metaId });
+            return { mode: "confirm" };
         }
         return { isLangSession, buildInjection, restoreIfNeeded, exitToChinese, enter, langSaveKey, hasLangSave, immStage };
     })();
