@@ -58,6 +58,8 @@ const COLLECTIONS = [
     { name: "lang_vocab", type: "base", fields: [F.text("user_id", { req: true }), F.text("lang", { req: true }), F.select("type", ["word", "expression"], { req: true }), F.text("term", { req: true, max: 64 }), F.text("gloss_en", { max: 500 }), F.text("gloss_zh", { max: 500 }), F.text("origin", { max: 200 }), F.number("status", { req: false }), F.autodate(), F.autodate("updated_at", true)], ...READ_PUBLIC, ...ADMIN_WRITE },
     // M6b 语言卡官方库:英语专属卡(结构化 data{text,structured},band 声明词域);仅 worker/超管代访
     { name: "lang_cards", type: "base", fields: [F.text("title", { req: true, max: 80 }), F.text("title_zh", { max: 40 }), F.select("lang", ["en", "ja", "ko"], { req: true }), F.select("band", ["hs", "cet4", "cet6", "ky", "toefl"], { req: true }), F.text("category", { max: 30 }), F.text("category_zh", { max: 30 }), F.text("theme", { max: 30 }), F.text("cover", { max: 120 }), F.json("data", { req: true }), F.select("status", ["draft", "online", "offline"], { req: true }), F.number("play_count", { req: false }), F.number("unlock_count", { req: false }), F.number("order", { req: false }), F.autodate(), F.autodate("updated_at", true)], ...ADMIN_ONLY },
+    // 排行榜:学习时长按自然日累计(user_id+lang+day 一行);日/周/月榜由 worker 按北京时区日期切片聚合
+    { name: "lang_study_days", type: "base", fields: [F.text("user_id", { req: true }), F.text("lang", { req: true }), F.text("day", { req: true }), F.number("seconds"), F.autodate(), F.autodate("updated_at", true)], ...ADMIN_ONLY },
 ];
 
 // users 集合需要确保存在的字段（auth 集合，缺了才补，不动规则）

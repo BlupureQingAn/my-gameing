@@ -4833,6 +4833,16 @@
     /* M9D:词双击查词(禁双击缩放)+ 弹层内「从生词本移除」 */
     .lg-word,.lg-w,.lg-sentence{touch-action:manipulation}
     .lg-pop-del{border:none;background:rgba(200,80,80,.12);color:#c05050;font-size:.68rem;font-weight:800;border-radius:7px;padding:3px 9px;cursor:pointer;flex-shrink:0}
+    /* ===== 排行榜(2026-09-06):日/周/月学习时长 Top100 ===== */
+    .lb-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line,#e2ccb0);border-radius:12px;background:var(--input-bg,#fff8f0);margin-bottom:7px}
+    .lb-row.lb-me{border-color:#7c4fd8;box-shadow:0 0 0 1px rgba(124,84,240,.35) inset}
+    .lb-rank{flex-shrink:0;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:var(--sub,#806a55);background:rgba(0,0,0,.05);border-radius:50%}
+    .lb-rank.lb-top{background:linear-gradient(135deg,#f7c948,#e0a41c);color:#fff;box-shadow:0 2px 6px rgba(224,164,28,.4)}
+    .lb-face{flex-shrink:0;width:34px;height:34px;border-radius:50%;object-fit:cover;background:rgba(0,0,0,.05)}
+    .lb-face-no{display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.9rem;color:#fff;background:linear-gradient(135deg,#7c4fd8,#3f6fd8)}
+    .lb-name{flex:1;min-width:0;font-size:.84rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .lb-sec{flex-shrink:0;font-size:.72rem;font-weight:800;color:#7c4fd8}
+    .lb-me-card{margin-top:2px;padding:9px 12px;font-size:.76rem;font-weight:700;color:#fff;background:linear-gradient(115deg,#7c4fd8,#3f6fd8);border-radius:12px;text-align:center}
     .lg-learn-sub{font-size:.7rem;color:var(--sub,#806a55);margin-top:2px;line-height:1.6}
     .lg-vr{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line,#e2ccb0);border-radius:12px;background:var(--input-bg,#fff8f0);margin-bottom:7px}
     .lg-vt{flex-shrink:0;font-size:.6rem;font-weight:800;border-radius:6px;padding:2px 6px;margin-top:2px}
@@ -5137,6 +5147,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <button type="button" class="top-nav-btn" data-view="view-lang-library" onclick="LangController.goLibrary()">剧本库</button>
                     <button type="button" class="top-nav-btn" data-view="view-lang-learn" onclick="LangController.goLearn()">学习中心</button>
                     <button type="button" class="top-nav-btn" data-view="view-lang-vocab" onclick="LangController.goVocab()">生词本</button>
+                    <button type="button" class="top-nav-btn" data-view="view-lang-leaderboard" onclick="LangController.goLeaderboard()">排行榜</button>
                 </div>
 
                 <img class="lang-hall-img" src="lang/hall-top.jpg" alt="语言文游" loading="lazy">
@@ -5189,6 +5200,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <button type="button" class="top-nav-btn active" data-view="view-lang-library" onclick="LangController.goLibrary()">剧本库</button>
                     <button type="button" class="top-nav-btn" data-view="view-lang-learn" onclick="LangController.goLearn()">学习中心</button>
                     <button type="button" class="top-nav-btn" data-view="view-lang-vocab" onclick="LangController.goVocab()">生词本</button>
+                    <button type="button" class="top-nav-btn" data-view="view-lang-leaderboard" onclick="LangController.goLeaderboard()">排行榜</button>
                 </div>
                 <div class="list-title" style="margin:0;">英语剧本库</div>
                 <div class="list-sub" id="lang-lib-sub">英语原生剧本：按卡的档位学对应词库，点卡即玩（第一次玩 = 英语开局）</div>
@@ -5214,6 +5226,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <button type="button" class="top-nav-btn" data-view="view-lang-library" onclick="LangController.goLibrary()">剧本库</button>
                     <button type="button" class="top-nav-btn active" data-view="view-lang-learn" onclick="LangController.goLearn()">学习中心</button>
                     <button type="button" class="top-nav-btn" data-view="view-lang-vocab" onclick="LangController.goVocab()">生词本</button>
+                    <button type="button" class="top-nav-btn" data-view="view-lang-leaderboard" onclick="LangController.goLeaderboard()">排行榜</button>
                 </div>
 
                 <div class="list-title" style="margin:0;" id="lang-learn-band">🎯 我的学习档 <span class="list-sub" style="margin-left:4px;">五档按难度递进，点选即生效</span></div>
@@ -5246,6 +5259,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <button type="button" class="top-nav-btn" data-view="view-lang-library" onclick="LangController.goLibrary()">剧本库</button>
                     <button type="button" class="top-nav-btn" data-view="view-lang-learn" onclick="LangController.goLearn()">学习中心</button>
                     <button type="button" class="top-nav-btn active" data-view="view-lang-vocab" onclick="LangController.goVocab()">生词本</button>
+                    <button type="button" class="top-nav-btn" data-view="view-lang-leaderboard" onclick="LangController.goLeaderboard()">排行榜</button>
                 </div>
 
                 <div class="list-title" style="margin:0;" id="lang-learn-vocab">📖 我的生词本 <span class="list-sub" style="margin-left:4px;">游戏里点过的词自动收进来</span></div>
@@ -5253,6 +5267,34 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <div class="lg-learn-sub">玩英语剧本时：轻点句子看整句译文，点蓝色虚线的生词看释义——点过的词会收进这里，可在「新学 → 眼熟 → 已掌握」之间手动划。</div>
                 <div class="list-sub" style="margin-top:6px;">点「返回大厅」可以继续学——生词本、刷词与章末复盘收藏的表达都在这里管理。</div>
                 <div id="lang-learn-box" style="margin-top:8px;"></div>
+            </section>
+        </section>
+
+        <section id="view-lang-leaderboard" class="view-section">
+            <section class="card">
+                <div class="lang-sub-nav">
+                    <button type="button" class="top-nav-btn" data-view="view-lang" onclick="switchView('view-lang')">语言首页</button>
+                    <button type="button" class="top-nav-btn" data-view="view-lang-library" onclick="LangController.goLibrary()">剧本库</button>
+                    <button type="button" class="top-nav-btn" data-view="view-lang-learn" onclick="LangController.goLearn()">学习中心</button>
+                    <button type="button" class="top-nav-btn" data-view="view-lang-vocab" onclick="LangController.goVocab()">生词本</button>
+                    <button type="button" class="top-nav-btn active" data-view="view-lang-leaderboard" onclick="LangController.goLeaderboard()">排行榜</button>
+                </div>
+
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <div class="list-title" style="margin:0;">🏆 英语学习时长榜</div>
+                    <button type="button" class="mini-btn ghost" onclick="LangController.refreshLeaderboard()">↻ 刷新</button>
+                </div>
+                <div class="list-sub">玩英语剧本 + 学习中心刷词/生词本翻记都算学习时长——每次进入自动记录，越玩越靠前。</div>
+
+                <div class="lang-picker" id="lb-span-picker" style="margin-top:10px;">
+                    <button type="button" class="lang-lang-card active" data-span="day" onclick="LangController.setLbSpan('day')"><span>今日</span></button>
+                    <button type="button" class="lang-lang-card" data-span="week" onclick="LangController.setLbSpan('week')"><span>本周</span></button>
+                    <button type="button" class="lang-lang-card" data-span="month" onclick="LangController.setLbSpan('month')"><span>本月</span></button>
+                </div>
+
+                <div class="list-sub" id="lb-meta" style="margin-top:4px;"></div>
+                <div id="lb-list" style="margin-top:6px;"><div class="list-sub" style="padding:14px 0;">榜单加载中…</div></div>
+                <div id="lb-me" style="display:none;margin-top:10px;"></div>
             </section>
         </section>
 
@@ -17880,7 +17922,7 @@ ${recent || "（无）"}
             const target = document.getElementById(viewId);
             if (target) target.classList.add("active");
             // M6a/M8d:语言页组(view-lang/-library/-learn/-vocab)共用一个主站 tab「学语言」高亮;页内语言子导航由 LangController.onShow 单独高亮
-            const LANG_VIEWS = ["view-lang", "view-lang-library", "view-lang-learn", "view-lang-vocab"];
+            const LANG_VIEWS = ["view-lang", "view-lang-library", "view-lang-learn", "view-lang-vocab", "view-lang-leaderboard"];
             const inLangGroup = LANG_VIEWS.includes(viewId);
             document.querySelectorAll(".nav-btn, .top-nav-btn").forEach((btn) => {
                 if (btn.closest && btn.closest(".lang-sub-nav")) return;
@@ -21899,6 +21941,7 @@ function openNpcProfile(npcId) {
     }
     /* M8b:语言首页推荐区 = 文游首页同款 hb-card 大图轮播(4:3 封面 + 档/题材 tag + 轮次 + 播放按钮);点击卡任意处进入播放 */
     var langBanner = { idx: 0, timer: null };
+    var lbSpan = "day", lbCache = {}, lbLoading = false;   // 排行榜:当前 span/结果缓存(30s)/拉取中标志
     function langBannerHtml(c) {
         var icon = THEME_ICON[String(c.theme || "")] || "📖";
         var has = cardSaveOf(c), r = cardRoundOf(c);
@@ -21970,7 +22013,8 @@ function openNpcProfile(npcId) {
             if (viewId === "view-lang") { api.renderHome(); return; }
             if (viewId === "view-lang-library") { api.renderLibrary(); return; }
             if (viewId === "view-lang-learn") { api.refresh(); return; }
-            if (viewId === "view-lang-vocab") { api.refreshVocab(); }
+            if (viewId === "view-lang-vocab") { api.refreshVocab(); return; }
+            if (viewId === "view-lang-leaderboard") { api.renderLeaderboard(); }
         },
         /* M8d:进入生词本子页并立即重绘词表(直接调绕开 1.5s MutationObserver 节流) */
         refreshVocab: function () {
@@ -22079,6 +22123,91 @@ function openNpcProfile(npcId) {
         goImmAnchor: function () { api.goLearn(); api.anchor("#lang-learn-imm"); },
         goVocabAnchor: function () { api.goVocab(); api.anchor("#lang-learn-vocab"); },
         goDrillAnchor: function () { api.goLearn(); api.anchor("#lang-learn-drill"); },
+        /* ---- 排行榜(2026-09-06):日/周/月学习时长 Top100 ---- */
+        goLeaderboard: function () {
+            switchView("view-lang-leaderboard");
+            api.renderLeaderboard();
+        },
+        setLbSpan: function (sp) {
+            if (sp !== "week" && sp !== "month") sp = "day";
+            lbSpan = sp;
+            var box = $("lb-span-picker");
+            if (box) {
+                var btns = box.querySelectorAll(".lang-lang-card");
+                for (var i = 0; i < btns.length; i++) btns[i].classList.toggle("active", btns[i].getAttribute("data-span") === sp);
+            }
+            api.renderLeaderboard();
+        },
+        refreshLeaderboard: function () {
+            lbCache = {};
+            api.renderLeaderboard();
+        },
+        renderLeaderboard: function () {
+            var box = $("lb-list");
+            if (!box) return;
+            var c = lbCache[lbSpan];
+            if (c && Date.now() - c.at < 30000) { box.innerHTML = c.html; api.lbMeta(c); api.lbMe(c); return; }
+            if (lbLoading) return;
+            lbLoading = true;
+            box.innerHTML = '<div class="list-sub" style="padding:14px 0;">榜单加载中…</div>';
+            fetch(API_BASE + "/api/lang/leaderboard?span=" + encodeURIComponent(lbSpan) + "&lang=en", {
+                headers: token() ? { "X-Auth-Token": "Bearer " + token() } : {}
+            })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (d) {
+                    lbLoading = false;
+                    if (!d) { box.innerHTML = '<div class="list-sub" style="padding:14px 0;">榜单加载失败，点「↻ 刷新」重试</div>'; return; }
+                    var html = api.lbRowsHtml(d);
+                    var c2 = { at: Date.now(), html: html, meta: d, items: d.items, me: d.me };
+                    lbCache[lbSpan] = c2;
+                    box.innerHTML = html;
+                    api.lbMeta(c2);
+                    api.lbMe(c2);
+                })
+                .catch(function () {
+                    lbLoading = false;
+                    box.innerHTML = '<div class="list-sub" style="padding:14px 0;">网络开小差了，点「↻ 刷新」重试</div>';
+                });
+        },
+        lbRowsHtml: function (d) {
+            var items = d.items || [];
+            if (!items.length) return '<div class="list-sub" style="padding:14px 0;">还没有人上榜——去玩英语剧本，第一个留下名字！</div>';
+            var html = "", i, it, face;
+            for (i = 0; i < items.length; i++) {
+                it = items[i];
+                face = it.faceimg ? '<img class="lb-face" src="' + api.esc(it.faceimg) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' :
+                    '<span class="lb-face lb-face-no">' + api.esc(String(it.nickname || "?").slice(0, 1).toUpperCase()) + "</span>";
+                html += '<div class="lb-row' + (d.me && d.me.user_id === it.user_id ? " lb-me" : "") + '">' +
+                    '<span class="lb-rank' + (it.rank <= 3 ? " lb-top" : "") + '">' + it.rank + "</span>" + face +
+                    '<span class="lb-name">' + api.esc(String(it.nickname || "云吞吞学友")) + "</span>" +
+                    '<span class="lb-sec">' + api.fmtDur(it.seconds) + "</span></div>";
+            }
+            return html;
+        },
+        lbMeta: function (c) {
+            var el = $("lb-meta"); if (!el) return;
+            var names = { day: "今日", week: "本周", month: "本月" };
+            el.textContent = "按北京时间的" + (names[c.meta.span] || "今日") + "学习时长排名：玩英语剧本 + 学习中心/生词本都计入，前 100 名上榜。";
+        },
+        lbMe: function (c) {
+            var el = $("lb-me"); if (!el) return;
+            var me = c.me;
+            if (!me) { el.style.display = "none"; el.innerHTML = ""; return; }
+            for (var i = 0; i < (c.items || []).length; i++) {
+                if (c.items[i].user_id === me.user_id) { el.style.display = "none"; el.innerHTML = ""; return; }
+            }
+            el.style.display = "block";
+            el.innerHTML = '<div class="lb-me-card">' + (me.rank ? "你当前第 " + me.rank + " 名" : "你还没上榜") + " · 已学 " + api.fmtDur(me.seconds) + (me.rank ? "" : "，再学一会儿就能挤进前 100") + "</div>";
+        },
+        fmtDur: function (s) {
+            s = Number(s) || 0;
+            if (s < 60) return "<1 分钟";
+            var m = Math.floor(s / 60);
+            if (m < 60) return m + " 分钟";
+            var h = Math.floor(m / 60);
+            if (h < 24) return h + (m % 60 ? " 小时 " + (m % 60) + " 分" : " 小时");
+            return Math.floor(h / 24) + " 天 " + (h % 24) + " 小时";
+        },
         setLibFilter: function (k, v) { libFilter[k] = v; api.renderLibrary(); },
         recommendFor: function (lcs) {
             var arr = lcs.slice();
@@ -23775,6 +23904,53 @@ function openNpcProfile(npcId) {
         /* M8d:生词本独立子页 — 切页钩子直接调,绕开 MutationObserver 1.5s 节流 */
         refreshVocab: function () { loadVocab(function () { renderLearn(); }); }
     };
+
+    /* ---- 排行榜:学习时长埋点(2026-09-06)----
+       口径:英语文游游玩(view-main 且 LangEngine 会话)+ 语言首页/学习中心/生词本停留(view-lang-library 不算);
+       10s tick 连续两拍都在学且页面可见才累计该区间;累计满 60s 或页面隐藏即上报 PUT /api/lang/study(登录才记,游客丢弃);失败保留待下轮补报 */
+    (function () {
+        var INTERVAL_MS = 10000, FLUSH_SEC = 60;
+        var acc = 0, lastTs = 0, inLearn = false;
+        function viewOn(id) {
+            var el = document.getElementById(id);
+            return !!(el && el.classList && el.classList.contains("active"));
+        }
+        function learnActive() {
+            try {
+                if (viewOn("view-main")) return !!(window.LangEngine && window.LangEngine.isLangSession());
+                return viewOn("view-lang") || viewOn("view-lang-learn") || viewOn("view-lang-vocab");
+            } catch (e) { return false; }
+        }
+        function flush() {
+            var n = Math.floor(acc);
+            if (n < 1) return;
+            var t = token();
+            if (!t) { acc = 0; return; }
+            fetch(API_BASE + "/api/lang/study", {
+                method: "PUT", headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + t },
+                body: JSON.stringify({ lang: "en", seconds: Math.min(n, 600) })
+            }).then(function (r) {
+                if (r.ok) { acc -= n; if (acc < 0) acc = 0; }
+            }).catch(function () {});
+        }
+        function tick() {
+            var now = Date.now();
+            if (!lastTs) { lastTs = now; inLearn = learnActive() && !document.hidden; return; }
+            var dt = now - lastTs; lastTs = now;
+            if (dt > 0) {
+                var ok = learnActive() && !document.hidden;
+                if (ok && inLearn) acc += dt / 1000;   // 只有连续可见学习才计,切走/隐藏即断
+                inLearn = ok;
+            }
+            if (acc >= FLUSH_SEC) flush();
+        }
+        setInterval(tick, INTERVAL_MS);
+        document.addEventListener("visibilitychange", function () {
+            tick();
+            if (document.hidden) flush();
+        });
+        window.addEventListener("pagehide", flush, false);
+    })();
 })();
 </script>
 </body>
