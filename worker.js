@@ -1001,6 +1001,7 @@ async function callGlossModel(env, sentences) {
 const RECAP_STORY_LIMIT = 8000;
 const RECAP_RATE_LIMIT_MS = 6000;
 const recapRateMap = new Map();
+let bankCache = { t: 0, data: null }; // M6d1 五档考试词库内存缓存(单 isolate,10min TTL)
 const RECAP_MODEL_IDS = GLOSS_MODEL_IDS; // 同 gloss 候选链:免费档优先,付费 glm-5.3-flash 兜底
 const RECAP_SYSTEM_PROMPT = [
     "You are an English-learning recap coach for a Chinese player who just finished a chapter of an English interactive story game.",
@@ -3041,6 +3042,44 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const out = await callRecapModel(env, story, band);
                 if (out.error) return out.error;
                 return new Response(JSON.stringify({ ok: true, expressions: out.expressions, writing: out.writing }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+            }
+
+            // ---- 路由:M6d1 五档考试词库(GET /api/lang/bank?band=hs|cet4|cet6|ky|toefl;公开只读;内存缓存 10min)----
+            if (url.pathname === "/api/lang/bank" && request.method === "GET") {
+                const band = String(url.searchParams.get("band") || "").trim();
+                if (!["hs", "cet4", "cet6", "ky", "toefl"].includes(band)) {
+                    return errorResponse("无效档位", 400, null, "INVALID_BAND");
+                }
+                const nowMs = Date.now();
+                if (bankCache.t > nowMs - 600000 && bankCache.data && bankCache.data[band]) {
+                    const hit = bankCache.data[band];
+                    return new Response(JSON.stringify({ ok: true, band: hit.band, total: hit.total, items: hit.items }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+                }
+                try {
+                    const q = await pbAdminFetch(env, "/api/collections/lang_banks/records?perPage=200");
+                    const d = await q.json().catch(() => ({}));
+                    const groups = {};
+                    for (const r of d.items || []) {
+                        if (!r || !r.band) continue;
+                        (groups[r.band] = groups[r.band] || []).push(r);
+                    }
+                    for (const b of Object.keys(groups)) {
+                        groups[b].sort((x, y) => (x.part || 0) - (y.part || 0));
+                        let items = [];
+                        let total = 0;
+                        for (const r of groups[b]) {
+                            if (Array.isArray(r.items)) items = items.concat(r.items);
+                            total = Number(r.total || 0) || total;
+                        }
+                        groups[b] = { band: b, total, items };
+                    }
+                    bankCache = { t: nowMs, data: groups };
+                    const out = groups[band];
+                    if (!out) return errorResponse("该档词库不存在", 404, null, "BANK_NOT_FOUND");
+                    return new Response(JSON.stringify({ ok: true, band: out.band, total: out.total, items: out.items }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+                } catch (e) {
+                    return errorResponse("词库服务暂不可用", 503, null, "BANK_UNAVAILABLE");
+                }
             }
 
             // ---- 路由：热聊人物卡榜（GET /api/characters/hot，送笔芯人气 + 收藏数聚合）----

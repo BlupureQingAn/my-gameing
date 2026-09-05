@@ -22711,7 +22711,56 @@ function openNpcProfile(npcId) {
         }
         else if (act === "recap-open") openRecap();
     }
-    window.LangAssist = {};
+    /* ---- M6d1 五档考试词库:按档懒加载(/api/lang/bank + localStorage 缓存),点查考纲化/嵌词/词测共用 ---- */
+    var langBankCache = {};      // band -> items[]
+    var langBankMapCache = {};   // band -> {word: item}
+    var langBankLoading = {};    // band -> Promise(防并发)
+    function bankCacheKey(band) { return "lang_bank_v1_" + band; }
+    function loadLangBank(band, force) {
+        band = String(band || "").trim();
+        if (!band) return Promise.resolve(null);
+        if (langBankCache[band]) return Promise.resolve(langBankCache[band]);
+        if (langBankLoading[band]) return langBankLoading[band];
+        if (!force) {
+            try {
+                var saved = localStorage.getItem(bankCacheKey(band));
+                if (saved) {
+                    var obj = JSON.parse(saved);
+                    if (obj && Array.isArray(obj.items) && obj.items.length) {
+                        langBankCache[band] = obj.items;
+                        return Promise.resolve(obj.items);
+                    }
+                }
+            } catch (e) {}
+        }
+        langBankLoading[band] = fetch(API_BASE + "/api/lang/bank?band=" + encodeURIComponent(band))
+            .then(function (r) { return r.json().catch(function () { return null; }); })
+            .then(function (d) {
+                langBankLoading[band] = null;
+                if (!d || !d.ok || !Array.isArray(d.items)) return null;
+                langBankCache[band] = d.items;
+                try { localStorage.setItem(bankCacheKey(band), JSON.stringify({ band: band, total: d.total || d.items.length, items: d.items })); } catch (e) {}
+                return d.items;
+            })
+            .catch(function () { langBankLoading[band] = null; return null; });
+        return langBankLoading[band];
+    }
+    function langBankItem(band, word) {
+        band = String(band || "").trim();
+        var items = langBankCache[band];
+        if (!items || !items.length || !word) return null;
+        var map = langBankMapCache[band];
+        if (!map) {
+            map = langBankMapCache[band] = {};
+            for (var i = 0; i < items.length; i++) map[items[i].w] = items[i];
+        }
+        return map[String(word).toLowerCase()] || null;
+    }
+    function langBankStatus(band) {
+        band = String(band || "").trim();
+        return { loaded: !!langBankCache[band], loading: !!langBankLoading[band], total: langBankCache[band] ? langBankCache[band].length : 0 };
+    }
+    window.LangAssist = { loadBank: loadLangBank, bankItem: langBankItem, bankStatus: langBankStatus };
 })();
 </script>
 </body>
