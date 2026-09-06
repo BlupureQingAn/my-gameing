@@ -23050,13 +23050,14 @@ function openNpcProfile(npcId) {
         if (hit) html += '<div class="lg-pop-badge">【' + (BAND_NAMES[hit.band] || "") + "考纲词】</div>";
         html += '<div class="lg-pop-w">' + esc(disp);
         if (hit && hit.it.ph) html += '<span class="lg-pop-ph">' + esc(hit.it.ph) + "</span>";
+        else if (info && info.ph) html += '<span class="lg-pop-ph">' + esc(info.ph) + "</span>";
         html += "</div>";
         if (hit) {
             html += '<div class="lg-pop-zh">' + esc(hit.it.zh) + "</div>";
         } else {
             if (info && info.en) html += '<div class="lg-pop-en">' + esc(info.en) + "</div>";
             if (info && info.zh) html += '<div class="lg-pop-zh">' + esc(info.zh) + "</div>";
-            if (!info) html += '<div class="lg-pop-zh" style="opacity:.62;">这个词不在当前档考纲词库里，也没有单独释义——点它所在的句子，看整句译文里怎么理解。</div>';
+            if (!info) html += '<div class="lg-pop-zh" style="opacity:.62;">考纲词库和全量词典里都没有这个词——点它所在的句子，看整句译文里怎么理解。</div>';
         }
         html += '<div class="lg-pop-foot">';
         if (inVocab) {
@@ -23077,6 +23078,7 @@ function openNpcProfile(npcId) {
         var key = String(term).toLowerCase();
         var info = wordInfo[key] || null;
         var p = ensurePop();
+        p.dataset.dw = key;   // 本词标记:迟到的兜底查询回调据此放弃已被新词接管的弹层
         p.innerHTML = '<div class="lg-pop-w">' + esc(String(term)) + '</div><div class="lg-pop-zh" style="opacity:.62;">查词中…</div>';
         p.classList.add("on");
         p.style.left = "-999px";
@@ -23090,17 +23092,24 @@ function openNpcProfile(npcId) {
         var band = currentLangBand();
         var done = function (hit) {
             if (!p.classList.contains("on")) return;    // 已被关闭/新词接管
-            var disp = term;
-            if (hit) { disp = hit.word; key = hit.word; info = null; markSeenWord(band, hit.word); }   // M6d4:点查词库词=seen(词状态机起点)
-            var inVocab = !!vocabMap[key];
-            noteTapped(disp, hit ? { w: disp, zh: hit.it.zh } : (wordInfo[String(term).toLowerCase()] || null));
-            renderPop(p, term, disp, hit, info, inVocab);
-            // M9D:已进本=渲染即终态;未进本→静默保存,成功后再渲染成"已收进"(词库词按考纲原形收录)
-            if (inVocab || !token()) return;
-            saveVocabSilent(disp, hit ? { zh: hit.it.zh, en: "" } : info, function (saved) {
-                if (!saved || !p.classList.contains("on") || !vocabMap[key]) return;
-                renderPop(p, term, disp, hit, info, true);
-            });
+            if (hit) {
+                var hdisp = hit.word;
+                key = hdisp; info = null;
+                markSeenWord(band, hdisp);   // M6d4:点查词库词=seen(词状态机起点)
+                var hinVocab = !!vocabMap[key];
+                noteTapped(hdisp, { w: hdisp, zh: hit.it.zh });
+                renderPop(p, term, hdisp, hit, info, hinVocab);
+                // M9D:已进本=渲染即终态;未进本→静默保存(词库词按考纲原形收录)
+                if (hinVocab || !token()) return;
+                saveVocabSilent(hdisp, { zh: hit.it.zh, en: "" }, function (saved) {
+                    if (!saved || !p.classList.contains("on") || !vocabMap[key]) return;
+                    renderPop(p, term, hdisp, hit, info, true);
+                });
+                return;
+            }
+            // 词库 miss → ECDICT 全量词典兜底查词(未命中/词典不可用回落原 miss 文案,收词不中断)
+            if (vocabMap[key]) { renderPop(p, term, term, null, wordInfo[String(term).toLowerCase()] || null, true); return; }
+            missResolve(term, p);
         };
         if (langBankCache[band]) {
             done(bankLookup(band, term));
@@ -23111,6 +23120,39 @@ function openNpcProfile(npcId) {
             var h = bankLookup(band, term);
             done(h);
         });
+    }
+    function missResolve(term, p) {
+        var key = String(term).toLowerCase();
+        var stale = function () { return !p.classList.contains("on") || p.dataset.dw !== key; };
+        var show = function (info) {
+            if (stale()) return;
+            renderPop(p, term, term, null, info, !!vocabMap[key]);
+        };
+        var save = function (info) {
+            if (!token() || vocabMap[key]) return;
+            saveVocabSilent(term, info, function (saved) {
+                if (!saved || stale() || !vocabMap[key]) return;
+                renderPop(p, term, term, null, info, true);
+            });
+        };
+        var settle = function (info) {
+            noteTapped(term, info ? { w: String(term), en: info.en || "", zh: info.zh || "" } : null);
+            show(info);
+            save(info);
+        };
+        var cached = wordInfo[key];
+        if (cached) { settle(cached); return; }
+        fetch(API_BASE + "/api/lang/dict?q=" + encodeURIComponent(String(term).slice(0, 64)) + "&lang=en")
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) {
+                var info2 = null;
+                if (d && d.hit) {
+                    info2 = { w: String(term), en: d.hit.en || "", zh: d.hit.zh || "", ph: d.hit.ph || "" };
+                    wordInfo[key] = info2;
+                }
+                settle(info2);
+            })
+            .catch(function () { settle(null); });
     }
     function saveVocabSilent(term, info, cb) {
         var key = String(term).toLowerCase();

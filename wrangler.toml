@@ -20,3 +20,8 @@ crons = ["10 4 * * *"]
 [[kv_namespaces]]
 binding = "COVER_CACHE"
 id = "05ff1df6441843368cec0b55bb74c847"
+
+# ECDICT 英汉词典兜底分片(70.6 万词条,按 strip 前 2 字符分 ~909 片;key d:en:{prefix})
+[[kv_namespaces]]
+binding = "DICT_EN"
+id = "12a77df4a079433db1e707f847d2b195"
