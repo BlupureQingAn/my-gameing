@@ -492,6 +492,35 @@ function dictStemCandidates(w) {   // 与前端 bankStemCandidates 同启发,兜
     return c;
 }
 
+// 有道直译最终兜底(ECDICT 词典也 miss 的生造/网络新词;免费源不稳定:4.5s 超时+10 次/10s 频控+5 分钟内存缓存,失败静默回落 miss)
+const YD_RATE = new Map();
+const YD_CACHE = new Map();
+const YD_MAX_CACHE = 300;
+async function youdaoWordFallback(q) {
+    if (!/^[a-z][a-z'\- ]{1,59}$/.test(q) || q.length < 2 || q.length > 64) return null;
+    const now = Date.now();
+    const cached = YD_CACHE.get(q);
+    if (cached && now - cached.t < 300000) return cached.text || null;
+    const rl = YD_RATE.get("g") || { t: 0, n: 0 };
+    if (now - rl.t > 10000) { rl.t = now; rl.n = 0; }
+    if (rl.n >= 10) return null;   // 兜底频控,防第三方封禁
+    rl.n++;
+    YD_RATE.set("g", rl);
+    try {
+        const res = await fetch("https://v.api.aa1.cn/api/api-fanyi-yd/index.php?msg=" + encodeURIComponent(q) + "&type=3", {
+            headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36" },
+            signal: AbortSignal.timeout(4500)
+        });
+        if (!res.ok) return null;
+        const d = await res.json().catch(() => null);
+        let text = d && typeof d.text === "string" ? d.text.trim().slice(0, 500) : "";
+        if (!text || text.toLowerCase() === q.toLowerCase()) text = "";   // 原样返回=没翻出来
+        if (YD_CACHE.size >= YD_MAX_CACHE) { const k0 = YD_CACHE.keys().next().value; if (k0) YD_CACHE.delete(k0); }
+        YD_CACHE.set(q, { t: now, text });
+        return text || null;
+    } catch (e) { return null; }
+}
+
 // 排行榜切片起点(北京时间):day=今天 / week=本周一 / month=本月 1 号
 function getCnSliceStart(span) {
     const d = new Date(Date.now() + TIMEZONE_OFFSET_MS);
@@ -3190,9 +3219,13 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                         }
                     }
                 } catch (e) {}
+                if (!found) {
+                    const yd = await youdaoWordFallback(q);
+                    if (yd) found = { word: q, val: ["", yd, "", ""], src: "youdao" };
+                }
                 return new Response(JSON.stringify({
                     ok: true, lang, found: !!found,
-                    hit: found ? { word: found.word, ph: found.val[0] || "", zh: found.val[1] || "", en: found.val[2] || "", tag: found.val[3] || "" } : null
+                    hit: found ? { word: found.word, ph: found.val[0] || "", zh: found.val[1] || "", en: found.val[2] || "", tag: found.val[3] || "", src: found.src || "ecdict" } : null
                 }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
 
