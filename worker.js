@@ -521,6 +521,39 @@ async function youdaoWordFallback(q) {
     } catch (e) { return null; }
 }
 
+// 有道句子兜底(AI 模型池挂起/漏句时逐句直翻保底;免费源不稳:8s 超时+20 次/20s 频控+5 分钟缓存+maxMs 总预算;与单词兜底 YD_* 频控分开)
+const YDS_RATE = { t: 0, n: 0 };
+const YDS_CACHE = new Map();
+async function youdaoSentenceFallback(texts, maxMs) {
+    const out = texts.map(() => "");
+    const t0 = Date.now();
+    for (let i = 0; i < texts.length; i++) {
+        if (maxMs && Date.now() - t0 > maxMs) break;
+        const t = String(texts[i] || "").replace(/\s+/g, " ").trim();
+        if (!t || t.length < 2 || t.length > 300) continue;
+        const now = Date.now();
+        const cached = YDS_CACHE.get(t);
+        if (cached && now - cached.t < 300000) { out[i] = cached.text; continue; }
+        if (now - YDS_RATE.t > 20000) { YDS_RATE.t = now; YDS_RATE.n = 0; }
+        if (YDS_RATE.n >= 20) break;   // 频控预算超出:放弃剩余句,缺口保持由前端重试
+        YDS_RATE.n++;
+        try {
+            const res = await fetch("https://v.api.aa1.cn/api/api-fanyi-yd/index.php?msg=" + encodeURIComponent(t) + "&type=3", {
+                headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36" },
+                signal: AbortSignal.timeout(8000)
+            });
+            if (!res.ok) continue;
+            const d = await res.json().catch(() => null);
+            let text = d && typeof d.text === "string" ? d.text.trim().slice(0, 600) : "";
+            if (!text || text.replace(/\s+/g, "").toLowerCase() === t.replace(/\s+/g, "").toLowerCase()) text = "";   // 原样返回=没翻出
+            if (YDS_CACHE.size >= 300) { const k0 = YDS_CACHE.keys().next().value; if (k0) YDS_CACHE.delete(k0); }
+            YDS_CACHE.set(t, { t: now, text });
+            out[i] = text;
+        } catch (e) {}
+    }
+    return out;
+}
+
 // 排行榜切片起点(北京时间):day=今天 / week=本周一 / month=本月 1 号
 function getCnSliceStart(span) {
     const d = new Date(Date.now() + TIMEZONE_OFFSET_MS);
@@ -1005,8 +1038,11 @@ async function authenticate(env, request) {
 const GLOSS_MAX_SENTENCES = 10;   // 前端亦按 ≤10 合批
 const GLOSS_RATE_LIMIT_MS = 6000; // 单实例内存限频即可(与 POST_RATE_LIMIT_MS 同理)
 const glossRateMap = new Map();
-// 候选优先免费档(智谱 flash 系/NVIDIA oss),终兜底付费 glm-5.3-flash(与 MODEL_POOL 末位 tier 一致)
-const GLOSS_MODEL_IDS = ["zp-glm-4.7-flash", "zp2-glm-4-flash", "zp-glm-4-flash", "zp-glm-4.5-air", "nv-gpt-oss-20b", "zp-glm-5.3-flash"];
+// 候选优先免费档(讯飞 X2-Flash 剧情主力/智谱 flash 系/NVIDIA),终兜底付费 glm-5.3-flash(与 MODEL_POOL 末位 tier 一致)
+// M-20260906 重排:讯飞置顶(独立平台不随智谱过载;非流式推理先 reasoning_content 后 content,JSON 干净);
+//   前 3 档为讯飞/智谱/NVIDIA 三平台,45s 预算内任一平台通即 ~20s 内出 AI 译文(带词标注);
+//   智谱免费档过载/5.3 欠费会秒败不耗预算;5.3 是 2026-08-31 小徐指定的终兜底(欠费期秒拒,恢复后自动生效)
+const GLOSS_MODEL_IDS = ["xf-spark-x2-flash", "zp-glm-4.7-flash", "nv-gpt-oss-20b", "zp2-glm-4-flash", "agnes-2.0-flash", "zp-glm-5.3-flash"];
 const GLOSS_SYSTEM_PROMPT = [
     "You are a friendly English→Chinese tutor for a Chinese learner reading English game-story scenes.",
     "Task: for each numbered English sentence provide (a) a natural, fluent Chinese translation (zh) — not word-for-word literal; (b) 1-3 most valuable words/phrases for this learner to notice (prefer what an intermediate learner may not know; include phrasal verbs/idioms when present), each with a SHORT English explanation (en, under 20 words) and a short Chinese gloss (zh).",
@@ -1024,7 +1060,15 @@ async function callGlossModel(env, sentences) {
     const userMsg = "Sentences to translate:\n" + sentences.map((s, i) => `[${i}] ${s}`).join("\n");
     const candidates = GLOSS_MODEL_IDS.map((id) => MODEL_POOL.find((m) => m.id === id && m.enabled)).filter(Boolean);
     const errs = [];
+    // M-20260906:AI 链每档 ≤12s、总预算 45s,连续 2 档超时(平台群故障)或预算尽 → 有道直译补齐(≤12s)
+    // 原每档 45s 最坏 4.5 分钟;现正常日 ~5s 出 AI 译文,多平台拥堵日 ~40s 内兜底必出,总等待 ≤60s
+    const deadline = Date.now() + 45000;
+    let timeouts = 0;
+    const aiZh = sentences.map(() => "");
+    const aiWd = sentences.map(() => []);
     for (const t of candidates) {
+        if (Date.now() >= deadline) { errs.push(t.id + ":budget"); break; }
+        if (timeouts >= 2) { errs.push(t.id + ":stall"); break; }   // 两档都挂=平台群故障,不再等预算,直接兜底
         const apiKey = env[t.apiKeyEnv];
         if (!apiKey) { errs.push(t.id + ":nokey"); continue; }
         try {
@@ -1040,7 +1084,7 @@ async function callGlossModel(env, sentences) {
                         { role: "user", content: userMsg }
                     ]
                 }),
-                signal: AbortSignal.timeout(45000)
+                signal: AbortSignal.timeout(Math.max(4000, Math.min(12000, deadline - Date.now() - 1000)))
             });
             if (!res.ok) { errs.push(t.id + ":http" + res.status); continue; }
             const data = await res.json().catch(() => ({}));
@@ -1058,18 +1102,29 @@ async function callGlossModel(env, sentences) {
                         en: String(wd && wd.en || "").trim().slice(0, 200),
                         zh: String(wd && wd.zh || "").trim().slice(0, 200)
                     })).filter((x) => x.w);
-                slots[idx] = { sentence: sentences[idx], zh: String(it.zh || "").trim().slice(0, 600), words };
+                slots[idx] = { zh: String(it.zh || "").trim().slice(0, 600), words };
             }
-            const items = [];
+            let got = 0;
             for (let i = 0; i < sentences.length; i++) {
-                const s = slots[i] || { sentence: sentences[i], zh: "", words: [] };
-                if (s.words.length > 3) s.words = s.words.slice(0, 3); // 每句最多 3 个关键表达
-                items.push(s);
+                const s = slots[i];
+                if (!s || !s.zh) continue;
+                aiZh[i] = s.zh;
+                aiWd[i] = s.words.length > 3 ? s.words.slice(0, 3) : s.words; // 每句最多 3 个关键表达
+                got++;
             }
-            if (items.some((x) => x.zh)) return { items };
+            if (got) break;   // 一档成功(含漏句)即停,漏的句交有道兜底
             errs.push(t.id + ":nozh");
-        } catch (e) { errs.push(t.id + ":err"); }
+        } catch (e) { errs.push(t.id + ":err"); timeouts++; }
     }
+    // 有道直译兜底补 AI 漏句(≤12s,尽力而为;源快时 10 句仅约 3s)
+    const miss = [];
+    for (let i = 0; i < sentences.length; i++) if (!aiZh[i]) miss.push(i);
+    if (miss.length) {
+        const yd = await youdaoSentenceFallback(miss.map((i) => sentences[i]), 12000);
+        yd.forEach((zh, k) => { if (zh) aiZh[miss[k]] = zh; });
+    }
+    const items = sentences.map((s, i) => ({ sentence: s, zh: aiZh[i], words: aiWd[i] }));
+    if (items.some((x) => x.zh)) return { items, chain: errs.join(",") };
     return { error: errorResponse("翻译服务暂时繁忙，稍后再试", 503, errs.join(","), "GLOSS_UNAVAILABLE") };
 }
 
@@ -3310,7 +3365,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const out = await callGlossModel(env, sentences);
                 if (out.error) return out.error;
                 await langAuxBump(env, uid, "gloss");
-                return new Response(JSON.stringify({ ok: true, items: out.items }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+                return new Response(JSON.stringify({ ok: true, items: out.items, chain: out.chain || "" }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
 
             // ---- 路由:语言文游 M5 章末复盘(POST /api/lang/recap;剧情+档位→高频表达+仿写例句,直调模型)----
