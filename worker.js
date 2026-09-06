@@ -475,6 +475,23 @@ function getTodayStr() {
     return new Date(Date.now() + TIMEZONE_OFFSET_MS).toISOString().slice(0, 10);
 }
 
+// ---- 词典兜底(GET /api/lang/dict):ECDICT 77 万词条按 strip 前 2 字符分 909 片存 DICT_EN KV ----
+const dictRate = new Map();    // IP 级限流(内存,跨 isolate 宽松可接受)
+const dictCache = new Map();   // 片解析缓存(最多 16 片,防查词连击重复拉 KV)
+const DICT_SHARD_CACHE_MAX = 16;
+function dictStemCandidates(w) {   // 与前端 bankStemCandidates 同启发,兜底词典词形回查
+    const c = [];
+    if (w.length <= 3) return c;
+    if (/ies$/.test(w)) c.push(w.slice(0, -3) + "y");
+    if (/(ss|sh|ch|x|z)es$/.test(w)) c.push(w.slice(0, -2));
+    if (/[a-z]s$/.test(w) && !/ss$/.test(w)) c.push(w.slice(0, -1));
+    const s1 = w.replace(/ing$/, "");
+    if (s1 !== w) { c.push(s1); c.push(s1 + "e"); }
+    const s2 = w.replace(/ed$/, "");
+    if (s2 !== w) { c.push(s2); c.push(s2 + "e"); if (s2.length > 3) c.push(s2.slice(0, -1)); }
+    return c;
+}
+
 // 排行榜切片起点(北京时间):day=今天 / week=本周一 / month=本月 1 号
 function getCnSliceStart(span) {
     const d = new Date(Date.now() + TIMEZONE_OFFSET_MS);
@@ -3132,6 +3149,51 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                     }
                 } catch (e) {}
                 return new Response(JSON.stringify({ span, lang, start, items, me }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+            }
+
+            // ---- 路由:词典兜底查词(GET /api/lang/dict?q=…&lang=en;ECDICT 77 万词条 KV 分片,公开,IP 60 次/分)----
+            if (url.pathname === "/api/lang/dict" && request.method === "GET") {
+                const q = String(url.searchParams.get("q") || "").trim().toLowerCase().slice(0, 64);
+                const lang = String(url.searchParams.get("lang") || "en").slice(0, 8);
+                if (!q || !/^[a-z0-9'\- ]+$/.test(q) || lang !== "en") {
+                    return errorResponse("查词参数不对", 400, null, "BAD_DICT_QUERY");
+                }
+                const ip = request.headers.get("cf-connecting-ip") || "x";
+                const now = Date.now();
+                const rl = dictRate.get(ip) || { t: 0, n: 0 };
+                if (now - rl.t > 60000) { rl.t = now; rl.n = 0; }
+                rl.n++;
+                if (rl.n > 60) return errorResponse("查词有点频繁，歇一下再试", 429, null, "DICT_TOO_FREQUENT");
+                dictRate.set(ip, rl);
+                const strip = q.replace(/[^a-z0-9]/g, "");
+                const prefix = strip.slice(0, 2) || "_";
+                let found = null;
+                try {
+                    let shard = dictCache.get(prefix);
+                    if (!shard) {
+                        const raw = await env.DICT_EN.get("d:en:" + prefix);
+                        if (raw) {
+                            shard = JSON.parse(raw);
+                            if (dictCache.size >= DICT_SHARD_CACHE_MAX) {
+                                const k0 = dictCache.keys().next().value;
+                                if (k0) dictCache.delete(k0);
+                            }
+                            dictCache.set(prefix, shard);
+                        }
+                    }
+                    if (shard) {
+                        if (shard[q]) found = { word: q, val: shard[q] };
+                        else if (q.length > 3) {
+                            for (const c of dictStemCandidates(q)) {
+                                if (shard[c]) { found = { word: c, val: shard[c] }; break; }
+                            }
+                        }
+                    }
+                } catch (e) {}
+                return new Response(JSON.stringify({
+                    ok: true, lang, found: !!found,
+                    hit: found ? { word: found.word, ph: found.val[0] || "", zh: found.val[1] || "", en: found.val[2] || "", tag: found.val[3] || "" } : null
+                }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
 
             // ---- 路由:M6d5 词库进度词测(GET|PUT /api/lang/progress?band=x;lang_bank_progress 私有集合)----
