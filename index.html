@@ -11404,6 +11404,23 @@ function rebuildChoicesBlock(body, labels = []) {
             const selectedScenario = ScenarioCardService.getSelectedCard();
             if (!selectedScenario) return;
         }
+        /* 0dced29 误删修复(2026-09-06):字体三函数定义随 BYOK 超删,export/调用残留致主块 ReferenceError 中断——此处恢复 */
+        function applyFontSize(size) {
+            const px = Math.min(20, Math.max(12, Math.round(Number(size) || DEFAULT_FONT_SIZE)));
+            document.documentElement.style.setProperty("--base-font-size", px + "px");
+            localStorage.setItem(FONT_KEY, String(px));
+            return px;
+        }
+        function loadFontSize() {
+            const saved = Number(localStorage.getItem(FONT_KEY));
+            if (saved >= 12 && saved <= 20) applyFontSize(saved);
+            return saved >= 12 && saved <= 20 ? saved : DEFAULT_FONT_SIZE;
+        }
+        function onFontSizeInput(value) {
+            const px = applyFontSize(value);
+            const valEl = document.getElementById("ui-font-size-val");
+            if (valEl) valEl.textContent = px + "px";
+        }
         function saveUserApiFromUI() {
             ThemeService.setMode(document.getElementById("ui-dark-mode-enabled")?.checked ? "dark" : "light");
             const sizeVal = document.getElementById("ui-font-size-range")?.value;
