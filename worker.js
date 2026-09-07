@@ -191,6 +191,20 @@ const STREAM_BROKEN = [
     "sf-glm-z1-9b", "sf-glm-4-9b", "sf-r1-qwen3-8b", "sf-qwen2.5-7b"
 ];
 
+// 池内全平台强制关推理思考(2026-09-07 小徐指示:所有模型关思考提速):
+//   讯飞 spark-x 系顶层 thinking.type=disabled(官方 HTTP 文档,agent/v1+x2+v2 同协议);
+//   智谱同字段(4.7-flash 实测字段被接受仅 429 限流非 400;z1 系固开思考 disabled 无效→已在池内禁用不入路由);
+//   硅基 enable_thinking=false(实测非思考模型 GLM-4-9B 亦 200 接受该字段,SF 忽略不适用参数→全系覆盖防边角);
+//   NVIDIA kimi 系(默认思考):网关直通 Moonshot 原生协议用 thinking.type=disabled;其余 nv 模型不推理不带字段;
+//   OpenRouter 官方统一关思考字段 reasoning.enabled=false(对不适用模型 OR 忽略,200 安全)
+const applyNoThinking = (payload, t) => {
+    if (t.model === "spark-x" || (t.url || "").includes("bigmodel.cn")) payload.thinking = { type: "disabled" };
+    if ((t.url || "").includes("siliconflow.cn")) payload.enable_thinking = false;
+    if (["nv-kimi-k3", "nv-kimi-k2.6"].includes(t.id)) payload.thinking = { type: "disabled" };
+    if ((t.url || "").includes("openrouter.ai")) payload.reasoning = { enabled: false };
+    return payload;
+};
+
 // ==================== 上游限流管理(防 429) ====================
 // 智谱按"并发数"限流(免费档并发极低,第三方实测 ~5RPM),会员绕过 dailyCap 后洪峰更需客户端自限速
 // 策略(openai-cookbook 最佳实践):并发信号量 + 滑动窗口,本地近似(CF 多实例叠加后仍留余量)
@@ -344,7 +358,8 @@ const MEMBER_PLANS = {
     quarterly: { id: "quarterly", name: "季度会员", price: "49",  days: 90 },
     yearly:    { id: "yearly",    name: "年度会员", price: "118", days: 365 },
 };
-// 免费用户每日免费 AI 次数(北京时间 08:00 刷新;额度内仅路由 NVIDIA 全部 + 硅基 sf-glm-4-9b,超限转云币计费)
+// 免费用户每日 AI 总次数(北京时间 08:00 刷新;2026-09-07 起主聊天/点译/复盘共享此池,三功能用同一 freequota KV;
+// 主聊天额度内仅路由 NVIDIA 全部 + 硅基 sf-glm-4-9b,超限转云币计费;点译/复盘超限即 429)
 const FREE_QUOTA_PER_DAY = 10;
 const FREE_QUOTA_REFRESH_HOUR = 8;
 // 终身会员（会员改革后保留的会员档，非充值档）
@@ -584,24 +599,6 @@ async function bumpFreeQuota(env, userId, date) {
     } catch (e) { console.error("free quota bump failed:", e.message); }
 }
 
-// M7c 语言辅助日配额:点译 gloss / 复盘 recap 直调模型不计币,但须封日上限防已登录零余额用户刷付费兜底模型
-// 分桶键 langaux:{kind}:{uid}:{date}(与剧情 freequota 分桶互不占用);返回 -1 = 用尽,其余 = 当日已用次数
-const LANG_AUX_DAILY = { gloss: { free: 60, vip: 300 }, recap: { free: 20, vip: 60 } };
-async function langAuxUsed(env, uid, kind, isVip) {
-    try {
-        const limit = (LANG_AUX_DAILY[kind] || {})[isVip ? "vip" : "free"];
-        if (!limit) return 0;
-        const cur = Number(await env.COVER_CACHE.get(`langaux:${kind}:${uid}:${getFreeQuotaDateStr()}`) || 0);
-        return cur >= limit ? -1 : cur;
-    } catch (e) { return 0; }
-}
-async function langAuxBump(env, uid, kind) {
-    try {
-        const key = `langaux:${kind}:${uid}:${getFreeQuotaDateStr()}`;
-        const cur = Number(await env.COVER_CACHE.get(key) || 0);
-        await env.COVER_CACHE.put(key, String(cur + 1), { expirationTtl: 48 * 3600 });
-    } catch (e) {}
-}
 // 会员剩余天数(终身/非会员返回 0;前端徽章/我的页展示用)
 function memberDaysLeft(record) {
     const t = record.membership_type;
@@ -1038,11 +1035,21 @@ async function authenticate(env, request) {
 const GLOSS_MAX_SENTENCES = 10;   // 前端亦按 ≤10 合批
 const GLOSS_RATE_LIMIT_MS = 6000; // 单实例内存限频即可(与 POST_RATE_LIMIT_MS 同理)
 const glossRateMap = new Map();
-// 候选优先免费档(讯飞 X2-Flash 剧情主力/智谱 flash 系/NVIDIA),终兜底付费 glm-5.3-flash(与 MODEL_POOL 末位 tier 一致)
+// 候选链:免费档全铺,付费 5.3-flash 仅末位终兜底(2026-09-07 小徐指示:免费模型可用时不得用付费模型;
+//   原 6 档链免费未穷尽即落付费档属缺陷,现扩至 22 免费档:讯飞/智谱双 key/Agnes/NVIDIA 9/OpenRouter 4/硅基流动 4,
+//   失败多为即时返回(429/5xx/401/nokey)不占档预算,仅网络挂起计 12s(gloss)/45s(recap),
+//   群故障由连续 2 档超时早停+总预算兜住;RECAP_MODEL_IDS 同引用自动同步)
 // M-20260906 重排:讯飞置顶(独立平台不随智谱过载;非流式推理先 reasoning_content 后 content,JSON 干净);
-//   前 3 档为讯飞/智谱/NVIDIA 三平台,45s 预算内任一平台通即 ~20s 内出 AI 译文(带词标注);
-//   智谱免费档过载/5.3 欠费会秒败不耗预算;5.3 是 2026-08-31 小徐指定的终兜底(欠费期秒拒,恢复后自动生效)
-const GLOSS_MODEL_IDS = ["xf-spark-x2-flash", "zp-glm-4.7-flash", "nv-gpt-oss-20b", "zp2-glm-4-flash", "agnes-2.0-flash", "zp-glm-5.3-flash"];
+//   前 5 档为讯飞/智谱/智谱2/NVIDIA/Agnes 五平台,45s 预算内任一平台通即 ~20s 内出 AI 译文(带词标注);
+//   5.3 为 2026-08-31 小徐指定终兜底,欠费期秒拒不耗预算,恢复后自动生效
+const GLOSS_MODEL_IDS = [
+    "xf-spark-x2-flash", "zp-glm-4.7-flash", "nv-gpt-oss-20b", "zp2-glm-4-flash", "agnes-2.0-flash",
+    "nv-gpt-oss-120b", "nv-kimi-k3", "nv-minimax-m3", "nv-deepseek-v4-flash", "nv-deepseek-v4-pro",
+    "nv-kimi-k2.6", "nv-nemotron-super", "nv-nemotron-ultra", "nv-nemotron-4-340b",
+    "or-minimax-m3", "or-nemotron-3-super", "or-minimax-m2.7", "or-nemotron-3-ultra",
+    "sf-glm-4-9b", "sf-r1-qwen3-8b", "sf-glm-z1-9b", "sf-qwen2.5-7b",
+    "zp-glm-5.3-flash"
+];
 const GLOSS_SYSTEM_PROMPT = [
     "You are a friendly English→Chinese tutor for a Chinese learner reading English game-story scenes.",
     "Task: for each numbered English sentence provide (a) a natural, fluent Chinese translation (zh) — not word-for-word literal; (b) 1-3 most valuable words/phrases for this learner to notice (prefer what an intermediate learner may not know; include phrasal verbs/idioms when present), each with a SHORT English explanation (en, under 20 words) and a short Chinese gloss (zh).",
@@ -1072,18 +1079,20 @@ async function callGlossModel(env, sentences) {
         const apiKey = env[t.apiKeyEnv];
         if (!apiKey) { errs.push(t.id + ":nokey"); continue; }
         try {
+            const reqBody = {
+                model: t.model,
+                temperature: 0.2,
+                max_tokens: Math.min(8000, Math.max(3000, sentences.length * 400)),
+                messages: [
+                    { role: "system", content: GLOSS_SYSTEM_PROMPT },
+                    { role: "user", content: userMsg }
+                ]
+            };
+            applyNoThinking(reqBody, t);   // 关推理:首档 xf-spark-x2-flash 原默认思考 15-40s 必撞 12s 档超时
             const res = await fetch((t.url || "").replace(/\/$/, "") + "/chat/completions", {
                 method: "POST",
                 headers: { "Authorization": "Bearer " + apiKey, "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    model: t.model,
-                    temperature: 0.2,
-                    max_tokens: Math.min(8000, Math.max(3000, sentences.length * 400)),
-                    messages: [
-                        { role: "system", content: GLOSS_SYSTEM_PROMPT },
-                        { role: "user", content: userMsg }
-                    ]
-                }),
+                body: JSON.stringify(reqBody),
                 signal: AbortSignal.timeout(Math.max(4000, Math.min(12000, deadline - Date.now() - 1000)))
             });
             if (!res.ok) { errs.push(t.id + ":http" + res.status); continue; }
@@ -1138,7 +1147,7 @@ let langCardsCache = { t: 0, data: null }; // M6b 语言卡库内存缓存(单 i
 const LANG_BANDS = ["hs", "cet4", "cet6", "ky", "toefl"];
 const LANG_BAND_LEGACY = { a: "cet4", b: "cet6", c: "ky" };
 const normLangBand = (v) => (LANG_BANDS.includes(v) ? v : (LANG_BAND_LEGACY[v] || ""));
-const RECAP_MODEL_IDS = GLOSS_MODEL_IDS; // 同 gloss 候选链:免费档优先,付费 glm-5.3-flash 兜底
+const RECAP_MODEL_IDS = GLOSS_MODEL_IDS; // 同 gloss 候选链(2026-09-07 扩容:免费 22 档全铺,付费 5.3-flash 仅末位)
 const RECAP_SYSTEM_PROMPT = [
     "You are an English-learning recap coach for a Chinese player who just finished a chapter of an English interactive story game.",
     "From the story excerpt, pick 3-6 high-value English expressions (phrases, sentence patterns, collocations, idioms — NOT single common words) worth remembering, tuned to the player band: hs = China senior-high syllabus level (simplest plain phrasings, everyday words only); cet4 = CET-4 level (plain everyday English); cet6 = CET-6 level (natural everyday English, a familiar idiom is fine); ky = postgrad-exam (考研) level (broad everyday English with moderate idiom); toefl = TOEFL level (richer idiomatic and lightly academic English).",
@@ -1149,23 +1158,31 @@ const RECAP_SYSTEM_PROMPT = [
 async function callRecapModel(env, story, band) {
     const candidates = RECAP_MODEL_IDS.map((id) => MODEL_POOL.find((m) => m.id === id && m.enabled)).filter(Boolean);
     const errs = [];
+    // 2026-09-07:链扩至 23 档后与 gloss 同款预算+早停——总预算 90s、连续 2 档异常(群故障)即停;
+    //   即时失败(429/5xx)不占预算,仅网络挂起档计 45s 内,防平台群故障把复盘拖死
+    const deadline = Date.now() + 90000;
+    let timeouts = 0;
     for (const t of candidates) {
+        if (Date.now() >= deadline) { errs.push(t.id + ":budget"); break; }
+        if (timeouts >= 2) { errs.push(t.id + ":stall"); break; }
         const apiKey = env[t.apiKeyEnv];
         if (!apiKey) { errs.push(t.id + ":nokey"); continue; }
         try {
+            const reqBody = {
+                model: t.model,
+                temperature: 0.4,
+                max_tokens: 4000,
+                messages: [
+                    { role: "system", content: RECAP_SYSTEM_PROMPT },
+                    { role: "user", content: `Player band: ${band || "cet6"}\n\nStory excerpt:\n${story}` }
+                ]
+            };
+            applyNoThinking(reqBody, t);   // 复盘不需要推理,关思考提速
             const res = await fetch((t.url || "").replace(/\/$/, "") + "/chat/completions", {
                 method: "POST",
                 headers: { "Authorization": "Bearer " + apiKey, "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    model: t.model,
-                    temperature: 0.4,
-                    max_tokens: 4000,
-                    messages: [
-                        { role: "system", content: RECAP_SYSTEM_PROMPT },
-                        { role: "user", content: `Player band: ${band || "cet6"}\n\nStory excerpt:\n${story}` }
-                    ]
-                }),
-                signal: AbortSignal.timeout(45000)
+                body: JSON.stringify(reqBody),
+                signal: AbortSignal.timeout(Math.max(4000, Math.min(45000, deadline - Date.now() - 1000)))
             });
             if (!res.ok) { errs.push(t.id + ":http" + res.status); continue; }
             const data = await res.json().catch(() => ({}));
@@ -1182,7 +1199,7 @@ async function callRecapModel(env, story, band) {
                 .map((s) => String(s || "").trim().slice(0, 300)).filter(Boolean);
             if (expressions.length || writing.length) return { expressions, writing };
             errs.push(t.id + ":emptyjson");
-        } catch (e) { errs.push(t.id + ":err"); }
+        } catch (e) { errs.push(t.id + ":err"); timeouts++; }
     }
     return { error: errorResponse("复盘生成失败，请稍后重试", 503, errs.join(","), "RECAP_UNAVAILABLE") };
 }
@@ -1213,7 +1230,7 @@ export default {
 
                 // 会员判定：会员到期自动回退免费用户（免费额度照常；membership_type 保留仅靠 expires_at 判定）
                 const isMemberUser = isMember(record);
-                // 三模式：免费模式（今日 50 次内，仅 NVIDIA 全部 + 硅基 sf-glm-4-9b，不扣币，成功后计数）
+                // 三模式：免费模式（今日 FREE_QUOTA_PER_DAY 次共享池内，与点译/复盘同池；仅 NVIDIA 全部 + 硅基 sf-glm-4-9b，不扣币，成功后计数）
                 //          / 云币模式（超限，全池路由，成功后按 token 扣币）/ 会员模式（不限次不扣币）
                 const quotaDate = getFreeQuotaDateStr();
                 const freeUsed = isMemberUser ? FREE_QUOTA_PER_DAY : await readFreeQuota(env, userId, quotaDate);
@@ -1277,8 +1294,8 @@ export default {
                                 const payload = { ...requestJson, model: target.model };
                                 if (isStream && STREAM_NO_JSON.includes(target.id)) delete payload.response_format;
                                 if (converted) { payload.stream = false; upstreamNonStream = true; }
-                                // Qwen3 系/Qwen3.5/GLM-Z1/DeepSeek-R1 默认思考模式(reasoning 占 87% token,耗时 28-37s),强制关闭提速 ~20 倍
-                                if (["sf-qwen3-8b", "sf-qwen3.5-4b", "sf-glm-z1-9b", "sf-r1-qwen3-8b"].includes(target.id)) payload.enable_thinking = false;
+                                // 深度推理模型(讯飞 spark-x 系/硅基思考系)默认思考模式:先输出 reasoning 再出正文,耗时数倍,强制关闭(见 applyNoThinking)
+                                applyNoThinking(payload, target);
                                 // 注意：不修改请求体其它字段（如 stream_options），部分上游模型不支持会报错或改变输出行为
                                 const r = await fetch(`${base}/chat/completions`, {
                                     method: "POST",
@@ -1347,7 +1364,7 @@ export default {
                 }
 
                 // 成功后才计模型级配额（会员绕过 dailyCap 不挤压免费用户；云币在成功后按 token 结算，失败不扣费；
-                // 免费模式成功后计个人免费额度,第 50 次用完即转云币模式）
+                // 免费模式成功后计个人共享额度(点译/复盘同池),满 FREE_QUOTA_PER_DAY 次即转云币模式）
                 ctx.waitUntil((async () => {
                     try {
                         if (!isMemberUser) await bumpModelUsage(env, usedModel.id, today);
@@ -1456,6 +1473,7 @@ export default {
                 };
                 for (let i = 0; i < 2 && !isGoodJson(); i++) {
                     const retryPayload = { ...requestJson, model: usedModel.model };
+                    applyNoThinking(retryPayload, usedModel);
                     retryPayload.messages = [
                         ...(requestJson.messages || []),
                         { role: "user", content: "你上一次的回复内容不是合法 JSON。请仅输出一个合法 JSON 对象，不要任何解释、围栏或多余字符。" }
@@ -3349,8 +3367,8 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 if (now - (glossRateMap.get(uid) || 0) < GLOSS_RATE_LIMIT_MS) {
                     return errorResponse("翻译有点快，歇一下再点吧", 429, null, "GLOSS_TOO_FREQUENT");
                 }
-                // M7c:日配额检查(不计数,调用成功后才 bump)
-                if ((await langAuxUsed(env, uid, "gloss", isMember(auth.record))) < 0) {
+                // 配额:免费用户点译/复盘/聊天共享 freequota 总池(成功后才 bump);会员完全不受限(2026-09-07 小徐指示)
+                if (!isMember(auth.record) && (await readFreeQuota(env, uid, getFreeQuotaDateStr())) >= FREE_QUOTA_PER_DAY) {
                     return errorResponse("今天的点译次数用完啦，明天 08:00 刷新；开通会员可点更多", 429, null, "GLOSS_DAILY_LIMIT");
                 }
                 const body = await request.json().catch(() => ({}));
@@ -3364,7 +3382,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 glossRateMap.set(uid, now);
                 const out = await callGlossModel(env, sentences);
                 if (out.error) return out.error;
-                await langAuxBump(env, uid, "gloss");
+                if (!isMember(auth.record)) await bumpFreeQuota(env, uid, getFreeQuotaDateStr());
                 return new Response(JSON.stringify({ ok: true, items: out.items, chain: out.chain || "" }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
 
@@ -3377,7 +3395,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 if (now - (recapRateMap.get(uid) || 0) < RECAP_RATE_LIMIT_MS) {
                     return errorResponse("刚生成过，先看看这份吧", 429, null, "RECAP_TOO_FREQUENT");
                 }
-                if ((await langAuxUsed(env, uid, "recap", isMember(auth.record))) < 0) {
+                if (!isMember(auth.record) && (await readFreeQuota(env, uid, getFreeQuotaDateStr())) >= FREE_QUOTA_PER_DAY) {
                     return errorResponse("今天的复盘次数用完啦，明天 08:00 刷新；开通会员可复盘更多", 429, null, "RECAP_DAILY_LIMIT");
                 }
                 const body = await request.json().catch(() => ({}));
@@ -3387,7 +3405,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 recapRateMap.set(uid, now);
                 const out = await callRecapModel(env, story, band);
                 if (out.error) return out.error;
-                await langAuxBump(env, uid, "recap");
+                if (!isMember(auth.record)) await bumpFreeQuota(env, uid, getFreeQuotaDateStr());
                 return new Response(JSON.stringify({ ok: true, expressions: out.expressions, writing: out.writing }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
 
