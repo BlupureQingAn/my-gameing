@@ -8014,7 +8014,33 @@ function rebuildChoicesBlock(body, labels = []) {
             if (!title || !time || !story || !options.length) return null;
             // location 为可选第七字段：仅同步状态(顶部面板/地图)，不参与必填校验，也不上卡片
             const location = String(obj.location || "").trim();
-            return { title, time, story, options, location };
+            // bilingual 为可选第八字段(M9F 渐进双语)：解析失败置 null，不影响六字段主校验
+            let bilingual = null;
+            try {
+                const rawBi = obj.bilingual;
+                if (rawBi && typeof rawBi === "object" && !Array.isArray(rawBi) && Array.isArray(rawBi.lines)) {
+                    const lines = [];
+                    for (let li = 0; li < rawBi.lines.length; li++) {
+                        const ln = rawBi.lines[li];
+                        if (!ln || typeof ln !== "object") continue;
+                        const en = String(ln.en || "").replace(/\s+/g, " ").trim();
+                        const zh = String(ln.zh || "").replace(/\s+/g, " ").trim();
+                        if (!en || !zh) continue;
+                        const words = [];
+                        if (Array.isArray(ln.words)) {
+                            for (let wi = 0; wi < ln.words.length && wi < 6; wi++) {
+                                const wd = ln.words[wi];
+                                if (!wd || typeof wd !== "object") continue;
+                                const w = String(wd.w || "").trim();
+                                if (w && /^[A-Za-z][A-Za-z' -]*$/.test(w)) words.push({ w, zh: String(wd.zh || "").trim() });
+                            }
+                        }
+                        lines.push({ en, zh, words });
+                    }
+                    if (lines.length) bilingual = { v: 1, lines };
+                }
+            } catch (e) { bilingual = null; }
+            return { title, time, story, options, location, bilingual };
         }
         // 流式部分解析：正则提取对截断文本鲁棒（字段内转义 \\. 还原）；返回 { complete, title, time, story, options }
         function parseStreaming(text) {
@@ -10088,7 +10114,7 @@ function rebuildChoicesBlock(body, labels = []) {
                     VisualEffects.decorateAiCardBears(node);
                 }
                 scrollToBottom();
-                return;
+                return node;
             }
             const bubble = document.createElement("div");
             bubble.className = `bubble ${role === "user" ? "user" : "ai"}`;
@@ -10109,6 +10135,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 setStreamingScrollMode(true);
             }
             scrollToBottom();
+            return bubble;
         }
         function updateStreaming(text) {
             if (!currentStreamingTarget) return;
@@ -10177,7 +10204,14 @@ function rebuildChoicesBlock(body, labels = []) {
                     AiResponseLayoutService.bindHtmlChoiceEvents(node);
                     AiResponseLayoutService.injectStatsIntoCard(node);
                     VisualEffects.decorateAiCardBears(node);
+                    /* M9F 双语随卡(渐进 scaffold 轮):data-bi 先落属性(进历史快照),快照后烘烤 → 行间译文免 AI 点译 */
+                    if (structuredFields.bilingual && window.LangAssist) {
+                        try { window.LangAssist.attachBiAttr(node, structuredFields.bilingual); } catch (e) {}
+                    }
                     mountedHtml = node.outerHTML;
+                    if (structuredFields.bilingual && window.LangAssist) {
+                        try { window.LangAssist.attachStoryBi(node, structuredFields.bilingual); } catch (e) { console.warn("[AI] 双语烘烤:", e); }
+                    }
                 }
             } else if (fillFields) {
                 // 卡片直接平铺:新 article 替换流式期间的 bubble
@@ -20350,13 +20384,24 @@ function openNpcProfile(npcId) {
                     const presetName = String(ScenarioCardService.getSelectedCard()?.structured?.identity?.name || "").trim();
                     const stateName = String(st2?.name || "").trim();
                     let fsStory = String(nativeScene.story || "").trim();
+                    // M9F:玩家改名时双语 en 行须随 story 同步替换(zh 不动),否则烘烤逐字匹配失败
+                    let fsBi = (nativeScene.bilingual && Array.isArray(nativeScene.bilingual.lines))
+                        ? { v: 1, lines: nativeScene.bilingual.lines.map((ln) => ({
+                            en: (presetName && stateName && stateName !== presetName)
+                                ? String(ln.en || "").split(presetName).join(stateName)
+                                : String(ln.en || ""),
+                            zh: String(ln.zh || ""),
+                            words: Array.isArray(ln.words) ? ln.words : []
+                        })) }
+                        : null;
                     if (presetName && stateName && stateName !== presetName) fsStory = fsStory.split(presetName).join(stateName);
                     const fsHtml = FillProtocolService.fillCardTemplate(FillProtocolService.getCardTheme(), {
                         story: fsStory,
                         options: (Array.isArray(nativeScene.options) ? nativeScene.options : []).slice(0, 4),
                         scene: String(w.genre || w.era || "Opening").slice(0, 40)
                     });
-                    UIRenderer.appendMessage("ai", fsHtml, Utils.nowDateStr(st2), false);
+                    const fsNode = UIRenderer.appendMessage("ai", fsHtml, Utils.nowDateStr(st2), false);
+                    if (fsNode && fsBi) { try { if (window.LangAssist && window.LangAssist.attachStoryBi) window.LangAssist.attachStoryBi(fsNode, fsBi); } catch (e) { console.warn("[LangEngine] 首轮双语烘烤:", e); } }
                     StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(st2), text: fsHtml });
                     StateService.save();
                     UIRenderer.renderTop(StateService.get());
@@ -21794,8 +21839,8 @@ function openNpcProfile(npcId) {
             const immText = stg.mode === "full"
                 ? "FULL IMMERSION — English only; absolutely no Chinese lines anywhere."
                 : (stg.mode === "scaffold"
-                    ? "PROGRESSIVE — round " + stg.round + "/" + stg.limit + ": after the story you MAY append ONE short Chinese recap line alone at the very end of \"story\", starting with 〔小译〕 (recast the key sentence in plain Chinese so the learner can check understanding). From round " + (stg.limit + 1) + " onward never write Chinese."
-                    : "PROGRESSIVE — round " + stg.round + " ≥ " + (IMM_SCAFFOLD_ROUNDS + 1) + ": English only from now on; no Chinese hints anymore.");
+                    ? "PROGRESSIVE — round " + stg.round + "/" + stg.limit + ": add the extra JSON field \"bilingual\":{\"v\":1,\"lines\":[{...}]}. In lines, put ONE entry per sentence of \"story\", in exact sentence order: each entry is {\"en\":\"<that exact story sentence, character for character, with NO line breaks inside>\",\"zh\":\"<its natural plain-Chinese translation>\",\"words\":[{\"w\":\"<key word from this sentence>\",\"zh\":\"<its Chinese meaning>\"}]}; 1-3 words per sentence, or an empty array if none fit. \"en\" must copy each story sentence VERBATIM — same words, same punctuation, no joining or splitting of sentences. Keep every zh translation short and natural. From round " + (stg.limit + 1) + " onward never write Chinese and omit the bilingual field."
+                    : "PROGRESSIVE — round " + stg.round + " ≥ " + (IMM_SCAFFOLD_ROUNDS + 1) + ": English only from now on; no Chinese hints anymore; omit the bilingual field.");
             /* M6d4:本章候选词(卡档词库抽 ≤3)→ 随续写指令注入;LangAssist 已在上一卡渲染时预载词库并抽好 */
             let cands = [];
             try { const _la = window.LangAssist; if (_la && _la.getChapterWords) cands = _la.getChapterWords() || []; } catch (e) { cands = []; }
@@ -21813,7 +21858,7 @@ function openNpcProfile(npcId) {
                 "4) " + band + ".",
                 "5) " + immText,
                 (candLine ? "6) " + candLine : ""),
-                "7) Reply with the fixed JSON only: {\"title\":\"English scene name (short)\",\"time\":\"...\",\"story\":\"...\",\"options\":[\"...\",\"...\"]} — story ≈ 200-350 English words in several paragraphs, dialogue on its own lines; if the story is just starting, open in medias res with an immersive scene-setting paragraph, then give 2-3 options."
+                "7) Reply with the fixed JSON only: {\"title\":\"English scene name (short)\",\"time\":\"...\",\"story\":\"...\",\"options\":[\"...\",\"...\"]" + (stg.mode === "scaffold" ? ",\"bilingual\":{\"v\":1,\"lines\":[...]}" : "") + "} — story ≈ 200-350 English words in several paragraphs, dialogue on its own lines; if the story is just starting, open in medias res with an immersive scene-setting paragraph, then give 2-3 options."
             ].filter(Boolean).join("\n");
         }
         function restoreIfNeeded() {
@@ -22598,7 +22643,14 @@ function openNpcProfile(npcId) {
             }
         }
         for (var n = 0; n < nodeList.length; n++) wrapNode(nodeList[n].node, nodeList[n].parts);
-        /* 词源就绪先切一遍(vocab 已加载时) */
+        /* M9F:双语随卡(开场/渐进前两轮)先烘烤:词注先行入池 + glossCache 预填 → scaffold 展开即时行间译文,零点译 AI;
+           miss 句不标 glossFail,留待下方 queueGloss 兜底 */
+        try {
+            var _bik = (typeof WeakMap !== "undefined") ? biByStory.get(st) : null;
+            if (!_bik) _bik = fromB64Safe(st.getAttribute("data-bi"));
+            if (_bik && Array.isArray(_bik.lines)) bakeCardBi(cardSens, _bik.lines);
+        } catch (e) {}
+        /* 词源就绪先切一遍(vocab 已加载时;双语词注已入池 → 一次包词) */
         if (vocabLoaded) refreshCardSens(cardSens);
         /* M7a/M9B 渐进沉浸状态机 scaffold 阶段:整卡自动出句下行间双语(interlinear)——仅登录用户、≤10 句自动,其余长按再看;
            原 auto-expand 展开卡形态已删(2026-09-06);阶段判定与生成侧共用 LangEngine.immStage */
@@ -22626,6 +22678,62 @@ function openNpcProfile(npcId) {
         }
     }
     function refreshCardSens(list) { for (var i = 0; i < list.length; i++) highlightSen(list[i]); }
+
+    /* ---- M9F 双语随卡烘烤:官方开场/渐进第 2 轮起 AI 携带的 bilingual 逐句译文+词注,
+          直接预填 glossCache(行间译文零 AI 即时出),历史重放经 data-bi 属性还原 ---- */
+    var biByStory = typeof WeakMap !== "undefined" ? new WeakMap() : null;
+    function nrmBi(s) {
+        return String(s || "").replace(/\s+/g, " ").trim()
+            .replace(/[‘’ʼ′]/g, "'")
+            .replace(/[“”«»]/g, '"')
+            .replace(/–/g, "—");
+    }
+    function b64Encode(s) {
+        try { return btoa(unescape(encodeURIComponent(String(s)))); } catch (e) { return ""; }
+    }
+    function fromB64Safe(s) {
+        if (!s) return null;
+        try { return JSON.parse(decodeURIComponent(escape(atob(String(s))))); } catch (e) { return null; }
+    }
+    function bakeCardBi(cardSens, lines) {
+        var li = 0, hit = 0;
+        for (var i = 0; i < cardSens.length; i++) {
+            var sen = cardSens[i];
+            if (glossCache[sen.text]) continue;
+            var t = nrmBi(sen.text);
+            if (!t) continue;
+            var k = -1;
+            for (var j = li; j < lines.length && j - li <= 1; j++) {   // 顺序双指针:优先当前行,前向容错 1 行(AI 偶漏报句)
+                if (!lines[j] || !lines[j].en) continue;
+                if (nrmBi(lines[j].en) === t) { k = j; break; }
+            }
+            if (k < 0) continue;
+            var L = lines[k];
+            li = k + 1;
+            hit++;
+            var words = Array.isArray(L.words) ? L.words.filter(function (w) { return w && w.w; }) : [];
+            glossCache[sen.text] = { zh: String(L.zh || "").trim(), words: words };
+            sen.gotGloss = true;
+            noteWords(words, "gloss");
+        }
+        return hit;
+    }
+    /* 渲染方(mount 后)先写 data-bi 属性(须在 mountedHtml 快照之前调用)→ 历史重放可还原双语;只写属性,不切句不动 DOM */
+    function attachBiAttr(node, bi) {
+        if (!node || !bi || typeof bi !== "object" || !Array.isArray(bi.lines)) return null;
+        var st = (node.querySelector && node.querySelector(".card-story")) || node;
+        if (!st || st.nodeType !== 1) return null;
+        try { st.setAttribute("data-bi", b64Encode(JSON.stringify({ v: 1, lines: bi.lines }))); } catch (e) {}
+        return st;
+    }
+    /* 注册双语并立即烘烤(须在 DOM 挂好且 mountedHtml 快照之后);mutation tryAttach 见 lgDone 幂等跳过 */
+    function attachStoryBi(node, bi) {
+        var st = attachBiAttr(node, bi);
+        if (!st) return null;
+        if (biByStory) { try { biByStory.set(st, bi); } catch (e) {} }
+        if (!st.dataset.lgDone) attachStory(st);
+        return st;
+    }
 
     /* ---- M6d4 剧情嵌词:每章开局从卡档词库抽候选词 ≤3 注入续写指令;正文词形命中 → 金标 + 记 seen ----
        词状态机起点:unknown → seen(剧情自然遇见/点查过);seen 按档持久(lang_seen_v1),
@@ -23961,7 +24069,11 @@ function openNpcProfile(npcId) {
         getChapterWords: getChapterWords,   // M6d4:当前章候选词(供 LangEngine 续写注入;内部触发预载/抽词)
         startDrill: startDrill, drillFlip: drillFlip, drillJudge: drillJudge,  // M6d6:考纲词刷词(学习中心⑥)
         /* M8d:生词本独立子页 — 切页钩子直接调,绕开 MutationObserver 1.5s 节流 */
-        refreshVocab: function () { loadVocab(function () { renderLearn(); }); }
+        refreshVocab: function () { loadVocab(function () { renderLearn(); }); },
+        /* M9F:渲染方挂卡后注册双语(卡首轮/渐进第 2 轮 AI 输出)→ 同步烘烤行间译文,免 AI 点译;
+           attachBiAttr 供 finishStreaming 在 mountedHtml 快照前先写 data-bi(历史重放还原用) */
+        attachStoryBi: attachStoryBi,
+        attachBiAttr: attachBiAttr
     };
 
     /* ---- 排行榜:学习时长埋点(2026-09-06)----
