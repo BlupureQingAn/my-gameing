@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="index, follow">
+    <title>云吞吞 · 边玩 AI 剧情边学英语 | 四六级/考研英语沉浸式学习</title>
+    <meta name="description" content="云吞吞是边玩 AI 互动剧情边学英语的沉浸式学习产品:原创英文剧本 + 每句可长按看翻译 + 双击单词查词典收生词 + 章末智能复盘。四六级、考研党友好,每天 10 次点译免费,浏览器打开就能玩,无需下载 App。">
+    <meta name="keywords" content="四六级英语,考研英语,剧情学英语,沉浸式英语学习,AI学英语,互动小说学英语,背单词,英语剧本,云吞吞">
+    <link rel="canonical" href="https://bitlife.blupure.cn/learn.html">
+    <link rel="icon" href="icons/favicon.ico">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="云吞吞文游">
+    <meta property="og:title" content="云吞吞 · 边玩 AI 剧情边学英语 | 四六级/考研英语沉浸式学习">
+    <meta property="og:description" content="原创英文剧情剧本,长按译句、双击查词、章末复盘——玩着玩着,英语就上去了。浏览器即玩,每天 10 次点译免费。">
+    <meta property="og:url" content="https://bitlife.blupure.cn/learn.html">
+    <meta property="og:image" content="https://bitlife.blupure.cn/icons/apple-touch-icon.png">
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "WebSite",
+                "name": "云吞吞",
+                "alternateName": "云吞吞文游",
+                "url": "https://bitlife.blupure.cn/",
+                "description": "边玩 AI 剧情边学英语的沉浸式学习网站。"
+            },
+            {
+                "@type": "FAQPage",
+                "mainEntity": [
+                    {
+                        "@type": "Question",
+                        "name": "云吞吞学英语免费吗?",
+                        "acceptedAnswer": { "@type": "Answer", "text": "免费。注册后每天有 10 次免费点译额度,可以零门槛体验全部剧本;需要更多点译、复盘或完整学习数据时再按需付费或开通会员。" }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "需要下载 App 吗?适合什么英语水平?",
+                        "acceptedAnswer": { "@type": "Answer", "text": "不用下载。手机或电脑浏览器打开即可玩。剧本从四六级、考研英语高频场景取材,基础薄弱也能靠逐句翻译跟读,备考党可当精读素材。" }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "在剧情里怎么学英语?",
+                        "acceptedAnswer": { "@type": "Answer", "text": "进入英文剧本后,长按任意句子看整句翻译,双击单词查词典,查过的词自动收进生词本,每章结束有小结复盘,帮你按记忆曲线复习。" }
+                    }
+                ]
+            }
+        ]
+    }
+    </script>
+    <style>
+        :root { --bg: #f7f2ea; --card: #ffffff; --ink: #3b2f23; --sub: #8a7a64; --accent: #b8864b; --accent-d: #9a6a33; --line: #e8dfcf; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif; line-height: 1.75; -webkit-font-smoothing: antialiased; }
+        .wrap { max-width: 760px; margin: 0 auto; padding: 0 20px; }
+        header.top { background: #fff; border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 9; }
+        header.top .wrap { display: flex; align-items: center; justify-content: space-between; height: 56px; }
+        .logo { font-weight: 700; font-size: 17px; color: var(--accent-d); text-decoration: none; }
+        .logo small { font-weight: 400; color: var(--sub); font-size: 12px; margin-left: 6px; }
+        .nav a { color: var(--sub); text-decoration: none; font-size: 14px; margin-left: 18px; }
+        .hero { padding: 52px 0 30px; text-align: center; }
+        .hero h1 { font-size: 27px; line-height: 1.4; letter-spacing: .5px; }
+        .hero h1 em { font-style: normal; color: var(--accent-d); }
+        .hero p.sub { color: var(--sub); margin: 14px auto 0; max-width: 520px; font-size: 15px; }
+        .cta { display: inline-block; margin-top: 24px; background: linear-gradient(135deg, #c99652, var(--accent-d)); color: #fff; font-size: 16px; font-weight: 600; padding: 13px 34px; border-radius: 999px; text-decoration: none; box-shadow: 0 6px 18px rgba(154, 106, 51, .3); }
+        .cta.free { background: none; color: var(--accent-d); border: 1.5px solid var(--accent); margin-left: 12px; box-shadow: none; }
+        .tagline { margin-top: 14px; font-size: 13px; color: var(--sub); }
+        .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 34px 0 8px; }
+        .step { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 14px; text-align: center; }
+        .step .no { width: 26px; height: 26px; line-height: 26px; margin: 0 auto 10px; background: var(--accent); color: #fff; border-radius: 50%; font-size: 13px; font-weight: 700; }
+        .step b { display: block; font-size: 15px; margin-bottom: 6px; }
+        .step span { font-size: 13px; color: var(--sub); }
+        .feat { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 26px 22px; margin: 16px 0; }
+        .feat h2 { font-size: 18px; margin-bottom: 6px; }
+        .feat h2 small { font-weight: 400; color: var(--sub); font-size: 13px; }
+        .feat p { font-size: 14px; color: #5c4d3c; }
+        .feat ul { margin: 10px 0 0 18px; font-size: 14px; color: #5c4d3c; }
+        .feat ul li { margin: 5px 0; }
+        .faq { margin: 26px 0 8px; }
+        .faq h2 { font-size: 19px; margin-bottom: 12px; text-align: center; }
+        .faq details { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; }
+        .faq summary { font-weight: 600; cursor: pointer; font-size: 15px; }
+        .faq p { margin-top: 8px; font-size: 14px; color: #5c4d3c; }
+        .cta-band { text-align: center; padding: 34px 0 10px; }
+        .cta-band .cta { margin: 0 0 18px; }
+        footer { border-top: 1px solid var(--line); margin-top: 40px; padding: 22px 0 34px; text-align: center; color: var(--sub); font-size: 12px; }
+        footer a { color: var(--accent-d); text-decoration: none; }
+        @media (max-width: 560px) { .steps { grid-template-columns: 1fr; } .nav a { display: none; } .hero h1 { font-size: 23px; } }
+    </style>
+</head>
+<body>
+<header class="top">
+    <div class="wrap">
+        <a class="logo" href="https://bitlife.blupure.cn/">云吞吞<small>边玩边学英语</small></a>
+        <nav class="nav">
+            <a href="#how">怎么玩</a>
+            <a href="#why">为什么有效</a>
+            <a href="#faq">常见问题</a>
+            <a href="https://bitlife.blupure.cn/">开始玩</a>
+        </nav>
+    </div>
+</header>
+
+<div class="wrap">
+    <section class="hero">
+        <h1>别背了,<em>玩着学</em><br>边玩 AI 剧情,边涨英语</h1>
+        <p class="sub">云吞吞把英文剧本做成了互动游戏:你选剧本、做选择、推进故事。每句话都能长按看翻译,每个词都能双击查词典。四六级、考研党友好的沉浸式英语学习——不枯燥,才坚持得下去。</p>
+        <div>
+            <a class="cta" href="https://bitlife.blupure.cn/">免费开始玩</a>
+            <a class="cta free" href="https://bitlife.blupure.cn/">进站看玩法</a>
+        </div>
+        <div class="tagline">浏览器即玩 · 无需下载 App · 注册后每天 10 次点译免费</div>
+    </section>
+
+    <section class="steps" id="how">
+        <div class="step"><div class="no">1</div><b>选一个英文剧本</b><span>校园、职场、奇幻……四六级高频场景取材</span></div>
+        <div class="step"><div class="no">2</div><b>沉浸剧情做选择</b><span>AI 生成故事走向,你的选择改变结局</span></div>
+        <div class="step"><div class="no">3</div><b>卡住就查,查了就收</b><span>长按译句、双击查词,生词自动进生词本</span></div>
+    </section>
+
+    <section class="feat" id="why">
+        <h2>为什么比"背单词 App"更容易坚持</h2>
+        <p>背单词靠意志力,追剧情靠好奇心。云吞吞让英语出现在"你本来就想看下去"的故事里——单词在情节里反复出现,见过几次,自然就记住了。</p>
+        <ul>
+            <li><b>长按句子 → 整句翻译:</b>跟不上剧情?按一下,中英对照接着玩,不打断沉浸。</li>
+            <li><b>双击单词 → 词典释义:</b>不用切出去查词,释义即时弹出,顺手收藏。</li>
+            <li><b>生词本自动累积:</b>查过的词按记忆曲线安排复习,游戏里的收获变成真实词汇量。</li>
+            <li><b>章末复盘小结:</b>每几轮剧情一个小结,把刚遇见的重点词句拎出来过一遍。</li>
+        </ul>
+    </section>
+
+    <section class="faq" id="faq">
+        <h2>常见问题</h2>
+        <details>
+            <summary>云吞吞学英语免费吗?</summary>
+            <p>免费。注册后每天有 10 次免费点译额度,可以零门槛体验全部剧本;需要更多点译、复盘或完整学习数据时再按需付费或开通会员。</p>
+        </details>
+        <details>
+            <summary>需要下载 App 吗?适合什么水平?</summary>
+            <p>不用下载。手机或电脑浏览器打开即玩。剧本从四六级、考研英语高频场景取材,基础薄弱也能靠逐句翻译跟读,备考党可以把它当有剧情的精读素材。</p>
+        </details>
+        <details>
+            <summary>在剧情里到底怎么学?</summary>
+            <p>进入英文剧本后,长按任意句子看整句翻译,双击单词查词典,查过的词自动收进生词本;每章结束有小结复盘,把新学的词句拎出来巩固。</p>
+        </details>
+        <details>
+            <summary>和直接看美剧、读原著有什么区别?</summary>
+            <p>美剧和原著不会停下来等你。云吞吞的剧本是为你设计的:难度可控、生词密度适中,卡住随时翻译,还有 AI 陪你把故事推进下去——阅读的主动权在你手里。</p>
+        </details>
+    </section>
+
+    <section class="cta-band">
+        <a class="cta" href="https://bitlife.blupure.cn/">免费开始玩</a>
+        <div class="tagline">第一个剧本几分钟就能上手,先玩一局试试</div>
+    </section>
+</div>
+
+<footer>
+    <div class="wrap">
+        <a href="https://bitlife.blupure.cn/">云吞吞文游</a> · 边玩 AI 剧情边学英语<br>
+        © 2026 云吞吞.浏览器直接打开即玩,无需下载。
+    </div>
+</footer>
+</body>
+</html>
