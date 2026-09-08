@@ -172,10 +172,11 @@ const MODEL_POOL = [
     { id: "sf-qwen2.5-7b",   url: "https://api.siliconflow.cn/v1", apiKeyEnv: "SILICONFLOW_KEY", model: "Qwen/Qwen2.5-7B-Instruct",    dailyCap: 1000, tier: 96, enabled: true },
     // qwen3-8b 流式实测 35 字即停(转非流式后仍慢),禁用
     { id: "sf-qwen3-8b",     url: "https://api.siliconflow.cn/v1", apiKeyEnv: "SILICONFLOW_KEY", model: "Qwen/Qwen3-8B",               dailyCap: Infinity, tier: 99, enabled: false },
-    // ---- 终极兜底(2026-08-31 小徐指定):智谱付费模型 GLM-5.3-Flash,不限额;tier 100 链尾,仅当全部免费模型
-    // 失败/熔断/限流后使用(pickModel 优先 tier1-99,候选链排序也在最后;实付按智谱账单计费)
+    // ---- 终极兜底(2026-08-31 小徐指定,2026-09-08 改为 lastResort 终兜):智谱付费模型 GLM-5.3-Flash(不限额)
+    // lastResort=true 后不再是池的常规成员:pickModel/候选链均排除(欠费 key 不参与每轮请求的链尾白试),
+    // 仅当"整个模型池都不可用"(配额尽 或 池内候选全部失败)时单独最后尝试一次,失败即按原错误返回。
     // 2026-08-31 22:40 ZHIPU_KEY2 调用付费模型失败(503)→ 换用已验证可调付费模型的 ZHIPU_KEY3 ----
-    { id: "zp-glm-5.3-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY3", model: "glm-5.3-flash", dailyCap: Infinity, tier: 100, enabled: true },
+    { id: "zp-glm-5.3-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY3", model: "glm-5.3-flash", dailyCap: Infinity, tier: 100, enabled: true, lastResort: true },
 ];
 
 // 流式坏模型两类（2026-08-29 全 55 模型实测 + 2026-08-31 线上剥 format 实测定稿）:
@@ -731,10 +732,11 @@ function isMemberExpired(record) {
 }
 
 // 按 tier 升序选当日未超限的第一个 enabled 模型；全无返回 null
+// lastResort 模型(付费终兜)不是池的常规成员,常规挑选一律排除
 function pickModel(usageMap, today, isMember, pool = MODEL_POOL) {
     // 会员不受池配额(dailyCap)限制:付费用户优先命中池内最优质模型,且不占用免费用户配额
     return pool
-        .filter(m => m.enabled)
+        .filter(m => m.enabled && !m.lastResort)
         .sort((a, b) => a.tier - b.tier)
         .find(m => isMember || (usageMap[m.id] || 0) < m.dailyCap) || null;
 }
@@ -1035,20 +1037,20 @@ async function authenticate(env, request) {
 const GLOSS_MAX_SENTENCES = 10;   // 前端亦按 ≤10 合批
 const GLOSS_RATE_LIMIT_MS = 6000; // 单实例内存限频即可(与 POST_RATE_LIMIT_MS 同理)
 const glossRateMap = new Map();
-// 候选链:免费档全铺,付费 5.3-flash 仅末位终兜底(2026-09-07 小徐指示:免费模型可用时不得用付费模型;
+// 候选链:免费档全铺,付费 5.3-flash 不入链(2026-09-07 小徐指示:免费模型可用时不得用付费模型;
+//   2026-09-08 起 lastResort 化:仅全链失败后终兜单试;
 //   原 6 档链免费未穷尽即落付费档属缺陷,现扩至 22 免费档:讯飞/智谱双 key/Agnes/NVIDIA 9/OpenRouter 4/硅基流动 4,
 //   失败多为即时返回(429/5xx/401/nokey)不占档预算,仅网络挂起计 12s(gloss)/45s(recap),
 //   群故障由连续 2 档超时早停+总预算兜住;RECAP_MODEL_IDS 同引用自动同步)
 // M-20260906 重排:讯飞置顶(独立平台不随智谱过载;非流式推理先 reasoning_content 后 content,JSON 干净);
 //   前 5 档为讯飞/智谱/智谱2/NVIDIA/Agnes 五平台,45s 预算内任一平台通即 ~20s 内出 AI 译文(带词标注);
-//   5.3 为 2026-08-31 小徐指定终兜底,欠费期秒拒不耗预算,恢复后自动生效
+//   5.3 为 2026-08-31 小徐指定终兜底;2026-09-08 lastResort 化后不入链——仅全链+有道兜底仍空时最后单试(欠费秒拒不耗预算,恢复自动生效)
 const GLOSS_MODEL_IDS = [
     "xf-spark-x2-flash", "zp-glm-4.7-flash", "nv-gpt-oss-20b", "zp2-glm-4-flash", "agnes-2.0-flash",
     "nv-gpt-oss-120b", "nv-kimi-k3", "nv-minimax-m3", "nv-deepseek-v4-flash", "nv-deepseek-v4-pro",
     "nv-kimi-k2.6", "nv-nemotron-super", "nv-nemotron-ultra", "nv-nemotron-4-340b",
     "or-minimax-m3", "or-nemotron-3-super", "or-minimax-m2.7", "or-nemotron-3-ultra",
-    "sf-glm-4-9b", "sf-r1-qwen3-8b", "sf-glm-z1-9b", "sf-qwen2.5-7b",
-    "zp-glm-5.3-flash"
+    "sf-glm-4-9b", "sf-r1-qwen3-8b", "sf-glm-z1-9b", "sf-qwen2.5-7b"
 ];
 const GLOSS_SYSTEM_PROMPT = [
     "You are a friendly English→Chinese tutor for a Chinese learner reading English game-story scenes.",
@@ -1132,6 +1134,52 @@ async function callGlossModel(env, sentences) {
         const yd = await youdaoSentenceFallback(miss.map((i) => sentences[i]), 12000);
         yd.forEach((zh, k) => { if (zh) aiZh[miss[k]] = zh; });
     }
+    // 全链(免费 22 档)+有道兜底仍全空 → 整个池不可用:最后单试 lastResort 付费终兜(欠费秒拒,恢复自动生效)
+    if (!aiZh.some(Boolean)) {
+        const lr = MODEL_POOL.find(m => m.lastResort && m.enabled && env[m.apiKeyEnv]) || null;
+        if (lr) {
+            try {
+                const reqBody = {
+                    model: lr.model,
+                    temperature: 0.2,
+                    max_tokens: Math.min(8000, Math.max(3000, sentences.length * 400)),
+                    messages: [
+                        { role: "system", content: GLOSS_SYSTEM_PROMPT },
+                        { role: "user", content: userMsg }
+                    ]
+                };
+                applyNoThinking(reqBody, lr);
+                const res = await fetch((lr.url || "").replace(/\/$/, "") + "/chat/completions", {
+                    method: "POST",
+                    headers: { "Authorization": "Bearer " + env[lr.apiKeyEnv], "Content-Type": "application/json" },
+                    body: JSON.stringify(reqBody),
+                    signal: AbortSignal.timeout(12000)
+                });
+                if (res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    const content = cleanJsonText(String((data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || ""));
+                    if (content) {
+                        const parsed = JSON.parse(content);
+                        for (const it of Array.isArray(parsed.items) ? parsed.items : []) {
+                            const idx = Number(it && it.idx);
+                            if (!(idx >= 0 && idx < sentences.length)) continue;
+                            const zh = String(it.zh || "").trim().slice(0, 600);
+                            if (zh) {
+                                aiZh[idx] = zh;
+                                aiWd[idx] = (Array.isArray(it.words) ? it.words : []).slice(0, 5)
+                                    .map((wd) => ({
+                                        w: String(wd && (wd.w || wd.word) || "").trim().slice(0, 64),
+                                        en: String(wd && wd.en || "").trim().slice(0, 200),
+                                        zh: String(wd && wd.zh || "").trim().slice(0, 200)
+                                    })).filter((x) => x.w).slice(0, 3);
+                            }
+                        }
+                        errs.push(lr.id + ":ok");
+                    } else errs.push(lr.id + ":empty");
+                } else errs.push(lr.id + ":http" + res.status);
+            } catch (e) { errs.push(lr.id + ":err"); }
+        }
+    }
     const items = sentences.map((s, i) => ({ sentence: s, zh: aiZh[i], words: aiWd[i] }));
     if (items.some((x) => x.zh)) return { items, chain: errs.join(",") };
     return { error: errorResponse("翻译服务暂时繁忙，稍后再试", 503, errs.join(","), "GLOSS_UNAVAILABLE") };
@@ -1147,7 +1195,7 @@ let langCardsCache = { t: 0, data: null }; // M6b 语言卡库内存缓存(单 i
 const LANG_BANDS = ["hs", "cet4", "cet6", "ky", "toefl"];
 const LANG_BAND_LEGACY = { a: "cet4", b: "cet6", c: "ky" };
 const normLangBand = (v) => (LANG_BANDS.includes(v) ? v : (LANG_BAND_LEGACY[v] || ""));
-const RECAP_MODEL_IDS = GLOSS_MODEL_IDS; // 同 gloss 候选链(2026-09-07 扩容:免费 22 档全铺,付费 5.3-flash 仅末位)
+const RECAP_MODEL_IDS = GLOSS_MODEL_IDS; // 同 gloss 候选链(免费 22 档;5.3 lastResort 终兜见 callRecapModel 尾)
 const RECAP_SYSTEM_PROMPT = [
     "You are an English-learning recap coach for a Chinese player who just finished a chapter of an English interactive story game.",
     "From the story excerpt, pick 3-6 high-value English expressions (phrases, sentence patterns, collocations, idioms — NOT single common words) worth remembering, tuned to the player band: hs = China senior-high syllabus level (simplest plain phrasings, everyday words only); cet4 = CET-4 level (plain everyday English); cet6 = CET-6 level (natural everyday English, a familiar idiom is fine); ky = postgrad-exam (考研) level (broad everyday English with moderate idiom); toefl = TOEFL level (richer idiomatic and lightly academic English).",
@@ -1200,6 +1248,45 @@ async function callRecapModel(env, story, band) {
             if (expressions.length || writing.length) return { expressions, writing };
             errs.push(t.id + ":emptyjson");
         } catch (e) { errs.push(t.id + ":err"); timeouts++; }
+    }
+    // 免费链全败 → 整个池不可用:最后单试 lastResort 付费终兜(欠费秒拒,恢复自动生效)
+    const lr = MODEL_POOL.find(m => m.lastResort && m.enabled && env[m.apiKeyEnv]) || null;
+    if (lr) {
+        try {
+            const reqBody = {
+                model: lr.model,
+                temperature: 0.4,
+                max_tokens: 4000,
+                messages: [
+                    { role: "system", content: RECAP_SYSTEM_PROMPT },
+                    { role: "user", content: `Player band: ${band || "cet6"}\n\nStory excerpt:\n${story}` }
+                ]
+            };
+            applyNoThinking(reqBody, lr);
+            const res = await fetch((lr.url || "").replace(/\/$/, "") + "/chat/completions", {
+                method: "POST",
+                headers: { "Authorization": "Bearer " + env[lr.apiKeyEnv], "Content-Type": "application/json" },
+                body: JSON.stringify(reqBody),
+                signal: AbortSignal.timeout(12000)
+            });
+            if (res.ok) {
+                const data = await res.json().catch(() => ({}));
+                const content = cleanJsonText(String((data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || ""));
+                if (content) {
+                    const parsed = JSON.parse(content);
+                    const expressions = (Array.isArray(parsed.expressions) ? parsed.expressions : []).slice(0, 6)
+                        .map((x) => ({
+                            en: String(x && x.en || "").trim().slice(0, 120),
+                            zh: String(x && x.zh || "").trim().slice(0, 200),
+                            example: String(x && x.example || "").trim().slice(0, 300)
+                        })).filter((x) => x.en);
+                    const writing = (Array.isArray(parsed.writing) ? parsed.writing : []).slice(0, 3)
+                        .map((s) => String(s || "").trim().slice(0, 300)).filter(Boolean);
+                    if (expressions.length || writing.length) return { expressions, writing };
+                    errs.push(lr.id + ":emptyjson");
+                } else errs.push(lr.id + ":empty");
+            } else errs.push(lr.id + ":http" + res.status);
+        } catch (e) { errs.push(lr.id + ":err"); }
     }
     return { error: errorResponse("复盘生成失败，请稍后重试", 503, errs.join(","), "RECAP_UNAVAILABLE") };
 }
@@ -1254,13 +1341,21 @@ export default {
                 // 测试后门：model 传 "pool:<模型id>" 可指定池内模型（仅认证用户可用，探针/兼容性实测用）
                 const forcedModel = requestJson.model && typeof requestJson.model === "string" && requestJson.model.indexOf("pool:") === 0
                     ? MODEL_POOL.find(m => m.id === requestJson.model.slice(5)) : null;
-                const picked = forcedModel || pickModel(usageMap, today, isMemberUser, pool);
+                let picked = forcedModel || pickModel(usageMap, today, isMemberUser, pool);
+                if (!picked) {
+                    // 池(常规免费成员)配额尽/不可用:非免费模式才把 lastResort 终兜提为唯一候选(平时不入池);
+                    // 免费模式为省免费额度设计,不落付费兜底
+                    if (!freeMode) {
+                        const lr = MODEL_POOL.find(m => m.lastResort && m.enabled) || null;
+                        if (lr) picked = lr;
+                    }
+                }
                 if (!picked) {
                     return errorResponse(freeMode ? "免费模型暂时不可用，请稍后重试" : "今日全部模型配额已用尽，请明天再试", 429, null, "QUOTA_EXCEEDED");
                 }
                 const candidates = forcedModel ? [forcedModel] : [
                     picked,
-                    ...pool.filter(m => m.enabled && m.id !== picked.id && (usageMap[m.id] || 0) < m.dailyCap)
+                    ...pool.filter(m => m.enabled && !m.lastResort && m.id !== picked.id && (usageMap[m.id] || 0) < m.dailyCap)
                         .sort((a, b) => a.tier - b.tier)
                 ];
 
@@ -1347,6 +1442,36 @@ export default {
                     }
                     await setModelCooldown(target.id);
                     console.warn(`model ${target.id} failed (${respStatus}), fallback next`);
+                }
+                // 池(常规免费成员)候选全部失败 → 整个模型池不可用,才最后单试 lastResort 付费终兜(欠费 key 平时不入池,不占每轮链尾)
+                if (!aiResponse && !freeMode) {
+                    const lr = MODEL_POOL.find(m => m.lastResort && m.enabled && !attempts.some(a => a.startsWith(m.id + ":"))) || null;
+                    if (lr) {
+                        const attemptStart = Date.now();
+                        if (!(await isModelInCooldown(lr.id))) {
+                            const apiKey = env[lr.apiKeyEnv];
+                            if (apiKey && (await gateAcquire(lr.apiKeyEnv, lr.id))) {
+                                try {
+                                    const controller = new AbortController();
+                                    const timeout = setTimeout(() => controller.abort(), isStream ? 15000 : 120000);
+                                    try {
+                                        const payload = { ...requestJson, model: lr.model };
+                                        applyNoThinking(payload, lr);
+                                        const r = await fetch((lr.url || "").replace(/\/$/, "") + "/chat/completions", {
+                                            method: "POST",
+                                            headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+                                            body: JSON.stringify(payload),
+                                            signal: controller.signal
+                                        });
+                                        attempts.push(`${lr.id}:${r.status}:${Date.now() - attemptStart}ms`);
+                                        if (r.ok) { await clearModelCooldown(lr.id); aiResponse = r; usedModel = lr; }
+                                        else await setModelCooldown(lr.id);
+                                    } finally { clearTimeout(timeout); }
+                                } catch (e) { attempts.push(`${lr.id}:err`); }
+                                finally { gateRelease(lr.apiKeyEnv, lr.id); }
+                            } else attempts.push(`${lr.id}:${apiKey ? "busy" : "nokey"}`);
+                        } else attempts.push(`${lr.id}:cooldown`);
+                    }
                 }
                 if (!aiResponse) {
                     // 免费模式并发/限流占满 → 立即返回排队状态(不等满 8s×候选),失败不扣额度,前端 3s 轮询重试;
