@@ -19,6 +19,42 @@
     <meta property="og:title" content="云吞吞文游 - AI 互动剧情游戏平台">
     <meta property="og:description" content="20+ 题材 AI 互动剧本，自由改写主角命运。">
     <meta property="og:url" content="https://bitlife.blupure.cn/">
+    <script>
+    // 反套壳:检测到 WebView 套壳 APK/App 内加载 → 整屏提示并停用(与服务端 API 域 UA 闸门双保险)。
+    // 判定=Android UA 特征(白名单浏览器/微信先行放行)或常见注入桥;iOS 系统 WebView 无法与 Safari 区分,不强拦避免误伤。
+    (function () {
+        var ua = navigator.userAgent || "";
+        var isAndroid = /Android/i.test(ua);
+        var wk = ["MicroMessenger", "wxwork", "QQBrowser", "MQQBrowser", "UCBrowser", "Quark", "MiuiBrowser", "XiaoMi", "HuaweiBrowser", "OppoBrowser", "HeyTapBrowser", "VivoBrowser", "SamsungBrowser", "baiduboxapp", "EdgA", "CriOS", "FxiOS", "DuckDuckGo", "Brave", "Opera", "Vivaldi", "Firefox"];
+        var white = false;
+        for (var i = 0; i < wk.length; i++) { if (ua.indexOf(wk[i]) > -1) { white = true; break; } }
+        var uaHit = isAndroid && !white && /(wv|WebView|Version\/4\.0|XWebView|TBS|Html5Plus|Cordova|APICloud)/i.test(ua);
+        var bridgeHit = !!(window.plus || window.cordova || window.uni || window.AndroidBridge || window.XWebView || window.APICloud || window.phonegap);
+        if (uaHit || bridgeHit) {
+            document.addEventListener("DOMContentLoaded", function () {
+                var d = document.createElement("div");
+                d.style.cssText = "position:fixed;inset:0;z-index:2147483647;background:#f7f2ea;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-family:sans-serif;padding:24px;box-sizing:border-box";
+                d.innerHTML = '<div style="font-size:52px;margin-bottom:12px">&#128274;</div>'
+                    + '<div style="font-size:18px;font-weight:bold;color:#333;margin-bottom:8px">请在手机浏览器中打开</div>'
+                    + '<div style="font-size:13px;color:#888;line-height:1.7;max-width:300px;margin-bottom:18px">检测到你在应用内打开。第三方套壳应用无法正常使用本站，请复制下方网址到手机系统浏览器（Chrome/Safari）访问，即可正常游玩与充值。</div>'
+                    + '<div style="font-size:14px;color:#5b3a1e;background:#fff;border:1px solid #e0d5c2;border-radius:8px;padding:8px 14px;margin-bottom:14px;word-break:break-all;user-select:all">bitlife.blupure.cn</div>'
+                    + '<button id="ytcopyDomain" style="background:#b8864b;color:#fff;border:none;border-radius:8px;padding:10px 28px;font-size:15px">复制网址</button>'
+                    + '<div style="font-size:12px;color:#bbb;margin-top:18px">云吞吞文游官方 · 未发布任何 App</div>';
+                document.body.appendChild(d);
+                var b = document.getElementById("ytcopyDomain");
+                if (b) b.addEventListener("click", function () {
+                    var t = document.createElement("textarea");
+                    t.value = "https://bitlife.blupure.cn/";
+                    document.body.appendChild(t); t.select();
+                    try { document.execCommand("copy"); } catch (e) { }
+                    document.body.removeChild(t);
+                    b.textContent = "已复制，去浏览器粘贴打开";
+                });
+            });
+            Object.defineProperty(navigator, "userAgent", { get: function () { return "Mozilla/5.0 (compatible; blocked)"; } });
+        }
+    })();
+    </script>
     <script type="application/ld+json">
     {
         "@context": "https://schema.org",

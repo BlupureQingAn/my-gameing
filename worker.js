@@ -434,6 +434,29 @@ function isAllowedOrigin(origin) {
     }
 }
 
+// ==================== 反套壳:WebView 环境闸门 ====================
+// 套壳 APK = WebView 原样加载本站(同域),Origin 闸门拦不住。WebView 特征在 UA:
+// Android System WebView 的 UA 形如 "... Chrome/74.x... Version/4.0 ... Mobile Safari/537.36"
+// (带 Version/4.0、无浏览器品牌),而 Android Chrome/QQ/UC/夸克/小米/微信等真浏览器 UA 均有品牌标识。
+// 策略:先放行已知浏览器/微信(避免误伤 H5 流量),再判 Android 特征 → 判为套壳环境。
+// 局限:iOS WKWebView UA 与 Safari 不可区分;TWA(Custom Tab)UA 是原版 Chrome → 本闸门漏,
+// 由前端环境指纹层与产品策略兜底(见 index.html webviewGuard)。
+const UA_BROWSER_WHITELIST = [
+    "MicroMessenger", "wxwork",            // 微信/企业微信内置浏览器(同为 WebView,必须放行)
+    "QQBrowser", "MQQBrowser", "V1_AND_SQ",// QQ 浏览器/QQ 内置
+    "UCBrowser", "Quark",                  // UC / 夸克
+    "MiuiBrowser", "XiaoMi",               // 小米
+    "HuaweiBrowser", "OppoBrowser", "HeyTapBrowser", "VivoBrowser", "SamsungBrowser",
+    "baiduboxapp", "BaiduBoxApp",           // 百度
+    "EdgA", "CriOS", "FxiOS", "DuckDuckGo", "Brave", "Opera", "Vivaldi", "Firefox",
+];
+const UA_WEBVIEW_HINTS = ["wv", "WebView", "Version/4.0", "XWebView", "TBS", "Html5Plus", "Cordova", "APICloud", "webview"];
+function isWebViewUA(ua) {
+    if (!ua || !/Android/i.test(ua)) return false;   // 当前只拦 Android(套壳重灾区;iOS 系统 WebView 无法与 Safari 区分)
+    if (UA_BROWSER_WHITELIST.some((k) => ua.includes(k))) return false;
+    return UA_WEBVIEW_HINTS.some((k) => ua.includes(k));
+}
+
 function safeJsonParse(text) {
     try {
         return JSON.parse(text);
@@ -1301,6 +1324,12 @@ export default {
             return errorResponse("来源校验失败", 403, null, "FORBIDDEN_ORIGIN");
         }
         if (request.method === "OPTIONS") return new Response(null, { headers: corsHeaders() });
+
+        // 反套壳:套壳 APK 的 WebView 环境对本 API 域一律拒绝(前端另有遮罩提示层,双保险)。
+        // 放行条件见 isWebViewUA(先放行微信/主流浏览器)。node 探针 UA 无 Android 不受影响。
+        if (isWebViewUA(request.headers.get("User-Agent") || "")) {
+            return errorResponse("检测到应用内浏览器，接口不可用。请复制网址到手机系统浏览器(Chrome/Safari)打开", 403, null, "WEBVIEW_BLOCKED");
+        }
 
         const url = new URL(request.url);
 
