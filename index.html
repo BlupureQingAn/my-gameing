@@ -5604,7 +5604,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             </section>
             <section class="card">
                 <div class="list-title"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M5 20v-2h14v2zm0-3.5L3.725 8.475q-.05 0-.113.013T3.5 8.5q-.625 0-1.062-.438T2 7t.438-1.062T3.5 5.5t1.063.438T5 7q0 .175-.038.325t-.087.275L8 9l3.125-4.275q-.275-.2-.45-.525t-.175-.7q0-.625.438-1.063T12 2t1.063.438T13.5 3.5q0 .375-.175.7t-.45.525L16 9l3.125-1.4q-.05-.125-.088-.275T19 7q0-.625.438-1.063T20.5 5.5t1.063.438T22 7t-.437 1.063T20.5 8.5q-.05 0-.112-.012t-.113-.013L19 16.5z"/></svg> 会员服务</div>
-                <div class="list-sub" id="membership-settings-text">AI 对话按 token 计费（输入 4 币/千 token、输出 12 币/千 token，普通对话约 10 币），官方剧本卡全部免费游玩。开通终身会员（限时 ¥188）后免一切云币消耗（AI 对话）+ 社区付费卡直接游玩。</div>
+                <div class="list-sub" id="membership-settings-text">AI 对话按 token 计费（输入 4 币/千 token、输出 12 币/千 token，普通对话约 10 币），官方剧本卡全部免费游玩。开通终身会员（限时 ¥199）后免一切云币消耗（AI 对话）+ 社区付费卡直接游玩。</div>
             </section>
             <button type="button" id="auth-logout-btn" class="logout-big-btn" onclick="AuthService.logout()" style="display:none;">退出登录</button>
         </section>
@@ -6224,14 +6224,17 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             c89: { id: "c89", name: "89000 云币", price: "89", coins: 106800, desc: "加赠 17800 云币", tag: "" },
             c168: { id: "c168", name: "168000 云币", price: "168", coins: 201600, desc: "加赠 33600 云币", tag: "" }
         },
-        // 会员档位(周/月/季/年):期内 AI 对话不限次、不消耗云币
+        // 会员档位(P1 2026-09-08 精简 3 档化:月/年+终身;周/季取消):期内 AI 对话不限次、不消耗云币
         memberPlans: {
-            weekly:    { id: "weekly",    name: "周度会员", price: "9",   days: 7,   desc: "7 天 AI 不限次 · 免云币消耗" },
-            monthly:   { id: "monthly",   name: "月度会员", price: "21",  days: 30,  desc: "30 天 AI 不限次 · 免云币消耗", tag: "推荐" },
-            quarterly: { id: "quarterly", name: "季度会员", price: "49",  days: 90,  desc: "90 天 AI 不限次 · 免云币消耗" },
-            yearly:    { id: "yearly",    name: "年度会员", price: "118", days: 365, desc: "365 天 AI 不限次 · 免云币消耗", tag: "超值" }
+            monthly: { id: "monthly", name: "月度会员", price: "21", days: 30, desc: "30 天 AI 不限次 · 免云币消耗" },
+            yearly:  { id: "yearly",  name: "年度会员", price: "118", days: 365, desc: "365 天 AI 不限次 · 免云币消耗", tag: "主推 · 年付省一半" }
         },
-        lifetimePlan: { id: "lifetime", name: "终身会员", price: "188", originalPrice: "249", desc: "永久不限量 · 免所有云币消耗" },
+        lifetimePlan: { id: "lifetime", name: "终身会员", price: "199", originalPrice: "299", desc: "永久不限量 · 免所有云币消耗" },
+        // P1 小额直付救急包(与 worker PACK_PLANS 对齐 rescue1/rescue3;前端展示+下单用,额度由 worker extrapack 结算)
+        packPlans: {
+            rescue1: { id: "rescue1", name: "点译救急包", price: "1", gloss: 10, recap: 0, desc: "¥1 = 点译 10 次" },
+            rescue3: { id: "rescue3", name: "学习救急包", price: "3", gloss: 30, recap: 3, desc: "¥3 = 点译 30 次 + 复盘 3 次", tag: "最划算" }
+        },
         identityPools: {
             cnNames: ["沈知夏", "苏见微", "江望舒", "程以宁", "周晚棠", "宋栖月", "陆听岚", "秦若禾", "林清和", "许映棠", "叶若岚", "顾晚晴", "姜令仪", "白昭宁"],
             enNames: ["Lumi", "Iris", "Mira", "Nora", "Lena", "Sylvia", "Evelyn", "Clara", "Ariel", "Elena", "Selina", "Olivia", "Amelia", "Yuna"],
@@ -11465,7 +11468,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const policy = ChatPolicyConfigService.load();
             const selectedCardId2 = ScenarioCardService.getSelectedId();
 
-            // 会员限时价格文案(188 限时 ↔ 249 永久)随状态刷新
+            // 会员限时价格文案(199 限时 ↔ 299 永久)随状态刷新
             if (typeof MembershipService !== "undefined" && typeof MembershipService.updateLifetimePriceTexts === "function") {
                 MembershipService.updateLifetimePriceTexts();
             }
@@ -20803,11 +20806,19 @@ function openNpcProfile(npcId) {
             const current = AuthService.getUserData()?.membership_type || "";
             const lp = AppConfig.lifetimePlan;
             const cdActive = countdownActive();
-            // 会员档（周/月/季/年）：期内 AI 对话不限次、不消耗云币
+            // 会员档（月/年）：期内 AI 对话不限次、不消耗云币
             let planCards = Object.values(AppConfig.memberPlans).map(p =>
                 `<div class="recharge-item ${selectedPlan === p.id ? "active" : ""}" onclick="MembershipService.selectPlan('${p.id}')">
                     <div class="recharge-coins">${p.tag ? `<span style="font-size:0.65rem;color:#fff;background:linear-gradient(135deg,#8e44ad,#6c3483);padding:1px 6px;border-radius:8px;margin-right:4px;vertical-align:2px;">${p.tag}</span>` : ""}<span style="font-size:0.8rem;color:#7c3aed;font-weight:800;">¥${p.price}</span><span style="font-size:0.7rem;color:#a89580;margin-left:4px;">= ${p.days} 天</span></div>
                     <div class="recharge-price">${p.name}${current === p.id ? "（当前）" : ""}</div>
+                    <div class="recharge-price">${p.desc}</div>
+                </div>`
+            ).join("");
+            // 小额救急包(¥1/¥3 直付):免费额度用完后先扣包额度,再扣云币(与 worker PACK_PLANS 对齐)
+            planCards += Object.values(AppConfig.packPlans).map(p =>
+                `<div class="recharge-item ${selectedPlan === p.id ? "active" : ""}" onclick="MembershipService.selectPlan('${p.id}')">
+                    <div class="recharge-coins">${p.tag ? `<span style="font-size:0.65rem;color:#fff;background:linear-gradient(135deg,#27ae60,#1e8449);padding:1px 6px;border-radius:8px;margin-right:4px;vertical-align:2px;">${p.tag}</span>` : ""}<span style="font-size:0.8rem;color:#16a34a;font-weight:800;">¥${p.price}</span><span style="font-size:0.7rem;color:#a89580;margin-left:4px;">= 点译 ${p.gloss} 次${p.recap ? ` + 复盘 ${p.recap} 次` : ""}</span></div>
+                    <div class="recharge-price">${p.name}</div>
                     <div class="recharge-price">${p.desc}</div>
                 </div>`
             ).join("");
@@ -20828,7 +20839,7 @@ function openNpcProfile(npcId) {
             grid.innerHTML = planCards;
             updateLifetimePriceTexts();
         }
-        // 终身会员一次性限时:每用户从首次打开充值面板起 24h 优惠,过期恢复 ¥249
+        // 终身会员一次性限时:每用户从首次打开充值面板起 24h 优惠,过期恢复 ¥299
         // 服务器账号级计时(offer:{userId} KV),localStorage 仅未登录/接口失败时兜底
         const COUNTDOWN_KEY = "bitlife_membership_countdown_v1";
         const COUNTDOWN_MS = 24 * 3600 * 1000;
@@ -20879,19 +20890,19 @@ function openNpcProfile(npcId) {
             if (countdownActive()) _cdTimer = setInterval(renderCountdown, 1000);
         }
         function stopCountdown() { if (_cdTimer) { clearInterval(_cdTimer); _cdTimer = null; } }
-        // 弹窗/设置页价格文案随限时状态切换(89 限时 ↔ 249 永久)
+        // 弹窗/设置页价格文案随限时状态切换(199 限时 ↔ 299 永久)
         function updateLifetimePriceTexts() {
             const active = countdownActive();
             const intro = document.getElementById("membership-intro-text");
-            if (intro) intro.textContent = `会员期内 AI 对话不限次、不消耗云币；云币用于解锁剧本卡与免费额度超限后的 AI 对话。终身会员${active ? "（限时 ¥188）" : "（¥249）"}永久不限次。`;
+            if (intro) intro.textContent = `会员期内 AI 对话不限次、不消耗云币；云币用于解锁剧本卡与免费额度超限后的 AI 对话。终身会员${active ? "（限时 ¥199）" : "（¥299）"}永久不限次。`;
             const banner = document.getElementById("membership-offer-banner");
             if (banner) {
                 banner.innerHTML = active
                     ? `<div style="font-size:0.9rem;font-weight:700;color:#8a4b00;"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M4 14q0-2.625 1.25-4.675T8 5.875t2.75-2.138L12 3v3.3q0 .925.625 1.462t1.4.538q.425 0 .813-.175t.712-.575L16 7q1.8 1.05 2.9 2.912T20 14q0 2.2-1.075 4.013T16.1 20.874q.425-.6.663-1.312T17 18.05q0-1-.375-1.888t-1.075-1.587L12 11.1l-3.525 3.475q-.725.725-1.1 1.6T7 18.05q0 .8.238 1.513t.662 1.312q-1.75-1.05-2.825-2.863T4 14m8-.1l2.125 2.075q.425.425.65.95T15 18.05q0 1.225-.875 2.088T12 21t-2.125-.862T9 18.05q0-.575.225-1.112t.65-.963z"/></svg> 限时优惠进行中</div><div style="font-size:0.9rem;font-weight:700;color:#d63031;">距优惠结束 <span id="membership-countdown" style="font-variant-numeric:tabular-nums;background:#fff;padding:2px 8px;border-radius:6px;border:1px solid #e8b84b;">23:59:59</span></div>`
-                    : `<div style="font-size:0.9rem;font-weight:700;color:#8a4b00;">⏰ 限时优惠已结束，终身会员恢复原价 ¥249</div>`;
+                    : `<div style="font-size:0.9rem;font-weight:700;color:#8a4b00;">⏰ 限时优惠已结束，终身会员恢复原价 ¥299</div>`;
             }
             const st = document.getElementById("membership-settings-text");
-            if (st) st.textContent = `免费用户每天可免费畅玩 AI 剧情，额度用完后按云币计费（输入 4 币/千 token、输出 12 币/千 token）；开通周/月/季/年/终身会员后 AI 对话不限次、不消耗云币。官方剧本卡全部免费游玩，解锁社区付费卡仍需云币（会员可直接游玩）。`;
+            if (st) st.textContent = `免费用户每天可免费畅玩 AI 剧情，额度用完后按云币计费（输入 4 币/千 token、输出 12 币/千 token），也可用 ¥1/¥3 小额救急包抵扣；开通月/年/终身会员后 AI 对话不限次、不消耗云币。官方剧本卡全部免费游玩，解锁社区付费卡仍需云币（会员可直接游玩）。`;
         }
         function selectPlan(id) {
             if (id !== selectedPlan) _currentOrder = null; // 套餐变了,旧订单作废
@@ -20908,7 +20919,10 @@ function openNpcProfile(npcId) {
             if (!payArea) return;
             const payMethodName = order.payType === "alipay" ? "支付宝" : "微信";
             const isMemberPlan = order.planId === "lifetime" || !!AppConfig.memberPlans[order.planId];
-            const tip = isMemberPlan ? "支付完成后会员自动开通（1-2 分钟内生效）" : "支付完成后云币自动到账（1-2 分钟内生效）";
+            const packPlan = AppConfig.packPlans[order.planId];
+            const tip = isMemberPlan ? "支付完成后会员自动开通（1-2 分钟内生效）"
+                : packPlan ? `支付完成后 ${packPlan.name} 自动到账：点译 ${packPlan.gloss} 次${packPlan.recap ? ` + 复盘 ${packPlan.recap} 次` : ""}（1-2 分钟内生效）`
+                : "支付完成后云币自动到账（1-2 分钟内生效）";
             // 设备区分:移动端必须跳 H5 收银台,若显示 url_qrcode 会与 PC 同码且手机无法扫码
             const isMobile = /Android|iPhone|iPad|iPod|Mobile|Windows Phone/i.test(navigator.userAgent || "");
             // PC 扫码模式：仅桌面端展示虎皮椒 url_qrcode 二维码
@@ -23050,7 +23064,7 @@ function openNpcProfile(npcId) {
     var glossCache = {};    // 句文本 → {zh, words}
     var glossFail = {};     // 句文本 → true
     var glossBlocked = false;   // M7c:当日点译额度用尽(worker 429 GLOSS_DAILY_LIMIT),句下译卡改显专属提示
-    var glossCoinMsg = "";      // 2026-09-08:超限且云币不足(402 INSUFFICIENT_COIN),显示服务端引导文案
+    var glossCoinMsg = "";      // 2026-09-08:超限且云币不足(402 INSUFFICIENT_COIN),显示服务端引导文案;P1 附小额救急包 CTA
     var batchQueue = [], batchTimer = null, batchBusy = false;
     function queueGloss(arr) {
         var need = [], i, s;
@@ -23137,7 +23151,9 @@ function openNpcProfile(npcId) {
             inner = '<div class="lg-gloss-note">' + (noAuth
                 ? "登录后即可使用点句翻译"
                 : (glossBlocked
-                    ? (glossCoinMsg ? esc(glossCoinMsg) : "今天的点译次数用完啦，明天 08:00 刷新；开通会员可点更多")
+                    ? (glossCoinMsg
+                        ? esc(glossCoinMsg) + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;"><button type="button" class="lg-gloss-close" data-act="buy-pack">小额直付 ¥1/¥3</button><button type="button" class="lg-gloss-close" data-act="buy-member">开通会员不限量</button></div>'
+                        : "今天的点译次数用完啦，明天 08:00 刷新；开通会员可点更多")
                     : '<button type="button" class="lg-gloss-close" data-act="retry">译文没取到 · 点此重试</button>')) + "</div>";
         } else {
             inner = '<div class="lg-gloss-note">' + (noAuth
@@ -23419,6 +23435,17 @@ function openNpcProfile(npcId) {
         var t = e.target;
         if (press.sen && t && t.closest && t.closest(".lg-sentence")) e.preventDefault();   // 长按进行/已触发:禁系统选择菜单
     }, true);
+    /* P1(2026-09-08)小额救急包/会员 CTA:额度用尽弹层直达充值面板 */
+    function buyPackFlow() {
+        try {
+            if (typeof MembershipService === "undefined") return;
+            if (typeof MembershipService.selectPlan === "function") MembershipService.selectPlan("rescue3");
+            MembershipService.openPanel();
+        } catch (e) {}
+    }
+    function openMemberPanel() {
+        try { if (typeof MembershipService !== "undefined") MembershipService.openPanel(); } catch (e) {}
+    }
     /* M9D:滚动自动收起查词弹层 */
     document.addEventListener("scroll", function () { hidePop(); }, true);
     document.addEventListener("click", function (e) {
@@ -23429,6 +23456,8 @@ function openNpcProfile(npcId) {
         var actEl = t.closest("[data-act]");
         if (actEl) {
             var act = actEl.getAttribute("data-act");
+            if (act === "buy-pack") { e.preventDefault(); e.stopPropagation(); buyPackFlow(); return; }
+            if (act === "buy-member") { e.preventDefault(); e.stopPropagation(); openMemberPanel(); return; }
             var g = actEl.closest(".lg-gloss");
             var sen = g ? sentences[Number(g.getAttribute("data-sen"))] : null;
             if (sen) {
@@ -23859,6 +23888,7 @@ function openNpcProfile(npcId) {
             h2 += '<button type="button" class="lg-rm-gen" disabled>⏳ AI 正在读这一章…（约 10 秒）</button>';
         } else if (st.mode === "err") {
             h2 += '<div class="lg-rm-empty" style="color:#c94857;">' + esc(st.msg || "生成失败") + "</div>";
+            if (st.needPay) h2 += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;"><button type="button" class="lg-rm-gen light" data-act="buy-pack">小额直付 ¥1/¥3</button><button type="button" class="lg-rm-gen light" data-act="buy-member">开通会员不限量</button></div>';
             h2 += '<button type="button" class="lg-rm-gen" data-act="rm-gen">↻ 重试生成</button>';
         } else if (st.mode === "done") {
             var i2, x;
@@ -23884,7 +23914,7 @@ function openNpcProfile(npcId) {
     function genRecap() {
         if (!token()) { closeRecap(); openLoginSheet(); return; }
         if (recapState.mode === "busy") return;
-        recapState = { mode: "busy", msg: "", expressions: [], writing: [] };
+        recapState = { mode: "busy", msg: "", expressions: [], writing: [], needPay: false };
         fillRecapAi();
         var profile = readProfile();
         fetch(API_BASE + "/api/lang/recap", {
@@ -23899,6 +23929,7 @@ function openNpcProfile(npcId) {
                 } else {
                     recapState.mode = "err";
                     // 2026-09-08:超限云币续用但余额不足 → 直接展示服务端引导(免费次数用完+续用单价+当前余额)
+                    recapState.needPay = !!(d && d.code === "INSUFFICIENT_COIN");
                     recapState.msg = (d && d.code === "INSUFFICIENT_COIN" && d.error)
                         ? String(d.error) : ((d && d.message) ? String(d.message) : "生成失败,请稍后重试");
                 }

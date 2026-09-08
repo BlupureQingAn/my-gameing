@@ -352,12 +352,17 @@ const CHARGE_PLANS = {
     c89: { id: "c89", name: "89000 云币", price: "89", base: 89000, bonus: 17800 },
     c168: { id: "c168", name: "168000 云币", price: "168", base: 168000, bonus: 33600 },
 };
-// 会员档位（金额/时长，前端仅展示；区别于 CHARGE_PLANS 云币档；2026-09-01 会员改革新增周/月/季/年）
+// 会员档位（金额/时长，前端仅展示；区别于 CHARGE_PLANS 云币档；2026-09-08 P1 定价重构:砍 5 档为 3 档,
+// 下架周/季——周卡留不住冲动客、季卡存在感弱;锚定心理:年卡 118 为主推,月卡 21 承接月付,终身限时做高价锚)
 const MEMBER_PLANS = {
-    weekly:    { id: "weekly",    name: "周度会员", price: "9",   days: 7 },
     monthly:   { id: "monthly",   name: "月度会员", price: "21",  days: 30 },
-    quarterly: { id: "quarterly", name: "季度会员", price: "49",  days: 90 },
     yearly:    { id: "yearly",    name: "年度会员", price: "118", days: 365 },
+};
+// 学习侧小额直付商品(不进云币,即时到账,心理学=第一笔破零门槛最低;结算走 settlePaidOrder 的 pack 分支,
+// 发到 KV extrapack:{uid} {gloss: 点译次数, recap: 复盘次数};gloss/recap 超限判定处先扣包,包尽再走云币)
+const PACK_PLANS = {
+    rescue1: { id: "rescue1", name: "点译救急包", price: "1", gloss: 10, recap: 0 },
+    rescue3: { id: "rescue3", name: "学习救急包", price: "3", gloss: 30, recap: 3 },
 };
 // 免费用户每日 AI 总次数(北京时间 08:00 刷新;2026-09-07 起主聊天/点译/复盘共享此池,三功能用同一 freequota KV;
 // 主聊天额度内仅路由 NVIDIA 全部 + 硅基 sf-glm-4-9b;三功能超限均可转云币计费续用(聊天按 token,点译/复盘按次;
@@ -367,11 +372,11 @@ const FREE_QUOTA_REFRESH_HOUR = 8;
 // 点译/复盘超限后云币续用单价(每次成功调用;价格可调)
 const GLOSS_COIN_COST = 5;   // 点译:1 次请求(≤10 句一批)5 云币
 const RECAP_COIN_COST = 10;  // 复盘:1 次生成 10 云币
-// 终身会员（会员改革后保留的会员档，非充值档）
-const LIFETIME_PLAN = { id: "lifetime", name: "终身会员", price: "188", days: 73000 };
-// 终身会员限时优惠:每用户从首次打开充值页起 24h 内 ¥188,过后恢复 ¥249
+// 终身会员（会员改革后保留的会员档，非充值档；2026-09-08 P1 调价:24h 内 ¥199,过后 ¥299,抬高锚点衬年卡划算）
+const LIFETIME_PLAN = { id: "lifetime", name: "终身会员", price: "199", days: 73000 };
+// 终身会员限时优惠:每用户从首次打开充值页起 24h 内 ¥199,过后恢复 ¥299
 const OFFER_MS = 24 * 3600 * 1000;
-const LIFETIME_REGULAR_PRICE = "249";
+const LIFETIME_REGULAR_PRICE = "299";
 async function getLifetimeOffer(env, userId) {
     try {
         const raw = await env.COVER_CACHE.get("offer:" + userId);
@@ -842,9 +847,9 @@ async function xunhuPlaceOrder(env, orderNo, title, price, userId) {
 
 // 创建订单：本地落库 pay_orders → 按设备/支付方式选网关 → 返回 { orderNo, jumpUrl, qrUrl? }
 async function createPayOrder(env, userId, planId, payType, isMobile) {
-    const plan = CHARGE_PLANS[planId] || MEMBER_PLANS[planId] || (planId === "lifetime" ? LIFETIME_PLAN : null);
+    const plan = CHARGE_PLANS[planId] || MEMBER_PLANS[planId] || PACK_PLANS[planId] || (planId === "lifetime" ? LIFETIME_PLAN : null);
     if (!plan) throw new Error("无效的充值档位");
-    // 终身会员按 offer 状态定价:24h 优惠期内 188,过期恢复 249
+    // 终身会员按 offer 状态定价:24h 优惠期内 199,过期恢复 299
     let price = plan.price;
     if (planId === "lifetime") {
         const offer = await getLifetimeOffer(env, userId);
@@ -932,9 +937,28 @@ async function settlePaidOrder(env, orderNo, tradeNo, amountCents) {
     const now = new Date().toISOString();
     const isLifetime = order.plan_id === "lifetime";
     const memberPlan = MEMBER_PLANS[order.plan_id];
+    const packPlan = PACK_PLANS[order.plan_id];
 
-    const plan = isLifetime ? LIFETIME_PLAN : (memberPlan || CHARGE_PLANS[order.plan_id]);
+    const plan = isLifetime ? LIFETIME_PLAN : (packPlan || memberPlan || CHARGE_PLANS[order.plan_id]);
     if (!plan) return "fail";
+
+    // 小额直付包(rescue1/rescue3):发货=KV extrapack:{uid} 累加点译/复盘次数,不走云币/会员
+    if (packPlan) {
+        try {
+            const raw = await env.COVER_CACHE.get("extrapack:" + order.user_id).catch(() => null);
+            const cur = raw ? JSON.parse(raw) : {};
+            await env.COVER_CACHE.put("extrapack:" + order.user_id, JSON.stringify({
+                gloss: Number(cur.gloss || 0) + packPlan.gloss,
+                recap: Number(cur.recap || 0) + packPlan.recap,
+                updated: now
+            }));
+        } catch (e) { return "fail"; }
+        await pbAdminFetch(env, `/api/collections/pay_orders/records/${order.id}`, {
+            method: "PATCH",
+            body: JSON.stringify({ status: "paid", trade_no: tradeNo || "", paid_at: now })
+        });
+        return "success";
+    }
 
     // 读当前余额（PocketBase 无原子自增，先读后写）
     const userRes = await pbAdminFetch(env, `/api/collections/users/records/${order.user_id}`);
@@ -3516,6 +3540,25 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 return new Response(JSON.stringify({ ok: true, items: out }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
 
+            // P1(2026-09-08)小额直付救急包:extrapack:{uid} KV = {gloss, recap, updated};先包后币;失败容忍(放行不追扣)
+            async function readPackExtra(env, uid) {
+                try {
+                    const raw = await env.COVER_CACHE.get("extrapack:" + uid);
+                    if (!raw) return null;
+                    const d = JSON.parse(raw);
+                    return { gloss: Math.max(0, Number(d.gloss || 0)), recap: Math.max(0, Number(d.recap || 0)) };
+                } catch (e) { return null; }
+            }
+            async function decPackExtra(env, uid, type) {
+                try {
+                    const d = (await readPackExtra(env, uid)) || { gloss: 0, recap: 0 };
+                    if ((type === "gloss" ? d.gloss : d.recap) < 1) return false;
+                    const nv = { gloss: d.gloss - (type === "gloss" ? 1 : 0), recap: d.recap - (type === "recap" ? 1 : 0), updated: Date.now() };
+                    await env.COVER_CACHE.put("extrapack:" + uid, JSON.stringify(nv));
+                    return true;
+                } catch (e) { return false; }
+            }
+
             // ---- 路由:语言文游 M4 点句翻译合批(POST /api/lang/gloss,直调模型不落库;同句重复由前端内存缓存兜住)----
             if (url.pathname === "/api/lang/gloss" && request.method === "POST") {
                 const auth = await authenticate(env, request);
@@ -3527,14 +3570,20 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 }
                 // 配额:免费用户点译/复盘/聊天共享 freequota 总池(成功后才 bump);会员完全不受限(2026-09-07 小徐指示)
                 // 2026-09-08 小徐确认:非会员超 10 次后可扣云币续用(成功才扣,失败不扣);不足返回 402 引导充值/会员
+                // P1(2026-09-08):小额直付救急包额度(extrapack)先于云币抵扣;包/币都不足→402 附 packs 供前端渲染小额直付 CTA
                 const glossQuotaDate = getFreeQuotaDateStr();
-                let glossCoinMode = false;
+                let glossPackMode = false, glossCoinMode = false;
                 if (!isMember(auth.record) && (await readFreeQuota(env, uid, glossQuotaDate)) >= FREE_QUOTA_PER_DAY) {
-                    glossCoinMode = true;
-                    const gcoin = Number(auth.record.coins || 0);
-                    if (gcoin < GLOSS_COIN_COST) {
-                        return errorResponse(`今日免费点译次数已用完；云币续用单次需 ${GLOSS_COIN_COST} 币（当前余额 ${gcoin}），请充值云币或开通会员`, 402,
-                            { coins: gcoin, cost: GLOSS_COIN_COST }, "INSUFFICIENT_COIN");
+                    const pk = await readPackExtra(env, uid);
+                    if (pk && pk.gloss >= 1) {
+                        glossPackMode = true;
+                    } else {
+                        glossCoinMode = true;
+                        const gcoin = Number(auth.record.coins || 0);
+                        if (gcoin < GLOSS_COIN_COST) {
+                            return errorResponse(`今日免费点译次数已用完，云币也不足抵扣（余额 ${gcoin} 币）。救急包 ¥3 = 点译 30 次，或开通会员不限量`, 402,
+                                { coins: gcoin, cost: GLOSS_COIN_COST, packs: Object.values(PACK_PLANS).map((p) => ({ id: p.id, name: p.name, price: p.price, gloss: p.gloss, recap: p.recap })) }, "INSUFFICIENT_COIN");
+                        }
                     }
                 }
                 const body = await request.json().catch(() => ({}));
@@ -3549,7 +3598,9 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const out = await callGlossModel(env, sentences);
                 if (out.error) return out.error;
                 if (!isMember(auth.record)) {
-                    if (glossCoinMode) {
+                    if (glossPackMode) {
+                        await decPackExtra(env, uid, "gloss"); // 只扣包额度;KV 偶发失败免费放行,与 bumpFreeQuota 同策略
+                    } else if (glossCoinMode) {
                         const gcoin = Number(auth.record.coins || 0);
                         const upd = await pbAdminFetch(env, `/api/collections/users/records/${uid}`, { method: "PATCH", body: JSON.stringify({ coins: gcoin - GLOSS_COIN_COST }) });
                         if (upd.ok) auth.record.coins = gcoin - GLOSS_COIN_COST; // 失败不重试:扣款失败免费放行,避免成功服务却重复扣款
@@ -3557,7 +3608,13 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                         await bumpFreeQuota(env, uid, glossQuotaDate);
                     }
                 }
-                return new Response(JSON.stringify({ ok: true, items: out.items, chain: out.chain || "" }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+                // mode/packLeft:诊断+前端展示用(前端忽略);packLeft=扣减后剩余
+                let packLeft = null;
+                if (!isMember(auth.record) && glossPackMode) {
+                    const pkn = await readPackExtra(env, uid);
+                    if (pkn) packLeft = pkn;
+                }
+                return new Response(JSON.stringify({ ok: true, items: out.items, chain: out.chain || "", mode: glossPackMode ? "pack" : (glossCoinMode ? "coin" : "free"), packLeft }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
 
             // ---- 路由:语言文游 M5 章末复盘(POST /api/lang/recap;剧情+档位→高频表达+仿写例句,直调模型)----
@@ -3570,14 +3627,20 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                     return errorResponse("刚生成过，先看看这份吧", 429, null, "RECAP_TOO_FREQUENT");
                 }
                 // 2026-09-08 同 gloss:非会员超 10 次后可扣云币续用(成功才扣,失败不扣)
+                // P1:extrapack 复盘额度先于云币;不足→402 附 packs(救急包 ¥3 含复盘 3 次)
                 const recapQuotaDate = getFreeQuotaDateStr();
-                let recapCoinMode = false;
+                let recapPackMode = false, recapCoinMode = false;
                 if (!isMember(auth.record) && (await readFreeQuota(env, uid, recapQuotaDate)) >= FREE_QUOTA_PER_DAY) {
-                    recapCoinMode = true;
-                    const rcoin = Number(auth.record.coins || 0);
-                    if (rcoin < RECAP_COIN_COST) {
-                        return errorResponse(`今日免费复盘次数已用完；云币续用单次需 ${RECAP_COIN_COST} 币（当前余额 ${rcoin}），请充值云币或开通会员`, 402,
-                            { coins: rcoin, cost: RECAP_COIN_COST }, "INSUFFICIENT_COIN");
+                    const pk = await readPackExtra(env, uid);
+                    if (pk && pk.recap >= 1) {
+                        recapPackMode = true;
+                    } else {
+                        recapCoinMode = true;
+                        const rcoin = Number(auth.record.coins || 0);
+                        if (rcoin < RECAP_COIN_COST) {
+                            return errorResponse(`今日免费复盘次数已用完，云币也不足抵扣（余额 ${rcoin} 币）。救急包 ¥3 = 复盘 3 次，或开通会员不限量`, 402,
+                                { coins: rcoin, cost: RECAP_COIN_COST, packs: Object.values(PACK_PLANS).map((p) => ({ id: p.id, name: p.name, price: p.price, gloss: p.gloss, recap: p.recap })) }, "INSUFFICIENT_COIN");
+                        }
                     }
                 }
                 const body = await request.json().catch(() => ({}));
@@ -3588,7 +3651,9 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const out = await callRecapModel(env, story, band);
                 if (out.error) return out.error;
                 if (!isMember(auth.record)) {
-                    if (recapCoinMode) {
+                    if (recapPackMode) {
+                        await decPackExtra(env, uid, "recap");
+                    } else if (recapCoinMode) {
                         const rcoin = Number(auth.record.coins || 0);
                         const upd = await pbAdminFetch(env, `/api/collections/users/records/${uid}`, { method: "PATCH", body: JSON.stringify({ coins: rcoin - RECAP_COIN_COST }) });
                         if (upd.ok) auth.record.coins = rcoin - RECAP_COIN_COST; // 同 gloss:扣款失败免费放行,不重复扣
@@ -3596,7 +3661,12 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                         await bumpFreeQuota(env, uid, recapQuotaDate);
                     }
                 }
-                return new Response(JSON.stringify({ ok: true, expressions: out.expressions, writing: out.writing }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+                let packLeft = null;
+                if (!isMember(auth.record) && recapPackMode) {
+                    const pkn = await readPackExtra(env, uid);
+                    if (pkn) packLeft = pkn;
+                }
+                return new Response(JSON.stringify({ ok: true, expressions: out.expressions, writing: out.writing, mode: recapPackMode ? "pack" : (recapCoinMode ? "coin" : "free"), packLeft }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
 
             // ---- 路由:M6d1 五档考试词库(GET /api/lang/bank?band=hs|cet4|cet6|ky|toefl;公开只读;内存缓存 10min)----
@@ -3752,7 +3822,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 try { body = await request.json(); } catch (e) {}
                 const planId = String(body.planId || "");
                 const payType = ["alipay", "wxpay"].includes(body.payType) ? body.payType : "alipay";
-                if (!CHARGE_PLANS[planId] && !MEMBER_PLANS[planId] && planId !== "lifetime") return errorResponse("无效的充值档位", 400, null, "INVALID_PLAN");
+                if (!CHARGE_PLANS[planId] && !MEMBER_PLANS[planId] && !PACK_PLANS[planId] && planId !== "lifetime") return errorResponse("无效的充值档位", 400, null, "INVALID_PLAN");
                 const ua = request.headers.get("user-agent") || "";
                 const isMobile = /Android|iPhone|iPad|iPod|Mobile|Windows Phone/i.test(ua);
                 try {
