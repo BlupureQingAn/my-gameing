@@ -4836,6 +4836,40 @@
     .lang-chip-s{border-radius:8px;padding:1px 7px;font-size:.62rem;color:#fff;background:#3f7ad8}
     .lang-band-t{font-weight:800;font-size:.92rem;color:var(--text)}
     .lang-band-d{font-size:.76rem;color:var(--text);opacity:.72;margin-top:3px;line-height:1.5}
+    /* ===== P2 学习首页(2026-09-08):今日一句 / 我的进度 / 复习清单 / 学习统计 / 周报 ===== */
+    .lang-today{border-radius:16px;padding:14px 15px;background:linear-gradient(135deg,rgba(124,84,240,.10),rgba(63,111,216,.07));border:1px solid rgba(124,84,240,.35)}
+    .lang-today-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:.78rem;font-weight:800;color:#7c4fd8}
+    .lang-today-en{font-size:1.05rem;line-height:1.7;font-weight:800;color:var(--text);margin-top:8px;word-break:break-word}
+    .lang-today-zh{font-size:.82rem;line-height:1.7;color:var(--text);margin-top:8px;padding-top:8px;border-top:1px dashed rgba(124,84,240,.35);word-break:break-word}
+    .lang-today-zh .okw{color:#7c4fd8;font-weight:700}
+    .lang-today-note{font-size:.68rem;color:var(--text);opacity:.62;margin-top:8px;line-height:1.7}
+    .lt-btn{border:none;border-radius:999px;padding:5px 13px;font-size:.72rem;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#7c4fd8,#3f6fd8);color:#fff;margin-top:2px}
+    .lt-btn.ghost{background:transparent;color:#7c4fd8;text-decoration:underline;padding:5px 4px}
+    .lt-btn.ok{background:linear-gradient(135deg,#2f9e6e,#2fc4b0)}
+    .lt-btn:disabled{opacity:.55;cursor:default}
+    .stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+    .stat-cell{border-radius:14px;padding:10px 4px;text-align:center;border:1px solid var(--line,#e2ccb0);background:var(--input-bg,#fff8f0)}
+    .stat-cell b{display:block;font-size:1.1rem;font-weight:900;color:#7c4fd8;line-height:1.35}
+    .stat-cell b.sm{font-size:.85rem;margin-top:3px;color:var(--text);font-weight:800}
+    .stat-cell s{display:block;font-size:.62rem;color:var(--sub,#806a55);margin-top:2px;font-style:normal}
+    .member-band{margin-top:8px;border-radius:16px;padding:12px 15px;display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#ffd66b,#f0a63c);border:none;color:#5a3a00;cursor:pointer;box-shadow:0 4px 14px rgba(224,169,58,.35)}
+    .rv-box{border:1px dashed rgba(47,158,110,.55);background:rgba(47,158,110,.06);border-radius:14px;padding:11px 12px;margin-bottom:10px}
+    .rv-t{font-size:.82rem;font-weight:800;color:#2f9e6e}
+    .rv-item{display:flex;align-items:flex-start;gap:8px;padding:7px 2px;border-bottom:1px dashed rgba(47,158,110,.25)}
+    .rv-item:last-child{border-bottom:none}
+    .rv-term{flex:1;min-width:0}
+    .rv-w{font-weight:800;font-size:.85rem;color:var(--text)}
+    .rv-w.on{color:#2f9e6e;text-decoration:line-through;opacity:.72}
+    .rv-gl{font-size:.7rem;color:var(--text);opacity:.72;margin-top:1px;word-break:break-word}
+    .rv-got{border:none;background:#2f9e6e;color:#fff;font-size:.66rem;font-weight:800;border-radius:999px;padding:4px 11px;cursor:pointer;flex-shrink:0}
+    .rv-more{border:1px dashed rgba(47,158,110,.5);background:transparent;color:#2f9e6e;font-size:.68rem;font-weight:800;border-radius:10px;padding:6px 0;width:100%;cursor:pointer;margin-top:6px}
+    .wk-bars{display:flex;align-items:flex-end;gap:5px;height:58px;margin:10px 2px 3px}
+    .wk-bar{flex:1;border-radius:5px 5px 0 0;background:linear-gradient(180deg,#7c4fd8,#c4a8f2);min-height:3px}
+    .wk-bar.today{background:linear-gradient(180deg,#2fc4b0,#7adfc9)}
+    .wk-day{flex:1;text-align:center;font-size:.58rem;color:var(--sub,#806a55)}
+    .wk-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px dashed var(--line,#e2ccb0);font-size:.78rem}
+    .wk-row:last-child{border-bottom:none}
+    .wk-row b{color:#7c4fd8}
     /* ---- 语言文游 M4:点句即译 / 生词标色点查 / 生词本(学习态色 #7c4fd8 系) ---- */
     .lang-hall-img{width:100%;aspect-ratio:16/5;object-fit:cover;border-radius:14px;margin:8px 0 2px;border:1px solid var(--line)}
     .lg-learn-head{width:100%;aspect-ratio:16/4;object-fit:cover;border-radius:14px;margin:8px 0 2px;border:1px solid var(--line)}
@@ -5192,6 +5226,8 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <div class="list-sub" style="margin-top:2px;">英语原生文游剧本 · 边玩边学 · 五档难度匹配词库 · 点句即译，点词进生词本</div>
                 </div>
 
+                <div id="lang-today-box" style="margin-top:12px;"></div>
+
                 <div class="list-title" style="margin-top:14px;">① 选择语言</div>
                 <div class="lang-picker" id="lang-picker">
                     <button type="button" class="lang-lang-card active" onclick="LangController.selectLang('en')"><span class="lang-badge en">EN</span><span>英语</span><span class="list-sub" style="margin:0;">已上线</span></button>
@@ -5207,7 +5243,9 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <button type="button" class="l6-cta" onclick="LangController.goDrillAnchor()"><span class="l6-cta-ic">🔁</span><span>刷词</span></button>
                 </div>
 
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;">
+                <div id="lang-my-stats" style="margin-top:6px;"></div>
+
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;">
                     <div class="list-title" style="margin:0;">✨ 推荐剧本</div>
                     <button type="button" class="mini-btn ghost" onclick="LangController.goLibrary()">查看全部 ›</button>
                 </div>
@@ -5225,6 +5263,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <div class="list-sub">接着上次的英语进度玩</div>
                     <div id="lang-home-continue" style="margin-top:6px;"></div>
                 </div>
+                <div id="lang-member-cta" style="margin-top:6px;"></div>
                 <div class="list-sub" style="margin-top:12px;text-align:center;">想玩中文剧本？点主站顶部的「首页」即可，中文进度互不影响。</div>
             </section>
         </section>
@@ -22105,6 +22144,7 @@ function openNpcProfile(npcId) {
             body: JSON.stringify({ lang: profile.lang || "en", band: profile.band || "", immersion: profile.immersion || "" })
         }).catch(function () { });
     }
+    var myStatsCache = null;   // P2:learn-stats 30s 缓存
     var api = {
         init: function () {
             if (!$("view-lang")) return;
@@ -22375,6 +22415,155 @@ function openNpcProfile(npcId) {
                 api.startLangBanner(cards.length);
             }
             api.renderContinue();
+            api.renderLangHub();
+        },
+        /* ---- P2 学习首页(2026-09-08):今日一句 / 我的进度 3 格 / 会员卡位 ----
+           今日一句:内置双语考场景句池按北京日期轮换;「译一译」直调 gloss(与剧情点句同一配额:免费 10 次/天→救急包→会员);
+           点译成功本地记 lang_today_g:{d,en,zh},当天重进不再重复扣额度 */
+        renderLangHub: function () {
+            api.renderToday();
+            api.renderMyStats();
+            api.renderMemberCta();
+        },
+        renderToday: function () {
+            var box = $("lang-today-box");
+            if (!box) return;
+            var pool = [
+                { en: "Sleeping in is tempting on weekends, but an early start makes the whole day feel longer.", tag: "四级·生活" },
+                { en: "The library stays open until ten at night during exam season, and every seat is usually taken.", tag: "校园" },
+                { en: "I practice listening every morning for twenty minutes before breakfast, and it really adds up.", tag: "四级·学习" },
+                { en: "Renting an apartment near campus costs more, yet it saves at least an hour of commuting a day.", tag: "四级·租房" },
+                { en: "If you prepare the interview questions in advance, you will feel far less nervous in the room.", tag: "四级·求职" },
+                { en: "A part-time job teaches you time management just as much as it fills your wallet.", tag: "六级·兼职" },
+                { en: "The more familiar you grow with a word, the easier it becomes to recall it under pressure.", tag: "六级·学习" },
+                { en: "Campus canteens may lack fancy dishes, but they remain the most affordable choice for students.", tag: "四级·校园" },
+                { en: "Students who form study groups often outperform those who prepare alone for the same exam.", tag: "六级·学习" },
+                { en: "The registration for the winter internship program closes this Friday at noon, so do not delay.", tag: "四级·实习" },
+                { en: "He was about to give up on the problem when a sudden idea crossed his mind.", tag: "四级·心理" },
+                { en: "Online courses give you flexibility, but they demand stronger self-discipline than classroom ones.", tag: "六级·教育" },
+                { en: "The subway line to the university town was extended last year, making trips to downtown much easier.", tag: "六级·城市" },
+                { en: "Keeping a gratitude journal for five minutes a day is a simple habit with surprising benefits.", tag: "六级·心理" },
+                { en: "Group presentations count for thirty percent of the final grade, so no one dares to skip rehearsal.", tag: "校园" },
+                { en: "Weather forecasts are more reliable now, yet people still check their phones before every outdoor plan.", tag: "四级·科技" },
+                { en: "A delayed train is annoying, but it gives you an unplanned chance to finish the chapter you brought.", tag: "四级·出行" },
+                { en: "Freshmen often overpack for college; the real necessities usually fit into one suitcase and a backpack.", tag: "四级·校园" },
+                { en: "Doctors recommend taking a ten-minute walk after each hour of sitting in front of a screen.", tag: "四级·健康" },
+                { en: "What impressed the employer most was not his degree but the way he solved problems calmly.", tag: "六级·求职" },
+                { en: "Saving two hundred yuan a month may seem small until you count how many months are left in a year.", tag: "四级·理财" },
+                { en: "She turned down the well-paid offer because the night shifts would ruin her sleeping schedule.", tag: "六级·职场" },
+                { en: "Renewable energy is no longer a distant dream, as solar panels now appear on dormitory rooftops.", tag: "六级·环保" },
+                { en: "You do not need expensive equipment to start running, just a pair of shoes and a clear route.", tag: "四级·健康" },
+                { en: "The lecturer paused now and then so that the audience could take notes without falling behind.", tag: "校园" },
+                { en: "Instead of scrolling through short videos, try reading one English article aloud to warm up your mouth.", tag: "六级·学习" },
+                { en: "Public bicycles scattered across campus have cut short trips that used to require the bus.", tag: "四级·生活" },
+                { en: "A clear schedule beats talent when finals week arrives and everyone is short on sleep.", tag: "校园" },
+                { en: "Though the film received mixed reviews, its soundtrack alone is worth the ticket price.", tag: "四级·娱乐" },
+                { en: "Culture shock usually fades once you build a routine and find people who share your hobbies.", tag: "六级·留学" }
+            ];
+            var nowBJ = new Date(Date.now() + 8 * 3600000);
+            var dayStr = nowBJ.toISOString().slice(0, 10);
+            var dayNum = Number(dayStr.replace(/-/g, ""));
+            var t = pool[dayNum % pool.length];
+            var got = null;
+            try { got = JSON.parse(localStorage.getItem("lang_today_g") || "null"); } catch (e) {}
+            var done = !!(got && got.d === dayStr && got.en === t.en);
+            var zhBox = done && got.zh ? '<div class="lang-today-zh" id="lang-today-zh">' + esc(String(got.zh)) + "</div>" : "";
+            var note = done
+                ? '<div class="lang-today-note" id="lang-today-note">本句已译过，明天换新句</div>'
+                : '<div class="lang-today-note" id="lang-today-note">' + (token()
+                    ? '<button type="button" class="lt-btn" onclick="LangController.todayGloss()">译一译</button> <span style="margin-left:4px;">免费每天 10 次，会员不限量</span>'
+                    : "登录后可点译今日一句（每天免费 10 次）") + "</div>";
+            box.innerHTML = '<div class="lang-today">' +
+                '<div class="lang-today-h"><span>📅 今日一句</span><span style="font-weight:600;opacity:.85;">【' + api.esc(t.tag) + "】</span></div>" +
+                '<div class="lang-today-en" id="lang-today-en">' + api.esc(t.en) + "</div>" + zhBox + note + "</div>";
+        },
+        todayGloss: function () {
+            var enEl = $("lang-today-en"), note = $("lang-today-note");
+            if (!enEl || !note) return;
+            if (!token()) { note.innerHTML = "登录后可点译今日一句（每天免费 10 次）"; return; }
+            var s = enEl.textContent.replace(/\s+/g, " ").trim().slice(0, 300);
+            if (!s) return;
+            var btns = function (h) { return '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">' + h + "</div>"; };
+            var bPack = '<button type="button" class="lt-btn ghost" onclick="LangController.openPack()">小额直付 ¥1/¥3</button>';
+            var bMember = '<button type="button" class="lt-btn ghost" onclick="MembershipService.openPanel()">开通会员不限量</button>';
+            note.innerHTML = '<span class="lg-gload"><i></i><i></i><i></i></span><span style="margin-left:6px;">译文生成中…</span>';
+            fetch(API_BASE + "/api/lang/gloss", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token() },
+                body: JSON.stringify({ sentences: [s] })
+            })
+                .then(function (r) { return r.json().catch(function () { return null; }); })
+                .then(function (d) {
+                    var nowBJ = new Date(Date.now() + 8 * 3600000);
+                    var dayStr = nowBJ.toISOString().slice(0, 10);
+                    if (d && d.ok && d.items && d.items[0] && d.items[0].zh) {
+                        var zh = String(d.items[0].zh);
+                        try { localStorage.setItem("lang_today_g", JSON.stringify({ d: dayStr, en: s, zh: zh })); } catch (e) {}
+                        var zhEl = $("lang-today-zh");
+                        if (!zhEl) { var box = $("lang-today-box"); var enEl2 = $("lang-today-en"); if (box && enEl2) { var d2 = document.createElement("div"); d2.className = "lang-today-zh"; d2.id = "lang-today-zh"; d2.textContent = zh; enEl2.parentNode.insertBefore(d2, enEl2.nextSibling); } }
+                        else { zhEl.style.display = ""; zhEl.textContent = zh; }
+                        note.innerHTML = '<span style="font-weight:800;color:#2f9e6e;">✓ 已译好</span><span style="margin-left:6px;">点剧情里的句子同样即点即译；点词自动进生词本</span>';
+                    } else if (d && d.code === "GLOSS_DAILY_LIMIT") {
+                        note.innerHTML = "今天的点译次数用完啦（明天 08:00 刷新）" + btns(bMember);
+                    } else if (d && d.code === "INSUFFICIENT_COIN") {
+                        note.innerHTML = esc(String(d.error || "点译额度已用完，云币也不足")).slice(0, 200) + btns(bPack + bMember);
+                    } else {
+                        note.innerHTML = '<button type="button" class="lt-btn ghost" onclick="LangController.todayGloss()">译文没取到 · 点此重试</button>';
+                    }
+                })
+                .catch(function () {
+                    var note2 = $("lang-today-note");
+                    if (note2) note2.innerHTML = '<button type="button" class="lt-btn ghost" onclick="LangController.todayGloss()">译文没取到 · 点此重试</button>';
+                });
+        },
+        openPack: function () {
+            try { MembershipService.selectPlan("rescue3"); MembershipService.openPanel(); } catch (e) {}
+        },
+        renderMyStats: function () {
+            var el = $("lang-my-stats");
+            if (!el) return;
+            if (!token()) { el.style.display = "none"; return; }
+            el.style.display = "block";
+            if (myStatsCache && Date.now() - myStatsCache.at < 30000) { api.myStatsHtml(myStatsCache.data); return; }
+            fetch(API_BASE + "/api/lang/learn-stats?lang=en", { headers: { "X-Auth-Token": "Bearer " + token() } })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (d) {
+                    if (!d || !d.ok) return;
+                    myStatsCache = { at: Date.now(), data: d };
+                    api.myStatsHtml(d);
+                }).catch(function () {});
+        },
+        myStatsHtml: function (d) {
+            var el = $("lang-my-stats");
+            if (!el) return;
+            var todayM = Math.floor(Number(d.today_seconds || 0) / 60);
+            var streak = Number(d.streak || 0);
+            var v = d.vocab || {};
+            var grid = '<div class="stat-grid">' +
+                '<div class="stat-cell"><b>' + api.fmtDur(d.today_seconds || 0) + "</b><s>今日学习</s></div>" +
+                '<div class="stat-cell"><b>' + (streak > 0 ? "🔥 " : "") + streak + " 天</b><s>连续学习</s></div>" +
+                '<div class="stat-cell"><b>' + (Number(v.mastered || 0) + Number(v.familiar || 0)) + " / " + Number(v.total || 0) + "</b><s>已掌握/生词</s></div>" +
+                "</div>";
+            var weekNew = Number(d.week_new_vocab || 0);
+            var line = "本周已学 " + api.fmtDur(d.week_seconds || 0) + " · 累计 " + Number(d.total_days || 0) + " 天 · 已练词 " + Number(d.bank_words || 0) +
+                (weekNew > 0 ? " · 本周新收 " + weekNew + " 词" : "");
+            el.innerHTML = grid +
+                '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;"><div class="list-sub" style="margin:0;">' + line + "</div>" +
+                '<button type="button" class="mini-btn ghost" onclick="LangController.goLearnStats()">统计与周报 ›</button></div>';
+        },
+        goLearnStats: function () { api.goLearn(); api.anchor("#lang-learn-stats"); },
+        renderMemberCta: function () {
+            var el = $("lang-member-cta");
+            if (!el) return;
+            var m = false;
+            try { m = !!(window.AuthService && AuthService.hasMembership && AuthService.hasMembership()); } catch (e) {}
+            if (m) { el.style.display = "none"; return; }
+            el.style.display = "block";
+            el.innerHTML = '<div class="member-band" onclick="MembershipService.openPanel()">' +
+                '<span style="font-size:1.55rem;">👑</span>' +
+                '<div style="flex:1;min-width:0;"><div style="font-weight:900;font-size:.88rem;">云吞吞会员</div>' +
+                '<div style="font-size:.68rem;line-height:1.5;opacity:.85;margin-top:2px;">生词复习计划 · 学习统计与周报 · 点译复盘不限量 · 全部剧本免解锁</div></div>' +
+                '<span style="font-weight:900;flex-shrink:0;">开通 ›</span></div>';
         },
         renderContinue: function () {
             var wrap = $("lang-home-continue-wrap"); if (!wrap) return;
@@ -23523,6 +23712,62 @@ function openNpcProfile(npcId) {
 
     /* ---- 「我的生词本」视图(view-lang ⑤) ---- */
     var lastLearnAt = 0;
+    /* ---- P2 复习计划(2026-09-08):艾宾浩斯简化版 1/2/4/7 ----
+       词首次收录(created_at 北京日)起第 1/2/4/7 天进入「今日复习」;status=2 已掌握毕业;
+       复习动作=自评三键(没记住→留新学/记住了→眼熟/很熟了→已掌握)调 status API;
+       当日打过分即移出清单(localStorage lang_review_done_v1:{date,ids}),次日到期按计划重现 */
+    var REVIEW_DAYS = [1, 2, 4, 7];
+    function bjDayInt(iso) {
+        var t = Date.parse(String(iso || "").replace(" ", "T"));
+        return isNaN(t) ? null : Math.floor((t + 8 * 3600000) / 86400000);
+    }
+    function todayBjInt() { return Math.floor((Date.now() + 8 * 3600000) / 86400000); }
+    function reviewDoneSet() {
+        try {
+            var o = JSON.parse(localStorage.getItem("lang_review_done_v1") || "null");
+            if (o && o.d === String(todayBjInt())) return (o.ids || []).slice();
+        } catch (e) {}
+        return [];
+    }
+    function reviewDoneAdd(vid) {
+        var ids = reviewDoneSet();
+        if (ids.indexOf(vid) < 0) ids.push(vid);
+        try { localStorage.setItem("lang_review_done_v1", JSON.stringify({ d: String(todayBjInt()), ids: ids })); } catch (e) {}
+    }
+    function reviewDueList() {
+        if (!vocabLoaded) return [];
+        var tday = todayBjInt(), done = reviewDoneSet(), out = [], k, it, bj, diff;
+        for (k in vocabMap) {
+            if (!Object.prototype.hasOwnProperty.call(vocabMap, k)) continue;
+            it = vocabMap[k];
+            if (Number(it.status || 0) >= 2) continue;         // 已掌握毕业
+            bj = bjDayInt(it.created_at);
+            if (bj == null) continue;
+            diff = tday - bj;
+            if (diff >= 0 && REVIEW_DAYS.indexOf(diff) >= 0 && done.indexOf(String(it.id)) < 0) out.push(it);
+        }
+        out.sort(function (a, b) { return String(a.created_at || "") < String(b.created_at || "") ? 1 : -1; });
+        return out;
+    }
+    function reviewHtml(rv) {
+        var h = '<div class="rv-box"><div class="rv-t">📅 今日复习 <span style="font-weight:600;opacity:.8;">按 1·2·4·7 天计划，共 ' + rv.length + " 词</span></div>";
+        var i, it, isExp = function (x) { return x.type === "expression"; };
+        var gz, gl;
+        for (i = 0; i < rv.length; i++) {
+            it = rv[i];
+            gz = String(it.gloss_zh || "");
+            gl = (gz || "（暂无释义）").slice(0, 200);
+            h += '<div class="rv-item"><div class="rv-term"><div class="rv-w" id="rvw-' + esc(String(it.id)) + '">' + esc(it.term) + (isExp(it) ? '<span style="font-size:.58rem;color:#b06a1f;margin-left:5px;">表达</span>' : "") + "</div>" +
+                '<div class="rv-gl">' + esc(gl) + "</div>" +
+                '<div class="lg-st" style="margin-top:4px;">' +
+                '<button type="button" data-act="rv" data-vid="' + esc(String(it.id)) + '" data-st="0">没记住</button>' +
+                '<button type="button" data-act="rv" data-vid="' + esc(String(it.id)) + '" data-st="1">记住了</button>' +
+                '<button type="button" data-act="rv" data-vid="' + esc(String(it.id)) + '" data-st="2">很熟了</button>' +
+                "</div></div></div>";
+        }
+        h += "</div>";
+        return h;
+    }
     function renderLearn() {
         var box = $("lang-learn-box");
         if (!box) return;
@@ -23535,6 +23780,8 @@ function openNpcProfile(npcId) {
             loadVocab(function () { renderLearn(); });
             return;
         }
+        var rv = reviewDueList();
+        var rvHtml = rv.length ? reviewHtml(rv) : "";
         var keys = Object.keys(vocabMap);
         if (!keys.length) {
             box.innerHTML = '<div class="lg-vr"><div class="lg-vr-main"><div class="lg-vr-term">还没有生词</div><div class="lg-vr-gl">去玩一个英语剧本吧——游戏里点查过的词和关键表达会自动出现在这里。</div></div></div>';
@@ -23563,7 +23810,7 @@ function openNpcProfile(npcId) {
                 (it.origin ? '<div class="lg-vr-origin">' + esc(String(it.origin).slice(0, 80)) + "</div>" : "") +
                 '<div class="lg-st">' + btns + "</div></div></div>";
         }
-        box.innerHTML = html;
+        box.innerHTML = rvHtml + html;
     }
     function changeStatus(vid, st) {
         if (!vid || !token()) return;
@@ -23590,8 +23837,19 @@ function openNpcProfile(npcId) {
         var box = $("lang-learn-box");
         if (!main || !box) return;
         var boxClick = box.addEventListener("click", function (e) {
-            var b = e.target && e.target.closest ? e.target.closest('[data-act="st"]') : null;
-            if (b && token()) changeStatus(b.getAttribute("data-vid"), Number(b.getAttribute("data-status")));
+            var b = e.target && e.target.closest ? e.target.closest('[data-act="st"], [data-act="rv"]') : null;
+            if (!b || !token()) return;
+            var act = b.getAttribute("data-act");
+            if (act === "rv") {
+                var vid2 = String(b.getAttribute("data-vid") || "");
+                var st2 = Number(b.getAttribute("data-st"));
+                if (vid2 && [0, 1, 2].indexOf(st2) >= 0) {
+                    reviewDoneAdd(vid2);
+                    changeStatus(vid2, st2);   // 自评即复习:打过分当日不再重复提示
+                }
+            } else {
+                changeStatus(b.getAttribute("data-vid"), Number(b.getAttribute("data-status")));
+            }
         });
         if (learnMo) return;
         learnMo = new MutationObserver(function () {

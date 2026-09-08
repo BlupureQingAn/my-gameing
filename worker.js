@@ -3434,6 +3434,83 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 } catch (e) {}
                 return new Response(JSON.stringify({ span, lang, start, items, me }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
+            // ---- P2 学习统计聚合(GET /api/lang/learn-stats?lang=en;登录)----
+            // 口径同排行榜(北京自然日/秒);streak=连续天数,今天没学从昨天倒推不打断;
+            // 返回:今日/本周/近7日/累计时长、连续天数、生词状态分桶、本周新收词、已练词数(lang_bank_progress)
+            if (url.pathname === "/api/lang/learn-stats" && request.method === "GET") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const uid = auth.record.id;
+                const lang = String(url.searchParams.get("lang") || "en").slice(0, 8);
+                const dayMap = new Map();
+                {
+                    let page = 1;
+                    for (;;) {
+                        const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'&&lang='${escapePocketBaseFilterValue(lang)}'`);
+                        const q = await pbAdminFetch(env, `/api/collections/lang_study_days/records?perPage=500&page=${page}&fields=day,seconds&filter=${f}`);
+                        const d = await q.json().catch(() => ({}));
+                        for (const it of (d.items || [])) dayMap.set(it.day, Math.max(0, Number(it.seconds) || 0));
+                        if ((d.items || []).length < 500 || !d.page || page >= (d.totalPages || page)) break;
+                        page++;
+                    }
+                }
+                const today = getTodayStr();
+                const weekStart = getCnSliceStart("week");
+                const dayList = [...dayMap.keys()].sort();
+                let totalSeconds = 0, weekSeconds = 0;
+                for (const dd of dayList) {
+                    const s = dayMap.get(dd);
+                    totalSeconds += s;
+                    if (dd >= weekStart) weekSeconds += s;
+                }
+                const todaySeconds = dayMap.get(today) || 0;
+                const cnDayBack = (n) => { const x = new Date(Date.now() + TIMEZONE_OFFSET_MS); x.setUTCDate(x.getUTCDate() - n); return x.toISOString().slice(0, 10); };
+                let streak = 0, cur = today;
+                if (!(dayMap.get(cur) > 0)) cur = cnDayBack(1);
+                while (dayMap.get(cur) > 0) { streak++; cur = cnDayBack(streak + 1); }
+                const days7 = [];
+                for (let i = 6; i >= 0; i--) { const dd = cnDayBack(i); days7.push({ day: dd, seconds: dayMap.get(dd) || 0 }); }
+                // 生词状态分桶(同表翻页本地计数;status 0新学/1眼熟/2已掌握)+ 本周新收(created 北京周一起)
+                let vTotal = 0, vNew = 0, vFam = 0, vMas = 0, weekNewVocab = 0;
+                {
+                    let page = 1;
+                    for (;;) {
+                        const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'`);
+                        const q = await pbAdminFetch(env, `/api/collections/lang_vocab/records?perPage=500&page=${page}&fields=id,status,created&filter=${f}`);
+                        const d = await q.json().catch(() => ({}));
+                        const items = d.items || [];
+                        for (const it of items) {
+                            vTotal++;
+                            const st = Number(it.status || 0);
+                            if (st === 1) vFam++; else if (st === 2) vMas++; else vNew++;
+                            const cISO = String(it.created || "").replace(" ", "T");
+                            if (cISO) {
+                                const cd = new Date(cISO);
+                                if (!Number.isNaN(cd.getTime())) {
+                                    const bj = new Date(cd.getTime() + TIMEZONE_OFFSET_MS).toISOString().slice(0, 10);
+                                    if (bj >= weekStart) weekNewVocab++;
+                                }
+                            }
+                        }
+                        if (items.length < 500 || !d.page || page >= (d.totalPages || page)) break;
+                        page++;
+                    }
+                }
+                // 已练词数(lang_bank_progress 词条数,词测+刷词共用)
+                let bankWords = 0;
+                {
+                    const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'`);
+                    const q = await pbAdminFetch(env, `/api/collections/lang_bank_progress/records?perPage=1&filter=${f}`);
+                    const d = await q.json().catch(() => ({}));
+                    bankWords = Number(d.totalItems || 0);
+                }
+                return new Response(JSON.stringify({
+                    ok: true, lang, today, today_seconds: todaySeconds, total_seconds: totalSeconds, total_days: dayList.length,
+                    week_seconds: weekSeconds, week_start: weekStart, streak, days7,
+                    vocab: { total: vTotal, new: vNew, familiar: vFam, mastered: vMas },
+                    week_new_vocab: weekNewVocab, bank_words: bankWords
+                }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+            }
 
             // ---- 路由:词典兜底查词(GET /api/lang/dict?q=…&lang=en;ECDICT 77 万词条 KV 分片,公开,IP 60 次/分)----
             if (url.pathname === "/api/lang/dict" && request.method === "GET") {
