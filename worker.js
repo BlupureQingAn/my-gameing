@@ -360,9 +360,13 @@ const MEMBER_PLANS = {
     yearly:    { id: "yearly",    name: "年度会员", price: "118", days: 365 },
 };
 // 免费用户每日 AI 总次数(北京时间 08:00 刷新;2026-09-07 起主聊天/点译/复盘共享此池,三功能用同一 freequota KV;
-// 主聊天额度内仅路由 NVIDIA 全部 + 硅基 sf-glm-4-9b,超限转云币计费;点译/复盘超限即 429)
+// 主聊天额度内仅路由 NVIDIA 全部 + 硅基 sf-glm-4-9b;三功能超限均可转云币计费续用(聊天按 token,点译/复盘按次;
+// 2026-09-08 小徐确认:非会员每用户每天 10 次不耗币的 AI 调用,所有类型共享,按用户独立计;计数口径=成功才计)
 const FREE_QUOTA_PER_DAY = 10;
 const FREE_QUOTA_REFRESH_HOUR = 8;
+// 点译/复盘超限后云币续用单价(每次成功调用;价格可调)
+const GLOSS_COIN_COST = 5;   // 点译:1 次请求(≤10 句一批)5 云币
+const RECAP_COIN_COST = 10;  // 复盘:1 次生成 10 云币
 // 终身会员（会员改革后保留的会员档，非充值档）
 const LIFETIME_PLAN = { id: "lifetime", name: "终身会员", price: "188", days: 73000 };
 // 终身会员限时优惠:每用户从首次打开充值页起 24h 内 ¥188,过后恢复 ¥249
@@ -3493,8 +3497,16 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                     return errorResponse("翻译有点快，歇一下再点吧", 429, null, "GLOSS_TOO_FREQUENT");
                 }
                 // 配额:免费用户点译/复盘/聊天共享 freequota 总池(成功后才 bump);会员完全不受限(2026-09-07 小徐指示)
-                if (!isMember(auth.record) && (await readFreeQuota(env, uid, getFreeQuotaDateStr())) >= FREE_QUOTA_PER_DAY) {
-                    return errorResponse("今天的点译次数用完啦，明天 08:00 刷新；开通会员可点更多", 429, null, "GLOSS_DAILY_LIMIT");
+                // 2026-09-08 小徐确认:非会员超 10 次后可扣云币续用(成功才扣,失败不扣);不足返回 402 引导充值/会员
+                const glossQuotaDate = getFreeQuotaDateStr();
+                let glossCoinMode = false;
+                if (!isMember(auth.record) && (await readFreeQuota(env, uid, glossQuotaDate)) >= FREE_QUOTA_PER_DAY) {
+                    glossCoinMode = true;
+                    const gcoin = Number(auth.record.coins || 0);
+                    if (gcoin < GLOSS_COIN_COST) {
+                        return errorResponse(`今日免费点译次数已用完；云币续用单次需 ${GLOSS_COIN_COST} 币（当前余额 ${gcoin}），请充值云币或开通会员`, 402,
+                            { coins: gcoin, cost: GLOSS_COIN_COST }, "INSUFFICIENT_COIN");
+                    }
                 }
                 const body = await request.json().catch(() => ({}));
                 const raw = Array.isArray(body.sentences) ? body.sentences : [];
@@ -3507,7 +3519,15 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 glossRateMap.set(uid, now);
                 const out = await callGlossModel(env, sentences);
                 if (out.error) return out.error;
-                if (!isMember(auth.record)) await bumpFreeQuota(env, uid, getFreeQuotaDateStr());
+                if (!isMember(auth.record)) {
+                    if (glossCoinMode) {
+                        const gcoin = Number(auth.record.coins || 0);
+                        const upd = await pbAdminFetch(env, `/api/collections/users/records/${uid}`, { method: "PATCH", body: JSON.stringify({ coins: gcoin - GLOSS_COIN_COST }) });
+                        if (upd.ok) auth.record.coins = gcoin - GLOSS_COIN_COST; // 失败不重试:扣款失败免费放行,避免成功服务却重复扣款
+                    } else {
+                        await bumpFreeQuota(env, uid, glossQuotaDate);
+                    }
+                }
                 return new Response(JSON.stringify({ ok: true, items: out.items, chain: out.chain || "" }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
 
@@ -3520,8 +3540,16 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 if (now - (recapRateMap.get(uid) || 0) < RECAP_RATE_LIMIT_MS) {
                     return errorResponse("刚生成过，先看看这份吧", 429, null, "RECAP_TOO_FREQUENT");
                 }
-                if (!isMember(auth.record) && (await readFreeQuota(env, uid, getFreeQuotaDateStr())) >= FREE_QUOTA_PER_DAY) {
-                    return errorResponse("今天的复盘次数用完啦，明天 08:00 刷新；开通会员可复盘更多", 429, null, "RECAP_DAILY_LIMIT");
+                // 2026-09-08 同 gloss:非会员超 10 次后可扣云币续用(成功才扣,失败不扣)
+                const recapQuotaDate = getFreeQuotaDateStr();
+                let recapCoinMode = false;
+                if (!isMember(auth.record) && (await readFreeQuota(env, uid, recapQuotaDate)) >= FREE_QUOTA_PER_DAY) {
+                    recapCoinMode = true;
+                    const rcoin = Number(auth.record.coins || 0);
+                    if (rcoin < RECAP_COIN_COST) {
+                        return errorResponse(`今日免费复盘次数已用完；云币续用单次需 ${RECAP_COIN_COST} 币（当前余额 ${rcoin}），请充值云币或开通会员`, 402,
+                            { coins: rcoin, cost: RECAP_COIN_COST }, "INSUFFICIENT_COIN");
+                    }
                 }
                 const body = await request.json().catch(() => ({}));
                 const story = String(body.story || "").replace(/\s+/g, " ").trim().slice(0, RECAP_STORY_LIMIT);
@@ -3530,7 +3558,15 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 recapRateMap.set(uid, now);
                 const out = await callRecapModel(env, story, band);
                 if (out.error) return out.error;
-                if (!isMember(auth.record)) await bumpFreeQuota(env, uid, getFreeQuotaDateStr());
+                if (!isMember(auth.record)) {
+                    if (recapCoinMode) {
+                        const rcoin = Number(auth.record.coins || 0);
+                        const upd = await pbAdminFetch(env, `/api/collections/users/records/${uid}`, { method: "PATCH", body: JSON.stringify({ coins: rcoin - RECAP_COIN_COST }) });
+                        if (upd.ok) auth.record.coins = rcoin - RECAP_COIN_COST; // 同 gloss:扣款失败免费放行,不重复扣
+                    } else {
+                        await bumpFreeQuota(env, uid, recapQuotaDate);
+                    }
+                }
                 return new Response(JSON.stringify({ ok: true, expressions: out.expressions, writing: out.writing }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
 
