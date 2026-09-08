@@ -22981,6 +22981,7 @@ function openNpcProfile(npcId) {
     var glossCache = {};    // 句文本 → {zh, words}
     var glossFail = {};     // 句文本 → true
     var glossBlocked = false;   // M7c:当日点译额度用尽(worker 429 GLOSS_DAILY_LIMIT),句下译卡改显专属提示
+    var glossCoinMsg = "";      // 2026-09-08:超限且云币不足(402 INSUFFICIENT_COIN),显示服务端引导文案
     var batchQueue = [], batchTimer = null, batchBusy = false;
     function queueGloss(arr) {
         var need = [], i, s;
@@ -23009,6 +23010,7 @@ function openNpcProfile(npcId) {
             .then(function (r) { return r.json().catch(function () { return null; }); })
             .then(function (d) {
                 if (d && d.code === "GLOSS_DAILY_LIMIT") glossBlocked = true;   // M7c:日配额用尽(明天 08:00 刷新)
+                else if (d && d.code === "INSUFFICIENT_COIN") { glossBlocked = true; glossCoinMsg = String(d.error || ""); }  // 2026-09-08:超限云币续用但余额不足(402)
                 var ok = !!(d && d.ok && Array.isArray(d.items));
                 for (var i = 0; i < take.length; i++) {
                     var s = take[i];
@@ -23066,7 +23068,7 @@ function openNpcProfile(npcId) {
             inner = '<div class="lg-gloss-note">' + (noAuth
                 ? "登录后即可使用点句翻译"
                 : (glossBlocked
-                    ? "今天的点译次数用完啦，明天 08:00 刷新；开通会员可点更多"
+                    ? (glossCoinMsg ? esc(glossCoinMsg) : "今天的点译次数用完啦，明天 08:00 刷新；开通会员可点更多")
                     : '<button type="button" class="lg-gloss-close" data-act="retry">译文没取到 · 点此重试</button>')) + "</div>";
         } else {
             inner = '<div class="lg-gloss-note">' + (noAuth
@@ -23827,7 +23829,9 @@ function openNpcProfile(npcId) {
                     recapState = { mode: "done", msg: "", expressions: d.expressions || [], writing: d.writing || [] };
                 } else {
                     recapState.mode = "err";
-                    recapState.msg = (d && d.message) ? String(d.message) : "生成失败,请稍后重试";
+                    // 2026-09-08:超限云币续用但余额不足 → 直接展示服务端引导(免费次数用完+续用单价+当前余额)
+                    recapState.msg = (d && d.code === "INSUFFICIENT_COIN" && d.error)
+                        ? String(d.error) : ((d && d.message) ? String(d.message) : "生成失败,请稍后重试");
                 }
                 fillRecapAi();
             })
