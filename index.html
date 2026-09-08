@@ -22645,6 +22645,29 @@ function openNpcProfile(npcId) {
         if (pos < val.length) frag.appendChild(document.createTextNode(val.slice(pos)));
         parent.replaceChild(frag, node);
     }
+    /* 新手引导:首次语言卡播放教两个手势(双击查词/长按译句)。localStorage 一次即终身;会话级去重;6s 自动关或点按关闭 */
+    var gGestureShown = false;
+    function showGestureGuide() {
+        try {
+            if (document.getElementById("lgGestureGuide")) return;
+            var card = document.createElement("div");
+            card.id = "lgGestureGuide";
+            card.style.cssText = "position:fixed;left:50%;bottom:92px;transform:translateX(-50%);z-index:9999;background:rgba(43,33,20,.95);color:#ffe9c9;border:1px solid rgba(255,214,150,.4);border-radius:14px;padding:12px 18px;font-size:13px;line-height:1.9;box-shadow:0 6px 24px rgba(0,0,0,.28);max-width:86vw;text-align:center;touch-action:manipulation";
+            card.innerHTML = '<div style="font-weight:bold;font-size:14px;margin-bottom:2px">📖 玩英语剧本小技巧</div>'
+                + '<div>👆 <b>长按</b>英文句子 → 看整句翻译</div>'
+                + '<div>👆 <b>双击</b>单词 → 查词典 / 收藏生词</div>'
+                + '<div style="margin-top:4px;font-size:11px;color:#c8a97e">点一下这条提示即可关闭</div>';
+            var closeGuide = function () { try { if (card.parentNode) card.parentNode.removeChild(card); } catch (e) {} };
+            card.addEventListener("pointerdown", function (e) {
+                e.stopPropagation();
+                try { e.preventDefault(); } catch (e2) {}
+                closeGuide();
+            }, true);
+            document.body.appendChild(card);
+            setTimeout(closeGuide, 6500);
+        } catch (e) {}
+    }
+
     function attachStory(st) {
         if (!st || st.dataset.lgDone) return;
         st.dataset.lgDone = "1";
@@ -22711,6 +22734,16 @@ function openNpcProfile(npcId) {
                 ce.textContent = "📋 第 " + Math.floor(rn / 5) + " 章小结 · 看看这 5 轮你学到啥 →";
                 st.appendChild(ce);
             }
+        }
+        /* 新手引导触发:首次卡挂载完成(句子/词已切、双语已铺),给一次手势教学 */
+        if (!gGestureShown && cardSens.length) {
+            gGestureShown = true;
+            try {
+                if (!localStorage.getItem("lg_gesture_guide_v1")) {
+                    localStorage.setItem("lg_gesture_guide_v1", "1");
+                    setTimeout(showGestureGuide, 600);
+                }
+            } catch (e) {}
         }
     }
     function refreshCardSens(list) { for (var i = 0; i < list.length; i++) highlightSen(list[i]); }
