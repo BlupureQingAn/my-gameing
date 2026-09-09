@@ -1,0 +1,874 @@
+{
+  "title": "Corner Cafe Love",
+  "title_zh": "街角咖啡馆的爱情",
+  "lang": "en",
+  "band": "cet6",
+  "category": "生活",
+  "category_zh": "生活",
+  "theme": "minimal",
+  "love_mode": true,
+  "gender_target": "female",
+  "text": "## Premise\nYou are a 24-year-old coffee maker at Corner Cafe in Aurora, a bustling city corner. As the autumn sun shines through the window, you find yourself at a crossroads. You want to find love, but your heart is still healing from a recent breakup.\n\n## The World\nCorner Cafe, a cozy little spot in the heart of Aurora, is your sanctuary. The warm, inviting atmosphere is filled with the aroma of freshly brewed coffee and the soft hum of laughter. The cafe is a melting pot of characters, from students to professionals, all drawn to its charming ambiance.\n\nThe regulars, Julian, Alex, Daniel, Leo, and Kevin, are as diverse as the coffee blends you prepare. Julian, the charming artist, frequents the cafe for his inspiration; Alex, the tech-savvy entrepreneur, is always looking for a good networking spot; Daniel, the gentle librarian, finds solace in the quiet corner; Leo, the charismatic musician, is the life of the party; and Kevin, the thoughtful writer, is always lost in his own world.\n\nThe cafe has a steady rhythm to it, with the morning rush, the lunchtime buzz, and the relaxing afternoons. You enjoy the rhythm, the laughter, and the occasional moment of solitude. It's a world where you feel both seen and unseen, where every day is a new adventure, and every customer a potential story.\n\n## Julian\nJulian, the artist with a heart as vast as his imagination, often finds solace in the quiet nooks of Corner Cafe. You first encountered him during a late-night shift, as he sat sipping his coffee, lost in a world of his own creation. Your conversation began with a simple compliment on his artwork, and soon, you found yourselves sharing stories of lost loves and found dreams. The air around you is always filled with a sense of nostalgia, as Julian's voice carries the weight of tales from the past. You cherish the moments when he addresses you as 'Dear,' his tone a gentle invitation into his world of art and introspection.\n\n## Alex\nAlex, the energetic entrepreneur, is a morning regular, always ready to seize the day with his 'Just do it!' mantra. You first met him during a busy morning rush, as he rushed in to grab a coffee before heading to the gym. Your paths crossed again when he noticed your dedication to fitness and challenged you to a friendly jog. Since then, your interactions are often playful and full of banter. Alex's straightforwardness is refreshing, and his nickname for you, 'Sweetheart,' adds a touch of warmth to your daily exchanges. You both share a mutual appreciation for determination and the thrill of a good challenge.\n\n## Daniel\nDaniel, the librarian with a gentle demeanor, is a frequent visitor during the quieter afternoons. You struck up a conversation one rainy day, sharing your love for literature and discussing the latest bestsellers. His wit and reliability quickly made him a favorite among the cafe patrons. You enjoy the calm and soothing atmosphere when you're together, often finding comfort in his choice words. Daniel's concern for your well-being is evident, and you find solace in his gentle smile as he calls you 'my dear.'\n\n## Leo\nLeo, the charismatic musician, is always the life of the party with his band performing in the corner. You first met him when he stopped by to grab a coffee after a gig. Your conversation was sparked by your shared love for music, and you quickly found common ground in discussing different genres and artists. Leo's genuine appreciation for your unique qualities and thoughtful insights is undeniable. The playful grins and the 'Sweetheart' he calls you during your conversations make your interactions both fun and meaningful.\n\n## Kevin\nKevin, the insightful writer, is a weekend regular, often found engrossed in his books or jotting down notes in his journal. You first encountered him when he complimented your coffee-making skills and asked for a recipe. Over time, your conversations delved into deeper topics, and you discovered a shared appreciation for honesty and kindness. Kevin's wit and directness are refreshing, and he often addresses you as 'Miss,' a tone that's both respectful and slightly amused. His genuine concern for others, paired with his critical eye for appearances, makes him a unique character in your life.\n\n## Love Routes — meeting phase\n\n### Julian\nJulian's route hook: \"Would you like to join me for a quiet evening reading by the lake?\" This invitation leads to shared stories and a deeper understanding of each other's worlds.\n\n### Alex\nAlex's route hook: \"Let's explore the city's hidden spots. It's the perfect way to get to know someone.\" His adventurous spirit opens new doors to connection.\n\n### Daniel\nDaniel's route hook: \"I've been thinking of starting a book club. You should join us. It's a great way to share ideas and grow closer.\" This shared interest in literature fosters a meaningful bond.\n\n### Leo\nLeo's route hook: \"I'm playing at the music festival next week. You should come. It would be great to see you enjoy the music live.\" His passion for music becomes a bridge to closer moments.\n\n### Kevin\nKevin's route hook: \"Would you like to see my latest novel? I think you'd enjoy it.\" His thoughtful gift reveals a side of him that craves intellectual connection.\n\n## Heating phase\n\nDuring this phase, you may choose to pursue 1-2 of these routes. Here are three heartbeat-moment triggers:\n\n1. Alone in the club room after a shared task, the music still playing softly, both of you laughing over the day's events.\n2. Walking home together after rain, the city lights reflecting on wet streets, the sound of raindrops and the warmth of each other's presence.\n3. Backstage before the show, the energy of the crowd building, both of you sharing a moment of anticipation and nerves.\n\n## Ending notes\n\nThe ending will depend on the bond you've nurtured. If one route reaches the threshold of confessed mutual love, the others will naturally step back. The HE ending will include a proper confession scene, while the BE ending will be a warm affection that ends in a missed goodbye. Each ending will contain a confession or farewell scene.\n\n## Round map\n\n| Round Number | Scene Keyword                | Characters Present  |\n|--------------|------------------------------|--------------------|\n| 1            | First encounter               | You, Julian        |\n| 2            | Shared coffee break           | You, Alex          |\n| 3            | Book club introduction        | You, Daniel        |\n| 4            | Music festival planning       | You, Leo           |\n| 5            | Rainy stroll                  | You, Kevin         |\n| 6            | Backstage chat                | You, Julian        |\n| 7            | Coffee shop night shift       | You, Alex          |\n| 8            | Literary discussion           | You, Daniel        |\n| 9            | Festival performance         | You, Leo           |\n| 10           | Rainy evening walk           | You, Kevin         |\n| 11           | Club room cleanup             | You, Julian        |\n| 12           | Barista's day off             | You, Alex          |\n| 13           | Book club meeting             | You, Daniel        |\n| 14           | Festival after-party         | You, Leo           |\n| 15           | Novel reading                | You, Kevin         |\n| 16           | Final barista's shift         | You, Julian        |\n| 17           | Confession scene              | You, Julian        |",
+  "structured": {
+    "band": "cet6",
+    "theme": "minimal",
+    "love_mode": true,
+    "world": {
+      "era": "现代都市生活",
+      "genre": "都市爱情/职场情感",
+      "summary": "In the vibrant city of Aurora, a coffee shop named Corner Cafe serves as a backdrop for a story of love and healing amidst the hustle and bustle of daily life. The shop is a melting pot of diverse characters, each with their own stories to tell.",
+      "rules": "1. Stay true to yourself while navigating the complexities of relationships. 2. Be open to new experiences and people. 3. Remember to take care of your heart as you pursue love. 4. Embrace the unique ambiance of Corner Cafe in your journey.",
+      "atmosphere": "温馨舒适，充满生活气息与浪漫氛围",
+      "vocab": [
+        "coffee",
+        "cafe",
+        "atmosphere",
+        "melting pot",
+        "diverse",
+        "regulars",
+        "artist",
+        "professional"
+      ]
+    },
+    "identity": {
+      "name": "Emily Young",
+      "gender": "女",
+      "age": 24,
+      "role": "coffee maker at Corner Cafe, moved to the neighborhood for half a year, dreams of opening her own shop",
+      "background": "Emily has always had a passion for coffee, inspired by her grandmother's cozy café back home."
+    },
+    "npcs": [
+      {
+        "name": "Julian",
+        "gender": "男",
+        "age": 30,
+        "role": "神秘书店街店主·文艺熟男",
+        "personality": "Warm, thoughtful, and speaks with a hint of old paper and whiskey.",
+        "relationship": "A quiet neighbor who occasionally stops by the café.",
+        "appearance": "Stately, 6'2'' with chestnut hair styled in a tousled, slightly unkempt cut, deep brown eyes, often wearing a vintage cardigan over a crisp white shirt, exuding an air of calm and scholarly charm.",
+        "profile": {
+          "personality": "Warm and thoughtful, his speech carries a nostalgic quality reminiscent of aged books and aged whiskey.",
+          "hobby": "Collects rare books and enjoys solitary walks in the quiet streets of Aurora.",
+          "redline": "Resists trivial talk and prefers deep, meaningful conversations.",
+          "soft": "His genuine interest in your thoughts and feelings can warm the coldest of hearts.",
+          "speech": "He often addresses you as 'Dear,' with a tone that's both inviting and gentle."
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_r1-02-aurora-cafe_julian.png"
+      },
+      {
+        "name": "Alex",
+        "gender": "男",
+        "age": 28,
+        "role": "健身教练·阳光身材管理师",
+        "personality": "Direct and friendly, with a laugh that's as infectious as his workout sessions",
+        "relationship": "A neighborly fitness instructor who always stops by the café for his post-workout protein shake.",
+        "appearance": "Tall and fit with dark, tousled hair, piercing blue eyes, casual workout attire, exuding a sunny, energetic vibe",
+        "profile": {
+          "personality": "Straightforward and amiable, his 'Just do it!' motto is always on his lips",
+          "hobby": "Spending his mornings at the gym",
+          "redline": "Dislikes people who skip workouts for no good reason",
+          "soft": "He's touched by your unwavering determination in fitness",
+          "speech": "He calls you 'Sweetheart' with a playful tone"
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_r1-02-aurora-cafe_alex.png"
+      },
+      {
+        "name": "Daniel",
+        "gender": "男",
+        "age": 29,
+        "role": "急诊科医生·温柔可靠",
+        "personality": "Witty and reliable, often speaks in a calm, soothing tone that reassures and comforts.",
+        "relationship": "He is an acquaintances from your neighborhood who occasionally drops by the café after his late shifts.",
+        "appearance": "Tall and slender, with soft brown hair styled neatly, hazel eyes reflecting fatigue yet patience, often seen in a white coat that hints at his professional yet approachable nature.",
+        "profile": {
+          "personality": "Witty and reliable, his tone is calm and soothing, often comforting with a few choice words.",
+          "hobby": "Spends his free time reading medical journals and exploring the city's hidden gems.",
+          "redline": "Avoid heavy conversations about his workload or patient stories.",
+          "soft": "His genuine concern for others' well-being warms your heart.",
+          "speech": "Calls you 'my dear' with a gentle smile."
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_r1-02-aurora-cafe_daniel.png"
+      },
+      {
+        "name": "Leo",
+        "gender": "男",
+        "age": 27,
+        "role": "独立摇滚吉他手·不羁随性",
+        "personality": "Outspoken, with a deep love for music that shines through his conversations, he's charmingly laid-back and unpredictable",
+        "relationship": "A mysterious and charming musician you encounter at Aurora's corner café",
+        "appearance": "Tall, lean build with chestnut hair styled in a tousled rock star cut, hazel eyes reflecting passion, dressed in a vintage band T-shirt and faded jeans, exuding a free-spirited and artistic aura",
+        "profile": {
+          "personality": "Outspoken and passionate about music, charmingly laid-back with an unpredictable twist",
+          "hobby": "Performing on stage with his band, crafting melodies that captivate hearts",
+          "redline": "He dislikes small talk and prefers deep, meaningful conversations",
+          "soft": "His genuine appreciation for your unique qualities and thoughtful insights",
+          "speech": "Calls you 'Sweetheart' with a playful grin"
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_r1-02-aurora-cafe_leo.png"
+      },
+      {
+        "name": "Kevin",
+        "gender": "男",
+        "age": 31,
+        "role": "金融分析师·精英克制",
+        "personality": "He's sharp-tongued and critical, but his kindness is evident in his daily acts of charity. His wit is sharp, and he's not afraid to speak his mind.",
+        "relationship": "A frequent visitor to Aurora's cafes, Kevin is initially a familiar face in the neighborhood.",
+        "appearance": "Tall and slender, with dark hair styled neatly, Kevin has piercing blue eyes and always dresses in a sharp, tailored suit. His demeanor exudes a blend of professionalism and elegance that's both intimidating and attractive.",
+        "profile": {
+          "personality": "Kevin is witty and direct, often speaking his mind without filter. He's critical of appearances but has a soft spot for those who show genuine kindness.",
+          "hobby": "Kevin enjoys reading financial reports and exploring the city's art scene on weekends.",
+          "redline": "He dislikes pretense and is allergic to small talk.",
+          "soft": "Kevin's heart is touched by acts of kindness and genuine concern for others.",
+          "speech": "He usually addresses you as 'Miss' with a tone that's both respectful and slightly amused."
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_r1-02-aurora-cafe_kevin.png"
+      }
+    ],
+    "timeline": {
+      "start": {
+        "year": 2026,
+        "month": 10,
+        "day": 18
+      },
+      "note": "恋爱攻略线,单次会话 15-25 分钟可通关一段完整攻略"
+    },
+    "scene_style": {
+      "env_templates": [],
+      "option_style": "romantic daily choices"
+    },
+    "love_rules": {
+      "slots": 3,
+      "lock_at": 70,
+      "he_end": {
+        "min_affection": 75,
+        "heartbeat_min": 1
+      },
+      "be_end": {
+        "min_affection": 30
+      },
+      "affection": {
+        "flirt": {
+          "favor": 1,
+          "affection": 6
+        },
+        "kind": {
+          "favor": 4,
+          "affection": 1
+        },
+        "tease": {
+          "favor": 2,
+          "affection": 2
+        },
+        "neutral": {
+          "favor": 1,
+          "affection": 0
+        },
+        "awkward": {
+          "favor": 0,
+          "affection": -2
+        },
+        "rude": {
+          "favor": -4,
+          "affection": -3
+        },
+        "reject": {
+          "favor": -3,
+          "affection": -8
+        }
+      }
+    },
+    "scenes": {
+      "heartbeat": [
+        {
+          "where": "Corner Cafe",
+          "when": "When interacting with regular customers or during personal reflection moments."
+        },
+        {
+          "where": "behind the counter after the evening rush",
+          "when": "when he lingers past closing time, just to keep talking to you"
+        },
+        {
+          "where": "the window seat on a rainy afternoon",
+          "when": "when rain keeps you both inside and the whole shop turns quiet"
+        }
+      ]
+    },
+    "first_scene": {
+      "story": "It's a crisp autumn morning at Corner Cafe, and you're just finishing up your last coffee blend before the rush. The aroma of freshly roasted beans fills the air, mingling with the scent of freshly baked pastries. As you wipe down the counter, Julian, the artist with his signature beret, slides into a booth by the window, his eyes instantly drawn to the sketchpad you've left open.\n\n\"Good morning,\" you smile, setting down his coffee. \"Is this the perfect spot for some inspiration?\"\n\nJulian nods, his gaze lingering on the sketchpad. \"It is indeed. I could almost hear the colors whispering to me.\"\n\nYou feel a spark of excitement. \"I love art. Do you mind if I join you for a bit?\"\n\n\"Of course,\" he says, pushing the sketchpad a little closer. \"Feel free to add your own touch.\"\n\nJust as you're about to pick up the pencil, the door swings open, and in walks Alex, the entrepreneur, his energy palpable even from across the room. \"Morning, team! Got a minute?\" he calls out, already heading towards the counter.\n\n\"Morning, Alex,\" you reply, turning back to Julian. \"My friend Alex just popped in. He's quite the character.\"\n\nJulian looks over, his curiosity piqued. \"A friend, huh? I like characters.\"\n\nAlex, noticing the sketchpad, stops at the table. \"Art, eh? I'm no artist, but I can appreciate the effort. What are you working on?\"\n\nJulian chuckles. \"Just some thoughts, some dreams. It's all in the details.\"\n\nYou feel a warmth spread through you, watching the easy banter between the two men. The door chimes again, and in steps Leo, the musician, his presence as magnetic as his melodies.\n\n\"Morning, all,\" Leo greets, his smile lighting up the room. \"I'm ready for a coffee. Any recommendations?\"\n\n\"You can't go wrong with the caramel latte,\" Alex replies, already at the counter. \"For you, Julian?\"\n\n\"Same,\" Julian says, his voice filled with a sense of camaraderie.\n\nAs you hand Leo his coffee, you can't help but feel a surge of excitement. This is just the beginning of your adventures in Corner Cafe. The question is, which path will you choose? Julian, with his artistic charm, or Alex, with his entrepreneurial spirit? You must立刻 do a choice.",
+      "options": [
+        {
+          "text": "Offer Julian a sketch to add color to his art",
+          "love": "flirt",
+          "target": "Julian"
+        },
+        {
+          "text": "Ask Alex to join you for a run at lunchtime",
+          "love": "kind",
+          "target": "Alex"
+        },
+        {
+          "text": "Tease Leo about his love for coffee",
+          "love": "tease",
+          "target": "Leo"
+        },
+        {
+          "text": "Tell Daniel about your favorite book to share interests",
+          "love": "neutral",
+          "target": "Daniel"
+        }
+      ],
+      "bilingual": {
+        "v": 1,
+        "lines": [
+          {
+            "en": "It's a crisp autumn morning at Corner Cafe, and you're just finishing up your last coffee blend before the rush.",
+            "zh": "在街角咖啡馆，一个清爽的秋日清晨，你刚喝完最后一杯特调咖啡，赶在高峰前收尾。",
+            "words": [
+              {
+                "w": "crisp",
+                "zh": "（天气）凉爽清新"
+              },
+              {
+                "w": "autumn morning",
+                "zh": "秋天的早晨"
+              },
+              {
+                "w": "finish up",
+                "zh": "收尾；完成"
+              }
+            ]
+          },
+          {
+            "en": "The aroma of freshly roasted beans fills the air, mingling with the scent of freshly baked pastries.",
+            "zh": "刚烘焙好的豆子的香气弥漫在空气中，与新鲜出炉的糕点香味交织在一起。",
+            "words": [
+              {
+                "w": "aroma",
+                "zh": "（食物或饮料散发的）香气"
+              },
+              {
+                "w": "freshly roasted",
+                "zh": "刚烤好的；新鲜的"
+              },
+              {
+                "w": "mingle",
+                "zh": "混合；交融"
+              }
+            ]
+          },
+          {
+            "en": "As you wipe down the counter, Julian, the artist with his signature beret, slides into a booth by the window, his eyes instantly drawn to the sketchpad you've left open.",
+            "zh": "你擦柜台时，戴着标志性贝雷帽的艺术家朱利安滑进窗边座位，目光立刻被你敞开着的速写本吸引。",
+            "words": [
+              {
+                "w": "wipe down",
+                "zh": "把……擦干净"
+              },
+              {
+                "w": "slide into",
+                "zh": "悄悄/溜进"
+              },
+              {
+                "w": "drawn to",
+                "zh": "被……吸引"
+              }
+            ]
+          },
+          {
+            "en": "\"Good morning,\" you smile, setting down his coffee.",
+            "zh": "你微笑着说：“早上好。”，然后把他的咖啡放下。",
+            "words": [
+              {
+                "w": "smile",
+                "zh": "用面部表情表示开心"
+              },
+              {
+                "w": "setting down",
+                "zh": "轻轻放到某个地方"
+              },
+              {
+                "w": "coffee",
+                "zh": "由豆子制成的热黑饮料"
+              }
+            ]
+          },
+          {
+            "en": "\"Is this the perfect spot for some inspiration?\"",
+            "zh": "这里适合激发灵感吗？",
+            "words": [
+              {
+                "w": "perfect spot",
+                "zh": "非常合适的地方"
+              },
+              {
+                "w": "for some inspiration",
+                "zh": "获得创意点子"
+              }
+            ]
+          },
+          {
+            "en": "Julian nods, his gaze lingering on the sketchpad.",
+            "zh": "朱利安点点头，目光仍停留在速写本上。",
+            "words": [
+              {
+                "w": "nod",
+                "zh": "点头表示同意或‘是’"
+              },
+              {
+                "w": "gaze",
+                "zh": "长时间专注地看某物"
+              },
+              {
+                "w": "linger",
+                "zh": "停留更久；迟迟不离开"
+              }
+            ]
+          },
+          {
+            "en": "\"It is indeed.",
+            "zh": "确实如此。",
+            "words": [
+              {
+                "w": "indeed",
+                "zh": "确实；真的"
+              }
+            ]
+          },
+          {
+            "en": "I could almost hear the colors whispering to me.\"",
+            "zh": "我几乎能听见那些颜色在向我低语。",
+            "words": [
+              {
+                "w": "whispering",
+                "zh": "低声说；悄悄话"
+              },
+              {
+                "w": "could almost hear",
+                "zh": "差点就能听到"
+              },
+              {
+                "w": "colors whispering",
+                "zh": "颜色仿佛在低语"
+              }
+            ]
+          },
+          {
+            "en": "You feel a spark of excitement.",
+            "zh": "你感到一阵兴奋。",
+            "words": [
+              {
+                "w": "spark of excitement",
+                "zh": "一阵兴奋；一种突然的激动感"
+              },
+              {
+                "w": "feel",
+                "zh": "感觉到、体验到"
+              }
+            ]
+          },
+          {
+            "en": "\"I love art.",
+            "zh": "我热爱艺术。",
+            "words": [
+              {
+                "w": "love",
+                "zh": "喜爱；对人、事物或活动的强烈好感"
+              },
+              {
+                "w": "art",
+                "zh": "绘画、音乐、雕塑等创造性作品"
+              }
+            ]
+          },
+          {
+            "en": "Do you mind if I join you for a bit?\"",
+            "zh": "介意我待一会儿吗？",
+            "words": [
+              {
+                "w": "join",
+                "zh": "加入；和……在一起"
+              },
+              {
+                "w": "for a bit",
+                "zh": "一会儿"
+              }
+            ]
+          },
+          {
+            "en": "\"Of course,\" he says, pushing the sketchpad a little closer.",
+            "zh": "“当然，”他说着，把速写本又往我这边推了推。",
+            "words": [
+              {
+                "w": "pushing",
+                "zh": "用力将某物朝某人方向移动；此处作现在分词，表示‘说’的同时发生的动作"
+              },
+              {
+                "w": "sketchpad",
+                "zh": "供绘画或记笔记用的小幅纸本"
+              },
+              {
+                "w": "closer",
+                "zh": "更近的（比较级）"
+              }
+            ]
+          },
+          {
+            "en": "\"Feel free to add your own touch.\"",
+            "zh": "请随意加上你自己的点缀。",
+            "words": [
+              {
+                "w": "feel free",
+                "zh": "表示可以/尽管做某事"
+              },
+              {
+                "w": "add",
+                "zh": "添加；加入"
+              },
+              {
+                "w": "touch",
+                "zh": "点缀；修饰"
+              }
+            ]
+          },
+          {
+            "en": "Just as you're about to pick up the pencil, the door swings open, and in walks Alex, the entrepreneur, his energy palpable even from across the room.",
+            "zh": "就在你正要拿起铅笔时，门猛地打开，Alex走了进来——这位企业家的能量在房间那头都能感受到。",
+            "words": [
+              {
+                "w": "pick up",
+                "zh": "拿起（笔）"
+              },
+              {
+                "w": "about to",
+                "zh": "即将；快要"
+              },
+              {
+                "w": "palpable",
+                "zh": "明显的；可感知的"
+              }
+            ]
+          },
+          {
+            "en": "\"Morning, team!",
+            "zh": "早上好，各位！",
+            "words": [
+              {
+                "w": "team",
+                "zh": "团队"
+              },
+              {
+                "w": "Morning",
+                "zh": "早上好"
+              }
+            ]
+          },
+          {
+            "en": "Got a minute?\" he calls out, already heading towards the counter.",
+            "zh": "他喊道：“有空吗？”，同时已经朝柜台走去。",
+            "words": [
+              {
+                "w": "calls out",
+                "zh": "大声喊；吆喝"
+              },
+              {
+                "w": "heading towards",
+                "zh": "朝……方向走"
+              },
+              {
+                "w": "counter",
+                "zh": "柜台"
+              }
+            ]
+          },
+          {
+            "en": "\"Morning, Alex,\" you reply, turning back to Julian.",
+            "zh": "“早上好，亚历克斯，”你回过头对朱利安说。",
+            "words": []
+          },
+          {
+            "en": "\"My friend Alex just popped in.",
+            "zh": "我的朋友亚历克斯刚过来一下。",
+            "words": [
+              {
+                "w": "popped in",
+                "zh": "突然来访；顺道拜访"
+              },
+              {
+                "w": "just",
+                "zh": "刚刚；刚才"
+              }
+            ]
+          },
+          {
+            "en": "He's quite the character.\"",
+            "zh": "他可真是个有意思的人。",
+            "words": [
+              {
+                "w": "quite the",
+                "zh": "用来强调某人或某物；“相当一个……”"
+              },
+              {
+                "w": "character",
+                "zh": "有个性的人格；有趣的人"
+              }
+            ]
+          },
+          {
+            "en": "Julian looks over, his curiosity piqued.",
+            "zh": "朱利安转过头去，好奇心被勾了起来。",
+            "words": [
+              {
+                "w": "looks over",
+                "zh": "转头看"
+              },
+              {
+                "w": "curiosity piqued",
+                "zh": "好奇心被激起"
+              }
+            ]
+          },
+          {
+            "en": "\"A friend, huh?",
+            "zh": "朋友啊，嗯？",
+            "words": [
+              {
+                "w": "friend",
+                "zh": "朋友；你认识且喜欢的人"
+              },
+              {
+                "w": "huh",
+                "zh": "表示惊讶或确认的感叹词"
+              }
+            ]
+          },
+          {
+            "en": "I like characters.\"",
+            "zh": "我喜欢这些角色。",
+            "words": [
+              {
+                "w": "like",
+                "zh": "喜欢"
+              },
+              {
+                "w": "characters",
+                "zh": "角色"
+              }
+            ]
+          },
+          {
+            "en": "Alex, noticing the sketchpad, stops at the table.",
+            "zh": "亚历克斯注意到素描本，便在桌边停了下来。",
+            "words": [
+              {
+                "w": "noticing",
+                "zh": "察觉到；看到"
+              },
+              {
+                "w": "sketchpad",
+                "zh": "素描本"
+              },
+              {
+                "w": "stops at",
+                "zh": "在……处停下"
+              }
+            ]
+          },
+          {
+            "en": "\"Art, eh?",
+            "zh": "艺术啊，是吧？",
+            "words": [
+              {
+                "w": "eh?",
+                "zh": "语气词，用于征求同意或确认；非正式。"
+              },
+              {
+                "w": "art",
+                "zh": "艺术作品（绘画、音乐、文学等）"
+              }
+            ]
+          },
+          {
+            "en": "I'm no artist, but I can appreciate the effort.",
+            "zh": "我虽然不是艺术家，但能看出你的用心。",
+            "words": [
+              {
+                "w": "no artist",
+                "zh": "不是艺术家"
+              },
+              {
+                "w": "appreciate",
+                "zh": "欣赏/感激"
+              },
+              {
+                "w": "the effort",
+                "zh": "付出的努力"
+              }
+            ]
+          },
+          {
+            "en": "What are you working on?\"",
+            "zh": "你在忙什么？",
+            "words": [
+              {
+                "w": "work on",
+                "zh": "花时间做某事；专注于"
+              },
+              {
+                "w": "be working on",
+                "zh": "正在做某事"
+              }
+            ]
+          },
+          {
+            "en": "Julian chuckles.",
+            "zh": "朱利安轻笑了一声。",
+            "words": [
+              {
+                "w": "chuckle",
+                "zh": "轻声地笑；常因觉得有趣而发出笑声"
+              },
+              {
+                "w": "chuckles",
+                "zh": "第三人称单数形式，表示‘他/她/它轻轻地笑了’"
+              }
+            ]
+          },
+          {
+            "en": "\"Just some thoughts, some dreams.",
+            "zh": "只是一些想法，一些梦想。",
+            "words": [
+              {
+                "w": "just",
+                "zh": "仅仅；只不过"
+              },
+              {
+                "w": "some",
+                "zh": "一些"
+              },
+              {
+                "w": "thoughts",
+                "zh": "想法"
+              }
+            ]
+          },
+          {
+            "en": "It's all in the details.\"",
+            "zh": "成败往往取决于细节。",
+            "words": [
+              {
+                "w": "all in",
+                "zh": "全在；完全在于"
+              },
+              {
+                "w": "in the details",
+                "zh": "在细节里"
+              }
+            ]
+          },
+          {
+            "en": "You feel a warmth spread through you, watching the easy banter between the two men.",
+            "zh": "看着那两人轻松地插科打诨，你感到一股暖意在体内蔓延开来。",
+            "words": [
+              {
+                "w": "spread through",
+                "zh": "扩散；传遍"
+              },
+              {
+                "w": "easy banter",
+                "zh": "轻松的闲聊"
+              },
+              {
+                "w": "watching",
+                "zh": "观看"
+              }
+            ]
+          },
+          {
+            "en": "The door chimes again, and in steps Leo, the musician, his presence as magnetic as his melodies.",
+            "zh": "门铃又响了，接着音乐家利奥走了进来；他的存在就像他的旋律一样具有磁性。",
+            "words": [
+              {
+                "w": "chimes",
+                "zh": "（钟/铃）发出悦耳的叮当声"
+              },
+              {
+                "w": "in steps",
+                "zh": "走进来；进入视野"
+              },
+              {
+                "w": "magnetic",
+                "zh": "有吸引力的；有磁性的"
+              }
+            ]
+          },
+          {
+            "en": "\"Morning, all,\" Leo greets, his smile lighting up the room.",
+            "zh": "“大家早上好，”利奥打招呼道，他的笑容照亮了整个房间。",
+            "words": [
+              {
+                "w": "light up",
+                "zh": "照亮；使容光焕发"
+              },
+              {
+                "w": "greet",
+                "zh": "打招呼；问候"
+              }
+            ]
+          },
+          {
+            "en": "\"I'm ready for a coffee.",
+            "zh": "我准备好喝咖啡了。",
+            "words": [
+              {
+                "w": "ready for",
+                "zh": "准备好；愿意做某事"
+              },
+              {
+                "w": "coffee",
+                "zh": "用烘焙过的豆子做的热饮"
+              }
+            ]
+          },
+          {
+            "en": "Any recommendations?\"",
+            "zh": "有什么推荐吗？",
+            "words": [
+              {
+                "w": "recommendations",
+                "zh": "建议（做什么、买什么或尝试什么）"
+              },
+              {
+                "w": "any",
+                "zh": "用于疑问句和否定句；根据语境表示“一个”或“一些”"
+              }
+            ]
+          },
+          {
+            "en": "\"You can't go wrong with the caramel latte,\" Alex replies, already at the counter.",
+            "zh": "“点焦糖拿铁肯定不会出错，”亚历克斯一边说，一边已经站在柜台前了。",
+            "words": [
+              {
+                "w": "go wrong",
+                "zh": "犯错；搞砸"
+              },
+              {
+                "w": "caramel latte",
+                "zh": "焦糖拿铁（咖啡饮品）"
+              },
+              {
+                "w": "already",
+                "zh": "已经"
+              }
+            ]
+          },
+          {
+            "en": "\"For you, Julian?\"",
+            "zh": "朱利安，是给你的吗？",
+            "words": [
+              {
+                "w": "for",
+                "zh": "表示某物是为某人准备的"
+              },
+              {
+                "w": "Julian",
+                "zh": "人名；保留原样"
+              }
+            ]
+          },
+          {
+            "en": "\"Same,\" Julian says, his voice filled with a sense of camaraderie.",
+            "zh": "“一样，”朱利安说道，他的声音里充满了一种战友般的情谊。",
+            "words": [
+              {
+                "w": "camaraderie",
+                "zh": "共同经历者之间的信任与友谊；温暖的纽带"
+              },
+              {
+                "w": "filled with",
+                "zh": "充满；含有大量某物"
+              }
+            ]
+          },
+          {
+            "en": "As you hand Leo his coffee, you can't help but feel a surge of excitement.",
+            "zh": "当你把咖啡递给Leo时，你忍不住感到一阵兴奋。",
+            "words": [
+              {
+                "w": "hand ... to ...",
+                "zh": "把……递给……"
+              },
+              {
+                "w": "can't help but do",
+                "zh": "忍不住做"
+              },
+              {
+                "w": "a surge of excitement",
+                "zh": "一阵强烈的兴奋感"
+              }
+            ]
+          },
+          {
+            "en": "This is just the beginning of your adventures in Corner Cafe.",
+            "zh": "这仅仅是你在“角落咖啡馆”冒险故事的开始。",
+            "words": [
+              {
+                "w": "just",
+                "zh": "仅仅；只是"
+              },
+              {
+                "w": "beginning",
+                "zh": "开始"
+              },
+              {
+                "w": "adventures",
+                "zh": "激动人心的经历"
+              }
+            ]
+          },
+          {
+            "en": "The question is, which path will you choose?",
+            "zh": "问题是，你会选择哪条路？",
+            "words": [
+              {
+                "w": "the question is",
+                "zh": "引出核心问题；“关键是”"
+              },
+              {
+                "w": "which path",
+                "zh": "哪条路（选项）"
+              },
+              {
+                "w": "will you choose",
+                "zh": "将来的选择；“你选哪个？”"
+              }
+            ]
+          },
+          {
+            "en": "Julian, with his artistic charm, or Alex, with his entrepreneurial spirit?",
+            "zh": "是选择有艺术魅力的朱利安，还是选择有创业精神的亚历克斯？",
+            "words": [
+              {
+                "w": "artistic charm",
+                "zh": "艺术魅力"
+              },
+              {
+                "w": "entrepreneurial spirit",
+                "zh": "创业精神"
+              }
+            ]
+          },
+          {
+            "en": "You must立刻 do a choice.",
+            "zh": "你必须立刻做出选择。",
+            "words": [
+              {
+                "w": "do a choice",
+                "zh": "做选择"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

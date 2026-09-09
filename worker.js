@@ -1117,43 +1117,50 @@ function cleanJsonText(s) {
     return a >= 0 && b > a ? s.slice(a, b + 1) : s;
 }
 async function callGlossModel(env, sentences) {
-    const userMsg = "Sentences to translate:\n" + sentences.map((s, i) => `[${i}] ${s}`).join("\n");
     const candidates = GLOSS_MODEL_IDS.map((id) => MODEL_POOL.find((m) => m.id === id && m.enabled)).filter(Boolean);
+    if (candidates.length) candidates.splice(1, 0, candidates[0]); // 首档(词注主力)瞬时超时给 1 次同档重试机会
     const errs = [];
     // M-20260906:AI 链每档 ≤12s、总预算 45s,连续 2 档超时(平台群故障)或预算尽 → 有道直译补齐(≤12s)
-    // 原每档 45s 最坏 4.5 分钟;现正常日 ~5s 出 AI 译文,多平台拥堵日 ~40s 内兜底必出,总等待 ≤60s
-    const deadline = Date.now() + 45000;
+    // M-20260909(小徐指示):漏句续链——某档"部分成功"(模型 JSON 漏 idx / 截断)不再即停断档,
+    //   后续档仅带剩余漏句继续请求,直至补全或链尽/预算尽;单档 JSON 坏掉不计数为网络超时(防误判群故障早停)
+    // M-20260909 实测:单句 ~5.5s 成功、10 句大包 ~12s 必超时 → 单档上限 12s→18s、总预算 45s→60s(批内仍快速,兜底最坏 ~55s)
+    const deadline = Date.now() + 60000;
     let timeouts = 0;
     const aiZh = sentences.map(() => "");
     const aiWd = sentences.map(() => []);
+    let pending = sentences.map((_, i) => i);
     for (const t of candidates) {
+        if (!pending.length) break;
         if (Date.now() >= deadline) { errs.push(t.id + ":budget"); break; }
         if (timeouts >= 2) { errs.push(t.id + ":stall"); break; }   // 两档都挂=平台群故障,不再等预算,直接兜底
         const apiKey = env[t.apiKeyEnv];
         if (!apiKey) { errs.push(t.id + ":nokey"); continue; }
+        const batch = pending.map((i) => sentences[i]);
+        const userMsg = "Sentences to translate:\n" + batch.map((s, i) => `[${pending[i]}] ${s}`).join("\n");
+        const reqBody = {
+            model: t.model,
+            temperature: 0.2,
+            max_tokens: Math.min(8000, Math.max(3000, batch.length * 400)),
+            messages: [
+                { role: "system", content: GLOSS_SYSTEM_PROMPT },
+                { role: "user", content: userMsg }
+            ]
+        };
+        applyNoThinking(reqBody, t);   // 关推理:首档 xf-spark-x2-flash 原默认思考 15-40s 必撞 12s 档超时
         try {
-            const reqBody = {
-                model: t.model,
-                temperature: 0.2,
-                max_tokens: Math.min(8000, Math.max(3000, sentences.length * 400)),
-                messages: [
-                    { role: "system", content: GLOSS_SYSTEM_PROMPT },
-                    { role: "user", content: userMsg }
-                ]
-            };
-            applyNoThinking(reqBody, t);   // 关推理:首档 xf-spark-x2-flash 原默认思考 15-40s 必撞 12s 档超时
             const res = await fetch((t.url || "").replace(/\/$/, "") + "/chat/completions", {
                 method: "POST",
                 headers: { "Authorization": "Bearer " + apiKey, "Content-Type": "application/json" },
                 body: JSON.stringify(reqBody),
-                signal: AbortSignal.timeout(Math.max(4000, Math.min(12000, deadline - Date.now() - 1000)))
+                signal: AbortSignal.timeout(Math.max(4000, Math.min(18000, deadline - Date.now() - 1000)))
             });
             if (!res.ok) { errs.push(t.id + ":http" + res.status); continue; }
             const data = await res.json().catch(() => ({}));
             const content = cleanJsonText(String((data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || ""));
             if (!content) { errs.push(t.id + ":empty"); continue; }
-            const parsed = JSON.parse(content);
-            const raw = Array.isArray(parsed.items) ? parsed.items : [];
+            let raw;
+            try { const parsed = JSON.parse(content); raw = Array.isArray(parsed.items) ? parsed.items : []; }
+            catch (e) { errs.push(t.id + ":json"); continue; }
             const slots = [];
             for (const it of raw) {
                 const idx = Number(it && it.idx);
@@ -1174,11 +1181,11 @@ async function callGlossModel(env, sentences) {
                 aiWd[i] = s.words.length > 3 ? s.words.slice(0, 3) : s.words; // 每句最多 3 个关键表达
                 got++;
             }
-            if (got) break;   // 一档成功(含漏句)即停,漏的句交有道兜底
-            errs.push(t.id + ":nozh");
+            errs.push(t.id + ":ok" + (got < batch.length ? "+miss" + (batch.length - got) : ""));
+            pending = pending.filter((i) => !aiZh[i]);   // 漏句留到后续档续补
         } catch (e) { errs.push(t.id + ":err"); timeouts++; }
     }
-    // 有道直译兜底补 AI 漏句(≤12s,尽力而为;源快时 10 句仅约 3s)
+    // 有道直译兜底补 AI 漏句(≤12s,尽力而为;源快时 10 句仅约 3s;仅补 zh 无词注,词注缺失前端自动降级)
     const miss = [];
     for (let i = 0; i < sentences.length; i++) if (!aiZh[i]) miss.push(i);
     if (miss.length) {
@@ -1232,8 +1239,9 @@ async function callGlossModel(env, sentences) {
         }
     }
     const items = sentences.map((s, i) => ({ sentence: s, zh: aiZh[i], words: aiWd[i] }));
-    if (items.some((x) => x.zh)) return { items, chain: errs.join(",") };
-    return { error: errorResponse("翻译服务暂时繁忙，稍后再试", 503, errs.join(","), "GLOSS_UNAVAILABLE") };
+    const chain = errs.join(",").slice(0, 400);
+    if (items.some((x) => x.zh)) return { items, chain };
+    return { error: errorResponse("翻译服务暂时繁忙，稍后再试", 503, chain, "GLOSS_UNAVAILABLE") };
 }
 
 // ---- 语言文游 M5 recap:章末复盘生成(剧情→高频表达+仿写例句;直调模型不落库;收藏由前端写 lang_vocab)----

@@ -1,0 +1,849 @@
+{
+  "title": "CineHarvest Love",
+  "title_zh": "电影节之爱意",
+  "lang": "en",
+  "band": "cet4",
+  "category": "campus",
+  "category_zh": "校园",
+  "theme": "minimal",
+  "love_mode": true,
+  "gender_target": "female",
+  "text": "## Premise\nYou are a fresh sophomore at Crestwood University, stepping into a new chapter of your life. As the days leading up to the film society's upcoming festival approach, you're eager to make a mark and find your place among the diverse group of people around you.\n\n## The World\nCrestwood University, nestled in the heart of autumn, is a vibrant campus filled with the rustling leaves of golden October. The film society, a tight-knit community, buzzes with creativity and excitement. It's a place where students gather to share their passion for cinema, whether it's through directing, acting, or editing. The society's rhythm is punctuated by weekly screenings and brainstorming sessions, all leading up to the grand festival that brings everyone together. The members are a mix of film enthusiasts, from the laid-back Ethan to the outgoing Marcus, each bringing their unique flavor to the group.\n\n## Ethan\n\nEthan is the gentle presence that greets you at the film society's first meeting. You first meet him when you're setting up the projector, and he offers a helping hand with a smile. His role is as a supportive member, often seen behind the scenes, capturing the moments with his old film camera. Your paths cross naturally as you both discuss the nuances of classic cinema. The interaction is warm and light, filled with genuine interest in your thoughts and opinions. He's the one who notices your laughter at a particularly funny scene and joins in, making you feel at ease. \n\n## Liam\n\nLiam is the first to greet you with a hearty handshake and a friendly \"Hey there, [Your Name]!\" He's the extrovert in the group, always ready to join a game of basketball or help out at the music club. You first bump into him during an impromptu practice session for the festival. His straightforward nature and genuine concern for others draw you to him. The interaction is playful, with Liam teasing you playfully about your choice of film. Yet, it's also filled with respect as he listens intently to your ideas, making you feel valued and understood.\n\n## Noah\n\nNoah's quiet demeanor at first seems intimidating, but as the weeks go by, you find him to be an engaging conversationalist, often quoting lines from classic literature with a twinkle in his eye. Your first encounter is at a brainstorming session where you're both tasked with coming up with a concept for the festival. He listens intently, then offers a perspective that's both insightful and thought-provoking. The interaction is intellectual, filled with a mutual respect for each other's ideas. You find yourself looking forward to their thoughtful insights during group discussions.\n\n## Marcus\n\nMarcus is the life of the film society, with a sharp wit and a talent for debate. You first meet him at a debate session, where he argues a point with passion and conviction. The interaction is lively and challenging, with Marcus often looking directly at you, seeking to engage you in the conversation. It's a stimulating encounter that leaves you both laughing and intrigued. Your conversations outside of these sessions are light and playful, often centered around the debate of which film was the greatest of all time.\n\n## Owen\n\nOwen's gentle nature becomes evident the moment you join him in the community room, where he sketches the lively atmosphere around you. Your first interaction is quiet and intimate, with Owen asking about your favorite films. His soft, soothing tone makes you feel at ease, and you find yourself sharing more than you expected. The interaction is a blend of warmth and respect, with Owen showing a keen interest in your life beyond the film society. You're captivated by his attention to detail and his kindness, which touches your heart deeply.\n\n## Love Routes — Meeting Phase\n\n### Ethan\n\n**Route Hook:** During a film analysis, Ethan shares a deep insight about a movie you both love, sparking a conversation about your mutual appreciation for the arts. This shared passion leads to casual, thoughtful exchanges that gradually bring you closer.\n\n### Liam\n\n**Route Hook:** At the library, you bump into Liam while researching for the festival. He offers to help, and the two of you spend hours discussing film history. His knowledge and enthusiasm are infectious, and you find yourself looking forward to more of these study sessions.\n\n### Noah\n\n**Route Hook:** Noah invites you to a casual movie night, where you watch a classic film together. The relaxed atmosphere and shared laughter create a comfortable bond, making you feel at ease in his company.\n\n### Marcus\n\n**Route Hook:** Marcus challenges you to an impromptu debate about a film topic during a break. While the debate is intense, it's also fun, and you both enjoy the intellectual sparring. This leads to more debates and discussions, deepening your connection.\n\n### Owen\n\n**Route Hook:** Owen invites you to join him for a quiet walk around the campus. The gentle conversation and the serene scenery make you feel cherished. His thoughtful questions and genuine interest in your thoughts and feelings create a strong emotional connection.\n\n## Heating Phase\n\nDuring this phase, you may pursue 1-2 of the routes, keeping the interactions light and enjoyable.\n\n### Heartbeat-Moment Triggers\n\n1. **Place:** Alone in the club room after a shared task, **Timing:** Late afternoon, **Mood:** Relaxed and satisfied, discussing the success of the festival planning.\n2. **Place:** Walking home together after rain, **Timing:** Evening, **Mood:** Warm and intimate, sharing stories and dreams.\n3. **Place:** Backstage before the show, **Timing:** Night, **Mood:** Excited and nervous, discussing the anticipation of the festival. \n\n## Lock-Line Note\n\nOnce one bond passes the threshold, the others naturally step back into the background, allowing the player to focus on the chosen route.\n\n## Ending Notes\n\nThe ending will contain a confession or farewell scene, depending on the chosen route:\n\n- **HE:** Confessed mutual love with a proper confession scene, where the player and the chosen candidate share their feelings in a romantic and heartfelt moment.\n- **BE:** Warm affection that ends in a missed goodbye, with the player expressing gratitude for the time spent together and wishing the chosen candidate well in their future endeavors.\n\n## Round Map\n\n| Round Number | Scene Keyword | Characters Present |\n|--------------|-----------------------------|-------------------------------|\n| 1 | Welcome to the club | You, Ethan, Club members |\n| 2 | Festival planning | You, Liam, Club members |\n| 3 | Club meeting | You, Noah, Club members |\n| 4 | Study session | You, Marcus, Club members |\n| 5 | Campus tour | You, Owen, Club members |\n| 6 | Late-night library study | You, Ethan |\n| 7 | Art project collaboration | You, Liam, Club members |\n| 8 | Outdoor sports | You, Noah, Club members |\n| 9 | Music practice | You, Marcus, Club members |\n| 10 | Movie night | You, Owen, Club members |\n| 11 | Dance lesson | You, Ethan |\n| 12 | Festival setup | You, Liam, Club members |\n| 13 | Festival opening | You, Noah, Club members |\n| 14 | Festival activities | You, Marcus, Club members |\n| 15 | Festival performance | You, Owen, Club members |\n| 16 | Festival wrap-up | You, Ethan, Liam, Noah, Marcus |\n| **17** | Romantic confession | You, Chosen candidate |",
+  "structured": {
+    "band": "cet4",
+    "theme": "minimal",
+    "love_mode": true,
+    "world": {
+      "era": "秋日校园",
+      "genre": "校园恋爱",
+      "summary": "Crestwood University is a lively campus filled with the golden leaves of autumn, where the film society thrives with creativity and passion. Students gather to share their love for cinema, whether through directing, acting, or editing, creating a vibrant community that's both engaging and inspiring.",
+      "rules": "1. Embrace the spirit of teamwork and creativity. 2. Discover your passion for cinema through various activities. 3. Make connections with diverse individuals. 4. Contribute to the film society's events and projects.",
+      "atmosphere": "温馨、创意、激情四溢",
+      "vocab": [
+        "cinema",
+        "director",
+        "actor",
+        "editing",
+        "screening",
+        "community",
+        "passion",
+        "creativity"
+      ]
+    },
+    "identity": {
+      "name": "Sophia Chen",
+      "gender": "女",
+      "age": 20,
+      "role": "Transfer student sophomore, a new member passionate about film and photography",
+      "background": "Sophia transferred to Crestwood University this fall, eager to explore her interests in cinema and photography, and to immerse herself in the vibrant film society."
+    },
+    "npcs": [
+      {
+        "name": "Ethan",
+        "gender": "男",
+        "age": 22,
+        "role": "电影社社长·温柔学长",
+        "personality": "Kind-hearted, approachable, and always has a warm smile. His words are gentle, like autumn leaves falling softly.",
+        "relationship": "A secret admirer who has always watched you from afar.",
+        "appearance": "Tall and slender, with chestnut hair styled in a casual wave, amber eyes reflecting warmth, often seen wearing vintage denim jackets and faded jeans. His gentle smile and soft gaze are unforgettable, as if carrying the essence of spring breeze.",
+        "profile": {
+          "personality": "Always with a gentle demeanor, his words are as warm as the autumn sun. 'You know, life's like a movie – full of surprises.'",
+          "hobby": "Enjoys taking photographs with his old film camera, capturing moments of campus life.",
+          "redline": "Hates loud noises and chaos, preferring quiet moments to reflect.",
+          "soft": "His kindness and thoughtful gestures often touch the heart, especially when he notices your small joys.",
+          "speech": "Calls you 'Sweetie' in a tender tone, his voice filled with affection."
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_r1-01-film-club_ethan.png"
+      },
+      {
+        "name": "Liam",
+        "gender": "男",
+        "age": 20,
+        "role": "篮球队队长·阳光直球",
+        "personality": "Outgoing and sunny, always ready to help, speaks in a straightforward manner.",
+        "relationship": "He's a helpful friend who often comes by the music club after practice.",
+        "appearance": "Athletic, 6'3'' tall with dark brown hair in a casual crew cut, bright blue eyes, wearing a Crestwood basketball jersey, exuding a cheerful and a bit naive vibe.",
+        "profile": {
+          "personality": "Extremely friendly, always ready to lend a hand, speaks in a straightforward, no-nonsense way.",
+          "hobby": "Playing basketball and helping out at the music club.",
+          "redline": "Dislikes being called names or teased.",
+          "soft": "His genuine care and concern for others touches her heart.",
+          "speech": "Hey there, [Your Name]!"
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_r1-01-film-club_liam.png"
+      },
+      {
+        "name": "Noah",
+        "gender": "男",
+        "age": 21,
+        "role": "图书馆神秘常客",
+        "personality": "Shy at first, but reveals a lively and articulate personality with a penchant for classic literature.",
+        "relationship": "A mysterious presence in the library, initially distant, but with time, a warm friendship blossoms.",
+        "appearance": "Lean, 6'2'' tall, with raven-black hair tied in a casual bun, amber eyes reflecting a depth, often wearing a vintage cardigan over a plain white shirt, and an air of intellectual elegance.",
+        "profile": {
+          "personality": "Initially reserved, he becomes lively and articulate, often quoting lines from classic literature.",
+          "hobby": "Collecting rare books and immersing himself in the world of classic literature.",
+          "redline": "Dislikes being judged based on his appearance or social status.",
+          "soft": "His thoughtful gestures and profound insights into life touch your heart deeply.",
+          "speech": "He usually calls you 'Friend' with a soft, encouraging tone."
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_r1-01-film-club_noah.png"
+      },
+      {
+        "name": "Marcus",
+        "gender": "男",
+        "age": 22,
+        "role": "辩论社主将",
+        "personality": "毒舌却不失风度，第一眼难相处，但话中有锋，针尖对麦芒。",
+        "relationship": "Your nemesis in the public debate, now your silent admirer.",
+        "appearance": "Chiseled features, tall and lean, his dark hair cut in a sharp style, bright blue eyes, wearing a tailored suit with a hint of casual elegance, exuding a mysterious aura.",
+        "profile": {
+          "personality": "Witty banter that never loses its edge.",
+          "hobby": "Mastering the art of debate and appreciating classical literature.",
+          "redline": "Do not challenge his opinions or question his debating skills.",
+          "soft": "His unexpected kindness in the face of adversity touches you deeply.",
+          "speech": "You, with a hint of admiration in his tone."
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_r1-01-film-club_marcus.png"
+      },
+      {
+        "name": "Owen",
+        "gender": "男",
+        "age": 20,
+        "role": "艺术系治愈系画手",
+        "personality": "温柔体贴，善解人意，说话轻声细语，总能记住你说的每一件小事。",
+        "relationship": "初识于社团活动室，他是对你微笑的邻座画家。",
+        "appearance": "Tall and slender, with chestnut hair tied in a loose bun, hazel eyes reflecting kindness, often wearing a canvas jacket and jeans, exuding a serene and artistic aura.",
+        "profile": {
+          "personality": "Gentle and considerate, always remembers the little things you say, speaking in a soft, soothing tone.",
+          "hobby": "Draws sketches of people in the campus' community room, capturing moments with a brush.",
+          "redline": "Doesn't appreciate loud and intrusive behavior.",
+          "soft": "His kindness and attention to detail are what touches your heart.",
+          "speech": "Calls you 'Sweetie' with a gentle smile, always speaking to you in a warm and affectionate manner."
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_r1-01-film-club_owen.png"
+      }
+    ],
+    "timeline": {
+      "start": {
+        "year": 2026,
+        "month": 10,
+        "day": 12
+      },
+      "note": "恋爱攻略线,单次会话 15-25 分钟可通关一段完整攻略"
+    },
+    "scene_style": {
+      "env_templates": [],
+      "option_style": "romantic daily choices"
+    },
+    "love_rules": {
+      "slots": 3,
+      "lock_at": 70,
+      "he_end": {
+        "min_affection": 75,
+        "heartbeat_min": 1
+      },
+      "be_end": {
+        "min_affection": 30
+      },
+      "affection": {
+        "flirt": {
+          "favor": 1,
+          "affection": 6
+        },
+        "kind": {
+          "favor": 4,
+          "affection": 1
+        },
+        "tease": {
+          "favor": 2,
+          "affection": 2
+        },
+        "neutral": {
+          "favor": 1,
+          "affection": 0
+        },
+        "awkward": {
+          "favor": 0,
+          "affection": -2
+        },
+        "rude": {
+          "favor": -4,
+          "affection": -3
+        },
+        "reject": {
+          "favor": -3,
+          "affection": -8
+        }
+      }
+    },
+    "scenes": {
+      "heartbeat": [
+        {
+          "where": "film society screenings",
+          "when": "when watching a film that resonates deeply with you"
+        },
+        {
+          "where": "the empty club room after everyone leaves",
+          "when": "when you stay behind to rewind one scene and end up talking for an hour"
+        },
+        {
+          "where": "the campus cinema corridor at night",
+          "when": "when the last screening ends and you walk out together under the warm lights"
+        }
+      ]
+    },
+    "first_scene": {
+      "story": " \n\nYou step off the bus, the crisp autumn air greeting you as you walk towards Crestwood University. The film society's festival is fast approaching, and you're filled with anticipation. As you push through the bustling crowd, a warm smile breaks through the noise. \n\n\"Ethan, did you get the camera charged?\" a voice calls out. You turn to see Ethan, his old film camera hanging around his neck, the light reflecting off his tousled hair.\n\n\"Yeah, it's all set,\" you reply, handing him the charger. His eyes meet yours, and for a moment, the world around you fades away. You both share a knowing smile, the start of a connection that feels just right.\n\nContinuing on, you find yourself at the library, the scent of old books mingling with the faint smell of coffee. You're searching for a book on classic cinema when you bump into Liam. He's surrounded by stacks of papers, a pen in hand, marking up a script.\n\n\"Hey there, [Your Name]!\" Liam greets you with a wide grin. \"Need some help finding that book?\"\n\n\"Actually, I do,\" you say, smiling back. Liam guides you to the section, and as you search for the book, you catch sight of his hand, the ink smudging slightly on his skin.\n\nYou reach for the book, your fingers brushing against his. For a moment, time stands still. The library around you fades, and it's just you and Liam, sharing a moment that feels both new and familiar.\n\nYou must immediately make a choice: follow Ethan, who's waiting with the camera, or continue with Liam, whose warmth is like a beacon in this busy place.\n\n<<\nAs you ponder your choice, a soft voice draws you back to reality. \"Are you looking for this?\" Noah asks, holding up the book you were searching for. His eyes are filled with curiosity, and you can't help but smile.\n\n\"Thanks, Noah,\" you say, taking the book from him. \"I didn't see you there.\"\n\n\"Noah's always here,\" Liam interjects, slipping an arm around your shoulder. \"He's like the university's little secret weapon when it comes to film knowledge.\"\n\nYou chuckle, feeling a sense of belonging. The three of you make your way to a quiet corner of the library, where you settle down to study. The hours pass quickly, filled with laughter and insightful conversations about films and life.\n\nAs the sun begins to set, casting a golden hue over the campus, you find yourself with a tough decision to make. Should you join Marcus in the debate society, where you can engage in lively discussions and challenge your own beliefs? Or should you join Owen in the community room, where you can share your thoughts and feelings in a more intimate setting?\n\nThe choice is yours, and as you stand at the crossroads, you realize that the true essence of Crestwood University lies not just in its academic rigor, but in the connections you make along the way. Each path offers a different opportunity to grow, to learn, and to fall in love with cinema all over again.\n>>",
+      "options": [
+        {
+          "text": "Ask Ethan about his camera",
+          "love": "flirt",
+          "target": "Ethan"
+        },
+        {
+          "text": "Tease Liam about his ink smudges",
+          "love": "tease",
+          "target": "Liam"
+        },
+        {
+          "text": "Join Marcus in the debate society",
+          "love": "neutral",
+          "target": "Marcus"
+        },
+        {
+          "text": "Offer to help Noah find a book",
+          "love": "kind",
+          "target": "Noah"
+        }
+      ],
+      "bilingual": {
+        "v": 1,
+        "lines": [
+          {
+            "en": "You step off the bus, the crisp autumn air greeting you as you walk towards Crestwood University.",
+            "zh": "你从公交车上下来，清新的秋日空气迎面而来，你朝Crestwood大学走去。",
+            "words": [
+              {
+                "w": "step off",
+                "zh": "下车"
+              },
+              {
+                "w": "crisp",
+                "zh": "清爽的"
+              },
+              {
+                "w": "greeting",
+                "zh": "迎接"
+              }
+            ]
+          },
+          {
+            "en": "The film society's festival is fast approaching, and you're filled with anticipation.",
+            "zh": "电影学会的电影节很快就要到了，你满心期待。",
+            "words": [
+              {
+                "w": "fast approaching",
+                "zh": "很快到来"
+              },
+              {
+                "w": "filled with anticipation",
+                "zh": "充满期待"
+              }
+            ]
+          },
+          {
+            "en": "As you push through the bustling crowd, a warm smile breaks through the noise.",
+            "zh": "当你挤过熙攘的人群时，一抹温暖的微笑穿透喧嚣。",
+            "words": [
+              {
+                "w": "push through",
+                "zh": "用力穿过；挤过"
+              },
+              {
+                "w": "bustling",
+                "zh": "热闹的；繁忙的"
+              },
+              {
+                "w": "breaks through",
+                "zh": "突破；显现"
+              }
+            ]
+          },
+          {
+            "en": "\"Ethan, did you get the camera charged?\" a voice calls out.",
+            "zh": "“伊森，你把相机充好电了吗？”一个声音喊道。",
+            "words": [
+              {
+                "w": "get ... charged",
+                "zh": "给……充满电；使设备可用"
+              },
+              {
+                "w": "calls out",
+                "zh": "大声呼喊"
+              }
+            ]
+          },
+          {
+            "en": "You turn to see Ethan, his old film camera hanging around his neck, the light reflecting off his tousled hair.",
+            "zh": "你转过身，看见伊森——他脖子上挂着那台旧胶片相机，阳光在他凌乱的头发上闪烁。",
+            "words": [
+              {
+                "w": "hang around",
+                "zh": "松垮地挂着"
+              },
+              {
+                "w": "reflecting off",
+                "zh": "从……反射（光）"
+              },
+              {
+                "w": "tousled",
+                "zh": "乱蓬蓬的"
+              }
+            ]
+          },
+          {
+            "en": "\"Yeah, it's all set,\" you reply, handing him the charger.",
+            "zh": "“好的，一切都准备好了，”你回答道，同时递给他充电器。",
+            "words": [
+              {
+                "w": "all set",
+                "zh": "一切都准备好了"
+              },
+              {
+                "w": "handing",
+                "zh": "递给"
+              },
+              {
+                "w": "reply",
+                "zh": "回答"
+              }
+            ]
+          },
+          {
+            "en": "His eyes meet yours, and for a moment, the world around you fades away.",
+            "zh": "他的目光与你相遇，刹那间，你周围的世界渐渐隐去。",
+            "words": [
+              {
+                "w": "meet (eyes)",
+                "zh": "（目光）交汇；对视"
+              },
+              {
+                "w": "for a moment",
+                "zh": "片刻；一会儿"
+              },
+              {
+                "w": "fade away",
+                "zh": "逐渐消失；淡出"
+              }
+            ]
+          },
+          {
+            "en": "You both share a knowing smile, the start of a connection that feels just right.",
+            "zh": "你们相视一笑，心照不宣，这份联结从一开始就恰到好处。",
+            "words": [
+              {
+                "w": "knowing smile",
+                "zh": "会意的微笑"
+              },
+              {
+                "w": "connection",
+                "zh": "联系；联结"
+              },
+              {
+                "w": "just right",
+                "zh": "恰到好处"
+              }
+            ]
+          },
+          {
+            "en": "Continuing on, you find yourself at the library, the scent of old books mingling with the faint smell of coffee.",
+            "zh": "继续往前走，你来到图书馆，旧书的香气与淡淡的咖啡味交织在一起。",
+            "words": [
+              {
+                "w": "mingling",
+                "zh": "混合；交融"
+              },
+              {
+                "w": "faint",
+                "zh": "微弱的；淡淡的"
+              },
+              {
+                "w": "continuing on",
+                "zh": "继续前进"
+              }
+            ]
+          },
+          {
+            "en": "You're searching for a book on classic cinema when you bump into Liam.",
+            "zh": "你正在找一本关于经典电影的书，这时你碰到了Liam。",
+            "words": [
+              {
+                "w": "searching for",
+                "zh": "寻找"
+              },
+              {
+                "w": "bump into",
+                "zh": "偶遇"
+              },
+              {
+                "w": "classic cinema",
+                "zh": "经典电影"
+              }
+            ]
+          },
+          {
+            "en": "He's surrounded by stacks of papers, a pen in hand, marking up a script.",
+            "zh": "他四周堆满了一摞摞文件，手里拿着一支笔，正在修改剧本。",
+            "words": [
+              {
+                "w": "surrounded by",
+                "zh": "被……包围"
+              },
+              {
+                "w": "stacks of",
+                "zh": "一堆堆的"
+              },
+              {
+                "w": "marking up",
+                "zh": "批注；修改"
+              }
+            ]
+          },
+          {
+            "en": "\"Hey there, [Your Name]!\"",
+            "zh": "嘿，[Your Name]！",
+            "words": [
+              {
+                "w": "Hey there",
+                "zh": "嗨；非正式打招呼"
+              },
+              {
+                "w": "[Your Name]",
+                "zh": "读者名字占位符"
+              }
+            ]
+          },
+          {
+            "en": "Liam greets you with a wide grin.",
+            "zh": "利亚姆咧嘴一笑，向你打招呼。",
+            "words": [
+              {
+                "w": "greets",
+                "zh": "向……打招呼"
+              },
+              {
+                "w": "with a wide grin",
+                "zh": "咧开嘴笑；露齿而笑"
+              }
+            ]
+          },
+          {
+            "en": "\"Need some help finding that book?\"",
+            "zh": "需要帮忙找那本书吗？",
+            "words": [
+              {
+                "w": "need",
+                "zh": "需要"
+              },
+              {
+                "w": "some help",
+                "zh": "一些帮助"
+              },
+              {
+                "w": "finding",
+                "zh": "寻找"
+              }
+            ]
+          },
+          {
+            "en": "\"Actually, I do,\" you say, smiling back.",
+            "zh": "“事实上，我有，”你说，微笑着回应。",
+            "words": []
+          },
+          {
+            "en": "Liam guides you to the section, and as you search for the book, you catch sight of his hand, the ink smudging slightly on his skin.",
+            "zh": "利亚姆带你来到那一部分，当你寻找这本书时，你瞥见了他的手，墨水在他皮肤上微微晕开。",
+            "words": [
+              {
+                "w": "guides",
+                "zh": "引导；带领"
+              },
+              {
+                "w": "catch sight of",
+                "zh": "看见；瞥见"
+              },
+              {
+                "w": "smudge",
+                "zh": "污迹；弄脏"
+              }
+            ]
+          },
+          {
+            "en": "You reach for the book, your fingers brushing against his.",
+            "zh": "你伸手去拿书，手指轻轻碰到了他的。",
+            "words": [
+              {
+                "w": "reach for",
+                "zh": "伸手去拿"
+              },
+              {
+                "w": "brush against",
+                "zh": "轻轻碰到"
+              },
+              {
+                "w": "against",
+                "zh": "靠着；接触"
+              }
+            ]
+          },
+          {
+            "en": "For a moment, time stands still.",
+            "zh": "有那么一刻，时间仿佛静止了。",
+            "words": [
+              {
+                "w": "stands still",
+                "zh": "不动；静止"
+              },
+              {
+                "w": "for a moment",
+                "zh": "片刻"
+              },
+              {
+                "w": "time stands still",
+                "zh": "时间似乎停止"
+              }
+            ]
+          },
+          {
+            "en": "The library around you fades, and it's just you and Liam, sharing a moment that feels both new and familiar.",
+            "zh": "你周围的图书馆渐渐淡去，只剩下你和Liam，共享一个既新鲜又熟悉的时刻。",
+            "words": [
+              {
+                "w": "fades",
+                "zh": "逐渐消失"
+              },
+              {
+                "w": "share a moment",
+                "zh": "共同经历一段时光"
+              },
+              {
+                "w": "both ... and ...",
+                "zh": "既……又……"
+              }
+            ]
+          },
+          {
+            "en": "You must immediately make a choice: follow Ethan, who's waiting with the camera, or continue with Liam, whose warmth is like a beacon in this busy place.",
+            "zh": "你必须立刻做出选择：跟随正在拿着相机等待的伊森，还是继续与像这繁忙场所中灯塔般温暖的利亚姆同行。",
+            "words": [
+              {
+                "w": "immediately",
+                "zh": "立刻；马上"
+              },
+              {
+                "w": "make a choice",
+                "zh": "做选择"
+              },
+              {
+                "w": "beacon",
+                "zh": "灯塔；指引的光"
+              }
+            ]
+          },
+          {
+            "en": "<<",
+            "zh": "<<",
+            "words": []
+          },
+          {
+            "en": "As you ponder your choice, a soft voice draws you back to reality.",
+            "zh": "当你思索自己的选择时，一个轻柔的声音将你拉回现实。",
+            "words": [
+              {
+                "w": "ponder",
+                "zh": "仔细思考"
+              },
+              {
+                "w": "draw ... back to ...",
+                "zh": "把某人拉回到某个地方或状态"
+              },
+              {
+                "w": "reality",
+                "zh": "现实世界；真实情况"
+              }
+            ]
+          },
+          {
+            "en": "\"Are you looking for this?\"",
+            "zh": "你在找这个吗？",
+            "words": [
+              {
+                "w": "looking for",
+                "zh": "寻找"
+              },
+              {
+                "w": "this",
+                "zh": "这个"
+              }
+            ]
+          },
+          {
+            "en": "Noah asks, holding up the book you were searching for.",
+            "zh": "诺亚举起你一直在找的那本书，问道。",
+            "words": [
+              {
+                "w": "holding up",
+                "zh": "举起；举起来展示"
+              },
+              {
+                "w": "searching for",
+                "zh": "寻找"
+              },
+              {
+                "w": "were searching for",
+                "zh": "过去进行时（was/were + -ing），表示过去某一时刻正在进行的动作"
+              }
+            ]
+          },
+          {
+            "en": "His eyes are filled with curiosity, and you can't help but smile.",
+            "zh": "他的眼神里满是好奇，你忍不住笑了起来。",
+            "words": [
+              {
+                "w": "filled with",
+                "zh": "充满；满溢着（某种情感）"
+              },
+              {
+                "w": "can't help but",
+                "zh": "忍不住；不得不"
+              },
+              {
+                "w": "curiosity",
+                "zh": "好奇心"
+              }
+            ]
+          },
+          {
+            "en": "\"Thanks, Noah,\" you say, taking the book from him.",
+            "zh": "你对他说：“谢谢，诺亚。”说着从他手里接过书。",
+            "words": [
+              {
+                "w": "saying",
+                "zh": "用现在分词表示同时发生的动作（一边说一边做）"
+              },
+              {
+                "w": "taking",
+                "zh": "动词 take 的现在分词形式；表示与 say 同时进行的动作"
+              },
+              {
+                "w": "from him",
+                "zh": "介词短语：表示来源或出处；此处指从他手中接过来"
+              }
+            ]
+          },
+          {
+            "en": "\"I didn't see you there.\"",
+            "zh": "我没看见你在那儿。",
+            "words": [
+              {
+                "w": "didn't see",
+                "zh": "过去否定的‘see’；表示过去没看到"
+              },
+              {
+                "w": "there",
+                "zh": "在那里；用来指位置"
+              }
+            ]
+          },
+          {
+            "en": "\"Noah's always here,\" Liam interjects, slipping an arm around your shoulder.",
+            "zh": "“诺亚一直都在，”利亚姆插嘴道，同时把一只胳膊搭在你的肩上。",
+            "words": [
+              {
+                "w": "interjects",
+                "zh": "插话；插嘴"
+              },
+              {
+                "w": "slip",
+                "zh": "悄悄/轻快地移动到某个位置"
+              },
+              {
+                "w": "around",
+                "zh": "环绕；在……周围"
+              }
+            ]
+          },
+          {
+            "en": "\"He's like the university's little secret weapon when it comes to film knowledge.\"",
+            "zh": "在电影知识方面，他就像是这所大学的一个秘密武器。",
+            "words": [
+              {
+                "w": "little secret weapon",
+                "zh": "小而有用的‘秘密武器’"
+              },
+              {
+                "w": "when it comes to",
+                "zh": "当谈到；关于"
+              },
+              {
+                "w": "film knowledge",
+                "zh": "电影知识"
+              }
+            ]
+          },
+          {
+            "en": "You chuckle, feeling a sense of belonging.",
+            "zh": "你轻笑一声，感到一种归属感。",
+            "words": [
+              {
+                "w": "chuckle",
+                "zh": "轻声笑；轻轻笑"
+              },
+              {
+                "w": "sense of belonging",
+                "zh": "归属感"
+              }
+            ]
+          },
+          {
+            "en": "The three of you make your way to a quiet corner of the library, where you settle down to study.",
+            "zh": "你们三人来到图书馆的一个安静角落，然后坐下来开始学习。",
+            "words": [
+              {
+                "w": "make your way",
+                "zh": "前往（某地）"
+              },
+              {
+                "w": "settle down",
+                "zh": "安顿下来"
+              },
+              {
+                "w": "to study",
+                "zh": "学习"
+              }
+            ]
+          },
+          {
+            "en": "The hours pass quickly, filled with laughter and insightful conversations about films and life.",
+            "zh": "时光飞逝，笑声不断，大家畅谈电影与人生。",
+            "words": [
+              {
+                "w": "pass quickly",
+                "zh": "过得快"
+              },
+              {
+                "w": "filled with",
+                "zh": "充满"
+              },
+              {
+                "w": "insightful conversations",
+                "zh": "有见地的交谈"
+              }
+            ]
+          },
+          {
+            "en": "As the sun begins to set, casting a golden hue over the campus, you find yourself with a tough decision to make.",
+            "zh": "当太阳开始西沉，给校园镀上一层金色时，你发现自己面临一个艰难的抉择。",
+            "words": [
+              {
+                "w": "casting",
+                "zh": "投射；使呈现（颜色或光线）"
+              },
+              {
+                "w": "golden hue",
+                "zh": "金色的色调"
+              },
+              {
+                "w": "tough decision",
+                "zh": "艰难的决定"
+              }
+            ]
+          },
+          {
+            "en": "Should you join Marcus in the debate society, where you can engage in lively discussions and challenge your own beliefs?",
+            "zh": "如果你加入马库斯所在的辩论社，在那里你可以参与热烈的讨论并挑战你自己的信念，你会怎么做？",
+            "words": [
+              {
+                "w": "join",
+                "zh": "加入（一个团体）"
+              },
+              {
+                "w": "engage in",
+                "zh": "参加"
+              },
+              {
+                "w": "lively discussions",
+                "zh": "热烈的讨论"
+              }
+            ]
+          },
+          {
+            "en": "Or should you join Owen in the community room, where you can share your thoughts and feelings in a more intimate setting?",
+            "zh": "或者，你要不要和欧文一起去社区活动室？在那里你可以在一个更私密的氛围中分享你的想法和感受。",
+            "words": [
+              {
+                "w": "intimate",
+                "zh": "私密的"
+              },
+              {
+                "w": "setting",
+                "zh": "环境"
+              },
+              {
+                "w": "share your thoughts and feelings",
+                "zh": "表达你的想法和感受"
+              }
+            ]
+          },
+          {
+            "en": "The choice is yours, and as you stand at the crossroads, you realize that the true essence of Crestwood University lies not just in its academic rigor, but in the connections you make along the way.",
+            "zh": "选择权在你手中。当你站在十字路口时，你会意识到，Crestwood大学真正的精髓不仅在于其严谨的学术要求，更在于你一路所建立的人脉关系。",
+            "words": [
+              {
+                "w": "choice",
+                "zh": "决定权"
+              },
+              {
+                "w": "crossroads",
+                "zh": "岔路口/关键抉择点"
+              },
+              {
+                "w": "essence",
+                "zh": "本质/精髓"
+              }
+            ]
+          },
+          {
+            "en": "Each path offers a different opportunity to grow, to learn, and to fall in love with cinema all over again.",
+            "zh": "每条道路都带来不同的成长机会，让你重新学习并再次爱上电影。",
+            "words": [
+              {
+                "w": "offers",
+                "zh": "提供"
+              },
+              {
+                "w": "opportunity",
+                "zh": "机会"
+              },
+              {
+                "w": "fall in love with",
+                "zh": "爱上"
+              }
+            ]
+          },
+          {
+            "en": ">>",
+            "zh": "...",
+            "words": [
+              {
+                "w": "...",
+                "zh": "..."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
