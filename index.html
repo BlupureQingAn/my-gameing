@@ -1542,6 +1542,57 @@
         .ending-stat span { font-size: 0.7rem; color: var(--text-muted); }
         .ending-actions { display: flex; gap: 8px; margin-top: 16px; }
         .ending-actions .mini-btn { flex: 1; }
+        /* R1 恋爱攻略结局:HE/BE 徽标 + 英文 epilogue 双语展示 */
+        .ending-badge.lhe { background: linear-gradient(135deg, #ff7e9d, #e0507a); box-shadow: 0 6px 18px rgba(255,126,157,.45); font-size: 26px; }
+        .ending-badge.lbe { background: linear-gradient(135deg, #6aa8e8, #4a74b8); box-shadow: 0 6px 18px rgba(106,168,232,.4); font-size: 26px; }
+        .ending-badge.lno { background: linear-gradient(135deg, #b9c2cc, #8b95a1); font-size: 26px; }
+        .ending-sub.lv-heart-note { margin-top: 2px; }
+        .ending-body.love-en {
+            border-left-color: #e0507a;
+            background: color-mix(in srgb, #e0507a 7%, transparent);
+            font-family: Georgia, "Times New Roman", "Songti SC", serif;
+            font-size: 1rem;
+            line-height: 1.9;
+            letter-spacing: .01em;
+        }
+        .ending-body.love-zh {
+            margin-top: 8px;
+            border-left-color: #9aa3ad;
+            background: rgba(154,163,173,.08);
+            font-size: .88rem;
+            color: var(--text-muted);
+        }
+        /* R1 恋爱攻略:LoveBar(5 可攻略角色条)/心动时刻卡 overlay */
+        #play-love-bar { display: none; padding: 6px 10px 4px; gap: 8px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid color-mix(in srgb, var(--theme-primary) 18%, transparent); }
+        #play-love-bar.show { display: flex; }
+        .love-npc { display: flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 12px; cursor: pointer; white-space: nowrap; background: color-mix(in srgb, var(--theme-primary) 6%, transparent); border: 1.5px solid transparent; flex: 0 0 auto; }
+        .love-npc.active { border-color: color-mix(in srgb, var(--theme-primary) 55%, transparent); }
+        .love-npc .lv-av { width: 26px; height: 26px; border-radius: 50%; overflow: hidden; flex: 0 0 auto; background: #e8d8c8; display: flex; align-items: center; justify-content: center; font-size: .7rem; color: #8a6a4a; }
+        .love-npc .lv-av img { width: 100%; height: 100%; object-fit: cover; }
+        .love-npc .lv-name { font-size: .72rem; font-weight: 800; color: var(--text); }
+        .love-npc .lv-aff { font-size: .62rem; color: var(--text-muted); }
+        .love-npc .lv-aff b { color: #e0557d; }
+        .love-npc.locked .lv-av { box-shadow: 0 0 0 2px #e0557d; }
+        .love-npc .lv-heart { height: 3px; width: 46px; border-radius: 2px; background: color-mix(in srgb, var(--text-muted) 25%, transparent); overflow: hidden; }
+        .love-npc .lv-heart i { display: block; height: 100%; border-radius: 2px; background: linear-gradient(90deg, #ff7fa8, #e0557d); }
+        .love-float { position: fixed; pointer-events: none; font-size: .8rem; font-weight: 900; color: #e0557d; animation: loveFloat 1.1s ease-out forwards; z-index: 299999; text-shadow: 0 1px 3px rgba(0,0,0,.25); }
+        @keyframes loveFloat { 0% { opacity: 0; transform: translateY(2px); } 18% { opacity: 1; } 100% { opacity: 0; transform: translateY(-26px); } }
+        .heartbeat-overlay { position: fixed; inset: 0; z-index: 300000; background: rgba(8,6,14,.72); display: flex; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
+        .heartbeat-card { width: min(340px, 88vw); background: linear-gradient(160deg, #2b1a2e, #3c1f3f); border: 1px solid rgba(255,150,190,.35); border-radius: 20px; padding: 18px 16px 14px; text-align: center; color: #f6e9ef; box-shadow: 0 18px 50px rgba(0,0,0,.55); animation: hbIn .4s cubic-bezier(.2,.9,.3,1.3); }
+        @keyframes hbIn { from { opacity: 0; transform: translateY(24px) scale(.94); } to { opacity: 1; transform: none; } }
+        .heartbeat-card .hb-title { font-size: .72rem; letter-spacing: .18em; color: #f4a7c2; font-weight: 700; }
+        .heartbeat-card .hb-av { width: 96px; height: 96px; margin: 12px auto 8px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255,170,200,.55); background: #4a2b38; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #f4a7c2; }
+        .heartbeat-card .hb-av img { width: 100%; height: 100%; object-fit: cover; }
+        .heartbeat-card .hb-en { font-family: Georgia, "Times New Roman", serif; font-style: italic; font-size: 1rem; line-height: 1.6; color: #fff2f7; margin: 4px 0 6px; }
+        .heartbeat-card .hb-zh { font-size: .78rem; color: #d9b6c4; line-height: 1.7; }
+        .heartbeat-card .hb-close { margin-top: 12px; font-size: .72rem; color: #f4a7c2; cursor: pointer; }
+        .lv-pop { position: fixed; z-index: 299999; width: min(300px, 84vw); background: var(--card-bg, #fff); color: var(--text, #333); border-radius: 16px; padding: 14px; box-shadow: 0 14px 44px rgba(0,0,0,.35); border: 1px solid color-mix(in srgb, var(--theme-primary) 25%, transparent); }
+        .lv-pop .lvp-head { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+        .lv-pop .lvp-av { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; background: #e8d8c8; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #8a6a4a; }
+        .lv-pop .lvp-av img { width: 100%; height: 100%; object-fit: cover; }
+        .lv-pop .lvp-t { font-weight: 900; font-size: .92rem; }
+        .lv-pop .lvp-s { font-size: .7rem; color: var(--text-muted); }
+        .lv-pop .lvp-body { font-size: .78rem; line-height: 1.75; white-space: pre-wrap; }
 
         /* ---- 设置组件（Settings Components） ---- */
         /* 容器 */
@@ -5683,8 +5734,10 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
 
         <section id="view-main" class="view-section">
             <div id="play-status-bar"></div>
+            <div id="play-love-bar"></div>
             <div id="play-chat-area"></div>
         </section>
+        <div class="heartbeat-overlay" id="heartbeat-overlay" style="display:none;"><div class="heartbeat-card" id="heartbeat-card-content"></div></div>
 
         <section id="view-world" class="view-section">
             <section class="card">
@@ -7925,6 +7978,14 @@ function rebuildChoicesBlock(body, labels = []) {
                 if (!choice) return;
                 evt.preventDefault();
                 evt.stopPropagation();
+                // 恋爱卡:选项按钮 data-love/data-target → 先结算好感(同步+浮字),再发文本推进剧情
+                try {
+                    const optBtn = clickable.closest && (clickable.closest(".card-option-btn, .wy-option-btn") || clickable);
+                    const love = optBtn && optBtn.dataset ? String(optBtn.dataset.love || "") : "";
+                    if (love && typeof window.LoveEngine !== "undefined" && window.LoveEngine && window.LoveEngine.settleFromClick) {
+                        window.LoveEngine.settleFromClick(optBtn, love, String(optBtn.dataset.target || ""));
+                    }
+                } catch (e) { console.warn("[Love] 结算异常:", e); }
                 Controller.sendUserText(`我选择：${choice}`);
             });
         }
@@ -8117,9 +8178,36 @@ function rebuildChoicesBlock(body, labels = []) {
             const time = String(obj.time || "").trim();
             const story = String(obj.story || "").trim();
             // 选项清洗：剥掉 AI 自带的序号前缀（①②、1.、1、1）、【1】、选项1：等），模板自带序号 icon，双序号影响观感
-            const options = Array.isArray(obj.options)
-                ? obj.options.map((o) => String(o || "").trim().replace(/^\s*(?:[①②③④⑤⑥⑦⑧⑨⑩]\s*|\d+\s*[.)、）\]]\s*|[（(]\s*\d+\s*[）)]\s*|【?\s*\d+\s*】\s*|选项\s*[:：]?\s*\d*\s*[.、:：]?\s*)/, "")).filter(Boolean)
-                : [];
+            // 恋爱卡(love_mode)选项可为对象形态 {"text":"...","love":"flirt|kind|tease|neutral|awkward|rude|reject","target":"角色名"}:
+            // text 清洗后进 options;love/target 按同序进 loves/optionTargets(渲染端挂按钮 data-love/data-target,点击时结算好感)
+            const LOVE_TAGS = ["flirt", "kind", "tease", "neutral", "awkward", "rude", "reject"];
+            const stripOptPrefix = (s) => String(s || "").trim().replace(/^\s*(?:[①②③④⑤⑥⑦⑧⑨⑩]\s*|\d+\s*[.)、）\]]\s*|[（(]\s*\d+\s*[）)]\s*|【?\s*\d+\s*】\s*|选项\s*[:：]?\s*\d*\s*[.、:：]?\s*)/, "");
+            const options = [], loveRows = [];
+            if (Array.isArray(obj.options)) {
+                for (let oi = 0; oi < obj.options.length; oi++) {
+                    const o = obj.options[oi];
+                    let text = "", love = "", target = "";
+                    let isObj = false;
+                    if (o && typeof o === "object" && !Array.isArray(o)) {
+                        isObj = true;
+                        text = String(o.text ?? o.content ?? "").trim();
+                        love = String(o.love ?? "").trim();
+                        target = String(o.target ?? o.npc ?? "").trim().slice(0, 24);
+                    } else {
+                        text = String(o ?? "").trim();
+                    }
+                    text = stripOptPrefix(text);
+                    if (!text) continue;
+                    options.push(text);
+                    if (isObj) loveRows.push({ love: LOVE_TAGS.includes(love) ? love : "neutral", target });
+                    else loveRows.push(null);
+                    if (options.length >= 4) break;
+                }
+            }
+            // 仅当选项以对象形态携带标签时,下游才按恋爱卡结算(旧字符串选项协议保持零影响)
+            const hasObjTag = loveRows.some((r) => r !== null);
+            const loves = hasObjTag ? loveRows.map((r) => r ? r.love : "neutral") : [];
+            const optionTargets = hasObjTag ? loveRows.map((r) => r ? r.target : "") : [];
             // 六字段全部必填：title/time/story 非空，options 至少 1 项非空（数量不限，AI 可给 1-6 个）
             if (!title || !time || !story || !options.length) return null;
             // location 为可选第七字段：仅同步状态(顶部面板/地图)，不参与必填校验，也不上卡片
@@ -8150,7 +8238,18 @@ function rebuildChoicesBlock(body, labels = []) {
                     if (lines.length) bilingual = { v: 1, lines };
                 }
             } catch (e) { bilingual = null; }
-            return { title, time, story, options, location, bilingual };
+            // heartbeat 为可选第九字段(恋爱卡心动时刻):{npc,en,zh},解析失败置 null 不影响主校验
+            let heartbeat = null;
+            try {
+                const hb = obj.heartbeat;
+                if (hb && typeof hb === "object" && !Array.isArray(hb)) {
+                    const hNpc = String(hb.npc || hb.target || "").trim().slice(0, 24);
+                    const hEn = String(hb.en || "").replace(/\s+/g, " ").trim().slice(0, 220);
+                    const hZh = String(hb.zh || "").replace(/\s+/g, " ").trim().slice(0, 220);
+                    if (hNpc && hEn) heartbeat = { npc: hNpc, en: hEn, zh: hZh };
+                }
+            } catch (e) { heartbeat = null; }
+            return { title, time, story, options, location, bilingual, loves, optionTargets, heartbeat };
         }
         // 流式部分解析：正则提取对截断文本鲁棒（字段内转义 \\. 还原）；返回 { complete, title, time, story, options }
         function parseStreaming(text) {
@@ -8195,8 +8294,16 @@ function rebuildChoicesBlock(body, labels = []) {
                 : "";
             const storyHtml = MarkdownService.render(fields.story);
             const optionsHtml = (fields.options || []).length
-                ? `<footer class="card-options" data-block="choices">${(fields.options || []).map((o, i) =>
-                    `<div class="wy-option-btn card-option-btn" data-choice="${MarkdownService.escapeHtml(o)}"><span class="wy-opt-icon">${["①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩"][i] || String(i + 1)}</span><span class="wy-opt-text">${MarkdownService.escapeHtml(o)}</span></div>`).join("")}</footer>`
+                ? `<footer class="card-options" data-block="choices">${(fields.options || []).map((o, i) => {
+                    // 恋爱卡:选项对象携带的 love 标签/互动目标落按钮 data 属性,点击结算用
+                    let loveAttr = "", targetAttr = "";
+                    if (Array.isArray(fields.loves) && fields.loves.length === (fields.options || []).length && fields.loves[i]) {
+                        loveAttr = ` data-love="${MarkdownService.escapeHtml(String(fields.loves[i] || ""))}"`;
+                        const t = Array.isArray(fields.optionTargets) ? String(fields.optionTargets[i] || "") : "";
+                        if (t) targetAttr = ` data-target="${MarkdownService.escapeHtml(t.slice(0, 24))}"`;
+                    }
+                    return `<div class="wy-option-btn card-option-btn" data-choice="${MarkdownService.escapeHtml(o)}"${loveAttr}${targetAttr}><span class="wy-opt-icon">${["①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩"][i] || String(i + 1)}</span><span class="wy-opt-text">${MarkdownService.escapeHtml(o)}</span></div>`;
+                }).join("")}</footer>`
                 : "";
             return [
                 `<article class="ai-beauty-card card ${themeClass}" data-theme="${safeTheme}" data-structured-card="1">`,
@@ -10140,6 +10247,39 @@ function rebuildChoicesBlock(body, labels = []) {
             const modal = document.getElementById("ending-modal");
             const card = document.getElementById("ending-card-content");
             if (!modal || !card) return;
+            // R1 恋爱攻略结局:HE/BE/遗憾 双语渲染(英文 epilogue + 中文译文)
+            if (result && result.loveMode) {
+                const lt = String(result.loveType || "none");
+                const isHe = lt === "he", isBe = lt === "be";
+                const badgeText = isHe ? "HE" : isBe ? "BE" : "TA";
+                const badgeCls = isHe ? "lhe" : isBe ? "lbe" : "lno";
+                const typeNote = isHe ? "💗 两情相悦" : isBe ? "🍂 曾经心动" : "🌙 心意未达";
+                const npcName = MarkdownService.escapeHtml(String(result.loveNpc || "TA"));
+                const rounds = (state.history || []).filter((h) => h.role === "user").length;
+                const aff = Number(result.loveAffection) || 0;
+                const stats = [
+                    { v: typeNote, l: "结局 · " + MarkdownService.escapeHtml(String(result.loveStage || "")) },
+                    { v: `${aff}`, l: "最终爱慕" },
+                    { v: `${rounds} 轮`, l: "抉择次数" }
+                ];
+                card.innerHTML = `
+                    <div class="ending-grade">
+                        <div class="ending-badge ${badgeCls}">${badgeText}</div>
+                        <div>
+                            <div class="ending-title">${MarkdownService.escapeHtml(result.title || (isHe ? "心意落定" : isBe ? "未竟之约" : "未完的心意"))}</div>
+                            <div class="ending-sub">${npcName} · 专属结局</div>
+                        </div>
+                    </div>
+                    <div class="ending-body love-en">${MarkdownService.escapeHtml(result.body || "……")}</div>
+                    ${result.bodyZh ? `<div class="ending-body love-zh">${MarkdownService.escapeHtml(String(result.bodyZh))}</div>` : ""}
+                    <div class="ending-stats">${stats.map((s) => `<div class="ending-stat"><b>${s.v}</b><span>${s.l}</span></div>`).join("")}</div>
+                    <div class="ending-actions">
+                        <button class="mini-btn ghost" onclick="closeEndingModal()"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M2 22V4q0-.825.588-1.412T4 2h16q.825 0 1.413.588T22 4v12q0 .825-.587 1.413T20 18H6z"/></svg> 继续回溯</button>
+                        <button class="mini-btn primary" onclick="restartLife()">🔁 开启新攻略</button>
+                    </div>`;
+                modal.classList.add("show");
+                return;
+            }
             const g = "SABCD".includes(String(result.grade || "").toUpperCase()) ? String(result.grade).toUpperCase() : "C";
             const gradeNames = { S: "传奇人生", A: "灿烂光辉", B: "温暖平凡", C: "留有遗憾", D: "悲凉收场" };
             const rounds = (state.history || []).filter((h) => h.role === "user").length;
@@ -10322,6 +10462,10 @@ function rebuildChoicesBlock(body, labels = []) {
                     if (structuredFields.bilingual && window.LangAssist) {
                         try { window.LangAssist.attachStoryBi(node, structuredFields.bilingual); } catch (e) { console.warn("[AI] 双语烘烤:", e); }
                     }
+                    /* R1 恋爱卡:每轮卡渲染后同步好感条/触发心动时刻 */
+                    if (typeof window.LoveEngine !== "undefined" && window.LoveEngine && window.LoveEngine.afterCard) {
+                        try { window.LoveEngine.afterCard(structuredFields); } catch (e) { console.warn("[Love] afterCard:", e); }
+                    }
                 }
             } else if (fillFields) {
                 // 卡片直接平铺:新 article 替换流式期间的 bubble
@@ -10393,6 +10537,8 @@ function rebuildChoicesBlock(body, labels = []) {
                 if (node) node.setAttribute("data-round", String(Math.max(0, rIdx)));
             });
             scrollToBottom();
+            // R1 恋爱卡:历史重渲染(续玩进入)后恢复好感条
+            try { if (window.LoveEngine && window.LoveEngine.syncBar) window.LoveEngine.syncBar(); } catch (e) {}
         }
         function patchLastAiMessage(text, options = {}) {
             const board = document.getElementById("play-chat-area");
@@ -17919,6 +18065,71 @@ ${recent || "（无）"}
             }
             return null;
         }
+        // R1 恋爱攻略结局请求:HE/BE/遗憾已由 LoveEngine 本地判定,AI 只撰写该角色的英文 epilogue + 中文译文(不可改结局走向)
+        async function requestLoveEnding(state, config, loveRes) {
+            const npc = (loveRes && loveRes.npc) || null;
+            const aff = npc ? (Number(npc.affection) || 0) : 0;
+            const type = !npc ? "none" : String(loveRes.type || "none");
+            const typeText = type === "he" ? "HE-两情相悦" : type === "be" ? "BE-遗憾收场" : "遗憾-心意未达";
+            const stage = (window.LoveEngine && window.LoveEngine.stageOf) ? window.LoveEngine.stageOf(aff) : "";
+            const npcDesc = npc
+                ? `${npc.name}（${npc.role || npc.relation || ""}，友善 ${npc.favor ?? 0}·爱慕 ${aff}）`
+                : "无明确攻略对象，与所有人都停在朋友边界";
+            const userMsgs = (state.history || []).filter((h) => h.role === "user").slice(-8);
+            const recent = userMsgs.map((r, i) => {
+                const idx = state.history.indexOf(r);
+                const aiText = state.history[idx + 1]?.text ? UIRenderer.stripHtml(state.history[idx + 1].text).slice(0, 80) : "";
+                return `轮次${i + 1} 指令：${String(r.text || "").slice(0, 40)}\n经历：${aiText}`;
+            }).join("\n");
+            const systemPrompt = `你是「云吞吞结局之书」。为这段恋爱攻略故事撰写专属结局。
+结局走向已由系统判定：${typeText}。你必须严格按此走向撰写，不可更改，也不可让角色对结局困惑。
+要求：
+1. body 用英语撰写 120-220 词的 epilogue，以第二人称 you 称呼玩家，语气像一封信或一段温柔旁白，须呼应关键互动与${npc ? npc.name : "主角"}的性格，禁止无意义堆砌。
+2. bodyZh 将 body 完整译为中文，通顺且有文采。
+3. title 用中文，8 字以内，有意境（如"风起时心动"）。
+4. statistics 一行中文概述（历经几轮抉择、最终爱慕值、结局类型）。
+只输出一个 JSON 对象，禁止输出任何其他文字：{"title":"...","body":"...","bodyZh":"...","statistics":"..."}`;
+            const userPrompt = `主角档案：${state.name || "主角"}（${state.gender || ""}${state.role ? "，" + state.role : ""}）
+结局判定：${typeText}
+攻略对象：${npcDesc}（关系阶段：${stage || "未知"}）
+
+关键经历（最近 ${recent.split("\n").filter((l) => l.trim()).length} 轮）：
+${recent || "（无）"}
+
+请输出结局 JSON。`;
+            const raw = String((await AIRequestService.streamCompletionWithFallback({
+                config,
+                fetchUrl: AIRequestService.buildFetchUrl(),
+                headers: AIRequestService.buildHeaders(config),
+                model: config.model,
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userPrompt }
+                ],
+                temperature: 0.8,
+                onToken: () => true
+            })) || "").trim();
+            const m = raw.match(/\{[\s\S]*\}/);
+            if (m) {
+                try {
+                    const obj = JSON.parse(m[0]);
+                    if (obj && (obj.body || obj.bodyZh)) {
+                        return {
+                            loveMode: true,
+                            loveType: type,
+                            loveNpc: npc ? String(npc.name) : "",
+                            loveAffection: aff,
+                            loveStage: stage,
+                            title: String(obj.title || "").slice(0, 12),
+                            body: String(obj.body || "").slice(0, 1800),
+                            bodyZh: String(obj.bodyZh || "").slice(0, 1800),
+                            statistics: String(obj.statistics || "").slice(0, 60)
+                        };
+                    }
+                } catch (e) { console.warn("[EndStory] 恋爱结局 JSON 解析失败", e); }
+            }
+            return null;
+        }
         // 结局条件来源:selected card structured.endings(编辑器维护),旧卡从 state.endings 兜底
         function getEndingDefs(state) {
             let card = null;
@@ -17990,19 +18201,61 @@ ${recent || "（无）"}
             else if (checks.met.length >= 1) grade = grade === "D" ? "C" : grade;
             return { grade, title: "未完待续", body: `${state.name || "主角"}的故事在此刻暂告一段落。经历了 ${rounds} 轮抉择，与 ${(state.npcs || []).length} 位人物相遇，人生仍在继续。（AI 暂不可用，本次为本地评定）`, statistics: "" };
         }
+        // R1 恋爱结局本地兜底(无 AI):模板双语 epilogue,结局走向已由 LoveEngine 判定
+        function loveFallbackEnding(state, loveRes) {
+            const rounds = (state.history || []).filter((h) => h.role === "user").length;
+            const npc = (loveRes && loveRes.npc) || null;
+            const type = !npc ? "none" : String(loveRes.type || "none");
+            const aff = npc ? (Number(npc.affection) || 0) : 0;
+            const nm = npc ? String(npc.name || "TA") : "TA";
+            const stage = (window.LoveEngine && window.LoveEngine.stageOf) ? window.LoveEngine.stageOf(aff) : "";
+            const enBody = type === "he"
+                ? "Some stories don't end when the last page turns — they begin. You found someone who makes ordinary days feel like occasions, and they found you, too. Every careful word, every brave answer, every moment your heart raced — it was all practice for this: two people finally standing on the same side of the quiet. This isn't where it stops. This is where the rest of your lives begins."
+                : type === "be"
+                ? "Not every road leads where we hoped. You shared laughter, silences, and a little courage — but the timing was never quite right. Some people cross our lives to show us what our hearts truly want, and they were one of them. Thank them for the lesson, keep walking, and carry the warmth with you."
+                : "Every conversation carried a question you never quite asked. The story ends with that courage still in your pocket — and that's all right. Some feelings take root slowly; in the next story, you may finally say it out loud.";
+            const zhBody = type === "he"
+                ? `有些故事不会在翻到最后一页时结束——它们才刚刚开始。你找到了那个让平凡日子都变得特别的人，TA 也找到了你。每一句斟酌过的话、每一次勇敢的回答、每一个心跳加速的瞬间，都是在为这一刻练习：两个人，终于并肩站在了同一边的宁静里。这不是终点，而是余生的起点。`
+                : type === "be"
+                ? `不是每条路都会通向期望的尽头。你们分享过笑声、沉默与一点勇气，但时机始终差了一步。有些人路过我们的生命，是为了让我们看清心之所向，${nm} 就是其中之一。谢谢这段相遇，带着这份温暖继续向前走吧。`
+                : `你们说过的每一句话里，都藏着一个始终没有问出口的问题。故事至此收束，那份勇气仍收在口袋里——没有关系。有些心意会在慢一点的土壤里生根；下一段故事，也许就是你终于说出口的时刻。`;
+            return {
+                loveMode: true,
+                loveType: type,
+                loveNpc: npc ? String(npc.name) : "",
+                loveAffection: aff,
+                loveStage: stage,
+                title: type === "he" ? "心意落定" : type === "be" ? "未竟之约" : "未完的心意",
+                body: enBody,
+                bodyZh: zhBody,
+                statistics: `历经 ${rounds} 轮抉择${npc ? `，与 ${nm} 走到${stage || "故事尽头"}` : "，心意未及言说"}（AI 暂不可用，本次为本地结局）`
+            };
+        }
         async function endStory() {
             const state = StateService.get();
             if (!(state.history || []).some((h) => h.role === "user")) {
                 NoticeModalService.showInfo({ title: "还没有故事", descHtml: "先开始游玩、推进几轮剧情，再让 AI 评定结局吧。" });
                 return;
             }
+            // R1 恋爱攻略卡:结局走向由 LoveEngine 本地判定(锁线/最高爱慕),AI 只润色 epilogue
+            const isLove = !!(window.LoveEngine && window.LoveEngine.isLoveSession());
+            const loveRes = isLove ? window.LoveEngine.resolveEnding(state) : null;
             const checks = buildEndingChecks(state);
             const metHtml = checks.met.length
                 ? `<div style="margin-top:10px;padding:8px 10px;border-radius:10px;background:color-mix(in srgb,var(--theme-primary) 12%,transparent);font-size:.82rem;"><b>✅ 已满足结局条件</b><ul style="margin:6px 0 0 14px;padding:0;">${checks.met.map((c) => `<li>${MarkdownService.escapeHtml(c.name)}（${MarkdownService.escapeHtml(c.desc)}）</li>`).join("")}</ul></div>`
                 : "";
+            let descHtml;
+            if (isLove && loveRes && loveRes.npc) {
+                const lTypeText = loveRes.type === "he" ? "💗 HE · 两情相悦" : loveRes.type === "be" ? "🍂 BE · 遗憾收场" : "🌙 未完的心意";
+                descHtml = `AI 将依据你与 <strong>${MarkdownService.escapeHtml(String(loveRes.npc.name))}</strong>（爱慕 ${loveRes.affection} · ${MarkdownService.escapeHtml(window.LoveEngine.stageOf(loveRes.npc.affection))}）的攻略进程，撰写 TA 的专属结局（${lTypeText}）：英文 epilogue + 中文译文。评定不会清除存档，仍可继续回溯。`;
+            } else if (isLove) {
+                descHtml = "AI 将为你这段尚未走进任何人内心的故事撰写结局评定。评定不会清除存档，仍可继续回溯。";
+            } else {
+                descHtml = `AI 将依据 <strong>${MarkdownService.escapeHtml(state.name || "主角")}</strong> 的一生撰写结局评定（S~D 级）与专属结局正文。评定不会清除存档，之后仍可继续回溯。${metHtml}`;
+            }
             const ok = await NoticeModalService.confirm({
-                title: "结束这段故事？",
-                descHtml: `AI 将依据 <strong>${MarkdownService.escapeHtml(state.name || "主角")}</strong> 的一生撰写结局评定（S~D 级）与专属结局正文。评定不会清除存档，之后仍可继续回溯。${metHtml}`,
+                title: isLove ? "为这段心动画上句点？" : "结束这段故事？",
+                descHtml,
                 okText: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='m4 4l2 4h3L7 4h2l2 4h3l-2-4h2l2 4h3l-2-4h3q.825 0 1.413.588T22 6v12q0 .825-.587 1.413T20 20H4q-.825 0-1.412-.587T2 18V6q0-.825.588-1.412T4 4'/></svg> 开始评定",
                 cancelText: "再想想"
             });
@@ -18010,10 +18263,11 @@ ${recent || "（无）"}
             const config = SettingsService.getApiConfig();
             let result = null;
             if (!config.blocked && config.model) {
-                try { result = await requestEnding(state, config, checks); }
-                catch (e) { console.warn("[EndStory] AI 评定失败,走本地兜底", e); }
+                try {
+                    result = isLove ? await requestLoveEnding(state, config, loveRes) : await requestEnding(state, config, checks);
+                } catch (e) { console.warn("[EndStory] AI 评定失败,走本地兜底", e); }
             }
-            if (!result) result = fallbackEnding(state);
+            if (!result) result = isLove ? loveFallbackEnding(state, loveRes) : fallbackEnding(state);
             UIRenderer.renderEndingModal(result, state);
         }
         function closeEndingModal() {
@@ -21969,6 +22223,28 @@ function openNpcProfile(npcId) {
                 ? "Try to naturally bring some of these words into your story when they fit: " + cands.join(", ")
                     + " — story and tone come first; tense and word form may change freely, and it is fine to use only one or two, or skip them entirely when the scene does not call for them."
                 : "";
+            /* R1 恋爱攻略:love_mode 卡指令块(选项对象带 love 标签/锁定名单/好感快照/心动字段) */
+            const loveBlock = (() => {
+                try {
+                    const _c = ScenarioCardService.getSelectedCard();
+                    const _st = _c && _c.structured;
+                    if (!(_st && _st.love_mode === true)) return "";
+                    const _LE = window.LoveEngine;
+                    if (!_LE) return "";
+                    const _state = StateService.get();
+                    const _ls = _LE.loveStateOf(_state);
+                    const _locked = _LE.lockedNpcOf(_state, _ls);
+                    const names = ((_state && _state.npcs) || []).map((x) => String(x.name || "")).filter(Boolean);
+                    const rel = ((_state && _state.npcs) || []).map((x) => `${x.name}(favor ${x.favor},affection ${x.affection ?? 0})`).join("; ");
+                    const lockedLine = _locked
+                        ? "ROMANCE LOCK IS ON with " + _locked.name + ": keep deepening that bond. Every OTHER character must stay friendly background only — no romantic tension, flirting or advances with them from now on."
+                        : "No romance lock yet, so scenes with any candidate are allowed; the system locks automatically once one bond crosses the lock threshold.";
+                    return "ROMANCE ROUTE MODE — this is a romance game; your romance candidates are: " + (names.join(", ") || "(list from world bible)")
+                        + ". Options MUST be JSON objects in the options array: {\"text\":\"<English option text>\",\"love\":\"flirt|kind|tease|neutral|awkward|rude|reject\",\"target\":\"<candidate name from the list; omit only when the option involves no candidate>\"}. love means: flirt=romantic advance, kind=warm caring, tease=playful banter, neutral=plain, awkward=embarrassing misfire, rude=harsh, reject=pushing away; choose it honestly from what the option says. Give 2-3 options with at least one positive (flirt/kind/tease) aimed at the current scene partner. Never put favor/affection into any state-patch — the engine manages those two values itself. Write natural romance beats that escalate gradually with affection (small tension, eye contact, shared moments); the player's choices decide the pace. Current affection snapshot: " + rel + ". " + lockedLine
+                        + " At a real peak moment (first shared glance, near-confession, decisive touch) you may add the optional JSON field \"heartbeat\":{\"npc\":\"<candidate>\",\"en\":\"<one heartfelt English line that appears verbatim in your story>\",\"zh\":\"<natural short Chinese translation>\"} — at most one heartbeat per 3 rounds, never force it."
+                        + " (Ignore the string-array options shape shown in rule 7 — in this mode always use the object shape above.)";
+                } catch (e) { return ""; }
+            })();
             return [
                 "[ENGLISH LANGUAGE MODE — for language and output style these rules override the Chinese instructions above; story facts come from the world bible below]",
                 "1) Write ALL narration, dialogue, scene title and options in natural English. Never output Chinese inside title / story / options.",
@@ -21979,7 +22255,8 @@ function openNpcProfile(npcId) {
                 "4) " + band + ".",
                 "5) " + immText,
                 (candLine ? "6) " + candLine : ""),
-                "7) Reply with the fixed JSON only: {\"title\":\"English scene name (short)\",\"time\":\"...\",\"story\":\"...\",\"options\":[\"...\",\"...\"]" + (stg.mode === "scaffold" ? ",\"bilingual\":{\"v\":1,\"lines\":[...]}" : "") + "} — story ≈ 200-350 English words in several paragraphs, dialogue on its own lines; if the story is just starting, open in medias res with an immersive scene-setting paragraph, then give 2-3 options."
+                "7) Reply with the fixed JSON only: {\"title\":\"English scene name (short)\",\"time\":\"...\",\"story\":\"...\",\"options\":[\"...\",\"...\"]" + (stg.mode === "scaffold" ? ",\"bilingual\":{\"v\":1,\"lines\":[...]}" : "") + "} — story ≈ 200-350 English words in several paragraphs, dialogue on its own lines; if the story is just starting, open in medias res with an immersive scene-setting paragraph, then give 2-3 options.",
+                (loveBlock ? "8) " + loveBlock : "")
             ].filter(Boolean).join("\n");
         }
         function restoreIfNeeded() {
@@ -22065,6 +22342,266 @@ function openNpcProfile(npcId) {
         return { isLangSession, buildInjection, restoreIfNeeded, exitToChinese, enter, langSaveKey, hasLangSave, immStage };
     })();
     window.LangEngine = LangEngine;
+</script>
+<script>
+/* ===== R1 恋爱攻略 LoveEngine(love_mode 攻略卡:选项标签结算/锁线淡出/好感UI/心动时刻/角色卡/结局)
+   只作用于 language 会话 + 卡 structured.love_mode=true;普通会话全程零影响 ===== */
+window.LoveEngine = (() => {
+    const esc = (s) => { try { return String(s == null ? "" : s).replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m])); } catch (e) { return ""; } };
+    function curCard() { try { return ScenarioCardService.getSelectedCard(); } catch (e) { return null; } }
+    function getState() { try { return StateService.get(); } catch (e) { return null; } }
+    function isLang() { return !!(window.LangEngine && window.LangEngine.isLangSession && window.LangEngine.isLangSession()); }
+    function isLoveSession() {
+        try {
+            const c = curCard();
+            return !!(c && c.structured && c.structured.love_mode === true && isLang());
+        } catch (e) { return false; }
+    }
+    // 标签数值模板:卡级 love_rules.affection 可覆盖(缺省=引擎默认)
+    function rulesOf(st) {
+        const lr = (st && st.love_rules) || {};
+        const base = {
+            flirt: { favor: 1, affection: 6 }, kind: { favor: 4, affection: 1 }, tease: { favor: 2, affection: 2 },
+            neutral: { favor: 1, affection: 0 }, awkward: { favor: 0, affection: -2 },
+            rude: { favor: -4, affection: -3 }, reject: { favor: -3, affection: -8 }
+        };
+        const custom = (lr.affection && typeof lr.affection === "object") ? lr.affection : {};
+        Object.keys(custom).forEach((k) => {
+            if (!base[k]) return;
+            const v = custom[k];
+            if (v && typeof v === "object") {
+                base[k] = {
+                    favor: v.favor == null ? base[k].favor : Number(v.favor),
+                    affection: v.affection == null ? base[k].affection : Number(v.affection)
+                };
+            } else {
+                base[k] = { favor: base[k].favor, affection: Number(v) || 0 };
+            }
+        });
+        return {
+            slots: Number(lr.slots) > 0 ? Number(lr.slots) : 3,
+            lock_at: Number(lr.lock_at) > 0 ? Number(lr.lock_at) : 70,
+            he_aff: (lr.he_end && Number(lr.he_end.min_affection)) || 75,
+            be_aff: (lr.be_end && Number(lr.be_end.min_affection)) || 30,
+            affection: base
+        };
+    }
+    function rules() { try { const c = curCard(); return rulesOf(c && c.structured); } catch (e) { return rulesOf(null); } }
+    function findNpc(state, name) {
+        const n = String(name || "").trim().toLowerCase();
+        if (!n) return null;
+        const list = (state && state.npcs) || [];
+        return list.find((x) => String(x.name || "").trim().toLowerCase() === n)
+            || list.find((x) => String(x.id || "").toLowerCase() === n)
+            || list.find((x) => String(x.role || x.relationship || "").trim().toLowerCase() === n) || null;
+    }
+    // 当前回合在场的主要互动角色:最近一张结构化卡正文最后出现的 npc
+    function currentTarget(state) {
+        const hist = (state && state.history) || [];
+        for (let i = hist.length - 1; i >= 0; i--) {
+            const h = hist[i];
+            if (!h || h.role !== "ai" || !String(h.text || "").includes("data-structured-card")) continue;
+            const txt = String(h.text || "").replace(/<[^>]*>/g, " ");
+            let hit = null;
+            for (const npc of (state.npcs || [])) { if (txt.includes(String(npc.name || ""))) hit = npc; }
+            return hit || null;
+        }
+        return null;
+    }
+    function stageOf(aff) { aff = Number(aff) || 0; return aff >= 75 ? "倾心" : aff >= 60 ? "心动" : aff >= 30 ? "熟络" : "相识"; }
+    function loveStateOf(state) {
+        if (!state || !state.loveState || typeof state.loveState !== "object") {
+            if (state) state.loveState = { lockedId: "", lockedName: "" };
+        }
+        return state ? state.loveState : { lockedId: "", lockedName: "" };
+    }
+    function lockedNpcOf(state, ls) {
+        const l = ls || loveStateOf(state);
+        if (!l.lockedId && !l.lockedName) return null;
+        return (state.npcs || []).find((x) => String(x.id || "") === String(l.lockedId || "") || String(x.name || "") === String(l.lockedName || "")) || null;
+    }
+    /* ---- 结算:点选选项 → love 标签 → npc 好感;锁线后他人 affection 冻结(淡出) ---- */
+    function settleChoice({ love = "", target = "" } = {}) {
+        try {
+            if (!isLoveSession()) return null;
+            const state = getState();
+            if (!state) return null;
+            const npc = findNpc(state, target) || currentTarget(state);
+            if (!npc) return null;
+            const r = rules();
+            const d = r.affection[love] || r.affection.neutral;
+            const ls = loveStateOf(state);
+            const lockedNpc = lockedNpcOf(state, ls);
+            const isLockedNpc = lockedNpc && (String(lockedNpc.id) === String(npc.id || "") || String(lockedNpc.name) === String(npc.name || ""));
+            const oldAff = Number(npc.affection) || 0;
+            const oldFav = Number(npc.favor) || 0;
+            let dAff = Number(d.affection) || 0;
+            if (lockedNpc && !isLockedNpc && dAff > 0) dAff = 0; // 锁线后其余角色感情不再升温
+            npc.favor = Math.max(0, Math.min(100, oldFav + (Number(d.favor) || 0)));
+            npc.affection = Math.max(-100, Math.min(100, oldAff + dAff));
+            // 自动锁线:未锁时若有角色爱慕 ≥ lock_at,锁定爱慕最高的那位(其余自动淡出)
+            let lockedNow = false, lockedName = "";
+            if (!lockedNpc) {
+                const top = (state.npcs || []).filter((x) => Number(x.affection) >= r.lock_at)
+                    .sort((a, b) => (Number(b.affection) || 0) - (Number(a.affection) || 0))[0];
+                if (top) {
+                    ls.lockedId = String(top.id || ""); ls.lockedName = String(top.name || "");
+                    lockedNow = true; lockedName = String(top.name || "");
+                    try { StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(state), text: `> 💗 **心动锁定**：你与 ${top.name} 的距离已近到无法忽视。从这一刻起，故事的重心将落在你们之间——其他人会渐渐退到朋友的位置。` }); } catch (e) {}
+                }
+            }
+            StateService.save();
+            syncBar();
+            const stage = stageOf(npc.affection);
+            return { npc, love, dFavor: (Number(npc.favor) - oldFav), dAffection: (Number(npc.affection) - oldAff), stage, lockedNow, lockedName };
+        } catch (e) { console.warn("[Love] settleChoice:", e); return null; }
+    }
+    /* ---- UI:顶部角色条 ---- */
+    function syncBar() {
+        try {
+            const box = document.getElementById("play-love-bar");
+            if (!box) return;
+            if (!isLoveSession()) { box.classList.remove("show"); box.innerHTML = ""; return; }
+            const state = getState();
+            const list = (state && state.npcs) || [];
+            const r = rules();
+            const ls = loveStateOf(state);
+            const lockedNpc = lockedNpcOf(state, ls);
+            const cur = currentTarget(state);
+            const html = list.map((n) => {
+                const aff = Number(n.affection) || 0;
+                const pct = Math.max(0, Math.min(100, (aff + 100) / 2));
+                const lockedCls = lockedNpc && (String(lockedNpc.id) === String(n.id || "") || String(lockedNpc.name) === String(n.name || "")) ? " locked" : "";
+                const isCur = cur && String(cur.name) === String(n.name || "") ? " active" : "";
+                const nm = esc(String(n.name || "?"));
+                const isImg = String(n.avatar || "").startsWith("http") || String(n.avatar || "").startsWith("data:");
+                const av = isImg ? `<img src="${esc(String(n.avatar || "").replace(/"/g, "%22"))}" alt="">` : esc((String(n.name || "?")[0]));
+                return `<div class="love-npc${lockedCls}${isCur}" data-lv-npc="${esc(nm)}"><div class="lv-av">${av}</div>` +
+                    `<div><div class="lv-name">${nm}</div><div class="lv-aff"><b>♥ ${aff}</b> · ${esc(stageOf(aff))}</div>` +
+                    `<div class="lv-heart"><i style="width:${pct}%;"></i></div></div></div>`;
+            }).join("");
+            box.innerHTML = html;
+            box.classList.add("show");
+            Array.prototype.forEach.call(box.querySelectorAll("[data-lv-npc]"), (el) => {
+                el.addEventListener("click", (ev) => {
+                    ev.stopPropagation();
+                    try { showNpcCard(el, findNpc(state, el.getAttribute("data-lv-npc"))); } catch (e) {}
+                });
+            });
+        } catch (e) { console.warn("[Love] syncBar:", e); }
+    }
+    function closePop() {
+        const p = document.getElementById("lv-pop-el");
+        if (p) p.remove();
+    }
+    function showNpcCard(anchor, npc) {
+        closePop();
+        if (!npc) return;
+        const st = getState();
+        const ls = loveStateOf(st);
+        const lockedNpc = lockedNpcOf(st, ls);
+        const isLocked = lockedNpc && (String(lockedNpc.id) === String(npc.id || "") || String(lockedNpc.name) === String(npc.name || ""));
+        const nm = esc(String(npc.name || "?"));
+        const isImg = String(npc.avatar || "").startsWith("http") || String(npc.avatar || "").startsWith("data:");
+        const av = isImg ? `<img src="${esc(String(npc.avatar || "").replace(/"/g, "%22"))}" alt="">` : esc((String(npc.name || "?")[0]));
+        const prof = (npc.profile && typeof npc.profile === "object") ? npc.profile : {};
+        const lines = [
+            prof.identity ? `身份：${esc(String(prof.identity))}` : (npc.relation ? `身份：${esc(String(npc.relation))}` : ""),
+            String(npc.gender || "") ? `性别：${esc(String(npc.gender))}` : "",
+            prof.age ? `年龄：${esc(String(prof.age))}` : "",
+            String(npc.mood || "") ? `心情：${esc(String(npc.mood))}` : "",
+            String(npc.status || "") ? `状态：${esc(String(npc.status))}` : "",
+            prof.personality ? `性格：${esc(String(prof.personality))}` : "",
+            npc.traits ? `特质：${esc(String(npc.traits))}` : "",
+            isLocked ? "🔒 你们已经走到一起" : ""
+        ].filter(Boolean).join("\n");
+        const el = document.createElement("div");
+        el.id = "lv-pop-el";
+        el.className = "lv-pop";
+        el.innerHTML = `<div class="lvp-head"><div class="lvp-av">${av}</div><div><div class="lvp-t">${nm}${isLocked ? " 🔒" : ""}</div>` +
+            `<div class="lvp-s">友善 ${esc(String(npc.favor))} · 爱慕 ${esc(String(npc.affection ?? 0))}（${esc(stageOf(npc.affection))}）</div></div></div>` +
+            `<div class="lvp-body">${lines || "尚未了解的TA…"}</div>`;
+        document.body.appendChild(el);
+        const r = anchor.getBoundingClientRect();
+        el.style.left = Math.max(8, Math.min(window.innerWidth - el.offsetWidth - 8, r.left)) + "px";
+        el.style.top = Math.max(8, r.bottom + 6) + "px";
+        setTimeout(() => { const ex = document.getElementById("lv-pop-el"); if (ex && ex === el) ex.remove(); }, 5200);
+    }
+    function showFloat(anchorEl, dAff, dFav, npcName) {
+        try {
+            if (!anchorEl) return;
+            const r = anchorEl.getBoundingClientRect();
+            const parts = [];
+            if (dAff > 0) parts.push(`+${dAff} ♥`);
+            else if (dAff < 0) parts.push(`${dAff} ♥`);
+            if (dFav > 0) parts.push(`+${dFav} 友善`);
+            else if (dFav < 0) parts.push(`${dFav} 友善`);
+            const txt = parts.length ? parts.join(" ") : "";
+            if (!txt) return;
+            const f = document.createElement("div");
+            f.className = "love-float";
+            f.textContent = (npcName ? esc(npcName) + " " : "") + txt;
+            f.style.left = (r.left + r.width / 2 - 30) + "px";
+            f.style.top = (r.top - 8) + "px";
+            document.body.appendChild(f);
+            setTimeout(() => f.remove(), 1200);
+        } catch (e) {}
+    }
+    /* ---- 心动时刻卡(fields.heartbeat → overlay 全屏展示) ---- */
+    function showHeartbeat(hb) {
+        try {
+            const state = getState();
+            const npc = hb && hb.npc ? findNpc(state, hb.npc) : null;
+            const nm = npc ? String(npc.name || hb.npc) : String((hb && hb.npc) || "TA");
+            const isImg = npc && (String(npc.avatar || "").startsWith("http") || String(npc.avatar || "").startsWith("data:"));
+            const avHtml = npc && isImg
+                ? `<img src="${esc(String(npc.avatar || "").replace(/"/g, "%22"))}" alt="">`
+                : esc((String(nm) || "♥")[0]);
+            const box = document.getElementById("heartbeat-card-content");
+            const ov = document.getElementById("heartbeat-overlay");
+            if (!box || !ov) return;
+            box.innerHTML = `<div class="hb-title">♡ 心动时刻 ♡</div><div class="hb-av">${avHtml}</div>` +
+                `<div style="font-weight:800;letter-spacing:.06em;">${esc(nm)}</div>` +
+                `<div class="hb-en">“${esc(String((hb && hb.en) || ""))}”</div>` +
+                (hb && hb.zh ? `<div class="hb-zh">${esc(String(hb.zh))}</div>` : "") +
+                `<div class="hb-close">轻触继续</div>`;
+            ov.style.display = "flex";
+            const close = () => { ov.style.display = "none"; };
+            box.onclick = close;
+            setTimeout(close, 4200);
+        } catch (e) { console.warn("[Love] heartbeat:", e); }
+    }
+    /* ---- 钩子:结构化卡渲染完成后调用(每轮) ---- */
+    function afterCard(fields) {
+        try {
+            if (!isLoveSession()) return;
+            syncBar();
+            if (fields && fields.heartbeat) showHeartbeat(fields.heartbeat);
+        } catch (e) {}
+    }
+    /* ---- 结局解析(love 卡:HE/BE/遗憾,由最高爱慕/锁定线决出) ---- */
+    function resolveEnding(state) {
+        const r = rules();
+        const ls = loveStateOf(state);
+        const lockedNpc = lockedNpcOf(state, ls);
+        const pool = (state.npcs || []).filter((x) => x && Number.isFinite(Number(x.affection)));
+        const top = pool.slice().sort((a, b) => (Number(b.affection) || 0) - (Number(a.affection) || 0))[0] || null;
+        const npc = lockedNpc || (top && Number(top.affection) >= r.be_aff ? top : null);
+        if (!npc) return { type: "none", npc: null, affection: 0, roundCount: (state.history || []).filter((h) => h.role === "user").length };
+        const aff = Number(npc.affection) || 0;
+        const roundCount = (state.history || []).filter((h) => h.role === "user").length;
+        if (aff >= r.he_aff) return { type: "he", npc, affection: aff, roundCount };
+        if (aff >= r.be_aff) return { type: "be", npc, affection: aff, roundCount };
+        return { type: "none", npc: null, affection: 0, roundCount };
+    }
+    // 供结算钩子显示数值浮字:由 bindHtmlChoiceEvents 在 settle 后调用
+    function settleFromClick(btnEl, love, target) {
+        const res = settleChoice({ love, target });
+        if (res && btnEl) showFloat(btnEl, res.dAffection, res.dFavor, res.npc ? res.npc.name : "");
+        return res;
+    }
+    return { isLoveSession, settleChoice, settleFromClick, syncBar, afterCard, showHeartbeat, resolveEnding, rules, stageOf, findNpc, lockedNpcOf, loveStateOf };
+})();
 </script>
 <script>
 /* ===== 语言文游 LangPlay · 大厅 M1-M3:语种/手选档/沉浸模式(M8.5 起档位纯手动,测定流程已删) + 档案云端同步(M2) + 语言剧本库入口(M3,经 window.LangEngine 旁挂 play 引擎) ===== */
