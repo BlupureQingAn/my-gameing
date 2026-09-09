@@ -1918,13 +1918,17 @@ export default {
                 try { body = await request.json(); } catch (e) {}
                 const prompt = String(body.prompt || "").slice(0, 200).trim();
                 if (!prompt) return errorResponse("缺少 prompt", 400, null, "INVALID_PROMPT");
+                // R1 角色立绘:cover 端点复用同通道同密钥,ratio 支持竖版 3:4 半身像/1:1 头像;非 4:3 的键后缀区分,老 4:3 缓存不受影响
+                const ratio = ["3:4", "1:1", "4:3"].indexOf(String(body.ratio || "")) >= 0 ? String(body.ratio) : "4:3";
+                const ratioKey = ratio !== "4:3" ? ":" + ratio : "";
+                const SF_SIZE = { "4:3": "1152x864", "3:4": "864x1152", "1:1": "1024x1024" };
                 // consume=true:自建卡付费生成(100 云币);KV(u:{userId}:cv:{prompt})仅为同一用户同提示词防重复扣费(生成成功后前端保存即入卡数据 coverUrl,数据库永久持有)
                 const consume = body.consume === true;
                 const COVER_COST = 100;
                 const now = Date.now();
                 // 非 consume(官方卡读取):免登录直接查缓存——KV 预生成封面是公开数据,token 过期/未登录也应能命中(否则首页封面因 401 全空白)
                 if (!consume) {
-                    const cacheKey = "cv:" + prompt;
+                    const cacheKey = "cv:" + prompt + ratioKey;
                     const hit = coverCache.get(cacheKey);
                     if (hit && now - hit.ts < 180000) {
                         return new Response(JSON.stringify({ image: hit.image }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
@@ -1943,7 +1947,7 @@ export default {
                 // 走到生成路径才鉴权:consume(扣币)必须登录;pregen(官方卡未命中补生成)确认操作者
                 const auth = await authenticate(env, request);
                 if (auth.error) return auth.error;
-                const cacheKey = consume ? "u:" + auth.record.id + ":cv:" + prompt : "cv:" + prompt;
+                const cacheKey = (consume ? "u:" + auth.record.id + ":cv:" : "cv:") + prompt + ratioKey;
                 const hit = coverCache.get(cacheKey);
                 if (hit && now - hit.ts < 180000) {
                     return new Response(JSON.stringify({ image: hit.image }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
@@ -1973,7 +1977,7 @@ export default {
                             const r = await fetch("https://apihub.agnes-ai.com/v1/images/generations", {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${agnesKey}` },
-                                body: JSON.stringify({ model: "agnes-image-2.1-flash", prompt, size: "1K", ratio: "4:3", extra_body: { response_format: "url" } }),
+                                body: JSON.stringify({ model: "agnes-image-2.1-flash", prompt, size: "1K", ratio, extra_body: { response_format: "url" } }),
                                 signal: ac.signal
                             });
                             const d = await r.json().catch(() => ({}));
@@ -2006,7 +2010,7 @@ export default {
                         const r = await fetch("https://api.siliconflow.cn/v1/images/generations", {
                             method: "POST",
                             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${sfKey}` },
-                            body: JSON.stringify({ model: "Kwai-Kolors/Kolors", prompt, image_size: "1152x864", batch_size: 1, response_format: "url" }),
+                            body: JSON.stringify({ model: "Kwai-Kolors/Kolors", prompt, image_size: SF_SIZE[ratio] || "1152x864", batch_size: 1, response_format: "url" }),
                             signal: ac.signal
                         });
                         const d = await r.json().catch(() => ({}));
