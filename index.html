@@ -4870,6 +4870,22 @@
     .wk-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px dashed var(--line,#e2ccb0);font-size:.78rem}
     .wk-row:last-child{border-bottom:none}
     .wk-row b{color:#7c4fd8}
+    /* P2-4 学习中心统计周报(2026-09-09):wks-* 自成体系,不依赖上面的 .wk-bars 布局 */
+    .wks-cols{display:flex;gap:5px;margin-top:8px}
+    .wks-col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px}
+    .wks-track{width:100%;height:58px;display:flex;align-items:flex-end;justify-content:center;background:rgba(124,84,240,.06);border-radius:8px;overflow:hidden}
+    .wks-bar{width:64%;min-height:2px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,#7c4fd8,#c8aef2);transition:height .25s}
+    .wks-bar.today{background:linear-gradient(180deg,#2fc4b0,#8ce3cf)}
+    .wks-lab{font-size:.6rem;font-weight:700;color:var(--sub,#806a55);line-height:1.2}
+    .wks-mins{font-size:.56rem;color:var(--sub,#806a55);opacity:.75;line-height:1.2}
+    .wks-t{font-size:.8rem;font-weight:800;color:var(--text);margin-top:4px}
+    .wks-vt{font-size:.76rem;font-weight:800;color:var(--text);margin-bottom:4px}
+    .wks-track-line{display:flex;height:9px;border-radius:6px;overflow:hidden;background:rgba(124,84,240,.15)}
+    .wks-track-line .wks-vf{background:linear-gradient(90deg,#f0a63c,#f7cf6b);height:100%}
+    .wks-track-line .wks-vm{background:linear-gradient(90deg,#7c4fd8,#3f6fd8);height:100%}
+    .mb-rows{margin-top:2px}
+    .mb-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:4px 0;font-size:.76rem;font-weight:700;color:var(--text)}
+    .mb-row s{font-size:.66rem;color:var(--sub,#806a55);font-style:normal;font-weight:600;flex-shrink:0}
     /* ---- 语言文游 M4:点句即译 / 生词标色点查 / 生词本(学习态色 #7c4fd8 系) ---- */
     .lang-hall-img{width:100%;aspect-ratio:16/5;object-fit:cover;border-radius:14px;margin:8px 0 2px;border:1px solid var(--line)}
     .lg-learn-head{width:100%;aspect-ratio:16/4;object-fit:cover;border-radius:14px;margin:8px 0 2px;border:1px solid var(--line)}
@@ -5129,6 +5145,18 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <button onclick="MembershipService.closePanel()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--sub);"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z"/></svg></button>
         </div>
         <div class="list-sub" id="membership-intro-text">会员期内 AI 对话不限次、不消耗云币；云币用于解锁剧本卡与免费额度超限后的 AI 对话。</div>
+        <!-- P2-5 权益卖点重排(2026-09-09):学习效果免费可见,会员卖「不限量 × 全解锁」 -->
+        <div id="membership-benefit-box" style="margin:10px 0 2px;border:1px dashed rgba(124,84,240,.5);border-radius:14px;padding:10px 12px;background:rgba(124,84,240,.05);">
+            <div style="font-size:.8rem;font-weight:900;color:#7c4fd8;margin-bottom:6px;">📊 学习数据全员可见 · 不用开会员</div>
+            <div class="list-sub" style="line-height:1.7;">今日一句点译 · 学习统计与 7 日周报 · 生词本与艾宾浩斯复习计划（1·2·4·7 天）——进步看得见，才值得为效率付费。</div>
+            <div style="font-size:.8rem;font-weight:900;color:#c0392b;margin:8px 0 4px;">👑 会员额外解锁</div>
+            <div class="mb-rows">
+                <div class="mb-row"><span>⚡ 点译 / 复盘不限量</span><s>免费每天各 10 次</s></div>
+                <div class="mb-row"><span>🎫 全部剧本免解锁 · 新卡抢先玩</span><s>非会员 1 元解锁</s></div>
+                <div class="mb-row"><span>☁️ 云端进度同步 · 复习计划随身走</span><s>自动续排不丢档</s></div>
+                <div class="mb-row"><span>🤖 中文剧本 AI 无限对话</span><s>免云币消耗</s></div>
+            </div>
+        </div>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin:10px 0;padding:10px 12px;border-radius:12px;background:var(--card-bg,#fffdf8);border:1px solid var(--line);">
             <div style="font-size:0.9rem;font-weight:700;">云币余额：<span id="membership-coin-balance" style="color:var(--accent-dark,#c0392b);">--</span></div>
         </div>
@@ -5314,6 +5342,10 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <button type="button" class="lang-lang-card active" data-m="progressive" onclick="LangController.setImmersion('progressive')"><span style="font-size:1.35rem;">🌱</span><span>渐进沉浸 <span class="lang-badge en" style="width:auto;height:auto;border-radius:8px;padding:1px 7px;font-size:.62rem;">推荐</span></span><span class="list-sub" style="margin:0;">译文随剧情推进逐渐退场</span></button>
                     <button type="button" class="lang-lang-card" data-m="full" onclick="LangController.setImmersion('full')"><span style="font-size:1.35rem;">🌊</span><span>全沉浸</span><span class="list-sub" style="margin:0;">纯英语体验，辅助全部手动触发</span></button>
                 </div>
+
+                <div class="list-title" style="margin-top:18px;" id="lang-learn-stats">📊 学习统计与周报 <span class="list-sub" style="margin-left:4px;">玩英语剧本、刷词、复习都会累计学习时长</span></div>
+                <div class="list-sub">学习数据每天自动统计：今天学了多久、连续几天打卡、生词掌握进度——进步看得见，更容易坚持。</div>
+                <div id="lang-learn-stats-box" style="margin-top:8px;"><div class="list-sub" style="padding:12px 0;">登录后查看</div></div>
 
                 <div class="list-title" style="margin-top:18px;" id="lang-learn-drill">🔁 考纲词刷词 <span class="list-sub" style="margin-left:4px;">10 词/轮 · 弱词优先 · 翻卡自评</span></div>
                 <div class="list-sub">按你的当前档词库出词：先看英文想释义，翻面核对——记住的收进「已掌握」，没记住的自动排进下轮（词测与刷词共用一份进度）。</div>
@@ -6265,10 +6297,10 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
         },
         // 会员档位(P1 2026-09-08 精简 3 档化:月/年+终身;周/季取消):期内 AI 对话不限次、不消耗云币
         memberPlans: {
-            monthly: { id: "monthly", name: "月度会员", price: "21", days: 30, desc: "30 天 AI 不限次 · 免云币消耗" },
-            yearly:  { id: "yearly",  name: "年度会员", price: "118", days: 365, desc: "365 天 AI 不限次 · 免云币消耗", tag: "主推 · 年付省一半" }
+            monthly: { id: "monthly", name: "月度会员", price: "21", days: 30, desc: "30 天点译复盘不限量 · 全部剧本免解锁" },
+            yearly:  { id: "yearly",  name: "年度会员", price: "118", days: 365, desc: "365 天点译复盘不限量 · 全部剧本免解锁", tag: "主推 · 年付省一半" }
         },
-        lifetimePlan: { id: "lifetime", name: "终身会员", price: "199", originalPrice: "299", desc: "永久不限量 · 免所有云币消耗" },
+        lifetimePlan: { id: "lifetime", name: "终身会员", price: "199", originalPrice: "299", desc: "永久不限量 · 全部剧本免解锁 · 新卡抢先玩" },
         // P1 小额直付救急包(与 worker PACK_PLANS 对齐 rescue1/rescue3;前端展示+下单用,额度由 worker extrapack 结算)
         packPlans: {
             rescue1: { id: "rescue1", name: "点译救急包", price: "1", gloss: 10, recap: 0, desc: "¥1 = 点译 10 次" },
@@ -22164,7 +22196,7 @@ function openNpcProfile(npcId) {
             api.syncSubNav(viewId);
             if (viewId === "view-lang") { api.renderHome(); return; }
             if (viewId === "view-lang-library") { api.renderLibrary(); return; }
-            if (viewId === "view-lang-learn") { api.refresh(); return; }
+            if (viewId === "view-lang-learn") { api.refresh(); api.renderLearnStats(false); return; }
             if (viewId === "view-lang-vocab") { api.refreshVocab(); return; }
             if (viewId === "view-lang-leaderboard") { api.renderLeaderboard(); }
         },
@@ -22551,7 +22583,91 @@ function openNpcProfile(npcId) {
                 '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;"><div class="list-sub" style="margin:0;">' + line + "</div>" +
                 '<button type="button" class="mini-btn ghost" onclick="LangController.goLearnStats()">统计与周报 ›</button></div>';
         },
-        goLearnStats: function () { api.goLearn(); api.anchor("#lang-learn-stats"); },
+        /* P2-4 学习中心统计周报区(2026-09-09):7 日柱状+本周小结+生词掌握条;数据同 learn-stats 单接口
+           force=true 绕过 30s 缓存强制刷新(点击「统计与周报」进入时) */
+        renderLearnStats: function (force) {
+            var box = $("lang-learn-stats-box");
+            if (!box) return;
+            if (!token()) {
+                box.innerHTML = '<div class="list-sub" style="padding:12px 0;">登录后查看学习统计与周报——数据随账号云端同步，换设备不丢。</div>';
+                return;
+            }
+            if (!force && myStatsCache && Date.now() - myStatsCache.at < 30000) { api.learnStatsHtml(myStatsCache.data); return; }
+            box.innerHTML = '<div class="list-sub" style="padding:12px 0;">统计加载中…</div>';
+            fetch(API_BASE + "/api/lang/learn-stats?lang=en", { headers: { "X-Auth-Token": "Bearer " + token() } })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (d) {
+                    if (!d || !d.ok) {
+                        var bx = $("lang-learn-stats-box");
+                        if (bx) bx.innerHTML = '<div class="list-sub" style="padding:12px 0;">统计加载失败，点「刷新」重试</div>';
+                        return;
+                    }
+                    myStatsCache = { at: Date.now(), data: d };
+                    api.learnStatsHtml(d);
+                })
+                .catch(function () {
+                    var bx = $("lang-learn-stats-box");
+                    if (bx) bx.innerHTML = '<div class="list-sub" style="padding:12px 0;">网络开小差了，点「刷新」重试</div>';
+                });
+        },
+        learnStatsHtml: function (d) {
+            var box = $("lang-learn-stats-box");
+            if (!box) return;
+            var today = String(d.today || "");
+            var d7 = d.days7 || [], maxS = 1, i, it, s;
+            for (i = 0; i < d7.length; i++) { s = Number(d7[i].seconds) || 0; if (s > maxS) maxS = s; }
+            var wd = ["日", "一", "二", "三", "四", "五", "六"];
+            function wkLab(dayStr) {
+                try { var dt = new Date(Date.parse(String(dayStr) + "T00:00:00Z") + 8 * 3600000); return "周" + wd[dt.getUTCDay()]; } catch (e) { return ""; }
+            }
+            var cols = "", mini = "";
+            for (i = 0; i < d7.length; i++) {
+                it = d7[i];
+                s = Number(it.seconds) || 0;
+                var pct = Math.max(2, Math.round(s / maxS * 100));
+                var m = Math.floor(s / 60);
+                cols += '<div class="wks-col"><div class="wks-track"><div class="wks-bar' + (String(it.day) === today ? " today" : "") + '" style="height:' + pct + '%" title="' + api.esc(String(it.day)) + " " + api.fmtDur(s) + '"></div></div>' +
+                    '<div class="wks-lab">' + wkLab(it.day) + "</div>" +
+                    '<div class="wks-mins">' + (m > 0 ? m + " 分" : "·") + "</div></div>";
+                if (s > 0) mini = "近 7 天你学了 " + api.fmtDur(s);
+            }
+            var v = d.vocab || {};
+            var vTotal = Number(v.total || 0);
+            var vMas = Number(v.mastered || 0), vFam = Number(v.familiar || 0), vNew = Number(v.new || 0);
+            var masPct = vTotal ? Math.round(vMas / vTotal * 100) : 0;
+            var famPct = vTotal ? Math.round(vFam / vTotal * 100) : 0;
+            var streak = Number(d.streak || 0);
+            var weekS = Number(d.week_seconds || 0);
+            var rows =
+                '<div class="wk-row"><span>本周学习</span><b>' + api.fmtDur(weekS) + "</b></div>" +
+                '<div class="wk-row"><span>连续学习</span><b>' + (streak > 0 ? "🔥 " + streak + " 天" : "今天开始第一段连胜") + "</b></div>" +
+                '<div class="wk-row"><span>累计学习</span><b>' + api.fmtDur(d.total_seconds || 0) + " · " + Number(d.total_days || 0) + " 天</b></div>" +
+                '<div class="wk-row"><span>本周新收生词</span><b>' + Number(d.week_new_vocab || 0) + " 个</b></div>" +
+                '<div class="wk-row"><span>刷词 / 词测练词</span><b>' + Number(d.bank_words || 0) + " 个</b></div>";
+            var vHtml = vTotal > 0
+                ? '<div style="margin-top:10px;"><div class="wks-vt">生词掌握 <span class="list-sub" style="margin-left:2px;">已掌握 ' + vMas + " · 眼熟 " + vFam + " · 新学 " + vNew + "</span></div>" +
+                    '<div class="wks-track-line"><div class="wks-vf" style="width:' + famPct + '%" title="眼熟 ' + vFam + '"></div><div class="wks-vm" style="width:' + masPct + '%" title="已掌握 ' + vMas + '"></div></div>' +
+                    '<div class="list-sub" style="margin-top:4px;">' + (vMas === vTotal ? "生词全部掌握 🎉 太强了，可以挑战更高档剧本了" : "深色段 = 已掌握进度 · 玩剧本时点词点句，生词本会自动长出来") + "</div></div>"
+                : '<div class="list-sub" style="margin-top:10px;">还没收过生词——去玩一个英语剧本，点一下不认识的字词就会自动收进生词本，开始积累吧。</div>';
+            box.innerHTML =
+                '<div class="stat-grid" style="grid-template-columns:repeat(4,1fr);margin-top:0;">' +
+                '<div class="stat-cell"><b>' + api.fmtDur(d.today_seconds || 0) + "</b><s>今日学习</s></div>" +
+                '<div class="stat-cell"><b>' + api.fmtDur(weekS) + "</b><s>本周学习</s></div>" +
+                '<div class="stat-cell"><b>' + (streak > 0 ? "🔥 " : "") + streak + "</b><s>连续天数</s></div>" +
+                '<div class="stat-cell"><b>' + Number(d.total_days || 0) + "</b><s>累计天数</s></div>" +
+                "</div>" +
+                '<div style="margin-top:12px;"><div class="wks-t">近 7 日学习</div><div class="wks-cols">' + cols + "</div>" +
+                (mini ? '<div class="list-sub" style="margin-top:3px;text-align:center;">' + mini + "，坚持就是胜利 💪</div>" : '<div class="list-sub" style="margin-top:3px;text-align:center;">这 7 天还没开始——从「今日一句」或推荐剧本的第一句开始吧</div>') +
+                "</div>" +
+                '<div class="wks-t" style="margin-top:12px;">本周小结</div>' + rows +
+                vHtml +
+                '<div style="margin-top:10px;text-align:center;"><button type="button" class="lt-btn ghost" onclick="LangController.renderLearnStats(true)">↻ 刷新统计</button></div>';
+        },
+        goLearnStats: function () {
+            api.goLearn();
+            api.renderLearnStats(true);
+            api.anchor("#lang-learn-stats");
+        },
         renderMemberCta: function () {
             var el = $("lang-member-cta");
             if (!el) return;
@@ -22562,7 +22678,7 @@ function openNpcProfile(npcId) {
             el.innerHTML = '<div class="member-band" onclick="MembershipService.openPanel()">' +
                 '<span style="font-size:1.55rem;">👑</span>' +
                 '<div style="flex:1;min-width:0;"><div style="font-weight:900;font-size:.88rem;">云吞吞会员</div>' +
-                '<div style="font-size:.68rem;line-height:1.5;opacity:.85;margin-top:2px;">生词复习计划 · 学习统计与周报 · 点译复盘不限量 · 全部剧本免解锁</div></div>' +
+                '<div style="font-size:.68rem;line-height:1.5;opacity:.85;margin-top:2px;">点译复盘不限量（每天各 10 次免费）· 全部剧本免解锁 · 生词本复习计划</div></div>' +
                 '<span style="font-weight:900;flex-shrink:0;">开通 ›</span></div>';
         },
         renderContinue: function () {
