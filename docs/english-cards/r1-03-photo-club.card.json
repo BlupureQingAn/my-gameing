@@ -1,0 +1,758 @@
+{
+  "title": "Autumn’s Shadow",
+  "title_zh": "秋影心动",
+  "lang": "en",
+  "band": "cet4",
+  "category": "campus",
+  "category_zh": "校园",
+  "theme": "minimal",
+  "love_mode": true,
+  "gender_target": "male",
+  "text": "## Premise\nYou are a second-year male student at Crestwood University, excited about the fresh start of the semester. As you walk through the bustling campus during the club recruitment week, you find yourself pulled into the Photography Club. Your current situation is both thrilling and daunting, as you are eager to explore your passion for photography but unsure of what to expect from the club's dynamic.\n\n## The World\nThe Photography Club at Crestwood University is a vibrant community of artists and enthusiasts. The club meets in a cozy, well-lit room filled with cameras, lenses, and darkroom equipment. The club's atmosphere is a mix of creativity and camaraderie, with members ranging from beginners to experienced photographers.\n\nThe club's activities are diverse, ranging from weekly photo shoots and critiques to workshops and guest speaker events. The club's rhythm is punctuated by the upcoming Autumn Photo Exhibition, which serves as a showcase for members' work and a chance to network with the local community.\n\nOn campus, the Photography Club is well-known for its lively spirit and the high-quality work produced by its members. The club's meetings are a blend of serious discussions about composition and technique, along with laughter and the occasional impromptu photo session. The members are a diverse group, each bringing their unique perspectives and talents to the club.\n\n## Lily\nLily, the club's leader, is the first to notice your potential. You meet during a critique session where her sharp eyes immediately pick out the uniqueness in your shots. Her firm but respectful approach wins you over. You start to hang around after meetings, sharing your passion for urban life. Her favorite interaction is when you both debate the best angles for capturing a bustling street scene.\n\n## Mia\nMia, the portrait photographer, catches your eye with her enigmatic smile. You first chat during a coffee break, and her soft, mysterious tone draws you in. She's intrigued by your candid shots of everyday moments. You often exchange tips during shoots, finding common ground in the essence of human expression. Her gentle \"my dear\" fills you with warmth.\n\n## Ava\nAva's energy is contagious, and you bump into her during a lively gym session. She's as enthusiastic about photography as she is about sports. Your paths cross during a city scavenger hunt, where her wit and athleticism shine. You're both in awe of the beauty around you, and her \"Hey, you!\" becomes a regular greeting. Her genuine concern for your well-being warms your heart.\n\n## Sofia\nSofia's soothing voice and gentle smile make you feel at ease during your first encounter in the club's darkroom. You share a laugh over a spilled developer, and her kindness stands out. You often collaborate on projects, her tender \"Dear\" reminding you of her thoughtful nature. Her passion for exploring the city with a camera complements yours perfectly.\n\n## Grace\nGrace's melodic speech and childlike wonder captivate you during a workshop. Her passion for analyzing camera settings is contagious, and you find yourself drawn to her detailed shots. You share a moment of excitement over a perfect shot, and her genuine enthusiasm is infectious. Her \"My dear\" with a gentle smile makes every interaction feel special.\n\n## Love Routes — Meeting Phase\n\n### Lily\nLily, the artiste, leaves a lasting impression during the club's first critique session. Her critiques are sharp but respectful, and you find yourself returning to her booth for more. You strike up a conversation about your favorite painters, and her knowledge opens up a new world to you. Her \"I see what you mean\" becomes a moment of shared insight.\n\n### Grace\nGrace's melodic speech and childlike wonder captivate you during a workshop. Her passion for analyzing camera settings is contagious, and you find yourself drawn to her detailed shots. You share a moment of excitement over a perfect shot, and her genuine enthusiasm is infectious. Her \"My dear\" with a gentle smile makes every interaction feel special.\n\n### Sofia\nSofia's soothing voice and gentle smile make you feel at ease during your first encounter in the club's darkroom. You share a laugh over a spilled developer, and her kindness stands out. You often collaborate on projects, her tender \"Dear\" reminding you of her thoughtful nature. Her passion for exploring the city with a camera complements yours perfectly.\n\n## Heartbeat Moments\n\n1. **Alone in the Club Room**: After a long day of editing photos, you find yourself alone in the club room. The dim lights and the quietness make it the perfect spot to chat about your dreams and fears. It's here that you realize just how much you value her company.\n\n2. **Walking Home Together After Rain**: The first time you walk home together after a rainstorm, you're both drenched and laughing. The warm rain and the sound of the city echo in your ears, making the moment feel magical and unforgettable.\n\n3. **Backstage Before the Show**: As you prepare for the autumn photography exhibit, you find yourself backstage before the show. The excitement in the air is palpable, and you share a glance that says it all. It's a moment of silent understanding that deepens your bond. \n\nTotal word count: 277 words.\n\n## Round Map\n\n| Round Number | Scene Keyword | Characters Present |\n|--------------|--------------------------|------------------------|\n| 1 | Introduction | You, Lily |\n| 2 | Introduction | You, Mia |\n| 3 | Introduction | You, Ava |\n| 4 | Introduction | You, Sofia |\n| 5 | Introduction | You, Grace |\n| 6 | Collaboration | You, Sofia |\n| 7 | Collaboration | You, Lily |\n| 8 | Collaboration | You, Mia |\n| 9 | Collaboration | You, Ava |\n| 10 | Collaboration | You, Grace |\n| 11 | Heartbeat Moment | You, Sofia |\n| 12 | Heartbeat Moment | You, Lily |\n| 13 | Heartbeat Moment | You, Mia |\n| 14 | Heartbeat Moment | You, Ava |\n| 15 | Heartbeat Moment | You, Grace |\n| 16 | Final Collaboration | You, All |\n| 17 | Ideal Final Round | You, Sofia |\n\nTotal word count: 230",
+  "structured": {
+    "band": "cet4",
+    "theme": "minimal",
+    "love_mode": true,
+    "world": {
+      "era": "当代校园",
+      "genre": "校园摄影恋爱",
+      "summary": "The Photography Club at Crestwood University is a hub for artistic expression and camaraderie, where members explore their passion for photography in a vibrant and supportive environment. The club's cozy setting, equipped with a range of cameras and equipment, fosters creativity and friendship among its diverse members.",
+      "rules": "1. Respect each other's work and opinions. 2. Attend club meetings and participate actively. 3. Follow safety guidelines in the darkroom. 4. Be open to learning and improving your skills.",
+      "atmosphere": "Creative and Welcoming",
+      "vocab": [
+        "photography",
+        "camera",
+        "lens",
+        "darkroom",
+        "composition",
+        "exposure",
+        "artistic",
+        "camaraderie",
+        "creativity"
+      ]
+    },
+    "identity": {
+      "name": "James",
+      "gender": "男",
+      "age": 20,
+      "role": "大二男生,本只想混学分却认真爱上按快门,新社员",
+      "background": "A second-year student at Crestwood University, James initially joined the Photography Club just to fulfill a class requirement, but his passion for capturing moments quickly grew."
+    },
+    "npcs": [
+      {
+        "name": "Lily",
+        "gender": "女",
+        "age": 20,
+        "role": "摄影社副社长·学生会主席",
+        "personality": "A no-nonsense leader with a passion for photography, she speaks in concise, sharp tones.",
+        "relationship": "Your esteemed and slightly intimidating photography mentor",
+        "appearance": "Tall with a poised posture, Lily has chestnut hair styled in a sleek bun, sharp blue eyes, and a preference for casual yet chic attire. Her aura is both commanding and approachable.",
+        "profile": {
+          "personality": "She leads with a firm hand yet listens intently, her tone sharp and precise.",
+          "hobby": "Her hobby is photographing the vibrant urban life around Crestwood University.",
+          "redline": "She cannot stand disorganization or poor quality in any form.",
+          "soft": "She is deeply touched by genuine effort and artistic vision.",
+          "speech": "She often addresses you as 'Partner' with a mix of respect and warmth."
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_r1-03-photo-club_lily.png"
+      },
+      {
+        "name": "Mia",
+        "gender": "女",
+        "age": 20,
+        "role": "美术系学姐·神秘文艺",
+        "personality": "She speaks softly, rarely smiling, her words carrying an air of mystery and elegance.",
+        "relationship": "She's an aloof but intriguing mentor to you in the photography club.",
+        "appearance": "Tall and slender, with long, chestnut hair cascading over her shoulders, hazel eyes reflecting a depth that seems to match her enigmatic personality, often seen in flowing blouses and vintage-style dresses, exuding an artistic and distant aura.",
+        "profile": {
+          "personality": "Her tone is soft, rarely smiling, her words woven with an air of mystery and grace.",
+          "hobby": "She is deeply passionate about portrait photography, capturing the essence of her subjects.",
+          "redline": "She dislikes interruptions during her shooting sessions.",
+          "soft": "Her heart is moved by genuine emotion in a person's eyes.",
+          "speech": "She usually calls you 'my dear,' her voice gentle and affectionate."
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_r1-03-photo-club_mia.png"
+      },
+      {
+        "name": "Ava",
+        "gender": "女",
+        "age": 20,
+        "role": "篮球队队长·元气直率",
+        "personality": "A lively and passionate player, often heard exclaiming 'Let's go!' in the gym. She's as quick-witted as she is athletic.",
+        "relationship": "A fellow photography enthusiast and team member at Crestwood University",
+        "appearance": "A towering figure with long, flowing auburn hair, sharp green eyes, wearing casual, stylish workout attire; her smile lights up the room, more radiant than the viewfinder of a camera.",
+        "profile": {
+          "personality": "A lively and passionate player, often heard exclaiming 'Let's go!' in the gym. She's as quick-witted as she is athletic.",
+          "hobby": "Capturing life's moments through photography",
+          "redline": "Don't belittle her skills or underestimate her strength",
+          "soft": "Her genuine concern for others can warm the coldest of hearts",
+          "speech": "Hey, you! Don't worry, I've got this!"
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_r1-03-photo-club_ava.png"
+      },
+      {
+        "name": "Sofia",
+        "gender": "女",
+        "age": 20,
+        "role": "校园广播主播·温柔声线",
+        "personality": "She speaks softly, always with a gentle smile, her words like a warm breeze that soothes the soul",
+        "relationship": "A friendly acquaintance who visits the photography club every Wednesday to record interviews",
+        "appearance": "Tall and slender, with long, chestnut hair cascading over her shoulders, big, expressive blue eyes, dressed in casual, stylish attire, exuding a serene and approachable aura",
+        "profile": {
+          "personality": "Her voice is soft and soothing, often accompanied by a gentle smile that makes you feel at ease",
+          "hobby": "She has a passion for photography and exploring the city",
+          "redline": "She dislikes loud noises and people who are overly aggressive",
+          "soft": "Her heart is easily touched by acts of kindness and genuine concern",
+          "speech": "She calls you 'Dear' with a tender tone"
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_r1-03-photo-club_sofia.png"
+      },
+      {
+        "name": "Grace",
+        "gender": "女",
+        "age": 20,
+        "role": "数学系学霸·软萌反差",
+        "personality": "Grace is naturally naive, her eyes twinkling with surprise and her speech soft and melodic. She's a math genius, always lost in numbers but endearingly so.",
+        "relationship": "Grace views you as a curious friend from the photography club.",
+        "appearance": "Tall with sleek black hair styled in a casual ponytail, bright blue eyes, wearing a flowing white blouse and dark jeans. She has an aura of serene intelligence and a natural elegance that draws the eye.",
+        "profile": {
+          "personality": "Grace is endearing with her naive charm and soft, melodic speech. She's deeply engrossed in numbers but still retains a childlike wonder.",
+          "hobby": "Grace loves analyzing camera parameters and photographing the beauty around her with a passion for detail.",
+          "redline": "Don't insult her intelligence or underestimate her photography skills.",
+          "soft": "Grace's heart swells at the sight of a perfect shot, capturing the essence of the moment.",
+          "speech": "She often calls you 'My dear' with a gentle smile."
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_r1-03-photo-club_grace.png"
+      }
+    ],
+    "timeline": {
+      "start": {
+        "year": 2026,
+        "month": 10,
+        "day": 5
+      },
+      "note": "恋爱攻略线,单次会话 15-25 分钟可通关一段完整攻略"
+    },
+    "scene_style": {
+      "env_templates": [],
+      "option_style": "romantic daily choices"
+    },
+    "love_rules": {
+      "slots": 3,
+      "lock_at": 70,
+      "he_end": {
+        "min_affection": 75,
+        "heartbeat_min": 1
+      },
+      "be_end": {
+        "min_affection": 30
+      },
+      "affection": {
+        "flirt": {
+          "favor": 1,
+          "affection": 6
+        },
+        "kind": {
+          "favor": 4,
+          "affection": 1
+        },
+        "tease": {
+          "favor": 2,
+          "affection": 2
+        },
+        "neutral": {
+          "favor": 1,
+          "affection": 0
+        },
+        "awkward": {
+          "favor": 0,
+          "affection": -2
+        },
+        "rude": {
+          "favor": -4,
+          "affection": -3
+        },
+        "reject": {
+          "favor": -3,
+          "affection": -8
+        }
+      }
+    },
+    "scenes": {
+      "heartbeat": [
+        {
+          "where": "Photography Club meeting",
+          "when": "When new ideas are shared or a member achieves a personal milestone in photography."
+        },
+        {
+          "where": "the campus garden at golden hour",
+          "when": "when she asks you to model for one shot and the light catches your face"
+        },
+        {
+          "where": "the darkroom after the meeting",
+          "when": "when you develop prints together in the red glow and she stays a step closer than usual"
+        }
+      ]
+    },
+    "first_scene": {
+      "story": "It's a crisp autumn morning at Crestwood University. As you push open the creaky door to the bustling campus, a sudden burst of excitement surges through you. Today is the first day of the club recruitment week, and you're on a mission to find your place among the myriad of possibilities. Your gaze drifts towards the Photography Club booth, and there, surrounded by a sea of students, you spot Lily and Mia.\n\nLily, with her artistic aura and infectious energy, greets you with a warm smile, \"Hey there! Welcome to the Photography Club. I'm Lily. Are you new to the club?\"\n\nHer vibrant eyes lock with yours, and you find yourself drawn in, \"Yeah, I'm interested in photography, and I thought this club might be a great fit.\"\n\nMia, standing nearby with her enigmatic smile, chimes in, \"Nice to meet you too! I'm Mia. Have you ever taken any portrait shots?\"\n\nYou blush slightly, \"I have, but not seriously. I mostly stick to candid photography.\"\n\nLily leans in, \"Well, candid shots have a way of capturing the essence of a moment. Do you want to see my latest street photography? It's been quite an adventure.\"\n\nYou nod eagerly, feeling the stir of anticipation. As Lily and Mia begin to show you their work, you can't help but feel a connection, a shared passion that you must delve into further. Suddenly, the world around you fades away, and it's just the three of you, surrounded by the art and the potential for endless discovery.\n\nYou must immediately make a choice—follow your heart towards the unknown world of photography or take a cautious step back, unsure of the direction this newfound connection might lead you.\n\nThe club room, filled with the scent of coffee and the murmur of conversations, feels like a haven. You spend hours there, exploring the art of photography, your fingers dancing across the dials of a camera, trying to capture the beauty that surrounds you. The friendships you form are as vivid as the images you create, each person adding a unique color to your canvas of life.\n\nOne evening, as the sun sets, casting a golden hue over the campus, you find yourself alone in the club room once more. The silence is deafening, and the darkness seems to whisper secrets. You turn on the lights, and the room comes to life, each corner a story waiting to be told.\n\nLily, Mia, Ava, Sofia, and Grace—they all have their own stories, their own dreams, and their own ways of seeing the world. You find yourself drawn to each one of them, their laughter, their passion, and their unique perspectives. The more you engage with them, the more you realize that photography is not just about capturing light and shadows, but about capturing the essence of human connection.\n\nAs the semester progresses, your relationship with each of them deepens. You share secrets, you share laughter, you share tears, and through it all, you share a common bond—a love for photography that transcends words. Each heartbeat moment becomes a cherished memory, a snapshot of time that you will carry with you forever.\n\nIn the end, you realize that the choice you made that crisp autumn morning was not just about joining a club; it was about embarking on a journey of self-discovery, of finding your place in a world that is as vast and complex as the photographs you hope to create. And as you stand there, alone in the club room, with the world outside a blur of colors and motion, you know that you are exactly where you are meant to be.",
+      "options": [
+        {
+          "text": "Ask Lily about her favorite street photography spots",
+          "love": "flirt",
+          "target": "Lily"
+        },
+        {
+          "text": "Compliment Mia on her enigmatic smile",
+          "love": "kind",
+          "target": "Mia"
+        },
+        {
+          "text": "Tease Ava about her energy during the gym session",
+          "love": "tease",
+          "target": "Ava"
+        },
+        {
+          "text": "Share a joke with Sofia about the darkroom mishap",
+          "love": "neutral",
+          "target": "Sofia"
+        }
+      ],
+      "bilingual": {
+        "v": 1,
+        "lines": [
+          {
+            "en": "It's a crisp autumn morning at Crestwood University.",
+            "zh": "在克雷斯伍德大学，这是一个清爽的秋日早晨。",
+            "words": [
+              {
+                "w": "crisp",
+                "zh": "（天气）清新凉爽；清晰提神"
+              },
+              {
+                "w": "autumn morning",
+                "zh": "秋天的早晨"
+              },
+              {
+                "w": "Crestwood University",
+                "zh": "克雷斯伍德大学"
+              }
+            ]
+          },
+          {
+            "en": "As you push open the creaky door to the bustling campus, a sudden burst of excitement surges through you.",
+            "zh": "当你推开吱呀作响的门，走进热闹的校园时，一阵突如其来的兴奋涌上心头。",
+            "words": [
+              {
+                "w": "push open",
+                "zh": "用力推开；强行打开"
+              },
+              {
+                "w": "creaky",
+                "zh": "（门等）吱呀作响的"
+              },
+              {
+                "w": "burst of excitement",
+                "zh": "一阵兴奋"
+              }
+            ]
+          },
+          {
+            "en": "Today is the first day of the club recruitment week, and you're on a mission to find your place among the myriad of possibilities.",
+            "zh": "今天是社团招新周的第一天，你要在众多选择中寻找属于自己的位置。",
+            "words": [
+              {
+                "w": "club recruitment",
+                "zh": "社团招新"
+              },
+              {
+                "w": "myriad",
+                "zh": "大量、无数"
+              },
+              {
+                "w": "find your place",
+                "zh": "找到自己的位置"
+              }
+            ]
+          },
+          {
+            "en": "Your gaze drifts towards the Photography Club booth, and there, surrounded by a sea of students, you spot Lily and Mia.",
+            "zh": "你的目光飘向摄影社的摊位，只见那里被学生的人海包围着，你一眼就看到了莉莉和米娅。",
+            "words": [
+              {
+                "w": "drifts towards",
+                "zh": "朝……缓缓移动"
+              },
+              {
+                "w": "surrounded by",
+                "zh": "被……包围"
+              },
+              {
+                "w": "spot",
+                "zh": "发现；认出"
+              }
+            ]
+          },
+          {
+            "en": "Lily, with her artistic aura and infectious energy, greets you with a warm smile, \"Hey there!",
+            "zh": "莉莉带着艺术气质和感染力十足的活力，微笑着热情地向你打招呼：“嘿！”",
+            "words": [
+              {
+                "w": "greets you",
+                "zh": "向你打招呼；友好地问候你"
+              }
+            ]
+          },
+          {
+            "en": "Welcome to the Photography Club.",
+            "zh": "欢迎来到摄影俱乐部。",
+            "words": [
+              {
+                "w": "welcome",
+                "zh": "用于迎接来客；回应时说‘不客气’"
+              },
+              {
+                "w": "Photography Club",
+                "zh": "喜欢拍照的人组成的社团"
+              }
+            ]
+          },
+          {
+            "en": "I'm Lily.",
+            "zh": "我是莉莉。",
+            "words": [
+              {
+                "w": "Lily",
+                "zh": "名字；用于自我介绍"
+              },
+              {
+                "w": "I'm",
+                "zh": "缩写形式，表示“我是”"
+              }
+            ]
+          },
+          {
+            "en": "Are you new to the club?\"",
+            "zh": "你是俱乐部的新成员吗？",
+            "words": [
+              {
+                "w": "new to",
+                "zh": "刚加入；还不熟悉"
+              },
+              {
+                "w": "the club",
+                "zh": "俱乐部"
+              }
+            ]
+          },
+          {
+            "en": "Her vibrant eyes lock with yours, and you find yourself drawn in, \"Yeah, I'm interested in photography, and I thought this club might be a great fit.\"",
+            "zh": "她那双充满活力的眼睛与你的目光相遇，你不由自主地被吸引住了。“是的，我对摄影很感兴趣，而且我觉得这个社团可能非常适合我。”",
+            "words": [
+              {
+                "w": "lock with",
+                "zh": "与……目光交汇"
+              },
+              {
+                "w": "drawn in",
+                "zh": "被吸引"
+              },
+              {
+                "w": "great fit",
+                "zh": "非常合适"
+              }
+            ]
+          },
+          {
+            "en": "Mia, standing nearby with her enigmatic smile, chimes in, \"Nice to meet you too!",
+            "zh": "米娅带着她那神秘的微笑站在一旁，插话道：“我也很高兴认识你！”",
+            "words": [
+              {
+                "w": "chime in",
+                "zh": "突然插话；插嘴"
+              },
+              {
+                "w": "enigmatic",
+                "zh": "神秘的；难以捉摸的"
+              },
+              {
+                "w": "nice to meet you",
+                "zh": "很高兴见到你（初次见面寒暄）"
+              }
+            ]
+          },
+          {
+            "en": "I'm Mia.",
+            "zh": "我是米娅。",
+            "words": [
+              {
+                "w": "I'm",
+                "zh": "我是（I am的缩写）"
+              }
+            ]
+          },
+          {
+            "en": "Have you ever taken any portrait shots?\"",
+            "zh": "你拍过人像吗？",
+            "words": [
+              {
+                "w": "portrait shots",
+                "zh": "人像照片"
+              }
+            ]
+          },
+          {
+            "en": "You blush slightly, \"I have, but not seriously.",
+            "zh": "你微微脸红，\"拍过，但不怎么认真。",
+            "words": [
+              {
+                "w": "blush",
+                "zh": "脸红"
+              }
+            ]
+          },
+          {
+            "en": "I mostly stick to candid photography.\"",
+            "zh": "我主要拍抓拍。",
+            "words": [
+              {
+                "w": "stick to",
+                "zh": "坚持做；专注于"
+              }
+            ]
+          },
+          {
+            "en": "Lily leans in, \"Well, candid shots have a way of capturing the essence of a moment.",
+            "zh": "莉莉凑近身子，\"嗯，抓拍有一种捕捉瞬间精髓的方式。",
+            "words": [
+              {
+                "w": "lean in",
+                "zh": "凑近；身体前倾"
+              }
+            ]
+          },
+          {
+            "en": "Do you want to see my latest street photography?",
+            "zh": "想看看我最新的街头摄影吗？",
+            "words": [
+              {
+                "w": "street photography",
+                "zh": "街头摄影"
+              }
+            ]
+          },
+          {
+            "en": "It's been quite an adventure.\"",
+            "zh": "这趟经历可真是一次冒险。",
+            "words": [
+              {
+                "w": "quite an adventure",
+                "zh": "一次奇妙的经历"
+              }
+            ]
+          },
+          {
+            "en": "You nod eagerly, feeling the stir of anticipation.",
+            "zh": "你急切地点头，感到一阵期待。",
+            "words": [
+              {
+                "w": "nod eagerly",
+                "zh": "急切地点头"
+              }
+            ]
+          },
+          {
+            "en": "As Lily and Mia begin to show you their work, you can't help but feel a connection, a shared passion that you must delve into further.",
+            "zh": "当莉莉和米娅开始向你展示她们的作品时，你情不自禁地感到一种连接，一种你必须深入探究的共同热情。",
+            "words": [
+              {
+                "w": "can't help but",
+                "zh": "情不自禁；忍不住"
+              }
+            ]
+          },
+          {
+            "en": "Suddenly, the world around you fades away, and it's just the three of you, surrounded by the art and the potential for endless discovery.",
+            "zh": "突然，周围的世界淡去，只剩下你们三人，被艺术和无穷的发现潜力所包围。",
+            "words": [
+              {
+                "w": "fades away",
+                "zh": "逐渐消失；淡去"
+              }
+            ]
+          },
+          {
+            "en": "You must immediately make a choice—follow your heart towards the unknown world of photography or take a cautious step back, unsure of the direction this newfound connection might lead you.",
+            "zh": "你必须立刻做出选择——是追随内心，走向摄影那未知的世界；还是谨慎地退后一步，不确定这段新建立的关系会把你带向何方。",
+            "words": [
+              {
+                "w": "make a choice",
+                "zh": "做决定"
+              },
+              {
+                "w": "follow your heart",
+                "zh": "听从内心"
+              },
+              {
+                "w": "newfound connection",
+                "zh": "新建立的关系"
+              }
+            ]
+          },
+          {
+            "en": "The club room, filled with the scent of coffee and the murmur of conversations, feels like a haven.",
+            "zh": "俱乐部活动室里弥漫着咖啡的香气和交谈声，让人感到像是一个避风港。",
+            "words": [
+              {
+                "w": "filled with",
+                "zh": "充满"
+              },
+              {
+                "w": "murmur",
+                "zh": "低语；嗡嗡声"
+              },
+              {
+                "w": "haven",
+                "zh": "避风港"
+              }
+            ]
+          },
+          {
+            "en": "You spend hours there, exploring the art of photography, your fingers dancing across the dials of a camera, trying to capture the beauty that surrounds you.",
+            "zh": "你在那儿一待就是好几个小时，探索摄影的艺术，手指在相机的旋钮上轻快地舞动，试图捕捉环绕在你身边的美。",
+            "words": [
+              {
+                "w": "explore",
+                "zh": "深入了解或学习某事"
+              },
+              {
+                "w": "dance across",
+                "zh": "在上面轻快移动"
+              },
+              {
+                "w": "capture",
+                "zh": "记录或拍下（某物）以便保存"
+              }
+            ]
+          },
+          {
+            "en": "The friendships you form are as vivid as the images you create, each person adding a unique color to your canvas of life.",
+            "zh": "你建立的友谊和你创作的图像一样生动，每个人都为你的生命画布增添独特的色彩。",
+            "words": [
+              {
+                "w": "as vivid as",
+                "zh": "和……一样生动"
+              },
+              {
+                "w": "canvas of life",
+                "zh": "生命的画布"
+              },
+              {
+                "w": "adding a unique color",
+                "zh": "增添独特色彩"
+              }
+            ]
+          },
+          {
+            "en": "One evening, as the sun sets, casting a golden hue over the campus, you find yourself alone in the club room once more.",
+            "zh": "傍晚时分，夕阳西下，给校园镀上一层金色，你又一次独自待在社团活动室里。",
+            "words": [
+              {
+                "w": "casting a golden hue",
+                "zh": "投射出金色的光泽"
+              },
+              {
+                "w": "campus",
+                "zh": "校园"
+              },
+              {
+                "w": "find yourself",
+                "zh": "发现自己处于……"
+              }
+            ]
+          },
+          {
+            "en": "The silence is deafening, and the darkness seems to whisper secrets.",
+            "zh": "寂静震耳欲聋，黑暗仿佛在低语着秘密。",
+            "words": [
+              {
+                "w": "deafening",
+                "zh": "震耳欲聋的"
+              },
+              {
+                "w": "whisper",
+                "zh": "低声说"
+              },
+              {
+                "w": "seems to",
+                "zh": "似乎"
+              }
+            ]
+          },
+          {
+            "en": "You turn on the lights, and the room comes to life, each corner a story waiting to be told.",
+            "zh": "你打开灯，房间顿时活了起来，每个角落都藏着一个等待被讲述的故事。",
+            "words": [
+              {
+                "w": "come to life",
+                "zh": "变得生动；活过来"
+              },
+              {
+                "w": "waiting to be told",
+                "zh": "等着被讲述"
+              },
+              {
+                "w": "each corner",
+                "zh": "每个角落"
+              }
+            ]
+          },
+          {
+            "en": "Lily, Mia, Ava, Sofia, and Grace—they all have their own stories, their own dreams, and their own ways of seeing the world.",
+            "zh": "莉莉、米娅、艾娃、索菲亚和格蕾丝——她们每个人都有自己的故事、自己的梦想，以及看待世界的独特方式。",
+            "words": [
+              {
+                "w": "have one's own ...",
+                "zh": "拥有属于自己的……"
+              },
+              {
+                "w": "see the world",
+                "zh": "看世界；理解生活"
+              },
+              {
+                "w": "way(s) of ...ing",
+                "zh": "做某事的方式"
+              }
+            ]
+          },
+          {
+            "en": "You find yourself drawn to each one of them, their laughter, their passion, and their unique perspectives.",
+            "zh": "你发现自己被他们每一个人吸引，无论是他们的笑声、热情还是独特的视角。",
+            "words": [
+              {
+                "w": "find yourself drawn to",
+                "zh": "感到自己被……吸引"
+              },
+              {
+                "w": "laughter",
+                "zh": "笑声"
+              },
+              {
+                "w": "unique perspectives",
+                "zh": "独特视角"
+              }
+            ]
+          },
+          {
+            "en": "The more you engage with them, the more you realize that photography is not just about capturing light and shadows, but about capturing the essence of human connection.",
+            "zh": "你越是深入接触他们，就越会意识到：摄影不只是捕捉光影，更是捕捉人与人之间的情感联结。",
+            "words": [
+              {
+                "w": "engage with",
+                "zh": "与……互动；与……打交道"
+              },
+              {
+                "w": "capture the essence",
+                "zh": "抓住本质；把握精髓"
+              },
+              {
+                "w": "human connection",
+                "zh": "人际联系；情感纽带"
+              }
+            ]
+          },
+          {
+            "en": "As the semester progresses, your relationship with each of them deepens.",
+            "zh": "随着学期的推进，你与他们每个人的关系也在加深。",
+            "words": [
+              {
+                "w": "progresses",
+                "zh": "进展；推进"
+              },
+              {
+                "w": "relationship",
+                "zh": "关系"
+              },
+              {
+                "w": "deepens",
+                "zh": "加深"
+              }
+            ]
+          },
+          {
+            "en": "You share secrets, you share laughter, you share tears, and through it all, you share a common bond—a love for photography that transcends words.",
+            "zh": "你们分享秘密，分享欢笑，也分享泪水；在这一切之中，你们维系着一种共同的纽带——对摄影的热爱，超越言语。",
+            "words": [
+              {
+                "w": "share",
+                "zh": "共用；告诉"
+              },
+              {
+                "w": "transcends",
+                "zh": "超越"
+              },
+              {
+                "w": "bond",
+                "zh": "纽带"
+              }
+            ]
+          },
+          {
+            "en": "Each heartbeat moment becomes a cherished memory, a snapshot of time that you will carry with you forever.",
+            "zh": "每一次心跳都化作珍贵的回忆，成为你将永远珍藏的时光快照。",
+            "words": [
+              {
+                "w": "heartbeat",
+                "zh": "心跳；每一次脉搏"
+              },
+              {
+                "w": "cherished memory",
+                "zh": "被珍视的记忆"
+              },
+              {
+                "w": "snapshot of time",
+                "zh": "时光的快照"
+              }
+            ]
+          },
+          {
+            "en": "In the end, you realize that the choice you made that crisp autumn morning was not just about joining a club; it was about embarking on a journey of self-discovery, of finding your place in a world that is as vast and complex as the photographs you hope to create.",
+            "zh": "最终，你意识到那个清爽秋日清晨所做的选择，不只是加入一个社团；更是踏上一段自我发现的旅程——在这样一个既广阔又复杂的世界中找到自己的位置，就像你所期待创作的照片那样。",
+            "words": [
+              {
+                "w": "in the end",
+                "zh": "最后"
+              },
+              {
+                "w": "crisp autumn morning",
+                "zh": "清爽的秋晨"
+              },
+              {
+                "w": "embark on",
+                "zh": "开始（旅程、计划）"
+              }
+            ]
+          },
+          {
+            "en": "And as you stand there, alone in the club room, with the world outside a blur of colors and motion, you know that you are exactly where you are meant to be.",
+            "zh": "当你独自站在社团活动室里，外面的世界只是一片色彩与动作的模糊光影时，你知道自己此刻所在之处正是该来的地方。",
+            "words": [
+              {
+                "w": "stand there",
+                "zh": "站在那儿"
+              },
+              {
+                "w": "alone",
+                "zh": "独自一人"
+              },
+              {
+                "w": "blur of colors and motion",
+                "zh": "色彩与动作的模糊混合"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

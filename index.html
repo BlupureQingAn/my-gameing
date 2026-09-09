@@ -1602,6 +1602,9 @@
         .lv-pop .lvp-t { font-weight: 900; font-size: .92rem; }
         .lv-pop .lvp-s { font-size: .7rem; color: var(--text-muted); }
         .lv-pop .lvp-body { font-size: .78rem; line-height: 1.75; white-space: pre-wrap; }
+        /* R1 立绘:结局弹窗角色半身像横幅(3:4 顶部对齐裁切,onerror 自动移除) */
+        .ending-art { height: 220px; border-radius: 14px; overflow: hidden; margin: 0 0 12px; background: linear-gradient(160deg, #2b1a2e, #3c1f3f); border: 1px solid rgba(255,150,190,.28); }
+        .ending-art img { width: 100%; height: 100%; object-fit: cover; object-position: center 16%; display: block; }
 
         /* ---- 设置组件（Settings Components） ---- */
         /* 容器 */
@@ -10277,7 +10280,17 @@ function rebuildChoicesBlock(body, labels = []) {
                     { v: `${aff}`, l: "最终爱慕" },
                     { v: `${rounds} 轮`, l: "抉择次数" }
                 ];
+                // R1 立绘:结局主角半身像(卡 structured.npcs[].art)
+                let artUrl = "";
+                try {
+                    const _cs = (typeof ScenarioCardService !== "undefined") ? ScenarioCardService.getSelectedCard() : null;
+                    const _ls = (_cs && _cs.structured && Array.isArray(_cs.structured.npcs)) ? _cs.structured.npcs : [];
+                    const _m = _ls.find((x) => x && String(x.name || "") === String(result.loveNpc || ""));
+                    const _a = _m ? String(_m.art || "") : "";
+                    if (_a && (_a.startsWith("http") || _a.startsWith("data:"))) artUrl = _a;
+                } catch (e) {}
                 card.innerHTML = `
+                    ${artUrl ? `<div class="ending-art"><img src="${MarkdownService.escapeHtml(String(artUrl).replace(/"/g, "%22"))}" alt="" loading="lazy" onerror="this.parentElement.remove()"></div>` : ""}
                     <div class="ending-grade">
                         <div class="ending-badge ${badgeCls}">${badgeText}</div>
                         <div>
@@ -22418,6 +22431,25 @@ window.LoveEngine = (() => {
             || list.find((x) => String(x.id || "").toLowerCase() === n)
             || list.find((x) => String(x.role || x.relationship || "").trim().toLowerCase() === n) || null;
     }
+    // R1 立绘:优先 npc.art(卡 structured.npcs[i].art,立绘大图 URL),其次自定义 avatar(http/data),否则回退首字
+    function artUrlOf(npc) {
+        try {
+            if (!npc) return "";
+            for (const k of ["art", "avatar"]) {
+                const v = String(npc[k] || "");
+                if (v && (v.startsWith("http") || v.startsWith("data:"))) return v;
+            }
+            const c = curCard();
+            const list = (c && c.structured && Array.isArray(c.structured.npcs)) ? c.structured.npcs : [];
+            const m = list.find((x) => x && String(x.name || "") === String(npc.name || ""));
+            const mv = m ? String(m.art || "") : "";
+            return (mv && (mv.startsWith("http") || mv.startsWith("data:"))) ? mv : "";
+        } catch (e) { return ""; }
+    }
+    function avHtmlOf(npc, name) {
+        const u = artUrlOf(npc);
+        return u ? `<img src="${esc(String(u).replace(/"/g, "%22"))}" alt="" loading="lazy">` : esc((String(name || "♥")[0]));
+    }
     // 当前回合在场的主要互动角色:最近一张结构化卡正文最后出现的 npc
     function currentTarget(state) {
         const hist = (state && state.history) || [];
@@ -22497,8 +22529,7 @@ window.LoveEngine = (() => {
                 const lockedCls = lockedNpc && (String(lockedNpc.id) === String(n.id || "") || String(lockedNpc.name) === String(n.name || "")) ? " locked" : "";
                 const isCur = cur && String(cur.name) === String(n.name || "") ? " active" : "";
                 const nm = esc(String(n.name || "?"));
-                const isImg = String(n.avatar || "").startsWith("http") || String(n.avatar || "").startsWith("data:");
-                const av = isImg ? `<img src="${esc(String(n.avatar || "").replace(/"/g, "%22"))}" alt="">` : esc((String(n.name || "?")[0]));
+                const av = avHtmlOf(n, String(n.name || "?"));
                 return `<div class="love-npc${lockedCls}${isCur}" data-lv-npc="${esc(nm)}"><div class="lv-av">${av}</div>` +
                     `<div><div class="lv-name">${nm}</div><div class="lv-aff"><b>♥ ${aff}</b> · ${esc(stageOf(aff))}</div>` +
                     `<div class="lv-heart"><i style="width:${pct}%;"></i></div></div></div>`;
@@ -22525,8 +22556,7 @@ window.LoveEngine = (() => {
         const lockedNpc = lockedNpcOf(st, ls);
         const isLocked = lockedNpc && (String(lockedNpc.id) === String(npc.id || "") || String(lockedNpc.name) === String(npc.name || ""));
         const nm = esc(String(npc.name || "?"));
-        const isImg = String(npc.avatar || "").startsWith("http") || String(npc.avatar || "").startsWith("data:");
-        const av = isImg ? `<img src="${esc(String(npc.avatar || "").replace(/"/g, "%22"))}" alt="">` : esc((String(npc.name || "?")[0]));
+        const av = avHtmlOf(npc, String(npc.name || "?"));
         const prof = (npc.profile && typeof npc.profile === "object") ? npc.profile : {};
         const lines = [
             prof.identity ? `身份：${esc(String(prof.identity))}` : (npc.relation ? `身份：${esc(String(npc.relation))}` : ""),
@@ -22576,10 +22606,7 @@ window.LoveEngine = (() => {
             const state = getState();
             const npc = hb && hb.npc ? findNpc(state, hb.npc) : null;
             const nm = npc ? String(npc.name || hb.npc) : String((hb && hb.npc) || "TA");
-            const isImg = npc && (String(npc.avatar || "").startsWith("http") || String(npc.avatar || "").startsWith("data:"));
-            const avHtml = npc && isImg
-                ? `<img src="${esc(String(npc.avatar || "").replace(/"/g, "%22"))}" alt="">`
-                : esc((String(nm) || "♥")[0]);
+            const avHtml = avHtmlOf(npc, String(nm) || "♥");
             const box = document.getElementById("heartbeat-card-content");
             const ov = document.getElementById("heartbeat-overlay");
             if (!box || !ov) return;
