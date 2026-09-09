@@ -1542,6 +1542,15 @@
         .ending-stat span { font-size: 0.7rem; color: var(--text-muted); }
         .ending-actions { display: flex; gap: 8px; margin-top: 16px; }
         .ending-actions .mini-btn { flex: 1; }
+        /* R1 恋爱卡徽标(轮播 tag/库网格/详情):粉紫 + 心动微光 */
+        .hb-tag .hb-love, .scenario-badge.love {
+            color: #e0507a;
+            border-color: rgba(224, 80, 122, .5);
+            background: rgba(224, 80, 122, .1);
+            box-shadow: 0 0 8px rgba(255, 110, 160, .15);
+        }
+        .scenario-badge.love { border-radius: 7px; padding: 1px 6px; font-size: .6rem; border: 1px solid; }
+        .hb-tag .hb-love { font-weight: 700; }
         /* R1 恋爱攻略结局:HE/BE 徽标 + 英文 epilogue 双语展示 */
         .ending-badge.lhe { background: linear-gradient(135deg, #ff7e9d, #e0507a); box-shadow: 0 6px 18px rgba(255,126,157,.45); font-size: 26px; }
         .ending-badge.lbe { background: linear-gradient(135deg, #6aa8e8, #4a74b8); box-shadow: 0 6px 18px rgba(106,168,232,.4); font-size: 26px; }
@@ -5368,6 +5377,12 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <button type="button" class="l6-chip" data-band="toefl" onclick="LangController.setLibFilter('band','toefl')">TOEFL</button>
                 </div>
                 <div class="l6-chips" id="lang-lib-cats"></div>
+                <div class="l6-chips" id="lang-lib-genders">
+                    <button type="button" class="l6-chip" data-gender="" onclick="LangController.setLibFilter('gender','')">全部</button>
+                    <button type="button" class="l6-chip" data-gender="love-f" onclick="LangController.setLibFilter('gender','love-f')">💗 恋爱 · 女向</button>
+                    <button type="button" class="l6-chip" data-gender="love-m" onclick="LangController.setLibFilter('gender','love-m')">💙 恋爱 · 男向</button>
+                    <button type="button" class="l6-chip" data-gender="plain" onclick="LangController.setLibFilter('gender','plain')">📚 学习剧本</button>
+                </div>
                 <div class="list-sub" id="lang-lib-hint" style="margin-top:2px;"></div>
                 <div id="lang-lib-grid"></div>
             </section>
@@ -22242,9 +22257,16 @@ function openNpcProfile(npcId) {
                     return "ROMANCE ROUTE MODE — this is a romance game; your romance candidates are: " + (names.join(", ") || "(list from world bible)")
                         + ". Options MUST be JSON objects in the options array: {\"text\":\"<English option text>\",\"love\":\"flirt|kind|tease|neutral|awkward|rude|reject\",\"target\":\"<candidate name from the list; omit only when the option involves no candidate>\"}. love means: flirt=romantic advance, kind=warm caring, tease=playful banter, neutral=plain, awkward=embarrassing misfire, rude=harsh, reject=pushing away; choose it honestly from what the option says. Give 2-3 options with at least one positive (flirt/kind/tease) aimed at the current scene partner. Never put favor/affection into any state-patch — the engine manages those two values itself. Write natural romance beats that escalate gradually with affection (small tension, eye contact, shared moments); the player's choices decide the pace. Current affection snapshot: " + rel + ". " + lockedLine
                         + " At a real peak moment (first shared glance, near-confession, decisive touch) you may add the optional JSON field \"heartbeat\":{\"npc\":\"<candidate>\",\"en\":\"<one heartfelt English line that appears verbatim in your story>\",\"zh\":\"<natural short Chinese translation>\"} — at most one heartbeat per 3 rounds, never force it."
+                        + " Dialogue and option wording should stay inside the target band vocabulary (rule 4) — a harder word is acceptable only when the scene truly needs it."
                         + " (Ignore the string-array options shape shown in rule 7 — in this mode always use the object shape above.)";
                 } catch (e) { return ""; }
             })();
+            /* R1 生词回投(所有 lang 卡通用,D5/D18):从用户生词本按复习优先级取样 ≤10,语境自然处重遇;不强用、剧情优先 */
+            let recallWords = [];
+            try { const _la = window.LangAssist; if (_la && _la.reviewVocabSample) recallWords = _la.reviewVocabSample(10) || []; } catch (e) { recallWords = []; }
+            const vocabRecall = recallWords.length
+                ? "The reader is re-learning these words — let them meet the words again in this scene where the context naturally allows (weave in a few at most, never force them, story flow and tone come first): " + recallWords.join(", ")
+                : "";
             return [
                 "[ENGLISH LANGUAGE MODE — for language and output style these rules override the Chinese instructions above; story facts come from the world bible below]",
                 "1) Write ALL narration, dialogue, scene title and options in natural English. Never output Chinese inside title / story / options.",
@@ -22256,7 +22278,8 @@ function openNpcProfile(npcId) {
                 "5) " + immText,
                 (candLine ? "6) " + candLine : ""),
                 "7) Reply with the fixed JSON only: {\"title\":\"English scene name (short)\",\"time\":\"...\",\"story\":\"...\",\"options\":[\"...\",\"...\"]" + (stg.mode === "scaffold" ? ",\"bilingual\":{\"v\":1,\"lines\":[...]}" : "") + "} — story ≈ 200-350 English words in several paragraphs, dialogue on its own lines; if the story is just starting, open in medias res with an immersive scene-setting paragraph, then give 2-3 options.",
-                (loveBlock ? "8) " + loveBlock : "")
+                (vocabRecall ? "8) " + vocabRecall : ""),
+                (loveBlock ? "9) " + loveBlock : "")
             ].filter(Boolean).join("\n");
         }
         function restoreIfNeeded() {
@@ -22631,8 +22654,28 @@ window.LoveEngine = (() => {
     function save() { try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch (e) { } }
     function hint(t, boxId) { var h = $(boxId || "lang-hint"); if (h) h.textContent = t || ""; }
     /* M6a:剧本库筛选状态与语言页渲染(库=英语原生卡;首页=推荐行+继续行) */
-    var libFilter = { band: "", cat: "" };
+    var libFilter = { band: "", cat: "", gender: "" };
     var THEME_ICON = { cottage: "🏡", "retro-paper": "🥛", glass: "🚇", fantasy: "🏰", "sci-fi-hud": "🌊", liquid: "💧", gothic: "🕯️", ink: "🖋️", cyber: "🌆", minimal: "▦" };
+    /* R1 恋爱攻略卡:love 标签/向别偏好(存 localStorage lang_gender_pref_v1,O2 服务端零改动);loveMatch 供推荐排序 */
+    function loveTagOf(c) {
+        var st = (c && c.structured) || {};
+        if (st.love_mode !== true) return "";
+        return "💗 恋爱" + (st.gender_target === "male" ? " · 男向" : st.gender_target === "female" ? " · 女向" : "");
+    }
+    function genderPref() { try { return localStorage.getItem("lang_gender_pref_v1") || ""; } catch (e) { return ""; } }
+    function saveGenderPref(g) { try { if (g) localStorage.setItem("lang_gender_pref_v1", g); else localStorage.removeItem("lang_gender_pref_v1"); } catch (e) {} }
+    function loveMatch(c, pref) {
+        var s = (c && c.structured) || {};
+        return !!pref && s.love_mode === true && String(s.gender_target || "") === String(pref);
+    }
+    function loveFilterOk(c, g) {
+        var st = (c && c.structured) || {};
+        var lm = st.love_mode === true, gt = String(st.gender_target || "");
+        if (g === "love-f") return lm && gt === "female";
+        if (g === "love-m") return lm && gt === "male";
+        if (g === "plain") return !lm;
+        return true;
+    }
     function bandShort(k) { return (BAND_INFO[k] && BAND_INFO[k][0]) ? BAND_INFO[k][0] : String(k || "").toUpperCase(); }
     function bandCls(k) { return (BAND_INFO[k] && BAND_INFO[k][2]) ? BAND_INFO[k][2] : ""; }
     function cardCid(c) { return String(c.id || "").replace(/"/g, "&quot;"); }
@@ -22665,7 +22708,8 @@ window.LoveEngine = (() => {
     function langBannerHtml(c) {
         var icon = THEME_ICON[String(c.theme || "")] || "📖";
         var has = cardSaveOf(c), r = cardRoundOf(c);
-        var tagTxt = api.esc(bandShort(c.band)) + (String(c.category_zh || "") ? " · " + api.esc(String(c.category_zh)) : "");
+        var loveTag = loveTagOf(c);
+        var tagTxt = (loveTag ? '<span class="hb-love">' + loveTag + "</span> " : "") + api.esc(bandShort(c.band)) + (String(c.category_zh || "") ? " · " + api.esc(String(c.category_zh)) : "");
         var playTxt = has ? "▶ 继续 · 第 " + (r || 1) + " 轮" : "立即游玩";
         return '<div data-cid="' + cardCid(c) + '" class="hb-card">' +
             '<div class="hb-cover" id="lb-cover-' + window.CoverService.safeId(c.id) + '"><img class="scc-img" alt="" loading="lazy"><span class="scc-emoji">' + icon + "</span></div>" +
@@ -22686,6 +22730,7 @@ window.LoveEngine = (() => {
             '<img class="scc-img" alt="" loading="lazy"><span class="scc-emoji">' + icon + "</span></div>" +
             '<div class="list-title">' + api.esc(String(c.title_zh || c.title || "英语剧本")) + "</div>" +
             '<div class="scenario-badges">' +
+            (loveTagOf(c) ? '<span class="scenario-badge love">' + loveTagOf(c) + "</span>" : "") +
             '<span class="scenario-badge">' + api.esc(bandShort(c.band)) + "</span>" +
             '<span class="scenario-badge">' + api.esc(String(c.category_zh || c.category || "")) + "</span>" +
             (has ? '<span class="scenario-badge" style="border-color:rgba(47,158,110,.6);color:#2f9e6e;background:rgba(47,158,110,.08);">第 ' + (r || 1) + " 轮</span>" : "") +
@@ -22929,17 +22974,25 @@ window.LoveEngine = (() => {
             if (h < 24) return h + (m % 60 ? " 小时 " + (m % 60) + " 分" : " 小时");
             return Math.floor(h / 24) + " 天 " + (h % 24) + " 小时";
         },
-        setLibFilter: function (k, v) { libFilter[k] = v; api.renderLibrary(); },
+        setLibFilter: function (k, v) {
+            if (k === "gender") { if (v === "love-f" || v === "love-m") saveGenderPref(v); else saveGenderPref(""); }
+            libFilter[k] = v; api.renderLibrary();
+        },
         recommendFor: function (lcs) {
             var arr = lcs.slice();
+            /* R1 向别偏好(有档时同样生效):匹配向别的恋爱卡最优先,再按 band 距离/上架序 */
+            var pref = genderPref();
             var my = profile.band || "";
-            if (!my) return arr;
-            var mi = BAND_ORDER.indexOf(my);
-            if (mi < 0) return arr;
+            var mi = my ? BAND_ORDER.indexOf(my) : -1;
             arr.sort(function (a, b) {
-                var ai = BAND_ORDER.indexOf(a.band || ""), bi = BAND_ORDER.indexOf(b.band || "");
-                var da = ai < 0 ? 99 : Math.abs(ai - mi), db = bi < 0 ? 99 : Math.abs(bi - mi);
-                return (da - db) || ((a.order || 9) - (b.order || 9));
+                var am = loveMatch(a, pref) ? 0 : 1, bm = loveMatch(b, pref) ? 0 : 1;
+                if (am !== bm) return am - bm;
+                if (mi >= 0) {
+                    var ai = BAND_ORDER.indexOf(a.band || ""), bi = BAND_ORDER.indexOf(b.band || "");
+                    var da = ai < 0 ? 99 : Math.abs(ai - mi), db = bi < 0 ? 99 : Math.abs(bi - mi);
+                    if (da !== db) return da - db;
+                }
+                return (a.order || 9) - (b.order || 9);
             });
             return arr;
         },
@@ -23246,6 +23299,9 @@ window.LoveEngine = (() => {
             /* 难度 chips 高亮 */
             var bts = document.querySelectorAll("#lang-lib-bands .l6-chip"), bi;
             for (bi = 0; bi < bts.length; bi++) bts[bi].classList.toggle("active", (bts[bi].getAttribute("data-band") || "") === libFilter.band);
+            /* R1 恋爱向别 chips 高亮 + 激活时提示向别偏好已记住 */
+            var gts = document.querySelectorAll("#lang-lib-genders .l6-chip"), gi;
+            for (gi = 0; gi < gts.length; gi++) gts[gi].classList.toggle("active", (gts[gi].getAttribute("data-gender") || "") === libFilter.gender);
             /* 列表 */
             if (!window.__LANG_CARDS_READY) {
                 rows.innerHTML = '<div class="list-sub" style="grid-column:1/-1;">剧本加载中…</div>';
@@ -23258,6 +23314,7 @@ window.LoveEngine = (() => {
                 c = lcs[i]; if (!c || !c.id) continue;
                 if (libFilter.band && String(c.band || "") !== libFilter.band) continue;
                 if (libFilter.cat && String(c.category_zh || c.category || "") !== libFilter.cat) continue;
+                if (!loveFilterOk(c, libFilter.gender)) continue;
                 list.push(c);
             }
             if (!list.length) {
@@ -23291,10 +23348,12 @@ window.LoveEngine = (() => {
                 '<div class="lgd-title">' + api.esc(String(c.title_zh || c.title || "英语剧本")) + "</div>" +
                 '<div class="lgd-en">' + api.esc(String(c.title || "")) + " · 英语原生剧本</div>" +
                 '<div class="lgd-badges">' +
+                (loveTagOf(c) ? '<span class="scenario-badge love">' + loveTagOf(c) + "</span>" : "") +
                 '<span class="scenario-badge">' + api.esc(bandShort(c.band)) + "</span>" +
                 '<span class="scenario-badge">' + api.esc(String(c.category_zh || c.category || "")) + "</span>" +
                 '<span class="scenario-badge">' + api.esc(String(w.genre || "").slice(0, 20)) + "</span>" +
                 "</div>" +
+                (loveTagOf(c) ? '<div class="lgd-desc"><b>玩法：</b>恋爱攻略——5 个' + (String(c.structured.gender_target || "female") === "male" ? "可攻略女孩" : "可攻略男孩") + '等你相识、心动、走到专属结局；选项带好感影响，爱慕超过 70 会触发锁线，最后走向 HE 或 BE。</div>' : "") +
                 (heroTxt ? '<div class="lgd-desc"><b>你扮演：</b>' + api.esc(heroTxt) + "</div>" : "") +
                 (summary ? '<div class="lgd-desc"><b>故事预览（English）：</b>' + api.esc(summary) + "</div>" : "") +
                 (has ? '<div class="lgd-desc"><b>进度：</b>已到第 ' + (r || 1) + " 轮——接着上次的英语进度玩，词库随卡走。</div>" : "");
@@ -25083,6 +25142,42 @@ window.LoveEngine = (() => {
         loadBank: loadLangBank, bankItem: langBankItem, bankStatus: langBankStatus,
         getChapterWords: getChapterWords,   // M6d4:当前章候选词(供 LangEngine 续写注入;内部触发预载/抽词)
         startDrill: startDrill, drillFlip: drillFlip, drillJudge: drillJudge,  // M6d6:考纲词刷词(学习中心⑥)
+        /* R1 生词回投取样:续写注入用;优先复习到期→未掌握新学→眼熟补位;只取单词(expression 跳过),≤10;未加载时静默触发拉取 */
+        reviewVocabSample: function (max) {
+            if (!vocabLoaded) { loadVocab(function () {}); return []; }
+            var cap = Math.max(1, Math.min(10, Number(max) || 10));
+            var done = reviewDoneSet();
+            var due = [], fresh = [], seen = [], k, it, diff, term;
+            for (k in vocabMap) {
+                if (!Object.prototype.hasOwnProperty.call(vocabMap, k)) continue;
+                it = vocabMap[k];
+                if (!it || it.type === "expression") continue;
+                term = String(it.term || "").trim();
+                if (term.length < 2 || /\s|[^A-Za-z'\-]/.test(term)) continue;   // 词组/含生僻符号不注入
+                if (Number(it.status || 0) >= 2) continue;                        // 已掌握毕业不打扰
+                diff = (function (b) { return b == null ? null : todayBjInt() - b; })(bjDayInt(it.created_at));
+                if (diff != null && diff >= 0 && REVIEW_DAYS.indexOf(diff) >= 0 && done.indexOf(String(it.id)) < 0) {
+                    due.push(term);                                              // 复习到期 1/2/4/7 天(当日未自评)
+                } else if (Number(it.status || 0) === 0) fresh.push({ t: term, c: String(it.created_at || "") });
+                else seen.push({ t: term, c: String(it.created_at || "") });
+            }
+            function rndTake(arr, n) {
+                var a = arr.slice(), res = [], i;
+                while (a.length && res.length < n) { i = Math.floor(Math.random() * a.length); res.push(a[i]); a.splice(i, 1); }
+                return res;
+            }
+            var out = due.slice(0, cap), rest = cap - out.length;
+            if (rest > 0) {
+                fresh.sort(function (a, b) { return a.c < b.c ? 1 : -1; });
+                out = out.concat(rndTake(fresh.slice(0, 40), rest).map(function (x) { return x.t; }));
+                rest = cap - out.length;
+                if (rest > 0) {
+                    seen.sort(function (a, b) { return a.c < b.c ? 1 : -1; });
+                    out = out.concat(rndTake(seen.slice(0, 40), rest).map(function (x) { return x.t; }));
+                }
+            }
+            return out.slice(0, cap);
+        },
         /* M8d:生词本独立子页 — 切页钩子直接调,绕开 MutationObserver 1.5s 节流 */
         refreshVocab: function () { loadVocab(function () { renderLearn(); }); },
         /* M9F:渲染方挂卡后注册双语(卡首轮/渐进第 2 轮 AI 输出)→ 同步烘烤行间译文,免 AI 点译;
