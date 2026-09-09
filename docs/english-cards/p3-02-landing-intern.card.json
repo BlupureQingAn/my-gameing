@@ -1,0 +1,864 @@
+{
+  "title": "Weekend Win",
+  "title_zh": "周末大胜",
+  "lang": "en",
+  "band": "cet6",
+  "category": "求职",
+  "category_zh": "职场",
+  "theme": "minimal",
+  "text": "## Premise\nYou're a fresh graduate, just thrown into the harsh reality of job hunting. Days of sending out resumes without any response have turned into a routine. Suddenly, an email arrives - an interview invitation from a bustling city tech company. You're excited, yet nervous, with only three days to prepare.\n\n## The World\nThe tech world you're stepping into is a vibrant, fast-paced environment. Skyscrapers lined with glass and steel dominate the skyline, their surfaces reflecting the bustling energy below. The company, known for its cutting-edge technology, is one of the top players in the industry. The interview is your chance to showcase your skills and passion. As you walk through the glass doors, you can feel the palpable sense of innovation and ambition. The corridors are lined with the latest gadgets and devices, a testament to the company's cutting-edge approach. You're aware that every word you say, every action you take, will be under scrutiny. But deep down, you're determined to make a good impression and secure your first job.\n\n## People\n\n### Daniel\nDaniel is the head recruiter at the tech company. He's a meticulous professional with a keen eye for talent. As your interviewer, he sees you as a potential asset to the team. His calm demeanor and structured questions make him seem approachable. You feel a bit of pressure knowing that he's the gatekeeper to your new career. Daniel tends to speak in short, concise sentences, ensuring clarity and professionalism.\n\n### Ava\nAva is your fellow interviewee, a candidate for the same position as you. She's confident and articulate, with a friendly smile that makes you feel at ease. Ava's positive attitude and strong technical background could be your biggest competition. Her speaking style is casual yet polished, with a hint of enthusiasm that makes her answers memorable.\n\n### Mr. Okafor\nMr. Okafor is the company's founder and CEO. He's charismatic and visionary, with a keen interest in new talent. As a key figure in the company, he has the power to shape your future. Mr. Okafor's tone is warm and engaging, but he doesn't miss a beat when it comes to the tough questions. You feel honored to be in his presence, yet the pressure to impress is immense.\n\n### Rosa\nRosa is the administrative assistant who schedules your interview. She's efficient and friendly, ensuring that everything runs smoothly. Rosa has a knack for making people feel at home, and her warm smile helps alleviate some of your nerves. Her speaking style is gentle and supportive, offering words of encouragement that make you feel more prepared for the interview.\n\n## The Arc\n\n### Act I: Establishing the Situation and Allies (4-5 Rounds)\n\nIn the first round, you're introduced to the team and the company's culture. You're asked to discuss your previous work experience and how it relates to the role you're interviewing for. You find yourself in a comfortable conversation with Ava, who shares her excitement about the company and her aspirations for the future. You feel a sense of camaraderie with her, and you both agree to support each other through the interview process.\n\nIn the second round, you're given a technical challenge to solve. The problem is complex, but you manage to tackle it with confidence, drawing on your strong background. Ava struggles a bit, but she doesn't give up. You offer her some guidance, and together, you come up with a solution. This experience strengthens your bond, and you realize that you can rely on each other in challenging situations.\n\nAs the rounds progress, you meet Mr. Okafor, who asks you about your long-term goals and how you envision yourself fitting into the company. You're impressed by his vision and his genuine interest in your potential. You feel a sense of pride in being able to articulate your thoughts clearly and confidently. Rosa, the administrative assistant, checks in with you periodically, offering words of encouragement and ensuring that everything is going smoothly.\n\n### Act II: Conflict Escalation and Emotional High Point (4-5 Rounds + 1 Emotional Highlight)\n\nIn the sixth round, you're faced with a difficult question that requires you to think on your feet. You're thrown off balance, but you quickly regroup and provide a well-thought-out answer. Ava, who was also struggling with the question, looks to you for guidance. You take a deep breath and offer her some advice, which helps her to come up with a strong response. This moment of teamwork is a turning point, and you both feel a surge of confidence.\n\nThe next round is a group discussion, where you and Ava must collaborate with the rest of the team to come up with a creative solution to a hypothetical problem. The pressure is on, but you work well together, combining your strengths and ideas. The team is impressed with your collaborative spirit and innovative thinking.\n\nThe emotional high point comes in the eighth round when Mr. Okafor asks you about a time you faced a significant challenge and how you overcame it. You share a personal story that resonates with him, and he offers you a warm smile and a pat on the back. This moment of connection makes you feel incredibly grateful and hopeful.\n\n### Act III: Concluding the Interview (3-4 Rounds)\n\nIn the final rounds, you're asked about your salary expectations and your availability. You provide a reasonable salary range and confirm your availability. Ava is also asked the same questions, and you both respond confidently, knowing that you've presented yourself well.\n\nThe interview concludes with a tour of the office, where you meet more team members. You feel a sense of belonging and excitement about the possibility of joining the company.\n\n## Endings\n\n### Happy Ending: \"You walk out of the interview with a smile, feeling confident and hopeful. You know that you've given it your best shot, and you're ready to wait for the outcome.\"\n\n### Average Ending: \"You leave the interview feeling satisfied, knowing that you've performed well. While you're not sure about the outcome, you're optimistic about your chances.\"\n\n### Sad Ending: \"You exit the interview with a heavy heart, feeling like you didn't do as well as you had hoped. You're disappointed, but you're determined to keep searching for the right opportunity.\"",
+  "structured": {
+    "band": "cet6",
+    "theme": "minimal",
+    "world": {
+      "era": "现代都市科技浪潮",
+      "genre": "都市职场/科幻技术",
+      "summary": "A modern, bustling tech world where skyscrapers reflect the vibrant energy of a fast-paced industry. The protagonist navigates through cutting-edge technology and competitive job hunting, striving to showcase their skills and passion at a prestigious interview.",
+      "rules": "1. The protagonist is a fresh graduate in a competitive job market. 2. Time is limited, with only three days to prepare for the interview. 3. The tech world is dominated by innovation and ambition. 4. The protagonist must balance preparation with managing the pressure of unemployment.",
+      "atmosphere": "快节奏、竞争激烈、充满创新氛围",
+      "vocab": [
+        "Tech innovation",
+        "Job hunt",
+        "Interview",
+        "Ambition",
+        "Skyscraper",
+        "Glass and steel",
+        "Competitive",
+        "Cutting-edge"
+      ]
+    },
+    "identity": {
+      "name": "Emma Li",
+      "gender": "女",
+      "age": 22,
+      "role": "年轻的软件工程师候选人",
+      "background": "A recent graduate with a degree in Computer Science, Emma is eager to apply her knowledge and skills in a fast-paced tech environment."
+    },
+    "npcs": [
+      {
+        "name": "Daniel",
+        "gender": "男",
+        "role": "面试官",
+        "personality": "严谨认真，条理清晰，说话直接",
+        "relationship": "面试官与应聘者之间的关系，正式且专业"
+      },
+      {
+        "name": "Ava",
+        "gender": "女",
+        "role": "人力资源专员",
+        "personality": "热情友好，善于沟通，耐心倾听",
+        "relationship": "人力资源专员与应聘者之间的关系，关心并帮助应聘者"
+      },
+      {
+        "name": "Mr. Okafor",
+        "gender": "男",
+        "role": "公司创始人",
+        "personality": "自信果敢，富有远见，言辞犀利",
+        "relationship": "公司创始人与应聘者之间的关系，期待应聘者能展现其才华"
+      },
+      {
+        "name": "Rosa",
+        "gender": "女",
+        "role": "技术部门主管",
+        "personality": "严谨专业，注重细节，言辞严谨",
+        "relationship": "技术部门主管与应聘者之间的关系，关注应聘者的技术能力"
+      }
+    ],
+    "timeline": {
+      "start": {
+        "year": 2026,
+        "month": 9,
+        "day": 7
+      },
+      "note": "The story begins with the protagonist receiving an interview invitation on the 7th of September, 2026, amidst the challenging phase of job hunting."
+    },
+    "scene_style": {
+      "env_templates": [
+        "繁华都市科技园区",
+        "顶尖科技公司面试室",
+        "高速发展的办公室",
+        "求职者聚集的咖啡厅",
+        "城市天际线",
+        "人才市场",
+        "面试官办公室",
+        "虚拟现实招聘会"
+      ]
+    },
+    "first_scene": {
+      "story": "The clock ticks louder with each passing minute. You stand in the sleek reception area, a sea of nervous energy swirling around you. The doors to the interview room swing open, and you're greeted by a stern-looking man. It's Daniel, the head recruiter. \n\n\"Good morning, we're ready for you,\" he says, his voice cold and unwavering.\n\nYour heart races as you take a deep breath and step into the room. The walls are adorned with the company's mission statement, and the air is thick with the scent of ambition. You're about to sit down when Ava walks in, her smile brightening the room.\n\n\"Hi, I'm Ava,\" she says, extending her hand. \"Nice to meet you.\"\n\nYou shake her hand, feeling a flicker of hope. \"I'm [Your Name].\"\n\nJust then, Daniel's phone rings, and his expression hardens. \"Excuse me,\" he says, turning away. \"I need to take this.\"\n\nYou glance at Ava, who looks just as anxious as you feel. The phone rings again, and Daniel's expression grows tense.\n\n\"You must make a decision,\" Ava whispers, her voice barely audible.\n\nThe phone rings once more. You can't waste another moment. You turn to Ava, ready to decide your fate...\n\nThe phone rings for the fourth time, and Daniel's face turns beet red. He ends the call abruptly and turns back to you and Ava, his demeanor now one of urgency.\n\n\"Let's get started,\" he says, his voice a mix of tension and determination. The interview begins with a series of questions that seem designed to trip you up. You're asked about your biggest weakness, and you struggle to find the right balance between honesty and self-promotion. Ava handles it with grace, acknowledging her own flaws while emphasizing her growth and resilience.\n\nThe next round is a group task, where you and Ava are paired with two other candidates to brainstorm solutions to a hypothetical business problem. The room is filled with the sound of animated discussion, and you find yourself leaning on Ava's insights to navigate the challenge. Despite the pressure, you both manage to contribute effectively, and the team's solution earns a round of applause from Daniel.\n\nAs the rounds progress, you're faced with increasingly difficult questions, each one more daunting than the last. Ava's confidence in her answers inspires you, and you begin to feel a sense of camaraderie that transcends the competition. You share a glance that speaks volumes, a silent agreement to support each other through the final stretch.\n\nThe final round is a one-on-one with Mr. Okafor. The room is silent as he leans forward, his eyes piercing through your nervous facade. \"What makes you the best candidate for this position?\" he asks, his voice calm but intense.\n\nYou take a deep breath and begin to speak, weaving together your experiences, your skills, and your passion for technology. As you speak, you realize that this interview isn't just about landing a job; it's about finding your place in a world that's constantly evolving. Ava watches you with pride, her smile a testament to the shared journey you've undergone.\n\nWhen you finish, Mr. Okafor nods thoughtfully. \"I'm impressed,\" he says. \"You've shown a remarkable blend of technical ability and personal drive.\"\n\nThe interview ends with a handshake and a promise of feedback. As you and Ava leave the building, the weight of your nerves lifts, replaced by a sense of accomplishment. You've faced the challenge head-on, and whether or not you get the job, you know that you've grown as a person and as a professional.",
+      "options": [
+        "Approach the reception desk with a confident smile.",
+        "Introduce yourself to Ava before sitting down.",
+        "Politely decline coffee, opting for water instead.",
+        "Take a deep breath and focus on the mission statement."
+      ],
+      "bilingual": {
+        "v": 1,
+        "lines": [
+          {
+            "en": "The clock ticks louder with each passing minute.",
+            "zh": "随着每一分钟的流逝，钟声越来越响。",
+            "words": [
+              {
+                "w": "tick",
+                "zh": "发出短促而规律的声音（如钟表）"
+              },
+              {
+                "w": "passing minute",
+                "zh": "一分钟一分钟地过去；正在流逝的时间"
+              },
+              {
+                "w": "with each",
+                "zh": "每一个……都"
+              }
+            ]
+          },
+          {
+            "en": "You stand in the sleek reception area, a sea of nervous energy swirling around you.",
+            "zh": "你站在光洁的接待区，周围涌动着一片紧张不安的能量。",
+            "words": [
+              {
+                "w": "sleek",
+                "zh": "光滑且时髦；简洁而时尚"
+              },
+              {
+                "w": "reception area",
+                "zh": "建筑物入口处迎接来宾的区域"
+              },
+              {
+                "w": "a sea of",
+                "zh": "形容数量极多、仿佛无边无际的事物"
+              }
+            ]
+          },
+          {
+            "en": "The doors to the interview room swing open, and you're greeted by a stern-looking man.",
+            "zh": "面试室的门砰地打开，你被一位神情严肃的男人迎了上来。",
+            "words": [
+              {
+                "w": "swing open",
+                "zh": "猛地打开"
+              },
+              {
+                "w": "be greeted by",
+                "zh": "被……迎接"
+              },
+              {
+                "w": "stern-looking",
+                "zh": "表情严肃的"
+              }
+            ]
+          },
+          {
+            "en": "It's Daniel, the head recruiter.",
+            "zh": "是丹尼尔，首席招聘官。",
+            "words": [
+              {
+                "w": "head recruiter",
+                "zh": "首席招聘官"
+              },
+              {
+                "w": "Daniel",
+                "zh": "丹尼尔"
+              }
+            ]
+          },
+          {
+            "en": "\"Good morning, we're ready for you,\" he says, his voice cold and unwavering.",
+            "zh": "“早上好，我们已准备好迎接您，”他说道，声音冰冷而坚定。",
+            "words": [
+              {
+                "w": "unwavering",
+                "zh": "坚定的；不动摇的"
+              },
+              {
+                "w": "cold",
+                "zh": "冷漠的；冷淡的"
+              },
+              {
+                "w": "ready for you",
+                "zh": "准备好接待/应对您"
+              }
+            ]
+          },
+          {
+            "en": "Your heart races as you take a deep breath and step into the room.",
+            "zh": "你深吸一口气，走进房间时心跳加速。",
+            "words": [
+              {
+                "w": "heart races",
+                "zh": "心跳很快"
+              },
+              {
+                "w": "take a deep breath",
+                "zh": "深深吸气"
+              },
+              {
+                "w": "step into",
+                "zh": "走进"
+              }
+            ]
+          },
+          {
+            "en": "The walls are adorned with the company's mission statement, and the air is thick with the scent of ambition.",
+            "zh": "墙上装饰着公司的使命宣言，空气中弥漫着雄心的气息。",
+            "words": [
+              {
+                "w": "adorned with",
+                "zh": "用……装饰"
+              },
+              {
+                "w": "mission statement",
+                "zh": "使命宣言"
+              },
+              {
+                "w": "thick with",
+                "zh": "充满；浓得化不开"
+              }
+            ]
+          },
+          {
+            "en": "You're about to sit down when Ava walks in, her smile brightening the room.",
+            "zh": "你正要坐下时，艾娃走了进来，她的笑容让房间亮了起来。",
+            "words": [
+              {
+                "w": "about to",
+                "zh": "即将；正要做"
+              },
+              {
+                "w": "brightening",
+                "zh": "使更明亮；照亮"
+              },
+              {
+                "w": "walks in",
+                "zh": "走进来"
+              }
+            ]
+          },
+          {
+            "en": "\"Hi, I'm Ava,\" she says, extending her hand.",
+            "zh": "她说：“嗨，我是艾娃。”说着伸出了手。",
+            "words": [
+              {
+                "w": "extending",
+                "zh": "伸出手；伸（肢体）"
+              },
+              {
+                "w": "says",
+                "zh": "引语后的‘说’标记"
+              },
+              {
+                "w": "I'm Ava",
+                "zh": "自我介绍：我是艾娃"
+              }
+            ]
+          },
+          {
+            "en": "\"Nice to meet you.\"",
+            "zh": "很高兴认识你。",
+            "words": [
+              {
+                "w": "Nice to meet you",
+                "zh": "初次见面时的礼貌问候；常用语"
+              },
+              {
+                "w": "meet",
+                "zh": "相遇；结识"
+              }
+            ]
+          },
+          {
+            "en": "You shake her hand, feeling a flicker of hope.",
+            "zh": "你握了握她的手，心中涌起一丝希望。",
+            "words": [
+              {
+                "w": "shake hands",
+                "zh": "握手（表示问候或达成协议）"
+              },
+              {
+                "w": "flicker",
+                "zh": "闪烁；摇曳；一闪而过"
+              }
+            ]
+          },
+          {
+            "en": "\"I'm [Your Name].\"",
+            "zh": "我是[你的名字]。",
+            "words": [
+              {
+                "w": "[Your Name]",
+                "zh": "用学习者名字替换"
+              },
+              {
+                "w": "I'm",
+                "zh": "“我是”的缩写，用于自我介绍"
+              }
+            ]
+          },
+          {
+            "en": "Just then, Daniel's phone rings, and his expression hardens.",
+            "zh": "就在这时，丹尼尔的电话响了，他的神情变得严肃起来。",
+            "words": [
+              {
+                "w": "Just then",
+                "zh": "就在那时；恰在此时"
+              },
+              {
+                "w": "expression hardens",
+                "zh": "表情变得严肃/冷硬"
+              }
+            ]
+          },
+          {
+            "en": "\"Excuse me,\" he says, turning away.",
+            "zh": "“失陪一下，”他说着转过身去。",
+            "words": [
+              {
+                "w": "turn away",
+                "zh": "转身；走开"
+              }
+            ]
+          },
+          {
+            "en": "\"I need to take this.\"",
+            "zh": "“我得接个电话。”",
+            "words": [
+              {
+                "w": "take this",
+                "zh": "接听（电话）"
+              }
+            ]
+          },
+          {
+            "en": "You glance at Ava, who looks just as anxious as you feel.",
+            "zh": "你瞥了艾娃一眼，她看起来和你一样焦虑。",
+            "words": [
+              {
+                "w": "glance at",
+                "zh": "瞥一眼；看一眼"
+              },
+              {
+                "w": "just as... as...",
+                "zh": "和……一样"
+              }
+            ]
+          },
+          {
+            "en": "The phone rings again, and Daniel's expression grows tense.",
+            "zh": "电话又响了，丹尼尔的表情变得紧张起来。",
+            "words": [
+              {
+                "w": "grow tense",
+                "zh": "变得紧张"
+              }
+            ]
+          },
+          {
+            "en": "\"You must make a decision,\" Ava whispers, her voice barely audible.",
+            "zh": "“你必须做出决定，”艾娃低声说道，声音几乎听不见。",
+            "words": [
+              {
+                "w": "barely audible",
+                "zh": "几乎听不见的"
+              }
+            ]
+          },
+          {
+            "en": "The phone rings once more.",
+            "zh": "电话又响了一次。",
+            "words": [
+              {
+                "w": "rings",
+                "zh": "（铃、钟等）发出响声"
+              },
+              {
+                "w": "once more",
+                "zh": "再一次；又一次"
+              }
+            ]
+          },
+          {
+            "en": "You can't waste another moment.",
+            "zh": "你不能再浪费时间了。",
+            "words": [
+              {
+                "w": "waste time",
+                "zh": "浪费时间"
+              }
+            ]
+          },
+          {
+            "en": "You turn to Ava, ready to decide your fate...",
+            "zh": "你转向艾娃，准备决定自己的命运……",
+            "words": [
+              {
+                "w": "turn to",
+                "zh": "转向；面对"
+              },
+              {
+                "w": "ready to",
+                "zh": "准备好做某事"
+              },
+              {
+                "w": "decide your fate",
+                "zh": "决定你的命运"
+              }
+            ]
+          },
+          {
+            "en": "The phone rings for the fourth time, and Daniel's face turns beet red.",
+            "zh": "电话第四次响起，丹尼尔的脸一下子变得通红。",
+            "words": [
+              {
+                "w": "ring",
+                "zh": "（铃、电话）响"
+              },
+              {
+                "w": "for the fourth time",
+                "zh": "第4次；这次是第4回"
+              },
+              {
+                "w": "turns beet red",
+                "zh": "脸涨得通红"
+              }
+            ]
+          },
+          {
+            "en": "He ends the call abruptly and turns back to you and Ava, his demeanor now one of urgency.",
+            "zh": "他突然挂断电话，转身面对你和Ava，神情变得十分急切。",
+            "words": [
+              {
+                "w": "ends the call",
+                "zh": "结束通话"
+              },
+              {
+                "w": "abruptly",
+                "zh": "突然地"
+              },
+              {
+                "w": "turns back",
+                "zh": "转回来"
+              }
+            ]
+          },
+          {
+            "en": "\"Let's get started,\" he says, his voice a mix of tension and determination.",
+            "zh": "他说：“咱们开始吧。”他的声音里既有紧张，又有决心。",
+            "words": [
+              {
+                "w": "get started",
+                "zh": "开始"
+              },
+              {
+                "w": "a mix of...and...",
+                "zh": "……和……的混合"
+              },
+              {
+                "w": "determination",
+                "zh": "决心"
+              }
+            ]
+          },
+          {
+            "en": "The interview begins with a series of questions that seem designed to trip you up.",
+            "zh": "面试一开始，就是一连串看似专门用来让你出丑的问题。",
+            "words": [
+              {
+                "w": "begins with",
+                "zh": "以……开始；开头是"
+              },
+              {
+                "w": "a series of",
+                "zh": "一连串的"
+              },
+              {
+                "w": "trip you up",
+                "zh": "让你栽跟头/出丑"
+              }
+            ]
+          },
+          {
+            "en": "You're asked about your biggest weakness, and you struggle to find the right balance between honesty and self-promotion.",
+            "zh": "当被问到最大的弱点时，你很难在诚实和自我推销之间找到恰当的平衡。",
+            "words": [
+              {
+                "w": "struggle to",
+                "zh": "努力尝试但仍难以做到"
+              },
+              {
+                "w": "balance",
+                "zh": "平衡；均衡"
+              },
+              {
+                "w": "self-promotion",
+                "zh": "自我推销"
+              }
+            ]
+          },
+          {
+            "en": "Ava handles it with grace, acknowledging her own flaws while emphasizing her growth and resilience.",
+            "zh": "阿娃以优雅的方式处理这件事，既承认自己的缺点，又强调了自己的成长与韧性。",
+            "words": [
+              {
+                "w": "handles",
+                "zh": "应对；处理"
+              },
+              {
+                "w": "with grace",
+                "zh": "优雅地"
+              },
+              {
+                "w": "acknowledging",
+                "zh": "承认"
+              }
+            ]
+          },
+          {
+            "en": "The next round is a group task, where you and Ava are paired with two other candidates to brainstorm solutions to a hypothetical business problem.",
+            "zh": "下一轮是小组任务，你和Ava将与另外两位候选人配对，一起为一个假设的商业问题集思广益、提出解决方案。",
+            "words": [
+              {
+                "w": "group task",
+                "zh": "小组任务（大家一起完成的任务）"
+              },
+              {
+                "w": "paired with",
+                "zh": "与……配对"
+              },
+              {
+                "w": "brainstorm",
+                "zh": "头脑风暴（快速想出很多点子）"
+              }
+            ]
+          },
+          {
+            "en": "The room is filled with the sound of animated discussion, and you find yourself leaning on Ava's insights to navigate the challenge.",
+            "zh": "房间里充满了热烈讨论的声音，而你发现自己正依靠艾娃的见解来应对这个挑战。",
+            "words": [
+              {
+                "w": "filled with",
+                "zh": "充满；被……填满"
+              },
+              {
+                "w": "animated discussion",
+                "zh": "热烈的讨论"
+              },
+              {
+                "w": "lean on",
+                "zh": "依靠"
+              }
+            ]
+          },
+          {
+            "en": "Despite the pressure, you both manage to contribute effectively, and the team's solution earns a round of applause from Daniel.",
+            "zh": "尽管压力很大，你们俩还是设法有效贡献，团队的方案赢得了丹尼尔的掌声。",
+            "words": [
+              {
+                "w": "manage to",
+                "zh": "设法做到（困难的事）"
+              },
+              {
+                "w": "contribute effectively",
+                "zh": "有效地做出贡献"
+              },
+              {
+                "w": "earn a round of applause",
+                "zh": "赢得一阵掌声"
+              }
+            ]
+          },
+          {
+            "en": "As the rounds progress, you're faced with increasingly difficult questions, each one more daunting than the last.",
+            "zh": "随着轮次推进，你会遇到越来越难的问题，每一道都比前一道更让人望而生畏。",
+            "words": [
+              {
+                "w": "progress",
+                "zh": "进展；推进"
+              },
+              {
+                "w": "faced with",
+                "zh": "面对"
+              },
+              {
+                "w": "daunting",
+                "zh": "令人畏惧的"
+              }
+            ]
+          },
+          {
+            "en": "Ava's confidence in her answers inspires you, and you begin to feel a sense of camaraderie that transcends the competition.",
+            "zh": "阿娃对自己答案的自信鼓舞了你，你开始感受到一种超越比赛的竞争情谊。",
+            "words": [
+              {
+                "w": "inspire",
+                "zh": "激励；鼓舞"
+              },
+              {
+                "w": "sense of camaraderie",
+                "zh": "战友感；同侪情谊"
+              },
+              {
+                "w": "transcend",
+                "zh": "超越"
+              }
+            ]
+          },
+          {
+            "en": "You share a glance that speaks volumes, a silent agreement to support each other through the final stretch.",
+            "zh": "你们交换了一个意味深长的眼神，无声地约定在最后的冲刺阶段互相支持。",
+            "words": [
+              {
+                "w": "glance",
+                "zh": "看一眼；常不用言语表达情感"
+              },
+              {
+                "w": "speaks volumes",
+                "zh": "含义丰富；比说出来的更多"
+              },
+              {
+                "w": "silent agreement",
+                "zh": "无声的协议/默契"
+              }
+            ]
+          },
+          {
+            "en": "The final round is a one-on-one with Mr.",
+            "zh": "决赛轮是和Mr.的一对一对决。",
+            "words": [
+              {
+                "w": "final round",
+                "zh": "比赛的最后一轮"
+              },
+              {
+                "w": "one-on-one",
+                "zh": "两人之间的直接对抗"
+              },
+              {
+                "w": "with Mr.",
+                "zh": "与Mr."
+              }
+            ]
+          },
+          {
+            "en": "Okafor.",
+            "zh": "奥卡福。",
+            "words": [
+              {
+                "w": "Okafor",
+                "zh": "姓氏/名字（专有名词）"
+              }
+            ]
+          },
+          {
+            "en": "The room is silent as he leans forward, his eyes piercing through your nervous facade.",
+            "zh": "他向前倾身时，房间一片寂静；他的目光穿透你紧张的伪装。",
+            "words": [
+              {
+                "w": "silent",
+                "zh": "安静的"
+              },
+              {
+                "w": "leans forward",
+                "zh": "前倾"
+              },
+              {
+                "w": "nervous facade",
+                "zh": "紧张的外表"
+              }
+            ]
+          },
+          {
+            "en": "\"What makes you the best candidate for this position?\" he asks, his voice calm but intense.",
+            "zh": "他问道：“是什么让你成为这个职位的最佳人选？”他的声音平静却充满力量。",
+            "words": [
+              {
+                "w": "candidate",
+                "zh": "候选人；申请人"
+              },
+              {
+                "w": "position",
+                "zh": "职位；岗位"
+              },
+              {
+                "w": "calm but intense",
+                "zh": "表面平静但内心强烈"
+              }
+            ]
+          },
+          {
+            "en": "You take a deep breath and begin to speak, weaving together your experiences, your skills, and your passion for technology.",
+            "zh": "你深吸一口气，开始讲述，把你在科技方面的经历、技能和热情交织在一起。",
+            "words": [
+              {
+                "w": "take a deep breath",
+                "zh": "深呼吸"
+              },
+              {
+                "w": "weave together",
+                "zh": "把……交织/融合成一体"
+              },
+              {
+                "w": "passion for technology",
+                "zh": "对科技的热情"
+              }
+            ]
+          },
+          {
+            "en": "As you speak, you realize that this interview isn't just about landing a job; it's about finding your place in a world that's constantly evolving.",
+            "zh": "当你开口说话时，你会意识到这次面试不只是找一份工作；更是在不断变化的世界里找到自己的位置。",
+            "words": [
+              {
+                "w": "landing a job",
+                "zh": "得到一份工作"
+              },
+              {
+                "w": "finding your place",
+                "zh": "找到你的位置"
+              },
+              {
+                "w": "constantly evolving",
+                "zh": "不断演变"
+              }
+            ]
+          },
+          {
+            "en": "Ava watches you with pride, her smile a testament to the shared journey you've undergone.",
+            "zh": "阿娃骄傲地看着你，她的笑容见证了你们共同走过的旅程。",
+            "words": [
+              {
+                "w": "watches",
+                "zh": "注视；看着"
+              },
+              {
+                "w": "with pride",
+                "zh": "带着自豪"
+              },
+              {
+                "w": "testament",
+                "zh": "证明；见证"
+              }
+            ]
+          },
+          {
+            "en": "When you finish, Mr.",
+            "zh": "等你完成后，先生。",
+            "words": [
+              {
+                "w": "finish",
+                "zh": "完成"
+              },
+              {
+                "w": "Mr.",
+                "zh": "先生"
+              }
+            ]
+          },
+          {
+            "en": "Okafor nods thoughtfully.",
+            "zh": "奥卡福若有所思地点了点头。",
+            "words": [
+              {
+                "w": "nod",
+                "zh": "点头；表示同意或思考的头部动作"
+              },
+              {
+                "w": "thoughtfully",
+                "zh": "沉思地；认真地"
+              },
+              {
+                "w": "nods thoughtfully",
+                "zh": "若有所思地点头"
+              }
+            ]
+          },
+          {
+            "en": "\"I'm impressed,\" he says.",
+            "zh": "他说：“我印象深刻。”",
+            "words": [
+              {
+                "w": "impressed",
+                "zh": "印象深刻；钦佩的"
+              },
+              {
+                "w": "he says",
+                "zh": "他说"
+              }
+            ]
+          },
+          {
+            "en": "\"You've shown a remarkable blend of technical ability and personal drive.\"",
+            "zh": "你展现出了技术能力和个人动力的出色结合。",
+            "words": [
+              {
+                "w": "remarkable blend",
+                "zh": "非常显著的结合；令人印象深刻的组合"
+              },
+              {
+                "w": "technical ability",
+                "zh": "使用工具、系统或方法的技能"
+              },
+              {
+                "w": "personal drive",
+                "zh": "实现目标的内在强大动力"
+              }
+            ]
+          },
+          {
+            "en": "The interview ends with a handshake and a promise of feedback.",
+            "zh": "面试结束时，双方握了握手，并约定会提供反馈。",
+            "words": [
+              {
+                "w": "ends with",
+                "zh": "以……结束"
+              },
+              {
+                "w": "handshake",
+                "zh": "握手"
+              },
+              {
+                "w": "promise of feedback",
+                "zh": "承诺给予反馈"
+              }
+            ]
+          },
+          {
+            "en": "As you and Ava leave the building, the weight of your nerves lifts, replaced by a sense of accomplishment.",
+            "zh": "当你和Ava离开大楼时，你神经上的重压减轻了，取而代之的是一种成就感。",
+            "words": [
+              {
+                "w": "the weight of",
+                "zh": "沉重的感觉；比喻压力或忧虑"
+              },
+              {
+                "w": "lifts",
+                "zh": "升起；变轻"
+              },
+              {
+                "w": "replaced by",
+                "zh": "被……取代"
+              }
+            ]
+          },
+          {
+            "en": "You've faced the challenge head-on, and whether or not you get the job, you know that you've grown as a person and as a professional.",
+            "zh": "你已经直面挑战，无论是否得到这份工作，你都知道自己在个人和职业上都有所成长。",
+            "words": [
+              {
+                "w": "face...head-on",
+                "zh": "直接面对（问题/挑战）"
+              },
+              {
+                "w": "whether or not",
+                "zh": "不管/是否"
+              },
+              {
+                "w": "get the job",
+                "zh": "得到这份工作"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

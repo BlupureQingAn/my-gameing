@@ -1,0 +1,1062 @@
+{
+  "title": "Library Struggle",
+  "title_zh": "图书馆争夺战",
+  "lang": "en",
+  "band": "cet4",
+  "category": "campus",
+  "category_zh": "校园",
+  "theme": "minimal",
+  "text": "## Premise\nYou are Alex, a dedicated student at the University of America, facing the final week of the semester. The library, a sanctuary of solitude and tranquility, is now a battlefield. The last empty seat in the back row, which you had been eyeing for hours, is now occupied by a pile of 'memorabilia'. You are determined to reclaim your spot, but you also fear the chaos that might ensue if you confront the 'guardian' of the seat.\n\n## The World\nThe University of America is renowned for its vast library, a place where knowledge and tranquility intertwine. However, during the final week of the semester, this sanctuary becomes a microcosm of the academic world's stress and urgency. Students, like you, are on a relentless quest for information and a quiet place to study. The library, with its countless shelves and secluded nooks, becomes a battleground for those seeking the last remaining seats. The 'memorabilia' is a symbol of the chaos that ensues when students are pushed to their limits. It represents the struggle for resources in a world where time is of the essence. The library, once a place of peace, is now a testament to the pressures of academia.\n\n## People\n\n### Maya\nMaya is a senior biology major with a calm and patient demeanor. She is your good friend and has been studying with you since freshman year. She is passionate about saving the last seat for the two of you, as it's your usual spot. Maya speaks softly, always trying to keep the situation peaceful. \"Hey Alex, let's not cause a scene. Maybe we can find another seat nearby?\"\n\n### Leo\nLeo is a lively economics student who loves a good debate. He's competitive but not malicious; he simply wants to succeed in his studies. He's the one who left the 'memorabilia' on the seat. Leo is quite persuasive and speaks in a confident tone. \"Look, Alex, I understand you need the seat, but I need it for my research. Can't we compromise?\"\n\n### Priya\nPriya is a quiet engineering student who values her privacy. She avoids conflict but is firm about her rights. She has been studying at the seat for the past two hours and is determined not to give it up. Priya communicates with a gentle smile, trying to remain respectful. \"I'm sorry, but I've been here for a while. I'd really appreciate it if you could find another spot.\"\n\n### Sam\nSam is a senior psychology major with a creative and free-spirited personality. They are a casual friend who enjoys observing social dynamics. Sam doesn't seem too concerned about the seat but is intrigued by the situation. They speak in a relaxed manner, often with a playful twist. \"Hey, maybe we can turn this into a game of strategy, Alex! What do you think?\"\n\n## The Arc\n\n### Act I: Establishing the Situation and Allies (4-5 rounds)\nAfter Sam's suggestion, the tension in the air begins to ease. You glance at Maya, who nods in agreement, signaling her support. The four of you engage in a round of negotiations, each presenting your case with conviction. Maya and Priya offer to switch seats with you temporarily, while Leo suggests that you all take turns using the spot. The atmosphere is still tense, but the collaborative spirit is growing.\n\nRound 1: Maya and Priya offer to switch seats.\nRound 2: Leo suggests taking turns.\nRound 3: You propose a compromise where everyone shares the seat for a set period.\nRound 4: Sam suggests a game-like approach to resolve the issue.\nRound 5: The group agrees to a plan and the tension dissipates.\n\n### Act II: Conflict Escalation and Emotional High Point (4-5 rounds + 1 emotional high point)\nAs the week progresses, the situation intensifies. Each of you begins to rely on the seat more, and the negotiations become more frequent. One day, while discussing the seating arrangement, Priya accidentally mentions a study group she's planning to attend, which requires the seat for the entire session. This revelation triggers a heated argument, with emotions running high.\n\nRound 6: Priya reveals her study group plans.\nRound 7: Leo becomes defensive, feeling that his needs are being overlooked.\nRound 8: Maya expresses her frustration over the increasing drama.\nRound 9: You try to mediate, reminding everyone of the compromise they had agreed upon.\nRound 10: Emotional high point: Alex loses patience and shouts, \"We're all adults here! Can't we just be reasonable?\"\n\n### Act III: Resolution (3-4 rounds)\nAfter the shouting match, the group takes a moment to reflect on their behavior. They realize that the seat is just a small part of their lives and that their friendship is more important. They decide to put the seat issue behind them and focus on their studies.\n\nRound 11: The group discusses the importance of their friendship.\nRound 12: They agree to alternate seating arrangements and set up a schedule.\nRound 13: Maya suggests that they use the seat as a meeting point for study sessions.\nRound 14: Leo apologizes for his outburst and offers to help with the study group.\n\n## Endings\n\n### Happy Ending: The group learns to value their friendship over material possessions, and they manage to share the seat amicably.\n\n### Average Ending: The group resolves the seating issue, but it takes a toll on their friendships, leaving them feeling somewhat strained.\n\n### Sad Ending: The group fails to resolve the seating issue, leading to a breakdown in communication and a lasting rift among them.",
+  "structured": {
+    "band": "cet4",
+    "theme": "minimal",
+    "world": {
+      "era": "现代美国校园",
+      "genre": "校园奇幻/青春励志",
+      "summary": "In the University of America, a grand library transforms into a stage of academic rivalry during the final week of the semester. Amidst the chaos, a dedicated student named Alex struggles to reclaim his seat amidst memorabilia piles, embodying the spirit of perseverance and friendship.",
+      "rules": "1. Alex must navigate the library's changing landscape and maintain academic focus. 2. The 'guardian' of the seat holds the key to Alex's quest. 3. The actions of others around Alex will influence the outcome. 4. The library is a living entity, affected by the emotions and struggles of its users.",
+      "atmosphere": "tense, intense, and occasionally whimsical",
+      "vocab": [
+        "library",
+        "seat",
+        "memorabilia",
+        "guardian",
+        "battlefield",
+        "sanctuary",
+        "tranquility",
+        "knowledge"
+      ]
+    },
+    "identity": {
+      "name": "Alex",
+      "gender": "男",
+      "age": 20,
+      "role": "图书馆的坚定守护者",
+      "background": "Alex is a dedicated student at the University of America, where the library is more than just a place to study; it's a sanctuary he fiercely protects."
+    },
+    "npcs": [
+      {
+        "name": "Maya",
+        "gender": "女",
+        "role": "图书馆管理员",
+        "personality": "冷静、理性，有时显得疏远",
+        "relationship": "主角的图书馆导师，对主角的学习和生活给予指导"
+      },
+      {
+        "name": "Leo",
+        "gender": "男",
+        "role": "学霸",
+        "personality": "自信、好斗，容易冲动",
+        "relationship": "与主角在图书馆座位争夺中对立"
+      },
+      {
+        "name": "Priya",
+        "gender": "女",
+        "role": "普通学生",
+        "personality": "善良、乐于助人，有时显得犹豫不决",
+        "relationship": "与主角共同面对图书馆座位争夺的挑战"
+      },
+      {
+        "name": "Sam",
+        "gender": "男",
+        "role": "朋友",
+        "personality": "随和、幽默，容易妥协",
+        "relationship": "主角的朋友，在座位争夺中提供支持"
+      }
+    ],
+    "timeline": {
+      "start": {
+        "year": 2026,
+        "month": 12,
+        "day": 14
+      },
+      "note": "The story unfolds in the final week of the semester, setting the stage for a series of intense confrontations and unexpected alliances."
+    },
+    "scene_style": {
+      "env_templates": [
+        "期末周图书馆后座战场",
+        "学生群体聚集区",
+        "静谧的阅读角落",
+        "图书馆管理员办公室",
+        "拥挤的借阅处",
+        "自习室的喧嚣",
+        "图书馆的藏书阁"
+      ],
+      "option_style": "选择题/决策题，情景模拟，互动体验"
+    },
+    "first_scene": {
+      "story": "It's 9:45 AM, and the library is buzzing with the last-minute rush of students. You're scanning the rows for your usual seat when you notice it—completely occupied by a pile of memorabilia. Your heart sinks as you realize the chaos that's about to unfold.\n\nMaya approaches, her eyes filled with concern. \"Hey, do you see that seat? Someone's left all that stuff there.\"\n\nYou nod, frustration creeping into your voice. \"Yeah, it's mine. I've been here all semester. I can't believe someone just took it.\"\n\nLeo joins the conversation, his arms crossed. \"Hey, I put that stuff there. I need that seat for my research. Can't you understand?\"\n\nYou feel a surge of anger. \"I've been using that seat since freshman year! It's not fair that you just took it.\"\n\nMaya steps in, trying to calm the situation. \"Let's not cause a scene. Maybe we can find another seat nearby?\"\n\nBut the thought of searching for a new spot fills you with dread. You must immediately decide: Will you stand up for your seat, or will you let it go and find somewhere else to study?\n\nRound 10: Priya, feeling cornered, decides to take a stand. \"I've been using that seat for the past two hours, and I'm not giving it up. It's my right.\"\n\nLeo's face reddens with anger. \"This is ridiculous! We're all students here. We all need this seat.\"\n\nThe atmosphere in the library becomes more intense. You realize that this is not just about the seat; it's about the respect and fairness that everyone deserves. Sam, ever the mediator, tries to calm the situation down. \"Look, everyone, let's not forget the bigger picture. We're all here to learn and succeed. Can't we find a way to coexist?\"\n\nRound 11: The group agrees to take a break from the heated discussion to gather their thoughts.\n\nDuring the break, you reflect on the situation. You realize that the seat is a symbol of the competition and stress that come with the end of the semester. You also think about Maya's suggestion to switch seats temporarily, and you feel a spark of hope.\n\nRound 12: When you return to the conversation, you propose a new plan. \"How about this? We all take turns using the seat for short periods. It's fair, and it ensures that everyone gets a chance to study there.\"\n\nPriya nods, her frustration easing. \"Alright, that sounds reasonable. But we need to stick to the schedule.\"\n\nLeo, still a bit defensive, agrees. \"Fine, as long as we all stick to the plan.\"\n\nMaya smiles, relieved. \"Great! Let's do this.\"\n\nRound 13: The group sets up a schedule for using the seat. You all agree to respect each other's time and to keep the peace.\n\nAs the semester comes to a close, the library becomes less chaotic. The seat, once a source of conflict, now brings a sense of community. You and your friends have learned to work together, even in the midst of stress and competition. And while you may not have your usual spot, you've gained something even more valuable—friends who understand the importance of respect and compromise.\n\nThe final bell rings, and you gather your books, feeling a sense of accomplishment. You look around at the library, now a place of both tranquility and camaraderie. The struggle for the seat may have ended, but the lessons you've learned will stay with you for a lifetime.",
+      "options": [
+        "stand up and confront Leo",
+        "ignore the memorabilia and find another seat",
+        "ask Maya to help negotiate with Leo",
+        "turn to Sam for advice on how to handle the situation"
+      ],
+      "bilingual": {
+        "v": 1,
+        "lines": [
+          {
+            "en": "It's 9:45 AM, and the library is buzzing with the last-minute rush of students.",
+            "zh": "现在是上午9点45分，图书馆里挤满了赶最后期限的学生，一片喧闹。",
+            "words": [
+              {
+                "w": "buzzing",
+                "zh": "热闹的；人声鼎沸"
+              },
+              {
+                "w": "last-minute",
+                "zh": "最后一刻的；临到截止前的"
+              },
+              {
+                "w": "rush",
+                "zh": "人流高峰；匆忙的人群"
+              }
+            ]
+          },
+          {
+            "en": "You're scanning the rows for your usual seat when you notice it—completely occupied by a pile of memorabilia.",
+            "zh": "你正扫视着一排排座位，寻找自己常坐的位置，这时却发现它——完全被一堆纪念品占满了。",
+            "words": [
+              {
+                "w": "scanning",
+                "zh": "仔细查看许多东西以找到某物"
+              },
+              {
+                "w": "rows",
+                "zh": "人或物的行列"
+              },
+              {
+                "w": "memorabilia",
+                "zh": "作为事件、人物等的纪念品而保存的物品"
+              }
+            ]
+          },
+          {
+            "en": "Your heart sinks as you realize the chaos that's about to unfold.",
+            "zh": "当你意识到即将发生的混乱时，你的心沉了下去。",
+            "words": [
+              {
+                "w": "heart sinks",
+                "zh": "心情沉重；感到失望"
+              },
+              {
+                "w": "realize",
+                "zh": "意识到"
+              },
+              {
+                "w": "about to unfold",
+                "zh": "即将发生"
+              }
+            ]
+          },
+          {
+            "en": "Maya approaches, her eyes filled with concern.",
+            "zh": "玛雅走近，眼神里满是担忧。",
+            "words": [
+              {
+                "w": "approaches",
+                "zh": "靠近；走向某人"
+              },
+              {
+                "w": "filled with concern",
+                "zh": "充满忧虑或关心"
+              }
+            ]
+          },
+          {
+            "en": "\"Hey, do you see that seat?",
+            "zh": "嘿，你看到那个座位了吗？",
+            "words": [
+              {
+                "w": "see",
+                "zh": "用眼睛注意到；看见"
+              },
+              {
+                "w": "seat",
+                "zh": "坐的地方"
+              }
+            ]
+          },
+          {
+            "en": "Someone's left all that stuff there.\"",
+            "zh": "有人把那些东西都留在那了。",
+            "words": [
+              {
+                "w": "left",
+                "zh": "过去分词，表示“被留下、遗留”"
+              },
+              {
+                "w": "stuff",
+                "zh": "非正式用语，指物品、东西（不可数）"
+              }
+            ]
+          },
+          {
+            "en": "You nod, frustration creeping into your voice.",
+            "zh": "你点点头，声音里透出一丝沮丧。",
+            "words": [
+              {
+                "w": "creeping",
+                "zh": "逐渐出现；悄悄渗入"
+              },
+              {
+                "w": "nod",
+                "zh": "点头"
+              },
+              {
+                "w": "frustration",
+                "zh": "沮丧"
+              }
+            ]
+          },
+          {
+            "en": "\"Yeah, it's mine.",
+            "zh": "对，这是我的。",
+            "words": [
+              {
+                "w": "it's mine",
+                "zh": "物主代词‘mine’跟在be动词后；表示所属关系很自然"
+              },
+              {
+                "w": "Yeah",
+                "zh": "口语中肯定回应；用于同意或确认某事"
+              }
+            ]
+          },
+          {
+            "en": "I've been here all semester.",
+            "zh": "我整个学期都在这里。",
+            "words": [
+              {
+                "w": "I've been",
+                "zh": "现在完成时的 be；表示过去开始并持续到现在"
+              },
+              {
+                "w": "here",
+                "zh": "副词，意为“在这里”；常跟在 be/stay/live 等动词后"
+              },
+              {
+                "w": "all semester",
+                "zh": "整个学期"
+              }
+            ]
+          },
+          {
+            "en": "I can't believe someone just took it.\"",
+            "zh": "真不敢相信有人就这么拿走了。",
+            "words": [
+              {
+                "w": "can't believe",
+                "zh": "难以置信"
+              },
+              {
+                "w": "just",
+                "zh": "刚刚；刚才"
+              },
+              {
+                "w": "take it",
+                "zh": "拿走"
+              }
+            ]
+          },
+          {
+            "en": "Leo joins the conversation, his arms crossed.",
+            "zh": "利奥加入谈话，双臂交叉。",
+            "words": [
+              {
+                "w": "joins the conversation",
+                "zh": "加入交谈"
+              },
+              {
+                "w": "his arms crossed",
+                "zh": "双臂交叉"
+              }
+            ]
+          },
+          {
+            "en": "\"Hey, I put that stuff there.",
+            "zh": "嘿，我把那些东西放在那儿了。",
+            "words": [
+              {
+                "w": "put ... there",
+                "zh": "把……放在某处；表示‘留下’"
+              },
+              {
+                "w": "stuff",
+                "zh": "东西（非正式）"
+              }
+            ]
+          },
+          {
+            "en": "I need that seat for my research.",
+            "zh": "我需要那个座位来做研究。",
+            "words": [
+              {
+                "w": "need",
+                "zh": "需要"
+              },
+              {
+                "w": "seat",
+                "zh": "座位"
+              },
+              {
+                "w": "for",
+                "zh": "为了"
+              }
+            ]
+          },
+          {
+            "en": "Can't you understand?\"",
+            "zh": "你难道不明白吗？",
+            "words": [
+              {
+                "w": "can't you",
+                "zh": "“cannot”的缩写，用于疑问句中表达惊讶或恼怒；如：“难道你看不见？”"
+              },
+              {
+                "w": "understand",
+                "zh": "理解、领会"
+              }
+            ]
+          },
+          {
+            "en": "You feel a surge of anger.",
+            "zh": "你感到一阵怒火涌上心头。",
+            "words": [
+              {
+                "w": "surge",
+                "zh": "一股突然而强烈的涌动；常与情绪搭配，表示突然袭来"
+              },
+              {
+                "w": "feel",
+                "zh": "感觉到；感受到（情绪）"
+              }
+            ]
+          },
+          {
+            "en": "\"I've been using that seat since freshman year!",
+            "zh": "我从大一就开始坐这个位置了！",
+            "words": [
+              {
+                "w": "freshman year",
+                "zh": "大学第一年"
+              },
+              {
+                "w": "been using",
+                "zh": "一直在用（现在完成进行时）"
+              },
+              {
+                "w": "since",
+                "zh": "自从"
+              }
+            ]
+          },
+          {
+            "en": "It's not fair that you just took it.\"",
+            "zh": "你就这么拿走了，这不公平。",
+            "words": [
+              {
+                "w": "not fair",
+                "zh": "不公平"
+              },
+              {
+                "w": "just",
+                "zh": "仅仅；就"
+              },
+              {
+                "w": "taken",
+                "zh": "拿；取"
+              }
+            ]
+          },
+          {
+            "en": "Maya steps in, trying to calm the situation.",
+            "zh": "玛雅走上前去，试图让局面平静下来。",
+            "words": [
+              {
+                "w": "steps in",
+                "zh": "介入；上前帮忙"
+              },
+              {
+                "w": "calm down",
+                "zh": "使紧张局势平息"
+              },
+              {
+                "w": "trying to",
+                "zh": "试图"
+              }
+            ]
+          },
+          {
+            "en": "\"Let's not cause a scene.",
+            "zh": "咱们别惹事。",
+            "words": [
+              {
+                "w": "cause a scene",
+                "zh": "惹事；制造麻烦"
+              },
+              {
+                "w": "scene",
+                "zh": "场面；场景"
+              }
+            ]
+          },
+          {
+            "en": "Maybe we can find another seat nearby?\"",
+            "zh": "也许我们能在附近找个别的座位？",
+            "words": [
+              {
+                "w": "find",
+                "zh": "找到；发现"
+              },
+              {
+                "w": "another",
+                "zh": "另一个；又一个"
+              },
+              {
+                "w": "nearby",
+                "zh": "在附近"
+              }
+            ]
+          },
+          {
+            "en": "But the thought of searching for a new spot fills you with dread.",
+            "zh": "但一想到要找个新地方，你就感到一阵恐惧。",
+            "words": [
+              {
+                "w": "fills you with dread",
+                "zh": "让你充满恐惧"
+              },
+              {
+                "w": "searching for",
+                "zh": "寻找"
+              },
+              {
+                "w": "the thought of",
+                "zh": "想到"
+              }
+            ]
+          },
+          {
+            "en": "You must immediately decide: Will you stand up for your seat, or will you let it go and find somewhere else to study?",
+            "zh": "你必须立刻做出决定：你是要为座位坚持一下，还是干脆放弃，另找个地方学习？",
+            "words": [
+              {
+                "w": "stand up for",
+                "zh": "维护；坚决不让步"
+              },
+              {
+                "w": "let it go",
+                "zh": "放手；接受失去"
+              },
+              {
+                "w": "find somewhere else",
+                "zh": "找别的地方"
+              }
+            ]
+          },
+          {
+            "en": "Round 10: Priya, feeling cornered, decides to take a stand.",
+            "zh": "第10轮：普丽娅感到被逼入绝境，决定挺身而出。",
+            "words": [
+              {
+                "w": "feeling cornered",
+                "zh": "感觉被困住；进退两难"
+              },
+              {
+                "w": "take a stand",
+                "zh": "明确表态反对"
+              },
+              {
+                "w": "round",
+                "zh": "（比赛的）一轮"
+              }
+            ]
+          },
+          {
+            "en": "\"I've been using that seat for the past two hours, and I'm not giving it up.",
+            "zh": "我这两个小时一直占着这个座位，不会让出去。",
+            "words": [
+              {
+                "w": "give up",
+                "zh": "放弃；不再坚持"
+              },
+              {
+                "w": "for the past + time",
+                "zh": "在过去一段时间里"
+              },
+              {
+                "w": "be using",
+                "zh": "正在使用"
+              }
+            ]
+          },
+          {
+            "en": "It's my right.\"",
+            "zh": "这是我的权利。",
+            "words": [
+              {
+                "w": "right",
+                "zh": "权利"
+              },
+              {
+                "w": "my",
+                "zh": "我的"
+              }
+            ]
+          },
+          {
+            "en": "Leo's face reddens with anger.",
+            "zh": "利奥气得脸都红了。",
+            "words": [
+              {
+                "w": "reddens",
+                "zh": "变红"
+              },
+              {
+                "w": "with anger",
+                "zh": "因为生气"
+              }
+            ]
+          },
+          {
+            "en": "\"This is ridiculous!",
+            "zh": "这也太离谱了！",
+            "words": [
+              {
+                "w": "ridiculous",
+                "zh": "荒谬的；荒唐得不像真的"
+              },
+              {
+                "w": "is",
+                "zh": "系动词，连接主语和补语"
+              }
+            ]
+          },
+          {
+            "en": "We're all students here.",
+            "zh": "我们在这里都是学生。",
+            "words": [
+              {
+                "w": "students",
+                "zh": "在学校学习的人"
+              },
+              {
+                "w": "here",
+                "zh": "在这里"
+              }
+            ]
+          },
+          {
+            "en": "We all need this seat.\"",
+            "zh": "我们都需要这个座位。",
+            "words": [
+              {
+                "w": "need",
+                "zh": "需要"
+              },
+              {
+                "w": "seat",
+                "zh": "座位"
+              }
+            ]
+          },
+          {
+            "en": "The atmosphere in the library becomes more intense.",
+            "zh": "图书馆里的气氛变得更加紧张。",
+            "words": [
+              {
+                "w": "atmosphere",
+                "zh": "气氛"
+              },
+              {
+                "w": "becomes",
+                "zh": "变得"
+              },
+              {
+                "w": "intense",
+                "zh": "强烈的"
+              }
+            ]
+          },
+          {
+            "en": "You realize that this is not just about the seat; it's about the respect and fairness that everyone deserves.",
+            "zh": "你意识到，这不仅仅是一个座位的问题；它关乎每个人应得的尊重与公平。",
+            "words": [
+              {
+                "w": "realize",
+                "zh": "明白；意识到"
+              },
+              {
+                "w": "not just..., but...",
+                "zh": "不只是……更是……"
+              },
+              {
+                "w": "deserve",
+                "zh": "值得；应得"
+              }
+            ]
+          },
+          {
+            "en": "Sam, ever the mediator, tries to calm the situation down.",
+            "zh": "作为一贯的调解人，山姆试图让局势平静下来。",
+            "words": [
+              {
+                "w": "ever the mediator",
+                "zh": "一贯充当调解人"
+              },
+              {
+                "w": "calm the situation down",
+                "zh": "让紧张/混乱的局面缓和下来"
+              }
+            ]
+          },
+          {
+            "en": "\"Look, everyone, let's not forget the bigger picture.",
+            "zh": "听着，各位，咱们别忘了大局。",
+            "words": [
+              {
+                "w": "look",
+                "zh": "看/听"
+              },
+              {
+                "w": "everyone",
+                "zh": "大家”"
+              },
+              {
+                "w": "let's not forget",
+                "zh": "别忘了”"
+              }
+            ]
+          },
+          {
+            "en": "We're all here to learn and succeed.",
+            "zh": "我们都在这里学习并取得成功。",
+            "words": [
+              {
+                "w": "all here",
+                "zh": "都在场；用于群体语境"
+              },
+              {
+                "w": "to learn",
+                "zh": "为了学习"
+              },
+              {
+                "w": "and succeed",
+                "zh": "并且成功"
+              }
+            ]
+          },
+          {
+            "en": "Can't we find a way to coexist?\"",
+            "zh": "难道我们不能找到共存的方法吗？",
+            "words": [
+              {
+                "w": "coexist",
+                "zh": "和平共处；同时存在而不冲突"
+              },
+              {
+                "w": "find a way",
+                "zh": "找到方法；想出办法"
+              }
+            ]
+          },
+          {
+            "en": "Round 11: The group agrees to take a break from the heated discussion to gather their thoughts.",
+            "zh": "第11轮：小组同意暂停激烈的讨论，以便整理思路。",
+            "words": [
+              {
+                "w": "agrees to",
+                "zh": "同意做某事"
+              },
+              {
+                "w": "take a break",
+                "zh": "休息一下"
+              },
+              {
+                "w": "heated discussion",
+                "zh": "激烈争论"
+              }
+            ]
+          },
+          {
+            "en": "During the break, you reflect on the situation.",
+            "zh": "休息时，你思考当前的情况。",
+            "words": [
+              {
+                "w": "reflect on",
+                "zh": "仔细思考"
+              },
+              {
+                "w": "during the break",
+                "zh": "在休息期间"
+              }
+            ]
+          },
+          {
+            "en": "You realize that the seat is a symbol of the competition and stress that come with the end of the semester.",
+            "zh": "你意识到，这个座位象征着期末临近时的竞争与压力。",
+            "words": [
+              {
+                "w": "realize",
+                "zh": "明白；意识到"
+              },
+              {
+                "w": "symbol",
+                "zh": "象征；符号"
+              },
+              {
+                "w": "come with",
+                "zh": "伴随；随之而来"
+              }
+            ]
+          },
+          {
+            "en": "You also think about Maya's suggestion to switch seats temporarily, and you feel a spark of hope.",
+            "zh": "你也想到玛雅建议暂时换座位，心里闪过一丝希望。",
+            "words": [
+              {
+                "w": "switch seats",
+                "zh": "交换座位"
+              },
+              {
+                "w": "temporarily",
+                "zh": "暂时"
+              },
+              {
+                "w": "spark of hope",
+                "zh": "一丝希望"
+              }
+            ]
+          },
+          {
+            "en": "Round 12: When you return to the conversation, you propose a new plan.",
+            "zh": "第12轮：当你回到对话中时，你要提出一个新计划。",
+            "words": [
+              {
+                "w": "return to",
+                "zh": "回到（某处/话题）"
+              },
+              {
+                "w": "propose",
+                "zh": "提出（想法供考虑）"
+              }
+            ]
+          },
+          {
+            "en": "\"How about this?",
+            "zh": "这个怎么样？",
+            "words": [
+              {
+                "w": "How about...?",
+                "zh": "询问意见；提出建议"
+              },
+              {
+                "w": "this",
+                "zh": "正在讨论的这件事"
+              }
+            ]
+          },
+          {
+            "en": "We all take turns using the seat for short periods.",
+            "zh": "我们都轮流使用这个座位，每次只用一小会儿。",
+            "words": [
+              {
+                "w": "take turns",
+                "zh": "轮流"
+              },
+              {
+                "w": "short periods",
+                "zh": "短时间"
+              }
+            ]
+          },
+          {
+            "en": "It's fair, and it ensures that everyone gets a chance to study there.\"",
+            "zh": "这很公平，而且能确保每个人都有机会在那里学习。",
+            "words": [
+              {
+                "w": "ensures",
+                "zh": "保证；确保"
+              },
+              {
+                "w": "gets a chance",
+                "zh": "有机会"
+              },
+              {
+                "w": "there",
+                "zh": "在那里"
+              }
+            ]
+          },
+          {
+            "en": "Priya nods, her frustration easing.",
+            "zh": "普丽娅点点头，她的沮丧情绪渐渐缓解。",
+            "words": [
+              {
+                "w": "nod",
+                "zh": "点头；用头上下动表示同意或打招呼"
+              },
+              {
+                "w": "frustration",
+                "zh": "因无法达成目标而产生的挫败感、懊恼"
+              },
+              {
+                "w": "ease",
+                "zh": "减轻、缓和（痛苦、压力等）"
+              }
+            ]
+          },
+          {
+            "en": "\"Alright, that sounds reasonable.",
+            "zh": "好吧，这听起来挺合理的。",
+            "words": [
+              {
+                "w": "sounds reasonable",
+                "zh": "听起来合理"
+              },
+              {
+                "w": "Alright",
+                "zh": "好吧"
+              }
+            ]
+          },
+          {
+            "en": "But we need to stick to the schedule.\"",
+            "zh": "但我们必须按计划进行。",
+            "words": [
+              {
+                "w": "stick to",
+                "zh": "坚持；遵守"
+              },
+              {
+                "w": "schedule",
+                "zh": "时间表；日程安排"
+              }
+            ]
+          },
+          {
+            "en": "Leo, still a bit defensive, agrees.",
+            "zh": "里奥有点防备，但还是同意了。",
+            "words": [
+              {
+                "w": "defensive",
+                "zh": "因感到被批评而紧张、戒备的"
+              },
+              {
+                "w": "agrees",
+                "zh": "同意；答应"
+              }
+            ]
+          },
+          {
+            "en": "\"Fine, as long as we all stick to the plan.\"",
+            "zh": "行，只要我们都按计划来就行。",
+            "words": [
+              {
+                "w": "stick to",
+                "zh": "坚持；遵守"
+              },
+              {
+                "w": "as long as",
+                "zh": "只要"
+              }
+            ]
+          },
+          {
+            "en": "Maya smiles, relieved.",
+            "zh": "玛雅松了口气，脸上露出了笑容。",
+            "words": [
+              {
+                "w": "relieved",
+                "zh": "松了一口气；放心"
+              },
+              {
+                "w": "smiles",
+                "zh": "微笑"
+              }
+            ]
+          },
+          {
+            "en": "\"Great!",
+            "zh": "太好了！",
+            "words": [
+              {
+                "w": "Great!",
+                "zh": "很好；太棒了——用于表达强烈的赞同或兴奋。"
+              }
+            ]
+          },
+          {
+            "en": "Let's do this.\"",
+            "zh": "咱们这就开干吧。",
+            "words": [
+              {
+                "w": "do this",
+                "zh": "处理这件事；马上行动"
+              },
+              {
+                "w": "Let's...",
+                "zh": "提议/邀请一起做（祈使）"
+              }
+            ]
+          },
+          {
+            "en": "Round 13: The group sets up a schedule for using the seat.",
+            "zh": "第13轮：小组制定了使用座位的时间表。",
+            "words": [
+              {
+                "w": "sets up",
+                "zh": "制定（计划）"
+              },
+              {
+                "w": "schedule",
+                "zh": "活动时间表"
+              },
+              {
+                "w": "for using",
+                "zh": "供……使用的"
+              }
+            ]
+          },
+          {
+            "en": "You all agree to respect each other's time and to keep the peace.",
+            "zh": "你们都同意尊重彼此的时间，并保持和平。",
+            "words": [
+              {
+                "w": "respect",
+                "zh": "尊重"
+              },
+              {
+                "w": "keep the peace",
+                "zh": "维持和平"
+              }
+            ]
+          },
+          {
+            "en": "As the semester comes to a close, the library becomes less chaotic.",
+            "zh": "随着学期接近尾声，图书馆也变得不那么混乱了。",
+            "words": [
+              {
+                "w": "comes to a close",
+                "zh": "结束"
+              },
+              {
+                "w": "less chaotic",
+                "zh": "没那么乱"
+              }
+            ]
+          },
+          {
+            "en": "The seat, once a source of conflict, now brings a sense of community.",
+            "zh": "这把椅子，曾经是引发冲突的根源，如今却带来了一种社区感。",
+            "words": [
+              {
+                "w": "source",
+                "zh": "根源；来源"
+              },
+              {
+                "w": "conflict",
+                "zh": "冲突；争执"
+              },
+              {
+                "w": "sense of community",
+                "zh": "社区感；归属感"
+              }
+            ]
+          },
+          {
+            "en": "You and your friends have learned to work together, even in the midst of stress and competition.",
+            "zh": "你和你的朋友们已经学会在压力和竞争之中彼此协作。",
+            "words": [
+              {
+                "w": "work together",
+                "zh": "一起合作"
+              },
+              {
+                "w": "in the midst of",
+                "zh": "在……期间/之中"
+              },
+              {
+                "w": "stress and competition",
+                "zh": "压力与竞争"
+              }
+            ]
+          },
+          {
+            "en": "And while you may not have your usual spot, you've gained something even more valuable—friends who understand the importance of respect and compromise.",
+            "zh": "虽然你可能没有平时那个位置，但你得到了更宝贵的东西——懂得尊重与妥协之重要性的朋友。",
+            "words": [
+              {
+                "w": "gained",
+                "zh": "得到（更好的东西）"
+              },
+              {
+                "w": "valuable",
+                "zh": "很值钱；很有用"
+              },
+              {
+                "w": "compromise",
+                "zh": "互相让步达成一致"
+              }
+            ]
+          },
+          {
+            "en": "The final bell rings, and you gather your books, feeling a sense of accomplishment.",
+            "zh": "最后一声铃响，你收拾好书本，心里有一种成就感。",
+            "words": [
+              {
+                "w": "final bell",
+                "zh": "最后一节课的铃声"
+              },
+              {
+                "w": "gather",
+                "zh": "收拾；把……收拢"
+              },
+              {
+                "w": "sense of accomplishment",
+                "zh": "成就感"
+              }
+            ]
+          },
+          {
+            "en": "You look around at the library, now a place of both tranquility and camaraderie.",
+            "zh": "你环顾四周，图书馆如今既是一处宁静之地，也是充满情谊之所。",
+            "words": [
+              {
+                "w": "tranquility",
+                "zh": "宁静；平静"
+              },
+              {
+                "w": "camaraderie",
+                "zh": "同伴间的情谊"
+              },
+              {
+                "w": "look around",
+                "zh": "环顾四周"
+              }
+            ]
+          },
+          {
+            "en": "The struggle for the seat may have ended, but the lessons you've learned will stay with you for a lifetime.",
+            "zh": "争夺这个位置的斗争或许已经结束，但你学到的教训将伴随你一生。",
+            "words": [
+              {
+                "w": "struggle",
+                "zh": "斗争；竞争"
+              },
+              {
+                "w": "seat",
+                "zh": "职位；角色"
+              },
+              {
+                "w": "may have ended",
+                "zh": "可能已经结束"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

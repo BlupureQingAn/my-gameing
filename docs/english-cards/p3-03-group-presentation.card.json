@@ -1,0 +1,861 @@
+{
+  "title": "Team Disconnects",
+  "title_zh": "团队掉线",
+  "lang": "en",
+  "band": "cet4",
+  "category": "校园",
+  "category_zh": "校园",
+  "theme": "minimal",
+  "text": "## Premise\nYou're the star of the show tonight, standing alone with the powerpoint slides in your hands. It's the eve of a crucial presentation, and your teammates have gone MIA. You're in a pickle, with a sea of expectant faces in the lecture hall and a room of silence in your dorm. You want to deliver an incredible performance, but the fear of failure looms like a shadow.\n\n## The World\nThe world of \"Team Disconnects\" is a realm where collaboration is key but communication is often patchy. You find yourself in a university setting, where technology and human error can create unexpected hurdles. The classroom is a modern, well-equipped space with high-tech projectors and sleek chairs. Outside, the dormitory is a maze of hallways, each room a small, personal sanctuary where you've spent countless late nights preparing for this moment. The campus is buzzing with activity, but the air is thick with tension as students feel the weight of their impending presentations. The technology used in the classroom, while impressive, is prone to glitches, and this is where your challenge begins.\n\n## People\n\nEmma - Your best friend and study partner, Emma is a Biology major with a sharp mind and a compassionate heart. She's deeply invested in your success and would have helped with the presentation. Her personality is warm and supportive, always ready to lend a helping hand. You've shared countless secrets and dreams over late-night study sessions. Emma tends to speak softly, with a tone that's both reassuring and encouraging. \"You've got this, remember? You're more prepared than you think.\"\n\nJake - A Computer Science student and your team leader, Jake has a reputation for being the brain behind the project. He's analytical and focused, but also has a playful side that keeps the team engaged. He's a key asset, and his absence could leave a significant gap in your presentation. Jake's tone is straightforward and often humorous, making him a popular figure in the group. \"Hey, don't worry. You can handle this. Just focus on the facts, and we'll get through this together.\"\n\nNoah - The graphics designer on your team, Noah has a knack for creating visually stunning slides. He's creative and often has out-of-the-box ideas. Despite his skills, he's not the most reliable, often missing deadlines and leaving the rest of the team to pick up the slack. Noah speaks with a lot of enthusiasm and a slight French accent from his study abroad experience. \"C'est incroyable! You'll make this presentation look fantastic, just wait and see!\"\n\nIris - A quiet History major who joined the team as a last-minute replacement. She's knowledgeable and meticulous, often catching errors that others overlook. Iris has a calm and collected demeanor, which is a stark contrast to the chaos surrounding you. Her speech is thoughtful and reserved, reflecting her personality. \"I understand the pressure, but trust in your preparation. You'll do well.\"\n\n## The Arc\n\n### Act I: Building the Situation and Allies (4-5 Rounds)\n\nAs you sit in your dorm room, the gravity of the situation weighs heavily on you. You've spent countless nights preparing for this presentation, and now, with Jake's sudden disappearance, you're left to face it alone. You're not one to back down, though. You reach out to Noah, your graphics designer, hoping for some last-minute assistance. \"Hey Noah, I need your slides done by morning. Jake's not here, and I'm on my own.\"\n\nNoah responds with his usual enthusiasm, \"C'est incroyable! I'll have them ready by dawn. You can count on me.\" You feel a small wave of relief wash over you, knowing that at least one member of your team is reliable.\n\nNext, you turn to Iris, the History major who joined the team at the last minute. She's always been quiet, but you've come to appreciate her meticulous nature. \"Iris, can you help me review the content? I need to make sure everything is perfect.\"\n\nIris nods calmly, \"Of course. Let's go through it together.\" As you delve into the details, you find that Iris's knowledge of history adds a depth to your presentation that you never thought possible. You begin to see her as more than just a replacement; she's a valuable asset to the team.\n\n### Act II: Conflict Escalation and Emotional High Point (4-5 Rounds + 1 Emotional High Point)\n\nAs the morning approaches, you're feeling more confident, but your anxiety doesn't entirely disappear. You arrive at the classroom, and the sight of the empty seats where Jake and Noah should be sitting sends a shiver down your spine. You take a deep breath and start setting up your slides.\n\nThe presentation begins, and you're off to a strong start. Your content is engaging, and Iris's insights add a new dimension to your discussion. As you progress, you notice the audience's attention beginning to wane. You realize that without Jake's humor and Noah's visual flair, the presentation isn't quite as dynamic as it could be.\n\nJust as you're about to lose your train of thought, Iris reaches out and touches your arm. \"Remember, you've done this before. You know your material inside and out. Trust yourself.\"\n\nThe words resonate with you, and you find your confidence surge. You pick up the pace, and the audience starts to engage once more. As you reach the climax of your presentation, you feel a sense of pride and accomplishment wash over you. You've overcome the challenges thrown at you, and you've done it well.\n\n### Act III: Resolution (3-4 Rounds)\n\nAfter the presentation, you receive a standing ovation. The professor shakes your hand and says, \"That was incredible. You handled that beautifully.\" Your teammates, Jake and Noah, arrive late, but they can't hide their pride. \"We're sorry we couldn't be there, but you did an amazing job,\" Jake says with a smile.\n\nAs you walk back to your dorm, you realize that the experience has brought you closer to your teammates. You've learned the importance of trust and the value of each team member's unique skills. You're grateful for the challenges you've faced, as they've only made you stronger.\n\n## Endings\n\n- **Happy Ending**: You successfully navigate the presentation, earning praise from your peers and professors. The experience strengthens your bond with your team, and you all come out of it as a more cohesive unit.\n- **Average Ending**: The presentation is good, but not as outstanding as you'd hoped. You learn valuable lessons about teamwork and personal growth, and you're grateful for the experience.\n- **Sad Ending**: Despite your best efforts, the presentation falls short of expectations. You're disappointed in yourself and your team, but you take the experience as a learning opportunity and strive to improve in the future.",
+  "structured": {
+    "band": "cet4",
+    "theme": "minimal",
+    "world": {
+      "era": "现代大学校园",
+      "genre": "科幻/悬疑/心理",
+      "summary": "In the realm of 'Team Disconnects,' technology and human error create unexpected challenges in a modern university setting, where collaboration is crucial but communication is often patchy. The protagonist, isolated and facing a crucial presentation, must navigate the high-tech classroom to deliver an incredible performance amidst fear and uncertainty.",
+      "rules": "1. The protagonist must rely on technology but face its unreliability. 2. Communication with teammates is limited or non-existent. 3. The protagonist's actions must be strategic to navigate the situation. 4. Time is limited and pressure is high.",
+      "atmosphere": "tense, isolating, and technologically advanced",
+      "vocab": [
+        "presentation",
+        "technology",
+        "teamwork",
+        "isolation",
+        "pressure",
+        "communication",
+        "technology failure",
+        "fear"
+      ]
+    },
+    "identity": {
+      "name": "Zara",
+      "gender": "女",
+      "age": 21,
+      "role": "独立演讲者",
+      "background": "A highly motivated and resourceful undergraduate student, Zara has been practicing her public speaking skills throughout her college years."
+    },
+    "npcs": [
+      {
+        "name": "Emma",
+        "gender": "女",
+        "role": "项目经理",
+        "personality": "严谨认真，有条不紊，但有时过于追求完美",
+        "relationship": "项目中的领导者，对主角有较高的期望，但在主角遇到困难时给予支持"
+      },
+      {
+        "name": "Jake",
+        "gender": "男",
+        "role": "技术专家",
+        "personality": "聪明机智，但有时过于自信，容易忽略细节",
+        "relationship": "主角的得力助手，对主角的技术问题提供帮助，但有时会因自信而引起矛盾"
+      },
+      {
+        "name": "Noah",
+        "gender": "男",
+        "role": "市场分析师",
+        "personality": "热情开朗，善于沟通，但有时过于乐观，缺乏危机感",
+        "relationship": "与主角关系较好，经常提供市场分析，但在关键时刻容易过于乐观而忽视风险"
+      },
+      {
+        "name": "Iris",
+        "gender": "女",
+        "role": "文案策划",
+        "personality": "创意无限，但有时过于追求独特，忽视团队合作",
+        "relationship": "主角的创意来源，经常提供新颖的想法，但在团队合作中容易与主角产生分歧"
+      }
+    ],
+    "timeline": {
+      "start": {
+        "year": 2026,
+        "month": 11,
+        "day": 3
+      },
+      "note": "The story unfolds on the eve of a crucial presentation, marking the start of the protagonist's intense journey."
+    },
+    "scene_style": {
+      "env_templates": [
+        "lecture hall",
+        "dormitory",
+        "university classroom",
+        "technology lab",
+        "team meeting room",
+        "library",
+        "online platform",
+        "office space"
+      ],
+      "option_style": "choices between actions and decisions that can lead to different outcomes"
+    },
+    "first_scene": {
+      "story": "It's minutes before showtime, and you're pacing in the quiet dormitory hall. Your phone rings, and it's Emma. \"Are you okay? Where's Jake?\" she asks worriedly.\n\nYou take a deep breath, \"I don't know. He was supposed to meet me here, but he never showed up.\" The weight of the upcoming presentation hangs heavily in the air. Emma suggests, \"Why don't you come over? I can help you with the slides.\"\n\nYour mind races as you consider the options. You need to make a decision quickly. Emma is a solid choice, but... Jake is the leader, the one you've always counted on. \"I have to go back to the classroom. Maybe Jake just lost track of time.\"\n\nBut as you turn to leave, a sudden thought hits you. \"Wait, Emma, can you really make it here in time? I must get this presentation right.\" \n\nYou glance at your watch. Time is ticking. You must decide: go back to the classroom for Jake or trust in Emma's support.\n\nYou hesitate for a moment, torn between the weight of tradition and the potential of a last-minute rescue. Emma's voice echoes in your mind, \"You've got this, remember? You're more prepared than you think.\" But the thought of Jake's analytical mind and his ability to tie everything together in a coherent narrative is hard to shake off. You take a step back, taking in the room where you've spent countless hours perfecting the presentation. The slides are meticulously arranged, each fact and figure in its place. The classroom is where the magic happens, where Jake's leadership and expertise can make all the difference.\n\nAs the seconds tick by, you realize that the choice isn't just about Jake or Emma. It's about trusting your instincts and the connections you've built over the course of this project. You remember the late-night discussions, the shared laughter, and the moments of frustration that brought you all closer together. You remember Iris's calm demeanor and her ability to spot the nuances in your presentation that you might have overlooked. And you remember Noah's infectious enthusiasm, his creative touch that could elevate your presentation to something extraordinary.\n\nWith a deep breath, you make your decision. You turn back to your phone, calling Jake's number one last time. This time, it goes to voicemail. \"Hey Jake, it's me. I know I'm supposed to be at the classroom, but... I think I might need your help more than I thought. Can you meet me at the dormitory? I'll be there in five minutes.\"\n\nYou hang up, a mix of anxiety and hope filling your chest. You rush back to the dormitory, the weight of the presentation on your shoulders but the support of your team in your heart. As you step into the room, Emma's face lights up with concern. \"I'm here, let's do this.\"\n\nTogether, you work through the final details, Emma's reassurances and Jake's insights weaving a tapestry of confidence around you. Time seems to stand still as you prepare, but the clock ticks on, reminding you that the show must go on. As you step into the lecture hall, the weight of the presentation lifts slightly, replaced by the thrill of performing under pressure. You take the stage, and with the support of your team, you deliver an incredible performance, one that you'll never forget.",
+      "options": [
+        "Call Jake one last time",
+        "Head back to the classroom",
+        "Accept Emma's offer to help",
+        "Review the presentation alone"
+      ],
+      "bilingual": {
+        "v": 1,
+        "lines": [
+          {
+            "en": "It's minutes before showtime, and you're pacing in the quiet dormitory hall.",
+            "zh": "离演出开始还有几分钟，你正安静的学生宿舍走廊里来回踱步。",
+            "words": [
+              {
+                "w": "pacing",
+                "zh": "来回踱步"
+              },
+              {
+                "w": "showtime",
+                "zh": "演出/上场时间"
+              }
+            ]
+          },
+          {
+            "en": "Your phone rings, and it's Emma.",
+            "zh": "你的电话响了，是艾玛打来的。",
+            "words": [
+              {
+                "w": "ring",
+                "zh": "（电话）响"
+              }
+            ]
+          },
+          {
+            "en": "\"Are you okay?",
+            "zh": "你还好吗？",
+            "words": [
+              {
+                "w": "okay",
+                "zh": "好的；没问题"
+              },
+              {
+                "w": "Are you...?",
+                "zh": "询问某人状况的疑问句结构"
+              }
+            ]
+          },
+          {
+            "en": "Where's Jake?\" she asks worriedly.",
+            "zh": "“杰克在哪里？”她担忧地问道。",
+            "words": [
+              {
+                "w": "worriedly",
+                "zh": "担忧地"
+              }
+            ]
+          },
+          {
+            "en": "You take a deep breath, \"I don't know.",
+            "zh": "你深吸一口气，“我不知道。",
+            "words": [
+              {
+                "w": "take a deep breath",
+                "zh": "深呼吸"
+              },
+              {
+                "w": "show up",
+                "zh": "出现"
+              }
+            ]
+          },
+          {
+            "en": "He was supposed to meet me here, but he never showed up.\"",
+            "zh": "他本该在这里等我，但他一直没出现。”",
+            "words": [
+              {
+                "w": "show up",
+                "zh": "出现"
+              }
+            ]
+          },
+          {
+            "en": "The weight of the upcoming presentation hangs heavily in the air.",
+            "zh": "即将到来的演示的沉重感在空气中弥漫。",
+            "words": [
+              {
+                "w": "hangs heavily",
+                "zh": "沉重地笼罩"
+              }
+            ]
+          },
+          {
+            "en": "Emma suggests, \"Why don't you come over?",
+            "zh": "艾玛建议道，“你过来吧？",
+            "words": [
+              {
+                "w": "come over",
+                "zh": "过来/过来玩"
+              }
+            ]
+          },
+          {
+            "en": "I can help you with the slides.\"",
+            "zh": "我可以帮你做幻灯片。”",
+            "words": [
+              {
+                "w": "slides",
+                "zh": "幻灯片"
+              }
+            ]
+          },
+          {
+            "en": "Your mind races as you consider the options.",
+            "zh": "你在考虑各种选择时，思绪纷乱。",
+            "words": [
+              {
+                "w": "mind races",
+                "zh": "思绪纷乱/大脑飞速运转"
+              }
+            ]
+          },
+          {
+            "en": "You need to make a decision quickly.",
+            "zh": "你得尽快做出决定。",
+            "words": [
+              {
+                "w": "make a decision",
+                "zh": "做决定"
+              },
+              {
+                "w": "quickly",
+                "zh": "快速地"
+              }
+            ]
+          },
+          {
+            "en": "Emma is a solid choice, but...",
+            "zh": "艾玛是个可靠的选择，不过……",
+            "words": [
+              {
+                "w": "solid choice",
+                "zh": "可靠人选；稳妥之选"
+              },
+              {
+                "w": "but...",
+                "zh": "但是……"
+              }
+            ]
+          },
+          {
+            "en": "Jake is the leader, the one you've always counted on.",
+            "zh": "杰克是你们的领袖，也是你们一直可以依靠的人。",
+            "words": [
+              {
+                "w": "leader",
+                "zh": "领导；负责人"
+              },
+              {
+                "w": "counted on",
+                "zh": "依赖；信任"
+              },
+              {
+                "w": "always",
+                "zh": "总是"
+              }
+            ]
+          },
+          {
+            "en": "\"I have to go back to the classroom.",
+            "zh": "我得回教室去。",
+            "words": [
+              {
+                "w": "have to",
+                "zh": "必须；表示义务或必要"
+              },
+              {
+                "w": "go back",
+                "zh": "返回（到原来的地方）"
+              },
+              {
+                "w": "classroom",
+                "zh": "教室"
+              }
+            ]
+          },
+          {
+            "en": "Maybe Jake just lost track of time.\"",
+            "zh": "也许杰克只是忘记了时间。",
+            "words": [
+              {
+                "w": "lost track",
+                "zh": "不知道发生了什么；没注意到时间的流逝"
+              },
+              {
+                "w": "just",
+                "zh": "仅仅；只"
+              },
+              {
+                "w": "maybe",
+                "zh": "也许；可能"
+              }
+            ]
+          },
+          {
+            "en": "But as you turn to leave, a sudden thought hits you.",
+            "zh": "但当你转身准备离开时，一个突然的念头闪过你的脑海。",
+            "words": [
+              {
+                "w": "turn to leave",
+                "zh": "开始离开"
+              },
+              {
+                "w": "a sudden thought",
+                "zh": "突然出现的想法"
+              },
+              {
+                "w": "hits you",
+                "zh": "击中你（指念头浮现）"
+              }
+            ]
+          },
+          {
+            "en": "\"Wait, Emma, can you really make it here in time?",
+            "zh": "等等，艾玛，你真能及时赶到这儿吗？",
+            "words": [
+              {
+                "w": "make it",
+                "zh": "按时到达；成功抵达"
+              },
+              {
+                "w": "really",
+                "zh": "确实；真的"
+              },
+              {
+                "w": "here",
+                "zh": "这里"
+              }
+            ]
+          },
+          {
+            "en": "I must get this presentation right.\"",
+            "zh": "我必须把这次汇报做好。",
+            "words": [
+              {
+                "w": "get ... right",
+                "zh": "把事情做对/做好"
+              },
+              {
+                "w": "presentation",
+                "zh": "汇报；演示"
+              }
+            ]
+          },
+          {
+            "en": "You glance at your watch.",
+            "zh": "你瞥了一眼手表。",
+            "words": [
+              {
+                "w": "glance at",
+                "zh": "快速看一眼"
+              },
+              {
+                "w": "watch",
+                "zh": "手表"
+              }
+            ]
+          },
+          {
+            "en": "Time is ticking.",
+            "zh": "时间在滴答作响。",
+            "words": [
+              {
+                "w": "ticking",
+                "zh": "（钟表）发出滴答声；（时间）迅速流逝"
+              },
+              {
+                "w": "is ticking",
+                "zh": "现在进行时结构，表示正在发生的动作"
+              }
+            ]
+          },
+          {
+            "en": "You must decide: go back to the classroom for Jake or trust in Emma's support.",
+            "zh": "你必须做出决定：是回到教室去找杰克，还是相信艾玛会支持你。",
+            "words": [
+              {
+                "w": "decide",
+                "zh": "经过思考后做出选择"
+              },
+              {
+                "w": "go back",
+                "zh": "回到之前所在的地方"
+              },
+              {
+                "w": "trust in",
+                "zh": "相信某人会帮忙/支持"
+              }
+            ]
+          },
+          {
+            "en": "You hesitate for a moment, torn between the weight of tradition and the potential of a last-minute rescue.",
+            "zh": "你犹豫了片刻，在传统的重负与最后一刻救援的可能性之间左右为难。",
+            "words": [
+              {
+                "w": "hesitate",
+                "zh": "犹豫；迟疑"
+              },
+              {
+                "w": "torn",
+                "zh": "被撕扯/左右为难"
+              },
+              {
+                "w": "weight",
+                "zh": "分量；压力"
+              }
+            ]
+          },
+          {
+            "en": "Emma's voice echoes in your mind, \"You've got this, remember?",
+            "zh": "艾玛的声音在你脑海中回响：“你行的，记得吗？”",
+            "words": [
+              {
+                "w": "echoes",
+                "zh": "回声；声音重复再被听到"
+              },
+              {
+                "w": "in your mind",
+                "zh": "在脑海里"
+              },
+              {
+                "w": "You've got this",
+                "zh": "你行的；你能搞定"
+              }
+            ]
+          },
+          {
+            "en": "You're more prepared than you think.\"",
+            "zh": "你比自己以为的更有准备。",
+            "words": [
+              {
+                "w": "more...than",
+                "zh": "比较结构：更……比……；用于比较两件事（如：比他聪明）。"
+              },
+              {
+                "w": "prepared",
+                "zh": "形容词，表示为某事准备好或具备条件；例如：对考试准备充分。"
+              }
+            ]
+          },
+          {
+            "en": "But the thought of Jake's analytical mind and his ability to tie everything together in a coherent narrative is hard to shake off.",
+            "zh": "但一想到杰克的分析头脑，以及他能把所有事情串联成一个连贯故事的能力，就让人难以释怀。",
+            "words": [
+              {
+                "w": "shake off",
+                "zh": "摆脱（感觉、习惯）"
+              },
+              {
+                "w": "tie ... together",
+                "zh": "把……连在一起"
+              },
+              {
+                "w": "coherent narrative",
+                "zh": "清晰合理的叙述"
+              }
+            ]
+          },
+          {
+            "en": "You take a step back, taking in the room where you've spent countless hours perfecting the presentation.",
+            "zh": "你往后退了一步，打量着这间你曾耗费无数小时打磨演示的房间。",
+            "words": [
+              {
+                "w": "take a step back",
+                "zh": "向后退一步"
+              },
+              {
+                "w": "taking in",
+                "zh": "观察并领会"
+              },
+              {
+                "w": "countless",
+                "zh": "无数的"
+              }
+            ]
+          },
+          {
+            "en": "The slides are meticulously arranged, each fact and figure in its place.",
+            "zh": "幻灯片被精心整理，每一条事实和数字都各就各位。",
+            "words": [
+              {
+                "w": "meticulously",
+                "zh": "非常仔细、精确"
+              },
+              {
+                "w": "in its place",
+                "zh": "在它该在的位置；摆放得当"
+              }
+            ]
+          },
+          {
+            "en": "The classroom is where the magic happens, where Jake's leadership and expertise can make all the difference.",
+            "zh": "教室是魔法发生的地方，在这里，杰克的领导能力和专业知识可以带来决定性的改变。",
+            "words": [
+              {
+                "w": "make all the difference",
+                "zh": "产生决定性影响"
+              },
+              {
+                "w": "leadership",
+                "zh": "领导能力"
+              },
+              {
+                "w": "expertise",
+                "zh": "专业知识"
+              }
+            ]
+          },
+          {
+            "en": "As the seconds tick by, you realize that the choice isn't just about Jake or Emma.",
+            "zh": "随着秒针滴答作响，你意识到这个选择并不仅仅是在杰克和艾玛之间做出取舍。",
+            "words": [
+              {
+                "w": "tick by",
+                "zh": "（时间）慢慢流逝"
+              },
+              {
+                "w": "isn't just about",
+                "zh": "不只是关于"
+              },
+              {
+                "w": "choice",
+                "zh": "选择"
+              }
+            ]
+          },
+          {
+            "en": "It's about trusting your instincts and the connections you've built over the course of this project.",
+            "zh": "关键在于相信你的直觉，以及你在这个项目过程中建立起来的关系。",
+            "words": [
+              {
+                "w": "trusting",
+                "zh": "相信；依赖"
+              },
+              {
+                "w": "instincts",
+                "zh": "直觉；本能感觉"
+              },
+              {
+                "w": "over the course of",
+                "zh": "在……的过程中"
+              }
+            ]
+          },
+          {
+            "en": "You remember the late-night discussions, the shared laughter, and the moments of frustration that brought you all closer together.",
+            "zh": "你还记得那些深夜的讨论、共同的欢笑，以及那些让你们彼此更亲近的沮丧时刻。",
+            "words": [
+              {
+                "w": "late-night",
+                "zh": "深夜的"
+              },
+              {
+                "w": "discussions",
+                "zh": "讨论"
+              },
+              {
+                "w": "shared laughter",
+                "zh": "共同的笑声"
+              }
+            ]
+          },
+          {
+            "en": "You remember Iris's calm demeanor and her ability to spot the nuances in your presentation that you might have overlooked.",
+            "zh": "你还记得伊里斯沉着冷静的举止，以及她能发现你在汇报中可能忽略的细节。",
+            "words": [
+              {
+                "w": "calm demeanor",
+                "zh": "沉着冷静的举止"
+              },
+              {
+                "w": "spot",
+                "zh": "发现；注意到"
+              },
+              {
+                "w": "nuances",
+                "zh": "细微差别；细节"
+              }
+            ]
+          },
+          {
+            "en": "And you remember Noah's infectious enthusiasm, his creative touch that could elevate your presentation to something extraordinary.",
+            "zh": "你还记得诺亚那极具感染力的热情，以及他那富有创意的手法——它能把你的演讲提升到非凡的境界。",
+            "words": [
+              {
+                "w": "infectious",
+                "zh": "（情绪、热情等）有感染力的"
+              },
+              {
+                "w": "creative touch",
+                "zh": "富有创意的手法/触感"
+              },
+              {
+                "w": "elevate",
+                "zh": "提升；使升高"
+              }
+            ]
+          },
+          {
+            "en": "With a deep breath, you make your decision.",
+            "zh": "你深吸一口气，然后做出了决定。",
+            "words": [
+              {
+                "w": "deep breath",
+                "zh": "深呼吸"
+              },
+              {
+                "w": "make your decision",
+                "zh": "做决定"
+              }
+            ]
+          },
+          {
+            "en": "You turn back to your phone, calling Jake's number one last time.",
+            "zh": "你转回手机，最后一次拨打杰克的号码。",
+            "words": [
+              {
+                "w": "turn back to",
+                "zh": "回到；返回"
+              },
+              {
+                "w": "calling",
+                "zh": "拨（电话）"
+              },
+              {
+                "w": "one last time",
+                "zh": "最后一次"
+              }
+            ]
+          },
+          {
+            "en": "This time, it goes to voicemail.",
+            "zh": "这次，电话转到了语音信箱。",
+            "words": [
+              {
+                "w": "goes to voicemail",
+                "zh": "接通某人的语音信箱；响铃后被转到语音信箱"
+              },
+              {
+                "w": "this time",
+                "zh": "这一次；这次"
+              },
+              {
+                "w": "it goes",
+                "zh": "（电话）接通；（来电）到达"
+              }
+            ]
+          },
+          {
+            "en": "\"Hey Jake, it's me.",
+            "zh": "嘿，杰克，是我。",
+            "words": [
+              {
+                "w": "it's me",
+                "zh": "这是我；用于接电话或表明身份"
+              },
+              {
+                "w": "Hey",
+                "zh": "用来引起别人注意"
+              }
+            ]
+          },
+          {
+            "en": "I know I'm supposed to be at the classroom, but...",
+            "zh": "我知道我本该在教室里，可是……",
+            "words": [
+              {
+                "w": "be supposed to",
+                "zh": "应该；被期望"
+              },
+              {
+                "w": "at the classroom",
+                "zh": "在教室里"
+              }
+            ]
+          },
+          {
+            "en": "I think I might need your help more than I thought.",
+            "zh": "我想我可能需要你的帮助，比我原先想的还要多。",
+            "words": [
+              {
+                "w": "need your help",
+                "zh": "需要某人的帮助"
+              },
+              {
+                "w": "more than",
+                "zh": "超过；比……更多"
+              },
+              {
+                "w": "than I thought",
+                "zh": "比我原本以为的"
+              }
+            ]
+          },
+          {
+            "en": "Can you meet me at the dormitory?",
+            "zh": "你能在宿舍那里见我吗？",
+            "words": [
+              {
+                "w": "meet (someone)",
+                "zh": "和某人见面"
+              },
+              {
+                "w": "dormitory",
+                "zh": "学生宿舍"
+              }
+            ]
+          },
+          {
+            "en": "I'll be there in five minutes.\"",
+            "zh": "我五分钟后就到。",
+            "words": [
+              {
+                "w": "be there",
+                "zh": "到达；抵达"
+              },
+              {
+                "w": "in five minutes",
+                "zh": "五分钟后"
+              }
+            ]
+          },
+          {
+            "en": "You hang up, a mix of anxiety and hope filling your chest.",
+            "zh": "你挂断电话，心里既焦虑又充满希望。",
+            "words": [
+              {
+                "w": "hang up",
+                "zh": "挂断（电话）"
+              },
+              {
+                "w": "a mix of...and...",
+                "zh": "……和……的混合"
+              },
+              {
+                "w": "filling your chest",
+                "zh": "填满你的胸口"
+              }
+            ]
+          },
+          {
+            "en": "You rush back to the dormitory, the weight of the presentation on your shoulders but the support of your team in your heart.",
+            "zh": "你匆匆赶回宿舍，肩上扛着演讲的压力，心里却有团队的支持。",
+            "words": [
+              {
+                "w": "rush back",
+                "zh": "急忙返回"
+              },
+              {
+                "w": "the weight of",
+                "zh": "……的沉重负担"
+              },
+              {
+                "w": "on your shoulders",
+                "zh": "压在你肩上"
+              }
+            ]
+          },
+          {
+            "en": "As you step into the room, Emma's face lights up with concern.",
+            "zh": "当你走进房间时，艾玛的脸上露出担忧的神情。",
+            "words": [
+              {
+                "w": "lights up",
+                "zh": "（因情绪）变得明亮、生动"
+              },
+              {
+                "w": "with concern",
+                "zh": "带着担忧"
+              }
+            ]
+          },
+          {
+            "en": "\"I'm here, let's do this.\"",
+            "zh": "我到了，咱们开始吧。",
+            "words": [
+              {
+                "w": "let's",
+                "zh": "用‘let’s’表示一起做某事（= let us）"
+              },
+              {
+                "w": "do this",
+                "zh": "常用短语，意为‘现在开始/继续’"
+              }
+            ]
+          },
+          {
+            "en": "Together, you work through the final details, Emma's reassurances and Jake's insights weaving a tapestry of confidence around you.",
+            "zh": "你们一起梳理最后的细节，Emma的安慰和Jake的见解交织成一张信心之网，将你们环绕。",
+            "words": [
+              {
+                "w": "work through",
+                "zh": "彻底处理；完成"
+              },
+              {
+                "w": "weave a tapestry",
+                "zh": "编织（比喻：把多方面因素组合起来）"
+              },
+              {
+                "w": "reassurances",
+                "zh": "安慰的话"
+              }
+            ]
+          },
+          {
+            "en": "Time seems to stand still as you prepare, but the clock ticks on, reminding you that the show must go on.",
+            "zh": "在你准备的时候，时间仿佛静止了，但时钟继续滴答作响，提醒你演出必须继续。",
+            "words": [
+              {
+                "w": "stand still",
+                "zh": "不动；停留"
+              },
+              {
+                "w": "tick on",
+                "zh": "滴答前进"
+              },
+              {
+                "w": "the show must go on",
+                "zh": "演出必须继续"
+              }
+            ]
+          },
+          {
+            "en": "As you step into the lecture hall, the weight of the presentation lifts slightly, replaced by the thrill of performing under pressure.",
+            "zh": "当你走进报告厅时，做展示的沉重感略微减轻，取而代之的是临场发挥、承受压力时的兴奋。",
+            "words": [
+              {
+                "w": "step into",
+                "zh": "走进（某地）"
+              },
+              {
+                "w": "the weight of ... lifts",
+                "zh": "……的重压/负担减轻"
+              },
+              {
+                "w": "performing under pressure",
+                "zh": "在压力下表现"
+              }
+            ]
+          },
+          {
+            "en": "You take the stage, and with the support of your team, you deliver an incredible performance, one that you'll never forget.",
+            "zh": "你走上舞台，在团队的支持下，呈现了一场令人难以置信的表演，这将是你永生难忘的经历。",
+            "words": [
+              {
+                "w": "take the stage",
+                "zh": "上台表演"
+              },
+              {
+                "w": "with the support of",
+                "zh": "在……支持下"
+              },
+              {
+                "w": "deliver a performance",
+                "zh": "进行一场演出"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
