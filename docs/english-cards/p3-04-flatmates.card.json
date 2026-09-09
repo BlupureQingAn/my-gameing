@@ -1,0 +1,847 @@
+{
+  "title": "Bills & Boundaries",
+  "title_zh": "账单与界限",
+  "lang": "en",
+  "band": "cet6",
+  "category": "生活",
+  "category_zh": "生活",
+  "theme": "minimal",
+  "text": "## Premise\nYou're living in a cozy off-campus apartment with three roommates. It's your first time managing a shared utility bill, and you're in a bit of a pickle. You've noticed that the water and electricity bills have been unusually high, and you're worried about how to split the costs fairly. You want to maintain the trust in your roommate relationships and avoid any conflicts, but you're also afraid of being taken advantage of or not being able to afford your share.\n\n## The World\nIn this world, shared living spaces like your apartment are quite common among university students. Each apartment is equipped with a shared meter for water and electricity, and the bills are typically divided among the roommates based on the number of occupants. The apartment complex has a friendly and community-oriented vibe, with a communal area where you can hang out and meet other students. However, managing finances can sometimes lead to misunderstandings and tensions, especially when it comes to splitting utility bills. The atmosphere is generally positive, but there's always that underlying pressure to keep everything fair and transparent.\n\n## People\n\nBen:\n- Identity: A responsible and organized finance major.\n- Personality: Meticulous and fair-minded, always looking for solutions.\n- To your benefit: He can help you analyze the bills and propose a fair splitting method.\n- Speaking habit: Uses clear, straightforward language, often finishing sentences with a confident tone.\n\nChloe:\n- Identity: A creative and spontaneous photography enthusiast.\n- Personality: Free-spirited and a bit impulsive, often in a rush.\n- To your benefit: She can provide a fresh perspective and lighten the mood.\n- Speaking habit: Expresses herself with colorful metaphors and slang, speaking quickly with enthusiasm.\n\nAhmed:\n- Identity: A quiet, thoughtful international student from Egypt.\n- Personality: Respectful and considerate, but also very traditional in his ways.\n- To your benefit: He can offer a different cultural perspective on sharing expenses.\n- Speaking habit: Uses formal language, often prefacing statements with polite phrases and a gentle tone.\n\nMia:\n- Identity: A lively and outgoing marketing student.\n- Personality: Social and popular, always up for a good time.\n- To your benefit: She can mediate conflicts and keep the group together.\n- Speaking habit: Uses a lot of idioms and colloquialisms, speaking rapidly with a playful demeanor.\n\n## The Arc\n\n### Act I: Establishing the Situation and Allies (4-5 Rounds)\n\nIn the cozy confines of their off-campus apartment, the group of friends sits around the kitchen table, a pile of bills scattered before them. The tension is palpable as each person takes a turn to examine the numbers.\n\nBen, with his meticulous nature, starts the conversation. \"Alright, let's look at the electricity bill. We need to figure out a fair way to split it. My approach would be to calculate the average usage per person based on the past month's data.\"\n\nChloe, ever the free spirit, pipes up with a grin. \"But that's so boring! How about we split it based on who uses the most appliances? It'll be fun!\"\n\nAhmed, the thoughtful international student, nods in agreement. \"I think that could work. It's a different perspective, and it might even bring us closer as a group.\"\n\nMia, the social butterfly, jumps in. \"Great! Let's make it a game. Whoever uses the most appliances gets to pick the next movie night snack!\"\n\nThe group laughter breaks the initial tension, and they start to brainstorm ways to track their usage. They agree to use an app that tracks energy consumption and update the data weekly.\n\n### Act II: Conflict Escalation and Emotional High Point (4-5 Rounds + 1 Emotional Highlight)\n\nAs the weeks pass, the bills continue to pile up, and so does the tension. Mia, who loves to throw parties, starts using more electricity than usual. The group's energy bills skyrocket, and the app shows a clear discrepancy.\n\nBen, ever the fair-minded one, suggests a meeting. \"Guys, we need to talk. Mia, I know you love hosting, but we all need to be more mindful of our usage. It's affecting everyone's share.\"\n\nMia, feeling defensive, argues back. \"But I thought we were all in this together! Why should I have to change?\"\n\nThe emotional high point comes when Ahmed speaks up. \"I understand Mia's point, but we also need to respect each other's boundaries. We're a team, and teams need to compromise.\"\n\nThe group listens, and the conversation evolves into a deeper discussion about trust and respect. They agree to set clearer boundaries and communicate more openly about their usage.\n\n### Act III: Resolution (3-4 Rounds)\n\nWith the new boundaries in place, the group starts to manage their expenses more effectively. They set up a schedule for hosting events and ensure that everyone contributes to the shared responsibilities.\n\nThe tension in the apartment fades away, replaced by a renewed sense of camaraderie. They all realize that trust is built through open communication and mutual respect.\n\n## Endings\n\n- Happy Ending: \"After a few weeks of adjusting, the bills are under control, and the group's trust in each other is stronger than ever.\"\n- Average Ending: \"The bills are still a bit of a challenge, but the group is learning to navigate their differences and work together.\"\n- Sad Ending: \"Despite their best efforts, the bills continue to be a point of contention, and the group starts to drift apart.\"",
+  "structured": {
+    "band": "cet6",
+    "theme": "minimal",
+    "world": {
+      "era": "现代校园生活",
+      "genre": "青春成长",
+      "summary": "In this modern university campus setting, students share off-campus apartments with communal meters for water and electricity. The narrative revolves around the challenges of fairly dividing utility bills among roommates, testing trust and fairness within the community.",
+      "rules": "1. Shared utility bills must be divided fairly among roommates. 2. Communication is key to resolving conflicts. 3. Financial constraints must be considered. 4. Maintaining trust and harmony among roommates is crucial.",
+      "atmosphere": "青春活力，充满挑战与冲突",
+      "vocab": [
+        "roommates",
+        "utility bills",
+        "fairness",
+        "communication",
+        "trust",
+        "conflicts",
+        "expenses",
+        "harmony"
+      ]
+    },
+    "identity": {
+      "name": "Zack",
+      "gender": "男",
+      "age": 20,
+      "role": "负责管理共享账单的大学生",
+      "background": "A responsible and communicative college student from a middle-class family in a bustling city."
+    },
+    "npcs": [
+      {
+        "name": "Ben",
+        "gender": "男",
+        "role": "学生/室友",
+        "personality": "理性、细心，喜欢条理清晰，说话习惯直接且逻辑性强",
+        "relationship": "性格较为沉稳，负责管理账单和协调关系"
+      },
+      {
+        "name": "Chloe",
+        "gender": "女",
+        "role": "学生/室友",
+        "personality": "开朗、活泼，善于沟通，说话习惯热情而富有感染力",
+        "relationship": "与Ben关系亲近，喜欢和大家一起解决问题"
+      },
+      {
+        "name": "Ahmed",
+        "gender": "男",
+        "role": "学生/室友",
+        "personality": "内向、谨慎，喜欢思考，说话习惯沉稳且含蓄",
+        "relationship": "经常独立处理问题，但也会在关键时刻提供帮助"
+      },
+      {
+        "name": "Mia",
+        "gender": "女",
+        "role": "学生/室友",
+        "personality": "独立、坚强，善于分析，说话习惯冷静而有力",
+        "relationship": "作为队长，她能引导团队，但也担心自己承担过多责任"
+      }
+    ],
+    "timeline": {
+      "start": {
+        "year": 2026,
+        "month": 10,
+        "day": 18
+      },
+      "note": "故事开始于2026年10月18日，主人公入住公寓的第一天，面临首次共同管理水电费用的挑战。"
+    },
+    "scene_style": {
+      "env_templates": [
+        "大学宿舍",
+        "公寓客厅",
+        "公共厨房",
+        "洗衣房",
+        "学校图书馆",
+        "校园广场",
+        "教授办公室",
+        "学生社团活动室"
+      ],
+      "option_style": "对话选择题，情景模拟题，角色扮演题"
+    },
+    "first_scene": {
+      "story": "You're flipping through the mail when you notice it: the utility bill is significantly higher than usual. Your heart sinks as you remember the recent party Mia hosted, and the promise you made to keep the bills fair among all roommates. You pick up the phone, dialing Ben's number...\n\n\"Hey, Ben? I just got the latest bill, and it's way above what we expected. What do you think we should do?\"\n\nBen's voice is calm and reassuring over the line. \"I think we need to have a meeting. It's important we all chip in fairly, but we also need to be honest about our usage.\"\n\nJust then, Chloe bursts through the door, her face lit up from a night out. \"Hey, what's up? I heard there's a problem with the bills. I say we just split it evenly, no questions asked!\"\n\nYou pause, weighing the options. On one hand, you want to maintain the trust you've built with your roommates, but on the other, you can't ignore the reality of the situation. You must immediately do choose:\n\nBen: \"We need to be fair, Chloe. Let's have a meeting and figure out a solution.\"\n\nChloe: \"Come on, it's just money. Why make a big deal out of it?\"\n\nMia's face flushes with embarrassment as she listens to the conversation. She knows that Ben is right, but she also doesn't want to be the one who causes trouble. Ahmed, ever the mediator, steps in, his voice soft yet firm.\n\n\"Chloe, Ben is right. We all need to be responsible for our share. But Mia, we understand that parties are fun, and we appreciate you hosting. Let's just find a way to balance this out.\"\n\nThe group nods in agreement, and you see a spark of determination in Chloe's eyes. \"Alright, let's do this. I'll help track the energy usage from now on. Maybe we can even create a chart on the fridge where we can all see our usage and make adjustments as needed.\"\n\nMia takes a deep breath, her shoulders relaxing slightly. \"I'll do my best to be more mindful of my energy consumption. I just didn't realize it was that much.\"\n\nAhmed smiles warmly, patting Mia on the back. \"That's all we ask, Mia. We're a team, and we need to support each other.\"\n\nBen pulls out a notepad and starts writing down some numbers. \"Alright, let's calculate the average usage per person for the past month and see where we stand. Then we can decide how to adjust for the next month.\"\n\nAs the group works together, a sense of camaraderie begins to grow. You realize that while managing shared expenses can be challenging, it's also an opportunity to strengthen your bonds and learn from each other. You look around the room, grateful for the diverse perspectives and the willingness of your roommates to find a solution that works for everyone. The tension in the air dissipates, and you feel a renewed sense of hope for maintaining a harmonious living situation.",
+      "options": [
+        "Call Ben immediately",
+        "Ignore the bill and hope it resolves itself",
+        "Talk to Mia about her party",
+        "Start a group chat to discuss the issue"
+      ],
+      "bilingual": {
+        "v": 1,
+        "lines": [
+          {
+            "en": "You're flipping through the mail when you notice it: the utility bill is significantly higher than usual.",
+            "zh": "你正翻着邮件，这时注意到：水电费比平时高了不少。",
+            "words": [
+              {
+                "w": "flipping through",
+                "zh": "快速翻阅"
+              },
+              {
+                "w": "notice it",
+                "zh": "注意到"
+              },
+              {
+                "w": "significantly higher",
+                "zh": "明显更高"
+              }
+            ]
+          },
+          {
+            "en": "Your heart sinks as you remember the recent party Mia hosted, and the promise you made to keep the bills fair among all roommates.",
+            "zh": "一想到Mia最近办的那场聚会，以及你向室友们做出的公平分摊账单的承诺，你的心就沉了下去。",
+            "words": [
+              {
+                "w": "heart sinks",
+                "zh": "心情沉重；心里一沉"
+              },
+              {
+                "w": "hosted",
+                "zh": "主办；承办（活动）"
+              },
+              {
+                "w": "keep ... fair",
+                "zh": "保持……公平；使……公平"
+              }
+            ]
+          },
+          {
+            "en": "You pick up the phone, dialing Ben's number...",
+            "zh": "你拿起电话，拨Ben的号码……",
+            "words": [
+              {
+                "w": "pick up",
+                "zh": "拿起；拾起"
+              },
+              {
+                "w": "dial",
+                "zh": "拨号"
+              },
+              {
+                "w": "number",
+                "zh": "号码"
+              }
+            ]
+          },
+          {
+            "en": "\"Hey, Ben?",
+            "zh": "嘿，本？",
+            "words": [
+              {
+                "w": "Hey",
+                "zh": "用来叫人或引起注意；非正式问候"
+              },
+              {
+                "w": "Ben",
+                "zh": "专有名词（人名）"
+              }
+            ]
+          },
+          {
+            "en": "I just got the latest bill, and it's way above what we expected.",
+            "zh": "我刚收到最新的账单，金额远超我们的预期。",
+            "words": [
+              {
+                "w": "way above",
+                "zh": "远高于"
+              },
+              {
+                "w": "latest bill",
+                "zh": "最新账单"
+              },
+              {
+                "w": "just got",
+                "zh": "刚收到"
+              }
+            ]
+          },
+          {
+            "en": "What do you think we should do?\"",
+            "zh": "你觉得我们该怎么做？",
+            "words": [
+              {
+                "w": "what do you think",
+                "zh": "询问对方看法；你觉得……怎么样"
+              },
+              {
+                "w": "we should",
+                "zh": "表示建议（should=应该）"
+              },
+              {
+                "w": "do",
+                "zh": "行动；做事"
+              }
+            ]
+          },
+          {
+            "en": "Ben's voice is calm and reassuring over the line.",
+            "zh": "电话那头，本的声音平静而令人安心。",
+            "words": [
+              {
+                "w": "calm",
+                "zh": "冷静的；不慌的"
+              },
+              {
+                "w": "reassuring",
+                "zh": "让人放心的"
+              },
+              {
+                "w": "over the line",
+                "zh": "在电话里"
+              }
+            ]
+          },
+          {
+            "en": "\"I think we need to have a meeting.",
+            "zh": "我觉得咱们得开个会。",
+            "words": [
+              {
+                "w": "have a meeting",
+                "zh": "开会；安排会议"
+              },
+              {
+                "w": "need to",
+                "zh": "需要做某事"
+              },
+              {
+                "w": "think",
+                "zh": "认为；觉得"
+              }
+            ]
+          },
+          {
+            "en": "It's important we all chip in fairly, but we also need to be honest about our usage.\"",
+            "zh": "我们都要公平分担，同时也要如实说明各自的使用情况。",
+            "words": [
+              {
+                "w": "chip in",
+                "zh": "一起出钱或出力；共同分担"
+              },
+              {
+                "w": "fairly",
+                "zh": "公平地；公正地"
+              },
+              {
+                "w": "be honest about",
+                "zh": "对……说实话"
+              }
+            ]
+          },
+          {
+            "en": "Just then, Chloe bursts through the door, her face lit up from a night out.",
+            "zh": "就在这时，克洛伊冲过门来，脸上洋溢着夜生活后的光彩。",
+            "words": [
+              {
+                "w": "bursts through",
+                "zh": "猛地穿过"
+              },
+              {
+                "w": "lit up",
+                "zh": "容光焕发"
+              },
+              {
+                "w": "from a night out",
+                "zh": "一晚外出后"
+              }
+            ]
+          },
+          {
+            "en": "\"Hey, what's up?",
+            "zh": "嘿，最近怎么样？",
+            "words": [
+              {
+                "w": "what's up",
+                "zh": "最近怎么样"
+              },
+              {
+                "w": "hey",
+                "zh": "嘿"
+              }
+            ]
+          },
+          {
+            "en": "I heard there's a problem with the bills.",
+            "zh": "我听说账单那边出了点问题。",
+            "words": [
+              {
+                "w": "heard",
+                "zh": "听到；过去式，表示你被告知了某事"
+              },
+              {
+                "w": "there's",
+                "zh": "是……的缩写；用于说某物存在或发生"
+              },
+              {
+                "w": "problem",
+                "zh": "问题；需要解决的困难"
+              }
+            ]
+          },
+          {
+            "en": "I say we just split it evenly, no questions asked!\"",
+            "zh": "我说咱们就平分，别问东问西！",
+            "words": [
+              {
+                "w": "split it evenly",
+                "zh": "平均分配"
+              },
+              {
+                "w": "no questions asked",
+                "zh": "不问任何问题"
+              }
+            ]
+          },
+          {
+            "en": "You pause, weighing the options.",
+            "zh": "你停下来，权衡着各种选择。",
+            "words": [
+              {
+                "w": "weigh",
+                "zh": "权衡；仔细考虑"
+              },
+              {
+                "w": "option",
+                "zh": "选项；可能性"
+              }
+            ]
+          },
+          {
+            "en": "On one hand, you want to maintain the trust you've built with your roommates, but on the other, you can't ignore the reality of the situation.",
+            "zh": "一方面，你想维护与室友建立起来的信任；但另一方面，你又不能忽视当前情况的现实。",
+            "words": [
+              {
+                "w": "maintain",
+                "zh": "保持（信任/关系）不流失"
+              },
+              {
+                "w": "on the other",
+                "zh": "但是；然而（表转折）"
+              },
+              {
+                "w": "ignore",
+                "zh": "无视；不予理会"
+              }
+            ]
+          },
+          {
+            "en": "You must immediately do choose:",
+            "zh": "你必须立刻做出选择：",
+            "words": [
+              {
+                "w": "immediately",
+                "zh": "立刻；马上"
+              },
+              {
+                "w": "do choose",
+                "zh": "强调选择（助动词do+动词）"
+              }
+            ]
+          },
+          {
+            "en": "Ben: \"We need to be fair, Chloe.",
+            "zh": "本：\"克洛伊，我们需要公平一点。\"",
+            "words": [
+              {
+                "w": "be fair",
+                "zh": "公平对待"
+              },
+              {
+                "w": "need to",
+                "zh": "需要"
+              },
+              {
+                "w": "Chloe",
+                "zh": "克洛伊（人名）"
+              }
+            ]
+          },
+          {
+            "en": "Let's have a meeting and figure out a solution.\"",
+            "zh": "咱们开个会，一起想个解决办法吧。",
+            "words": [
+              {
+                "w": "have a meeting",
+                "zh": "开会；聚在一起讨论"
+              },
+              {
+                "w": "figure out",
+                "zh": "想出；解决"
+              },
+              {
+                "w": "solution",
+                "zh": "解决办法"
+              }
+            ]
+          },
+          {
+            "en": "Chloe: \"Come on, it's just money.",
+            "zh": "克洛伊：\"得了吧，这不过是钱而已。\"",
+            "words": [
+              {
+                "w": "Come on",
+                "zh": "（口语）别这样；得了吧"
+              },
+              {
+                "w": "it's just",
+                "zh": "只是；不过"
+              },
+              {
+                "w": "money",
+                "zh": "钱"
+              }
+            ]
+          },
+          {
+            "en": "Why make a big deal out of it?\"",
+            "zh": "干嘛要小题大做？",
+            "words": [
+              {
+                "w": "make a big deal out of",
+                "zh": "夸大；把……当大事"
+              },
+              {
+                "w": "big deal",
+                "zh": "重要的事"
+              }
+            ]
+          },
+          {
+            "en": "Mia's face flushes with embarrassment as she listens to the conversation.",
+            "zh": "米娅听着谈话，尴尬得脸都红了。",
+            "words": [
+              {
+                "w": "flushes",
+                "zh": "脸红"
+              },
+              {
+                "w": "embarrassment",
+                "zh": "尴尬"
+              },
+              {
+                "w": "as she listens",
+                "zh": "当她听的时候"
+              }
+            ]
+          },
+          {
+            "en": "She knows that Ben is right, but she also doesn't want to be the one who causes trouble.",
+            "zh": "她知道本是对的，但她也不想成为那个惹麻烦的人。",
+            "words": [
+              {
+                "w": "causes trouble",
+                "zh": "惹麻烦"
+              },
+              {
+                "w": "be the one who...",
+                "zh": "是……的那个人"
+              },
+              {
+                "w": "doesn't want to",
+                "zh": "不想"
+              }
+            ]
+          },
+          {
+            "en": "Ahmed, ever the mediator, steps in, his voice soft yet firm.",
+            "zh": "作为一贯的调解人，艾哈迈德走上前去，声音柔和却坚定。",
+            "words": [
+              {
+                "w": "ever the",
+                "zh": "一贯；总是"
+              },
+              {
+                "w": "steps in",
+                "zh": "介入；插进来"
+              },
+              {
+                "w": "soft yet firm",
+                "zh": "柔和却坚定"
+              }
+            ]
+          },
+          {
+            "en": "\"Chloe, Ben is right.",
+            "zh": "克洛伊，本是对的。",
+            "words": [
+              {
+                "w": "right",
+                "zh": "正确；对的"
+              },
+              {
+                "w": "is right",
+                "zh": "是正确的"
+              }
+            ]
+          },
+          {
+            "en": "We all need to be responsible for our share.",
+            "zh": "我们每个人都要对自己的那一份负责。",
+            "words": [
+              {
+                "w": "be responsible for",
+                "zh": "对……负责"
+              },
+              {
+                "w": "share",
+                "zh": "份额；一份"
+              }
+            ]
+          },
+          {
+            "en": "But Mia, we understand that parties are fun, and we appreciate you hosting.",
+            "zh": "但是米娅，我们明白聚会很有趣，也很感谢你主办。",
+            "words": [
+              {
+                "w": "understand",
+                "zh": "知道；意识到"
+              },
+              {
+                "w": "appreciate",
+                "zh": "感激；欣赏"
+              },
+              {
+                "w": "hosting",
+                "zh": "主办（活动/聚会）"
+              }
+            ]
+          },
+          {
+            "en": "Let's just find a way to balance this out.\"",
+            "zh": "咱们就找个办法来平衡一下这件事吧。",
+            "words": [
+              {
+                "w": "balance",
+                "zh": "使均衡；保持公平"
+              },
+              {
+                "w": "find a way",
+                "zh": "找到方法"
+              },
+              {
+                "w": "just",
+                "zh": "只是；仅仅"
+              }
+            ]
+          },
+          {
+            "en": "The group nods in agreement, and you see a spark of determination in Chloe's eyes.",
+            "zh": "大家点头表示赞同，你看到克洛伊眼中闪过一丝决心。",
+            "words": [
+              {
+                "w": "nod in agreement",
+                "zh": "点头表示同意"
+              },
+              {
+                "w": "a spark of determination",
+                "zh": "一丝决心的火花"
+              },
+              {
+                "w": "in one's eyes",
+                "zh": "在某人眼里"
+              }
+            ]
+          },
+          {
+            "en": "\"Alright, let's do this.",
+            "zh": "好吧，我们开始吧。",
+            "words": [
+              {
+                "w": "let's",
+                "zh": "‘let us’的缩写；用来建议一起做某事"
+              },
+              {
+                "w": "do this",
+                "zh": "动词短语+代词；意为‘处理/完成这项任务’"
+              }
+            ]
+          },
+          {
+            "en": "I'll help track the energy usage from now on.",
+            "zh": "从现在起，我会帮忙追踪能源的使用情况。",
+            "words": [
+              {
+                "w": "track",
+                "zh": "跟踪；监控"
+              },
+              {
+                "w": "energy usage",
+                "zh": "能源使用量"
+              },
+              {
+                "w": "from now on",
+                "zh": "从现在开始"
+              }
+            ]
+          },
+          {
+            "en": "Maybe we can even create a chart on the fridge where we can all see our usage and make adjustments as needed.\"",
+            "zh": "也许我们甚至可以在冰箱上贴一张图表，这样大家都能看到我们的用量，并在需要时进行调整。",
+            "words": [
+              {
+                "w": "create a chart",
+                "zh": "制作图表"
+              },
+              {
+                "w": "on the fridge",
+                "zh": "在冰箱上"
+              },
+              {
+                "w": "as needed",
+                "zh": "根据需要"
+              }
+            ]
+          },
+          {
+            "en": "Mia takes a deep breath, her shoulders relaxing slightly.",
+            "zh": "米娅深吸了一口气，肩膀微微放松下来。",
+            "words": [
+              {
+                "w": "takes a deep breath",
+                "zh": "深深吸一口气"
+              },
+              {
+                "w": "relaxing",
+                "zh": "放松"
+              },
+              {
+                "w": "slightly",
+                "zh": "稍微"
+              }
+            ]
+          },
+          {
+            "en": "\"I'll do my best to be more mindful of my energy consumption.",
+            "zh": "我会尽力更加注意自己的能源消耗。",
+            "words": [
+              {
+                "w": "do my best",
+                "zh": "尽最大努力"
+              },
+              {
+                "w": "be mindful of",
+                "zh": "留意；注意"
+              },
+              {
+                "w": "energy consumption",
+                "zh": "能源消耗"
+              }
+            ]
+          },
+          {
+            "en": "I just didn't realize it was that much.\"",
+            "zh": "我只是没意识到会这么多。",
+            "words": [
+              {
+                "w": "just",
+                "zh": "只；强调程度小（不是“刚才”）"
+              },
+              {
+                "w": "didn't realize",
+                "zh": "realize的过去式；没有意识到"
+              },
+              {
+                "w": "that much",
+                "zh": "那么多；常跟know/think/realize等动词"
+              }
+            ]
+          },
+          {
+            "en": "Ahmed smiles warmly, patting Mia on the back.",
+            "zh": "艾哈迈德热情地微笑着，拍了拍米娅的背。",
+            "words": [
+              {
+                "w": "pat someone on the back",
+                "zh": "拍某人的背（表示鼓励或表扬）"
+              },
+              {
+                "w": "warmly",
+                "zh": "亲切地；热情地"
+              }
+            ]
+          },
+          {
+            "en": "\"That's all we ask, Mia.",
+            "zh": "这就是我们要的全部，米娅。",
+            "words": [
+              {
+                "w": "That's all",
+                "zh": "就这些；全部"
+              },
+              {
+                "w": "we ask",
+                "zh": "要求"
+              }
+            ]
+          },
+          {
+            "en": "We're a team, and we need to support each other.\"",
+            "zh": "我们是一支队伍，需要互相支持。",
+            "words": [
+              {
+                "w": "support",
+                "zh": "支持"
+              },
+              {
+                "w": "each other",
+                "zh": "彼此"
+              }
+            ]
+          },
+          {
+            "en": "Ben pulls out a notepad and starts writing down some numbers.",
+            "zh": "本拿出一个记事本，开始写下一些数字。",
+            "words": [
+              {
+                "w": "pulls out",
+                "zh": "从里面取出"
+              },
+              {
+                "w": "notepad",
+                "zh": "小本子"
+              },
+              {
+                "w": "starts writing down",
+                "zh": "开始写下来"
+              }
+            ]
+          },
+          {
+            "en": "\"Alright, let's calculate the average usage per person for the past month and see where we stand.",
+            "zh": "好的，我们来算一下过去一个月每人的平均使用量，看看目前的情况。",
+            "words": [
+              {
+                "w": "calculate",
+                "zh": "计算"
+              },
+              {
+                "w": "average usage per person",
+                "zh": "每人平均用量"
+              },
+              {
+                "w": "see where we stand",
+                "zh": "了解当前情况"
+              }
+            ]
+          },
+          {
+            "en": "Then we can decide how to adjust for the next month.\"",
+            "zh": "然后我们可以决定下个月该如何调整。",
+            "words": [
+              {
+                "w": "adjust",
+                "zh": "调整；使更合适"
+              },
+              {
+                "w": "decide",
+                "zh": "决定"
+              },
+              {
+                "w": "how to",
+                "zh": "如何"
+              }
+            ]
+          },
+          {
+            "en": "As the group works together, a sense of camaraderie begins to grow.",
+            "zh": "随着团队一起工作，一种战友般的情谊开始慢慢滋生。",
+            "words": [
+              {
+                "w": "works together",
+                "zh": "一起合作"
+              },
+              {
+                "w": "camaraderie",
+                "zh": "战友般的情谊"
+              },
+              {
+                "w": "begins to grow",
+                "zh": "开始增长"
+              }
+            ]
+          },
+          {
+            "en": "You realize that while managing shared expenses can be challenging, it's also an opportunity to strengthen your bonds and learn from each other.",
+            "zh": "你意识到，虽然分摊费用可能有些棘手，但这也是一个加深彼此感情、互相学习的好机会。",
+            "words": [
+              {
+                "w": "manage shared expenses",
+                "zh": "一起管理/分担共同开销"
+              },
+              {
+                "w": "strengthen your bonds",
+                "zh": "让关系更紧密牢固"
+              },
+              {
+                "w": "learn from each other",
+                "zh": "互相学习、取长补短"
+              }
+            ]
+          },
+          {
+            "en": "You look around the room, grateful for the diverse perspectives and the willingness of your roommates to find a solution that works for everyone.",
+            "zh": "你环顾房间，感激大家视角各异，也感激室友们愿意一起找到对每个人都合适的方案。",
+            "words": [
+              {
+                "w": "look around",
+                "zh": "环视；扫视"
+              },
+              {
+                "w": "diverse perspectives",
+                "zh": "多样的视角"
+              },
+              {
+                "w": "willingness",
+                "zh": "意愿"
+              }
+            ]
+          },
+          {
+            "en": "The tension in the air dissipates, and you feel a renewed sense of hope for maintaining a harmonious living situation.",
+            "zh": "空气中的紧张气氛消散了，你感到重燃起希望，想要维持和谐的生活状态。",
+            "words": [
+              {
+                "w": "dissipates",
+                "zh": "逐渐散开并消失"
+              },
+              {
+                "w": "renewed sense",
+                "zh": "重新出现的感觉"
+              },
+              {
+                "w": "harmonious living situation",
+                "zh": "和谐的共同生活"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
