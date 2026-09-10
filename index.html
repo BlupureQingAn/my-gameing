@@ -5214,7 +5214,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <div class="list-sub" style="line-height:1.7;">今日一句点译 · 学习统计与 7 日周报 · 生词本与艾宾浩斯复习计划（1·2·4·7 天）——进步看得见，才值得为效率付费。</div>
             <div style="font-size:.8rem;font-weight:900;color:#c0392b;margin:8px 0 4px;">👑 会员额外解锁</div>
             <div class="mb-rows">
-                <div class="mb-row"><span>⚡ 点译 / 复盘不限量</span><s>免费每天各 10 次</s></div>
+                <div class="mb-row"><span>⚡ 点译 / 复盘不限量</span><s>免费每日限量</s></div>
                 <div class="mb-row"><span>🎫 全部剧本免解锁 · 新卡抢先玩</span><s>非会员 1 元解锁</s></div>
                 <div class="mb-row"><span>☁️ 云端进度同步 · 复习计划随身走</span><s>自动续排不丢档</s></div>
                 <div class="mb-row"><span>🤖 中文剧本 AI 无限对话</span><s>免云币消耗</s></div>
@@ -23085,7 +23085,7 @@ window.LoveEngine = (() => {
             api.renderLangHub();
         },
         /* ---- P2 学习首页(2026-09-08):今日一句 / 我的进度 3 格 / 会员卡位 ----
-           今日一句:内置双语考场景句池按北京日期轮换;「译一译」直调 gloss(与剧情点句同一配额:免费 10 次/天→救急包→会员);
+           今日一句:内置双语考场景句池按北京日期轮换;「译一译」直调 gloss(与剧情点句同一配额:免费每日限量→救急包→会员);
            点译成功本地记 lang_today_g:{d,en,zh},当天重进不再重复扣额度 */
         renderLangHub: function () {
             api.renderToday();
@@ -23138,8 +23138,8 @@ window.LoveEngine = (() => {
             var note = done
                 ? '<div class="lang-today-note" id="lang-today-note">本句已译过，明天换新句</div>'
                 : '<div class="lang-today-note" id="lang-today-note">' + (token()
-                    ? '<button type="button" class="lt-btn" onclick="LangController.todayGloss()">译一译</button> <span style="margin-left:4px;">免费每天 10 次，会员不限量</span>'
-                    : "登录后可点译今日一句（每天免费 10 次）") + "</div>";
+                    ? '<button type="button" class="lt-btn" onclick="LangController.todayGloss()">译一译</button> <span style="margin-left:4px;">免费每天限量，会员不限量</span>'
+                    : "登录后可点译今日一句（每日免费限量）") + "</div>";
             box.innerHTML = '<div class="lang-today">' +
                 '<div class="lang-today-h"><span>📅 今日一句</span><span style="font-weight:600;opacity:.85;">【' + api.esc(t.tag) + "】</span></div>" +
                 '<div class="lang-today-en" id="lang-today-en">' + api.esc(t.en) + "</div>" + zhBox + note + "</div>";
@@ -23147,7 +23147,7 @@ window.LoveEngine = (() => {
         todayGloss: function () {
             var enEl = $("lang-today-en"), note = $("lang-today-note");
             if (!enEl || !note) return;
-            if (!token()) { note.innerHTML = "登录后可点译今日一句（每天免费 10 次）"; return; }
+            if (!token()) { note.innerHTML = "登录后可点译今日一句（每日免费限量）"; return; }
             var s = enEl.textContent.replace(/\s+/g, " ").trim().slice(0, 500);
             if (!s) return;
             var btns = function (h) { return '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">' + h + "</div>"; };
@@ -23313,7 +23313,7 @@ window.LoveEngine = (() => {
             el.innerHTML = '<div class="member-band" onclick="MembershipService.openPanel()">' +
                 '<span style="font-size:1.55rem;">👑</span>' +
                 '<div style="flex:1;min-width:0;"><div style="font-weight:900;font-size:.88rem;">云吞吞会员</div>' +
-                '<div style="font-size:.68rem;line-height:1.5;opacity:.85;margin-top:2px;">点译复盘不限量（每天各 10 次免费）· 全部剧本免解锁 · 生词本复习计划</div></div>' +
+                '<div style="font-size:.68rem;line-height:1.5;opacity:.85;margin-top:2px;">点译复盘不限量（每天限量免费）· 全部剧本免解锁 · 生词本复习计划</div></div>' +
                 '<span style="font-weight:900;flex-shrink:0;">开通 ›</span></div>';
         },
         renderContinue: function () {
