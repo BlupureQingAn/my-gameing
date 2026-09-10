@@ -1,4 +1,4 @@
-// 英语卡(M8a)官方封面生成:5 张在线卡手写 prompt(视觉体系同中文官方卡 4:3 无字横版)→ POST 生产 cover 接口 pregen 通道
+// 英语卡官方封面生成:缺封面卡手写 prompt(视觉体系同中文官方卡 4:3 无字横版)→ POST 生产 cover 接口 pregen 通道
 // → 落盘 scenarios/covers/lang_{pbId}.jpg(静态文件,前端 CoverService 直接归一加载,不走 KV)
 // 用法: node scripts/lang_card_covers.mjs --email PB管理员邮箱 --password PB管理员密码 [--pb https://db.blupure.cn]
 // pregen key 读取: 环境变量 COVER_PREGEN_KEY_FILE(默认 F:/Claude/cover-pregen-key,worker secret COVER_PREGEN_KEY 同值)
@@ -21,16 +21,16 @@ const USER_PASS = "cover_pregen_2026!";
 
 // 每卡 prompt(手写,≤200 字符;主体/场景/氛围中文 + 风格段英文,对齐旧 6 段模板气质)
 const CARDS = [
-    { id: "438v6062rf5eorf", file: "card-01-first-semester.card.json",
-      prompt: "大一新生 Kai 独自拖着行李箱,深夜抵达美国小城大学城的初秋校园,路灯下的忐忑与期待;Makoto Shinkai style, youthful campus anime, warm hopeful light;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
-    { id: "l5swqbkdmta2n1h", file: "card-02-moonlight-diner.card.json",
-      prompt: "海风小镇主街尽头的午夜 diner,雨夜霓虹在湿沥青上倒映,窗内夜班服务员 Riley 的身影,怪谈却温暖;atmospheric anime illustration, film-noir neon reflections, cozy mystery mood;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
-    { id: "kwtlgha9t7on3hk", file: "card-03-last-train-home.card.json",
-      prompt: "深夜 23:47 空荡的末班车厢,一人独坐,昏黄车厢灯,黑窗滑落雨痕,克制的怪谈与酸暖;Makoto Shinkai style night train, melancholic, rain-streaked glass reflections;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
-    { id: "jganx0kf0rvm77v", file: "card-04-night-watch.card.json",
-      prompt: "北境边城 Kilgore 雪前的冬夜,结霜的城墙砖与火炬光,见习夜巡 Rowan 持灯巡墙,墙根浓雾低伏,人文向低奇幻;warm epic fantasy illustration, torchlight frost and fog, grounded human heroic;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
-    { id: "zgtcu5wjqmp01ec", file: "card-05-echoes-of-the-deep.card.json",
-      prompt: "近未来离岸声学监听站,冬夜风暴中的甲板,屏幕波形微光,夜班技术员 Avery 望着墨色大海,克制悬念;cinematic sci-fi illustration, deep-sea listening station, storm-lit, restrained suspense;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" }
+    { id: "438v6062rf5eorf", file: "m5-01-first-semester.card.json",
+      prompt: "初雪飘落的美国小镇大学,大一新生女孩拖着行李箱站在 Edgewater 大学红砖校门前,雪中暖灯,初恋悸动的校园;Makoto Shinkai style, snowy campus anime, tender first-love mood;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
+    { id: "lkj0jaokc4etgl8", file: "m5-02-weekend-win.card.json",
+      prompt: "深夜都市科技园区,应届生男生站在 Northgate Labs 灯火通明的落地窗前,咖啡与屏幕微光,紧张坚定的终面之夜;modern urban anime, tech park at night, cinematic city bokeh glow;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
+    { id: "m1kcx2khpuqqx0s", file: "r1-01-film-club.card.json",
+      prompt: "秋日校园电影放映会,女生站在投影光束与金色落叶之间,幕布微光与坐满的礼堂,电影社的浪漫初遇;warm campus anime, autumn golden leaves, cinema projector glow, romantic;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
+    { id: "ncd5g34ejo3sdiv", file: "r1-02-aurora-cafe.card.json",
+      prompt: "秋日清晨的街角咖啡馆,窗边暖光下系围裙的女孩擦拭吧台,咖啡蒸汽与窗外落叶街景,都市治愈恋爱;cozy cafe anime, warm morning light, autumn city street, gentle healing romance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
+    { id: "zr7uixg5xqwbr5g", file: "r1-03-photo-club.card.json",
+      prompt: "秋日大学校园摄影摊位,男生举起相机对焦金色树影与人群,午后逆光的光斑,青春摄影恋曲;vibrant campus anime, golden-hour backlight, photography club, youthful warmth;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" }
 ];
 
 async function pbJson(url, opts) {

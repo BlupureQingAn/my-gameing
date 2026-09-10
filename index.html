@@ -6357,14 +6357,12 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             scenarioDismissedWarningsMap: "bitlife_scenario_dismissed_warnings_map_v1",
             uiThemeMode: "bitlife_ui_theme_mode_v1"
         },
+        // 云币档位(2026-09-10 精简 4 档:砍 ¥18/¥89/¥168,¥89/¥168 与 ¥68 加赠率同为 20% 纯重复;worker CHARGE_PLANS 保留全档位以兼容历史订单结算)
         chargePlans: {
             c1:  { id: "c1",  name: "1000 云币", price: "1",  coins: 2000, desc: "首充双倍 2000 · 新用户专属（复充 1100）", tag: "首充双倍" },
             c6:  { id: "c6",  name: "6000 云币", price: "6",  coins: 12000, desc: "首充双倍 12000 · 新用户专属（复充 6600）", tag: "首充双倍" },
-            c18: { id: "c18", name: "18000 云币", price: "18", coins: 19800, desc: "加赠 1800 云币", tag: "" },
             c30: { id: "c30", name: "30000 云币", price: "30", coins: 34500, desc: "加赠 4500 云币", tag: "" },
-            c68: { id: "c68", name: "68000 云币", price: "68", coins: 81600, desc: "加赠 13600 云币", tag: "" },
-            c89: { id: "c89", name: "89000 云币", price: "89", coins: 106800, desc: "加赠 17800 云币", tag: "" },
-            c168: { id: "c168", name: "168000 云币", price: "168", coins: 201600, desc: "加赠 33600 云币", tag: "" }
+            c68: { id: "c68", name: "68000 云币", price: "68", coins: 81600, desc: "加赠 13600 云币", tag: "" }
         },
         // 会员档位(P1 2026-09-08 精简 3 档化:月/年+终身;周/季取消):期内 AI 对话不限次、不消耗云币
         memberPlans: {
@@ -20773,6 +20771,7 @@ function openNpcProfile(npcId) {
             try {
                 const st2 = StateService.get();
                 UIRenderer.renderTop(st2); UIRenderer.renderInventory(st2); UIRenderer.renderSocialList(st2); UIRenderer.renderSaveSlots(st2);
+                UIRenderer.renderHistory(st2.history || []); // 清空聊天区,防上一张卡内容残留(renderHistory 会先清 board 再按存档重绘)
             } catch (e) { console.warn("[LangEngine] 开局渲染:", e); }
             // 英语专属卡(带 structured.band + 写死全英文 first_scene)首轮本地渲染,零 AI 请求
             let nativeScene = null;
@@ -23605,7 +23604,7 @@ window.LoveEngine = (() => {
             if (document.getElementById("lgGestureGuide")) return;
             var card = document.createElement("div");
             card.id = "lgGestureGuide";
-            card.style.cssText = "position:fixed;left:50%;bottom:92px;transform:translateX(-50%);z-index:9999;background:rgba(43,33,20,.95);color:#ffe9c9;border:1px solid rgba(255,214,150,.4);border-radius:14px;padding:12px 18px;font-size:13px;line-height:1.9;box-shadow:0 6px 24px rgba(0,0,0,.28);max-width:86vw;text-align:center;touch-action:manipulation";
+            card.style.cssText = "position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9999;background:rgba(43,33,20,.95);color:#ffe9c9;border:1px solid rgba(255,214,150,.4);border-radius:14px;padding:12px 18px;font-size:13px;line-height:1.9;box-shadow:0 6px 24px rgba(0,0,0,.28);max-width:86vw;text-align:center;touch-action:manipulation";
             card.innerHTML = '<div style="font-weight:bold;font-size:14px;margin-bottom:2px">📖 玩英语剧本小技巧</div>'
                 + '<div>👆 <b>长按</b>英文句子 → 看整句翻译</div>'
                 + '<div>👆 <b>双击</b>单词 → 查词典 / 收藏生词</div>'
