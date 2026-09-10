@@ -1038,6 +1038,18 @@ async function logCoinLedger(env, userId, orderNo, delta, before, after, reason)
     }
 }
 
+// 封面/立绘 prompt 裁切:上限 n 字符(产线脚本按同值动态预算,见 gen_love_art.mjs);
+// 超长时按词边界回退到最后一个空格,避免把结尾画风词/单词切成半截(旧版硬切曾致风格词残缺、多角色 prompt 撞车出同图)
+function clipCoverPrompt(s, n) {
+    const raw = String(s || "");
+    let out = raw.slice(0, n).trim();
+    if (raw.length > n && /\S/.test(raw.charAt(n))) {
+        const cut = out.lastIndexOf(" ");
+        if (cut > 0) out = out.slice(0, cut).trim();
+    }
+    return out;
+}
+
 // h5zhifu 回调处理：验签 → trade_status 校验 → 公共发货；原文留档(含验签失败)
 async function handlePayNotify(env, params, raw = "") {
     try {
@@ -1086,6 +1098,7 @@ async function authenticate(env, request) {
 
 // ---- 语言文游 M4 gloss:点句翻译+难词释义合批(直调模型不落库、不进主站计费/配额;独立轻量候选链)----
 const GLOSS_MAX_SENTENCES = 10;   // 前端亦按 ≤10 合批
+const GLOSS_SENTENCE_MAX_CHARS = 500; // 单句上限(前端同值截断,防长台词译文只覆盖前半);旧值 300 对长句会静默丢后半
 const GLOSS_RATE_LIMIT_MS = 6000; // 单实例内存限频即可(与 POST_RATE_LIMIT_MS 同理)
 const glossRateMap = new Map();
 // 候选链:免费档全铺,付费 5.3-flash 不入链(2026-09-07 小徐指示:免费模型可用时不得用付费模型;
@@ -1295,7 +1308,8 @@ async function callRecapModel(env, story, band) {
             const data = await res.json().catch(() => ({}));
             const content = cleanJsonText(String((data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || ""));
             if (!content) { errs.push(t.id + ":empty"); continue; }
-            const parsed = JSON.parse(content);
+            let parsed;
+            try { parsed = JSON.parse(content); } catch (e) { errs.push(t.id + ":json"); continue; } // JSON 截断/坏档不计网络超时(防误判群故障早停,同 gloss)
             const expressions = (Array.isArray(parsed.expressions) ? parsed.expressions : []).slice(0, 6)
                 .map((x) => ({
                     en: String(x && x.en || "").trim().slice(0, 120),
@@ -1924,7 +1938,7 @@ export default {
             if (url.pathname === "/api/cover/generate" && request.method === "POST") {
                 let body = {};
                 try { body = await request.json(); } catch (e) {}
-                const prompt = String(body.prompt || "").slice(0, 200).trim();
+                const prompt = clipCoverPrompt(body.prompt, 200);
                 if (!prompt) return errorResponse("缺少 prompt", 400, null, "INVALID_PROMPT");
                 // R1 角色立绘:cover 端点复用同通道同密钥,ratio 支持竖版 3:4 半身像/1:1 头像;非 4:3 的键后缀区分,老 4:3 缓存不受影响
                 const ratio = ["3:4", "1:1", "4:3"].indexOf(String(body.ratio || "")) >= 0 ? String(body.ratio) : "4:3";
@@ -3679,7 +3693,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const raw = Array.isArray(body.sentences) ? body.sentences : [];
                 const sentences = [];
                 for (let i = 0; i < raw.length && sentences.length < GLOSS_MAX_SENTENCES; i++) {
-                    const s = String(raw[i] || "").replace(/\s+/g, " ").trim().slice(0, 300);
+                    const s = String(raw[i] || "").replace(/\s+/g, " ").trim().slice(0, GLOSS_SENTENCE_MAX_CHARS);
                     if (s) sentences.push(s);
                 }
                 if (!sentences.length) return errorResponse("没有可翻译的句子", 400, null, "INVALID_SENTENCES");
