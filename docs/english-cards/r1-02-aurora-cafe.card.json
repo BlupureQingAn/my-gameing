@@ -194,7 +194,7 @@
       ]
     },
     "first_scene": {
-      "story": "It's a crisp autumn morning at Corner Cafe, and you're just finishing up your last coffee blend before the rush. The aroma of freshly roasted beans fills the air, mingling with the scent of freshly baked pastries. As you wipe down the counter, Julian, the artist with his signature beret, slides into a booth by the window, his eyes instantly drawn to the sketchpad you've left open.\n\n\"Good morning,\" you smile, setting down his coffee. \"Is this the perfect spot for some inspiration?\"\n\nJulian nods, his gaze lingering on the sketchpad. \"It is indeed. I could almost hear the colors whispering to me.\"\n\nYou feel a spark of excitement. \"I love art. Do you mind if I join you for a bit?\"\n\n\"Of course,\" he says, pushing the sketchpad a little closer. \"Feel free to add your own touch.\"\n\nJust as you're about to pick up the pencil, the door swings open, and in walks Alex, the entrepreneur, his energy palpable even from across the room. \"Morning, team! Got a minute?\" he calls out, already heading towards the counter.\n\n\"Morning, Alex,\" you reply, turning back to Julian. \"My friend Alex just popped in. He's quite the character.\"\n\nJulian looks over, his curiosity piqued. \"A friend, huh? I like characters.\"\n\nAlex, noticing the sketchpad, stops at the table. \"Art, eh? I'm no artist, but I can appreciate the effort. What are you working on?\"\n\nJulian chuckles. \"Just some thoughts, some dreams. It's all in the details.\"\n\nYou feel a warmth spread through you, watching the easy banter between the two men. The door chimes again, and in steps Leo, the musician, his presence as magnetic as his melodies.\n\n\"Morning, all,\" Leo greets, his smile lighting up the room. \"I'm ready for a coffee. Any recommendations?\"\n\n\"You can't go wrong with the caramel latte,\" Alex replies, already at the counter. \"For you, Julian?\"\n\n\"Same,\" Julian says, his voice filled with a sense of camaraderie.\n\nAs you hand Leo his coffee, you can't help but feel a surge of excitement. This is just the beginning of your adventures in Corner Cafe. The question is, which path will you choose? Julian, with his artistic charm, or Alex, with his entrepreneurial spirit? You must立刻 do a choice.",
+      "story": "It's a crisp autumn morning at Corner Cafe, and you're just finishing up your last coffee blend before the rush. The aroma of freshly roasted beans fills the air, mingling with the scent of freshly baked pastries. As you wipe down the counter, Julian, the artist with his signature beret, slides into a booth by the window, his eyes instantly drawn to the sketchpad you've left open.\n\n\"Good morning,\" you smile, setting down his coffee. \"Is this the perfect spot for some inspiration?\"\n\nJulian nods, his gaze lingering on the sketchpad. \"It is indeed. I could almost hear the colors whispering to me.\"\n\nYou feel a spark of excitement. \"I love art. Do you mind if I join you for a bit?\"\n\n\"Of course,\" he says, pushing the sketchpad a little closer. \"Feel free to add your own touch.\"\n\nJust as you're about to pick up the pencil, the door swings open, and in walks Alex, the entrepreneur, his energy palpable even from across the room. \"Morning, team! Got a minute?\" he calls out, already heading towards the counter.\n\n\"Morning, Alex,\" you reply, turning back to Julian. \"My friend Alex just popped in. He's quite the character.\"\n\nJulian looks over, his curiosity piqued. \"A friend, huh? I like characters.\"\n\nAlex, noticing the sketchpad, stops at the table. \"Art, eh? I'm no artist, but I can appreciate the effort. What are you working on?\"\n\nJulian chuckles. \"Just some thoughts, some dreams. It's all in the details.\"\n\nYou feel a warmth spread through you, watching the easy banter between the two men. The door chimes again, and in steps Leo, the musician, his presence as magnetic as his melodies.\n\n\"Morning, all,\" Leo greets, his smile lighting up the room. \"I'm ready for a coffee. Any recommendations?\"\n\n\"You can't go wrong with the caramel latte,\" Alex replies, already at the counter. \"For you, Julian?\"\n\n\"Same,\" Julian says, his voice filled with a sense of camaraderie.\n\nAs you hand Leo his coffee, you can't help but feel a surge of excitement. This is just the beginning of your adventures in Corner Cafe. The question is, which path will you choose? Julian, with his artistic charm, or Alex, with his entrepreneurial spirit? You must make a choice right now.",
       "options": [
         {
           "text": "Offer Julian a sketch to add color to his art",
@@ -222,11 +222,11 @@
         "lines": [
           {
             "en": "It's a crisp autumn morning at Corner Cafe, and you're just finishing up your last coffee blend before the rush.",
-            "zh": "在街角咖啡馆，一个清爽的秋日清晨，你刚喝完最后一杯特调咖啡，赶在高峰前收尾。",
+            "zh": "Corner Cafe 里，一个清爽的秋日清晨，你刚把最后一杯特调咖啡做完，赶在高峰前收尾。",
             "words": [
               {
                 "w": "crisp",
-                "zh": "（天气）凉爽清新"
+                "zh": "（天气）清新凉爽"
               },
               {
                 "w": "autumn morning",
@@ -234,121 +234,125 @@
               },
               {
                 "w": "finish up",
-                "zh": "收尾；完成"
+                "zh": "完成；收尾"
               }
             ]
           },
           {
             "en": "The aroma of freshly roasted beans fills the air, mingling with the scent of freshly baked pastries.",
-            "zh": "刚烘焙好的豆子的香气弥漫在空气中，与新鲜出炉的糕点香味交织在一起。",
+            "zh": "新烘焙豆子的香气弥漫在空气中，与新鲜出炉糕点的味道交织在一起。",
             "words": [
               {
-                "w": "aroma",
-                "zh": "（食物或饮料散发的）香气"
-              },
-              {
-                "w": "freshly roasted",
-                "zh": "刚烤好的；新鲜的"
+                "w": "aromatic",
+                "zh": "有香味的"
               },
               {
                 "w": "mingle",
                 "zh": "混合；交融"
+              },
+              {
+                "w": "freshly baked",
+                "zh": "刚烤好的"
               }
             ]
           },
           {
             "en": "As you wipe down the counter, Julian, the artist with his signature beret, slides into a booth by the window, his eyes instantly drawn to the sketchpad you've left open.",
-            "zh": "你擦柜台时，戴着标志性贝雷帽的艺术家朱利安滑进窗边座位，目光立刻被你敞开着的速写本吸引。",
+            "zh": "你擦着柜台时，戴着标志性贝雷帽的艺术家朱利安滑进窗边的卡座，目光立刻被你摊开的手绘图板吸引。",
             "words": [
               {
                 "w": "wipe down",
-                "zh": "把……擦干净"
+                "zh": "擦拭；擦净"
+              },
+              {
+                "w": "signature",
+                "zh": "标志性的"
               },
               {
                 "w": "slide into",
-                "zh": "悄悄/溜进"
-              },
-              {
-                "w": "drawn to",
-                "zh": "被……吸引"
+                "zh": "滑入；挪进去"
               }
             ]
           },
           {
             "en": "\"Good morning,\" you smile, setting down his coffee.",
-            "zh": "你微笑着说：“早上好。”，然后把他的咖啡放下。",
+            "zh": "“早上好。”你微笑着，把他的咖啡放下。",
             "words": [
               {
+                "w": "set down",
+                "zh": "轻轻放下"
+              },
+              {
                 "w": "smile",
-                "zh": "用面部表情表示开心"
+                "zh": "微笑"
               },
               {
                 "w": "setting down",
-                "zh": "轻轻放到某个地方"
-              },
-              {
-                "w": "coffee",
-                "zh": "由豆子制成的热黑饮料"
+                "zh": "放置的动作"
               }
             ]
           },
           {
             "en": "\"Is this the perfect spot for some inspiration?\"",
-            "zh": "这里适合激发灵感吗？",
+            "zh": "“这里是寻找灵感的绝佳地点吗？”",
             "words": [
               {
                 "w": "perfect spot",
-                "zh": "非常合适的地方"
+                "zh": "完美的地方"
               },
               {
-                "w": "for some inspiration",
-                "zh": "获得创意点子"
+                "w": "inspiration",
+                "zh": "灵感"
+              },
+              {
+                "w": "spot",
+                "zh": "地方"
               }
             ]
           },
           {
             "en": "Julian nods, his gaze lingering on the sketchpad.",
-            "zh": "朱利安点点头，目光仍停留在速写本上。",
+            "zh": "朱利恩点点头，目光停留在手绘图板上。",
             "words": [
               {
                 "w": "nod",
-                "zh": "点头表示同意或‘是’"
+                "zh": "点头"
               },
               {
                 "w": "gaze",
-                "zh": "长时间专注地看某物"
+                "zh": "凝视"
               },
               {
                 "w": "linger",
-                "zh": "停留更久；迟迟不离开"
+                "zh": "停留；徘徊"
               }
             ]
           },
           {
             "en": "\"It is indeed.",
-            "zh": "确实如此。",
+            "zh": "“确实如此。”",
             "words": [
               {
                 "w": "indeed",
-                "zh": "确实；真的"
+                "zh": "的确；确实"
               }
             ]
           },
           {
             "en": "I could almost hear the colors whispering to me.\"",
-            "zh": "我几乎能听见那些颜色在向我低语。",
+            "zh": "我几乎能听见颜色在向我低语。",
             "words": [
               {
-                "w": "whispering",
-                "zh": "低声说；悄悄话"
+                "w": "whisper",
+                "zh": "低声说"
               },
               {
-                "w": "could almost hear",
-                "zh": "差点就能听到"
+                "w": "hear",
+                "zh": "听到"
               },
               {
-                "w": "colors whispering",
-                "zh": "颜色仿佛在低语"
+                "w": "colors",
+                "zh": "色彩"
               }
             ]
           },
@@ -357,26 +361,30 @@
             "zh": "你感到一阵兴奋。",
             "words": [
               {
-                "w": "spark of excitement",
-                "zh": "一阵兴奋；一种突然的激动感"
+                "w": "spark",
+                "zh": "火花；激动"
+              },
+              {
+                "w": "excitement",
+                "zh": "兴奋"
               },
               {
                 "w": "feel",
-                "zh": "感觉到、体验到"
+                "zh": "感觉"
               }
             ]
           },
           {
             "en": "\"I love art.",
-            "zh": "我热爱艺术。",
+            "zh": "“我爱艺术。”",
             "words": [
               {
                 "w": "love",
-                "zh": "喜爱；对人、事物或活动的强烈好感"
+                "zh": "热爱"
               },
               {
                 "w": "art",
-                "zh": "绘画、音乐、雕塑等创造性作品"
+                "zh": "艺术"
               }
             ]
           },
@@ -385,141 +393,146 @@
             "zh": "介意我待一会儿吗？",
             "words": [
               {
-                "w": "join",
-                "zh": "加入；和……在一起"
+                "w": "join you",
+                "zh": "和你一起；陪伴"
               },
               {
                 "w": "for a bit",
                 "zh": "一会儿"
+              },
+              {
+                "w": "Do you mind...?",
+                "zh": "询问对方是否介意……"
               }
             ]
           },
           {
             "en": "\"Of course,\" he says, pushing the sketchpad a little closer.",
-            "zh": "“当然，”他说着，把速写本又往我这边推了推。",
+            "zh": "“当然，”他说着，把速写板又往近推了推。",
             "words": [
               {
-                "w": "pushing",
-                "zh": "用力将某物朝某人方向移动；此处作现在分词，表示‘说’的同时发生的动作"
+                "w": "push ... closer",
+                "zh": "把……往前推/拉近"
               },
               {
                 "w": "sketchpad",
-                "zh": "供绘画或记笔记用的小幅纸本"
+                "zh": "速写本"
               },
               {
-                "w": "closer",
-                "zh": "更近的（比较级）"
+                "w": "a little closer",
+                "zh": "更近一点"
               }
             ]
           },
           {
             "en": "\"Feel free to add your own touch.\"",
-            "zh": "请随意加上你自己的点缀。",
+            "zh": "“请随意加上你自己的笔触。”",
             "words": [
               {
-                "w": "feel free",
-                "zh": "表示可以/尽管做某事"
+                "w": "feel free to do sth",
+                "zh": "可以自由地做某事"
               },
               {
-                "w": "add",
-                "zh": "添加；加入"
-              },
-              {
-                "w": "touch",
-                "zh": "点缀；修饰"
+                "w": "add your own touch",
+                "zh": "加入你自己的风格/润色"
               }
             ]
           },
           {
             "en": "Just as you're about to pick up the pencil, the door swings open, and in walks Alex, the entrepreneur, his energy palpable even from across the room.",
-            "zh": "就在你正要拿起铅笔时，门猛地打开，Alex走了进来——这位企业家的能量在房间那头都能感受到。",
+            "zh": "你正要拿起铅笔时，门猛地打开，亚历克斯走了进来——这位企业家的能量从房间那头都能感觉到。",
             "words": [
               {
+                "w": "just as ... is about to ...",
+                "zh": "正当……要……的时候"
+              },
+              {
                 "w": "pick up",
-                "zh": "拿起（笔）"
+                "zh": "拿起"
               },
               {
-                "w": "about to",
-                "zh": "即将；快要"
-              },
-              {
-                "w": "palpable",
-                "zh": "明显的；可感知的"
+                "w": "swing open",
+                "zh": "猛然打开"
               }
             ]
           },
           {
             "en": "\"Morning, team!",
-            "zh": "早上好，各位！",
+            "zh": "“早上好，团队！”",
             "words": [
               {
                 "w": "team",
                 "zh": "团队"
-              },
-              {
-                "w": "Morning",
-                "zh": "早上好"
               }
             ]
           },
           {
             "en": "Got a minute?\" he calls out, already heading towards the counter.",
-            "zh": "他喊道：“有空吗？”，同时已经朝柜台走去。",
+            "zh": "“有空吗？”他喊道，已经朝柜台走去。",
             "words": [
               {
-                "w": "calls out",
-                "zh": "大声喊；吆喝"
+                "w": "Got a minute?",
+                "zh": "有空吗？"
               },
               {
-                "w": "heading towards",
-                "zh": "朝……方向走"
+                "w": "call out",
+                "zh": "大声说"
               },
               {
-                "w": "counter",
-                "zh": "柜台"
+                "w": "head towards ...",
+                "zh": "朝……走去"
               }
             ]
           },
           {
             "en": "\"Morning, Alex,\" you reply, turning back to Julian.",
-            "zh": "“早上好，亚历克斯，”你回过头对朱利安说。",
-            "words": []
+            "zh": "“早上好，亚历克斯，”你回答，转身面向朱利安。",
+            "words": [
+              {
+                "w": "turn back to ...",
+                "zh": "转回……"
+              },
+              {
+                "w": "reply",
+                "zh": "回答"
+              }
+            ]
           },
           {
             "en": "\"My friend Alex just popped in.",
-            "zh": "我的朋友亚历克斯刚过来一下。",
+            "zh": "“我朋友亚历克斯刚过来一下。”",
             "words": [
               {
-                "w": "popped in",
-                "zh": "突然来访；顺道拜访"
+                "w": "pop in",
+                "zh": "短暂拜访"
               },
               {
                 "w": "just",
-                "zh": "刚刚；刚才"
+                "zh": "刚刚"
               }
             ]
           },
           {
             "en": "He's quite the character.\"",
-            "zh": "他可真是个有意思的人。",
+            "zh": "他是个很有个性的人。”",
             "words": [
               {
-                "w": "quite the",
-                "zh": "用来强调某人或某物；“相当一个……”"
+                "w": "quite the + noun",
+                "zh": "真是个……”"
               },
               {
                 "w": "character",
-                "zh": "有个性的人格；有趣的人"
+                "zh": "有个性的人"
               }
             ]
           },
           {
             "en": "Julian looks over, his curiosity piqued.",
-            "zh": "朱利安转过头去，好奇心被勾了起来。",
+            "zh": "朱利安看过去，好奇心被勾起了。",
             "words": [
               {
-                "w": "looks over",
-                "zh": "转头看"
+                "w": "look over",
+                "zh": "看向"
               },
               {
                 "w": "curiosity piqued",
@@ -532,90 +545,90 @@
             "zh": "朋友啊，嗯？",
             "words": [
               {
-                "w": "friend",
-                "zh": "朋友；你认识且喜欢的人"
+                "w": "friend, huh?",
+                "zh": "口语化反问；表示惊讶或略带怀疑"
               },
               {
-                "w": "huh",
-                "zh": "表示惊讶或确认的感叹词"
+                "w": "huh?",
+                "zh": "感叹词；用于确认或表达反应"
               }
             ]
           },
           {
             "en": "I like characters.\"",
-            "zh": "我喜欢这些角色。",
+            "zh": "我喜欢角色。",
             "words": [
               {
                 "w": "like",
-                "zh": "喜欢"
+                "zh": "动词：喜欢；常用动词"
               },
               {
                 "w": "characters",
-                "zh": "角色"
+                "zh": "复数形式；指故事中的人物"
               }
             ]
           },
           {
             "en": "Alex, noticing the sketchpad, stops at the table.",
-            "zh": "亚历克斯注意到素描本，便在桌边停了下来。",
+            "zh": "亚历克斯注意到速写本，在桌边停下。",
             "words": [
               {
                 "w": "noticing",
-                "zh": "察觉到；看到"
+                "zh": "现在分词；表示与主句动作同时发生"
               },
               {
                 "w": "sketchpad",
-                "zh": "素描本"
+                "zh": "速写本"
               },
               {
                 "w": "stops at",
-                "zh": "在……处停下"
+                "zh": "短语动词；停在某处"
               }
             ]
           },
           {
             "en": "\"Art, eh?",
-            "zh": "艺术啊，是吧？",
+            "zh": "艺术啊，嗯？",
             "words": [
               {
-                "w": "eh?",
-                "zh": "语气词，用于征求同意或确认；非正式。"
+                "w": "art",
+                "zh": "美术；绘画和雕塑等视觉艺术"
               },
               {
-                "w": "art",
-                "zh": "艺术作品（绘画、音乐、文学等）"
+                "w": "eh?",
+                "zh": "反问语气词；表示确认或轻微惊讶"
               }
             ]
           },
           {
             "en": "I'm no artist, but I can appreciate the effort.",
-            "zh": "我虽然不是艺术家，但能看出你的用心。",
+            "zh": "我不是艺术家，但能看出你的用心。",
             "words": [
               {
                 "w": "no artist",
-                "zh": "不是艺术家"
+                "zh": "不是艺术家；否定自身身份"
               },
               {
                 "w": "appreciate",
-                "zh": "欣赏/感激"
+                "zh": "欣赏；认可其价值或品质"
               },
               {
-                "w": "the effort",
-                "zh": "付出的努力"
+                "w": "effort",
+                "zh": "努力；付出的劳动"
               }
             ]
           },
           {
             "en": "What are you working on?\"",
-            "zh": "你在忙什么？",
+            "zh": "你在画什么？",
             "words": [
               {
                 "w": "work on",
-                "zh": "花时间做某事；专注于"
+                "zh": "从事；花时间做某事"
               },
               {
-                "w": "be working on",
-                "zh": "正在做某事"
+                "w": "What...on?",
+                "zh": "疑问词+介词；询问活动对象"
               }
             ]
           },
@@ -625,11 +638,11 @@
             "words": [
               {
                 "w": "chuckle",
-                "zh": "轻声地笑；常因觉得有趣而发出笑声"
+                "zh": "轻声笑；表示觉得好笑"
               },
               {
-                "w": "chuckles",
-                "zh": "第三人称单数形式，表示‘他/她/它轻轻地笑了’"
+                "w": "Julian",
+                "zh": "专有名词；保留不译"
               }
             ]
           },
@@ -639,93 +652,93 @@
             "words": [
               {
                 "w": "just",
-                "zh": "仅仅；只不过"
-              },
-              {
-                "w": "some",
-                "zh": "一些"
+                "zh": "副词；仅仅、只是"
               },
               {
                 "w": "thoughts",
-                "zh": "想法"
+                "zh": "想法；脑海中的思考"
+              },
+              {
+                "w": "dreams",
+                "zh": "梦想；比喻为抱负或希望"
               }
             ]
           },
           {
             "en": "It's all in the details.\"",
-            "zh": "成败往往取决于细节。",
+            "zh": "细节决定一切。",
             "words": [
               {
                 "w": "all in",
-                "zh": "全在；完全在于"
+                "zh": "成语；全部包含在内"
               },
               {
-                "w": "in the details",
-                "zh": "在细节里"
+                "w": "details",
+                "zh": "细节；构成整体的具体小部分"
+              },
+              {
+                "w": "It's all in...",
+                "zh": "固定搭配；强调取决于细微之处"
               }
             ]
           },
           {
             "en": "You feel a warmth spread through you, watching the easy banter between the two men.",
-            "zh": "看着那两人轻松地插科打诨，你感到一股暖意在体内蔓延开来。",
+            "zh": "看着两人轻松的谈笑，你感到一股暖意传遍全身。",
             "words": [
               {
                 "w": "spread through",
-                "zh": "扩散；传遍"
+                "zh": "短语动词；遍及、蔓延"
+              },
+              {
+                "w": "warmth",
+                "zh": "温暖；愉快的情感"
               },
               {
                 "w": "easy banter",
-                "zh": "轻松的闲聊"
-              },
-              {
-                "w": "watching",
-                "zh": "观看"
+                "zh": "轻松闲聊；友好且略带玩笑的对话"
               }
             ]
           },
           {
             "en": "The door chimes again, and in steps Leo, the musician, his presence as magnetic as his melodies.",
-            "zh": "门铃又响了，接着音乐家利奥走了进来；他的存在就像他的旋律一样具有磁性。",
+            "zh": "门铃又响了，音乐家Leo走进来，他的存在像他的旋律一样充满吸引力。",
             "words": [
               {
                 "w": "chimes",
-                "zh": "（钟/铃）发出悦耳的叮当声"
+                "zh": "发出悦耳的铃声"
               },
               {
                 "w": "in steps",
-                "zh": "走进来；进入视野"
+                "zh": "走进（某处）"
               },
               {
-                "w": "magnetic",
-                "zh": "有吸引力的；有磁性的"
+                "w": "as ... as ...",
+                "zh": "和……一样（用于比较）"
               }
             ]
           },
           {
             "en": "\"Morning, all,\" Leo greets, his smile lighting up the room.",
-            "zh": "“大家早上好，”利奥打招呼道，他的笑容照亮了整个房间。",
+            "zh": "\"大家早啊，\"Leo打招呼道，他的笑容照亮了整个房间。",
             "words": [
               {
-                "w": "light up",
-                "zh": "照亮；使容光焕发"
+                "w": "greets",
+                "zh": "向某人打招呼"
               },
               {
-                "w": "greet",
-                "zh": "打招呼；问候"
+                "w": "light up",
+                "zh": "使更明亮/更开心"
               }
             ]
           },
           {
             "en": "\"I'm ready for a coffee.",
-            "zh": "我准备好喝咖啡了。",
+            "zh": "我想喝杯咖啡。",
             "words": [
               {
                 "w": "ready for",
-                "zh": "准备好；愿意做某事"
-              },
-              {
-                "w": "coffee",
-                "zh": "用烘焙过的豆子做的热饮"
+                "zh": "为……准备好"
               }
             ]
           },
@@ -734,58 +747,46 @@
             "zh": "有什么推荐吗？",
             "words": [
               {
-                "w": "recommendations",
-                "zh": "建议（做什么、买什么或尝试什么）"
-              },
-              {
-                "w": "any",
-                "zh": "用于疑问句和否定句；根据语境表示“一个”或“一些”"
+                "w": "recommendation",
+                "zh": "建议；推荐"
               }
             ]
           },
           {
             "en": "\"You can't go wrong with the caramel latte,\" Alex replies, already at the counter.",
-            "zh": "“点焦糖拿铁肯定不会出错，”亚历克斯一边说，一边已经站在柜台前了。",
+            "zh": "\"焦糖拿铁绝对不会错，\"Alex回答道，他已经在柜台那边了。",
             "words": [
               {
                 "w": "go wrong",
-                "zh": "犯错；搞砸"
+                "zh": "出错；搞砸"
               },
               {
                 "w": "caramel latte",
-                "zh": "焦糖拿铁（咖啡饮品）"
+                "zh": "焦糖拿铁"
               },
               {
-                "w": "already",
-                "zh": "已经"
+                "w": "at the counter",
+                "zh": "在柜台附近"
               }
             ]
           },
           {
             "en": "\"For you, Julian?\"",
-            "zh": "朱利安，是给你的吗？",
+            "zh": "给你的，Julian？",
             "words": [
               {
-                "w": "for",
-                "zh": "表示某物是为某人准备的"
-              },
-              {
-                "w": "Julian",
-                "zh": "人名；保留原样"
+                "w": "for you",
+                "zh": "给你的"
               }
             ]
           },
           {
             "en": "\"Same,\" Julian says, his voice filled with a sense of camaraderie.",
-            "zh": "“一样，”朱利安说道，他的声音里充满了一种战友般的情谊。",
+            "zh": "\"一样的，\"Julian说道，他的声音充满了伙伴情谊。",
             "words": [
               {
                 "w": "camaraderie",
-                "zh": "共同经历者之间的信任与友谊；温暖的纽带"
-              },
-              {
-                "w": "filled with",
-                "zh": "充满；含有大量某物"
+                "zh": "友谊；同志情谊"
               }
             ]
           },
@@ -794,34 +795,30 @@
             "zh": "当你把咖啡递给Leo时，你忍不住感到一阵兴奋。",
             "words": [
               {
-                "w": "hand ... to ...",
-                "zh": "把……递给……"
+                "w": "hand ... over",
+                "zh": "递过去"
               },
               {
-                "w": "can't help but do",
-                "zh": "忍不住做"
+                "w": "can't help but",
+                "zh": "忍不住做某事"
               },
               {
-                "w": "a surge of excitement",
-                "zh": "一阵强烈的兴奋感"
+                "w": "a surge of",
+                "zh": "一阵（突然的增加）"
               }
             ]
           },
           {
             "en": "This is just the beginning of your adventures in Corner Cafe.",
-            "zh": "这仅仅是你在“角落咖啡馆”冒险故事的开始。",
+            "zh": "这只是你在Corner Cafe冒险故事的开始。",
             "words": [
               {
-                "w": "just",
-                "zh": "仅仅；只是"
+                "w": "adventure",
+                "zh": "冒险经历"
               },
               {
                 "w": "beginning",
                 "zh": "开始"
-              },
-              {
-                "w": "adventures",
-                "zh": "激动人心的经历"
               }
             ]
           },
@@ -830,16 +827,12 @@
             "zh": "问题是，你会选择哪条路？",
             "words": [
               {
-                "w": "the question is",
-                "zh": "引出核心问题；“关键是”"
+                "w": "path",
+                "zh": "道路；路线"
               },
               {
-                "w": "which path",
-                "zh": "哪条路（选项）"
-              },
-              {
-                "w": "will you choose",
-                "zh": "将来的选择；“你选哪个？”"
+                "w": "choose",
+                "zh": "选择"
               }
             ]
           },
@@ -858,7 +851,7 @@
             ]
           },
           {
-            "en": "You must立刻 do a choice.",
+            "en": "You must make a choice right now.",
             "zh": "你必须立刻做出选择。",
             "words": [
               {

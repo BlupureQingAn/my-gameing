@@ -222,7 +222,7 @@
         "lines": [
           {
             "en": "You step off the bus, the crisp autumn air greeting you as you walk towards Crestwood University.",
-            "zh": "你从公交车上下来，清新的秋日空气迎面而来，你朝Crestwood大学走去。",
+            "zh": "你从公交车上下来，清新的秋日空气迎面而来，你朝常青藤大学走去。",
             "words": [
               {
                 "w": "step off",
@@ -266,7 +266,7 @@
               },
               {
                 "w": "breaks through",
-                "zh": "突破；显现"
+                "zh": "冲破；显现"
               }
             ]
           },
@@ -276,11 +276,11 @@
             "words": [
               {
                 "w": "get ... charged",
-                "zh": "给……充满电；使设备可用"
+                "zh": "给……充满电"
               },
               {
                 "w": "calls out",
-                "zh": "大声呼喊"
+                "zh": "大声喊；呼喊"
               }
             ]
           },
@@ -290,33 +290,29 @@
             "words": [
               {
                 "w": "hang around",
-                "zh": "松垮地挂着"
+                "zh": "挂在……周围"
               },
               {
                 "w": "reflecting off",
-                "zh": "从……反射（光）"
+                "zh": "从……反射/映出"
               },
               {
                 "w": "tousled",
-                "zh": "乱蓬蓬的"
+                "zh": "（头发）乱蓬蓬的"
               }
             ]
           },
           {
             "en": "\"Yeah, it's all set,\" you reply, handing him the charger.",
-            "zh": "“好的，一切都准备好了，”你回答道，同时递给他充电器。",
+            "zh": "“是的，都准备好了，”你回答，把充电器递给他。",
             "words": [
               {
                 "w": "all set",
-                "zh": "一切都准备好了"
+                "zh": "准备就绪；都安排好了"
               },
               {
-                "w": "handing",
-                "zh": "递给"
-              },
-              {
-                "w": "reply",
-                "zh": "回答"
+                "w": "charger",
+                "zh": "充电器"
               }
             ]
           },
@@ -326,15 +322,15 @@
             "words": [
               {
                 "w": "meet (eyes)",
-                "zh": "（目光）交汇；对视"
+                "zh": "（目光）交汇"
               },
               {
                 "w": "for a moment",
-                "zh": "片刻；一会儿"
+                "zh": "片刻"
               },
               {
-                "w": "fade away",
-                "zh": "逐渐消失；淡出"
+                "w": "fades away",
+                "zh": "逐渐消失"
               }
             ]
           },
@@ -358,7 +354,7 @@
           },
           {
             "en": "Continuing on, you find yourself at the library, the scent of old books mingling with the faint smell of coffee.",
-            "zh": "继续往前走，你来到图书馆，旧书的香气与淡淡的咖啡味交织在一起。",
+            "zh": "继续前行，你来到图书馆，旧书的香气与淡淡的咖啡味交织在一起。",
             "words": [
               {
                 "w": "mingling",
@@ -369,14 +365,14 @@
                 "zh": "微弱的；淡淡的"
               },
               {
-                "w": "continuing on",
-                "zh": "继续前进"
+                "w": "scent",
+                "zh": "气味；香味"
               }
             ]
           },
           {
             "en": "You're searching for a book on classic cinema when you bump into Liam.",
-            "zh": "你正在找一本关于经典电影的书，这时你碰到了Liam。",
+            "zh": "你正在找一本关于经典电影的书，这时你撞见了利亚姆。",
             "words": [
               {
                 "w": "searching for",
@@ -406,49 +402,45 @@
               },
               {
                 "w": "marking up",
-                "zh": "批注；修改"
+                "zh": "修改"
               }
             ]
           },
           {
             "en": "\"Hey there, [Your Name]!\"",
-            "zh": "嘿，[Your Name]！",
+            "zh": "\"嘿，[你的名字]！\"",
             "words": [
               {
                 "w": "Hey there",
-                "zh": "嗨；非正式打招呼"
+                "zh": "嗨；你好"
               },
               {
                 "w": "[Your Name]",
-                "zh": "读者名字占位符"
+                "zh": "[你的名字]"
               }
             ]
           },
           {
             "en": "Liam greets you with a wide grin.",
-            "zh": "利亚姆咧嘴一笑，向你打招呼。",
+            "zh": "利亚姆咧着嘴笑着向你打招呼。",
             "words": [
               {
                 "w": "greets",
                 "zh": "向……打招呼"
               },
               {
-                "w": "with a wide grin",
-                "zh": "咧开嘴笑；露齿而笑"
+                "w": "wide grin",
+                "zh": "咧嘴笑"
               }
             ]
           },
           {
             "en": "\"Need some help finding that book?\"",
-            "zh": "需要帮忙找那本书吗？",
+            "zh": "\"需要帮忙找那本书吗？\"",
             "words": [
               {
-                "w": "need",
-                "zh": "需要"
-              },
-              {
-                "w": "some help",
-                "zh": "一些帮助"
+                "w": "need some help",
+                "zh": "需要帮助"
               },
               {
                 "w": "finding",
@@ -458,30 +450,39 @@
           },
           {
             "en": "\"Actually, I do,\" you say, smiling back.",
-            "zh": "“事实上，我有，”你说，微笑着回应。",
-            "words": []
+            "zh": "\"其实，我确实需要，\"你说，回以微笑。",
+            "words": [
+              {
+                "w": "Actually",
+                "zh": "其实"
+              },
+              {
+                "w": "smiling back",
+                "zh": "回以微笑"
+              }
+            ]
           },
           {
             "en": "Liam guides you to the section, and as you search for the book, you catch sight of his hand, the ink smudging slightly on his skin.",
-            "zh": "利亚姆带你来到那一部分，当你寻找这本书时，你瞥见了他的手，墨水在他皮肤上微微晕开。",
+            "zh": "利亚姆带你到那个区域，当你在找书时，你瞥见他的手，墨水在他皮肤上微微晕开。",
             "words": [
               {
                 "w": "guides",
-                "zh": "引导；带领"
+                "zh": "引导"
               },
               {
                 "w": "catch sight of",
-                "zh": "看见；瞥见"
+                "zh": "瞥见"
               },
               {
                 "w": "smudge",
-                "zh": "污迹；弄脏"
+                "zh": "墨迹晕染"
               }
             ]
           },
           {
             "en": "You reach for the book, your fingers brushing against his.",
-            "zh": "你伸手去拿书，手指轻轻碰到了他的。",
+            "zh": "你伸手去拿书，手指轻轻碰到他的手。",
             "words": [
               {
                 "w": "reach for",
@@ -489,11 +490,7 @@
               },
               {
                 "w": "brush against",
-                "zh": "轻轻碰到"
-              },
-              {
-                "w": "against",
-                "zh": "靠着；接触"
+                "zh": "轻触"
               }
             ]
           },
@@ -502,203 +499,172 @@
             "zh": "有那么一刻，时间仿佛静止了。",
             "words": [
               {
-                "w": "stands still",
-                "zh": "不动；静止"
-              },
-              {
                 "w": "for a moment",
                 "zh": "片刻"
               },
               {
-                "w": "time stands still",
-                "zh": "时间似乎停止"
+                "w": "stands still",
+                "zh": "静止不动"
               }
             ]
           },
           {
             "en": "The library around you fades, and it's just you and Liam, sharing a moment that feels both new and familiar.",
-            "zh": "你周围的图书馆渐渐淡去，只剩下你和Liam，共享一个既新鲜又熟悉的时刻。",
+            "zh": "周围的图书馆渐渐淡出，只剩下你和利亚姆，共享一个既新鲜又熟悉的时刻。",
             "words": [
               {
                 "w": "fades",
                 "zh": "逐渐消失"
               },
               {
-                "w": "share a moment",
-                "zh": "共同经历一段时光"
-              },
-              {
-                "w": "both ... and ...",
-                "zh": "既……又……"
+                "w": "familiar",
+                "zh": "熟悉的"
               }
             ]
           },
           {
             "en": "You must immediately make a choice: follow Ethan, who's waiting with the camera, or continue with Liam, whose warmth is like a beacon in this busy place.",
-            "zh": "你必须立刻做出选择：跟随正在拿着相机等待的伊森，还是继续与像这繁忙场所中灯塔般温暖的利亚姆同行。",
+            "zh": "你必须立刻做出选择：跟随拿着相机等待的伊森，还是继续与利亚姆在一起，他的温暖在这个繁忙的地方如同灯塔一般。",
             "words": [
               {
                 "w": "immediately",
-                "zh": "立刻；马上"
+                "zh": "立刻"
               },
               {
-                "w": "make a choice",
-                "zh": "做选择"
-              },
-              {
-                "w": "beacon",
-                "zh": "灯塔；指引的光"
+                "w": "like a beacon",
+                "zh": "像灯塔一样"
               }
             ]
           },
           {
             "en": "<<",
-            "zh": "<<",
-            "words": []
-          },
-          {
-            "en": "As you ponder your choice, a soft voice draws you back to reality.",
-            "zh": "当你思索自己的选择时，一个轻柔的声音将你拉回现实。",
+            "zh": "当你思索自己的选择时，一个轻柔的声音把你拉回现实。",
             "words": [
               {
                 "w": "ponder",
                 "zh": "仔细思考"
               },
               {
-                "w": "draw ... back to ...",
-                "zh": "把某人拉回到某个地方或状态"
-              },
+                "w": "draw someone back to reality",
+                "zh": "把某人拉回现实"
+              }
+            ]
+          },
+          {
+            "en": "As you ponder your choice, a soft voice draws you back to reality.",
+            "zh": "\"你在找这个吗？\"",
+            "words": [
               {
-                "w": "reality",
-                "zh": "现实世界；真实情况"
+                "w": "look for",
+                "zh": "寻找"
               }
             ]
           },
           {
             "en": "\"Are you looking for this?\"",
-            "zh": "你在找这个吗？",
+            "zh": "诺亚问道，举起了你一直在找的那本书。",
             "words": [
               {
-                "w": "looking for",
-                "zh": "寻找"
+                "w": "hold up",
+                "zh": "举起"
               },
               {
-                "w": "this",
-                "zh": "这个"
+                "w": "search for",
+                "zh": "寻找"
               }
             ]
           },
           {
             "en": "Noah asks, holding up the book you were searching for.",
-            "zh": "诺亚举起你一直在找的那本书，问道。",
+            "zh": "他的眼神充满好奇，你忍不住笑了。",
             "words": [
               {
-                "w": "holding up",
-                "zh": "举起；举起来展示"
+                "w": "be filled with",
+                "zh": "充满"
               },
               {
-                "w": "searching for",
-                "zh": "寻找"
-              },
-              {
-                "w": "were searching for",
-                "zh": "过去进行时（was/were + -ing），表示过去某一时刻正在进行的动作"
+                "w": "can't help but do",
+                "zh": "忍不住做某事"
               }
             ]
           },
           {
             "en": "His eyes are filled with curiosity, and you can't help but smile.",
-            "zh": "他的眼神里满是好奇，你忍不住笑了起来。",
+            "zh": "\"谢谢，诺亚，\"你说，从他手里接过书。",
             "words": [
               {
-                "w": "filled with",
-                "zh": "充满；满溢着（某种情感）"
-              },
-              {
-                "w": "can't help but",
-                "zh": "忍不住；不得不"
-              },
-              {
-                "w": "curiosity",
-                "zh": "好奇心"
+                "w": "take something from someone",
+                "zh": "从某人那里接过某物"
               }
             ]
           },
           {
             "en": "\"Thanks, Noah,\" you say, taking the book from him.",
-            "zh": "你对他说：“谢谢，诺亚。”说着从他手里接过书。",
+            "zh": "你说：“谢谢，诺亚。”说着从他手里接过书。",
             "words": [
               {
-                "w": "saying",
-                "zh": "用现在分词表示同时发生的动作（一边说一边做）"
+                "w": "say",
+                "zh": "说的话；对话中某人的台词"
               },
               {
                 "w": "taking",
-                "zh": "动词 take 的现在分词形式；表示与 say 同时进行的动作"
+                "zh": "take的现在分词；表示同时发生的动作"
               },
               {
                 "w": "from him",
-                "zh": "介词短语：表示来源或出处；此处指从他手中接过来"
+                "zh": "介词短语，表示来源或出处"
               }
             ]
           },
           {
             "en": "\"I didn't see you there.\"",
-            "zh": "我没看见你在那儿。",
+            "zh": "\"诺亚总在这儿，\"利亚姆插话道，一只胳膊搭在你肩上。",
             "words": [
               {
-                "w": "didn't see",
-                "zh": "过去否定的‘see’；表示过去没看到"
+                "w": "interject",
+                "zh": "插话"
               },
               {
-                "w": "there",
-                "zh": "在那里；用来指位置"
+                "w": "slip an arm around someone's shoulder",
+                "zh": "用胳膊搂住某人的肩膀"
               }
             ]
           },
           {
             "en": "\"Noah's always here,\" Liam interjects, slipping an arm around your shoulder.",
-            "zh": "“诺亚一直都在，”利亚姆插嘴道，同时把一只胳膊搭在你的肩上。",
+            "zh": "\"说到电影知识，他就像这所大学的秘密小武器。\"",
             "words": [
               {
-                "w": "interjects",
-                "zh": "插话；插嘴"
+                "w": "when it comes to...",
+                "zh": "关于……"
               },
               {
-                "w": "slip",
-                "zh": "悄悄/轻快地移动到某个位置"
-              },
-              {
-                "w": "around",
-                "zh": "环绕；在……周围"
+                "w": "secret weapon",
+                "zh": "秘密武器（指高手）"
               }
             ]
           },
           {
             "en": "\"He's like the university's little secret weapon when it comes to film knowledge.\"",
-            "zh": "在电影知识方面，他就像是这所大学的一个秘密武器。",
+            "zh": "你轻笑一声，感到一种归属感。",
             "words": [
               {
-                "w": "little secret weapon",
-                "zh": "小而有用的‘秘密武器’"
+                "w": "chuckle",
+                "zh": "轻声笑"
               },
               {
-                "w": "when it comes to",
-                "zh": "当谈到；关于"
-              },
-              {
-                "w": "film knowledge",
-                "zh": "电影知识"
+                "w": "a sense of belonging",
+                "zh": "归属感"
               }
             ]
           },
           {
             "en": "You chuckle, feeling a sense of belonging.",
-            "zh": "你轻笑一声，感到一种归属感。",
+            "zh": "你轻笑，感到一种归属感。",
             "words": [
               {
                 "w": "chuckle",
-                "zh": "轻声笑；轻轻笑"
+                "zh": "轻声笑；不是大笑"
               },
               {
                 "w": "sense of belonging",
@@ -708,123 +674,123 @@
           },
           {
             "en": "The three of you make your way to a quiet corner of the library, where you settle down to study.",
-            "zh": "你们三人来到图书馆的一个安静角落，然后坐下来开始学习。",
+            "zh": "你们三人来到图书馆的一个安静角落，安顿下来开始学习。",
             "words": [
               {
                 "w": "make your way",
-                "zh": "前往（某地）"
+                "zh": "前往"
               },
               {
                 "w": "settle down",
                 "zh": "安顿下来"
               },
               {
-                "w": "to study",
-                "zh": "学习"
+                "w": "corner",
+                "zh": "角落"
               }
             ]
           },
           {
             "en": "The hours pass quickly, filled with laughter and insightful conversations about films and life.",
-            "zh": "时光飞逝，笑声不断，大家畅谈电影与人生。",
+            "zh": "时光飞逝，充满欢笑和关于电影与人生的深刻对话。",
             "words": [
               {
                 "w": "pass quickly",
-                "zh": "过得快"
+                "zh": "很快过去"
               },
               {
                 "w": "filled with",
                 "zh": "充满"
               },
               {
-                "w": "insightful conversations",
-                "zh": "有见地的交谈"
+                "w": "insightful",
+                "zh": "有洞察力的"
               }
             ]
           },
           {
             "en": "As the sun begins to set, casting a golden hue over the campus, you find yourself with a tough decision to make.",
-            "zh": "当太阳开始西沉，给校园镀上一层金色时，你发现自己面临一个艰难的抉择。",
+            "zh": "当太阳开始西沉，给校园披上金色光辉时，你发现自己面临一个艰难的抉择。",
             "words": [
               {
-                "w": "casting",
-                "zh": "投射；使呈现（颜色或光线）"
+                "w": "begins to set",
+                "zh": "开始落下"
               },
               {
-                "w": "golden hue",
-                "zh": "金色的色调"
+                "w": "casting a golden hue",
+                "zh": "洒下金色"
               },
               {
                 "w": "tough decision",
-                "zh": "艰难的决定"
+                "zh": "艰难决定"
               }
             ]
           },
           {
             "en": "Should you join Marcus in the debate society, where you can engage in lively discussions and challenge your own beliefs?",
-            "zh": "如果你加入马库斯所在的辩论社，在那里你可以参与热烈的讨论并挑战你自己的信念，你会怎么做？",
+            "zh": "你应该加入马库斯所在的辩论社吗？在那里你可以参与热烈的讨论并挑战自己的信念。",
             "words": [
               {
-                "w": "join",
-                "zh": "加入（一个团体）"
+                "w": "join ... in ...",
+                "zh": "加入……"
+              },
+              {
+                "w": "debate society",
+                "zh": "辩论社"
               },
               {
                 "w": "engage in",
-                "zh": "参加"
-              },
-              {
-                "w": "lively discussions",
-                "zh": "热烈的讨论"
+                "zh": "参与"
               }
             ]
           },
           {
             "en": "Or should you join Owen in the community room, where you can share your thoughts and feelings in a more intimate setting?",
-            "zh": "或者，你要不要和欧文一起去社区活动室？在那里你可以在一个更私密的氛围中分享你的想法和感受。",
+            "zh": "还是应该加入欧文在社区活动室的活动？在那里你可以在更亲密的氛围中分享你的想法和感受。",
             "words": [
               {
-                "w": "intimate",
-                "zh": "私密的"
+                "w": "community room",
+                "zh": "社区活动室"
               },
               {
-                "w": "setting",
-                "zh": "环境"
+                "w": "share your thoughts",
+                "zh": "分享想法"
               },
               {
-                "w": "share your thoughts and feelings",
-                "zh": "表达你的想法和感受"
+                "w": "intimate setting",
+                "zh": "亲密环境"
               }
             ]
           },
           {
             "en": "The choice is yours, and as you stand at the crossroads, you realize that the true essence of Crestwood University lies not just in its academic rigor, but in the connections you make along the way.",
-            "zh": "选择权在你手中。当你站在十字路口时，你会意识到，Crestwood大学真正的精髓不仅在于其严谨的学术要求，更在于你一路所建立的人脉关系。",
+            "zh": "选择权在你手中，当你站在十字路口时，你会意识到克雷斯特伍德大学的真正精髓不仅在于其学术严谨，更在于沿途建立的人际关系。",
             "words": [
               {
-                "w": "choice",
-                "zh": "决定权"
+                "w": "the choice is yours",
+                "zh": "由你决定"
               },
               {
                 "w": "crossroads",
-                "zh": "岔路口/关键抉择点"
+                "zh": "十字路口"
               },
               {
-                "w": "essence",
-                "zh": "本质/精髓"
+                "w": "academic rigor",
+                "zh": "学术严谨"
               }
             ]
           },
           {
             "en": "Each path offers a different opportunity to grow, to learn, and to fall in love with cinema all over again.",
-            "zh": "每条道路都带来不同的成长机会，让你重新学习并再次爱上电影。",
+            "zh": "每条道路都提供不同的成长、学习和重新爱上电影的机会。",
             "words": [
               {
-                "w": "offers",
-                "zh": "提供"
+                "w": "offers an opportunity",
+                "zh": "提供机会"
               },
               {
-                "w": "opportunity",
-                "zh": "机会"
+                "w": "grow",
+                "zh": "成长"
               },
               {
                 "w": "fall in love with",
