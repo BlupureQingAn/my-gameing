@@ -1,0 +1,14 @@
+{
+  "name": "Rosa",
+  "gender": "女",
+  "role_zh": "Tech Department Head",
+  "age": 32,
+  "appearance_en": "Tall with sleek black hair in a sleek bob, deep green eyes, dressed in professional black suits, exuding a commanding presence.",
+  "personality_zh": "Fiercely intelligent, no-nonsense, with a sharp wit.",
+  "personality_en": "Intelligent and direct, often using concise language to get to the point.",
+  "hobby_en": "Engaging in open-source projects late at night.",
+  "redline_en": "Dislikes complacency and is allergic to flattery.",
+  "soft_en": "Moved by genuine passion and commitment.",
+  "speech_en": "Calls you 'Mr. [Your Last Name]', often with a tone of respect and professionalism.",
+  "relationship_zh": "A challenging yet professional colleague."
+}

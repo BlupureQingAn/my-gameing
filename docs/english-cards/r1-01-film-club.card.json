@@ -194,35 +194,35 @@
       ]
     },
     "first_scene": {
-      "story": " \n\nYou step off the bus, the crisp autumn air greeting you as you walk towards Crestwood University. The film society's festival is fast approaching, and you're filled with anticipation. As you push through the bustling crowd, a warm smile breaks through the noise. \n\n\"Ethan, did you get the camera charged?\" a voice calls out. You turn to see Ethan, his old film camera hanging around his neck, the light reflecting off his tousled hair.\n\n\"Yeah, it's all set,\" you reply, handing him the charger. His eyes meet yours, and for a moment, the world around you fades away. You both share a knowing smile, the start of a connection that feels just right.\n\nContinuing on, you find yourself at the library, the scent of old books mingling with the faint smell of coffee. You're searching for a book on classic cinema when you bump into Liam. He's surrounded by stacks of papers, a pen in hand, marking up a script.\n\n\"Hey there, [Your Name]!\" Liam greets you with a wide grin. \"Need some help finding that book?\"\n\n\"Actually, I do,\" you say, smiling back. Liam guides you to the section, and as you search for the book, you catch sight of his hand, the ink smudging slightly on his skin.\n\nYou reach for the book, your fingers brushing against his. For a moment, time stands still. The library around you fades, and it's just you and Liam, sharing a moment that feels both new and familiar.\n\nYou must immediately make a choice: follow Ethan, who's waiting with the camera, or continue with Liam, whose warmth is like a beacon in this busy place.\n\n<<\nAs you ponder your choice, a soft voice draws you back to reality. \"Are you looking for this?\" Noah asks, holding up the book you were searching for. His eyes are filled with curiosity, and you can't help but smile.\n\n\"Thanks, Noah,\" you say, taking the book from him. \"I didn't see you there.\"\n\n\"Noah's always here,\" Liam interjects, slipping an arm around your shoulder. \"He's like the university's little secret weapon when it comes to film knowledge.\"\n\nYou chuckle, feeling a sense of belonging. The three of you make your way to a quiet corner of the library, where you settle down to study. The hours pass quickly, filled with laughter and insightful conversations about films and life.\n\nAs the sun begins to set, casting a golden hue over the campus, you find yourself with a tough decision to make. Should you join Marcus in the debate society, where you can engage in lively discussions and challenge your own beliefs? Or should you join Owen in the community room, where you can share your thoughts and feelings in a more intimate setting?\n\nThe choice is yours, and as you stand at the crossroads, you realize that the true essence of Crestwood University lies not just in its academic rigor, but in the connections you make along the way. Each path offers a different opportunity to grow, to learn, and to fall in love with cinema all over again.\n>>",
+      "story": "You step off the university bus, the crisp autumn air wrapping around you as you make your way to Crestwood University. The vibrant campus buzzes with the energy of students, and you feel a mix of excitement and nerves as you approach the film society's meeting spot.\n\nYou arrive just in time, and the room is already buzzing with activity. Ethan, the film society's president, is setting up the projector with a gentle smile. \"Hi, Sophia Chen! Are you new to the society?\" he asks, his voice warm and inviting.\n\n\"Hi, yes, I am,\" you respond, feeling a wave of relief that you've already found a friendly face.\n\nJust then, Liam, the basketball team captain, bursts into the room, his hair slightly mussed from a game. \"Hey there, Sophia Chen! I see you've got a new friend,\" he says with a playful grin, his eyes twinkling with mischief.\n\nThe two of them seem to be the life of the party, and you find yourself drawn into their conversation. Ethan points to a stack of film posters on the wall. \"Have you seen this new movie that's been getting a lot of buzz? I think it might be perfect for our festival.\"\n\nLiam nods eagerly. \"I heard about it. We should definitely include it in the lineup. But, hey, Sophia Chen, what's your take on it?\"\n\nYour heart races a bit at the mention of your name, but you manage to gather your thoughts. \"I think it has a lot of potential. It's a little different from what we usually showcase, but I think it would be a refreshing change.\"\n\nThe conversation flows effortlessly, and you feel a genuine connection with both Ethan and Liam. As the meeting progresses, you realize that you're not just here to watch films; you're here to find your place in this vibrant community.\n\nThe clock on the wall ticks ominously, and the meeting is about to end. You look around the room, the warm smiles of your new friends still fresh in your mind. As you stand up to leave, Ethan turns to you, his eyes filled with curiosity. \"Do you think you'll join us for the festival planning sessions?\"\n\nThe question hangs in the air, and you feel a sudden jolt of excitement. You must immediately make a choice: will you dive into the world of film with Ethan and Liam, or will you keep your options open?",
       "options": [
         {
-          "text": "Ask Ethan about his camera",
+          "text": "Ask Ethan about his favorite film",
           "love": "flirt",
           "target": "Ethan"
         },
         {
-          "text": "Tease Liam about his ink smudges",
+          "text": "Tease Liam about his basketball skills",
           "love": "tease",
           "target": "Liam"
         },
         {
-          "text": "Join Marcus in the debate society",
-          "love": "neutral",
-          "target": "Marcus"
-        },
-        {
-          "text": "Offer to help Noah find a book",
+          "text": "Compliment Noah on his insightful ideas",
           "love": "kind",
           "target": "Noah"
+        },
+        {
+          "text": "Politely decline and say you need time to think",
+          "love": "neutral",
+          "target": "Ethan"
         }
       ],
       "bilingual": {
         "v": 1,
         "lines": [
           {
-            "en": "You step off the bus, the crisp autumn air greeting you as you walk towards Crestwood University.",
-            "zh": "你从公交车上下来，清新的秋日空气迎面而来，你朝常青藤大学走去。",
+            "en": "You step off the university bus, the crisp autumn air wrapping around you as you make your way to Crestwood University.",
+            "zh": "你从大学巴士上下来，清爽的秋日空气裹着你，朝着Crestwood大学走去。",
             "words": [
               {
                 "w": "step off",
@@ -230,581 +230,467 @@
               },
               {
                 "w": "crisp",
-                "zh": "清爽的"
+                "zh": "清新的；凉爽的"
               },
               {
-                "w": "greeting",
-                "zh": "迎接"
+                "w": "wrap around",
+                "zh": "环绕"
               }
             ]
           },
           {
-            "en": "The film society's festival is fast approaching, and you're filled with anticipation.",
-            "zh": "电影学会的电影节很快就要到了，你满心期待。",
+            "en": "The vibrant campus buzzes with the energy of students, and you feel a mix of excitement and nerves as you approach the film society's meeting spot.",
+            "zh": "充满活力的校园里洋溢着学生们的朝气，当你走近电影社团的聚会地点时，既兴奋又紧张。",
             "words": [
               {
-                "w": "fast approaching",
-                "zh": "很快到来"
+                "w": "vibrant",
+                "zh": "充满活力的"
               },
               {
-                "w": "filled with anticipation",
-                "zh": "充满期待"
+                "w": "buzzes with",
+                "zh": "充满……的活动"
+              },
+              {
+                "w": "mix of...and...",
+                "zh": "……和……的混合"
               }
             ]
           },
           {
-            "en": "As you push through the bustling crowd, a warm smile breaks through the noise.",
-            "zh": "当你挤过熙攘的人群时，一抹温暖的微笑穿透喧嚣。",
+            "en": "You arrive just in time, and the room is already buzzing with activity.",
+            "zh": "你刚好及时赶到，房间里已经热闹起来。",
             "words": [
               {
-                "w": "push through",
-                "zh": "用力穿过；挤过"
+                "w": "just in time",
+                "zh": "刚好及时"
               },
               {
-                "w": "bustling",
-                "zh": "热闹的；繁忙的"
-              },
-              {
-                "w": "breaks through",
-                "zh": "冲破；显现"
+                "w": "buzzing with",
+                "zh": "充满活动"
               }
             ]
           },
           {
-            "en": "\"Ethan, did you get the camera charged?\" a voice calls out.",
-            "zh": "“伊森，你把相机充好电了吗？”一个声音喊道。",
+            "en": "Ethan, the film society's president, is setting up the projector with a gentle smile.",
+            "zh": "电影社团的社长伊森正带着温和的微笑在调试投影仪。",
             "words": [
               {
-                "w": "get ... charged",
-                "zh": "给……充满电"
+                "w": "president",
+                "zh": "社长；主席"
               },
               {
-                "w": "calls out",
-                "zh": "大声喊；呼喊"
+                "w": "set up",
+                "zh": "安装；设置"
+              },
+              {
+                "w": "gentle smile",
+                "zh": "温和的微笑"
               }
             ]
           },
           {
-            "en": "You turn to see Ethan, his old film camera hanging around his neck, the light reflecting off his tousled hair.",
-            "zh": "你转过身，看见伊森——他脖子上挂着那台旧胶片相机，阳光在他凌乱的头发上闪烁。",
+            "en": "\"Hi, Sophia Chen!",
+            "zh": "嗨，Sophia Chen！",
             "words": [
               {
-                "w": "hang around",
-                "zh": "挂在……周围"
+                "w": "Hi",
+                "zh": "嗨"
               },
               {
-                "w": "reflecting off",
-                "zh": "从……反射/映出"
-              },
-              {
-                "w": "tousled",
-                "zh": "（头发）乱蓬蓬的"
+                "w": "Sophia Chen",
+                "zh": "人名；保留原样"
               }
             ]
           },
           {
-            "en": "\"Yeah, it's all set,\" you reply, handing him the charger.",
-            "zh": "“是的，都准备好了，”你回答，把充电器递给他。",
+            "en": "Are you new to the society?\" he asks, his voice warm and inviting.",
+            "zh": "\"你是新来的吗？\"他问道，声音温暖而亲切。",
             "words": [
               {
-                "w": "all set",
-                "zh": "准备就绪；都安排好了"
+                "w": "new to",
+                "zh": "不习惯；新手"
               },
               {
-                "w": "charger",
-                "zh": "充电器"
+                "w": "inviting",
+                "zh": "吸引人的；令人愉快的"
               }
             ]
           },
           {
-            "en": "His eyes meet yours, and for a moment, the world around you fades away.",
-            "zh": "他的目光与你相遇，刹那间，你周围的世界渐渐隐去。",
+            "en": "\"Hi, yes, I am,\" you respond, feeling a wave of relief that you've already found a friendly face.",
+            "zh": "\"嗨，是的，我是新来的，\"你回答，感到一阵宽慰，因为你已经找到了一个友好的面孔。",
             "words": [
               {
-                "w": "meet (eyes)",
-                "zh": "（目光）交汇"
+                "w": "respond",
+                "zh": "回应"
               },
               {
-                "w": "for a moment",
-                "zh": "片刻"
+                "w": "wave of relief",
+                "zh": "如释重负的感觉"
               },
               {
-                "w": "fades away",
-                "zh": "逐渐消失"
+                "w": "friendly face",
+                "zh": "友善的人"
               }
             ]
           },
           {
-            "en": "You both share a knowing smile, the start of a connection that feels just right.",
-            "zh": "你们相视一笑，心照不宣，这份联结从一开始就恰到好处。",
+            "en": "Just then, Liam, the basketball team captain, bursts into the room, his hair slightly mussed from a game.",
+            "zh": "就在这时，篮球队队长Liam冲进房间，头发因比赛有些凌乱。",
             "words": [
               {
-                "w": "knowing smile",
-                "zh": "会意的微笑"
+                "w": "bursts into",
+                "zh": "突然闯入"
               },
               {
-                "w": "connection",
-                "zh": "联系；联结"
-              },
-              {
-                "w": "just right",
-                "zh": "恰到好处"
+                "w": "mussed",
+                "zh": "凌乱的"
               }
             ]
           },
           {
-            "en": "Continuing on, you find yourself at the library, the scent of old books mingling with the faint smell of coffee.",
-            "zh": "继续前行，你来到图书馆，旧书的香气与淡淡的咖啡味交织在一起。",
-            "words": [
-              {
-                "w": "mingling",
-                "zh": "混合；交融"
-              },
-              {
-                "w": "faint",
-                "zh": "微弱的；淡淡的"
-              },
-              {
-                "w": "scent",
-                "zh": "气味；香味"
-              }
-            ]
-          },
-          {
-            "en": "You're searching for a book on classic cinema when you bump into Liam.",
-            "zh": "你正在找一本关于经典电影的书，这时你撞见了利亚姆。",
-            "words": [
-              {
-                "w": "searching for",
-                "zh": "寻找"
-              },
-              {
-                "w": "bump into",
-                "zh": "偶遇"
-              },
-              {
-                "w": "classic cinema",
-                "zh": "经典电影"
-              }
-            ]
-          },
-          {
-            "en": "He's surrounded by stacks of papers, a pen in hand, marking up a script.",
-            "zh": "他四周堆满了一摞摞文件，手里拿着一支笔，正在修改剧本。",
-            "words": [
-              {
-                "w": "surrounded by",
-                "zh": "被……包围"
-              },
-              {
-                "w": "stacks of",
-                "zh": "一堆堆的"
-              },
-              {
-                "w": "marking up",
-                "zh": "修改"
-              }
-            ]
-          },
-          {
-            "en": "\"Hey there, [Your Name]!\"",
-            "zh": "\"嘿，[你的名字]！\"",
+            "en": "\"Hey there, Sophia Chen!",
+            "zh": "嘿，Sophia Chen！",
             "words": [
               {
                 "w": "Hey there",
-                "zh": "嗨；你好"
+                "zh": "嗨；用于打招呼的称呼。"
               },
               {
-                "w": "[Your Name]",
-                "zh": "[你的名字]"
+                "w": "there",
+                "zh": "用在问候语中，如‘你好呀’。"
               }
             ]
           },
           {
-            "en": "Liam greets you with a wide grin.",
-            "zh": "利亚姆咧着嘴笑着向你打招呼。",
+            "en": "I see you've got a new friend,\" he says with a playful grin, his eyes twinkling with mischief.",
+            "zh": "\"我看到你已经交到新朋友了，\"他说着露出顽皮的笑容，眼睛里闪烁着淘气的光芒。",
             "words": [
               {
-                "w": "greets",
-                "zh": "向……打招呼"
+                "w": "playful grin",
+                "zh": "顽皮的笑容"
               },
               {
-                "w": "wide grin",
-                "zh": "咧嘴笑"
+                "w": "twinkling",
+                "zh": "闪闪发光"
+              },
+              {
+                "w": "mischievous",
+                "zh": "淘气的"
               }
             ]
           },
           {
-            "en": "\"Need some help finding that book?\"",
-            "zh": "\"需要帮忙找那本书吗？\"",
+            "en": "The two of them seem to be the life of the party, and you find yourself drawn into their conversation.",
+            "zh": "他们俩看起来是派对的灵魂人物，而你发现自己不知不觉就被卷入了他们的谈话。",
             "words": [
               {
-                "w": "need some help",
-                "zh": "需要帮助"
+                "w": "life of the party",
+                "zh": "派对的灵魂人物"
               },
               {
-                "w": "finding",
-                "zh": "寻找"
+                "w": "find oneself",
+                "zh": "发现自己（处于某种状态）"
+              },
+              {
+                "w": "drawn into",
+                "zh": "被卷入"
               }
             ]
           },
           {
-            "en": "\"Actually, I do,\" you say, smiling back.",
-            "zh": "\"其实，我确实需要，\"你说，回以微笑。",
+            "en": "Ethan points to a stack of film posters on the wall.",
+            "zh": "伊森指着墙上一叠电影海报。",
             "words": [
               {
-                "w": "Actually",
-                "zh": "其实"
+                "w": "point to",
+                "zh": "指向；用手指示意位置"
               },
               {
-                "w": "smiling back",
-                "zh": "回以微笑"
+                "w": "a stack of",
+                "zh": "一叠；一堆"
+              },
+              {
+                "w": "film posters",
+                "zh": "电影海报"
               }
             ]
           },
           {
-            "en": "Liam guides you to the section, and as you search for the book, you catch sight of his hand, the ink smudging slightly on his skin.",
-            "zh": "利亚姆带你到那个区域，当你在找书时，你瞥见他的手，墨水在他皮肤上微微晕开。",
+            "en": "\"Have you seen this new movie that's been getting a lot of buzz?",
+            "zh": "你看过这部最近很火的新电影吗？",
             "words": [
               {
-                "w": "guides",
-                "zh": "引导"
+                "w": "buzz",
+                "zh": "热度；大家谈论的兴奋点"
               },
               {
-                "w": "catch sight of",
-                "zh": "瞥见"
+                "w": "getting a lot of buzz",
+                "zh": "变得非常受欢迎并被广泛讨论"
               },
               {
-                "w": "smudge",
-                "zh": "墨迹晕染"
+                "w": "that's been",
+                "zh": "一直在（现在完成时，表示到目前为止持续发生）"
               }
             ]
           },
           {
-            "en": "You reach for the book, your fingers brushing against his.",
-            "zh": "你伸手去拿书，手指轻轻碰到他的手。",
+            "en": "I think it might be perfect for our festival.\"",
+            "zh": "我觉得它可能非常适合我们的节日。",
             "words": [
               {
-                "w": "reach for",
-                "zh": "伸手去拿"
+                "w": "perfect",
+                "zh": "完美的；最合适的"
               },
               {
-                "w": "brush against",
-                "zh": "轻触"
+                "w": "might be",
+                "zh": "可能是"
+              },
+              {
+                "w": "for our festival",
+                "zh": "适合我们的节日"
               }
             ]
           },
           {
-            "en": "For a moment, time stands still.",
-            "zh": "有那么一刻，时间仿佛静止了。",
+            "en": "Liam nods eagerly.",
+            "zh": "利亚姆急切地点了点头。",
             "words": [
               {
-                "w": "for a moment",
-                "zh": "片刻"
+                "w": "nod eagerly",
+                "zh": "急切点头"
               },
               {
-                "w": "stands still",
-                "zh": "静止不动"
+                "w": "nod",
+                "zh": "点头"
               }
             ]
           },
           {
-            "en": "The library around you fades, and it's just you and Liam, sharing a moment that feels both new and familiar.",
-            "zh": "周围的图书馆渐渐淡出，只剩下你和利亚姆，共享一个既新鲜又熟悉的时刻。",
+            "en": "\"I heard about it.",
+            "zh": "我听说过这件事。",
             "words": [
               {
-                "w": "fades",
-                "zh": "逐渐消失"
+                "w": "heard about",
+                "zh": "听说；从别人那里得知"
               },
               {
-                "w": "familiar",
-                "zh": "熟悉的"
+                "w": "it",
+                "zh": "它（指上文提到的事）"
               }
             ]
           },
           {
-            "en": "You must immediately make a choice: follow Ethan, who's waiting with the camera, or continue with Liam, whose warmth is like a beacon in this busy place.",
-            "zh": "你必须立刻做出选择：跟随拿着相机等待的伊森，还是继续与利亚姆在一起，他的温暖在这个繁忙的地方如同灯塔一般。",
+            "en": "We should definitely include it in the lineup.",
+            "zh": "我们绝对应该把它列入阵容。",
+            "words": [
+              {
+                "w": "definitely",
+                "zh": "肯定；无疑"
+              },
+              {
+                "w": "include ... in the lineup",
+                "zh": "把……列入名单"
+              },
+              {
+                "w": "lineup",
+                "zh": "阵容；名单"
+              }
+            ]
+          },
+          {
+            "en": "But, hey, Sophia Chen, what's your take on it?\"",
+            "zh": "不过，嘿，Sophia Chen，你怎么看？",
+            "words": [
+              {
+                "w": "what's your take on",
+                "zh": "你对……的看法"
+              },
+              {
+                "w": "hey",
+                "zh": "喂（引起注意）"
+              }
+            ]
+          },
+          {
+            "en": "Your heart races a bit at the mention of your name, but you manage to gather your thoughts.",
+            "zh": "一听到你的名字，你的心跳就快了一点，但你还是设法让自己冷静下来。",
+            "words": [
+              {
+                "w": "races",
+                "zh": "（心脏）快速跳动"
+              },
+              {
+                "w": "at the mention of",
+                "zh": "一提到……时"
+              },
+              {
+                "w": "gather your thoughts",
+                "zh": "理清思绪；稳住心态"
+              }
+            ]
+          },
+          {
+            "en": "\"I think it has a lot of potential.",
+            "zh": "我觉得它很有潜力。",
+            "words": [
+              {
+                "w": "potential",
+                "zh": "潜力；可能性"
+              },
+              {
+                "w": "have (a lot of) potential",
+                "zh": "有（很大）潜力"
+              }
+            ]
+          },
+          {
+            "en": "It's a little different from what we usually showcase, but I think it would be a refreshing change.\"",
+            "zh": "这和我们平时展示的不太一样，但我觉得会是个让人耳目一新的改变。",
+            "words": [
+              {
+                "w": "showcase",
+                "zh": "向公众展示；展出"
+              },
+              {
+                "w": "refreshing change",
+                "zh": "令人耳目一新的变化"
+              },
+              {
+                "w": "a little",
+                "zh": "有点；稍微"
+              }
+            ]
+          },
+          {
+            "en": "The conversation flows effortlessly, and you feel a genuine connection with both Ethan and Liam.",
+            "zh": "对话自然流畅，你与伊森和利安都有一种真诚的连接感。",
+            "words": [
+              {
+                "w": "flows effortlessly",
+                "zh": "顺畅地进行"
+              },
+              {
+                "w": "genuine connection",
+                "zh": "真实的联系"
+              },
+              {
+                "w": "both ... and ...",
+                "zh": "……和……两者都"
+              }
+            ]
+          },
+          {
+            "en": "As the meeting progresses, you realize that you're not just here to watch films; you're here to find your place in this vibrant community.",
+            "zh": "随着会议的进行，你意识到你不只是来看电影；你是来在这个充满活力的社区中找到自己的位置。",
+            "words": [
+              {
+                "w": "progresses",
+                "zh": "进展、推进"
+              },
+              {
+                "w": "vibrant",
+                "zh": "充满活力的"
+              },
+              {
+                "w": "find your place",
+                "zh": "找到自己的定位"
+              }
+            ]
+          },
+          {
+            "en": "The clock on the wall ticks ominously, and the meeting is about to end.",
+            "zh": "墙上的钟滴答作响，气氛不祥，会议也即将结束。",
+            "words": [
+              {
+                "w": "tick",
+                "zh": "发出短促而规律的声音；常指钟表或心跳"
+              },
+              {
+                "w": "ominously",
+                "zh": "预示凶兆地；不祥地"
+              },
+              {
+                "w": "about to",
+                "zh": "即将；快要"
+              }
+            ]
+          },
+          {
+            "en": "You look around the room, the warm smiles of your new friends still fresh in your mind.",
+            "zh": "你环顾四周，新朋友们温暖的笑容仍在脑海中清晰可见。",
+            "words": [
+              {
+                "w": "look around",
+                "zh": "环视、打量"
+              },
+              {
+                "w": "fresh in your mind",
+                "zh": "记忆犹新"
+              }
+            ]
+          },
+          {
+            "en": "As you stand up to leave, Ethan turns to you, his eyes filled with curiosity.",
+            "zh": "当你起身准备离开时，伊森转向你，眼中满是好奇。",
+            "words": [
+              {
+                "w": "stand up",
+                "zh": "站起来"
+              },
+              {
+                "w": "turns to",
+                "zh": "转向"
+              },
+              {
+                "w": "filled with curiosity",
+                "zh": "充满好奇"
+              }
+            ]
+          },
+          {
+            "en": "\"Do you think you'll join us for the festival planning sessions?\"",
+            "zh": "你觉得你会来参加我们的节日策划会吗？",
+            "words": [
+              {
+                "w": "join us",
+                "zh": "加入我们；一起来"
+              },
+              {
+                "w": "planning sessions",
+                "zh": "策划会议/讨论会"
+              }
+            ]
+          },
+          {
+            "en": "The question hangs in the air, and you feel a sudden jolt of excitement.",
+            "zh": "这个问题悬在空气中，你感到一阵突如其来的兴奋。",
+            "words": [
+              {
+                "w": "hangs in the air",
+                "zh": "悬而未决；弥漫的氛围"
+              },
+              {
+                "w": "jolt of excitement",
+                "zh": "一阵激动的猛然袭来"
+              }
+            ]
+          },
+          {
+            "en": "You must immediately make a choice: will you dive into the world of film with Ethan and Liam, or will you keep your options open?",
+            "zh": "你必须立刻做出选择：是和伊森、利亚姆一起投身电影的世界，还是先保持观望？",
             "words": [
               {
                 "w": "immediately",
-                "zh": "立刻"
+                "zh": "立刻；马上"
               },
               {
-                "w": "like a beacon",
-                "zh": "像灯塔一样"
-              }
-            ]
-          },
-          {
-            "en": "<<",
-            "zh": "当你思索自己的选择时，一个轻柔的声音把你拉回现实。",
-            "words": [
-              {
-                "w": "ponder",
-                "zh": "仔细思考"
+                "w": "dive into",
+                "zh": "投入；深入"
               },
               {
-                "w": "draw someone back to reality",
-                "zh": "把某人拉回现实"
-              }
-            ]
-          },
-          {
-            "en": "As you ponder your choice, a soft voice draws you back to reality.",
-            "zh": "\"你在找这个吗？\"",
-            "words": [
-              {
-                "w": "look for",
-                "zh": "寻找"
-              }
-            ]
-          },
-          {
-            "en": "\"Are you looking for this?\"",
-            "zh": "诺亚问道，举起了你一直在找的那本书。",
-            "words": [
-              {
-                "w": "hold up",
-                "zh": "举起"
-              },
-              {
-                "w": "search for",
-                "zh": "寻找"
-              }
-            ]
-          },
-          {
-            "en": "Noah asks, holding up the book you were searching for.",
-            "zh": "他的眼神充满好奇，你忍不住笑了。",
-            "words": [
-              {
-                "w": "be filled with",
-                "zh": "充满"
-              },
-              {
-                "w": "can't help but do",
-                "zh": "忍不住做某事"
-              }
-            ]
-          },
-          {
-            "en": "His eyes are filled with curiosity, and you can't help but smile.",
-            "zh": "\"谢谢，诺亚，\"你说，从他手里接过书。",
-            "words": [
-              {
-                "w": "take something from someone",
-                "zh": "从某人那里接过某物"
-              }
-            ]
-          },
-          {
-            "en": "\"Thanks, Noah,\" you say, taking the book from him.",
-            "zh": "你说：“谢谢，诺亚。”说着从他手里接过书。",
-            "words": [
-              {
-                "w": "say",
-                "zh": "说的话；对话中某人的台词"
-              },
-              {
-                "w": "taking",
-                "zh": "take的现在分词；表示同时发生的动作"
-              },
-              {
-                "w": "from him",
-                "zh": "介词短语，表示来源或出处"
-              }
-            ]
-          },
-          {
-            "en": "\"I didn't see you there.\"",
-            "zh": "\"诺亚总在这儿，\"利亚姆插话道，一只胳膊搭在你肩上。",
-            "words": [
-              {
-                "w": "interject",
-                "zh": "插话"
-              },
-              {
-                "w": "slip an arm around someone's shoulder",
-                "zh": "用胳膊搂住某人的肩膀"
-              }
-            ]
-          },
-          {
-            "en": "\"Noah's always here,\" Liam interjects, slipping an arm around your shoulder.",
-            "zh": "\"说到电影知识，他就像这所大学的秘密小武器。\"",
-            "words": [
-              {
-                "w": "when it comes to...",
-                "zh": "关于……"
-              },
-              {
-                "w": "secret weapon",
-                "zh": "秘密武器（指高手）"
-              }
-            ]
-          },
-          {
-            "en": "\"He's like the university's little secret weapon when it comes to film knowledge.\"",
-            "zh": "你轻笑一声，感到一种归属感。",
-            "words": [
-              {
-                "w": "chuckle",
-                "zh": "轻声笑"
-              },
-              {
-                "w": "a sense of belonging",
-                "zh": "归属感"
-              }
-            ]
-          },
-          {
-            "en": "You chuckle, feeling a sense of belonging.",
-            "zh": "你轻笑，感到一种归属感。",
-            "words": [
-              {
-                "w": "chuckle",
-                "zh": "轻声笑；不是大笑"
-              },
-              {
-                "w": "sense of belonging",
-                "zh": "归属感"
-              }
-            ]
-          },
-          {
-            "en": "The three of you make your way to a quiet corner of the library, where you settle down to study.",
-            "zh": "你们三人来到图书馆的一个安静角落，安顿下来开始学习。",
-            "words": [
-              {
-                "w": "make your way",
-                "zh": "前往"
-              },
-              {
-                "w": "settle down",
-                "zh": "安顿下来"
-              },
-              {
-                "w": "corner",
-                "zh": "角落"
-              }
-            ]
-          },
-          {
-            "en": "The hours pass quickly, filled with laughter and insightful conversations about films and life.",
-            "zh": "时光飞逝，充满欢笑和关于电影与人生的深刻对话。",
-            "words": [
-              {
-                "w": "pass quickly",
-                "zh": "很快过去"
-              },
-              {
-                "w": "filled with",
-                "zh": "充满"
-              },
-              {
-                "w": "insightful",
-                "zh": "有洞察力的"
-              }
-            ]
-          },
-          {
-            "en": "As the sun begins to set, casting a golden hue over the campus, you find yourself with a tough decision to make.",
-            "zh": "当太阳开始西沉，给校园披上金色光辉时，你发现自己面临一个艰难的抉择。",
-            "words": [
-              {
-                "w": "begins to set",
-                "zh": "开始落下"
-              },
-              {
-                "w": "casting a golden hue",
-                "zh": "洒下金色"
-              },
-              {
-                "w": "tough decision",
-                "zh": "艰难决定"
-              }
-            ]
-          },
-          {
-            "en": "Should you join Marcus in the debate society, where you can engage in lively discussions and challenge your own beliefs?",
-            "zh": "你应该加入马库斯所在的辩论社吗？在那里你可以参与热烈的讨论并挑战自己的信念。",
-            "words": [
-              {
-                "w": "join ... in ...",
-                "zh": "加入……"
-              },
-              {
-                "w": "debate society",
-                "zh": "辩论社"
-              },
-              {
-                "w": "engage in",
-                "zh": "参与"
-              }
-            ]
-          },
-          {
-            "en": "Or should you join Owen in the community room, where you can share your thoughts and feelings in a more intimate setting?",
-            "zh": "还是应该加入欧文在社区活动室的活动？在那里你可以在更亲密的氛围中分享你的想法和感受。",
-            "words": [
-              {
-                "w": "community room",
-                "zh": "社区活动室"
-              },
-              {
-                "w": "share your thoughts",
-                "zh": "分享想法"
-              },
-              {
-                "w": "intimate setting",
-                "zh": "亲密环境"
-              }
-            ]
-          },
-          {
-            "en": "The choice is yours, and as you stand at the crossroads, you realize that the true essence of Crestwood University lies not just in its academic rigor, but in the connections you make along the way.",
-            "zh": "选择权在你手中，当你站在十字路口时，你会意识到克雷斯特伍德大学的真正精髓不仅在于其学术严谨，更在于沿途建立的人际关系。",
-            "words": [
-              {
-                "w": "the choice is yours",
-                "zh": "由你决定"
-              },
-              {
-                "w": "crossroads",
-                "zh": "十字路口"
-              },
-              {
-                "w": "academic rigor",
-                "zh": "学术严谨"
-              }
-            ]
-          },
-          {
-            "en": "Each path offers a different opportunity to grow, to learn, and to fall in love with cinema all over again.",
-            "zh": "每条道路都提供不同的成长、学习和重新爱上电影的机会。",
-            "words": [
-              {
-                "w": "offers an opportunity",
-                "zh": "提供机会"
-              },
-              {
-                "w": "grow",
-                "zh": "成长"
-              },
-              {
-                "w": "fall in love with",
-                "zh": "爱上"
-              }
-            ]
-          },
-          {
-            "en": ">>",
-            "zh": "...",
-            "words": [
-              {
-                "w": "...",
-                "zh": "..."
+                "w": "keep your options open",
+                "zh": "保持灵活；不急于决定"
               }
             ]
           }

@@ -3,6 +3,7 @@
 //   2. 剧情壳:love_mode 卡(top-level love_mode/gender_target,structured 含
 //      npcs/love_rules/scenes.heartbeat/world/identity/timeline/scene_style/first_scene{story,options带love+target})
 // 用法: node scripts/love_card_pipeline.mjs [--only r1-01-xxx] [--out docs/english-cards] [--api-key 智谱key]
+//      [--openings-only] 仅重生成已有卡的 first_scene(开场缺陷返修,不动其余字段,需先删 bilingual 重烤)
 // 环境: 模型 glm-4-flash(免费稳定非思考);key 默认读 F:/Claude/zhipu-apikey
 import fs from "node:fs";
 import path from "node:path";
@@ -61,6 +62,39 @@ const TOPICS = [
             Ava: "女篮队长,大二,运动系元气少女,快门永远对不准却最爱按,笑得比取景器还亮",
             Sofia: "校园电台主持人,大二,声音温柔治愈,每周三来社里录采访,耳机里外两个人",
             Grace: "数学系学霸,大二,借相机参数当论文写,天然呆,反差萌,全校社团都挖不动她只留在这里"
+        }
+    },
+    // ---- M5 存量回炉打样:保留原卡题材与基础设定,角色池与剧情链换攻略骨架(PRD §5) ----
+    {
+        slug: "m5-01-first-semester", target: "female", band: "cet4", category: "campus", category_zh: "校园",
+        title_seed: "开学第一周:公寓爆管的临时落脚期与初雪前的校园",
+        premise: "大一女主独自飞越大洋到 Edgewater 大学报到,抵达当晚就撞上住宿变故;开学第一周一边应付课业与生存琐事,一边与校园和镇上的五位男生各自产生交集",
+        setting: "美国东北部虚构小镇 Maple Bay 的 Edgewater University 与镇上(十月初秋,初雪将至)",
+        start: { year: 2026, month: 10, day: 1 },
+        identity: { gender: "女", age: 18, role_seed: "独自飞越大洋入学的大一国际新生,校外租的公寓因水管爆裂暂不能入住" },
+        names: ["Ethan", "Caleb", "Ryan", "Theo", "Nathan"],
+        archetypes: {
+            Ethan: "华裔大二学长兼临时室友,在中餐馆打夜工,话少心细,出门前会默默把热水壶烧上",
+            Caleb: "校报摄影记者,大二,自来熟,爱拉着你跑新闻,把相机塞给你说这次你来按快门",
+            Ryan: "冰球队后卫,小镇本地人,看着粗线条,深夜开车送你回去会等你进屋亮了灯才走",
+            Theo: "心理学大课的助教,研究生,安静毒舌,改作业的红笔比谁都狠,答疑时却极有耐心",
+            Nathan: "镇上旧书店打夜工的艺术生,大三,总在窗边画速写,记得你翻过哪一本书"
+        }
+    },
+    {
+        slug: "m5-02-weekend-win", target: "male", band: "cet6", category: "职场", category_zh: "都市职场",
+        title_seed: "终面周:科技园区里的咖啡、代码与深夜通勤",
+        premise: "刚毕业的男主闯进快速扩张的科技公司 Northgate Labs 的终面周;在通勤、白板面试、深夜路演之间,与公司内外五位女性各自产生交集",
+        setting: "现代都市科技园区与市中心(Northgate Labs 及其周边,虚构)",
+        start: { year: 2026, month: 9, day: 21 },
+        identity: { gender: "男", age: 22, role_seed: "刚毕业的计算机专业学生,正在 Northgate Labs 走终面流程" },
+        names: ["Ava", "Rosa", "Chloe", "Iris", "Selina"],
+        archetypes: {
+            Ava: "人力资源专员,面试流程里的第一张笑脸,专业得体,茶水间里才会露出真实的疲惫",
+            Rosa: "技术部门主管,终面考官之一,代码评审不留情面,深夜却在开源社区用另一个 ID 提交补丁",
+            Chloe: "同批面试的竞争者兼短租邻居,压力之下从对手慢慢变成同盟",
+            Iris: "公司楼下咖啡馆店主,前程序员,每天替你留一杯,记得你面试走到第几轮",
+            Selina: "对面联合办公空间的独立开发者,正在做自己的产品,会对你说你该为自己写代码"
         }
     }
 ];
@@ -187,9 +221,16 @@ async function genText(t, title, chars) {
 
 // ---- 槽位 4:世界元信息 + 心动场景定义 ----
 async function genWorldMeta(t, title, textHead) {
-    const d = await ask(SYS_BASE,
-        `卡《${title}》设定前段:\n${textHead}\n` +
-        `输出单行 JSON:{"world":{"era":"时代/地域一句话(中文)","genre":"题材标签(中文,如:校园恋爱)","summary":"英文 4-6 句世界观综述(纯英文)","rules":"该世界对主角的 3-4 条规则(中文)","atmosphere":"氛围(中文)","vocab":["8 个本卡核心考点词(贴合${t.band})"]},"heartbeats":[{"where":"心动时刻地点(中文)","when":"触发时机/情绪条件(中文)"}]}`, 5000);
+    const HB_WARN = "\n!!!上一次心动场景不足 3 个。必须恰好给 3 个,分别对应五位攻略对象中不同的人与不同场地,禁止只写 1 个或凑数重复!!!";
+    let d = null;
+    for (let i = 0; i < 3; i++) {
+        d = await ask(SYS_BASE,
+            `卡《${title}》设定前段:\n${textHead}\n` +
+            `输出单行 JSON:{"world":{"era":"时代/地域一句话(中文)","genre":"题材标签(中文,如:校园恋爱)","summary":"英文 4-6 句世界观综述(纯英文)","rules":"该世界对主角的 3-4 条规则(中文)","atmosphere":"氛围(中文)","vocab":["8 个本卡核心考点词(贴合${t.band})"]},"heartbeats":[{"where":"心动时刻地点(中文)","when":"触发时机/情绪条件(中文)"}]}\n` +
+            `heartbeats 必须恰好 3 个(攻略卡的核心心动节点):地点与情绪条件各不相同,覆盖不同攻略对象与不同场地。` + (i > 0 ? HB_WARN : ""), 5000);
+        if (Array.isArray(d?.heartbeats) && d.heartbeats.length >= 3) break;
+        console.log("  heartbeats " + (Array.isArray(d?.heartbeats) ? d.heartbeats.length : 0) + " 个,重问…");
+    }
     return d;
 }
 
@@ -202,31 +243,55 @@ async function genIdentity(t, title, textHead) {
 }
 
 // ---- 槽位 6:开场(双语 story 围栏 + options JSON 带 love 标签与 target) ----
-async function genFirstScene(t, title, text, chars) {
+const storyWords = (s) => String(s || "").split(/\s+/).filter(Boolean).length;
+// 开场越界检测:①正文出现 "1." "2." 编号行;②写出了"决定已做出"式收束 —— 两者都等于把选项/选择后果写进了正文(开场必须停在选择前)
+const storyOvershoot = (s) => /(^|\n)\s*\d+\s*[.)、]\s+\S/.test(String(s || "")) ||
+    /\b(decision|choice)\b[^.!?]{0,24}\balready (?:been )?(?:made|decided)\b/i.test(String(s || ""));
+async function genFirstScene(t, title, text, chars, playerName) {
     const base = `卡《${title}》完整设定:\n${text.slice(0, 4600)}\n`;
-    let story = await genEnBlock("fs", (warn) => askText(SYS_TEXT,
-        base +
-        `写开场故事:开始于设定时间点前几分钟,第二人称 you,现在时,340-420 词,停在「你必须立刻做选择」的节骨眼,不展开后续。` +
-        `开场要让玩家与至少 2 位攻略对象${t.names[0]}/${t.names[1]}自然相遇(可按名字写,${t.names[0]}${t.names[1]}必须真人出场且有台词)。` +
-        warn +
-        `句长 8-15 词为主,对话自然,营造心动感的画面细节。`, 9000));
-    const w0 = story.split(/\s+/).length;
-    if (w0 < 300) {
-        console.log("  fs " + w0 + " 词不足,补写…");
-        const add = await askText(SYS_TEXT,
-            base + `上面这份开场草稿还不够长(才 ${w0} 词)。请补写续段直接接在草稿末尾(从草稿最后一句话之后继续,不要重复),使总长达到 380-440 词。\n草稿原文:\n${story}\n输出格式:仅围栏包裹的续段内容。`, 9000);
-        story = story + "\n\n" + add;
+    const roleLines = Array.isArray(chars) ? chars.filter((c) => c && c.name).map((c) => `- ${c.name}:${String(c.role_zh || c.role || "").slice(0, 60)}`).join("\n") : "";
+    const SPEC = `写开场故事:全程第二人称——叙述句主语一律是 you,严禁用第三人称讲述主角("She steps into…"这类句子整段作废)。开始于设定时间点前几分钟,现在时,340-420 词,停在「你必须立刻做选择」的节骨眼,不展开后续。` +
+        `开场要让玩家与至少 2 位攻略对象${t.names[0]}/${t.names[1]}自然相遇(可按名字写,${t.names[0]}${t.names[1]}必须真人出场且有台词)。\n` +
+        (roleLines ? `出场角色身份(严禁写错身份:面试官别写成同批竞争者、店员别写成同事):\n${roleLines}\n` : "") +
+        (playerName ? `主角名字是 ${playerName}:只允许出现在别人对主角的称呼里(如 "Hi, ${playerName}!"),叙述句里一律用 you。\n` : "") +
+        `句长 8-15 词为主,对话自然,营造心动感的画面细节。`;
+    const BAN = `\n!!!硬性禁止(违反即整段作废):①正文严禁出现任何选项行——不得写 "1." "2." 这类编号;②严禁写任何一个选择的后果或选择之后的剧情,也不准交代"你已经做出决定"——必须在悬念处戛然而止;③总词数不得超过 460;④严禁方括号占位符(如 [Your Last Name]),姓氏/称呼必须写实或直接省略;⑤严禁第三人称叙述主角,叙述句主语只能是 you。`;
+    let story = "";
+    for (let round = 0; round < 3; round++) {
+        story = await genEnBlock(round ? "fs重写" : "fs", (warn) => askText(SYS_TEXT,
+            base + SPEC + (round ? BAN + `重写一个全新的开场,不要沿用上一版措辞。` : "") + warn, 9000));
+        let w = storyWords(story);
+        // 只偏短时补写:严格限定"同一时刻"的细节,禁止顺势推进剧情(旧版补写会写到选择之后,是本管线最大坑)
+        if (w < 300) {
+            console.log("  fs " + w + " 词不足,补写同刻细节…");
+            const add = await askText(SYS_TEXT,
+                base + `下面这份开场草稿还不够长(才 ${w} 词)。请只补写 100-150 词,接在草稿最后一句话之后(不要重复已有内容)。` +
+                `补写内容必须是【同一时刻】的更多环境细节或在场角色的更多对话——严禁推进剧情、严禁写出任何选择的后果、严禁出现 "1." "2." 编号选项行。` +
+                `补完总长应落在 380-440 词。\n草稿原文:\n${story}\n输出格式:仅围栏包裹的续段内容。`, 9000);
+            story = story + "\n\n" + add; w = storyWords(story);
+        }
+        const bad = w < 300 || w > 500 || storyOvershoot(story);
+        if (!bad) break;
+        console.log(`  fs 第 ${round + 1} 版不合格(${w} 词,越界=${storyOvershoot(story)}),整段重写…`);
+        if (round === 2) console.log("  ⚠ fs 三次仍不合格,按现状继续(需人工复核)");
     }
+    // 围栏残渣:模型偶尔在正文首尾留下 >> / << 单侧标记(stripFences 只处理成对围栏)
+    story = story.replace(/^[\s<>:]+/, "").replace(/[\s<>:]+$/, "");
     // options:带 love 标签(结算)+ target(作用对象),开场须 ≥2 正向(flirt/kind);模型偶尔漏 love 字段 → 渐进警告重问
     let options = [];
     const posN = (arr) => arr.filter((o) => o.love === "flirt" || o.love === "kind").length;
+    // 选项文字若点名了某攻略对象,该名字必须就是 target(防"文字写 Chloe、target 填 Ava"式错配)
+    const optBad = (arr) => arr.some((o) => {
+        const ns = t.names.filter((n) => new RegExp("\\b" + n + "\\b", "i").test(o.text || ""));
+        return ns.length > 0 && !ns.includes(o.target);
+    });
     const optPrompt = (warn, extra) => `开场故事节选:\n${story.slice(0, 2400)}\n` +
         `为这个开场设计 4 个可行动选项。每条一个 JSON 对象 {"text":"英文行动 4-10 词(具体行动,非是/否,you 视角)","love":"${LOVE_TAGS.join("/")} 之一","target":"该选项主要影响的对象:必须来自名单 ${t.names.join("/")} 之一"}\n` +
-        `love 分布要求:至少 2 条正向(flirt 或 kind),1 条 tease/neutral,1 条由你按剧情定;target 建议 2 条给 ${t.names[0]}、1 条给 ${t.names[1]}。` +
+        `love 分布要求:至少 2 条正向(flirt 或 kind),1 条 tease/neutral,1 条由你按剧情定;target 优先给开场故事里已出场的角色(建议 ${t.names[0]}/${t.names[1]} 各 1-2 条),最多 1 条给未出场角色。` +
         `love 与 target 字段是必填的,禁止省略、禁止拼写错误、禁止使用名单外的 target。\n` +
         `输出单行 JSON:{"options":[…]} (text 必须 100% 纯英文)` + warn + (extra || "");
-    for (let i = 0; i < 5 && (options.length < 4 || posN(options) < 2); i++) {
-        const extra = i === 0 ? "" : "\n!!!上一轮不合格(选项不足 4 条、或正向 flirt/kind 不足 2 条、或 love/target 字段缺失)。请重新输出完整的 4 条,每条的 love 必须显式给出且 target 必须在名单内!!!";
+    for (let i = 0; i < 5 && (options.length < 4 || posN(options) < 2 || optBad(options)); i++) {
+        const extra = i === 0 ? "" : "\n!!!上一轮不合格(选项不足 4 条、或正向 flirt/kind 不足 2 条、或 love/target 字段缺失、或选项文字点名的角色与 target 不一致)。请重新输出完整的 4 条,每条的 love 必须显式给出且 target 必须在名单内,文字里点到谁的名字 target 就必须是谁!!!";
         const raw = await askText(SYS_TEXT, base + optPrompt(i >= 2 ? EN_WARN : "", extra), 2500);
         const m = raw.match(/\{[\s\S]*\}/);
         try {
@@ -240,7 +305,7 @@ async function genFirstScene(t, title, text, chars) {
                 })).filter((o) => o.text && cjkCount(o.text) === 0);
             } else { options = []; }
         } catch (e) { console.log("  opts JSON 解析失败,重问…(" + String(e).slice(0, 60) + ")"); options = []; }
-        console.log("  opts " + options.length + " 条(正向 " + posN(options) + ")" + (options.length < 4 || posN(options) < 2 ? ",重问…" : ""));
+        console.log("  opts " + options.length + " 条(正向 " + posN(options) + ")" + (options.length < 4 || posN(options) < 2 || optBad(options) ? ",重问…" : ""));
     }
     return { story, options: options.slice(0, 4) };
 }
@@ -315,7 +380,7 @@ async function genOne(t) {
         }
     }));
     console.log(`[${t.slug}] T5 开场…`);
-    const fs1 = await genFirstScene(t, meta.title, text, chars);
+    const fs1 = await genFirstScene(t, meta.title, text, chars, ident.name || "");
 
     const structured = {
         band: t.band,
@@ -355,6 +420,25 @@ const only = args.only ? String(args.only) : "";
 const wanted = TOPICS.filter((t) => !only || t.slug === only || t.slug.startsWith(only));
 if (!wanted.length) { console.error("无匹配主题: " + only); process.exit(1); }
 if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
+
+// --openings-only:只对已存在的卡重生成 first_scene(story+options),其余字段原样保留;
+// 清掉陈旧 bilingual(由 prebake_first_scene.mjs 重新预制)。用于开场缺陷返修,避免整卡重产。
+if ("openings-only" in args) {
+    for (const t of wanted) {
+        const f = path.join(OUT_DIR, t.slug + ".card.json");
+        if (!fs.existsSync(f)) { console.log(`✗ ${t.slug}: 卡文件不存在,跳过`); continue; }
+        const card = JSON.parse(fs.readFileSync(f, "utf8"));
+        console.log(`[${t.slug}] 重生成开场(story+options)…`);
+        const fs1 = await genFirstScene(t, card.title, card.text, card.structured.npcs || [], card.structured.identity?.name || "");
+        const w = storyWords(fs1.story);
+        const bad = w < 300 || w > 500 || storyOvershoot(fs1.story) || fs1.options.length < 4;
+        console.log(`${bad ? "✗" : "✓"} ${t.slug} 新开场 ${w} 词 越界=${storyOvershoot(fs1.story)} options ${fs1.options.length} 条` + (bad ? "(未写盘,请重跑)" : ""));
+        if (bad) continue;
+        card.structured.first_scene = { story: fs1.story, options: fs1.options };
+        fs.writeFileSync(f, JSON.stringify(card, null, 2) + "\n", "utf8");
+    }
+    process.exit(0);
+}
 let okN = 0;
 for (const t of wanted) {
     const f = path.join(OUT_DIR, t.slug + ".card.json");
