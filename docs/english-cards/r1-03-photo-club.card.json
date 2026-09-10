@@ -195,559 +195,457 @@
       ]
     },
     "first_scene": {
-      "story": "It's a crisp autumn morning at Crestwood University. As you push open the creaky door to the bustling campus, a sudden burst of excitement surges through you. Today is the first day of the club recruitment week, and you're on a mission to find your place among the myriad of possibilities. Your gaze drifts towards the Photography Club booth, and there, surrounded by a sea of students, you spot Lily and Mia.\n\nLily, with her artistic aura and infectious energy, greets you with a warm smile, \"Hey there! Welcome to the Photography Club. I'm Lily. Are you new to the club?\"\n\nHer vibrant eyes lock with yours, and you find yourself drawn in, \"Yeah, I'm interested in photography, and I thought this club might be a great fit.\"\n\nMia, standing nearby with her enigmatic smile, chimes in, \"Nice to meet you too! I'm Mia. Have you ever taken any portrait shots?\"\n\nYou blush slightly, \"I have, but not seriously. I mostly stick to candid photography.\"\n\nLily leans in, \"Well, candid shots have a way of capturing the essence of a moment. Do you want to see my latest street photography? It's been quite an adventure.\"\n\nYou nod eagerly, feeling the stir of anticipation. As Lily and Mia begin to show you their work, you can't help but feel a connection, a shared passion that you must delve into further. Suddenly, the world around you fades away, and it's just the three of you, surrounded by the art and the potential for endless discovery.\n\nYou must immediately make a choice—follow your heart towards the unknown world of photography or take a cautious step back, unsure of the direction this newfound connection might lead you.\n\nThe club room, filled with the scent of coffee and the murmur of conversations, feels like a haven. You spend hours there, exploring the art of photography, your fingers dancing across the dials of a camera, trying to capture the beauty that surrounds you. The friendships you form are as vivid as the images you create, each person adding a unique color to your canvas of life.\n\nOne evening, as the sun sets, casting a golden hue over the campus, you find yourself alone in the club room once more. The silence is deafening, and the darkness seems to whisper secrets. You turn on the lights, and the room comes to life, each corner a story waiting to be told.\n\nLily, Mia, Ava, Sofia, and Grace—they all have their own stories, their own dreams, and their own ways of seeing the world. You find yourself drawn to each one of them, their laughter, their passion, and their unique perspectives. The more you engage with them, the more you realize that photography is not just about capturing light and shadows, but about capturing the essence of human connection.\n\nAs the semester progresses, your relationship with each of them deepens. You share secrets, you share laughter, you share tears, and through it all, you share a common bond—a love for photography that transcends words. Each heartbeat moment becomes a cherished memory, a snapshot of time that you will carry with you forever.\n\nIn the end, you realize that the choice you made that crisp autumn morning was not just about joining a club; it was about embarking on a journey of self-discovery, of finding your place in a world that is as vast and complex as the photographs you hope to create. And as you stand there, alone in the club room, with the world outside a blur of colors and motion, you know that you are exactly where you are meant to be.",
+      "story": "It's the first day of the semester, and the bustling campus of Crestwood University is alive with energy. You, James, are navigating through the sea of students, your heart pounding with excitement for the new semester ahead. As you weave through the crowd, you can't help but notice the vibrant Photography Club booth, adorned with a variety of cameras and photos.\n\nYou approach the booth, where Lily, the club's leader and president of the student council, is busy greeting new members. She has an air of confidence and grace that draws you in.\n\n\"Hi, I'm Lily,\" she says with a warm smile, her eyes scanning the crowd. \"Are you interested in joining the Photography Club?\"\n\nYou nod eagerly, your hands itching to share your passion for capturing moments.\n\n\"Great! I see you have a camera,\" she observes, her gaze lingering on your equipment. \"I'm impressed with your setup.\"\n\nJust then, Mia, an enigmatic senior from the Art Department, joins the conversation. She has a mysterious smile that seems to say there's more to her than meets the eye.\n\n\"Hi, I'm Mia,\" she says, her voice soft yet intriguing. \"I've been following James' work online. It's quite remarkable.\"\n\nMia's words catch you off guard, and you blush slightly. You feel a spark of excitement, knowing that she's taken notice of your photography.\n\n\"Thank you, Mia,\" you reply, trying to keep your composure. \"I'm glad you like it.\"\n\nAs the conversation unfolds, you find yourself drawn to both Lily and Mia, their personalities and passions resonating with you. The booth is filled with the buzz of excitement, but you can't help but feel a sense of anticipation. The semester is just beginning, and you must choose which path to take—will you follow the creative and structured Lily, or the mysterious and artistic Mia?\n\nThe clock ticks, and you realize you must make a decision. You can't have both. As you stand there, surrounded by the vibrant energy of the Photography Club, you know that this choice will shape your semester and beyond.",
       "options": [
         {
-          "text": "Ask Lily about her favorite street photography spots",
+          "text": "Ask Lily about the club's upcoming projects",
           "love": "flirt",
           "target": "Lily"
         },
         {
-          "text": "Compliment Mia on her enigmatic smile",
-          "love": "kind",
+          "text": "Compliment Mia's mysterious smile",
+          "love": "flirt",
           "target": "Mia"
         },
         {
-          "text": "Tease Ava about her energy during the gym session",
+          "text": "Tease Mia about her following your work online",
           "love": "tease",
-          "target": "Ava"
+          "target": "Mia"
         },
         {
-          "text": "Share a joke with Sofia about the darkroom mishap",
-          "love": "neutral",
-          "target": "Sofia"
+          "text": "Tell Lily you're excited to collaborate on a project",
+          "love": "kind",
+          "target": "Lily"
         }
       ],
       "bilingual": {
         "v": 1,
         "lines": [
           {
-            "en": "It's a crisp autumn morning at Crestwood University.",
-            "zh": "在克雷斯伍德大学，这是一个清爽的秋日早晨。",
+            "en": "It's the first day of the semester, and the bustling campus of Crestwood University is alive with energy.",
+            "zh": "这是学期的第一天，Crestwood 大学热闹非凡、充满活力。",
             "words": [
               {
-                "w": "crisp",
-                "zh": "（天气）清新凉爽；清晰提神"
+                "w": "bustling",
+                "zh": "熙熙攘攘；非常繁忙"
               },
               {
-                "w": "autumn morning",
-                "zh": "秋天的早晨"
+                "w": "alive with",
+                "zh": "充满……活力"
               },
               {
-                "w": "Crestwood University",
-                "zh": "克雷斯伍德大学"
+                "w": "semester",
+                "zh": "学期"
               }
             ]
           },
           {
-            "en": "As you push open the creaky door to the bustling campus, a sudden burst of excitement surges through you.",
-            "zh": "当你推开吱呀作响的门，走进热闹的校园时，一阵突如其来的兴奋涌上心头。",
+            "en": "You, James, are navigating through the sea of students, your heart pounding with excitement for the new semester ahead.",
+            "zh": "你，詹姆斯，在学生的人海中穿行，心里因即将到来的新学期而激动得怦怦直跳。",
             "words": [
               {
-                "w": "push open",
-                "zh": "用力推开；强行打开"
+                "w": "navigate through",
+                "zh": "穿过；在……中穿行"
               },
               {
-                "w": "creaky",
-                "zh": "（门等）吱呀作响的"
+                "w": "sea of",
+                "zh": "如海般的（大量）"
               },
               {
-                "w": "burst of excitement",
-                "zh": "一阵兴奋"
+                "w": "pounding",
+                "zh": "（心脏等）怦怦跳"
               }
             ]
           },
           {
-            "en": "Today is the first day of the club recruitment week, and you're on a mission to find your place among the myriad of possibilities.",
-            "zh": "今天是社团招新周的第一天，你要在众多选择中寻找属于自己的位置。",
+            "en": "As you weave through the crowd, you can't help but notice the vibrant Photography Club booth, adorned with a variety of cameras and photos.",
+            "zh": "当你在人群中穿梭时，你不禁会注意到那个充满活力的摄影社团展位，上面装饰着各种各样的相机和照片。",
             "words": [
               {
-                "w": "club recruitment",
-                "zh": "社团招新"
+                "w": "weave through",
+                "zh": "在……中穿行"
               },
               {
-                "w": "myriad",
-                "zh": "大量、无数"
+                "w": "can't help but",
+                "zh": "忍不住"
               },
               {
-                "w": "find your place",
-                "zh": "找到自己的位置"
+                "w": "vibrant",
+                "zh": "充满活力"
               }
             ]
           },
           {
-            "en": "Your gaze drifts towards the Photography Club booth, and there, surrounded by a sea of students, you spot Lily and Mia.",
-            "zh": "你的目光飘向摄影社的摊位，只见那里被学生的人海包围着，你一眼就看到了莉莉和米娅。",
+            "en": "You approach the booth, where Lily, the club's leader and president of the student council, is busy greeting new members.",
+            "zh": "你走近那个摊位，莉莉——俱乐部的负责人兼学生会主席——正忙着迎接新成员。",
             "words": [
               {
-                "w": "drifts towards",
-                "zh": "朝……缓缓移动"
+                "w": "approach",
+                "zh": "靠近；接近"
               },
               {
-                "w": "surrounded by",
-                "zh": "被……包围"
+                "w": "booth",
+                "zh": "摊位；售货亭"
               },
               {
-                "w": "spot",
-                "zh": "发现；认出"
+                "w": "greeting",
+                "zh": "问候；迎接"
               }
             ]
           },
           {
-            "en": "Lily, with her artistic aura and infectious energy, greets you with a warm smile, \"Hey there!",
-            "zh": "莉莉带着艺术气质和感染力十足的活力，微笑着热情地向你打招呼：“嘿！”",
+            "en": "She has an air of confidence and grace that draws you in.",
+            "zh": "她有一种自信而优雅的气质，让人不由自主地被吸引。",
             "words": [
               {
-                "w": "greets you",
-                "zh": "向你打招呼；友好地问候你"
+                "w": "air",
+                "zh": "气质；氛围"
+              },
+              {
+                "w": "draw you in",
+                "zh": "吸引并拉入"
+              },
+              {
+                "w": "confidence",
+                "zh": "自信"
               }
             ]
           },
           {
-            "en": "Welcome to the Photography Club.",
-            "zh": "欢迎来到摄影俱乐部。",
+            "en": "\"Hi, I'm Lily,\" she says with a warm smile, her eyes scanning the crowd.",
+            "zh": "嗨，我叫莉莉，\"她带着温暖的笑容说，眼睛扫视着人群。",
             "words": [
               {
-                "w": "welcome",
-                "zh": "用于迎接来客；回应时说‘不客气’"
+                "w": "with a warm smile",
+                "zh": "带着温暖的笑容"
+              },
+              {
+                "w": "scanning the crowd",
+                "zh": "扫视人群"
+              }
+            ]
+          },
+          {
+            "en": "\"Are you interested in joining the Photography Club?\"",
+            "zh": "你有兴趣加入摄影社吗？",
+            "words": [
+              {
+                "w": "interested in",
+                "zh": "对……感兴趣"
+              },
+              {
+                "w": "joining",
+                "zh": "加入"
               },
               {
                 "w": "Photography Club",
-                "zh": "喜欢拍照的人组成的社团"
+                "zh": "摄影社"
               }
             ]
           },
           {
-            "en": "I'm Lily.",
-            "zh": "我是莉莉。",
-            "words": [
-              {
-                "w": "Lily",
-                "zh": "名字；用于自我介绍"
-              },
-              {
-                "w": "I'm",
-                "zh": "缩写形式，表示“我是”"
-              }
-            ]
-          },
-          {
-            "en": "Are you new to the club?\"",
-            "zh": "你是俱乐部的新成员吗？",
-            "words": [
-              {
-                "w": "new to",
-                "zh": "刚加入；还不熟悉"
-              },
-              {
-                "w": "the club",
-                "zh": "俱乐部"
-              }
-            ]
-          },
-          {
-            "en": "Her vibrant eyes lock with yours, and you find yourself drawn in, \"Yeah, I'm interested in photography, and I thought this club might be a great fit.\"",
-            "zh": "她那双充满活力的眼睛与你的目光相遇，你不由自主地被吸引住了。“是的，我对摄影很感兴趣，而且我觉得这个社团可能非常适合我。”",
-            "words": [
-              {
-                "w": "lock with",
-                "zh": "与……目光交汇"
-              },
-              {
-                "w": "drawn in",
-                "zh": "被吸引"
-              },
-              {
-                "w": "great fit",
-                "zh": "非常合适"
-              }
-            ]
-          },
-          {
-            "en": "Mia, standing nearby with her enigmatic smile, chimes in, \"Nice to meet you too!",
-            "zh": "米娅带着她那神秘的微笑站在一旁，插话道：“我也很高兴认识你！”",
-            "words": [
-              {
-                "w": "chime in",
-                "zh": "突然插话；插嘴"
-              },
-              {
-                "w": "enigmatic",
-                "zh": "神秘的；难以捉摸的"
-              },
-              {
-                "w": "nice to meet you",
-                "zh": "很高兴见到你（初次见面寒暄）"
-              }
-            ]
-          },
-          {
-            "en": "I'm Mia.",
-            "zh": "我是米娅。",
-            "words": [
-              {
-                "w": "I'm",
-                "zh": "我是（I am的缩写）"
-              }
-            ]
-          },
-          {
-            "en": "Have you ever taken any portrait shots?\"",
-            "zh": "你拍过人像吗？",
-            "words": [
-              {
-                "w": "portrait shots",
-                "zh": "人像照片"
-              }
-            ]
-          },
-          {
-            "en": "You blush slightly, \"I have, but not seriously.",
-            "zh": "你微微脸红，\"拍过，但不怎么认真。",
-            "words": [
-              {
-                "w": "blush",
-                "zh": "脸红"
-              }
-            ]
-          },
-          {
-            "en": "I mostly stick to candid photography.\"",
-            "zh": "我主要拍抓拍。",
-            "words": [
-              {
-                "w": "stick to",
-                "zh": "坚持做；专注于"
-              }
-            ]
-          },
-          {
-            "en": "Lily leans in, \"Well, candid shots have a way of capturing the essence of a moment.",
-            "zh": "莉莉凑近身子，\"嗯，抓拍有一种捕捉瞬间精髓的方式。",
-            "words": [
-              {
-                "w": "lean in",
-                "zh": "凑近；身体前倾"
-              }
-            ]
-          },
-          {
-            "en": "Do you want to see my latest street photography?",
-            "zh": "想看看我最新的街头摄影吗？",
-            "words": [
-              {
-                "w": "street photography",
-                "zh": "街头摄影"
-              }
-            ]
-          },
-          {
-            "en": "It's been quite an adventure.\"",
-            "zh": "这趟经历可真是一次冒险。",
-            "words": [
-              {
-                "w": "quite an adventure",
-                "zh": "一次奇妙的经历"
-              }
-            ]
-          },
-          {
-            "en": "You nod eagerly, feeling the stir of anticipation.",
-            "zh": "你急切地点头，感到一阵期待。",
+            "en": "You nod eagerly, your hands itching to share your passion for capturing moments.",
+            "zh": "你急切地点点头，双手痒痒的，恨不得立刻分享你对捕捉瞬间的热情。",
             "words": [
               {
                 "w": "nod eagerly",
-                "zh": "急切地点头"
-              }
-            ]
-          },
-          {
-            "en": "As Lily and Mia begin to show you their work, you can't help but feel a connection, a shared passion that you must delve into further.",
-            "zh": "当莉莉和米娅开始向你展示她们的作品时，你情不自禁地感到一种连接，一种你必须深入探究的共同热情。",
-            "words": [
-              {
-                "w": "can't help but",
-                "zh": "情不自禁；忍不住"
-              }
-            ]
-          },
-          {
-            "en": "Suddenly, the world around you fades away, and it's just the three of you, surrounded by the art and the potential for endless discovery.",
-            "zh": "突然，周围的世界淡去，只剩下你们三人，被艺术和无穷的发现潜力所包围。",
-            "words": [
-              {
-                "w": "fades away",
-                "zh": "逐渐消失；淡去"
-              }
-            ]
-          },
-          {
-            "en": "You must immediately make a choice—follow your heart towards the unknown world of photography or take a cautious step back, unsure of the direction this newfound connection might lead you.",
-            "zh": "你必须立刻做出选择——是追随内心，走向摄影那未知的世界；还是谨慎地退后一步，不确定这段新建立的关系会把你带向何方。",
-            "words": [
-              {
-                "w": "make a choice",
-                "zh": "做决定"
+                "zh": "急切点头"
               },
               {
-                "w": "follow your heart",
-                "zh": "听从内心"
+                "w": "itching to",
+                "zh": "渴望做某事"
               },
               {
-                "w": "newfound connection",
-                "zh": "新建立的关系"
+                "w": "capturing moments",
+                "zh": "捕捉瞬间"
               }
             ]
           },
           {
-            "en": "The club room, filled with the scent of coffee and the murmur of conversations, feels like a haven.",
-            "zh": "俱乐部活动室里弥漫着咖啡的香气和交谈声，让人感到像是一个避风港。",
+            "en": "\"Great!",
+            "zh": "太好了！",
+            "words": [
+              {
+                "w": "Great!",
+                "zh": "用来表达强烈的赞同或兴奋；常见的积极感叹词。"
+              }
+            ]
+          },
+          {
+            "en": "I see you have a camera,\" she observes, her gaze lingering on your equipment.",
+            "zh": "她说道：“我看到你带了相机。”目光在你装备上停留了一会儿。",
+            "words": [
+              {
+                "w": "observes",
+                "zh": "观察/指出；平静地说明"
+              },
+              {
+                "w": "gaze",
+                "zh": "凝视；注视"
+              },
+              {
+                "w": "lingering",
+                "zh": "逗留；徘徊"
+              }
+            ]
+          },
+          {
+            "en": "\"I'm impressed with your setup.\"",
+            "zh": "我对你的配置印象深刻。",
+            "words": [
+              {
+                "w": "impressed",
+                "zh": "对……感到钦佩；常用搭配 be impressed with"
+              },
+              {
+                "w": "setup",
+                "zh": "设备的配置或布置方式"
+              }
+            ]
+          },
+          {
+            "en": "Just then, Mia, an enigmatic senior from the Art Department, joins the conversation.",
+            "zh": "就在这时，来自艺术系的神秘学长米娅加入了谈话。",
+            "words": [
+              {
+                "w": "just then",
+                "zh": "就在那时"
+              },
+              {
+                "w": "enigmatic",
+                "zh": "神秘的"
+              },
+              {
+                "w": "join the conversation",
+                "zh": "加入对话"
+              }
+            ]
+          },
+          {
+            "en": "She has a mysterious smile that seems to say there's more to her than meets the eye.",
+            "zh": "她带着一抹神秘的微笑，仿佛在说：她远不止表面看上去那样。",
+            "words": [
+              {
+                "w": "mysterious",
+                "zh": "不寻常、难以捉摸的"
+              },
+              {
+                "w": "more...than meets the eye",
+                "zh": "表象之下还有更深/隐藏的东西"
+              }
+            ]
+          },
+          {
+            "en": "\"Hi, I'm Mia,\" she says, her voice soft yet intriguing.",
+            "zh": "她说：“嗨，我是米娅。”她的声音轻柔却又引人入胜。",
+            "words": [
+              {
+                "w": "soft yet intriguing",
+                "zh": "轻柔却迷人"
+              },
+              {
+                "w": "yet",
+                "zh": "然而"
+              },
+              {
+                "w": "voice",
+                "zh": "声音"
+              }
+            ]
+          },
+          {
+            "en": "\"I've been following James' work online.",
+            "zh": "我一直在网上关注詹姆斯的作品。",
+            "words": [
+              {
+                "w": "following",
+                "zh": "关注；持续了解"
+              },
+              {
+                "w": "James' work",
+                "zh": "詹姆斯的作品"
+              },
+              {
+                "w": "online",
+                "zh": "在线"
+              }
+            ]
+          },
+          {
+            "en": "It's quite remarkable.\"",
+            "zh": "这相当了不起。",
+            "words": [
+              {
+                "w": "quite remarkable",
+                "zh": "非常出色；很不寻常"
+              },
+              {
+                "w": "remarkable",
+                "zh": "引人注目的；特别的"
+              }
+            ]
+          },
+          {
+            "en": "Mia's words catch you off guard, and you blush slightly.",
+            "zh": "米娅的话让你措手不及，你微微脸红。",
+            "words": [
+              {
+                "w": "catch you off guard",
+                "zh": "让人措手不及"
+              },
+              {
+                "w": "blush slightly",
+                "zh": "微微脸红"
+              }
+            ]
+          },
+          {
+            "en": "You feel a spark of excitement, knowing that she's taken notice of your photography.",
+            "zh": "你感到一阵兴奋，因为你知道她注意到了你的摄影作品。",
+            "words": [
+              {
+                "w": "a spark of excitement",
+                "zh": "一阵兴奋；突如其来的激动感"
+              },
+              {
+                "w": "taken notice of",
+                "zh": "注意到；留意到"
+              },
+              {
+                "w": "photography",
+                "zh": "摄影；拍照"
+              }
+            ]
+          },
+          {
+            "en": "\"Thank you, Mia,\" you reply, trying to keep your composure.",
+            "zh": "你回复道：“谢谢你，米娅。”尽量保持镇定。",
+            "words": [
+              {
+                "w": "keep one's composure",
+                "zh": "保持冷静；稳住情绪"
+              },
+              {
+                "w": "trying to",
+                "zh": "试图；努力做某事"
+              },
+              {
+                "w": "reply",
+                "zh": "回答；回应"
+              }
+            ]
+          },
+          {
+            "en": "\"I'm glad you like it.\"",
+            "zh": "我很高兴你喜欢它。",
+            "words": [
+              {
+                "w": "be glad",
+                "zh": "高兴"
+              },
+              {
+                "w": "like",
+                "zh": "喜欢"
+              }
+            ]
+          },
+          {
+            "en": "As the conversation unfolds, you find yourself drawn to both Lily and Mia, their personalities and passions resonating with you.",
+            "zh": "随着对话展开，你发现自己被莉莉和米娅同时吸引，她们的性格与热情都与你产生了共鸣。",
+            "words": [
+              {
+                "w": "unfolds",
+                "zh": "逐渐发生"
+              },
+              {
+                "w": "drawn to",
+                "zh": "被……吸引"
+              },
+              {
+                "w": "resonate",
+                "zh": "产生共鸣"
+              }
+            ]
+          },
+          {
+            "en": "The booth is filled with the buzz of excitement, but you can't help but feel a sense of anticipation.",
+            "zh": "展位里满是兴奋的嗡嗡声，但你忍不住感到一阵期待。",
             "words": [
               {
                 "w": "filled with",
                 "zh": "充满"
               },
               {
-                "w": "murmur",
-                "zh": "低语；嗡嗡声"
+                "w": "buzz of excitement",
+                "zh": "兴奋的嗡嗡声"
               },
               {
-                "w": "haven",
-                "zh": "避风港"
+                "w": "can't help but",
+                "zh": "忍不住"
               }
             ]
           },
           {
-            "en": "You spend hours there, exploring the art of photography, your fingers dancing across the dials of a camera, trying to capture the beauty that surrounds you.",
-            "zh": "你在那儿一待就是好几个小时，探索摄影的艺术，手指在相机的旋钮上轻快地舞动，试图捕捉环绕在你身边的美。",
+            "en": "The semester is just beginning, and you must choose which path to take—will you follow the creative and structured Lily, or the mysterious and artistic Mia?",
+            "zh": "学期刚开始，你必须选择要走的路——你会跟随有创造力且条理分明的莉莉，还是神秘而富有艺术气息的米娅？",
             "words": [
               {
-                "w": "explore",
-                "zh": "深入了解或学习某事"
+                "w": "semester",
+                "zh": "学期"
               },
               {
-                "w": "dance across",
-                "zh": "在上面轻快移动"
+                "w": "path to take",
+                "zh": "要走的路"
               },
               {
-                "w": "capture",
-                "zh": "记录或拍下（某物）以便保存"
+                "w": "creative and structured",
+                "zh": "有创造力且条理分明"
               }
             ]
           },
           {
-            "en": "The friendships you form are as vivid as the images you create, each person adding a unique color to your canvas of life.",
-            "zh": "你建立的友谊和你创作的图像一样生动，每个人都为你的生命画布增添独特的色彩。",
+            "en": "The clock ticks, and you realize you must make a decision.",
+            "zh": "时钟滴答作响，你意识到自己必须做出决定。",
             "words": [
               {
-                "w": "as vivid as",
-                "zh": "和……一样生动"
+                "w": "tick(s)",
+                "zh": "滴答（响）"
               },
               {
-                "w": "canvas of life",
-                "zh": "生命的画布"
+                "w": "realize",
+                "zh": "意识到"
               },
               {
-                "w": "adding a unique color",
-                "zh": "增添独特色彩"
+                "w": "make a decision",
+                "zh": "做决定"
               }
             ]
           },
           {
-            "en": "One evening, as the sun sets, casting a golden hue over the campus, you find yourself alone in the club room once more.",
-            "zh": "傍晚时分，夕阳西下，给校园镀上一层金色，你又一次独自待在社团活动室里。",
+            "en": "You can't have both.",
+            "zh": "你不能两者都要。",
             "words": [
               {
-                "w": "casting a golden hue",
-                "zh": "投射出金色的光泽"
-              },
-              {
-                "w": "campus",
-                "zh": "校园"
-              },
-              {
-                "w": "find yourself",
-                "zh": "发现自己处于……"
+                "w": "have both",
+                "zh": "两者都要"
               }
             ]
           },
           {
-            "en": "The silence is deafening, and the darkness seems to whisper secrets.",
-            "zh": "寂静震耳欲聋，黑暗仿佛在低语着秘密。",
+            "en": "As you stand there, surrounded by the vibrant energy of the Photography Club, you know that this choice will shape your semester and beyond.",
+            "zh": "当你站在那里，被摄影社充满活力的氛围包围时，你知道这个选择将塑造你这学期乃至更久的未来。",
             "words": [
               {
-                "w": "deafening",
-                "zh": "震耳欲聋的"
+                "w": "vibrant energy",
+                "zh": "充满活力的氛围"
               },
               {
-                "w": "whisper",
-                "zh": "低声说"
+                "w": "shape",
+                "zh": "塑造"
               },
               {
-                "w": "seems to",
-                "zh": "似乎"
-              }
-            ]
-          },
-          {
-            "en": "You turn on the lights, and the room comes to life, each corner a story waiting to be told.",
-            "zh": "你打开灯，房间顿时活了起来，每个角落都藏着一个等待被讲述的故事。",
-            "words": [
-              {
-                "w": "come to life",
-                "zh": "变得生动；活过来"
-              },
-              {
-                "w": "waiting to be told",
-                "zh": "等着被讲述"
-              },
-              {
-                "w": "each corner",
-                "zh": "每个角落"
-              }
-            ]
-          },
-          {
-            "en": "Lily, Mia, Ava, Sofia, and Grace—they all have their own stories, their own dreams, and their own ways of seeing the world.",
-            "zh": "莉莉、米娅、艾娃、索菲亚和格蕾丝——她们每个人都有自己的故事、自己的梦想，以及看待世界的独特方式。",
-            "words": [
-              {
-                "w": "have one's own ...",
-                "zh": "拥有属于自己的……"
-              },
-              {
-                "w": "see the world",
-                "zh": "看世界；理解生活"
-              },
-              {
-                "w": "way(s) of ...ing",
-                "zh": "做某事的方式"
-              }
-            ]
-          },
-          {
-            "en": "You find yourself drawn to each one of them, their laughter, their passion, and their unique perspectives.",
-            "zh": "你发现自己被他们每一个人吸引，无论是他们的笑声、热情还是独特的视角。",
-            "words": [
-              {
-                "w": "find yourself drawn to",
-                "zh": "感到自己被……吸引"
-              },
-              {
-                "w": "laughter",
-                "zh": "笑声"
-              },
-              {
-                "w": "unique perspectives",
-                "zh": "独特视角"
-              }
-            ]
-          },
-          {
-            "en": "The more you engage with them, the more you realize that photography is not just about capturing light and shadows, but about capturing the essence of human connection.",
-            "zh": "你越是深入接触他们，就越会意识到：摄影不只是捕捉光影，更是捕捉人与人之间的情感联结。",
-            "words": [
-              {
-                "w": "engage with",
-                "zh": "与……互动；与……打交道"
-              },
-              {
-                "w": "capture the essence",
-                "zh": "抓住本质；把握精髓"
-              },
-              {
-                "w": "human connection",
-                "zh": "人际联系；情感纽带"
-              }
-            ]
-          },
-          {
-            "en": "As the semester progresses, your relationship with each of them deepens.",
-            "zh": "随着学期的推进，你与他们每个人的关系也在加深。",
-            "words": [
-              {
-                "w": "progresses",
-                "zh": "进展；推进"
-              },
-              {
-                "w": "relationship",
-                "zh": "关系"
-              },
-              {
-                "w": "deepens",
-                "zh": "加深"
-              }
-            ]
-          },
-          {
-            "en": "You share secrets, you share laughter, you share tears, and through it all, you share a common bond—a love for photography that transcends words.",
-            "zh": "你们分享秘密，分享欢笑，也分享泪水；在这一切之中，你们维系着一种共同的纽带——对摄影的热爱，超越言语。",
-            "words": [
-              {
-                "w": "share",
-                "zh": "共用；告诉"
-              },
-              {
-                "w": "transcends",
-                "zh": "超越"
-              },
-              {
-                "w": "bond",
-                "zh": "纽带"
-              }
-            ]
-          },
-          {
-            "en": "Each heartbeat moment becomes a cherished memory, a snapshot of time that you will carry with you forever.",
-            "zh": "每一次心跳都化作珍贵的回忆，成为你将永远珍藏的时光快照。",
-            "words": [
-              {
-                "w": "heartbeat",
-                "zh": "心跳；每一次脉搏"
-              },
-              {
-                "w": "cherished memory",
-                "zh": "被珍视的记忆"
-              },
-              {
-                "w": "snapshot of time",
-                "zh": "时光的快照"
-              }
-            ]
-          },
-          {
-            "en": "In the end, you realize that the choice you made that crisp autumn morning was not just about joining a club; it was about embarking on a journey of self-discovery, of finding your place in a world that is as vast and complex as the photographs you hope to create.",
-            "zh": "最终，你意识到那个清爽秋日清晨所做的选择，不只是加入一个社团；更是踏上一段自我发现的旅程——在这样一个既广阔又复杂的世界中找到自己的位置，就像你所期待创作的照片那样。",
-            "words": [
-              {
-                "w": "in the end",
-                "zh": "最后"
-              },
-              {
-                "w": "crisp autumn morning",
-                "zh": "清爽的秋晨"
-              },
-              {
-                "w": "embark on",
-                "zh": "开始（旅程、计划）"
-              }
-            ]
-          },
-          {
-            "en": "And as you stand there, alone in the club room, with the world outside a blur of colors and motion, you know that you are exactly where you are meant to be.",
-            "zh": "当你独自站在社团活动室里，外面的世界只是一片色彩与动作的模糊光影时，你知道自己此刻所在之处正是该来的地方。",
-            "words": [
-              {
-                "w": "stand there",
-                "zh": "站在那儿"
-              },
-              {
-                "w": "alone",
-                "zh": "独自一人"
-              },
-              {
-                "w": "blur of colors and motion",
-                "zh": "色彩与动作的模糊混合"
+                "w": "and beyond",
+                "zh": "以及更久以后"
               }
             ]
           }

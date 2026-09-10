@@ -1,0 +1,14 @@
+{
+  "name": "Ava",
+  "gender": "女",
+  "role_zh": "Human Resources Specialist",
+  "age": 28,
+  "appearance_en": "Tall with sleek black hair tied in a neat bun, green eyes that shimmer like emeralds, professional attire often in muted tones, exuding a composed yet approachable气质",
+  "personality_zh": "Professional and poised, her smile is the first welcome in the interview process, but only in the staff kitchen does her real fatigue show",
+  "personality_en": "Professional and poised, her tone is always measured and confident, rarely does she let her guard down",
+  "hobby_en": "Enjoying a quiet evening with a good book",
+  "redline_en": "Doesn't appreciate small talk or unprofessional behavior",
+  "soft_en": "Her warmth towards a colleague in need touches her heart deeply",
+  "speech_en": "She calls you 'Mr. [Your Last Name]' with a gentle tone",
+  "relationship_zh": "A professional colleague with a hint of warmth"
+}
