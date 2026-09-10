@@ -1576,7 +1576,7 @@
         #play-love-bar.show { display: flex; }
         .love-npc { display: flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 12px; cursor: pointer; white-space: nowrap; background: color-mix(in srgb, var(--theme-primary) 6%, transparent); border: 1.5px solid transparent; flex: 0 0 auto; }
         .love-npc.active { border-color: color-mix(in srgb, var(--theme-primary) 55%, transparent); }
-        .love-npc .lv-av { width: 26px; height: 26px; border-radius: 50%; overflow: hidden; flex: 0 0 auto; background: #e8d8c8; display: flex; align-items: center; justify-content: center; font-size: .7rem; color: #8a6a4a; }
+        .love-npc .lv-av { width: 48px; height: 64px; border-radius: 10px; overflow: hidden; flex: 0 0 auto; background: #e8d8c8; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: #8a6a4a; }
         .love-npc .lv-av img { width: 100%; height: 100%; object-fit: cover; }
         .love-npc .lv-name { font-size: .72rem; font-weight: 800; color: var(--text); }
         .love-npc .lv-aff { font-size: .62rem; color: var(--text-muted); }
@@ -1597,7 +1597,7 @@
         .heartbeat-card .hb-close { margin-top: 12px; font-size: .72rem; color: #f4a7c2; cursor: pointer; }
         .lv-pop { position: fixed; z-index: 299999; width: min(300px, 84vw); background: var(--card-bg, #fff); color: var(--text, #333); border-radius: 16px; padding: 14px; box-shadow: 0 14px 44px rgba(0,0,0,.35); border: 1px solid color-mix(in srgb, var(--theme-primary) 25%, transparent); }
         .lv-pop .lvp-head { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
-        .lv-pop .lvp-av { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; background: #e8d8c8; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #8a6a4a; }
+        .lv-pop .lvp-av { width: 56px; height: 75px; border-radius: 10px; overflow: hidden; background: #e8d8c8; flex: 0 0 auto; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #8a6a4a; }
         .lv-pop .lvp-av img { width: 100%; height: 100%; object-fit: cover; }
         .lv-pop .lvp-t { font-weight: 900; font-size: .92rem; }
         .lv-pop .lvp-s { font-size: .7rem; color: var(--text-muted); }
@@ -7933,6 +7933,7 @@ function rebuildChoicesBlock(body, labels = []) {
             HtmlCardService.applyReadableTextColors(card);
             const isTrueChoiceNode = (el) => {
                 if (!(el instanceof HTMLElement)) return false;
+                if (el.closest(".lg-gloss")) return false;   // 句下译卡/选项译卡内部(重试、购买等按钮)永远不算选项:否则点击会被当成选项发送
                 if (el.hasAttribute("data-choice")) return true;
                 if (el.closest(".wy-option-btn, .card-option-btn")) return false; // 选项按钮内部 span(①/文本)不再二次气泡化(按钮自身有 data-choice 已先命中)
                 const tag = el.tagName.toLowerCase();
@@ -22549,7 +22550,12 @@ window.LoveEngine = (() => {
             Array.prototype.forEach.call(box.querySelectorAll("[data-lv-npc]"), (el) => {
                 el.addEventListener("click", (ev) => {
                     ev.stopPropagation();
-                    try { showNpcCard(el, findNpc(state, el.getAttribute("data-lv-npc"))); } catch (e) {}
+                    try {
+                        const npcObj = findNpc(state, el.getAttribute("data-lv-npc"));
+                        const openPop = document.getElementById("lv-pop-el");
+                        if (openPop && npcObj && openPop.getAttribute("data-npc") === String(npcObj.name || "")) { closePop(); return; }
+                        showNpcCard(el, npcObj);
+                    } catch (e) {}
                 });
             });
         } catch (e) { console.warn("[Love] syncBar:", e); }
@@ -22581,6 +22587,7 @@ window.LoveEngine = (() => {
         const el = document.createElement("div");
         el.id = "lv-pop-el";
         el.className = "lv-pop";
+        el.setAttribute("data-npc", String(npc.name || ""));
         el.innerHTML = `<div class="lvp-head"><div class="lvp-av">${av}</div><div><div class="lvp-t">${nm}${isLocked ? " 🔒" : ""}</div>` +
             `<div class="lvp-s">友善 ${esc(String(npc.favor))} · 爱慕 ${esc(String(npc.affection ?? 0))}（${esc(stageOf(npc.affection))}）</div></div></div>` +
             `<div class="lvp-body">${lines || "尚未了解的TA…"}</div>`;
@@ -23606,7 +23613,7 @@ window.LoveEngine = (() => {
             card.id = "lgGestureGuide";
             card.style.cssText = "position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9999;background:rgba(43,33,20,.95);color:#ffe9c9;border:1px solid rgba(255,214,150,.4);border-radius:14px;padding:12px 18px;font-size:13px;line-height:1.9;box-shadow:0 6px 24px rgba(0,0,0,.28);max-width:86vw;text-align:center;touch-action:manipulation";
             card.innerHTML = '<div style="font-weight:bold;font-size:14px;margin-bottom:2px">📖 玩英语剧本小技巧</div>'
-                + '<div>👆 <b>长按</b>英文句子 → 看整句翻译</div>'
+                + '<div>👆 <b>长按</b>英文句子/选项 → 看整句翻译</div>'
                 + '<div>👆 <b>双击</b>单词 → 查词典 / 收藏生词</div>'
                 + '<div style="margin-top:4px;font-size:11px;color:#c8a97e">点一下这条提示即可关闭</div>';
             var closeGuide = function () { try { if (card.parentNode) card.parentNode.removeChild(card); } catch (e) {} };
@@ -24338,10 +24345,10 @@ window.LoveEngine = (() => {
     /* ---- 点击/长按委托(M9C 句长按开译区+单击收起;M9D 词双击查词+滚动关弹层) ---- */
     var lastDbl = { key: "", at: 0 };   // M9D 双击检测(同词 ≤320ms)
     var PRESS_MS = 430;   // M9C 长按阈值
-    var press = { sen: null, x: 0, y: 0, timer: null, fired: false };
+    var press = { sen: null, x: 0, y: 0, timer: null, fired: false, optEl: null };
     function clearPress() {
         if (press.timer) { clearTimeout(press.timer); press.timer = null; }
-        press.sen = null; press.fired = false;
+        press.sen = null; press.fired = false; press.optEl = null;
     }
     function firePress() {
         if (!press.sen) return;
@@ -24349,13 +24356,34 @@ window.LoveEngine = (() => {
         press.fired = true;
         openSen(press.sen);
     }
+    /* 选项长按翻译:首次按下时把选项文案惰性注册成句,复用 openSen/fillGloss 链路(译卡插在选项按钮下方) */
+    function senForOption(el) {
+        var id = Number(el.getAttribute("data-lg-sen") || 0);
+        if (id && sentences[id]) return sentences[id];
+        var tEl = el.querySelector(".wy-opt-text") || el;
+        var t = String(tEl.textContent || "").replace(/\s+/g, " ").trim();
+        for (var k = 0; k < 2; k++) t = t.replace(/^(\d+[.)、]\s*|[①②③④⑤⑥⑦⑧⑨⑩]\s*|【?选项[:：]?\s*\d*】?\s*)/, "");
+        if (!t || !/[A-Za-z]/.test(t)) return null;   // 纯中文选项不走长按翻译
+        var nid = ++senSeq;
+        // hDone=true:选项不做词级切分(免得双击查词与"点选项推进剧情"打架)
+        var sen = { id: nid, text: t, spans: [el], expanded: false, glossEl: null, gotGloss: false, hDone: true };
+        sentences[nid] = sen;
+        el.setAttribute("data-lg-sen", String(nid));
+        return sen;
+    }
     document.addEventListener("pointerdown", function (e) {
         if (!langActive() || !e.target || !e.target.closest) return;
         if (e.pointerType === "mouse" && e.button !== 0) return;   // 忽略右键
         var sEl = e.target.closest(".lg-sentence");
-        if (!sEl) return;
+        var oEl = sEl ? null : (e.target.closest(".lg-gloss") ? null : e.target.closest(".card-option-btn, .wy-option-btn, [data-choice]"));
+        if (!sEl && !oEl) return;
         clearPress();
-        press.sen = sentences[Number(sEl.getAttribute("data-sen"))] || null;
+        if (oEl) {
+            press.sen = senForOption(oEl);
+            press.optEl = press.sen ? oEl : null;
+        } else {
+            press.sen = sentences[Number(sEl.getAttribute("data-sen"))] || null;
+        }
         press.x = e.clientX; press.y = e.clientY;
         press.timer = setTimeout(firePress, PRESS_MS);
     }, true);
@@ -24367,11 +24395,17 @@ window.LoveEngine = (() => {
         if (press.fired) { setTimeout(function () { press.fired = false; }, 600); return; }   // 吞掉长按后的 click
         clearPress();
     }, true);
+    /* 选项长按后的抬起 click:卡片级选项处理器挂在冒泡链前段且会 stopPropagation,必须在捕获阶段先吞掉,防误发"我选择" */
+    document.addEventListener("click", function (e) {
+        if (!press.fired || !press.optEl) return;
+        var t = e.target;
+        if (t && (t === press.optEl || press.optEl.contains(t))) { e.stopPropagation(); e.preventDefault(); }
+    }, true);
     document.addEventListener("pointercancel", clearPress, true);
     window.addEventListener("blur", clearPress, false);
     document.addEventListener("contextmenu", function (e) {
         var t = e.target;
-        if (press.sen && t && t.closest && t.closest(".lg-sentence")) e.preventDefault();   // 长按进行/已触发:禁系统选择菜单
+        if (press.sen && t && t.closest && (t.closest(".lg-sentence") || t.closest(".card-option-btn, .wy-option-btn"))) e.preventDefault();   // 长按进行/已触发:禁系统选择菜单
     }, true);
     /* P1(2026-09-08)小额救急包/会员 CTA:额度用尽弹层直达充值面板 */
     function buyPackFlow() {
