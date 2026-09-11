@@ -1043,8 +1043,9 @@ async function logCoinLedger(env, userId, orderNo, delta, before, after, reason)
 function clipCoverPrompt(s, n) {
     const raw = String(s || "");
     let out = raw.slice(0, n).trim();
-    if (raw.length > n && /\S/.test(raw.charAt(n))) {
-        const cut = out.lastIndexOf(" ");
+    if (raw.length > n) {
+        // 英文按词边界回退;中文提示词无空格,改按中文/英文逗号回退,避免画风词或外貌词被切一半
+        const cut = Math.max(out.lastIndexOf(" "), out.lastIndexOf("，"), out.lastIndexOf(","));
         if (cut > 0) out = out.slice(0, cut).trim();
     }
     return out;
@@ -1938,11 +1939,19 @@ export default {
             if (url.pathname === "/api/cover/generate" && request.method === "POST") {
                 let body = {};
                 try { body = await request.json(); } catch (e) {}
-                const prompt = clipCoverPrompt(body.prompt, 200);
+                const prompt = clipCoverPrompt(body.prompt, 320);
                 if (!prompt) return errorResponse("缺少 prompt", 400, null, "INVALID_PROMPT");
+                // 反向提示词(角色立绘/封面画风用):透传 Agnes 与 Kolors;必须进缓存键,否则不同反向词的图会互相串用
+                const negative = clipCoverPrompt(body.negative, 200);
+                const negKey = negative ? ":n:" + negative : "";
                 // R1 角色立绘:cover 端点复用同通道同密钥,ratio 支持竖版 3:4 半身像/1:1 头像;非 4:3 的键后缀区分,老 4:3 缓存不受影响
                 const ratio = ["3:4", "1:1", "4:3"].indexOf(String(body.ratio || "")) >= 0 ? String(body.ratio) : "4:3";
                 const ratioKey = ratio !== "4:3" ? ":" + ratio : "";
+                // KV key 上限 512 字节(UTF-8)。中文提示词 3 字节/字,带反向词或长中文 prompt 的明文键必超,
+                // 超 400 字节就改 md5 短键;短提示词(线上既有英文封面)仍走明文键,缓存不失效
+                const keyRaw = prompt + ratioKey + negKey;
+                const keyTooLong = new TextEncoder().encode(keyRaw).length > 400;
+                const coverKeyBody = (negative || keyTooLong) ? md5(keyRaw) : keyRaw;
                 const SF_SIZE = { "4:3": "1152x864", "3:4": "864x1152", "1:1": "1024x1024" };
                 // consume=true:自建卡付费生成(100 云币);KV(u:{userId}:cv:{prompt})仅为同一用户同提示词防重复扣费(生成成功后前端保存即入卡数据 coverUrl,数据库永久持有)
                 const consume = body.consume === true;
@@ -1950,7 +1959,7 @@ export default {
                 const now = Date.now();
                 // 非 consume(官方卡读取):免登录直接查缓存——KV 预生成封面是公开数据,token 过期/未登录也应能命中(否则首页封面因 401 全空白)
                 if (!consume) {
-                    const cacheKey = "cv:" + prompt + ratioKey;
+                    const cacheKey = "cv:" + coverKeyBody;
                     const hit = coverCache.get(cacheKey);
                     if (hit && now - hit.ts < 180000) {
                         return new Response(JSON.stringify({ image: hit.image }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
@@ -1969,7 +1978,7 @@ export default {
                 // 走到生成路径才鉴权:consume(扣币)必须登录;pregen(官方卡未命中补生成)确认操作者
                 const auth = await authenticate(env, request);
                 if (auth.error) return auth.error;
-                const cacheKey = (consume ? "u:" + auth.record.id + ":cv:" : "cv:") + prompt + ratioKey;
+                const cacheKey = (consume ? "u:" + auth.record.id + ":cv:" : "cv:") + coverKeyBody;
                 const hit = coverCache.get(cacheKey);
                 if (hit && now - hit.ts < 180000) {
                     return new Response(JSON.stringify({ image: hit.image }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
@@ -1999,6 +2008,8 @@ export default {
                             const r = await fetch("https://apihub.agnes-ai.com/v1/images/generations", {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${agnesKey}` },
+                                // 不给 Agnes 传 negative_prompt:实测其对该字段直接 400(negative_prompt is not allowed),
+                                // 反向词只有 Kolors 认;带反向词的请求请走 provider:"siliconflow"
                                 body: JSON.stringify({ model: "agnes-image-2.1-flash", prompt, size: "1K", ratio, extra_body: { response_format: "url" } }),
                                 signal: ac.signal
                             });
@@ -2032,7 +2043,7 @@ export default {
                         const r = await fetch("https://api.siliconflow.cn/v1/images/generations", {
                             method: "POST",
                             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${sfKey}` },
-                            body: JSON.stringify({ model: "Kwai-Kolors/Kolors", prompt, image_size: SF_SIZE[ratio] || "1152x864", batch_size: 1, response_format: "url" }),
+                            body: JSON.stringify({ model: "Kwai-Kolors/Kolors", prompt, image_size: SF_SIZE[ratio] || "1152x864", batch_size: 1, response_format: "url", ...(negative ? { negative_prompt: negative } : {}) }),
                             signal: ac.signal
                         });
                         const d = await r.json().catch(() => ({}));
