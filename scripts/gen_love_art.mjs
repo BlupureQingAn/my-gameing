@@ -1,40 +1,102 @@
-// R1 M4 角色立绘批量生成:遍历 docs/english-cards/{r1,m5}-*.card.json 的 structured.npcs
-// prompt = 人名 + 性别化固定画风 + npc.appearance(总长≤200,超长按词截断) → /api/cover/generate ratio 3:4(pregen 通道)
-// 画风:女=japanese anime 定稿(小徐 2026-09-10 确认);男=照片级半写实 CG(小徐 2026-09-10 指定)
+// 角色立绘批量生成:遍历 docs/english-cards/{r1,m5}-*.card.json 的 structured.npcs
+// prompt = 人名 + 中文画风词 + NPC 中文外貌标签(总长≤320 字符,超长按逗号边界截断) → /api/cover/generate ratio 3:4(pregen 通道)
+// 反向提示词随 body.negative 透传(worker 侧转给 Agnes/Kolors,并进缓存键)——当前 NEG_ZH 为空,即不传
+// 画风:韩系乙女手游柔光风(小徐 2026-09-11 横评 4 组画风后选定 C,明确"不要任何厚涂");外貌标签见 APPEAR_ZH
 // 产物: scenarios/covers/loveart_{slug}_{npc}.png(全小写下划线);并回填卡 JSON structured.npcs[i].art(https://bitlife.blupure.cn/scenarios/covers/xxx.png)
-// 用法: node F:/Claude/tmp/gen_love_art.mjs <pregenKey> <pbAdminEmail> <pbAdminPassword> [--slug r1-01] [--dry]
+// 用法: node scripts/gen_love_art.mjs <pregenKey> <pbAdminEmail> <pbAdminPassword> [--slug r1-01] [--npc Ethan] [--dry]
+//        [--provider siliconflow] [--outdir <dir>] [--no-refill] [--force]
 import fs from "node:fs";
 import path from "node:path";
 
+const FLAG_KEYS = ["slug", "npc", "provider", "outdir"];
 const args = Object.fromEntries(process.argv.slice(2).flatMap((a, i, arr) =>
     a.startsWith("--") ? [[a.slice(2), arr[i + 1] ?? ""]] : []
-).filter(([k]) => ["slug", "dry"].includes(k)));
-const [pregenKey, pbAdminEmail, pbAdminPassword] = process.argv.slice(2).filter((x) => !x.startsWith("--"));
+).filter(([k]) => FLAG_KEYS.includes(k)));
+const flags = new Set(process.argv.slice(2).filter((a) => a.startsWith("--")).map((a) => a.slice(2)));
+const [pregenKey, pbAdminEmail, pbAdminPassword] = process.argv.slice(2).filter((x) => !x.startsWith("--") && !FLAG_KEYS.some((k) => args[k] === x));
 if (!pregenKey || !pbAdminEmail || !pbAdminPassword) {
-    console.error("用法: node gen_love_art.mjs <pregenKey> <pbAdminEmail> <pbAdminPassword> [--slug r1-01]");
+    console.error("用法: node gen_love_art.mjs <pregenKey> <pbAdminEmail> <pbAdminPassword> [--slug r1-01] [--npc Ethan] [--dry] [--provider siliconflow] [--outdir dir] [--no-refill] [--force]");
     process.exit(1);
 }
 const PB_URL = process.env.PB_URL || "https://db.blupure.cn";
 const API = process.env.COVER_API || "https://ai.blupure.cn/api/cover/generate";
 const CARDS_DIR = "docs/english-cards";
-const OUT_DIR = "scenarios/covers";
+const OUT_DIR = args.outdir || "scenarios/covers";
 const STATIC_BASE = "https://bitlife.blupure.cn/scenarios/covers/";
-const MAX_PROMPT = 200;
-// 女向定稿(jp_anime 样张,小徐 2026-09-10:"女生的挺合适"):不动
-const STYLE_F = "Japanese anime key visual style, clean cel shading, vivid bright colors, large expressive eyes, waist-up bust portrait";
-const SUFFIX_F = ", soft blurred campus background, high quality";
-// 男向新画风(小徐 2026-09-10 指定):照片级半写实 CG + 冷调电影人像光影 + 漫画化精致美少年 + 真人摄影质感/二次元美化五官
-// male/young man 双锚点防性别漂移(旧版无性别锚,多个男角色被画成女生)
-const STYLE_M = "Photorealistic semi-realistic CG, cool cinematic lighting, refined beautiful young man, real-photo texture, anime-refined features, male";
-const SUFFIX_M = ", bust shot";
-const isMaleNpc = (npc) => String((npc && npc.gender) || "").trim() === "男";
+const MAX_PROMPT = 320;
+// 画风定稿(小徐 2026-09-11 五次调整)：韩系乙女手游柔光风
+// 定稿路径：初版 2D 厚涂 → 恋与深空 3D CG(判"五官太丑"推翻) → 回厚涂原画(判"画风整体跑偏") → 4 组画风候选横评 → **选定 C 韩系柔光**
+// 小徐明确指示：不要任何厚涂；露腰不受限
+const STYLE_ZH = "韩系乙女手游插画风格角色立绘，柔和渐变上色，细腻水润的笔触过渡，精致美型五官，柔光打底，通透微微发光的皮肤，发丝柔顺有光泽，唯美柔和氛围，现代都市服装，半身立绘，简约虚化背景，高细节，画面干净通透，高级感";
+// 小徐 2026-09-11 指示"删掉所有负面提示词"→ 停用全部负向词(不传 negative,worker 侧也不带 negative_prompt)
+// 停用会把此前几轮排查积累的漂移一起放回来(3D人偶感/兽耳/胡渣/耳钉纹身/越界瞳色)。若下面这些漂移复现,从 ARCHIVED_NEG_ZH 取回对应词恢复:
+//   反 3D 人偶：3D渲染，人偶，娃娃，塑料皮肤，光滑CG质感，捏脸模型，塑料毛发，强高光糊脸，blender渲染，虚幻引擎，黏土质感
+//   反脏色块：脏脸，暗沉浑浊阴影，糊脸，画面脏污噪点，厚重脏色块，油腻，噪点
+//   反古风漂移：古装，古风服饰，发簪头饰，盔甲
+//   反越界瞳色：琥珀色瞳孔，金色瞳孔，浅褐色瞳孔，紫色瞳孔，红色瞳孔，异色瞳
+//   反男性漂移：胡子，胡渣，络腮胡，女性化，兽耳，猫耳，狼耳，动物耳朵
+//   反多余配饰：眼镜，纹身，耳钉，耳环，唇钉，鼻环
+const ARCHIVED_NEG_ZH = "3D渲染，人偶，娃娃，塑料皮肤，光滑CG质感，捏脸模型，网红统一五官，同质化面部，塑料毛发，强高光糊脸，畸形五官，脏阴影，噪点，油腻，卡通Q版，blender渲染，虚幻引擎，黏土质感，脏脸，暗沉浑浊阴影，糊脸，画面脏污噪点，厚重脏色块，古装，古风服饰，发簪头饰，盔甲，琥珀色瞳孔，金色瞳孔，浅褐色瞳孔，紫色瞳孔，红色瞳孔，异色瞳，胡子，胡渣，络腮胡，女性化，兽耳，猫耳，狼耳，动物耳朵，眼镜，纹身，耳钉，耳环，唇钉，鼻环";
+const NEG_ZH = "";
+// 性别锚点(2026-09-11 打样实测:无锚点时男角色被画成女性——Owen 明显女性化;并加"现代"防 Kolors 中文提示词漂向古风——Noah 出武侠感)
+// 长发型(狼尾/半束辫)会让 Kolors 把男性画成中性脸,补骨骼锚把下颌线拉回来(2026-09-11 二次打样实测)
+const ANCHOR_M = "男性青年，面部骨骼立体，下颌线清晰，";
+const ANCHOR_F = "女性青年，";
+// 构图收束(2026-09-11 打样实测):只靠画风词里的"半身角色原画"会跑到腰臀取景。小徐说露腰不受限,故只锁"半身"不锁腰线
+const FRAME_ZH = "，半身立绘取景，构图完整";
+// NPC 中文外貌标签:由卡 JSON 的英文 appearance 提炼,固定"人种 → 发型 → 瞳色 → 身形 → 服装 → 气质"顺序
+// ①人种逐角色指定(小徐 2026-09-11 定):多数东亚面孔,少数欧亚混血拉开五官差异;写进标签而非公共画风词
+// ②用"瞳色"而非"眼睛"是实测教训:写"深色短发,明亮蓝色眼睛"时模型把"蓝色"串到头发上(Marcus 出了亮蓝发)
+// ③瞳孔只允许黑/蓝/绿三色(小徐 2026-09-11 定):琥珀、浅榛、祖母绿等一律改掉,越界色进 NEG_ZH
+// ④发型只允许取自"热门恋爱游戏角色发型库·现代都市风"章节(小徐 2026-09-11 定),库中古风款一律不用:
+//    男——陆景和款(深棕纹理碎盖)/萧逸款(黑短碎盖)/齐司礼款(长直发低扎半束辫)/沈星回款(中长片状狼尾→写"层次碎发")
+//        /祁煜款(最长狼尾→写"及肩长层次碎发")/莫弈款(偏分微卷短发)/夏以昼款(短款多层狼尾→"短款多层碎发")/查理苏款(偏分短发)
+//        /秦彻款(短碎型狼尾→"短碎型层次碎发")/陆沉款(三七分短发)/祁煜日常款(短款微卷)/黎深款(中长型片状狼尾→"片状层次碎发")/左然款(工整二八分)
+//    女——齐肩锁骨短发/抓发低盘发/侧麻花辫/高扎马尾(库中现代女款仅此4类,多人复用靠发色+气质区分)
+// ⑥"狼尾"三个字必须改写成"层次碎发"(2026-09-11 实测):直接写"狼尾"会让 Kolors 给角色加兽耳
+const APPEAR_ZH = {
+    "r1-01-film-club|Ethan": "东亚面孔，深棕纹理碎盖，发顶蓬松有层次，刘海偏分自然服帖，瞳色黑色，高挑清瘦，穿复古牛仔外套，温和书卷气质",
+    "r1-01-film-club|Liam": "东亚面孔，黑色短碎盖，厚刘海带自然弧度，发顶蓬松有纹理感，鬓角短而利落，瞳色蓝色，健硕高个，穿篮球球衣，阳光少年气质",
+    "r1-01-film-club|Noah": "东亚面孔，黑色长直发，脑后低扎细小半束发辫，额前碎发修饰脸型，长发柔顺垂落肩背，瞳色黑色，清瘦高挑，穿针织开衫内搭白衬衫，知性优雅气质",
+    "r1-01-film-club|Marcus": "欧亚混血面孔，五官立体，深棕近黑中长片状层次碎发，发尾与两侧收得干净利落，线条流畅顺滑，瞳色蓝色，轮廓分明高挑清瘦，穿修身西服，冷峻神秘气质",
+    "r1-01-film-club|Owen": "东亚面孔，浅亚麻棕及肩长层次碎发，发尾自然微卷外翘，慵懒贵气，瞳色绿色，高挑清瘦，穿帆布夹克，宁静艺术气质",
+    "r1-02-aurora-cafe|Julian": "东亚面孔，深棕偏分微卷短发，发卷柔和自然，刘海侧分露出额头，瞳色黑色，高大挺拔，穿针织开衫内搭白衬衫，儒雅学者气质",
+    "r1-02-aurora-cafe|Alex": "东亚面孔，深棕短款多层碎发，两侧发尾自然上翘，层次丰富蓬松，瞳色蓝色，高挑健硕，穿运动健身装，阳光运动气质",
+    "r1-02-aurora-cafe|Daniel": "东亚面孔，浅棕偏分短发，发量浓密有光泽，刘海自然偏分不遮眼，简洁干练，瞳色绿色，高挑清瘦，穿白色医生大褂，温文尔雅气质",
+    "r1-02-aurora-cafe|Leo": "欧亚混血面孔，五官立体，红棕短碎型层次碎发，两侧带自然微卷，发尾凌乱随性，瞳色绿色，高挑清瘦，穿复古乐队T恤，自由不羁气质",
+    "r1-02-aurora-cafe|Kevin": "东亚面孔，深棕三七分短发，刘海梳理服帖，发顶蓬松不贴头皮，鬓角修剪整齐，瞳色蓝色，高挑清瘦，穿合身西服，精致精英气质",
+    "r1-03-photo-club|Lily": "东亚面孔，棕色凌乱感抓发盘发，颅顶蓬松显发量，干练高级，瞳色蓝色，高挑挺拔，穿简约衬衫，干练自信气质",
+    "r1-03-photo-club|Mia": "东亚面孔，深棕单侧三股麻花辫，编发后刻意扯松营造蓬松感，鬓角碎发自然卷翘，瞳色绿色，高挑纤细，穿飘逸衬衫连衣裙，清冷艺术气质",
+    "r1-03-photo-club|Ava": "东亚面孔，红棕清爽高扎马尾，发尾自然垂落，偏分刘海，瞳色绿色，高挑健硕，穿运动休闲装，阳光活力气质",
+    "r1-03-photo-club|Sofia": "欧亚混血面孔，五官立体，浅棕齐肩锁骨短发，发尾微卷蓬松，侧分刘海露出额头，瞳色蓝色，高挑纤细，穿休闲连衣裙，温柔亲和气质",
+    "r1-03-photo-club|Grace": "东亚面孔，黑色齐肩锁骨短发，发尾自然内扣弧度，空气薄刘海，瞳色蓝色，高挑修长，穿白色衬衫配牛仔裤，知性优雅气质",
+    "m5-01-first-semester|Ethan": "东亚面孔，黑色长直发，脑后低扎细小半束发辫，额前碎发修饰脸型，长发柔顺垂落肩背，瞳色黑色，高挑清瘦，穿休闲衬衫，锐利艺术感五官",
+    "m5-01-first-semester|Caleb": "东亚面孔，浅棕短款微卷发，刘海蓬松凌乱带空气感，发尾自然内扣，瞳色蓝色，高挑清瘦，穿时尚夹克，爽朗迷人笑容",
+    "m5-01-first-semester|Ryan": "东亚面孔，深棕中长型片状层次碎发，发顶蓬松利落，两侧碎发收得干净整齐，发尾平直硬朗，瞳色蓝色，高挑健硕，穿厚毛衣，粗犷可靠气质",
+    "m5-01-first-semester|Theo": "欧亚混血面孔，五官立体，深棕近黑工整二八分短发，线条利落，发丝服帖有光泽，瞳色蓝色，高挑清瘦，穿挺括衬衫，冷静神秘气质",
+    "m5-01-first-semester|Nathan": "东亚面孔，棕色及肩长层次碎发，发尾自然微卷外翘，慵懒贵气，瞳色绿色，清瘦高挑，穿印花T恤，艺术神秘气质",
+    "m5-02-weekend-win|Ava": "东亚面孔，黑色凌乱感抓发盘发，颅顶蓬松显发量，冷艳高级，瞳色绿色，高挑，穿素色职业套装，职业干练气质",
+    "m5-02-weekend-win|Rosa": "东亚面孔，黑色齐肩锁骨短发，发尾自然内扣，侧分刘海，瞳色绿色，高挑，穿黑色职业西装，强势统领气场",
+    "m5-02-weekend-win|Chloe": "东亚面孔，深棕清爽高扎马尾，发尾自然垂落，偏分刘海，瞳色黑色，运动型健康身形，穿运动装，活力气质",
+    "m5-02-weekend-win|Iris": "欧亚混血面孔，五官立体，棕色齐肩锁骨短发，发尾微卷蓬松，侧分刘海露出额头，瞳色绿色，高挑纤细，穿职业西装外套，知性自由气质",
+    "m5-02-weekend-win|Selina": "东亚面孔，深棕凌乱感抓发盘发，颅顶蓬松显发量，瞳色黑色，清瘦，穿修身西装外套配牛仔裤，干练时尚气质",
+};
 
+const isMaleNpc = (npc) => String((npc && npc.gender) || "").trim() === "男";
 function slugify(s) { return String(s || "npc").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, ""); }
 function enHead(s, n) {
     const words = String(s || "").split(/\s+/).filter(Boolean);
     let out = "";
     for (const w of words) { if ((out + " " + w).trim().length > n) break; out = (out ? out + " " : "") + w; }
     return out.trim();
+}
+// 中文按逗号边界截断:中文无空格,硬切会把外貌词切一半
+function zhHead(s, n) {
+    const raw = String(s || "").replace(/\s+/g, " ").trim();
+    if (raw.length <= n) return raw;
+    const cut = raw.slice(0, n);
+    const i = Math.max(cut.lastIndexOf("，"), cut.lastIndexOf(","));
+    return (i > 0 ? cut.slice(0, i) : cut).trim();
 }
 
 async function pbJson(url, opts) {
@@ -68,6 +130,7 @@ async function getToken() {
 }
 
 const onlySlug = args.slug ? String(args.slug) : "";
+const onlyNpc = args.npc ? String(args.npc).toLowerCase() : "";
 const cardFiles = fs.readdirSync(CARDS_DIR).filter((f) => /^(r1|m5)-.*\.card\.json$/.test(f) && (!onlySlug || f.startsWith(onlySlug))).sort();
 if (!cardFiles.length) { console.error("无匹配卡:", onlySlug || "r1-*/m5-*"); process.exit(1); }
 
@@ -82,57 +145,69 @@ for (const cf of cardFiles) {
     const filled = [];
     for (const npc of npcs) {
         if (!npc || !npc.name) continue;
+        if (onlyNpc && String(npc.name).toLowerCase() !== onlyNpc) continue;
         const nm = slugify(npc.name);
         const rel = `loveart_${slug}_${nm}.png`;
         const file = path.join(OUT_DIR, rel);
-        if (fs.existsSync(file) && fs.statSync(file).size > 1000) {
+        if (!flags.has("force") && !flags.has("dry") && fs.existsSync(file) && fs.statSync(file).size > 1000) {
             console.log(`SKIP ${rel} 已存在`);
             filled.push({ name: npc.name, art: STATIC_BASE + rel });
             skipped++;
             continue;
         }
-        const male = isMaleNpc(npc);
-        const STYLE = male ? STYLE_M : STYLE_F;
-        const SUFFIX = male ? SUFFIX_M : SUFFIX_F;
-        // 人名前缀:多一个身份/性别锚点,并保证同批 prompt 两两不同(旧版截断后多个角色 prompt 撞车出同图)
-        const prefix = String(npc.name).trim() + ", " + STYLE + ", ";
-        const body = enHead(String(npc.appearance || npc.personality || "").replace(/\s+/g, " ").trim(), MAX_PROMPT - prefix.length - SUFFIX.length);
-        if (!body) { console.log(`SKIP ${npc.name} 无 appearance 描述`); filled.push({ name: npc.name, art: "" }); skipped++; continue; }
-        const prompt = (prefix + body + SUFFIX).slice(0, MAX_PROMPT);
-        if (args.dry !== undefined) { console.log(`DRY[${male ? "M" : "F"}] ${npc.name} (${prompt.length}): ${prompt}`); skipped++; continue; }
+        // 人名声 + 性别锚:保证同批 prompt 两两不同(旧版截断后多个角色 prompt 撞车出同图)
+        const prefix = String(npc.name).trim() + "，" + (isMaleNpc(npc) ? ANCHOR_M : ANCHOR_F);
+        const tag = APPEAR_ZH[`${slug}|${npc.name}`] || enHead(String(npc.appearance || npc.personality || ""), 90);
+        if (!tag) { console.log(`SKIP ${npc.name} 无外貌描述`); filled.push({ name: npc.name, art: "" }); skipped++; continue; }
+        const fixed = prefix.length + STYLE_ZH.length + FRAME_ZH.length;
+        const body = zhHead(tag, MAX_PROMPT - fixed);
+        const prompt = (prefix + body + "，" + STYLE_ZH + FRAME_ZH).slice(0, MAX_PROMPT);
+        if (flags.has("dry")) { console.log(`DRY ${npc.name} (${prompt.length}): ${prompt}`); skipped++; continue; }
         const start = Date.now();
-        try {
-            const res = await fetch(API, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "X-Auth-Token": `Bearer ${token}`, "X-Cover-Pregen": pregenKey },
-                body: JSON.stringify({ prompt, ratio: "3:4" }),
-                signal: AbortSignal.timeout(180000)
-            });
-            const d = await res.json().catch(() => ({}));
-            if (!res.ok || !d.image) throw new Error(`${res.status} ${d.error || ""}`);
-            const b64 = String(d.image).slice(String(d.image).indexOf(",") + 1);
-            fs.writeFileSync(file, Buffer.from(b64, "base64"));
-            console.log(`OK   ${rel} ${(Date.now() - start) / 1000}s`);
-            filled.push({ name: npc.name, art: STATIC_BASE + rel });
-            ok++;
-        } catch (e) {
+        // SiliconFlow 偶发 502/超时(实测约 1/10),失败退避重试;3 次仍失败才计入 failed
+        let lastErr = "";
+        for (let attempt = 0; attempt < 3; attempt++) {
+            if (attempt) await new Promise((res) => setTimeout(res, attempt * 5000));
+            try {
+                const res = await fetch(API, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "X-Auth-Token": `Bearer ${token}`, "X-Cover-Pregen": pregenKey },
+                    // 默认强制 Kolors:Agnes 不认 negative_prompt(400),且其中文理解弱于 Kolors;
+                    // 只有显式 --provider auto 才允许回落 Agnes 优先(此时反向词被丢弃,画风会不一致,慎用)
+                    body: JSON.stringify({ prompt, negative: NEG_ZH, ratio: "3:4", provider: args.provider || "siliconflow" }),
+                    signal: AbortSignal.timeout(180000)
+                });
+                const d = await res.json().catch(() => ({}));
+                if (!res.ok || !d.image) throw new Error(`${res.status} ${d.error || ""} ${d.detail?.genErr || d.genErr || d.detail || ""}`.slice(0, 200));
+                const b64 = String(d.image).slice(String(d.image).indexOf(",") + 1);
+                fs.writeFileSync(file, Buffer.from(b64, "base64"));
+                console.log(`OK   ${rel} ${(Date.now() - start) / 1000}s${attempt ? ` (重试${attempt})` : ""}${d.genErr ? " [" + String(d.genErr).slice(0, 90) + "]" : ""}`);
+                filled.push({ name: npc.name, art: STATIC_BASE + rel });
+                ok++;
+                lastErr = "";
+                break;
+            } catch (e) { lastErr = String(e).slice(0, 160); }
+        }
+        if (lastErr) {
             failed++;
-            console.log(`FAIL ${npc.name}: ${String(e).slice(0, 140)}`);
+            console.log(`FAIL ${npc.name}: ${lastErr}`);
             filled.push({ name: npc.name, art: "" });
         }
     }
     perCard.push({ file: path.join(CARDS_DIR, cf), card, filled });
 }
 
-// 回填卡 JSON structured.npcs[i].art
+// 回填卡 JSON structured.npcs[i].art(打样模式 --no-refill 或 --outdir 时跳过)
 let refilled = 0;
-for (const { file, card, filled } of perCard) {
-    const map = new Map(filled.filter((f) => f.art).map((f) => [f.name, f.art]));
-    let chg = false;
-    for (const npc of (card.structured.npcs || [])) {
-        const a = npc && npc.name ? map.get(npc.name) : "";
-        if (a && npc.art !== a) { npc.art = a; chg = true; }
+if (!flags.has("no-refill")) {
+    for (const { file, card, filled } of perCard) {
+        const map = new Map(filled.filter((f) => f.art).map((f) => [f.name, f.art]));
+        let chg = false;
+        for (const npc of (card.structured.npcs || [])) {
+            const a = npc && npc.name ? map.get(npc.name) : "";
+            if (a && npc.art !== a) { npc.art = a; chg = true; }
+        }
+        if (chg) { fs.writeFileSync(file, JSON.stringify(card, null, 2), "utf8"); refilled++; }
     }
-    if (chg) { fs.writeFileSync(file, JSON.stringify(card, null, 2), "utf8"); refilled++; }
 }
 console.log(`\n完成: 新生成 ${ok} / 失败 ${failed} / 跳过 ${skipped};回填卡 ${refilled}/${perCard.length} 张 → ${OUT_DIR}/`);
