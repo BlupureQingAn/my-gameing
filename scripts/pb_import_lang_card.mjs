@@ -3,8 +3,10 @@
 //          --file docs/cards/first-semester.card.json [--id 记录id(更新)] [--status draft|online] [--order N]
 // 环境变量 PB_URL/PB_ADMIN_EMAIL/PB_ADMIN_PASSWORD 亦可;--file 缺省读 stdin
 // JSON 形状(官方卡子集):
-//   { title, title_zh, lang:"en", band:"cet4", category, category_zh, theme, text, structured:{...} }
+//   { title, title_zh, lang:"en", band:"cet4", category, category_zh, theme, text, structured:{...},
+//     love_mode?:true, gender_target?:"male"|"female" }
 //   structured 须含 band/world/identity/npcs/first_scene{story,options}/stats/endings 等 editor 协议键
+//   注:love_mode/gender_target 在卡 JSON 顶层,但前端筛选器读 c.structured.*,落库时须并入 structured
 import process from "node:process";
 import fs from "node:fs";
 
@@ -54,6 +56,10 @@ async function api(path, opts = {}) {
 }
 
 const status = STATUSES.includes(args.status) ? args.status : "draft";
+// 恋爱向别字段由卡 JSON 顶层并入 structured(前端读 structured.gender_target 做男向/女向筛选,漏并则筛选器失效)
+const structured = { ...card.structured };
+if (card.love_mode !== undefined) structured.love_mode = card.love_mode === true;
+if (card.gender_target) structured.gender_target = String(card.gender_target);
 const record = {
     title: String(card.title).trim().slice(0, 80),
     title_zh: String(card.title_zh).trim().slice(0, 40),
@@ -62,7 +68,7 @@ const record = {
     category: String(card.category || card.structured.world?.genre || "").slice(0, 30),
     category_zh: String(card.category_zh || "").slice(0, 30),
     theme: String(card.theme || "minimal").slice(0, 30),
-    data: { text: card.text, structured: card.structured },
+    data: { text: card.text, structured },
     status,
 };
 
