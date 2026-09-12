@@ -16,6 +16,7 @@ const BASE = "https://ai.blupure.cn";
 const KEY_FILE = process.env.COVER_PREGEN_KEY_FILE || "F:/Claude/cover-pregen-key";
 const PREGEN_KEY = fs.readFileSync(KEY_FILE, "utf8").trim();
 const OUT_DIR = path.join(process.cwd(), "scenarios", "covers");
+const ONLY = args.only ? String(args.only).split(",").map((s) => s.trim()).filter(Boolean) : null; // --only id1,id2 只补指定卡,避免覆盖已上线的旧封面
 const USER_EMAIL = "cover_pregen@test.local";
 const USER_PASS = "cover_pregen_2026!";
 
@@ -30,7 +31,18 @@ const CARDS = [
     { id: "ncd5g34ejo3sdiv", file: "r1-02-aurora-cafe.card.json",
       prompt: "秋日清晨的街角咖啡馆,窗边暖光下系围裙的女孩擦拭吧台,咖啡蒸汽与窗外落叶街景,都市治愈恋爱;cozy cafe anime, warm morning light, autumn city street, gentle healing romance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
     { id: "zr7uixg5xqwbr5g", file: "r1-03-photo-club.card.json",
-      prompt: "秋日大学校园摄影摊位,男生举起相机对焦金色树影与人群,午后逆光的光斑,青春摄影恋曲;vibrant campus anime, golden-hour backlight, photography club, youthful warmth;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" }
+      prompt: "秋日大学校园摄影摊位,男生举起相机对焦金色树影与人群,午后逆光的光斑,青春摄影恋曲;vibrant campus anime, golden-hour backlight, photography club, youthful warmth;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
+    // 2026-09-13 补:P3 五卡回炉上线时漏做卡级封面(PB cover 为空 → 剧本库显示无封面),按同套视觉体系补齐
+    { id: "vpnkvv9t4t5hfyx", file: "p3-01-last-desk.card.json",
+      prompt: "期末周的大学图书馆深夜,男生伏在堆满书本与速溶咖啡的长桌前抬头,暖黄台灯与窗外夜色,安静的校园暗恋;cozy university library anime, warm desk lamp, late-night study mood;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
+    { id: "2e3tfto98v7niwk", file: "p3-02-landing-intern.card.json",
+      prompt: "黄昏的现代都市科技园区,应届生男生站在玻璃幕墙大厅,夕阳暖光穿过玻璃与咖啡店蒸汽交织,终面日的心动;warm-toned anime, glass office lobby at sunset, soft golden light, romantic;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
+    { id: "cpstdjnne9ypave", file: "p3-03-group-presentation.card.json",
+      prompt: "午夜大学教学楼,女生抱着笔记本电脑站在空荡走廊,窗外城市灯火与月光,赶完演示后的怦然相遇;midnight campus anime, empty hallway, city lights and moonlight, romantic;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
+    { id: "gobfm2v4ct7jpyp", file: "p3-04-flatmates.card.json",
+      prompt: "傍晚合租公寓客厅,女生拿着账单簿站在窗边,厨房暖光与摊开的账单,同居日常的甜蜜拉扯;cozy shared apartment anime, warm evening interior, bills on the table, playful love;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
+    { id: "m7vdb6183249yjy", file: "p3-05-debate-club.card.json",
+      prompt: "高中辩论社教室,男生站在木质辩论台后握稿发言,午后斜阳透过窗棂洒在讲台上,暖光里的青春热血与暗恋;high school debate club anime, afternoon sunlight through window, wooden podium, youthful passion;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" }
 ];
 
 async function pbJson(url, opts) {
@@ -82,6 +94,7 @@ async function main() {
     fs.mkdirSync(OUT_DIR, { recursive: true });
     console.log(`待生成 ${CARDS.length} 张,key=${PREGEN_KEY.slice(0, 6)}…,输出 ${OUT_DIR}`);
     for (const c of CARDS) {
+        if (ONLY && !ONLY.includes(c.id)) continue;
         const src = path.join(process.cwd(), "docs", "english-cards", c.file);
         if (!fs.existsSync(src)) { console.log(`SKIP ${c.id} 缺 ${c.file}`); continue; }
         let r = await genOne(c.prompt, token, false);
