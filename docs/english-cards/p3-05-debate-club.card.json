@@ -1,67 +1,127 @@
 {
-  "title": "Debate Challenge",
-  "title_zh": "辩论挑战",
+  "title": "From Bench to Finals",
+  "title_zh": "从替补到决赛",
   "lang": "en",
   "band": "hs",
   "category": "校园",
   "category_zh": "校园",
   "theme": "minimal",
-  "text": "## Premise\nYou stand at the bustling university recruitment fair, your heart pounding with a mix of excitement and anxiety. As a fresh college student, you're eager to join a club that resonates with your interests, but you're also terrified of not being selected. Your goal is to impress the recruitment team with your oratory skills and debating prowess, hoping to secure a spot in their esteemed society.\n\n## The World\nNestled in the vibrant heart of the fair, the Debate Challenge booth stands out with its vibrant red backdrop and a large \"JOIN US!\" sign. Around you, other clubs showcase their unique activities, but your eyes are drawn to the Debate Challenge team, who are engaging in a lively debate about the merits of online learning. You learn that the Debate Challenge is a society that values critical thinking and public speaking, fostering an environment where members can hone their skills and compete in inter-school debates.\n\nThe team, diverse and energetic, consists of passionate individuals who are excited to share their love for debate. You notice a few seasoned debaters, confidently discussing strategies and research topics. Meanwhile, newcomers like yourself are observing, eager to learn and improve. The atmosphere is electric, filled with the buzz of ideas and the sound of persuasive arguments. It's clear that joining this society would mean being part of a dynamic community that challenges and supports its members.\n\n## People\n\nTessa, a confident and articulate freshman, is the president of the Debate Challenge society. She's your mentor and a fierce debater, always eager to help you improve. Tessa's passion for debate is evident in her sharp mind and persuasive speaking habits. She sees you as a potential star and is willing to guide you through the ropes of debate.\n\nMarcus, a senior, is the vice-president and a seasoned debater. He's known for his logical reasoning and calm demeanor. Marcus is approachable and always willing to share his insights. He sees you as a fresh perspective and is excited about the new ideas you might bring to the team.\n\nYuki, a freshman like you, is shy but has a natural talent for argumentation. She's eager to learn and improve, and her enthusiasm is contagious. Yuki values your company and sees you as a friend who can help her grow. Her speaking habits are thoughtful and precise, making her arguments compelling.\n\nOwen, a senior and the team's strategist, is known for his meticulous research and strategic thinking. He's a bit of a perfectionist but always has the team's best interest at heart. Owen sees you as a valuable asset and is eager to see you develop your skills. His speaking habits are clear and concise, leaving no room for ambiguity.\n\n## The Arc\n\n### Act 1: Establishing the Situation and Allies (4-5 rounds)\n\nYou find yourself standing at the bustling recruitment booth of the Debate Challenge society, surrounded by a diverse group of students. The air is filled with lively discussions and the occasional heated argument. As you approach the booth, Tessa greets you with a warm smile and introduces you to Marcus, the vice-president. The two of them seem impressed by your interest and enthusiasm.\n\nIn the first round, you engage in a casual debate with Yuki, the freshman with a knack for argumentation. You find yourself matching her wit and passion, and the two of you quickly become friends. Owen, the strategist, observes from the side, taking mental notes.\n\nThe second round brings you face-to-face with Marcus, who challenges you with a complex argument. You manage to hold your ground, thanks to the support of Yuki, who provides you with valuable insights. Marcus nods in approval, impressed by your resilience.\n\nAs the rounds progress, you become more confident in your debating skills. Owen takes you under his wing, offering to help you refine your research and argumentation techniques. You start to see the value of teamwork and the importance of strategic planning.\n\n### Act 2: Conflict Escalation and Emotional High Point (4-5 rounds + 1 emotional high point)\n\nThe competition heats up as the rounds progress. You find yourself facing off against more challenging opponents, each round more intense than the last. Marcus, Yuki, and Owen push you to your limits, pushing you to refine your skills and strategies.\n\nIn the fifth round, you encounter your most formidable opponent yet. The debate is intense, and you find yourself struggling to keep up. As the minutes tick by, you start to doubt your abilities. Yuki notices your distress and offers words of encouragement, reminding you of your progress and potential. Marcus and Owen join in, providing support and strategic advice.\n\nThe emotional high point comes in the final moments of the round. You gather your thoughts and deliver a powerful argument that leaves the audience in awe. The tension in the room is palpable as the judges deliberate. You hold your breath, waiting for the outcome.\n\n### Act 3: Resolution (3-4 rounds)\n\nThe judges announce the winner, and to your surprise, you have won the debate. The entire team cheers, and you feel a sense of accomplishment and pride. Tessa, Marcus, Yuki, and Owen congratulate you, acknowledging your hard work and dedication.\n\nThe final rounds of the competition are a breeze, as you and your team work seamlessly together, capitalizing on each other's strengths. You win the competition, and the Debate Challenge society becomes your home away from home.\n\n## Endings\n\n### 1. Happy Ending: Fulfilling\nYou leave the competition with a sense of fulfillment and pride. Your hard work and dedication have paid off, and you have made lasting friendships and memories with your teammates.\n\n### 2. Average Ending: Boring\nWhile you don't win the competition, you learn a lot about yourself and your abilities. The experience is a valuable learning opportunity, and you take away valuable lessons that you can apply to future endeavors.\n\n### 3. Sad Ending: Regretful\nDespite your best efforts, you and your team fall short of victory. You feel a sense of regret and disappointment, but you also realize that the experience has taught you valuable lessons about perseverance and teamwork.",
+  "love_mode": true,
+  "gender_target": "male",
+  "text": "## Premise\nYou are a shy freshman at Westbrook High, attending the debate club recruitment event with a friend. You find yourself accidentally seated on the substitute bench, a place you never imagined you'd be. Your desire is to fit in and find your place within the bustling high school life.\n\n## The World\nWestbrook High is a vibrant and diverse school, with a strong sense of community. The debate club, located in a cozy corner of the library, is a hub of intellectual energy. The club members are a mix of seasoned veterans and eager newcomers, all united by their passion for debate. The atmosphere is lively, with debates often spilling into the hallways, attracting curious onlookers. The club meets twice a week, balancing rigorous practice sessions with casual hangouts, creating a rhythm that keeps members engaged and excited.\n\n## Tessa\nTessa is the first person you meet at the debate club. She approaches you with a questioning gaze, her sharp eyes reflecting her debating prowess. You two initially cross paths during a heated debate practice session, where you find yourselves on opposite sides. Her quick wit and analytical mind leave a lasting impression. As you discuss a complex topic, her insights are both challenging and enlightening. You find yourself looking forward to these intellectual sparring sessions, and soon, your interactions become more frequent.\n\n## Yuki\nYuki is introduced to you by Tessa during a casual hangout after a practice session. She's sitting at a table, diligently taking notes on a debate topic. Her soft voice and gentle demeanor catch your attention immediately. You strike up a conversation about the topic, and she shares her insightful comments. Her warm smile and thoughtful nature make you feel at ease. From then on, you often bump into her in the library, sharing notes and discussing debates, creating a bond based on mutual respect and shared interests.\n\n## Quinn\nQuinn is the club president and a seasoned debater. You first meet her during a team-building activity, where she leads a discussion on effective communication. Her confident tone and direct approach are both impressive and intimidating. However, as the session progresses, you find yourself enjoying her no-nonsense attitude. You later collaborate on a debate project, and your working relationship evolves into a friendly competition. Her genuine concern for your well-being and her encouragement make you feel valued as a team member.\n\n## Blaire\nBlaire is known for her sharp debating skills and charismatic personality. You first encounter her during a debate practice session, where she delivers a powerful argument. Her confidence and wit are undeniable, but she also shows a softer side during breaks. One day, you help her with a literature assignment, and she thanks you with a playful comment. Over time, your interactions become more personal, and you find yourself enjoying her teasing remarks and the warmth behind them.\n\n## Hana\nHana is the club's photographer, capturing moments both in and out of the debate room. You first meet her during a debate tournament, where she's snapping photos of the competitors. Her enthusiasm and genuine smile make you feel at ease. After the tournament, you exchange contact information, and you often see her at the club, taking photos of debates and events. Your conversations are usually light and fun, and you find yourself looking forward to her company during these moments.\n\n## Love Routes — Meeting Phase\n\n### Tessa\n- **Route Hook:** You first bond over a shared love for Shakespeare's plays during a debate preparation session. Her insightful analysis of the texts draws you in, and you find yourselves discussing literature well into the night.\n- **Heartbeat Triggers:** Alone in the club room after a long debate session, sharing your thoughts about the play you recently read; walking home together after a school event, discussing the nuances of the debate you just witnessed; during the school play, catching each other's eyes during a dramatic moment.\n\n### Yuki\n- **Route Hook:** During a debate tournament, you help Yuki with a challenging statistic, and she shows her gratitude with a warm smile and a small gift. Your shared interest in the topic deepens the connection.\n- **Heartbeat Triggers:** During a team-building retreat, sharing a secret joke that only the two of you understand; after a particularly intense debate, sitting together in the quiet library, reflecting on the day's events; finding a lost item of Yuki's and returning it to her in the morning, before school starts.\n\n### Quinn\n- **Route Hook:** You bond over a shared passion for photography during a debate practice, where you both capture the moment of a particularly intense argument. Quinn invites you to her photography exhibit, and you find yourself enchanted by her art.\n- **Heartbeat Triggers:** Alone in the darkroom, helping Quinn develop photos and discussing the emotions captured; during a school dance, watching Quinn's photography project displayed, feeling a sense of pride; after a long day of debates, sitting together in the quiet of the club room, sharing stories and dreams.\n\n### Blaire\n- **Route Hook:** You help Blaire with a literature assignment, and she thanks you with a playful comment, sparking a friendly rivalry. As you work together on debate projects, you discover a shared sense of humor and competitiveness.\n- **Heartbeat Triggers:** During a debate practice, laughing together over a humorous remark; after a particularly successful debate, celebrating with a small, exclusive dance in the empty hall; alone in the club room, sharing your favorite book and discussing the characters.\n\n### Hana\n- **Route Hook:** During a debate tournament, you chat with Hana while she takes photos, finding common ground in your love for storytelling. She invites you to her photo exhibit, where you find a piece of her that resonates with you.\n- **Heartbeat Triggers:** After a long day of debates, sharing a quiet moment in the club room, discussing the day's events; walking home together after rain, your laughter mingling with the sounds of the night; at the photo exhibit, finding a piece of Hana's work that captures a moment you shared, making you feel connected to her memories.\n\n## Round map — list roughly 13-16 rounds as a simple table (use pipes or hyphens):\n| Round Number | Scene Keyword | Characters Present |\n|--------------|---------------------|--------------------|\n| 1 | Debate Club Meeting | You, Tessa, Yuki |\n| 2 | Library Study | You, Quinn |\n| 3 | Debate Practice | You, Blaire |\n| 4 | School Dance | You, Hana |\n| 5 | Debate Tournament | You, All |\n| 6 | Photo Exhibit | You, Hana |\n| 7 | Club Room Chat | You, Blaire |\n| 8 | Debate Win | You, Quinn |\n| 9 | Rainy Walk | You, Hana |\n| 10 | Debate Strategy | You, Tessa |\n| 11 | Book Club | You, Blaire |\n| 12 | Late Night Talk | You, Yuki |\n| 13 | Debate Prep | You, Quinn |\n| 14 | Photo Session | You, Hana |\n| 15 | Debate Rehearsal | You, All |\n| 16 | Final Debate | You, All |\n| 17 | Confession | You, Quinn |\n\nIn the final round, you find yourself alone with Quinn in the quiet of the club room. The tension between you is palpable as you discuss the upcoming debate. As the conversation shifts to your shared dreams and fears, you realize that your feelings for her have grown deeper. With a deep breath, you must decide whether to confess your feelings or keep them hidden.",
   "structured": {
     "band": "hs",
     "theme": "minimal",
+    "love_mode": true,
     "world": {
-      "era": "现代大学校园",
-      "genre": "校园辩论赛",
-      "summary": "In the heart of a bustling university recruitment fair, the Debate Challenge booth stands out with vibrant red and a 'JOIN US!' sign, drawing students eager to showcase their debating skills. The world revolves around competitive debate clubs, fostering intellectual growth and teamwork among young minds.",
-      "rules": "1. Participants must demonstrate strong oratory skills and debating prowess. 2. Fair play and respect for opponents are mandatory. 3. The debate should be conducted within the given time limit. 4. Only registered members can join the club.",
-      "atmosphere": "竞技激烈，充满活力和智慧碰撞",
+      "era": "现代校园",
+      "genre": "校园恋爱",
+      "summary": "In Westbrook High, a lively and diverse school, the debate club, a hub of intellectual energy, serves as a backdrop for a story of growth and romance among its members.",
+      "rules": "1. Maintain a balance between academic pursuits and personal relationships. 2. Be open to new experiences and challenges. 3. Show respect and empathy towards others. 4. Develop your debating skills and character.",
+      "atmosphere": "Intellectual and dynamic",
       "vocab": [
         "debate",
-        "oratory",
-        "prospectus",
-        "recruitment",
-        "prospect",
         "club",
-        "society",
-        "proceed"
+        "recruitment",
+        "community",
+        "passion",
+        "energetic",
+        "curious",
+        "onlooker"
       ]
     },
     "identity": {
-      "name": "Alex",
-      "gender": "Male",
-      "age": 20,
-      "role": "Debate Challenge team member",
-      "background": "A dedicated and ambitious college student with a passion for public speaking and critical thinking."
+      "name": "Ryan",
+      "gender": "男",
+      "age": 16,
+      "role": "高一男生,被朋友拉去辩论社招新现场,意外留在了替补席",
+      "background": "A shy and introverted freshman at Westbrook High, you're eager to find your place among the bustling high school life."
     },
     "npcs": [
       {
         "name": "Tessa",
         "gender": "女",
-        "role": "辩手",
-        "personality": "自信，表达流利，喜欢在辩论中寻找论据",
-        "relationship": "队友，一起参与辩论挑战赛"
-      },
-      {
-        "name": "Marcus",
-        "gender": "男",
-        "role": "队长",
-        "personality": "领导力强，决策果断，有时显得严肃",
-        "relationship": "团队领袖，对Tessa和其他成员有指导作用"
+        "age": 17,
+        "role": "The ace debater of Westbrook High's Debate Club",
+        "personality": "Tessa is sharp-witted, always dissecting arguments with precision, both on and off the stage. Her tongue is as sharp as her intellect, but she's also compassionate and generous with her knowledge.",
+        "relationship": "A respected debate opponent and an enigmatic presence.",
+        "appearance": "Tessa stands tall with an elegant posture, her sleek black hair styled in a chic bun, sharp blue eyes reflecting her analytical mind. She often wears form-fitting blazers, exuding a confident and professional aura.",
+        "profile": {
+          "personality": "Tessa's tone is always sharp, her words as cutting as her debate skills, yet she's warm and generous with her insights.",
+          "hobby": "She loves researching and analyzing complex topics for her debates.",
+          "redline": "She dislikes superficiality and people who avoid confrontation.",
+          "soft": "Her heart is touched by genuine passion and intelligence.",
+          "speech": "She usually addresses you as 'Mr.', maintaining a respectful distance."
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_p3-05-debate-club_tessa.png"
       },
       {
         "name": "Yuki",
         "gender": "女",
-        "role": "记录员",
-        "personality": "细心，善于倾听，但有时过于紧张",
-        "relationship": "团队成员，负责记录辩论内容，为团队提供支持"
+        "age": 16,
+        "role": "Quiet notetaker in debate club",
+        "personality": "She's meticulous, always jotting down every point, leaving you with thoughtful notes in her elegant handwriting.",
+        "relationship": "You are her debate partner, a silent but supportive presence.",
+        "appearance": "slender frame, shoulder-length black hair, bright green eyes, always in a neat blazer with a soft smile on her face",
+        "profile": {
+          "personality": "She speaks softly, her notes are always filled with insightful comments.",
+          "hobby": "She loves taking detailed notes during debates.",
+          "redline": "She dislikes loud and chaotic environments.",
+          "soft": "Her gentle smile and thoughtful comments can warm anyone's heart.",
+          "speech": "She often calls you 'partner' with a warm tone."
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_p3-05-debate-club_yuki.png"
       },
       {
-        "name": "Owen",
-        "gender": "男",
-        "role": "对手辩手",
-        "personality": "机智，反应快，有时有点自大",
-        "relationship": "辩论赛中的对手，挑战性强"
+        "name": "Quinn",
+        "gender": "女",
+        "age": 17,
+        "role": "辩论社社长，高三学姐",
+        "personality": "Strong-willed and serious, she treats the debate club as her own child, always ready to challenge and inspire.",
+        "relationship": "A new recruit, you are immediately seen as a potential asset to the debate club.",
+        "appearance": "Tall and slender, with chestnut hair styled in a sleek bun, emerald green eyes, wearing a tailored blazer and pencil skirt, exuding a commanding yet approachable aura.",
+        "profile": {
+          "personality": "She speaks with a confident tone, often punctuating her sentences with 'let's get to the point'.",
+          "hobby": "She is passionate about debate and public speaking.",
+          "redline": "She dislikes interruptions and prefers a well-structured discussion.",
+          "soft": "Her kindness and genuine concern for others can melt even the coldest of hearts.",
+          "speech": "She usually calls you 'debater' or 'partner', with a tone that's both respectful and friendly."
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_p3-05-debate-club_quinn.png"
+      },
+      {
+        "name": "Blaire",
+        "gender": "女",
+        "age": 17,
+        "role": "辩论社的傲娇女王",
+        "personality": "傲慢犀利，赛场上毫不留情，私下却温柔体贴，说话带点傲娇。",
+        "relationship": "initially a formidable opponent, but gradually becomes an unexpected ally",
+        "appearance": "tall and slender, with chestnut hair tied in a sleek bun, sharp green eyes, wearing a fitted blazer over a white blouse, exuding a confident and aloof aura",
+        "profile": {
+          "personality": "arrogant and sharp on the debate floor, yet soft and protective off it, with a hint of tsundere in her tone",
+          "hobby": "debating and reading classic literature",
+          "redline": "dislikes being called 'little' or being patronized",
+          "soft": "touched by genuine kindness and intelligence",
+          "speech": "usually addresses you as 'Mr. [Your Name]', with a mix of respect and a hint of teasing"
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_p3-05-debate-club_blaire.png"
+      },
+      {
+        "name": "Hana",
+        "gender": "女",
+        "age": 16,
+        "role": "辩论社新星记者",
+        "personality": "Eager to learn, she speaks with a lively tone, often peppered with 'Oh, really?' when surprised.",
+        "relationship": "An intriguing interviewee with a spark of interest in you.",
+        "appearance": "Blonde waves cascade down her slender shoulders, green eyes sparkling with curiosity, wearing a stylish blazer over a casual tee, embodying both grace and approachability.",
+        "profile": {
+          "personality": "She speaks with enthusiasm, often interjecting 'Oh, really?' in surprise.",
+          "hobby": "She enjoys taking photos, capturing moments in the blink of an eye.",
+          "redline": "Avoid talking about her personal life; she prefers to keep it private.",
+          "soft": "Her smile, bright and genuine, can light up a room.",
+          "speech": "She usually addresses you as 'Hey, [Your Name]', her tone friendly and warm."
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_p3-05-debate-club_hana.png"
       }
     ],
     "timeline": {
@@ -70,624 +130,509 @@
         "month": 9,
         "day": 21
       },
-      "note": "The story unfolds during the university recruitment fair, marking the beginning of the Debate Challenge club's recruitment season."
+      "note": "恋爱攻略线,单次会话 15-25 分钟可通关一段完整攻略"
     },
     "scene_style": {
-      "env_templates": [
-        "辩论挑战摊位前",
-        "辩论室内景",
-        "图书馆学习区",
-        "校园广场",
-        "教室内部",
-        "宿舍房间",
-        "食堂角落"
-      ],
-      "option_style": "选择题，辩论题，角色扮演题"
+      "env_templates": [],
+      "option_style": "romantic daily choices"
+    },
+    "love_rules": {
+      "slots": 3,
+      "lock_at": 70,
+      "he_end": {
+        "min_affection": 75,
+        "heartbeat_min": 1
+      },
+      "be_end": {
+        "min_affection": 30
+      },
+      "affection": {
+        "flirt": {
+          "favor": 1,
+          "affection": 6
+        },
+        "kind": {
+          "favor": 4,
+          "affection": 1
+        },
+        "tease": {
+          "favor": 2,
+          "affection": 2
+        },
+        "neutral": {
+          "favor": 1,
+          "affection": 0
+        },
+        "awkward": {
+          "favor": 0,
+          "affection": -2
+        },
+        "rude": {
+          "favor": -4,
+          "affection": -3
+        },
+        "reject": {
+          "favor": -3,
+          "affection": -8
+        }
+      }
+    },
+    "scenes": {
+      "heartbeat": [
+        {
+          "where": "Library Debate Club Room",
+          "when": "After a heated debate, witnessing the passion and camaraderie among the club members."
+        },
+        {
+          "where": "Hallways during Debate Practice",
+          "when": "When you overhear a heartfelt debate between two club members, feeling inspired."
+        },
+        {
+          "where": "School's Annual Debate Tournament",
+          "when": "During the tournament, feeling a mix of excitement and anxiety as you watch your crush in action."
+        }
+      ]
     },
     "first_scene": {
-      "story": "You stand in line, your heart aflutter, as the university recruitment fair swirls around you. The air is thick with the excitement of new beginnings. Minutes before the fair opens, you're caught in a dilemma. Should you approach the Debate Challenge booth, where the energy is palpable, or the nearby music club, where the tunes are irresistible? As you ponder, the line moves forward, and you reach the entrance. You must immediately do a choice. \n\nShould you go with Tessa, the president, whose passion for debate is as infectious as her smile? Or with Marcus, the vice-president, whose calm presence promises a logical and strategic approach? The clock ticks, and you realize this is the moment to decide your future.\n\nAs you stand at the crossroads, the Debate Challenge booth beckons with an allure that you can't resist. The vibrant red backdrop and the infectious energy of the team members draw you in. You approach Tessa, her infectious smile greeting you warmly. She introduces you to Marcus, who extends his hand with a confident handshake. The two of them engage in a brief conversation, and you sense their genuine interest in you.\n\nYou're invited to join a debate session, where you witness the seasoned debaters in action. The passion and the clarity in their arguments captivate you. You realize that this is where you belong. The decision is made, and you step into the Debate Challenge society, your heart brimming with a mix of excitement and apprehension.\n\nThe weeks that follow are intense. You participate in various debates, each one challenging your perspectives and expanding your horizons. Owen's meticulous research and strategic planning become your guiding light. Yuki's enthusiasm and Marcus's logical reasoning inspire you to push your boundaries. You begin to see the value of teamwork and the importance of preparation.\n\nOne day, the team receives an invitation to participate in an inter-school debate tournament. The competition is fierce, but your newfound skills and the support of your team members give you confidence. The tournament is a whirlwind of intense debates, sleepless nights, and exhilarating victories.\n\nAs the final round approaches, you find yourself face-to-face with a formidable opponent. The pressure is on, but you remember the lessons you've learned from your teammates. You stand up, ready to present your argument. With Yuki's insightful observations, Marcus's logical reasoning, and Owen's strategic guidance, you deliver a compelling and persuasive argument that leaves the judges in awe.\n\nIn the end, you and your team emerge victorious, bringing honor to the Debate Challenge society. The victory is not just about winning the tournament, but about the growth and friendships you've cultivated along the way. You realize that the Debate Challenge is more than just a club; it's a family that challenges and supports you in every aspect of your life. And as you stand together, united and triumphant, you know that this is where you truly belong.",
+      "story": "The clock ticks loudly as you step into Westbrook High's library, the air thick with anticipation. You're here for the debate club recruitment event, your heart pounding with a mix of nerves and excitement. You scan the room, your eyes catching sight of a group of students gathered around a table, deep in conversation.\n\n\"Hi, Ryan! Are you here for the debate club too?\" a voice calls out, and you turn to see Tessa, the ace debater of Westbrook High's Debate Club, her eyes sparkling with enthusiasm.\n\n\"Um, yes, I am,\" you reply, feeling a bit out of place among the more seasoned debaters.\n\n\"Great! I'm Tessa. You must be new,\" she says, extending her hand. \"Welcome to the club.\"\n\nAs you shake her hand, you can't help but notice the warmth in her grip. \"Thanks, Tessa. I'm just getting started.\"\n\nJust then, Yuki, the quiet notetaker in the debate club, slips into the conversation, her soft voice barely above a whisper. \"I'm Yuki. I've been looking forward to meeting new members.\"\n\nYou nod, feeling a sense of camaraderie with these two. \"Nice to meet you, Yuki.\"\n\nThe conversation flows easily, and you find yourself drawn to both Tessa and Yuki's personalities. As the event continues, you're introduced to more club members, but it's Tessa and Yuki who stand out to you.\n\nYou're about to make your way to the registration table when Quinn, the debate club president, approaches. \"Hi, I'm Quinn. I'm the club president. You'll be working with us this year.\"\n\nYou smile, feeling a sense of belonging. \"I'm excited to be here, Quinn.\"\n\nAs you turn to leave, Tessa calls out, \"Ryan, wait up! We should introduce you to the rest of the team.\"\n\nYou follow her, feeling a flutter in your stomach as you anticipate the next steps in this new chapter of your life. But as you turn the corner, you must immediately make a choice: will you follow Tessa and Yuki, or will you take a different path?",
       "options": [
-        "join Tessa at Debate Challenge",
-        "linger over the music booth",
-        "talk to Marcus about strategies",
-        "witness a debate before choosing"
+        {
+          "text": "Ask Tessa about her favorite Shakespeare play",
+          "love": "flirt",
+          "target": "Tessa"
+        },
+        {
+          "text": "Comment on Yuki's notes during the event",
+          "love": "kind",
+          "target": "Yuki"
+        },
+        {
+          "text": "Tease Quinn about her leadership style",
+          "love": "tease",
+          "target": "Quinn"
+        },
+        {
+          "text": "Offer to help Blaire with an upcoming debate topic",
+          "love": "neutral",
+          "target": "Blaire"
+        }
       ],
       "bilingual": {
         "v": 1,
         "lines": [
           {
-            "en": "You stand in line, your heart aflutter, as the university recruitment fair swirls around you.",
-            "zh": "你站在队伍中，心怦怦直跳，大学招聘会在你周围热闹非凡。",
+            "en": "The clock ticks loudly as you step into Westbrook High's library, the air thick with anticipation.",
+            "zh": "当你走进西布鲁克高中的图书馆时，时钟滴答作响，空气中弥漫着期待。",
             "words": [
               {
-                "w": "stand in line",
-                "zh": "排队等候"
-              },
-              {
-                "w": "heart aflutter",
-                "zh": "心跳加速；心慌意乱"
-              },
-              {
-                "w": "recruitment fair",
-                "zh": "招聘会"
-              }
-            ]
-          },
-          {
-            "en": "The air is thick with the excitement of new beginnings.",
-            "zh": "空气中弥漫着新开始的兴奋气息。",
-            "words": [
-              {
-                "w": "is thick with",
-                "zh": "充满；非常浓烈"
-              },
-              {
-                "w": "excitement",
-                "zh": "激动；兴奋"
-              },
-              {
-                "w": "new beginnings",
-                "zh": "新的开始"
-              }
-            ]
-          },
-          {
-            "en": "Minutes before the fair opens, you're caught in a dilemma.",
-            "zh": "集市开幕前几分钟，你陷入了两难境地。",
-            "words": [
-              {
-                "w": "caught in",
-                "zh": "陷入（困境）"
-              },
-              {
-                "w": "dilemma",
-                "zh": "两难；进退维谷"
-              }
-            ]
-          },
-          {
-            "en": "Should you approach the Debate Challenge booth, where the energy is palpable, or the nearby music club, where the tunes are irresistible?",
-            "zh": "你是该走向那股能量扑面而来的辩论挑战展台，还是去附近那家旋律令人难以抗拒的音乐俱乐部？",
-            "words": [
-              {
-                "w": "approach",
-                "zh": "靠近；走近"
-              },
-              {
-                "w": "palpable",
-                "zh": "可感知的；明显的"
-              },
-              {
-                "w": "irresistible",
-                "zh": "无法抗拒的"
-              }
-            ]
-          },
-          {
-            "en": "As you ponder, the line moves forward, and you reach the entrance.",
-            "zh": "当你思索时，队伍向前移动，你到达了入口。",
-            "words": [
-              {
-                "w": "ponder",
-                "zh": "深思"
-              },
-              {
-                "w": "moves forward",
-                "zh": "前进"
-              },
-              {
-                "w": "entrance",
-                "zh": "入口"
-              }
-            ]
-          },
-          {
-            "en": "You must immediately do a choice.",
-            "zh": "你必须立刻做出选择。",
-            "words": [
-              {
-                "w": "immediately",
-                "zh": "立刻；马上"
-              },
-              {
-                "w": "do a choice",
-                "zh": "做决定"
-              }
-            ]
-          },
-          {
-            "en": "Should you go with Tessa, the president, whose passion for debate is as infectious as her smile?",
-            "zh": "如果你选择与总统泰莎同行，她对辩论的热情和她的笑容一样具有感染力。",
-            "words": [
-              {
-                "w": "go with",
-                "zh": "选择与……一起"
-              },
-              {
-                "w": "passion for",
-                "zh": "热情"
-              },
-              {
-                "w": "as...as",
-                "zh": "像……一样"
-              }
-            ]
-          },
-          {
-            "en": "Or with Marcus, the vice-president, whose calm presence promises a logical and strategic approach?",
-            "zh": "或者和副总裁马库斯一起，他那沉稳的气场预示着一种既合乎逻辑又富有战略眼光的思路？",
-            "words": [
-              {
-                "w": "calm presence",
-                "zh": "沉稳的气质；沉着冷静的表现"
-              },
-              {
-                "w": "promises",
-                "zh": "预示；表明将会发生"
-              },
-              {
-                "w": "logical and strategic approach",
-                "zh": "合乎逻辑且具有战略性的做法；理性而长远的策略"
-              }
-            ]
-          },
-          {
-            "en": "The clock ticks, and you realize this is the moment to decide your future.",
-            "zh": "时钟滴答作响，你意识到此刻正是决定自己未来的时刻。",
-            "words": [
-              {
-                "w": "tick",
-                "zh": "（钟/表）发出短促而规律的响声；时间很快过去"
-              },
-              {
-                "w": "realize",
-                "zh": "意识到；明白"
-              },
-              {
-                "w": "decide",
-                "zh": "决定；选定"
-              }
-            ]
-          },
-          {
-            "en": "As you stand at the crossroads, the Debate Challenge booth beckons with an allure that you can't resist.",
-            "zh": "当你站在十字路口时，辩论挑战摊位以你无法抗拒的魅力向你招手。",
-            "words": [
-              {
-                "w": "crossroads",
-                "zh": "道路交汇处；关键抉择点"
-              },
-              {
-                "w": "beckon",
-                "zh": "招手示意；吸引"
-              },
-              {
-                "w": "allure",
-                "zh": "吸引力；魅力"
-              }
-            ]
-          },
-          {
-            "en": "The vibrant red backdrop and the infectious energy of the team members draw you in.",
-            "zh": "鲜艳的红色背景和团队成员充满活力的氛围深深吸引着你。",
-            "words": [
-              {
-                "w": "vibrant",
-                "zh": "鲜艳的；充满生机的"
-              },
-              {
-                "w": "backdrop",
-                "zh": "背景"
-              },
-              {
-                "w": "infectious",
-                "zh": "有感染力的；易传播的"
-              }
-            ]
-          },
-          {
-            "en": "You approach Tessa, her infectious smile greeting you warmly.",
-            "zh": "你走向泰莎，她那极具感染力的微笑热情地向你致意。",
-            "words": [
-              {
-                "w": "approach",
-                "zh": "走近；靠近"
-              },
-              {
-                "w": "infectious smile",
-                "zh": "有感染力的笑"
-              },
-              {
-                "w": "greeting",
-                "zh": "问候"
-              }
-            ]
-          },
-          {
-            "en": "She introduces you to Marcus, who extends his hand with a confident handshake.",
-            "zh": "她把你介绍给马库斯，他自信地伸出手来和你握手。",
-            "words": [
-              {
-                "w": "introduce",
-                "zh": "把某人介绍给他人；正式引见"
-              },
-              {
-                "w": "extend",
-                "zh": "伸出（身体部位）"
-              },
-              {
-                "w": "confident",
-                "zh": "自信的；有把握的"
-              }
-            ]
-          },
-          {
-            "en": "The two of them engage in a brief conversation, and you sense their genuine interest in you.",
-            "zh": "他们俩和你进行了简短的交谈，你能感觉到他们对你真心感兴趣。",
-            "words": [
-              {
-                "w": "engage in",
-                "zh": "参与（对话）"
-              },
-              {
-                "w": "brief",
-                "zh": "短暂的"
-              },
-              {
-                "w": "sense",
-                "zh": "感觉"
-              }
-            ]
-          },
-          {
-            "en": "You're invited to join a debate session, where you witness the seasoned debaters in action.",
-            "zh": "诚邀您参加一场辩论会，在那里您可以亲眼目睹资深辩手们的精彩表现。",
-            "words": [
-              {
-                "w": "invite",
-                "zh": "邀请"
-              },
-              {
-                "w": "debate session",
-                "zh": "辩论会"
-              },
-              {
-                "w": "witness",
-                "zh": "见证；目睹"
-              }
-            ]
-          },
-          {
-            "en": "The passion and the clarity in their arguments captivate you.",
-            "zh": "他们辩论中的激情与清晰让你着迷。",
-            "words": [
-              {
-                "w": "captivate",
-                "zh": "深深吸引；使着迷"
-              },
-              {
-                "w": "clarity",
-                "zh": "清晰；明确"
-              },
-              {
-                "w": "argument",
-                "zh": "争论；论点"
-              }
-            ]
-          },
-          {
-            "en": "You realize that this is where you belong.",
-            "zh": "你意识到，这里就是你该在的地方。",
-            "words": [
-              {
-                "w": "realize",
-                "zh": "明白；意识到"
-              },
-              {
-                "w": "belong",
-                "zh": "属于；应在"
-              }
-            ]
-          },
-          {
-            "en": "The decision is made, and you step into the Debate Challenge society, your heart brimming with a mix of excitement and apprehension.",
-            "zh": "决定已定，你踏入辩论挑战社，心中既兴奋又忐忑。",
-            "words": [
-              {
-                "w": "decision is made",
-                "zh": "事情已经做出决定"
+                "w": "tick loudly",
+                "zh": "发出响亮的滴答声"
               },
               {
                 "w": "step into",
-                "zh": "走进；踏入"
+                "zh": "走进"
               },
               {
-                "w": "brimming with",
-                "zh": "充满"
+                "w": "thick with anticipation",
+                "zh": "充满期待"
               }
             ]
           },
           {
-            "en": "The weeks that follow are intense.",
-            "zh": "接下来的几周非常紧张。",
+            "en": "You're here for the debate club recruitment event, your heart pounding with a mix of nerves and excitement.",
+            "zh": "你是来参加辩论社招新活动的，心里既紧张又兴奋。",
             "words": [
               {
-                "w": "follow",
-                "zh": "在……之后；随后"
+                "w": "debate club",
+                "zh": "辩论社"
               },
               {
-                "w": "intense",
-                "zh": "强烈的；激烈的"
+                "w": "recruitment event",
+                "zh": "招募活动"
+              },
+              {
+                "w": "pounding",
+                "zh": "怦怦跳"
               }
             ]
           },
           {
-            "en": "You participate in various debates, each one challenging your perspectives and expanding your horizons.",
-            "zh": "你参与各种辩论，每一次都在挑战你的观点并拓宽你的视野。",
+            "en": "You scan the room, your eyes catching sight of a group of students gathered around a table, deep in conversation.",
+            "zh": "你扫视房间，目光落在一群围在桌旁热烈交谈的学生身上。",
             "words": [
               {
-                "w": "participate in",
-                "zh": "参加"
+                "w": "scan",
+                "zh": "扫视"
               },
               {
-                "w": "challenging",
-                "zh": "挑战的；考验的"
+                "w": "catch sight of",
+                "zh": "看见"
               },
               {
-                "w": "expanding",
-                "zh": "扩大；拓展"
+                "w": "gathered around",
+                "zh": "聚集在…周围"
               }
             ]
           },
           {
-            "en": "Owen's meticulous research and strategic planning become your guiding light.",
-            "zh": "欧文的细致研究和周密规划将成为你的指路明灯。",
+            "en": "\"Hi, Ryan!",
+            "zh": "嗨，瑞安！",
             "words": [
               {
-                "w": "meticulous",
-                "zh": "非常仔细、精确"
+                "w": "Hi",
+                "zh": "嗨；非正式场合的问候"
               },
               {
-                "w": "strategic planning",
-                "zh": "运用策略达成目标的计划"
-              },
-              {
-                "w": "guiding light",
-                "zh": "指引方向的事物"
+                "w": "Ryan",
+                "zh": "人名；保留原样"
               }
             ]
           },
           {
-            "en": "Yuki's enthusiasm and Marcus's logical reasoning inspire you to push your boundaries.",
-            "zh": "由雪的热情与马库斯的理性推理所激发，你开始突破自己的极限。",
+            "en": "Are you here for the debate club too?\" a voice calls out, and you turn to see Tessa, the ace debater of Westbrook High's Debate Club, her eyes sparkling with enthusiasm.",
+            "zh": "“你也是为了辩论社来的吗？”一个声音喊道，你转身看到泰莎——西布鲁克高中辩论社王牌辩手，她的眼睛闪烁着热情。",
             "words": [
               {
-                "w": "enthusiasm",
-                "zh": "热情；热忱"
+                "w": "call out",
+                "zh": "大声喊"
               },
               {
-                "w": "logical reasoning",
-                "zh": "合乎逻辑的推理"
+                "w": "turn to see",
+                "zh": "转头去看"
               },
               {
-                "w": "push your boundaries",
-                "zh": "突破你的界限"
+                "w": "ace debater",
+                "zh": "王牌辩手"
               }
             ]
           },
           {
-            "en": "You begin to see the value of teamwork and the importance of preparation.",
-            "zh": "你开始明白团队合作的价值，也意识到准备的重要性。",
+            "en": "\"Um, yes, I am,\" you reply, feeling a bit out of place among the more seasoned debaters.",
+            "zh": "“嗯，是的。”你回答，感觉和更有经验的辩手们相比有些格格不入。",
             "words": [
               {
-                "w": "begin to see",
-                "zh": "开始意识到"
+                "w": "seasoned",
+                "zh": "有经验的"
               },
               {
-                "w": "value of",
-                "zh": "……的价值"
-              },
-              {
-                "w": "teamwork",
-                "zh": "团队合作"
+                "w": "out of place",
+                "zh": "格格不入"
               }
             ]
           },
           {
-            "en": "One day, the team receives an invitation to participate in an inter-school debate tournament.",
-            "zh": "有一天，团队收到邀请，参加校际辩论赛。",
+            "en": "\"Great!",
+            "zh": "太好了！",
             "words": [
               {
-                "w": "inter-school",
-                "zh": "跨校的"
-              },
-              {
-                "w": "participate in",
-                "zh": "参加"
-              },
-              {
-                "w": "receive an invitation",
-                "zh": "收到邀请"
+                "w": "Great!",
+                "zh": "表示强烈赞同或兴奋；口语化且积极。"
               }
             ]
           },
           {
-            "en": "The competition is fierce, but your newfound skills and the support of your team members give you confidence.",
-            "zh": "竞争非常激烈，但你新掌握的技能和队友的支持让你充满信心。",
+            "en": "I'm Tessa.",
+            "zh": "我叫泰莎。",
             "words": [
               {
-                "w": "fierce",
-                "zh": "激烈的"
+                "w": "I'm",
+                "zh": "“I am”的缩写；用于自我介绍"
               },
               {
-                "w": "newfound",
-                "zh": "新获得的"
-              },
-              {
-                "w": "give you confidence",
-                "zh": "给你信心"
+                "w": "Tessa",
+                "zh": "女性名字；翻译中保留原样"
               }
             ]
           },
           {
-            "en": "The tournament is a whirlwind of intense debates, sleepless nights, and exhilarating victories.",
-            "zh": "锦标赛是一场旋风般的激烈辩论、不眠之夜和令人振奋的胜利。",
+            "en": "You must be new,\" she says, extending her hand.",
+            "zh": "“你一定刚来。”她说着伸出手。",
             "words": [
               {
-                "w": "whirlwind",
-                "zh": "像旋转风一样的混乱忙碌状态"
-              },
-              {
-                "w": "intense",
-                "zh": "非常强烈或极端的"
-              },
-              {
-                "w": "exhilarating",
-                "zh": "让人感到高兴和兴奋"
+                "w": "extend one's hand",
+                "zh": "伸出手"
               }
             ]
           },
           {
-            "en": "As the final round approaches, you find yourself face-to-face with a formidable opponent.",
-            "zh": "随着决赛轮的临近，你发现自己与一位强大的对手正面相对。",
+            "en": "\"Welcome to the club.\"",
+            "zh": "欢迎加入俱乐部。",
             "words": [
+              {
+                "w": "welcome",
+                "zh": "用于迎接来客；回应时说‘不客气’"
+              },
+              {
+                "w": "to the club",
+                "zh": "进入某个场所或组织（不只是‘俱乐部’）"
+              }
+            ]
+          },
+          {
+            "en": "As you shake her hand, you can't help but notice the warmth in her grip.",
+            "zh": "当你和她握手时，你忍不住注意到她握得有多温暖。",
+            "words": [
+              {
+                "w": "can't help but",
+                "zh": "忍不住"
+              },
+              {
+                "w": "grip",
+                "zh": "握法/握力"
+              }
+            ]
+          },
+          {
+            "en": "\"Thanks, Tessa.",
+            "zh": "谢谢你，泰莎。",
+            "words": [
+              {
+                "w": "Thanks",
+                "zh": "谢谢"
+              },
+              {
+                "w": "Tessa",
+                "zh": "泰莎"
+              }
+            ]
+          },
+          {
+            "en": "I'm just getting started.\"",
+            "zh": "我才刚开始呢。",
+            "words": [
+              {
+                "w": "getting started",
+                "zh": "开始做某事"
+              }
+            ]
+          },
+          {
+            "en": "Just then, Yuki, the quiet notetaker in the debate club, slips into the conversation, her soft voice barely above a whisper.",
+            "zh": "就在这时，辩论社里安静的记录员由纪悄悄插话进来，她的声音轻柔得几乎像耳语。",
+            "words": [
+              {
+                "w": "just then",
+                "zh": "就在那时"
+              },
+              {
+                "w": "slips into",
+                "zh": "悄悄加入"
+              },
+              {
+                "w": "barely above a whisper",
+                "zh": "几乎像耳语一样轻"
+              }
+            ]
+          },
+          {
+            "en": "\"I'm Yuki.",
+            "zh": "我叫Yuki。",
+            "words": [
+              {
+                "w": "I'm",
+                "zh": "‘I am’的缩写；用于说明身份或自身情况"
+              },
+              {
+                "w": "Yuki",
+                "zh": "日语名字；翻译中保留原样"
+              }
+            ]
+          },
+          {
+            "en": "I've been looking forward to meeting new members.\"",
+            "zh": "我一直期待认识新成员。",
+            "words": [
+              {
+                "w": "look forward to",
+                "zh": "期待"
+              },
+              {
+                "w": "meeting new members",
+                "zh": "结识新成员"
+              }
+            ]
+          },
+          {
+            "en": "You nod, feeling a sense of camaraderie with these two.",
+            "zh": "你点点头，感到和她们两人有一种同伴情谊。",
+            "words": [
+              {
+                "w": "camaraderie",
+                "zh": "同伴情谊"
+              }
+            ]
+          },
+          {
+            "en": "\"Nice to meet you, Yuki.\"",
+            "zh": "很高兴认识你，Yuki。",
+            "words": [
+              {
+                "w": "Nice to meet you",
+                "zh": "初次见面时的礼貌问候；常用短语"
+              },
+              {
+                "w": "meet",
+                "zh": "遇见或结识某人"
+              }
+            ]
+          },
+          {
+            "en": "The conversation flows easily, and you find yourself drawn to both Tessa and Yuki's personalities.",
+            "zh": "谈话进行得很顺畅，你发现自己被泰莎和由纪的个性所吸引。",
+            "words": [
+              {
+                "w": "flows easily",
+                "zh": "流畅地进行"
+              },
+              {
+                "w": "be drawn to",
+                "zh": "被……吸引"
+              }
+            ]
+          },
+          {
+            "en": "As the event continues, you're introduced to more club members, but it's Tessa and Yuki who stand out to you.",
+            "zh": "随着活动继续，你又认识了更多社团成员，但让你印象最深的还是泰莎和由纪。",
+            "words": [
+              {
+                "w": "stand out",
+                "zh": "突出/显眼"
+              }
+            ]
+          },
+          {
+            "en": "You're about to make your way to the registration table when Quinn, the debate club president, approaches.",
+            "zh": "你正要走向登记处时，辩论社社长奎因走了过来。",
+            "words": [
+              {
+                "w": "make one's way",
+                "zh": "前往；动身去"
+              },
               {
                 "w": "approaches",
-                "zh": "接近；临近"
+                "zh": "走近；靠近"
               },
               {
-                "w": "find yourself",
-                "zh": "发现自己处于……"
-              },
-              {
-                "w": "face-to-face",
-                "zh": "面对面"
+                "w": "debate club",
+                "zh": "辩论社"
               }
             ]
           },
           {
-            "en": "The pressure is on, but you remember the lessons you've learned from your teammates.",
-            "zh": "压力很大，但你记得从队友那里学到的经验。",
+            "en": "\"Hi, I'm Quinn.",
+            "zh": "“嗨，我是奎因。”",
             "words": [
               {
-                "w": "pressure is on",
-                "zh": "形势很紧张；压力大"
-              },
-              {
-                "w": "lessons you've learned",
-                "zh": "你学到的东西（经验）"
-              },
-              {
-                "w": "from your teammates",
-                "zh": "来自你的队友"
+                "w": "I'm",
+                "zh": "我是"
               }
             ]
           },
           {
-            "en": "You stand up, ready to present your argument.",
-            "zh": "你站起身，准备陈述你的论点。",
+            "en": "I'm the club president.",
+            "zh": "我是社团的社长。”",
             "words": [
               {
-                "w": "stand up",
-                "zh": "站起来"
-              },
-              {
-                "w": "present",
-                "zh": "展示；陈述"
-              },
-              {
-                "w": "argument",
-                "zh": "论点"
+                "w": "club president",
+                "zh": "社团社长"
               }
             ]
           },
           {
-            "en": "With Yuki's insightful observations, Marcus's logical reasoning, and Owen's strategic guidance, you deliver a compelling and persuasive argument that leaves the judges in awe.",
-            "zh": "凭借由Yuki的敏锐观察、Marcus的逻辑推理和Owen的战略指导，你提出了一个令人信服且有说服力的论点，让评委们惊叹不已。",
+            "en": "You'll be working with us this year.\"",
+            "zh": "今年你会和我们一起工作。”",
             "words": [
               {
-                "w": "insightful",
-                "zh": "洞察力强的"
+                "w": "work with sb",
+                "zh": "与某人一起工作"
               },
               {
-                "w": "logical reasoning",
-                "zh": "逻辑推理"
-              },
-              {
-                "w": "strategic guidance",
-                "zh": "战略指导"
+                "w": "this year",
+                "zh": "今年"
               }
             ]
           },
           {
-            "en": "In the end, you and your team emerge victorious, bringing honor to the Debate Challenge society.",
-            "zh": "最终，你和你的团队取得胜利，为辩论挑战赛社团赢得荣誉。",
+            "en": "You smile, feeling a sense of belonging.",
+            "zh": "你笑了，感到一种归属感。",
             "words": [
               {
-                "w": "emerge victorious",
-                "zh": "获胜；在竞争中取得成功"
-              },
-              {
-                "w": "bring honor to",
-                "zh": "给……带来荣耀或荣誉"
-              },
-              {
-                "w": "Debate Challenge society",
-                "zh": "学校的辩论比赛社团"
+                "w": "sense of belonging",
+                "zh": "归属感"
               }
             ]
           },
           {
-            "en": "The victory is not just about winning the tournament, but about the growth and friendships you've cultivated along the way.",
-            "zh": "这场胜利不只是赢得锦标赛，更是你一路走来所收获的成长与友谊。",
+            "en": "\"I'm excited to be here, Quinn.\"",
+            "zh": "“我很兴奋来到这里，奎因。”",
             "words": [
               {
-                "w": "cultivate",
-                "zh": "培养；逐渐养成"
-              },
-              {
-                "w": "along the way",
-                "zh": "一路上；过程中"
-              },
-              {
-                "w": "not just...but...",
-                "zh": "不仅……而且……"
+                "w": "be excited to do sth",
+                "zh": "对做某事感到兴奋"
               }
             ]
           },
           {
-            "en": "You realize that the Debate Challenge is more than just a club; it's a family that challenges and supports you in every aspect of your life.",
-            "zh": "你意识到，辩论挑战赛不仅仅是一个社团；它是一个家庭，在生活的方方面面都给你挑战与支持。",
+            "en": "As you turn to leave, Tessa calls out, \"Ryan, wait up!",
+            "zh": "当你转身要离开时，泰莎喊道：“瑞安，等等！”",
             "words": [
               {
-                "w": "more than",
-                "zh": "不只是……"
+                "w": "turn to leave",
+                "zh": "转身离开"
               },
               {
-                "w": "in every aspect",
-                "zh": "在各个方面"
-              },
-              {
-                "w": "supports you",
-                "zh": "支持某人"
+                "w": "call out",
+                "zh": "大声呼喊"
               }
             ]
           },
           {
-            "en": "And as you stand together, united and triumphant, you know that this is where you truly belong.",
-            "zh": "当你们并肩而立，团结一致、充满胜利的喜悦时，你会明白这里才是你真正归属的地方。",
+            "en": "We should introduce you to the rest of the team.\"",
+            "zh": "我们应该把你介绍给团队的其他成员。”",
             "words": [
               {
-                "w": "stand together",
-                "zh": "站在一起；团结"
+                "w": "introduce sb to sb",
+                "zh": "把某人介绍给另一个人"
               },
               {
-                "w": "united",
-                "zh": "团结的"
+                "w": "the rest of",
+                "zh": "其余的"
+              }
+            ]
+          },
+          {
+            "en": "You follow her, feeling a flutter in your stomach as you anticipate the next steps in this new chapter of your life.",
+            "zh": "你跟着她，心里怦怦直跳，期待着人生新篇章的下一步。",
+            "words": [
+              {
+                "w": "follow sb",
+                "zh": "跟随某人"
               },
               {
-                "w": "triumphant",
-                "zh": "胜利的；欢欣鼓舞的"
+                "w": "a flutter in your stomach",
+                "zh": "胃里一阵紧张/激动的感觉"
+              },
+              {
+                "w": "anticipate",
+                "zh": "期待；盼望"
+              }
+            ]
+          },
+          {
+            "en": "But as you turn the corner, you must immediately make a choice: will you follow Tessa and Yuki, or will you take a different path?",
+            "zh": "但当你转过拐角时，你必须立刻做出选择：是跟随泰莎和由纪，还是走另一条路？",
+            "words": [
+              {
+                "w": "turn the corner",
+                "zh": "转过拐角"
+              },
+              {
+                "w": "make a choice",
+                "zh": "做出选择"
+              },
+              {
+                "w": "take a different path",
+                "zh": "走不同的路"
               }
             ]
           }

@@ -80,6 +80,32 @@ const APPEAR_ZH = {
     "m5-02-weekend-win|Chloe": "东亚面孔，深棕清爽高扎马尾，发尾自然垂落，偏分刘海，瞳色黑色，运动型健康身形，穿运动装，活力气质",
     "m5-02-weekend-win|Iris": "欧亚混血面孔，五官立体，棕色齐肩锁骨短发，发尾微卷蓬松，侧分刘海露出额头，瞳色绿色，高挑纤细，穿职业西装外套，知性自由气质",
     "m5-02-weekend-win|Selina": "东亚面孔，深棕凌乱感抓发盘发，颅顶蓬松显发量，瞳色黑色，清瘦，穿修身西装外套配牛仔裤，干练时尚气质",
+    // P3 五卡回炉(2026-09-12 追加):01/02/05 男向(攻略对象为女性),03/04 女向(攻略对象为男性)
+    "p3-01-last-desk|Maya": "东亚面孔，深棕齐肩锁骨短发，发尾自然内扣，空气薄刘海，瞳色黑色，清瘦沉静，穿米色针织开衫，温柔安静气质",
+    "p3-01-last-desk|Ivy": "东亚面孔，黑色抓发低盘发，颅顶蓬松显发量，鬓角碎发利落，瞳色蓝色，清瘦挺拔，穿深灰高领毛衣，清冷理性气质",
+    "p3-01-last-desk|Cora": "东亚面孔，黑色清爽高扎马尾，偏分刘海，发尾自然垂落，瞳色黑色，娇小轻盈，穿棕色围裙内搭白T恤，元气明亮气质",
+    "p3-01-last-desk|Selene": "东亚面孔，黑色单侧三股麻花辫，编发刻意扯松蓬松，瞳色绿色，清瘦修长，穿深色宽松毛衣配格纹围巾，文艺神秘气质",
+    "p3-01-last-desk|June": "东亚面孔，浅亚麻棕高扎马尾，发尾波浪卷，瞳色黑色，健康匀称，穿修身棒球夹克，反差活力气质",
+    "p3-02-landing-intern|Ava": "东亚面孔，深棕抓发低盘发，颅顶蓬松，瞳色黑色，高挑苗条，穿浅灰职业套装，专业亲和气质",
+    "p3-02-landing-intern|Rosa": "东亚面孔，黑色齐肩锁骨短发，侧分刘海，发尾利落内扣，瞳色绿色，高挑挺拔，穿黑色修身西装，强势干练气质",
+    "p3-02-landing-intern|Nadia": "东亚面孔，黑色高扎马尾，发尾直顺，瞳色黑色，高挑清瘦，穿简约衬衫配西裤，锋利自信气质",
+    "p3-02-landing-intern|Zoe": "欧亚混血面孔，五官立体，深棕侧麻花辫，发尾微卷蓬松，瞳色蓝色，高挑纤细，穿棕色围裙内搭米色毛衣，温暖慵懒气质",
+    "p3-02-landing-intern|Vivian": "东亚面孔，浅棕抓发低盘发，鬓角碎发柔和，瞳色黑色，高挑修长，穿深色高领针织配阔腿裤，从容优雅气质",
+    "p3-03-group-presentation|Jake": "东亚面孔，黑色短碎盖，厚刘海带自然弧度，瞳色黑色，高挑清瘦，穿黑色连帽卫衣，沉默专注气质",
+    "p3-03-group-presentation|Noah": "东亚面孔，深棕纹理碎盖，发顶蓬松有层次，瞳色蓝色，高挑，穿休闲衬衫，爽朗健谈气质",
+    "p3-03-group-presentation|Felix": "欧亚混血面孔，五官立体，深棕偏分微卷短发，发卷柔和自然，瞳色绿色，高挑清瘦，穿工装外套，专注严谨气质",
+    "p3-03-group-presentation|Ian": "东亚面孔，黑色工整二八分短发，线条利落，瞳色黑色，高大挺拔，穿休闲西装外套，从容自信气质",
+    "p3-03-group-presentation|Cole": "东亚面孔，黑色短款多层碎发，发尾凌乱随性，瞳色黑色，健硕高个，穿运动卫衣，率真开朗气质",
+    "p3-04-flatmates|Ben": "东亚面孔，黑色短碎盖，刘海自然服帖，瞳色黑色，健硕，穿运动T恤，老实耿直气质",
+    "p3-04-flatmates|Ahmed": "欧亚混血面孔，五官立体，黑色偏分微卷短发，瞳色黑色，中等健硕，穿针织衫配围裙，温和体贴气质",
+    "p3-04-flatmates|Devon": "东亚面孔，黑色片状层次碎发，发尾凌乱垂落，瞳色黑色，高挑清瘦，穿复古乐队T恤，颓废随性气质",
+    "p3-04-flatmates|Marco": "欧亚混血面孔，五官立体，深棕三七分短发，刘海梳理服帖，瞳色绿色，高挑，穿白色衬衫配餐厅围裙，温暖爽朗气质",
+    "p3-04-flatmates|Simon": "东亚面孔，深棕短款微卷发，刘海蓬松自然，瞳色黑色，结实匀称，穿工装背带裤，安静可靠气质",
+    "p3-05-debate-club|Tessa": "东亚面孔，黑色高扎马尾，发尾直顺利落，瞳色黑色，高挑清瘦，穿校队西装外套，锋利自信气质",
+    "p3-05-debate-club|Yuki": "东亚面孔，黑色齐肩锁骨短发，发尾自然内扣，瞳色黑色，清瘦，穿针织开衫配衬衫，安静细致气质",
+    "p3-05-debate-club|Quinn": "东亚面孔，深棕抓发低盘发，颅顶蓬松显发量，瞳色蓝色，高挑，穿制服外套配百褶裙，强势认真气质",
+    "p3-05-debate-club|Blaire": "欧亚混血面孔，五官立体，浅棕侧麻花辫，编发刻意扯松蓬松，瞳色绿色，高挑，穿深色校服西装，傲慢犀利气质",
+    "p3-05-debate-club|Hana": "东亚面孔，浅棕高扎马尾，额前空气刘海，瞳色黑色，清瘦，穿校报马甲内搭衬衫，灵动细腻气质",
 };
 
 const isMaleNpc = (npc) => String((npc && npc.gender) || "").trim() === "男";
@@ -131,8 +157,8 @@ async function getToken() {
 
 const onlySlug = args.slug ? String(args.slug) : "";
 const onlyNpc = args.npc ? String(args.npc).toLowerCase() : "";
-const cardFiles = fs.readdirSync(CARDS_DIR).filter((f) => /^(r1|m5)-.*\.card\.json$/.test(f) && (!onlySlug || f.startsWith(onlySlug))).sort();
-if (!cardFiles.length) { console.error("无匹配卡:", onlySlug || "r1-*/m5-*"); process.exit(1); }
+const cardFiles = fs.readdirSync(CARDS_DIR).filter((f) => /^(r1|m5|p3)-.*\.card\.json$/.test(f) && (!onlySlug || f.startsWith(onlySlug))).sort();
+if (!cardFiles.length) { console.error("无匹配卡:", onlySlug || "r1-*/m5-*/p3-*"); process.exit(1); }
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
 const token = await getToken();

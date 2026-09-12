@@ -1,6 +1,6 @@
-// 小红书切片器(2026-09-09):读 p3_*.card.json → 每卡 4 种角度笔记文案稿
+// 小红书切片器(2026-09-09;2026-09-12 增恋爱攻略卡 love_mode 支持):读 *.card.json → 每卡 4 种角度笔记文案稿
 // 输出: docs/xhs-clips/{slug}/{01..04}-{角度}.md(标题+正文+标签;英文试读不超过 6 句,均带译文)
-// 用法: node scripts/xhs_clipper.mjs [--slug p3-01-last-desk] [--dir docs/english-cards] [--out docs/xhs-clips]
+// 用法: node scripts/xhs_clipper.mjs [--slug p3-01-last-desk] [--dir docs/english-cards] [--out docs/xhs-clips] [--pattern p3-]
 import fs from "node:fs";
 import path from "node:path";
 
@@ -10,6 +10,7 @@ const args = Object.fromEntries(process.argv.slice(2).flatMap((a, i, arr) =>
 const DIR = args.dir || "docs/english-cards";
 const OUT = args.out || "docs/xhs-clips";
 const only = args.slug || null;
+const PATTERN = new RegExp("^" + (args.pattern || "p3-") + ".*\\.card\\.json$");
 
 // ---- 素材提取 ----
 function quotes(text, n = 5) {
@@ -30,8 +31,12 @@ function storyExcerpt(story, maxChars = 260) {
     const flat = String(story || "").replace(/\s+/g, " ").trim();
     return flat.slice(0, maxChars).replace(/\s+\S*$/, "") + "…";
 }
+function tagsOf(c, extra = []) {
+    const t = c.gender_target === "female" ? ["乙女游戏", "女性向游戏"] : ["恋爱游戏", "文游"];
+    return ["#" + t.join(" #")].concat(extra).join(" ");
+}
 
-// 4 角度模板(占位 {…} 在下面填充)
+// ---- 4 角度模板:通用(非恋爱卡) ----
 function clip1Scene(c, q) {
     const st = c.structured;
     const envs = (st.scene_style?.env_templates || []).slice(0, 3).map((e) => "「" + e + "」").join("");
@@ -50,7 +55,7 @@ ${envs}
 > ${c.title} · ${c.title_zh}
 > "${q}"
 
-能读懂多少?读不懂的单词也不用查词典——在游戏里长按单词,解释直接弹出来,还能一键收进生词本,第二天按遗忘曲线提醒你复习。
+能读懂多少?读不懂的单词也不用查词典——在游戏里长按单词,解释直接弹出来,还能一键收进生词本,第 1·2·4·7 天自动安排复习。
 
 这是云吞吞文游的「${c.category_zh}」剧本,把枯燥的 ${c.band.toUpperCase()} 词汇装进一个你放不下的故事里。
 
@@ -58,9 +63,9 @@ ${envs}
         tags: `#英语学习 #${c.band.toUpperCase()} #背单词 #文游 #沉浸式英语 #${c.category_zh}英语 #英语口语 #学英语的尽头是上瘾`
     };
 }
+
 function clip2Vocab(c, quotesV, qMain) {
     const vocab = (c.structured.world?.vocab || []).slice(0, 8);
-    const st = c.structured;
     const sample = (quotesV[1] || quotesV[0] || qMain || "").slice(0, 100);
     return {
         n: "02", tag: "考点词速记", file: "02-考点词速记.md",
@@ -68,7 +73,7 @@ function clip2Vocab(c, quotesV, qMain) {
         body:
 `今天不背单词表,咱们在故事里捡词。🎯
 
-新出的「${c.title_zh}」校园剧本里,这 8 个词一个比一个眼熟,但放进剧情里立刻活了:
+「${c.title_zh}」里,这 8 个词一个比一个眼熟,但放进剧情里立刻活了:
 
 ${vocab.map((w) => "▸ **" + w + "**").join("\n")}
 
@@ -80,7 +85,7 @@ ${vocab.map((w) => "▸ **" + w + "**").join("\n")}
 云吞吞文游把 ${c.band.toUpperCase()} 词嵌进可交互剧本:你的每个选择都决定剧情走向,英语就成了你通关的工具,而不是任务。
 
 评论区告诉我,上面 8 个词你认识几个?`,
-        tags: `#英语单词 #${c.band.toUpperCase()}词汇 #背单词技巧 #语境记单词 #文游学英语 #校园英语 #英语打卡 #四六级`
+        tags: `#英语单词 #${c.band.toUpperCase()}词汇 #背单词技巧 #语境记单词 #文游学英语 #${c.category_zh}英语 #英语打卡 #四六级`
     };
 }
 function clip3People(c, qMain) {
@@ -88,7 +93,6 @@ function clip3People(c, qMain) {
     const npcs = (st.npcs || []).slice(0, 4);
     if (npcs.length < 3) return null;
     const lines = npcs.map((n) => `**${n.name}** ${n.gender==="女"?"她":"他"}是${n.role}——${n.personality.replace(/,/g,",")}`);
-    const q0 = qMain;
     return {
         n: "03", tag: "人物群像", file: "03-人物群像.md",
         title: "4 个 NPC,把" + c.title_zh + "演活了",
@@ -102,7 +106,7 @@ ${lines.join("\n")}
 开场 30 秒你就会跟他们对上话,而你的每一句回应,都会改变他们待你的方式——游戏没有标准答案,只有你想不到的发展。
 
 英文对话都是按真实口语写的,短句、地道、不超纲:
-> "${q0}"
+> "${qMain}"
 
 是不是比课文里的对话有意思多了?😏
 
@@ -125,7 +129,7 @@ function clip4Gameplay(c) {
 「${c.title_zh}」开篇 340+ 词纯英文沉浸故事,地点是 ${envs}——你不是在读英语,是在里面过日子。
 
 🧠 单词自己往脑子里钻
-每张卡内置 ${vocabN}+ 个考点词,长按即译、双击进生词本,还有每日点译次数免费送,当天学的词晚上自动安排复习。
+每张卡内置 ${vocabN}+ 个考点词,长按即译、双击进生词本,当天学的词按艾宾浩斯曲线安排复习。
 
 🎮 选择即学习
 每次抉择都是真实的英语输出练习,故事会记住你的选择,三幕剧情 + 三档结局,通关一次不过瘾,换个活法再来一遍。
@@ -137,8 +141,90 @@ function clip4Gameplay(c) {
     };
 }
 
+// ---- 4 角度模板:恋爱攻略卡(love_mode=true) ----
+function loveClip1Scene(c, q) {
+    const st = c.structured;
+    const id = st.identity || {};
+    const npcs = st.npcs || [];
+    const first = npcs.slice(0, 2).map((n) => n.name).join(" / ") || "TA";
+    // identity.role/background 可能是英文(LLM 翻译漂移),文案里只接受中文身份,否则退化为通用说法
+    const role = /[一-鿿]/.test(String(id.role || "")) ? String(id.role) : "故事的主角";
+    return {
+        n: "01", tag: "悬念开场", file: "01-悬念开场.md",
+        title: `开局就遇见 ${npcs[0] ? npcs[0].name : "TA"},这剧本有点上头`,
+        body:
+`刷到这条的先别划走——给你 5 秒,把自己放进这个场景:
+
+你是${role}。
+开场 30 秒,${first} 就会跟你对上话——而你的每一句回应,都在改变 TA 看你的眼神。
+
+难度 ${c.band.toUpperCase()},但读不懂完全不影响玩:
+> "${q}"
+
+长按句子出译文,长按 / 双击单词直接进生词本,第 1·2·4·7 天自动安排复习。
+你会真的想知道 TA 下一句说什么——这大概就是最好的学习动机。
+
+云吞吞文游「${c.title_zh}」(${c.category_zh} · ${c.band.toUpperCase()}),你的选择决定剧情,你的好感决定结局。
+
+评论区扣 1,我把入口发你👇`,
+        tags: tagsOf(c, ["#英语学习", "#" + c.band.toUpperCase(), "#角色扮演", "#云吞吞文游"])
+    };
+}
+function loveClip3Roster(c, q) {
+    const st = c.structured;
+    const npcs = (st.npcs || []).slice(0, 5);
+    if (npcs.length < 3) return null;
+    const lr = st.love_rules || {};
+    const lines = npcs.map((n) => `**${n.name}**｜${n.role}——${String(n.personality || "").split(/[。.,]/)[0]}`);
+    const he = lr.he_end || {};
+    return {
+        n: "03", tag: "攻略对象群像", file: "03-攻略对象群像.md",
+        title: `${npcs.length} 个攻略对象,你先选谁`,
+        body:
+`恋爱和学习是可以一起要的。👥
+
+「${c.title_zh}」里有 ${npcs.length} 个可攻略对象,每个都有独立人设和立绘:
+
+${lines.join("\n")}
+
+玩法不是点点点就完事:选项分"态度"(撩 / 暖心 / 逗趣),好感值够了会**锁线**——锁线之后其他角色自动淡出,只能走你选的那个人,结局分 HE 和 BE${he.min_affection ? `(HE 需要好感度 ${he.min_affection}+ 且触发心动时刻)` : ""}。
+
+而且每一段对话都是真实口语,不是课文腔:
+> "${(q || "").slice(0, 110)}"
+
+想先撩哪个?评论区告诉我,人多我出这条线的攻略路线。`,
+        tags: tagsOf(c, ["#英语学习", "#" + c.band.toUpperCase(), "#游戏推荐", "#云吞吞文游"])
+    };
+}
+function loveClip4Gameplay(c) {
+    const st = c.structured;
+    const world = st.world || {};
+    const vocabN = (world.vocab || []).length;
+    const hearts = (st.scenes?.heartbeat || []).slice(0, 3).map((h) => "「" + h.where + "」").join("");
+    return {
+        n: "04", tag: "玩法安利", file: "04-玩法安利.md",
+        title: "边谈恋爱边学英语,是种什么体验",
+        body:
+`一个能把 ${c.band.toUpperCase()} 词汇"玩"进去的产品长这样:
+
+🎭 恋爱线是真的恋爱
+「${c.title_zh}」里你以 you 视角与 ${(st.npcs || []).length} 个角色发展关系,选项带态度标签,好感度实时结算,还能触发心动时刻卡片${hearts ? `——${hearts}都是高发地点` : ""}。锁线之后只走一个人的结局,HE / BE 都会认真写。
+
+🧠 学习线是隐形的
+每张卡内置 ${vocabN}+ 个 ${c.band.toUpperCase()} 考点词,长按即译、双击进生词本;每局结束还有章末复盘,把这轮学到的表达整理成清单。
+
+📈 数据也不会骗你
+学习中心有今日一句、7 日周报和学习时长排行榜,每天学了多少一目了然。
+
+剧情、词汇、口语一次全包,${c.category_zh}题材 + ${c.band.toUpperCase()} 难度。
+
+评论区扣「1」,我把「${c.title_zh}」的传送门放出来~`,
+        tags: tagsOf(c, ["#英语学习App", "#背单词App", "#英语游戏化学习", "#" + c.band.toUpperCase() + "备考"])
+    };
+}
+
 // ---- 主流程 ----
-const files = fs.readdirSync(DIR).filter((f) => /^p3-.*\.card\.json$/.test(f) && (!only || f.includes(only)));
+const files = fs.readdirSync(DIR).filter((f) => PATTERN.test(f) && (!only || f.includes(only)));
 fs.mkdirSync(OUT, { recursive: true });
 let total = 0;
 for (const f of files.sort()) {
@@ -148,7 +234,9 @@ for (const f of files.sort()) {
     const slug = f.replace(/\.card\.json$/, "");
     const qMain = qs[0] || storyExcerpt(st.first_scene?.story);
     if (!qMain) { console.log("✗ " + f + " 无任何正文素材,跳过"); continue; }
-    const clips = [clip1Scene(c, qMain), clip2Vocab(c, qs, qMain), clip3People(c, qMain), clip4Gameplay(c)].filter(Boolean);
+    const clips = c.love_mode === true
+        ? [loveClip1Scene(c, qMain), clip2Vocab(c, qs, qMain), loveClip3Roster(c, qMain), loveClip4Gameplay(c)].filter(Boolean)
+        : [clip1Scene(c, qMain), clip2Vocab(c, qs, qMain), clip3People(c, qMain), clip4Gameplay(c)].filter(Boolean);
     const outDir = path.join(OUT, slug);
     fs.mkdirSync(outDir, { recursive: true });
     for (const cl of clips) {

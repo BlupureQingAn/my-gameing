@@ -1,0 +1,14 @@
+{
+  "name": "Rosa",
+  "gender": "女",
+  "role_zh": "Tech Department Head",
+  "age": 32,
+  "appearance_en": "Tall and slender, with chestnut hair tied in a neat bun, hazel eyes reflecting intelligence, dressed in a tailored suit that accentuates her elegant figure, exuding a confident and approachable aura.",
+  "personality_zh": "Firm yet fair, her words cut through to the core, but her soft smile can warm the coldest heart.",
+  "personality_en": "Direct and to the point, her tone is always professional, yet her eyes occasionally hint at a playful side.",
+  "hobby_en": "Devoting her evenings to open-source projects, contributing patches under an alias.",
+  "redline_en": "She dislikes superficiality and is unimpressed by empty boasts.",
+  "soft_en": "Her genuine concern for others' well-being can touch her deeply.",
+  "speech_en": "She often addresses you as 'Mr. [Your Name]', her tone warm yet firm.",
+  "relationship_zh": "Your potential mentor and colleague in the tech world."
+}
