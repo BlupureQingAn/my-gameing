@@ -353,10 +353,10 @@ const CHARGE_PLANS = {
     c168: { id: "c168", name: "168000 云币", price: "168", base: 168000, bonus: 33600 },
 };
 // 会员档位（金额/时长，前端仅展示；区别于 CHARGE_PLANS 云币档；2026-09-08 P1 定价重构:砍 5 档为 3 档,
-// 下架周/季——周卡留不住冲动客、季卡存在感弱;锚定心理:年卡 118 为主推,月卡 21 承接月付,终身限时做高价锚)
+// 下架周/季——周卡留不住冲动客、季卡存在感弱;锚定心理:年卡 49 为主推,月卡 21 承接月付,终身限时做高价锚)
 const MEMBER_PLANS = {
     monthly:   { id: "monthly",   name: "月度会员", price: "21",  days: 30 },
-    yearly:    { id: "yearly",    name: "年度会员", price: "118", days: 365 },
+    yearly:    { id: "yearly",    name: "年度会员", price: "49", days: 365 },
 };
 // 学习侧小额直付商品(不进云币,即时到账,心理学=第一笔破零门槛最低;结算走 settlePaidOrder 的 pack 分支,
 // 发到 KV extrapack:{uid} {gloss: 点译次数, recap: 复盘次数};gloss/recap 超限判定处先扣包,包尽再走云币)
