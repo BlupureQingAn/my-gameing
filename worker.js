@@ -372,11 +372,15 @@ const FREE_QUOTA_REFRESH_HOUR = 8;
 // 点译/复盘超限后云币续用单价(每次成功调用;价格可调)
 const GLOSS_COIN_COST = 5;   // 点译:1 次请求(≤10 句一批)5 云币
 const RECAP_COIN_COST = 10;  // 复盘:1 次生成 10 云币
-// 终身会员（会员改革后保留的会员档，非充值档；2026-09-08 P1 调价:24h 内 ¥199,过后 ¥299,抬高锚点衬年卡划算）
-const LIFETIME_PLAN = { id: "lifetime", name: "终身会员", price: "199", days: 73000 };
-// 终身会员限时优惠:每用户从首次打开充值页起 24h 内 ¥199,过后恢复 ¥299
+// 终身会员（会员改革后保留的会员档，非充值档；2026-09-12 调价:统一 ¥98,原 199/299 限时两档价作废——
+// 小徐同日指示"不要有超过98的别的商品",限时 UI 已随之下线;机制代码保留,若恢复限时把 LIFETIME_REGULAR_PRICE 改回高价即可）
+const LIFETIME_PLAN = { id: "lifetime", name: "终身会员", price: "98", days: 73000 };
+// 终身会员限时优惠:每用户从首次打开充值页起 24h 内 ¥98,过后 ¥98(2026-09-12 起两档同值=恒定)
 const OFFER_MS = 24 * 3600 * 1000;
-const LIFETIME_REGULAR_PRICE = "299";
+const LIFETIME_REGULAR_PRICE = "98";
+// 全站商品价格上限(小徐 2026-09-12):不得存在超过 ¥98 的可购商品;
+// 旧高价档(c168 ¥168)常量保留仅供历史订单结算,新下单在此拦下
+const MAX_PRODUCT_PRICE = 98;
 async function getLifetimeOffer(env, userId) {
     try {
         const raw = await env.COVER_CACHE.get("offer:" + userId);
@@ -849,12 +853,13 @@ async function xunhuPlaceOrder(env, orderNo, title, price, userId) {
 async function createPayOrder(env, userId, planId, payType, isMobile) {
     const plan = CHARGE_PLANS[planId] || MEMBER_PLANS[planId] || PACK_PLANS[planId] || (planId === "lifetime" ? LIFETIME_PLAN : null);
     if (!plan) throw new Error("无效的充值档位");
-    // 终身会员按 offer 状态定价:24h 优惠期内 199,过期恢复 299
+    // 终身会员按 offer 状态定价(2026-09-12 起两档同值 98)
     let price = plan.price;
     if (planId === "lifetime") {
         const offer = await getLifetimeOffer(env, userId);
         price = offer.active ? LIFETIME_PLAN.price : LIFETIME_REGULAR_PRICE;
     }
+    if (Number(price) > MAX_PRODUCT_PRICE) throw new Error("该档位已下架"); // 价格上限 98:高价旧档(c168 等)仅保留结算兼容,禁止新购
     const orderNo = "MP" + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 8).toUpperCase();
     const timestamp = new Date().toISOString();
 

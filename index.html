@@ -5744,7 +5744,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             </section>
             <section class="card">
                 <div class="list-title"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M5 20v-2h14v2zm0-3.5L3.725 8.475q-.05 0-.113.013T3.5 8.5q-.625 0-1.062-.438T2 7t.438-1.062T3.5 5.5t1.063.438T5 7q0 .175-.038.325t-.087.275L8 9l3.125-4.275q-.275-.2-.45-.525t-.175-.7q0-.625.438-1.063T12 2t1.063.438T13.5 3.5q0 .375-.175.7t-.45.525L16 9l3.125-1.4q-.05-.125-.088-.275T19 7q0-.625.438-1.063T20.5 5.5t1.063.438T22 7t-.437 1.063T20.5 8.5q-.05 0-.112-.012t-.113-.013L19 16.5z"/></svg> 会员服务</div>
-                <div class="list-sub" id="membership-settings-text">AI 对话按 token 计费（输入 4 币/千 token、输出 12 币/千 token，普通对话约 10 币），官方剧本卡全部免费游玩。开通终身会员（限时 ¥199）后免一切云币消耗（AI 对话）+ 社区付费卡直接游玩。</div>
+                <div class="list-sub" id="membership-settings-text">AI 对话按 token 计费（输入 4 币/千 token、输出 12 币/千 token，普通对话约 10 币），官方剧本卡全部免费游玩。开通终身会员（¥98）后免一切云币消耗（AI 对话）+ 社区付费卡直接游玩。</div>
             </section>
             <button type="button" id="auth-logout-btn" class="logout-big-btn" onclick="AuthService.logout()" style="display:none;">退出登录</button>
         </section>
@@ -6369,7 +6369,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             monthly: { id: "monthly", name: "月度会员", price: "21", days: 30, desc: "30 天点译复盘不限量 · 全部剧本免解锁" },
             yearly:  { id: "yearly",  name: "年度会员", price: "49", days: 365, desc: "365 天点译复盘不限量 · 全部剧本免解锁", tag: "主推 · 年付立省 80%" }
         },
-        lifetimePlan: { id: "lifetime", name: "终身会员", price: "199", originalPrice: "299", desc: "永久不限量 · 全部剧本免解锁 · 新卡抢先玩" },
+        lifetimePlan: { id: "lifetime", name: "终身会员", price: "98", originalPrice: "98", desc: "永久不限量 · 全部剧本免解锁 · 新卡抢先玩" },
         // P1 小额直付救急包(与 worker PACK_PLANS 对齐 rescue1/rescue3;前端展示+下单用,额度由 worker extrapack 结算)
         packPlans: {
             rescue1: { id: "rescue1", name: "点译救急包", price: "1", gloss: 10, recap: 0, desc: "¥1 = 点译 10 次" },
@@ -11720,7 +11720,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const policy = ChatPolicyConfigService.load();
             const selectedCardId2 = ScenarioCardService.getSelectedId();
 
-            // 会员限时价格文案(199 限时 ↔ 299 永久)随状态刷新
+            // 会员价格文案随限时状态刷新(2026-09-12 起终身统一 ¥98,限时 UI 自动隐藏)
             if (typeof MembershipService !== "undefined" && typeof MembershipService.updateLifetimePriceTexts === "function") {
                 MembershipService.updateLifetimePriceTexts();
             }
@@ -21170,7 +21170,7 @@ function openNpcProfile(npcId) {
             if (!grid) return;
             const current = AuthService.getUserData()?.membership_type || "";
             const lp = AppConfig.lifetimePlan;
-            const cdActive = countdownActive();
+            const cdActive = lifetimeOfferOn();
             // 会员档（月/年）：期内 AI 对话不限次、不消耗云币
             let planCards = Object.values(AppConfig.memberPlans).map(p =>
                 `<div class="recharge-item ${selectedPlan === p.id ? "active" : ""}" onclick="MembershipService.selectPlan('${p.id}')">
@@ -21204,7 +21204,7 @@ function openNpcProfile(npcId) {
             grid.innerHTML = planCards;
             updateLifetimePriceTexts();
         }
-        // 终身会员一次性限时:每用户从首次打开充值面板起 24h 优惠,过期恢复 ¥299
+        // 终身会员一次性限时机制:每用户从首次打开充值面板起 24h 优惠(2026-09-12 起终身统一 ¥98,两档同值=限时 UI 不再展示)
         // 服务器账号级计时(offer:{userId} KV),localStorage 仅未登录/接口失败时兜底
         const COUNTDOWN_KEY = "bitlife_membership_countdown_v1";
         const COUNTDOWN_MS = 24 * 3600 * 1000;
@@ -21221,6 +21221,11 @@ function openNpcProfile(npcId) {
             if (_serverOffer) return _serverOffer.active;
             const start = countdownStart();
             return !start || Date.now() - start < COUNTDOWN_MS;
+        }
+        // 限时 UI 是否生效:两档价同值(限时已下线,2026-09-12 终身统一 ¥98)或不在优惠期时,限时样式/横幅/倒计时全部不展示
+        function lifetimeOfferOn() {
+            const lp = AppConfig.lifetimePlan;
+            return countdownActive() && String(lp.originalPrice || "") !== String(lp.price);
         }
         // 登录用户打开充值页时同步服务器优惠状态(POST 幂等:仅首次写入时间戳)
         async function syncServerOffer() {
@@ -21252,19 +21257,20 @@ function openNpcProfile(npcId) {
         function startCountdown() {
             stopCountdown();
             renderCountdown();
-            if (countdownActive()) _cdTimer = setInterval(renderCountdown, 1000);
+            if (lifetimeOfferOn()) _cdTimer = setInterval(renderCountdown, 1000);
         }
         function stopCountdown() { if (_cdTimer) { clearInterval(_cdTimer); _cdTimer = null; } }
-        // 弹窗/设置页价格文案随限时状态切换(199 限时 ↔ 299 永久)
+        // 弹窗/设置页价格文案随限时状态切换(2026-09-12 起终身统一 ¥98,限时 UI 自动隐藏)
         function updateLifetimePriceTexts() {
-            const active = countdownActive();
+            const lp = AppConfig.lifetimePlan;
+            const active = lifetimeOfferOn();
             const intro = document.getElementById("membership-intro-text");
-            if (intro) intro.textContent = `会员期内 AI 对话不限次、不消耗云币；云币用于解锁剧本卡与免费额度超限后的 AI 对话。终身会员${active ? "（限时 ¥199）" : "（¥299）"}永久不限次。`;
+            if (intro) intro.textContent = `会员期内 AI 对话不限次、不消耗云币；云币用于解锁剧本卡与免费额度超限后的 AI 对话。终身会员${active ? `（限时 ¥${lp.price}）` : `（¥${lp.originalPrice}）`}永久不限次。`;
             const banner = document.getElementById("membership-offer-banner");
             if (banner) {
                 banner.innerHTML = active
                     ? `<div style="font-size:0.9rem;font-weight:700;color:#8a4b00;"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M4 14q0-2.625 1.25-4.675T8 5.875t2.75-2.138L12 3v3.3q0 .925.625 1.462t1.4.538q.425 0 .813-.175t.712-.575L16 7q1.8 1.05 2.9 2.912T20 14q0 2.2-1.075 4.013T16.1 20.874q.425-.6.663-1.312T17 18.05q0-1-.375-1.888t-1.075-1.587L12 11.1l-3.525 3.475q-.725.725-1.1 1.6T7 18.05q0 .8.238 1.513t.662 1.312q-1.75-1.05-2.825-2.863T4 14m8-.1l2.125 2.075q.425.425.65.95T15 18.05q0 1.225-.875 2.088T12 21t-2.125-.862T9 18.05q0-.575.225-1.112t.65-.963z"/></svg> 限时优惠进行中</div><div style="font-size:0.9rem;font-weight:700;color:#d63031;">距优惠结束 <span id="membership-countdown" style="font-variant-numeric:tabular-nums;background:#fff;padding:2px 8px;border-radius:6px;border:1px solid #e8b84b;">23:59:59</span></div>`
-                    : `<div style="font-size:0.9rem;font-weight:700;color:#8a4b00;">⏰ 限时优惠已结束，终身会员恢复原价 ¥299</div>`;
+                    : "";
             }
             const st = document.getElementById("membership-settings-text");
             if (st) st.textContent = `免费用户每天可免费畅玩 AI 剧情，额度用完后按云币计费（输入 4 币/千 token、输出 12 币/千 token），也可用 ¥1/¥3 小额救急包抵扣；开通月/年/终身会员后 AI 对话不限次、不消耗云币。官方剧本卡全部免费游玩，解锁社区付费卡仍需云币（会员可直接游玩）。`;
