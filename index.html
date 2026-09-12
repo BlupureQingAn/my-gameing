@@ -4830,14 +4830,15 @@
 </head>
 <body>
 
-<!-- ==================== 小屏横屏提示遮罩(仅触屏手机横向时显示,可跳过) ==================== -->
+<!-- ==================== 小屏横屏提示遮罩(仅触屏手机横向时显示,点任意位置可跳过) ==================== -->
 <style>
-    #rotate-hint{display:none;position:fixed;inset:0;z-index:99999;background:linear-gradient(160deg,#1e1a28,#2a2440);color:#fff;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;text-align:center;padding:16px}
+    #rotate-hint{display:none;position:fixed;inset:0;z-index:2147482000;background:linear-gradient(160deg,#1e1a28,#2a2440);color:#fff;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;text-align:center;padding:16px;cursor:pointer}
     #rotate-hint .rh-icon{font-size:2.6rem;animation:bootPulse 1.6s ease-in-out infinite}
     #rotate-hint .rh-title{font-size:1.05rem;font-weight:800}
     #rotate-hint .rh-sub{font-size:.78rem;opacity:.7}
-    #rotate-hint .rh-btn{margin-top:4px;padding:9px 22px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;font-size:.82rem;font-weight:600;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+    #rotate-hint .rh-btn{margin-top:4px;padding:12px 28px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;font-size:.88rem;font-weight:600;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
     #rotate-hint .rh-btn:active{background:rgba(255,255,255,.24)}
+    #rotate-hint .rh-tap{font-size:.72rem;opacity:.55}
     /* 仅触屏设备的小屏横向(手机横屏)才遮挡;平板横屏(高度>500)不触发,桌面(pointer:fine)不触发 */
     @media (orientation: landscape) and (pointer: coarse) and (max-height: 500px) { #rotate-hint { display:flex; } }
 </style>
@@ -4846,17 +4847,36 @@
     <div class="rh-title">请竖屏使用云吞吞文游</div>
     <div class="rh-sub">旋转手机以获得最佳体验</div>
     <button type="button" id="rh-skip" class="rh-btn">继续横屏使用</button>
+    <div class="rh-tap">也可点按屏幕任意位置继续</div>
 </div>
 <script>
 (function () {
     var KEY = "yt_rotate_hint_off";
     var el = document.getElementById("rotate-hint");
     if (!el) return;
-    function skip() {
+    var done = false;
+    function hide() {
+        el.style.pointerEvents = "none";
         el.style.display = "none";
-        try { localStorage.setItem(KEY, "1"); } catch (e) {}
+        el.style.visibility = "hidden";
+        if (el.parentNode) el.parentNode.removeChild(el);
     }
-    try { if (localStorage.getItem(KEY) === "1") el.style.display = "none"; } catch (e) {}
+    function skip() {
+        if (done) return;
+        done = true;
+        try { localStorage.setItem(KEY, "1"); } catch (e) {}
+        hide();
+    }
+    function onTouchEnd(e) {
+        if (e && e.cancelable) { try { e.preventDefault(); } catch (e2) {} }
+        skip();
+    }
+    var off = false;
+    try { off = localStorage.getItem(KEY) === "1"; } catch (e) {}
+    if (off) { hide(); return; }
+    el.addEventListener("click", skip);
+    el.addEventListener("pointerup", skip);
+    el.addEventListener("touchend", onTouchEnd, { passive: false });
     var btn = document.getElementById("rh-skip");
     if (btn) btn.addEventListener("click", skip);
 })();
