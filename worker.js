@@ -98,11 +98,16 @@ const MODEL_POOL = [
     { id: "zp2-glm-z1-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-z1-flash",   dailyCap: 1500, tier: 2, enabled: false },
     { id: "zp-glm-z1-flash",  url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-z1-flash",   dailyCap: 1500, tier: 2, enabled: false },
     // ZHIPU_KEY 已于 2026-08-29 换新 key(0a84a2ef...):zp- 条目 6 条恢复启用(4.7/4.5-air/4-air 直连全 200 合规)
-    // 2026-09-12 实测:glm-4.7 / glm-4-air 双 key 全部 429 code=1113「余额不足或无可用资源包,请充值」= 账号欠费(非模型问题)
-    //   → 4 条停用,充值后把 enabled 改回 true 再测;4.5-air 双 key 实测健康,留 tier3 但 TTFT 抖动大(0.6-6.3s)
+    // 2026-09-12 23:45 三把 key 直连矩阵复测(探针 F:/Claude/tmp/zp_keys_probe.mjs + zp_nothink_probe.mjs)——
+    //   推翻上轮"4.7/4-air 双 key 全欠费"的笼统结论,两个模型失效原因并不相同:
+    //   glm-4.7  : 仅 K1=429/1113(该账号无此资源包) | K2=200 关思考合规 1.4s | K3=200 1.4s → key 问题不是模型问题
+    //   glm-4-air: K1/K2/K3 全 429/1113 → 三账号都无该模型资源包(真缺包,非拥挤);买包后改 enabled 再测
+    //   ⚠ 但生产路径 pool:zp2-glm-4.7 仍 1113,而小徐给的 K2(直连同参数)200 → 疑 CF Secret ZHIPU_KEY2 从未换成该 key
+    //     (部署清单 2026-08-29 记的是"已好→不动")→ 待小徐确认换 key 后 zp2-glm-4.7 即可启用
+    //   4.5-air 双 key 实测健康,留 tier3 但 TTFT 抖动大(0.6-6.3s)
     { id: "zp2-glm-4.5-air",  url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4.5-air",     dailyCap: 600,  tier: 3, enabled: true },
     { id: "zp-glm-4.5-air",   url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4.5-air",     dailyCap: 600,  tier: 3, enabled: true },
-    { id: "zp2-glm-4.7",      url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4.7",         dailyCap: 300,  tier: 3, enabled: false },
+    { id: "zp2-glm-4.7",      url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4.7",         dailyCap: 300,  tier: 3, enabled: false }, // 待换 K2 key 后启用(直连实测 200/1.4s/关思考合规)
     { id: "zp2-glm-4-air",    url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4-air",       dailyCap: 1000, tier: 3, enabled: false },
     { id: "zp-glm-4.7",       url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4.7",         dailyCap: 300,  tier: 3, enabled: false },
     { id: "zp-glm-4-air",     url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4-air",       dailyCap: 1000, tier: 3, enabled: false },
@@ -119,8 +124,9 @@ const MODEL_POOL = [
     // 2026-09-12 tier7 内部按实测 TTFT 重排:4-flash-250414(0.5-0.6s) > 4-flash(2.4-2.6s) > 4.7-flash(当前 1305 访问量过大,垫底)
     { id: "zp2-glm-4-flash-250414", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4-flash-250414", dailyCap: 5000, tier: 7,  enabled: true },
     { id: "zp-glm-4-flash-250414", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4-flash-250414", dailyCap: 5000, tier: 7,  enabled: true },
-    // 2026-09-12:4.7-flash 双 key 连续三轮探测全部 429/1305「该模型当前访问量过大」(拿不到服务,也无法验证是否关思考)→ 停用,平台降温后可重测
-    { id: "zp2-glm-4.7-flash",    url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4.7-flash",     dailyCap: 5000, tier: 7,  enabled: false },
+    // 2026-09-12:4.7-flash 是「拥挤型」限流——三把 key 直连均 429/1305「该模型当前访问量过大」,非欠费,高峰秒拒低谷可用;
+    //   生产路径实测 zp2-glm-4.7-flash 200/首字 627ms/✅无推理(关思考字段被接受)→ K2 这条恢复启用,429 由 30s 短熔断自愈
+    { id: "zp2-glm-4.7-flash",    url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4.7-flash",     dailyCap: 5000, tier: 7,  enabled: true },
     { id: "zp-glm-4.7-flash",     url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4.7-flash",     dailyCap: 5000, tier: 7,  enabled: false },
     { id: "zp2-glm-4-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4-flash", dailyCap: 5000, tier: 7,  enabled: true },
     { id: "zp-glm-4-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY", model: "glm-4-flash", dailyCap: 5000, tier: 7,  enabled: true },
@@ -196,7 +202,8 @@ const MODEL_POOL = [
     // lastResort=true 后不再是池的常规成员:pickModel/候选链均排除(欠费 key 不参与每轮请求的链尾白试),
     // 仅当"整个模型池都不可用"(配额尽 或 池内候选全部失败)时单独最后尝试一次,失败即按原错误返回。
     // 2026-08-31 22:40 ZHIPU_KEY2 调用付费模型失败(503)→ 换用已验证可调付费模型的 ZHIPU_KEY3 ----
-    // 2026-09-12 停用:该模型上游强制思考(400/1210 不支持关闭思考),违反"全池禁思考"硬规则;且 ZHIPU_KEY3 实测余额不足(429/1113)
+    // 2026-09-12 停用双因(生产路径 pool: 实测):①上游原文 400/1210「该模型始终思考，不支持关闭思考；请使用 low、high 或 max」→ 无法满足"全池禁思考"硬规则;
+    //   ②K1/K2/K3 三把 key 调它均 429/1113 无可用资源包 → 即便允许思考也用不了。要恢复须先解决"始终思考"(上游只给 low/high/max 三档)+ 开通资源包
     { id: "zp-glm-5.3-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY3", model: "glm-5.3-flash", dailyCap: Infinity, tier: 100, enabled: false, lastResort: true },
 ];
 
@@ -220,7 +227,8 @@ const STREAM_BROKEN = [
 //   NVIDIA kimi 系(默认思考):网关直通 Moonshot 原生协议用 thinking.type=disabled;其余 nv 模型不推理不带字段;
 //   OpenRouter 官方统一关思考字段 reasoning.enabled=false(对不适用模型 OR 忽略,200 安全)
 const applyNoThinking = (payload, t) => {
-    // 注意:智谱 glm-5.3-flash 是"始终思考"型(1210:不支持关闭思考),无法满足"全池关思考"硬规则 → 已在池内停用,勿再启用
+    // 注意:智谱 glm-5.3-flash 是"始终思考"型——上游原文 400/1210「该模型始终思考，不支持关闭思考；请使用 low、high 或 max」
+    // → 无法满足"全池关思考"硬规则,已在池内停用,勿再启用(且三账号均无其资源包,调它必 429/1113)
     if (t.model === "spark-x" || (t.url || "").includes("bigmodel.cn")) payload.thinking = { type: "disabled" };
     if ((t.url || "").includes("siliconflow.cn")) payload.enable_thinking = false;
     if (["nv-kimi-k3", "nv-kimi-k2.6"].includes(t.id)) payload.thinking = { type: "disabled" };
