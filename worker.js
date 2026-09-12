@@ -102,12 +102,12 @@ const MODEL_POOL = [
     //   推翻上轮"4.7/4-air 双 key 全欠费"的笼统结论,两个模型失效原因并不相同:
     //   glm-4.7  : 仅 K1=429/1113(该账号无此资源包) | K2=200 关思考合规 1.4s | K3=200 1.4s → key 问题不是模型问题
     //   glm-4-air: K1/K2/K3 全 429/1113 → 三账号都无该模型资源包(真缺包,非拥挤);买包后改 enabled 再测
-    //   ⚠ 但生产路径 pool:zp2-glm-4.7 仍 1113,而小徐给的 K2(直连同参数)200 → 疑 CF Secret ZHIPU_KEY2 从未换成该 key
-    //     (部署清单 2026-08-29 记的是"已好→不动")→ 待小徐确认换 key 后 zp2-glm-4.7 即可启用
+    //   ⚠ 生产路径 pool:zp2-glm-4.7 曾报 1113 而小徐的 K2 直连 200 → 查明 CF Secret ZHIPU_KEY2 从未换成该 key
+    //     (部署清单 2026-08-29 记"已好→不动"所致)。2026-09-12 小徐确认后已 secret put K2 → zp2-glm-4.7 启用(实测 200/关思考合规)
     //   4.5-air 双 key 实测健康,留 tier3 但 TTFT 抖动大(0.6-6.3s)
     { id: "zp2-glm-4.5-air",  url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4.5-air",     dailyCap: 600,  tier: 3, enabled: true },
     { id: "zp-glm-4.5-air",   url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4.5-air",     dailyCap: 600,  tier: 3, enabled: true },
-    { id: "zp2-glm-4.7",      url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4.7",         dailyCap: 300,  tier: 3, enabled: false }, // 待换 K2 key 后启用(直连实测 200/1.4s/关思考合规)
+    { id: "zp2-glm-4.7",      url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4.7",         dailyCap: 300,  tier: 3, enabled: true },
     { id: "zp2-glm-4-air",    url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4-air",       dailyCap: 1000, tier: 3, enabled: false },
     { id: "zp-glm-4.7",       url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4.7",         dailyCap: 300,  tier: 3, enabled: false },
     { id: "zp-glm-4-air",     url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4-air",       dailyCap: 1000, tier: 3, enabled: false },
