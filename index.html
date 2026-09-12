@@ -23679,15 +23679,18 @@ window.LoveEngine = (() => {
         /* 词源就绪先切一遍(vocab 已加载时;双语词注已入池 → 一次包词) */
         if (vocabLoaded) refreshCardSens(cardSens);
         /* M7a/M9B 渐进沉浸状态机 scaffold 阶段:整卡自动出句下行间双语(interlinear)——仅登录用户、≤10 句自动,其余长按再看;
-           原 auto-expand 展开卡形态已删(2026-09-06);阶段判定与生成侧共用 LangEngine.immStage */
+           原 auto-expand 展开卡形态已删(2026-09-06);阶段判定与生成侧共用 LangEngine.immStage
+           2026-09-13:自动展开只铺"已烘烤好的译文",未命中一律不展开也不发 AI——原先 miss 走 queueGloss 兜底,
+           会让用户"没点过的句子也批量生成译文"(小徐报:只长按一句,开场前几句却一起出译文),违背零点译 AI 的设计 */
         var immStg = null;
         try { immStg = window.LangEngine && LangEngine.immStage ? LangEngine.immStage(roundNo()) : null; } catch (e) { immStg = null; }
         if (token() && cardSens.length && immStg && immStg.mode === "scaffold") {
             for (var a = 0; a < cardSens.length && a < GLOSS_BATCH; a++) {
                 var as = cardSens[a];
+                var ac = glossCache[as.text];
+                if (!ac || !ac.zh) continue;   // 无预烤译文:留给用户长按,不主动生成
                 as.expanded = true;
-                if (glossCache[as.text] || glossFail[as.text]) fillGloss(as);
-                else queueGloss([as]);
+                fillGloss(as);
             }
         }
         /* M5 章末复盘入口:每 5 轮一小章,本轮卡尾挂轻量入口条(st.lgDone 保证每卡仅一次) */
