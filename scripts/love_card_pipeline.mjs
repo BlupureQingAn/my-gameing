@@ -96,6 +96,87 @@ const TOPICS = [
             Iris: "公司楼下咖啡馆店主,前程序员,每天替你留一杯,记得你面试走到第几轮",
             Selina: "对面联合办公空间的独立开发者,正在做自己的产品,会对你说你该为自己写代码"
         }
+    },
+    // ---- P3 五卡回炉:保留原卡题材与基础设定,角色池与剧情链换攻略骨架(PRD §5 指派:01/02/05 男向,03/04 女向) ----
+    {
+        slug: "p3-01-last-desk", target: "male", band: "cet4", category: "校园", category_zh: "校园",
+        title_seed: "期末周图书馆:一座难求的座位与闭馆前的那杯咖啡",
+        premise: "大二男主在期末周死守图书馆的一个座位;自习、闭馆、深夜通勤之间,与图书馆里遇见的五位女生各自展开交集",
+        setting: "美国大学图书馆与校园(十二月期末周,寒冬)",
+        start: { year: 2026, month: 12, day: 14 },
+        identity: { gender: "男", age: 20, role_seed: "大二男生,期末周图书馆常驻,靠自律和速溶咖啡熬夜" },
+        names: ["Maya", "Ivy", "Cora", "Selene", "June"],
+        archetypes: {
+            Maya: "图书馆学生馆员,大三,安静温柔,管着一架旧书和整层楼的自习秩序,会不动声色地给你留一张'已占用'的纸条",
+            Ivy: "理学院学霸,大三,固定坐你邻座,期末周靠黑咖啡续命,嘴上冷淡,却会把整理好的笔记推过来一半",
+            Cora: "校门口咖啡车的兼职女生,大二,记得你每天的点单,收摊前会给你留最后一个可颂,笑起来眼睛弯弯",
+            Selene: "文学系女生,大三,总在图书馆顶楼角落写小说,夜里才出现,会把你的自习日常悄悄写进她的故事里",
+            June: "啦啦队队长,平时精致到不像会来图书馆的人,期末周第一天成了你的'抱佛脚'同桌,反差点满"
+        }
+    },
+    {
+        slug: "p3-02-landing-intern", target: "male", band: "cet6", category: "职场", category_zh: "都市职场",
+        title_seed: "终面周:科技园区里的三轮面试与深夜咖啡",
+        premise: "应届男主闯入快速扩张的科技公司 Vertex Systems 的终面与实习周;面试室、工位、园区咖啡店之间,与公司内外五位女性各自产生交集",
+        setting: "现代都市科技园区(虚构 Vertex Systems 及其周边)",
+        start: { year: 2026, month: 9, day: 7 },
+        identity: { gender: "男", age: 22, role_seed: "刚毕业的软件工程专业学生,正在 Vertex Systems 走终面流程" },
+        names: ["Ava", "Rosa", "Nadia", "Zoe", "Vivian"],
+        archetypes: {
+            Ava: "人力资源专员,26 岁,面试流程里的第一张笑脸,专业得体,茶水间里才会露出真实的疲惫与温柔",
+            Rosa: "技术部门主管,32 岁,终面考官之一,代码评审不留情面,深夜却在开源社区用另一个 ID 提交补丁",
+            Nadia: "同批面试的竞争者,24 岁,棋逢对手的锋利与骄傲,压力之下从对手慢慢变成同盟",
+            Zoe: "公司楼下咖啡店店主,28 岁,前设计师,记得你面试走到第几轮,每天替你留一杯温度刚好的拿铁",
+            Vivian: "市场部总监,35 岁,电梯里偶遇的年上系,说话慢条斯理,句句都在考你"
+        }
+    },
+    {
+        slug: "p3-03-group-presentation", target: "female", band: "cet4", category: "校园", category_zh: "校园",
+        title_seed: "演示前夜:小组掉线之后重新凑齐的人",
+        premise: "大三女主在课程小组演示前夜遭遇队友集体失联,一边补位救场,一边重新认识同组与同系的五位男生;校园协作与怦然一起发生",
+        setting: "美国 Crestwood 大学校园(十一月,演示周前夕)",
+        start: { year: 2026, month: 11, day: 3 },
+        identity: { gender: "女", age: 21, role_seed: "大三传媒专业女生,课程小组组长,演示主讲人" },
+        names: ["Jake", "Noah", "Felix", "Ian", "Cole"],
+        archetypes: {
+            Jake: "计算机系大三,小组里沉默的技术担当,话不多,但永远在凌晨三点回你消息:问题已修好",
+            Noah: "商学院大三,小组的市场分析师,社交达人,嘴上没个正形,关键时刻却把所有人的锅都背过去",
+            Felix: "建筑系大四,完美主义,为演示模型熬到天亮,苛求每一处细节,却会偷偷帮你把你那部分改好",
+            Ian: "学生会副主席,大三,临危受命来救场的外援学长,主持功底一流,笑起来有点坏",
+            Cole: "体育系大三,被拉来当'气氛组'的篮球队员,看着大大咧咧,其实记得你说的每一句小话"
+        }
+    },
+    {
+        slug: "p3-04-flatmates", target: "female", band: "cet6", category: "生活", category_zh: "都市合租",
+        title_seed: "合租公寓的第一个秋天:一张账单掀起的边界之争",
+        premise: "大三女主与室友合租校外公寓,一张异常的水电账单掀起边界之争;在与室友和邻居男生的相处中,重新划定'界限'与心动",
+        setting: "现代都市 Riverside 街区合租公寓与周边(十月末,深秋)",
+        start: { year: 2026, month: 10, day: 18 },
+        identity: { gender: "女", age: 21, role_seed: "大三女生,合租公寓里负责管理共享账单和公共事务的人" },
+        names: ["Ben", "Ahmed", "Devon", "Marco", "Simon"],
+        archetypes: {
+            Ben: "室友,大三体育生,老实耿直,健身房的常客,账单算不清时最先把钱转过来的人",
+            Ahmed: "室友,大三国际生,厨艺好到整层楼都来蹭饭,细心体贴,冰箱里永远给你的那一格留着东西",
+            Devon: "隔壁合租的男生,乐队鼓手,作息颠倒,白天睡觉晚上排练,隔着墙敲节奏跟你打招呼",
+            Marco: "楼下意式餐厅的兼职服务生,24 岁,总会'不小心'多打包一份甜点带给你,笑容很暖",
+            Simon: "房东的侄子,来修东西的水管工,安静可靠,工具箱里常备你随口抱怨过的小零件"
+        }
+    },
+    {
+        slug: "p3-05-debate-club", target: "male", band: "hs", category: "校园", category_zh: "校园",
+        title_seed: "高中辩论社招新:从替补席到决赛台",
+        premise: "高一男主陪朋友去辩论社招新,阴差阳错坐上了替补席;一个学期里,在校内联赛与社团日常中,与五位女生各自交锋又并肩",
+        setting: "美国虚构高中 Westbrook High 辩论社与校园(九月招新季)",
+        start: { year: 2026, month: 9, day: 21 },
+        identity: { gender: "男", age: 16, role_seed: "高一男生,被朋友拉去辩论社招新现场,意外留在了替补席" },
+        names: ["Tessa", "Yuki", "Quinn", "Blaire", "Hana"],
+        archetypes: {
+            Tessa: "高三辩手,队内王牌,逻辑锋利,台上从不让分,台下会把你被驳倒的论点一条条拆给你听",
+            Yuki: "高二记录员,安静细致,速记全场论点,赛后会递给你写满批注的笔记,字迹清秀",
+            Quinn: "辩论社社长,高三学姐,强势认真,把社团看得比自己重要,招新时一眼看中了替补席上的你",
+            Blaire: "对手校的王牌辩手,17 岁,傲慢犀利,赛场上与你针锋相对,赛后却在校门口等你出来",
+            Hana: "校报记者部成员,高二,来辩论社采访写稿,相机里存了九张你在台上讲话的照片"
+        }
     }
 ];
 
@@ -171,7 +252,8 @@ async function genEnBlock(label, doAsk) {
     for (let i = 0; i < 3; i++) {
         const raw = await doAsk(i > 0 ? EN_WARN : "");
         if (raw && cjkCount(raw) <= 2) return raw;
-        console.log(label + "  含中文 " + cjkCount(raw) + " 字,重试…");
+        const hits = (String(raw || "").match(/[^\n]*[一-鿿][^\n]*/g) || []).slice(0, 3).map((l) => l.trim().slice(0, 120)).join(" ⏎ ");
+        console.log(label + "  含中文 " + cjkCount(raw) + " 字,重试…" + (hits ? " [" + hits + "]" : ""));
     }
     throw new Error("三次生成均含中文");
 }
@@ -238,7 +320,7 @@ async function genWorldMeta(t, title, textHead) {
 async function genIdentity(t, title, textHead) {
     const d = await ask(SYS_BASE,
         `卡《${title}》(${t.target === "female" ? "女向:玩家是女主" : "男向:玩家是男主"}):为主角定身份。参考前面设定,玩家以第二人称 you 存在。\n${textHead}\n` +
-        `输出单行 JSON:{"name":"英文名","gender":"${t.identity.gender}","age":${t.identity.age},"role":"${t.identity.role_seed}","background":"英文 2-3 句背景(纯英文)"}`, 2000);
+        `输出单行 JSON:{"name":"英文名","gender":"${t.identity.gender}","age":${t.identity.age},"role":"${t.identity.role_seed}(role 字段必须原样保留这段中文,禁止翻译成英文)","background":"英文 2-3 句背景(纯英文)"}`, 2000);
     return d.identity || d;
 }
 
@@ -252,7 +334,7 @@ async function genFirstScene(t, title, text, chars, playerName) {
     const roleLines = Array.isArray(chars) ? chars.filter((c) => c && c.name).map((c) => `- ${c.name}:${String(c.role_zh || c.role || "").slice(0, 60)}`).join("\n") : "";
     const SPEC = `写开场故事:全程第二人称——叙述句主语一律是 you,严禁用第三人称讲述主角("She steps into…"这类句子整段作废)。开始于设定时间点前几分钟,现在时,340-420 词,停在「你必须立刻做选择」的节骨眼,不展开后续。` +
         `开场要让玩家与至少 2 位攻略对象${t.names[0]}/${t.names[1]}自然相遇(可按名字写,${t.names[0]}${t.names[1]}必须真人出场且有台词)。\n` +
-        (roleLines ? `出场角色身份(严禁写错身份:面试官别写成同批竞争者、店员别写成同事):\n${roleLines}\n` : "") +
+        (roleLines ? `出场角色身份(严禁写错身份:面试官别写成同批竞争者、店员别写成同事;下方身份描述可能含中文,仅供你理解角色定位,正文严禁出现任何中文):\n${roleLines}\n` : "") +
         (playerName ? `主角名字是 ${playerName}:只允许出现在别人对主角的称呼里(如 "Hi, ${playerName}!"),叙述句里一律用 you。\n` : "") +
         `句长 8-15 词为主,对话自然,营造心动感的画面细节。`;
     const BAN = `\n!!!硬性禁止(违反即整段作废):①正文严禁出现任何选项行——不得写 "1." "2." 这类编号;②严禁写任何一个选择的后果或选择之后的剧情,也不准交代"你已经做出决定"——必须在悬念处戛然而止;③总词数不得超过 460;④严禁方括号占位符(如 [Your Last Name]),姓氏/称呼必须写实或直接省略;⑤严禁第三人称叙述主角,叙述句主语只能是 you。`;
@@ -329,6 +411,8 @@ function qcCard(card, t) {
     const wantG = t.target === "female" ? "男" : "女";
     if (npcs.some((n) => n && n.gender !== wantG)) errs.push("npcs gender 须全为" + wantG + "(与 gender_target 互补)");
     if (s.identity && ((s.identity.gender || "") !== t.identity.gender)) errs.push("玩家性别应为 " + t.identity.gender);
+    // 玩家名与攻略对象重名会让开场"Hi, X!"同时指玩家与 NPC(p3-05 实错,2026-09-12 加)
+    if (s.identity && t.names.some((n) => String(n).toLowerCase() === String(s.identity.name || "").trim().toLowerCase())) errs.push("identity.name 与攻略对象重名: " + s.identity.name);
     const lr = s.love_rules;
     if (!lr || typeof lr !== "object") errs.push("love_rules 缺失");
     else {

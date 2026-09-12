@@ -1,67 +1,128 @@
 {
-  "title": "Bills & Boundaries",
-  "title_zh": "账单与界限",
+  "title": "Bill Battle",
+  "title_zh": "账单之战",
   "lang": "en",
   "band": "cet6",
   "category": "生活",
-  "category_zh": "生活",
+  "category_zh": "都市合租",
   "theme": "minimal",
-  "text": "## Premise\nYou're living in a cozy off-campus apartment with three roommates. It's your first time managing a shared utility bill, and you're in a bit of a pickle. You've noticed that the water and electricity bills have been unusually high, and you're worried about how to split the costs fairly. You want to maintain the trust in your roommate relationships and avoid any conflicts, but you're also afraid of being taken advantage of or not being able to afford your share.\n\n## The World\nIn this world, shared living spaces like your apartment are quite common among university students. Each apartment is equipped with a shared meter for water and electricity, and the bills are typically divided among the roommates based on the number of occupants. The apartment complex has a friendly and community-oriented vibe, with a communal area where you can hang out and meet other students. However, managing finances can sometimes lead to misunderstandings and tensions, especially when it comes to splitting utility bills. The atmosphere is generally positive, but there's always that underlying pressure to keep everything fair and transparent.\n\n## People\n\nBen:\n- Identity: A responsible and organized finance major.\n- Personality: Meticulous and fair-minded, always looking for solutions.\n- To your benefit: He can help you analyze the bills and propose a fair splitting method.\n- Speaking habit: Uses clear, straightforward language, often finishing sentences with a confident tone.\n\nChloe:\n- Identity: A creative and spontaneous photography enthusiast.\n- Personality: Free-spirited and a bit impulsive, often in a rush.\n- To your benefit: She can provide a fresh perspective and lighten the mood.\n- Speaking habit: Expresses herself with colorful metaphors and slang, speaking quickly with enthusiasm.\n\nAhmed:\n- Identity: A quiet, thoughtful international student from Egypt.\n- Personality: Respectful and considerate, but also very traditional in his ways.\n- To your benefit: He can offer a different cultural perspective on sharing expenses.\n- Speaking habit: Uses formal language, often prefacing statements with polite phrases and a gentle tone.\n\nMia:\n- Identity: A lively and outgoing marketing student.\n- Personality: Social and popular, always up for a good time.\n- To your benefit: She can mediate conflicts and keep the group together.\n- Speaking habit: Uses a lot of idioms and colloquialisms, speaking rapidly with a playful demeanor.\n\n## The Arc\n\n### Act I: Establishing the Situation and Allies (4-5 Rounds)\n\nIn the cozy confines of their off-campus apartment, the group of friends sits around the kitchen table, a pile of bills scattered before them. The tension is palpable as each person takes a turn to examine the numbers.\n\nBen, with his meticulous nature, starts the conversation. \"Alright, let's look at the electricity bill. We need to figure out a fair way to split it. My approach would be to calculate the average usage per person based on the past month's data.\"\n\nChloe, ever the free spirit, pipes up with a grin. \"But that's so boring! How about we split it based on who uses the most appliances? It'll be fun!\"\n\nAhmed, the thoughtful international student, nods in agreement. \"I think that could work. It's a different perspective, and it might even bring us closer as a group.\"\n\nMia, the social butterfly, jumps in. \"Great! Let's make it a game. Whoever uses the most appliances gets to pick the next movie night snack!\"\n\nThe group laughter breaks the initial tension, and they start to brainstorm ways to track their usage. They agree to use an app that tracks energy consumption and update the data weekly.\n\n### Act II: Conflict Escalation and Emotional High Point (4-5 Rounds + 1 Emotional Highlight)\n\nAs the weeks pass, the bills continue to pile up, and so does the tension. Mia, who loves to throw parties, starts using more electricity than usual. The group's energy bills skyrocket, and the app shows a clear discrepancy.\n\nBen, ever the fair-minded one, suggests a meeting. \"Guys, we need to talk. Mia, I know you love hosting, but we all need to be more mindful of our usage. It's affecting everyone's share.\"\n\nMia, feeling defensive, argues back. \"But I thought we were all in this together! Why should I have to change?\"\n\nThe emotional high point comes when Ahmed speaks up. \"I understand Mia's point, but we also need to respect each other's boundaries. We're a team, and teams need to compromise.\"\n\nThe group listens, and the conversation evolves into a deeper discussion about trust and respect. They agree to set clearer boundaries and communicate more openly about their usage.\n\n### Act III: Resolution (3-4 Rounds)\n\nWith the new boundaries in place, the group starts to manage their expenses more effectively. They set up a schedule for hosting events and ensure that everyone contributes to the shared responsibilities.\n\nThe tension in the apartment fades away, replaced by a renewed sense of camaraderie. They all realize that trust is built through open communication and mutual respect.\n\n## Endings\n\n- Happy Ending: \"After a few weeks of adjusting, the bills are under control, and the group's trust in each other is stronger than ever.\"\n- Average Ending: \"The bills are still a bit of a challenge, but the group is learning to navigate their differences and work together.\"\n- Sad Ending: \"Despite their best efforts, the bills continue to be a point of contention, and the group starts to drift apart.\"",
+  "love_mode": true,
+  "gender_target": "female",
+  "text": "## Premise\nYou, a third-year university student, are living in a shared apartment off-campus with your roommate. An unusual utility bill sparks a boundary dispute. You want to re-establish clear boundaries while navigating the complexities of living with others and finding love.\n\n## The World\nRiverside Street, a bustling urban area, is where your shared apartment is located. The neighborhood is diverse, with a mix of students, young professionals, and local families. The apartment complex is modern and well-maintained, with a communal garden and a small gym. The residents are friendly, but each has their own space and routine.\n\nThe students, like you, have busy schedules filled with classes, assignments, and social events. The atmosphere is lively during the day, but it quietens down in the evening as everyone heads to their respective rooms. The neighbors, a mix of internationals and locals, add to the cultural diversity of the area. There's a sense of community, but also personal space respected by all.\n\n## Ben\n\nBen, the first neighbor you meet, is always around during your workout sessions at the gym. You first crossed paths while discussing the best techniques for lifting. His directness and no-nonsense approach are refreshing, especially when it comes to tackling the boundary issue with your roommate. Interacting with him is always punctuated with a touch of playful banter, and there's a genuine warmth in the way he addresses you as 'Sweetie'.\n\n## Ahmed\n\nAhmed, the considerate cook, introduced himself during one of your quiet evenings. You two bonded over a shared appreciation for diverse cuisine. He often prepares meals in the communal kitchen, and his gentle manner and logical approach to solving problems make him a popular figure in the building. Your interactions are characterized by thoughtful conversations and his affectionate use of 'my dear'.\n\n## Devon\n\nDevon, the musician, first caught your attention with the rhythm of his drumming echoing through the halls. You found yourselves discussing the nuances of music, and his quiet charm made a lasting impression. He's not one for loud conversations, but his rhythmic phrases and gentle smile make every interaction memorable. He often addresses you casually with 'Hey, you', adding a personal touch to your exchanges.\n\n## Marco\n\nMarco, the pianist, became a familiar face as you walked by his apartment door. His light-hearted tone and the way he often ends sentences with 'you know?' make him a fun person to chat with. You remember him from a late-night chat where he played the piano, his music matching his gentle whisper when he calls you 'Sweetie'. The kindness in his words touched you deeply.\n\n## Simon\n\nSimon, the soft-spoken repairman, is often seen working on various tasks around the apartment. His gentle demeanor and the soothing murmur of his voice make him a calming presence. You first met him while discussing the unusual utility bill, and his genuine concern for your well-being left a lasting impression. His 'Dear', accompanied by a reassuring smile, makes every conversation feel like a comfort.\n\n## Love Routes — meeting phase\n\n### Ben's Route: The Kitchen Chronicles\n\nBen's route hook lies in the communal kitchen, where his love for cooking creates a shared passion. You find yourselves talking about recipes and cooking techniques, leading to a deeper connection over shared meals and laughter. His gentle nature and sense of humor make every kitchen session a memorable one.\n\n### Ahmed's Route: The Late-Night Discussions\n\nAhmed's route is unlocked through the depth of conversation during late-night chats. His intellectual discussions about philosophy and life’s mysteries draw you in, creating a sense of camaraderie that grows with each conversation.\n\n### Devon's Route: The Drum Beats\n\nDevon's route hook is the rhythm of his drumming, a sound that seems to resonate with your soul. Discussing music and art together, you find a shared love for expression and creativity. His ability to communicate through beats and his casual 'Hey, you' makes every interaction feel personal and intimate.\n\n### Marco's Route: The Melodies\n\nMarco's route begins with the soothing notes of his piano. The way he incorporates your name, 'Sweetie', into his soft, gentle whispers creates a tender bond. Listening to him play, you realize the music mirrors his personality, and the two of you share a mutual appreciation for life’s finer things.\n\n### Simon's Route: The Quiet Moments\n\nSimon's route is about the quiet moments, the subtle connections in the apartment's shared spaces. His gentle demeanor and the warmth in his voice create a sense of safety. Discussing the utility bill with him turns into a heartwarming exchange, unlocking a deeper connection.\n\n## Heating Phase\n\nDuring this phase, you may choose to pursue 1-2 of the routes, such as deepening your bond with Ben and Simon. Heartbeat-moment triggers include:\n\n1. Alone in the club room after a shared task, the laughter and warmth filling the room as you both clean up together.\n2. Walking home together after a rainy day, the silence filled with the sound of rain and the comfort of each other's presence.\n3. Backstage before a show, where the excitement of Devon's performance and your shared anticipation create a thrilling connection.\n\nOnce one bond passes the threshold, the others naturally step back into the background.\n\n## Round map — list roughly 13-16 rounds as a simple table (use pipes or hyphens):\n| Round Number | Scene Keyword | Characters Present |\n|--------------|-------------------------|---------------------------|\n| 1 | Cooking Dinner | You, Marco |\n| 2 | Shared Study Group | You, Ahmed, Devon |\n| 3 | Apartment Cleaning | You, Simon |\n| 4 | Movie Night | You, Devon, Simon |\n| 5 | Park Walk | You, Ahmed |\n| 6 | Community Event | You, Marco, Devon, Simon |\n| 7 | Late-Night Snack | You, Ahmed |\n| 8 | Art Class | You, Marco |\n| 9 | Music Festival | You, Simon |\n| 10 | Apartment Party | You, Devon, Ahmed, Marco |\n| 11 | Bookstore Discovery | You, Simon |\n| 12 | Cooking Class | You, Ahmed, Marco |\n| 13 | Volunteer Day | You, Devon, Simon |\n| 14 | Late-Night Talk | You, Ahmed |\n| 15 | Music Collaboration | You, Marco |\n| 16 | Final Study Session | You, Devon, Ahmed, Marco |\n| Final Round | Romantic Confession | You, Marco |\n\nThe final round culminates in a romantic confession, where you and Marco share a heartfelt moment, revealing your feelings and setting the stage for a potential relationship.",
   "structured": {
     "band": "cet6",
     "theme": "minimal",
+    "love_mode": true,
     "world": {
-      "era": "现代校园生活",
-      "genre": "青春成长",
-      "summary": "In this modern university campus setting, students share off-campus apartments with communal meters for water and electricity. The narrative revolves around the challenges of fairly dividing utility bills among roommates, testing trust and fairness within the community.",
-      "rules": "1. Shared utility bills must be divided fairly among roommates. 2. Communication is key to resolving conflicts. 3. Financial constraints must be considered. 4. Maintaining trust and harmony among roommates is crucial.",
-      "atmosphere": "青春活力，充满挑战与冲突",
+      "era": "现代都市生活",
+      "genre": "校园恋爱",
+      "summary": "Set in the vibrant urban area of Riverside Street, this world portrays the life of a third-year university student navigating the complexities of shared living and romantic pursuits amidst a diverse community of students, young professionals, and local families.",
+      "rules": "1. Maintain clear boundaries in shared living spaces. 2. Balance academic responsibilities with social life. 3. Navigate the challenges of dating while respecting personal space. 4. Embrace the community spirit of the apartment complex.",
+      "atmosphere": "Modern, urban, and community-oriented",
       "vocab": [
-        "roommates",
-        "utility bills",
-        "fairness",
-        "communication",
-        "trust",
-        "conflicts",
-        "expenses",
-        "harmony"
+        "apartment",
+        "boundary",
+        "complex",
+        "community",
+        "schedule",
+        "routine",
+        "student",
+        "professional",
+        "family"
       ]
     },
     "identity": {
-      "name": "Zack",
-      "gender": "男",
-      "age": 20,
-      "role": "负责管理共享账单的大学生",
-      "background": "A responsible and communicative college student from a middle-class family in a bustling city."
+      "name": "Sophie Chen",
+      "gender": "女",
+      "age": 21,
+      "role": "大三女生,合租公寓里负责管理共享账单和公共事务的人",
+      "background": "Sophie is an ambitious and organized student who enjoys balancing her academic life with her passion for community management. She has a natural talent for resolving conflicts and fostering a harmonious living environment."
     },
     "npcs": [
       {
         "name": "Ben",
         "gender": "男",
-        "role": "学生/室友",
-        "personality": "理性、细心，喜欢条理清晰，说话习惯直接且逻辑性强",
-        "relationship": "性格较为沉稳，负责管理账单和协调关系"
-      },
-      {
-        "name": "Chloe",
-        "gender": "女",
-        "role": "学生/室友",
-        "personality": "开朗、活泼，善于沟通，说话习惯热情而富有感染力",
-        "relationship": "与Ben关系亲近，喜欢和大家一起解决问题"
+        "age": 21,
+        "role": "The Honest Roommate",
+        "personality": "Genuine, straightforward, always ready to lend a hand; speaks with a friendly and slightly rough tone.",
+        "relationship": "Your reliable and silent guardian, living in the same apartment complex.",
+        "appearance": "Tall and athletic build, short sandy-blond hair styled casually, green eyes, wearing relaxed, gym-inspired clothing, exuding a confident yet approachable aura.",
+        "profile": {
+          "personality": "Direct and honest, speaks with a rough-around-the-edges charm; often says, 'Let's get it done.'",
+          "hobby": "Enjoys lifting weights at the gym to stay in shape.",
+          "redline": "Doesn't appreciate backstabbing or dishonesty.",
+          "soft": "His willingness to help others and his warm smile are his biggest heartwarmers.",
+          "speech": "Calls you 'Sweetie' in a soft, affectionate tone."
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_p3-04-flatmates_ben.png"
       },
       {
         "name": "Ahmed",
         "gender": "男",
-        "role": "学生/室友",
-        "personality": "内向、谨慎，喜欢思考，说话习惯沉稳且含蓄",
-        "relationship": "经常独立处理问题，但也会在关键时刻提供帮助"
+        "age": 22,
+        "role": "Charming International Roommate",
+        "personality": "Ahmed is细心体贴，总能在你需要时出现，说话温和而有条理。",
+        "relationship": "Your friendly and reliable roommate",
+        "appearance": "Tall and slender, Ahmed has dark brown hair styled in a casual bun, deep brown eyes, wearing a fitted shirt and jeans, exuding a calm and thoughtful aura.",
+        "profile": {
+          "personality": "Ahmed is thoughtful and considerate, always there with a gentle and logical manner of speaking.",
+          "hobby": "Ahmed loves cooking traditional dishes from his home country, often experimenting with new flavors.",
+          "redline": "Ahmed dislikes loud parties and prefers quiet evenings.",
+          "soft": "Ahmed's kindness and genuine concern can warm anyone's heart.",
+          "speech": "He often calls you 'my dear' with a soft, endearing tone."
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_p3-04-flatmates_ahmed.png"
       },
       {
-        "name": "Mia",
-        "gender": "女",
-        "role": "学生/室友",
-        "personality": "独立、坚强，善于分析，说话习惯冷静而有力",
-        "relationship": "作为队长，她能引导团队，但也担心自己承担过多责任"
+        "name": "Devon",
+        "gender": "男",
+        "age": 24,
+        "role": "隔壁合租的乐队鼓手",
+        "personality": "Quiet but charming, often speaks in rhythmic phrases",
+        "relationship": "A mysterious neighbor who occasionally taps the wall with a drum beat",
+        "appearance": "Lean build, 6'2",
+        "profile": {
+          "personality": "Quiet and charming, often speaks in rhythmic phrases",
+          "hobby": "Drums and music composition",
+          "redline": "Dislikes being woken up during the day",
+          "soft": "His gentle smile can melt the hardest heart",
+          "speech": "Hey, you"
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_p3-04-flatmates_devon.png"
+      },
+      {
+        "name": "Marco",
+        "gender": "男",
+        "age": 24,
+        "role": "楼下咖啡店兼职服务生",
+        "personality": "Warm and approachable, always with a playful smile",
+        "relationship": "Your friendly neighbor who often treats you to a surprise dessert",
+        "appearance": "athletic, 6'1",
+        "profile": {
+          "personality": "He speaks with a light-hearted tone, often ending his sentences with 'you know?'",
+          "hobby": "enjoys playing the piano in his free time",
+          "redline": "dislikes being late",
+          "soft": "touched by your genuine kindness",
+          "speech": "calls you 'Sweetie' in a gentle whisper"
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_p3-04-flatmates_marco.png"
+      },
+      {
+        "name": "Simon",
+        "gender": "男",
+        "age": 28,
+        "role": "The Landlord's Nephew",
+        "personality": "Quiet and dependable, Simon speaks softly and listens intently, making you feel heard and valued.",
+        "relationship": "Your neighbor and occasional handyman",
+        "appearance": "Tall and slender, Simon has chestnut hair styled in a casual, tousled manner. His eyes are a deep, inviting green, and he often wears practical, well-fitted jeans and a simple, unassuming shirt. He carries an aura of calm and reliability that's both approachable and mysterious.",
+        "profile": {
+          "personality": "Soft-spoken and attentive, Simon listens more than he talks, his voice a soothing murmur that makes you feel at ease.",
+          "hobby": "He enjoys tinkering with home repairs and fixing things around the apartment.",
+          "redline": "He dislikes loud music and crowded places, preferring the quiet of his own space.",
+          "soft": "His genuine concern for your well-being and his unexpected acts of kindness are what truly touch your heart.",
+          "speech": "He calls you 'Dear' in a gentle tone, often accompanied by a reassuring smile."
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_p3-04-flatmates_simon.png"
       }
     ],
     "timeline": {
@@ -70,773 +131,520 @@
         "month": 10,
         "day": 18
       },
-      "note": "故事开始于2026年10月18日，主人公入住公寓的第一天，面临首次共同管理水电费用的挑战。"
+      "note": "恋爱攻略线,单次会话 15-25 分钟可通关一段完整攻略"
     },
     "scene_style": {
-      "env_templates": [
-        "大学宿舍",
-        "公寓客厅",
-        "公共厨房",
-        "洗衣房",
-        "学校图书馆",
-        "校园广场",
-        "教授办公室",
-        "学生社团活动室"
-      ],
-      "option_style": "对话选择题，情景模拟题，角色扮演题"
+      "env_templates": [],
+      "option_style": "romantic daily choices"
+    },
+    "love_rules": {
+      "slots": 3,
+      "lock_at": 70,
+      "he_end": {
+        "min_affection": 75,
+        "heartbeat_min": 1
+      },
+      "be_end": {
+        "min_affection": 30
+      },
+      "affection": {
+        "flirt": {
+          "favor": 1,
+          "affection": 6
+        },
+        "kind": {
+          "favor": 4,
+          "affection": 1
+        },
+        "tease": {
+          "favor": 2,
+          "affection": 2
+        },
+        "neutral": {
+          "favor": 1,
+          "affection": 0
+        },
+        "awkward": {
+          "favor": 0,
+          "affection": -2
+        },
+        "rude": {
+          "favor": -4,
+          "affection": -3
+        },
+        "reject": {
+          "favor": -3,
+          "affection": -8
+        }
+      }
+    },
+    "scenes": {
+      "heartbeat": [
+        {
+          "where": "Shared Apartment Kitchen",
+          "when": "After an unusual utility bill dispute, when you start cooking dinner and reflect on the importance of boundaries."
+        },
+        {
+          "where": "Local Cafe",
+          "when": "During a break from classes, when you meet a mysterious stranger who intrigues you."
+        },
+        {
+          "where": "Apartment Complex Gym",
+          "when": "While exercising, when you accidentally overhear a conversation that sparks your interest in a fellow resident."
+        }
+      ]
     },
     "first_scene": {
-      "story": "You're flipping through the mail when you notice it: the utility bill is significantly higher than usual. Your heart sinks as you remember the recent party Mia hosted, and the promise you made to keep the bills fair among all roommates. You pick up the phone, dialing Ben's number...\n\n\"Hey, Ben? I just got the latest bill, and it's way above what we expected. What do you think we should do?\"\n\nBen's voice is calm and reassuring over the line. \"I think we need to have a meeting. It's important we all chip in fairly, but we also need to be honest about our usage.\"\n\nJust then, Chloe bursts through the door, her face lit up from a night out. \"Hey, what's up? I heard there's a problem with the bills. I say we just split it evenly, no questions asked!\"\n\nYou pause, weighing the options. On one hand, you want to maintain the trust you've built with your roommates, but on the other, you can't ignore the reality of the situation. You must immediately do choose:\n\nBen: \"We need to be fair, Chloe. Let's have a meeting and figure out a solution.\"\n\nChloe: \"Come on, it's just money. Why make a big deal out of it?\"\n\nMia's face flushes with embarrassment as she listens to the conversation. She knows that Ben is right, but she also doesn't want to be the one who causes trouble. Ahmed, ever the mediator, steps in, his voice soft yet firm.\n\n\"Chloe, Ben is right. We all need to be responsible for our share. But Mia, we understand that parties are fun, and we appreciate you hosting. Let's just find a way to balance this out.\"\n\nThe group nods in agreement, and you see a spark of determination in Chloe's eyes. \"Alright, let's do this. I'll help track the energy usage from now on. Maybe we can even create a chart on the fridge where we can all see our usage and make adjustments as needed.\"\n\nMia takes a deep breath, her shoulders relaxing slightly. \"I'll do my best to be more mindful of my energy consumption. I just didn't realize it was that much.\"\n\nAhmed smiles warmly, patting Mia on the back. \"That's all we ask, Mia. We're a team, and we need to support each other.\"\n\nBen pulls out a notepad and starts writing down some numbers. \"Alright, let's calculate the average usage per person for the past month and see where we stand. Then we can decide how to adjust for the next month.\"\n\nAs the group works together, a sense of camaraderie begins to grow. You realize that while managing shared expenses can be challenging, it's also an opportunity to strengthen your bonds and learn from each other. You look around the room, grateful for the diverse perspectives and the willingness of your roommates to find a solution that works for everyone. The tension in the air dissipates, and you feel a renewed sense of hope for maintaining a harmonious living situation.",
+      "story": "You step out of the elevator, the scent of freshly brewed coffee wafting through the air. The shared apartment on Riverside Street is buzzing with activity. The clock on your phone reads 9:15 AM. You're greeted by the sight of Ben, your honest roommate, lugging a bag of groceries into the kitchen. \"Morning, Sophie Chen,\" he says with a smile, \"I thought we could cook up something special today.\"\n\nAs you follow him into the kitchen, Ahmed, the charming international roommate, is already setting up ingredients on the counter. \"Hi, Sophie Chen,\" he greets, his accent adding a touch of mystery to his words. \"I was just thinking of making a spicy curry. Care to join?\"\n\nYou find yourself drawn to the warmth of the kitchen, the clinking of pots and pans, and the aroma of food being prepared. The two of you chat about your favorite cuisines, and Ahmed shares a recipe from his home country. Ben listens intently, occasionally adding his own tips and tricks.\n\nJust as you're about to dive into the cooking, the doorbell rings. It's Devon, the drummer from the apartment next door, with a backpack slung over his shoulder. \"Morning, Sophie Chen,\" he says, his voice filled with enthusiasm. \"I was just on my way to the gym. You guys cooking up something good?\"\n\nBefore you can respond, Marco, the pianist from the coffee shop downstairs, walks in. \"Morning, Sophie Chen,\" he says, his eyes twinkling with mischief. \"I heard the kitchen was the place to be. What's on the menu today?\"\n\nThe room is filled with laughter and the sound of music filtering through the door from Devon's drumming. You look around, feeling a sense of belonging. The choices are clear, but you must immediately decide which path to take. Will you join Ahmed in the kitchen, sharing recipes and stories? Or will you follow Marco and Devon to the gym, where the rhythm of drums and the beat of your heart could lead to something more?",
       "options": [
-        "Call Ben immediately",
-        "Ignore the bill and hope it resolves itself",
-        "Talk to Mia about her party",
-        "Start a group chat to discuss the issue"
+        {
+          "text": "Ask Ben about his workout routine",
+          "love": "flirt",
+          "target": "Ben"
+        },
+        {
+          "text": "Join Ahmed in the kitchen and learn a new recipe",
+          "love": "kind",
+          "target": "Ahmed"
+        },
+        {
+          "text": "Offer to help Devon with his drumming",
+          "love": "kind",
+          "target": "Devon"
+        },
+        {
+          "text": "Tell Marco about your favorite piano piece",
+          "love": "neutral",
+          "target": "Marco"
+        }
       ],
       "bilingual": {
         "v": 1,
         "lines": [
           {
-            "en": "You're flipping through the mail when you notice it: the utility bill is significantly higher than usual.",
-            "zh": "你正翻着邮件，这时注意到：水电费比平时高了不少。",
+            "en": "You step out of the elevator, the scent of freshly brewed coffee wafting through the air.",
+            "zh": "你走出电梯，空气中飘着刚煮好的咖啡香。",
             "words": [
               {
-                "w": "flipping through",
-                "zh": "快速翻阅"
+                "w": "step out of",
+                "zh": "从……出来"
               },
               {
-                "w": "notice it",
-                "zh": "注意到"
+                "w": "wafting",
+                "zh": "飘荡；弥漫"
               },
               {
-                "w": "significantly higher",
-                "zh": "明显更高"
+                "w": "freshly brewed",
+                "zh": "刚泡好；新鲜的"
               }
             ]
           },
           {
-            "en": "Your heart sinks as you remember the recent party Mia hosted, and the promise you made to keep the bills fair among all roommates.",
-            "zh": "一想到Mia最近办的那场聚会，以及你向室友们做出的公平分摊账单的承诺，你的心就沉了下去。",
+            "en": "The shared apartment on Riverside Street is buzzing with activity.",
+            "zh": "河滨街的合租公寓里热闹非凡。",
             "words": [
               {
-                "w": "heart sinks",
-                "zh": "心情沉重；心里一沉"
+                "w": "buzzing with",
+                "zh": "充满（活动/喧嚣）"
               },
               {
-                "w": "hosted",
-                "zh": "主办；承办（活动）"
-              },
-              {
-                "w": "keep ... fair",
-                "zh": "保持……公平；使……公平"
+                "w": "shared apartment",
+                "zh": "合租公寓"
               }
             ]
           },
           {
-            "en": "You pick up the phone, dialing Ben's number...",
-            "zh": "你拿起电话，拨Ben的号码……",
+            "en": "The clock on your phone reads 9:15 AM.",
+            "zh": "你手机上的时钟显示是上午9点15分。",
             "words": [
               {
-                "w": "pick up",
-                "zh": "拿起；拾起"
+                "w": "reads",
+                "zh": "（时间）显示"
               },
               {
-                "w": "dial",
-                "zh": "拨号"
+                "w": "on your phone",
+                "zh": "在你手机上"
               },
               {
-                "w": "number",
-                "zh": "号码"
+                "w": "AM",
+                "zh": "上午"
               }
             ]
           },
           {
-            "en": "\"Hey, Ben?",
-            "zh": "嘿，本？",
+            "en": "You're greeted by the sight of Ben, your honest roommate, lugging a bag of groceries into the kitchen.",
+            "zh": "映入眼帘的是本，你诚实的室友，正把一袋食品搬进厨房。",
             "words": [
               {
-                "w": "Hey",
-                "zh": "用来叫人或引起注意；非正式问候"
+                "w": "be greeted by",
+                "zh": "被……迎接"
               },
               {
-                "w": "Ben",
-                "zh": "专有名词（人名）"
+                "w": "lug",
+                "zh": "吃力地搬运"
+              },
+              {
+                "w": "groceries",
+                "zh": "食品杂货"
               }
             ]
           },
           {
-            "en": "I just got the latest bill, and it's way above what we expected.",
-            "zh": "我刚收到最新的账单，金额远超我们的预期。",
+            "en": "\"Morning, Sophie Chen,\" he says with a smile, \"I thought we could cook up something special today.\"",
+            "zh": "早上好，陈苏菲，他笑着说，我想我们今天可以一起做点特别的。",
             "words": [
               {
-                "w": "way above",
-                "zh": "远高于"
+                "w": "cook up",
+                "zh": "构思；临时想出（计划或菜肴）"
               },
               {
-                "w": "latest bill",
-                "zh": "最新账单"
+                "w": "something special",
+                "zh": "特别的东西"
               },
               {
-                "w": "just got",
-                "zh": "刚收到"
+                "w": "with a smile",
+                "zh": "微笑着"
               }
             ]
           },
           {
-            "en": "What do you think we should do?\"",
-            "zh": "你觉得我们该怎么做？",
+            "en": "As you follow him into the kitchen, Ahmed, the charming international roommate, is already setting up ingredients on the counter.",
+            "zh": "当你跟着他走进厨房时，迷人的国际室友艾哈迈德已经在台面上摆好了食材。",
             "words": [
               {
-                "w": "what do you think",
-                "zh": "询问对方看法；你觉得……怎么样"
+                "w": "follow",
+                "zh": "跟随；跟在某人后面"
               },
               {
-                "w": "we should",
-                "zh": "表示建议（should=应该）"
+                "w": "set up",
+                "zh": "布置、准备好（物品）"
               },
               {
-                "w": "do",
-                "zh": "行动；做事"
+                "w": "counter",
+                "zh": "操作台；柜台"
               }
             ]
           },
           {
-            "en": "Ben's voice is calm and reassuring over the line.",
-            "zh": "电话那头，本的声音平静而令人安心。",
+            "en": "\"Hi, Sophie Chen,\" he greets, his accent adding a touch of mystery to his words.",
+            "zh": "他打招呼说：“嗨，陈苏菲。”他的口音让他的话多了一丝神秘感。",
             "words": [
               {
-                "w": "calm",
-                "zh": "冷静的；不慌的"
+                "w": "greets",
+                "zh": "打招呼"
               },
               {
-                "w": "reassuring",
-                "zh": "让人放心的"
-              },
-              {
-                "w": "over the line",
-                "zh": "在电话里"
+                "w": "adding a touch of mystery",
+                "zh": "增添一点神秘感"
               }
             ]
           },
           {
-            "en": "\"I think we need to have a meeting.",
-            "zh": "我觉得咱们得开个会。",
+            "en": "\"I was just thinking of making a spicy curry.",
+            "zh": "我正想着做一份辣咖喱。",
             "words": [
               {
-                "w": "have a meeting",
-                "zh": "开会；安排会议"
+                "w": "was just thinking of",
+                "zh": "过去进行时，表示此刻突然想到"
               },
               {
-                "w": "need to",
-                "zh": "需要做某事"
-              },
-              {
-                "w": "think",
-                "zh": "认为；觉得"
+                "w": "spicy curry",
+                "zh": "椰奶咖喱（加辣椒和香料）"
               }
             ]
           },
           {
-            "en": "It's important we all chip in fairly, but we also need to be honest about our usage.\"",
-            "zh": "我们都要公平分担，同时也要如实说明各自的使用情况。",
+            "en": "Care to join?\"",
+            "zh": "要一起加入吗？",
             "words": [
               {
-                "w": "chip in",
-                "zh": "一起出钱或出力；共同分担"
+                "w": "care to",
+                "zh": "愿意/想（礼貌邀请）"
               },
               {
-                "w": "fairly",
-                "zh": "公平地；公正地"
-              },
-              {
-                "w": "be honest about",
-                "zh": "对……说实话"
+                "w": "join",
+                "zh": "加入、参与"
               }
             ]
           },
           {
-            "en": "Just then, Chloe bursts through the door, her face lit up from a night out.",
-            "zh": "就在这时，克洛伊冲过门来，脸上洋溢着夜生活后的光彩。",
+            "en": "You find yourself drawn to the warmth of the kitchen, the clinking of pots and pans, and the aroma of food being prepared.",
+            "zh": "你发现自己被厨房的温暖、锅碗瓢盆的叮当声以及食物烹制时的香气所吸引。",
             "words": [
               {
-                "w": "bursts through",
-                "zh": "猛地穿过"
+                "w": "find oneself drawn to",
+                "zh": "感到自己被……吸引"
               },
               {
-                "w": "lit up",
-                "zh": "容光焕发"
+                "w": "clinking",
+                "zh": "叮当（碰撞）声"
               },
               {
-                "w": "from a night out",
-                "zh": "一晚外出后"
+                "w": "aroma",
+                "zh": "香味"
               }
             ]
           },
           {
-            "en": "\"Hey, what's up?",
-            "zh": "嘿，最近怎么样？",
+            "en": "The two of you chat about your favorite cuisines, and Ahmed shares a recipe from his home country.",
+            "zh": "你们俩聊起了各自最喜欢的美食，然后艾哈迈德分享了一道来自他家乡的菜谱。",
             "words": [
               {
-                "w": "what's up",
-                "zh": "最近怎么样"
+                "w": "favorite cuisines",
+                "zh": "最爱吃的菜系"
               },
               {
-                "w": "hey",
-                "zh": "嘿"
+                "w": "shares a recipe",
+                "zh": "分享一份菜谱"
+              },
+              {
+                "w": "from his home country",
+                "zh": "来自他的祖国"
               }
             ]
           },
           {
-            "en": "I heard there's a problem with the bills.",
-            "zh": "我听说账单那边出了点问题。",
+            "en": "Ben listens intently, occasionally adding his own tips and tricks.",
+            "zh": "本专心地听着，偶尔还会补充自己的小窍门和技巧。",
             "words": [
+              {
+                "w": "listens intently",
+                "zh": "专注地听"
+              },
+              {
+                "w": "occasionally",
+                "zh": "有时；偶尔"
+              },
+              {
+                "w": "tips and tricks",
+                "zh": "小窍门和技巧"
+              }
+            ]
+          },
+          {
+            "en": "Just as you're about to dive into the cooking, the doorbell rings.",
+            "zh": "就在你正要开始做饭的时候，门铃响了。",
+            "words": [
+              {
+                "w": "dive into",
+                "zh": "投入；沉浸于"
+              },
+              {
+                "w": "about to",
+                "zh": "即将（做某事）"
+              },
+              {
+                "w": "doorbell",
+                "zh": "门铃"
+              }
+            ]
+          },
+          {
+            "en": "It's Devon, the drummer from the apartment next door, with a backpack slung over his shoulder.",
+            "zh": "是隔壁公寓的鼓手德文，肩上斜挎着一个背包。",
+            "words": [
+              {
+                "w": "drummer",
+                "zh": "乐队里的鼓手"
+              },
+              {
+                "w": "backpack",
+                "zh": "背在背上的包"
+              },
+              {
+                "w": "slung",
+                "zh": "随意搭/挂着"
+              }
+            ]
+          },
+          {
+            "en": "\"Morning, Sophie Chen,\" he says, his voice filled with enthusiasm.",
+            "zh": "他说：“早上好，Sophie Chen。”他的声音里充满了热情。",
+            "words": [
+              {
+                "w": "filled with",
+                "zh": "充满；情绪饱满"
+              },
+              {
+                "w": "enthusiasm",
+                "zh": "热情"
+              }
+            ]
+          },
+          {
+            "en": "\"I was just on my way to the gym.",
+            "zh": "我正要去健身房。",
+            "words": [
+              {
+                "w": "on one's way to",
+                "zh": "在去……的路上"
+              },
+              {
+                "w": "just",
+                "zh": "刚才；刚刚"
+              }
+            ]
+          },
+          {
+            "en": "You guys cooking up something good?\"",
+            "zh": "你们在弄什么好吃的吗？",
+            "words": [
+              {
+                "w": "cooking up",
+                "zh": "酝酿；准备"
+              },
+              {
+                "w": "something good",
+                "zh": "好吃的东西或好主意"
+              }
+            ]
+          },
+          {
+            "en": "Before you can respond, Marco, the pianist from the coffee shop downstairs, walks in.",
+            "zh": "在你来得及回应之前，楼下咖啡店的钢琴师马可走了进来。",
+            "words": [
+              {
+                "w": "respond",
+                "zh": "回应；答复"
+              },
+              {
+                "w": "downstairs",
+                "zh": "在楼下"
+              },
+              {
+                "w": "walks in",
+                "zh": "走进来"
+              }
+            ]
+          },
+          {
+            "en": "\"Morning, Sophie Chen,\" he says, his eyes twinkling with mischief.",
+            "zh": "“早上好，苏菲·陈，”他说，眼睛里闪烁着调皮的光芒。",
+            "words": []
+          },
+          {
+            "en": "\"I heard the kitchen was the place to be.",
+            "zh": "我听说厨房是最热闹的地方。",
+            "words": [
+              {
+                "w": "the place to be",
+                "zh": "热门/最火的地方"
+              },
               {
                 "w": "heard",
-                "zh": "听到；过去式，表示你被告知了某事"
+                "zh": "听说；听到"
               },
               {
-                "w": "there's",
-                "zh": "是……的缩写；用于说某物存在或发生"
-              },
-              {
-                "w": "problem",
-                "zh": "问题；需要解决的困难"
+                "w": "kitchen",
+                "zh": "厨房"
               }
             ]
           },
           {
-            "en": "I say we just split it evenly, no questions asked!\"",
-            "zh": "我说咱们就平分，别问东问西！",
+            "en": "What's on the menu today?\"",
+            "zh": "今天的菜单上有什么？",
             "words": [
               {
-                "w": "split it evenly",
-                "zh": "平均分配"
+                "w": "menu",
+                "zh": "餐馆的菜品或酒水清单"
               },
               {
-                "w": "no questions asked",
-                "zh": "不问任何问题"
+                "w": "today",
+                "zh": "今天；在今天"
+              },
+              {
+                "w": "What's on...?",
+                "zh": "……上面有什么？（询问列表内容）"
               }
             ]
           },
           {
-            "en": "You pause, weighing the options.",
-            "zh": "你停下来，权衡着各种选择。",
+            "en": "The room is filled with laughter and the sound of music filtering through the door from Devon's drumming.",
+            "zh": "房间里充满了笑声，还有从德翁打鼓传来、透过门传进来的音乐声。",
             "words": [
               {
-                "w": "weigh",
-                "zh": "权衡；仔细考虑"
+                "w": "filled with",
+                "zh": "充满；装满"
               },
               {
-                "w": "option",
-                "zh": "选项；可能性"
+                "w": "laughter",
+                "zh": "笑声"
+              },
+              {
+                "w": "filtering through",
+                "zh": "透入；渗透"
               }
             ]
           },
           {
-            "en": "On one hand, you want to maintain the trust you've built with your roommates, but on the other, you can't ignore the reality of the situation.",
-            "zh": "一方面，你想维护与室友建立起来的信任；但另一方面，你又不能忽视当前情况的现实。",
-            "words": [
-              {
-                "w": "maintain",
-                "zh": "保持（信任/关系）不流失"
-              },
-              {
-                "w": "on the other",
-                "zh": "但是；然而（表转折）"
-              },
-              {
-                "w": "ignore",
-                "zh": "无视；不予理会"
-              }
-            ]
-          },
-          {
-            "en": "You must immediately do choose:",
-            "zh": "你必须立刻做出选择：",
-            "words": [
-              {
-                "w": "immediately",
-                "zh": "立刻；马上"
-              },
-              {
-                "w": "do choose",
-                "zh": "强调选择（助动词do+动词）"
-              }
-            ]
-          },
-          {
-            "en": "Ben: \"We need to be fair, Chloe.",
-            "zh": "本：\"克洛伊，我们需要公平一点。\"",
-            "words": [
-              {
-                "w": "be fair",
-                "zh": "公平对待"
-              },
-              {
-                "w": "need to",
-                "zh": "需要"
-              },
-              {
-                "w": "Chloe",
-                "zh": "克洛伊（人名）"
-              }
-            ]
-          },
-          {
-            "en": "Let's have a meeting and figure out a solution.\"",
-            "zh": "咱们开个会，一起想个解决办法吧。",
-            "words": [
-              {
-                "w": "have a meeting",
-                "zh": "开会；聚在一起讨论"
-              },
-              {
-                "w": "figure out",
-                "zh": "想出；解决"
-              },
-              {
-                "w": "solution",
-                "zh": "解决办法"
-              }
-            ]
-          },
-          {
-            "en": "Chloe: \"Come on, it's just money.",
-            "zh": "克洛伊：\"得了吧，这不过是钱而已。\"",
-            "words": [
-              {
-                "w": "Come on",
-                "zh": "（口语）别这样；得了吧"
-              },
-              {
-                "w": "it's just",
-                "zh": "只是；不过"
-              },
-              {
-                "w": "money",
-                "zh": "钱"
-              }
-            ]
-          },
-          {
-            "en": "Why make a big deal out of it?\"",
-            "zh": "干嘛要小题大做？",
-            "words": [
-              {
-                "w": "make a big deal out of",
-                "zh": "夸大；把……当大事"
-              },
-              {
-                "w": "big deal",
-                "zh": "重要的事"
-              }
-            ]
-          },
-          {
-            "en": "Mia's face flushes with embarrassment as she listens to the conversation.",
-            "zh": "米娅听着谈话，尴尬得脸都红了。",
-            "words": [
-              {
-                "w": "flushes",
-                "zh": "脸红"
-              },
-              {
-                "w": "embarrassment",
-                "zh": "尴尬"
-              },
-              {
-                "w": "as she listens",
-                "zh": "当她听的时候"
-              }
-            ]
-          },
-          {
-            "en": "She knows that Ben is right, but she also doesn't want to be the one who causes trouble.",
-            "zh": "她知道本是对的，但她也不想成为那个惹麻烦的人。",
-            "words": [
-              {
-                "w": "causes trouble",
-                "zh": "惹麻烦"
-              },
-              {
-                "w": "be the one who...",
-                "zh": "是……的那个人"
-              },
-              {
-                "w": "doesn't want to",
-                "zh": "不想"
-              }
-            ]
-          },
-          {
-            "en": "Ahmed, ever the mediator, steps in, his voice soft yet firm.",
-            "zh": "作为一贯的调解人，艾哈迈德走上前去，声音柔和却坚定。",
-            "words": [
-              {
-                "w": "ever the",
-                "zh": "一贯；总是"
-              },
-              {
-                "w": "steps in",
-                "zh": "介入；插进来"
-              },
-              {
-                "w": "soft yet firm",
-                "zh": "柔和却坚定"
-              }
-            ]
-          },
-          {
-            "en": "\"Chloe, Ben is right.",
-            "zh": "克洛伊，本是对的。",
-            "words": [
-              {
-                "w": "right",
-                "zh": "正确；对的"
-              },
-              {
-                "w": "is right",
-                "zh": "是正确的"
-              }
-            ]
-          },
-          {
-            "en": "We all need to be responsible for our share.",
-            "zh": "我们每个人都要对自己的那一份负责。",
-            "words": [
-              {
-                "w": "be responsible for",
-                "zh": "对……负责"
-              },
-              {
-                "w": "share",
-                "zh": "份额；一份"
-              }
-            ]
-          },
-          {
-            "en": "But Mia, we understand that parties are fun, and we appreciate you hosting.",
-            "zh": "但是米娅，我们明白聚会很有趣，也很感谢你主办。",
-            "words": [
-              {
-                "w": "understand",
-                "zh": "知道；意识到"
-              },
-              {
-                "w": "appreciate",
-                "zh": "感激；欣赏"
-              },
-              {
-                "w": "hosting",
-                "zh": "主办（活动/聚会）"
-              }
-            ]
-          },
-          {
-            "en": "Let's just find a way to balance this out.\"",
-            "zh": "咱们就找个办法来平衡一下这件事吧。",
-            "words": [
-              {
-                "w": "balance",
-                "zh": "使均衡；保持公平"
-              },
-              {
-                "w": "find a way",
-                "zh": "找到方法"
-              },
-              {
-                "w": "just",
-                "zh": "只是；仅仅"
-              }
-            ]
-          },
-          {
-            "en": "The group nods in agreement, and you see a spark of determination in Chloe's eyes.",
-            "zh": "大家点头表示赞同，你看到克洛伊眼中闪过一丝决心。",
-            "words": [
-              {
-                "w": "nod in agreement",
-                "zh": "点头表示同意"
-              },
-              {
-                "w": "a spark of determination",
-                "zh": "一丝决心的火花"
-              },
-              {
-                "w": "in one's eyes",
-                "zh": "在某人眼里"
-              }
-            ]
-          },
-          {
-            "en": "\"Alright, let's do this.",
-            "zh": "好吧，我们开始吧。",
-            "words": [
-              {
-                "w": "let's",
-                "zh": "‘let us’的缩写；用来建议一起做某事"
-              },
-              {
-                "w": "do this",
-                "zh": "动词短语+代词；意为‘处理/完成这项任务’"
-              }
-            ]
-          },
-          {
-            "en": "I'll help track the energy usage from now on.",
-            "zh": "从现在起，我会帮忙追踪能源的使用情况。",
-            "words": [
-              {
-                "w": "track",
-                "zh": "跟踪；监控"
-              },
-              {
-                "w": "energy usage",
-                "zh": "能源使用量"
-              },
-              {
-                "w": "from now on",
-                "zh": "从现在开始"
-              }
-            ]
-          },
-          {
-            "en": "Maybe we can even create a chart on the fridge where we can all see our usage and make adjustments as needed.\"",
-            "zh": "也许我们甚至可以在冰箱上贴一张图表，这样大家都能看到我们的用量，并在需要时进行调整。",
-            "words": [
-              {
-                "w": "create a chart",
-                "zh": "制作图表"
-              },
-              {
-                "w": "on the fridge",
-                "zh": "在冰箱上"
-              },
-              {
-                "w": "as needed",
-                "zh": "根据需要"
-              }
-            ]
-          },
-          {
-            "en": "Mia takes a deep breath, her shoulders relaxing slightly.",
-            "zh": "米娅深吸了一口气，肩膀微微放松下来。",
-            "words": [
-              {
-                "w": "takes a deep breath",
-                "zh": "深深吸一口气"
-              },
-              {
-                "w": "relaxing",
-                "zh": "放松"
-              },
-              {
-                "w": "slightly",
-                "zh": "稍微"
-              }
-            ]
-          },
-          {
-            "en": "\"I'll do my best to be more mindful of my energy consumption.",
-            "zh": "我会尽力更加注意自己的能源消耗。",
-            "words": [
-              {
-                "w": "do my best",
-                "zh": "尽最大努力"
-              },
-              {
-                "w": "be mindful of",
-                "zh": "留意；注意"
-              },
-              {
-                "w": "energy consumption",
-                "zh": "能源消耗"
-              }
-            ]
-          },
-          {
-            "en": "I just didn't realize it was that much.\"",
-            "zh": "我只是没意识到会这么多。",
-            "words": [
-              {
-                "w": "just",
-                "zh": "只；强调程度小（不是“刚才”）"
-              },
-              {
-                "w": "didn't realize",
-                "zh": "realize的过去式；没有意识到"
-              },
-              {
-                "w": "that much",
-                "zh": "那么多；常跟know/think/realize等动词"
-              }
-            ]
-          },
-          {
-            "en": "Ahmed smiles warmly, patting Mia on the back.",
-            "zh": "艾哈迈德热情地微笑着，拍了拍米娅的背。",
-            "words": [
-              {
-                "w": "pat someone on the back",
-                "zh": "拍某人的背（表示鼓励或表扬）"
-              },
-              {
-                "w": "warmly",
-                "zh": "亲切地；热情地"
-              }
-            ]
-          },
-          {
-            "en": "\"That's all we ask, Mia.",
-            "zh": "这就是我们要的全部，米娅。",
-            "words": [
-              {
-                "w": "That's all",
-                "zh": "就这些；全部"
-              },
-              {
-                "w": "we ask",
-                "zh": "要求"
-              }
-            ]
-          },
-          {
-            "en": "We're a team, and we need to support each other.\"",
-            "zh": "我们是一支队伍，需要互相支持。",
-            "words": [
-              {
-                "w": "support",
-                "zh": "支持"
-              },
-              {
-                "w": "each other",
-                "zh": "彼此"
-              }
-            ]
-          },
-          {
-            "en": "Ben pulls out a notepad and starts writing down some numbers.",
-            "zh": "本拿出一个记事本，开始写下一些数字。",
-            "words": [
-              {
-                "w": "pulls out",
-                "zh": "从里面取出"
-              },
-              {
-                "w": "notepad",
-                "zh": "小本子"
-              },
-              {
-                "w": "starts writing down",
-                "zh": "开始写下来"
-              }
-            ]
-          },
-          {
-            "en": "\"Alright, let's calculate the average usage per person for the past month and see where we stand.",
-            "zh": "好的，我们来算一下过去一个月每人的平均使用量，看看目前的情况。",
-            "words": [
-              {
-                "w": "calculate",
-                "zh": "计算"
-              },
-              {
-                "w": "average usage per person",
-                "zh": "每人平均用量"
-              },
-              {
-                "w": "see where we stand",
-                "zh": "了解当前情况"
-              }
-            ]
-          },
-          {
-            "en": "Then we can decide how to adjust for the next month.\"",
-            "zh": "然后我们可以决定下个月该如何调整。",
-            "words": [
-              {
-                "w": "adjust",
-                "zh": "调整；使更合适"
-              },
-              {
-                "w": "decide",
-                "zh": "决定"
-              },
-              {
-                "w": "how to",
-                "zh": "如何"
-              }
-            ]
-          },
-          {
-            "en": "As the group works together, a sense of camaraderie begins to grow.",
-            "zh": "随着团队一起工作，一种战友般的情谊开始慢慢滋生。",
-            "words": [
-              {
-                "w": "works together",
-                "zh": "一起合作"
-              },
-              {
-                "w": "camaraderie",
-                "zh": "战友般的情谊"
-              },
-              {
-                "w": "begins to grow",
-                "zh": "开始增长"
-              }
-            ]
-          },
-          {
-            "en": "You realize that while managing shared expenses can be challenging, it's also an opportunity to strengthen your bonds and learn from each other.",
-            "zh": "你意识到，虽然分摊费用可能有些棘手，但这也是一个加深彼此感情、互相学习的好机会。",
-            "words": [
-              {
-                "w": "manage shared expenses",
-                "zh": "一起管理/分担共同开销"
-              },
-              {
-                "w": "strengthen your bonds",
-                "zh": "让关系更紧密牢固"
-              },
-              {
-                "w": "learn from each other",
-                "zh": "互相学习、取长补短"
-              }
-            ]
-          },
-          {
-            "en": "You look around the room, grateful for the diverse perspectives and the willingness of your roommates to find a solution that works for everyone.",
-            "zh": "你环顾房间，感激大家视角各异，也感激室友们愿意一起找到对每个人都合适的方案。",
+            "en": "You look around, feeling a sense of belonging.",
+            "zh": "你环顾四周，感到一种归属感。",
             "words": [
               {
                 "w": "look around",
-                "zh": "环视；扫视"
+                "zh": "环顾四周"
               },
               {
-                "w": "diverse perspectives",
-                "zh": "多样的视角"
+                "w": "feeling",
+                "zh": "感觉；感受到"
               },
               {
-                "w": "willingness",
-                "zh": "意愿"
+                "w": "a sense of belonging",
+                "zh": "归属感"
               }
             ]
           },
           {
-            "en": "The tension in the air dissipates, and you feel a renewed sense of hope for maintaining a harmonious living situation.",
-            "zh": "空气中的紧张气氛消散了，你感到重燃起希望，想要维持和谐的生活状态。",
+            "en": "The choices are clear, but you must immediately decide which path to take.",
+            "zh": "选择很明确，但你必须立刻决定走哪条路。",
             "words": [
               {
-                "w": "dissipates",
-                "zh": "逐渐散开并消失"
+                "w": "choices",
+                "zh": "选择；选项"
               },
               {
-                "w": "renewed sense",
-                "zh": "重新出现的感觉"
+                "w": "clear",
+                "zh": "清楚的；明确的"
               },
               {
-                "w": "harmonious living situation",
-                "zh": "和谐的共同生活"
+                "w": "immediately",
+                "zh": "立即；马上"
+              }
+            ]
+          },
+          {
+            "en": "Will you join Ahmed in the kitchen, sharing recipes and stories?",
+            "zh": "你会和艾哈迈德一起待在厨房里，分享菜谱和故事吗？",
+            "words": [
+              {
+                "w": "join sb. in...",
+                "zh": "加入某人在某地"
+              },
+              {
+                "w": "recipes",
+                "zh": "菜谱；食谱"
+              },
+              {
+                "w": "stories",
+                "zh": "故事"
+              }
+            ]
+          },
+          {
+            "en": "Or will you follow Marco and Devon to the gym, where the rhythm of drums and the beat of your heart could lead to something more?",
+            "zh": "或者你会跟随马可和德翁去健身房吗，在那里，鼓点的节奏和你心跳的节拍可能会带来更进一步的东西？",
+            "words": [
+              {
+                "w": "follow sb. to...",
+                "zh": "跟随某人去某处"
+              },
+              {
+                "w": "rhythm",
+                "zh": "节奏"
+              },
+              {
+                "w": "beat",
+                "zh": "心跳；脉搏"
               }
             ]
           }

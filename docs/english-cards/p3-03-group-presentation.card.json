@@ -1,67 +1,127 @@
 {
-  "title": "Team Disconnects",
-  "title_zh": "团队掉线",
+  "title": "Midnight Reunion",
+  "title_zh": "午夜重逢",
   "lang": "en",
   "band": "cet4",
   "category": "校园",
   "category_zh": "校园",
   "theme": "minimal",
-  "text": "## Premise\nYou're the star of the show tonight, standing alone with the powerpoint slides in your hands. It's the eve of a crucial presentation, and your teammates have gone MIA. You're in a pickle, with a sea of expectant faces in the lecture hall and a room of silence in your dorm. You want to deliver an incredible performance, but the fear of failure looms like a shadow.\n\n## The World\nThe world of \"Team Disconnects\" is a realm where collaboration is key but communication is often patchy. You find yourself in a university setting, where technology and human error can create unexpected hurdles. The classroom is a modern, well-equipped space with high-tech projectors and sleek chairs. Outside, the dormitory is a maze of hallways, each room a small, personal sanctuary where you've spent countless late nights preparing for this moment. The campus is buzzing with activity, but the air is thick with tension as students feel the weight of their impending presentations. The technology used in the classroom, while impressive, is prone to glitches, and this is where your challenge begins.\n\n## People\n\nEmma - Your best friend and study partner, Emma is a Biology major with a sharp mind and a compassionate heart. She's deeply invested in your success and would have helped with the presentation. Her personality is warm and supportive, always ready to lend a helping hand. You've shared countless secrets and dreams over late-night study sessions. Emma tends to speak softly, with a tone that's both reassuring and encouraging. \"You've got this, remember? You're more prepared than you think.\"\n\nJake - A Computer Science student and your team leader, Jake has a reputation for being the brain behind the project. He's analytical and focused, but also has a playful side that keeps the team engaged. He's a key asset, and his absence could leave a significant gap in your presentation. Jake's tone is straightforward and often humorous, making him a popular figure in the group. \"Hey, don't worry. You can handle this. Just focus on the facts, and we'll get through this together.\"\n\nNoah - The graphics designer on your team, Noah has a knack for creating visually stunning slides. He's creative and often has out-of-the-box ideas. Despite his skills, he's not the most reliable, often missing deadlines and leaving the rest of the team to pick up the slack. Noah speaks with a lot of enthusiasm and a slight French accent from his study abroad experience. \"C'est incroyable! You'll make this presentation look fantastic, just wait and see!\"\n\nIris - A quiet History major who joined the team as a last-minute replacement. She's knowledgeable and meticulous, often catching errors that others overlook. Iris has a calm and collected demeanor, which is a stark contrast to the chaos surrounding you. Her speech is thoughtful and reserved, reflecting her personality. \"I understand the pressure, but trust in your preparation. You'll do well.\"\n\n## The Arc\n\n### Act I: Building the Situation and Allies (4-5 Rounds)\n\nAs you sit in your dorm room, the gravity of the situation weighs heavily on you. You've spent countless nights preparing for this presentation, and now, with Jake's sudden disappearance, you're left to face it alone. You're not one to back down, though. You reach out to Noah, your graphics designer, hoping for some last-minute assistance. \"Hey Noah, I need your slides done by morning. Jake's not here, and I'm on my own.\"\n\nNoah responds with his usual enthusiasm, \"C'est incroyable! I'll have them ready by dawn. You can count on me.\" You feel a small wave of relief wash over you, knowing that at least one member of your team is reliable.\n\nNext, you turn to Iris, the History major who joined the team at the last minute. She's always been quiet, but you've come to appreciate her meticulous nature. \"Iris, can you help me review the content? I need to make sure everything is perfect.\"\n\nIris nods calmly, \"Of course. Let's go through it together.\" As you delve into the details, you find that Iris's knowledge of history adds a depth to your presentation that you never thought possible. You begin to see her as more than just a replacement; she's a valuable asset to the team.\n\n### Act II: Conflict Escalation and Emotional High Point (4-5 Rounds + 1 Emotional High Point)\n\nAs the morning approaches, you're feeling more confident, but your anxiety doesn't entirely disappear. You arrive at the classroom, and the sight of the empty seats where Jake and Noah should be sitting sends a shiver down your spine. You take a deep breath and start setting up your slides.\n\nThe presentation begins, and you're off to a strong start. Your content is engaging, and Iris's insights add a new dimension to your discussion. As you progress, you notice the audience's attention beginning to wane. You realize that without Jake's humor and Noah's visual flair, the presentation isn't quite as dynamic as it could be.\n\nJust as you're about to lose your train of thought, Iris reaches out and touches your arm. \"Remember, you've done this before. You know your material inside and out. Trust yourself.\"\n\nThe words resonate with you, and you find your confidence surge. You pick up the pace, and the audience starts to engage once more. As you reach the climax of your presentation, you feel a sense of pride and accomplishment wash over you. You've overcome the challenges thrown at you, and you've done it well.\n\n### Act III: Resolution (3-4 Rounds)\n\nAfter the presentation, you receive a standing ovation. The professor shakes your hand and says, \"That was incredible. You handled that beautifully.\" Your teammates, Jake and Noah, arrive late, but they can't hide their pride. \"We're sorry we couldn't be there, but you did an amazing job,\" Jake says with a smile.\n\nAs you walk back to your dorm, you realize that the experience has brought you closer to your teammates. You've learned the importance of trust and the value of each team member's unique skills. You're grateful for the challenges you've faced, as they've only made you stronger.\n\n## Endings\n\n- **Happy Ending**: You successfully navigate the presentation, earning praise from your peers and professors. The experience strengthens your bond with your team, and you all come out of it as a more cohesive unit.\n- **Average Ending**: The presentation is good, but not as outstanding as you'd hoped. You learn valuable lessons about teamwork and personal growth, and you're grateful for the experience.\n- **Sad Ending**: Despite your best efforts, the presentation falls short of expectations. You're disappointed in yourself and your team, but you take the experience as a learning opportunity and strive to improve in the future.",
+  "love_mode": true,
+  "gender_target": "female",
+  "text": "## Premise\nYou are a third-year university student, facing the night before a crucial group presentation. Your teammates have suddenly disappeared, leaving you to step in and save the day. You want to not only pull off a successful presentation but also get to know the five new faces in your group.\n\n## The World\nThe setting is the vibrant campus of Crestwood University in November, just before the presentation week. The campus is bustling with students preparing for their final projects. You find yourself in a small, dimly lit classroom, surrounded by the echoes of your own footsteps and the quiet hum of the approaching deadline. The group consists of five male students from different departments: Jake, Noah, Felix, Ian, and Cole. Each one brings a unique personality and background to the table. The atmosphere is tense but hopeful, as you all work together to piece together the presentation that was supposed to be your teammates' responsibility. The clock ticks away, and the pressure to perform mounts, but so does the unexpected spark of camaraderie and potential romance.\n\n## Jake\nJake is the first to arrive, his presence a silent reassurance. You meet in the crowded library, surrounded by the scent of fresh coffee and the hum of computers. Your initial encounter is brief, but his eyes seem to hold a world of understanding. As you work together, you find that Jake's quiet guidance is invaluable. His interactions are subtle, but his attention to detail is striking. One evening, as you both stay late to finalize the presentation, Jake offers a gentle smile, and in that moment, you feel a connection that transcends words.\n\n## Noah\nNoah enters the room with a confident stride, his laughter echoing through the small space. You first meet during a rushed coffee break, where he offers to help with the presentation. His ease and optimism are infectious. As the project progresses, Noah's supportive nature becomes evident, often checking in on your progress with a reassuring, \"Don't worry, I've got it.\" One day, while discussing a challenging aspect of the project, Noah's playful tone softens, and he calls you \"Sweetie,\" making you feel both cared for and lighthearted.\n\n## Felix\nFelix arrives next, his presence a stark contrast to the chaos around you. You first speak during a brainstorming session, where his precise and thoughtful words stand out. Felix's meticulous nature is both a challenge and a comfort. As you work together, his attention to detail and passion for architecture become apparent. One evening, as you debate over a design element, Felix calls you \"Sweetheart,\" his gentle smile filling the room with warmth. It's in these moments that you realize the depth of his appreciation for genuine effort.\n\n## Ian\nIan's arrival is marked by a burst of energy, his laughter and guitar playing filling the room. You first meet at a spontaneous jam session, where his musical talent and wit captivate you. Ian's intellectual and humorous nature make him a standout in the group. As you collaborate, his thoughtful gestures and gentle touch leave a lasting impression. One day, during a break, Ian calls you \"Sweetheart,\" his tone warm and teasing, hinting at a playful side you hadn't noticed before.\n\n## Cole\nCole rounds out the group, his lively personality a breath of fresh air. You first encounter him during a casual chat about sports, where his enthusiasm is palpable. Cole's outgoing nature makes him easy to talk to, and his genuine kindness is evident in every interaction. As you work together, his positive attitude and willingness to help are invaluable. One evening, while discussing the presentation, Cole calls you \"Hey, you,\" his warm, inviting smile making you feel at ease. It's in these moments that you realize the depth of his friendship and the potential for more.\n\n## Love Routes — Meeting Phase\n\n### Jake\nYou first encounter Jake at the library, where he's poring over old architectural books. His deep knowledge and passion for history spark your interest. You strike up a conversation about the project, and his insightful comments help you see things from a new angle. As the night progresses, you share a laugh over a misunderstanding, and Jake calls you \"Partner,\" his eyes twinkling with amusement. This moment feels like the start of a great friendship.\n\n### Noah\nDuring a late-night snack run, you bump into Noah. He's witty and observant, noticing the stress on your face. You vent about the project, and Noah listens intently, offering practical advice. His easygoing nature and genuine concern make you feel at ease. As you part ways, he gives you a knowing smile and whispers, \"You're not alone,\" leaving you with a sense of comfort and connection.\n\n### Felix\nFelix's meticulous nature becomes more endearing as you work together. You find yourself admiring his dedication and creativity. One evening, as you brainstorm ideas, Felix suggests a design that excites you both. He turns to you and says, \"You're a fantastic team member,\" his voice filled with appreciation. This moment reinforces your shared vision and respect for each other.\n\n### Ian\nIan's musical talent catches your attention during a group break. You join in on the impromptu jam session, and his guitar playing fills the room with a sense of freedom. Afterward, you exchange numbers and chat about music. Ian's playful banter and thoughtful gestures make you feel special. One day, he texts you a song he thinks you'll like, and you can't help but smile.\n\n### Cole\nCole's lively personality makes him stand out in the group. You bond over a shared love for sports and discuss the latest games. Cole's enthusiasm is infectious, and his willingness to help you study for the presentation is invaluable. One day, after a long night of work, Cole offers to walk you back to your dorm. As you walk together, he says, \"You're a great friend,\" and you feel a warmth spread through you.\n\n## Heating Phase\n\nAs the project deadline approaches, you find yourself drawn to Jake's insightful conversations and Noah's comforting presence. You decide to pursue these connections further. Here are three heartbeat-moment triggers:\n\n1. **Library Study Session**: Alone in the club room after a shared task, you find Jake there, still working on the project. You share a laugh about the day's challenges, and Jake leans in to whisper, \"You're doing great,\" his voice filled with admiration.\n\n2. **Rainy Evening Walk**: Walking home together after a storm, you notice Noah's thoughtful gaze. He stops and says, \"You've been amazing, and I'm glad we're working on this together,\" his words echoing the feelings you've been holding back.\n\n3. **Backstage Before the Show**: As you prepare for the presentation, Cole offers to help you calm your nerves. In the quiet backstage, he says, \"You're the best part of this project, and I'm proud to be on your team,\" his words leaving you with a sense of pride and affection.\n\n## Lock-line Note\n\nOnce you've formed a deeper bond with Jake or Noah, the other relationships naturally step back into the background. Your focus shifts to the person with whom you share the most chemistry and connection.\n\n## Ending Notes\n\nHE: After the presentation, you and Jake share a moment of triumph. He pulls you aside and says, \"I've loved working with you, and I want to continue this journey. Will you be my girlfriend?\" You nod, and the two of you share a heartfelt embrace, sealing your mutual love.\n\nBE: As the semester comes to an end, you and Noah part ways with a heavy heart. He says, \"I'll always cherish the time we spent together. You're an incredible person, and I'm grateful for our friendship.\" You both smile through the tears, knowing that while the journey has ended, the memories will last forever.\n\n## Round map — list roughly 13-16 rounds as a simple table (use pipes or hyphens):\n| Round Number | Scene Keyword | Characters Present |\n|--------------|-------------------------|------------------------|\n| 1 | Team Meeting | Jake, Noah, Felix |\n| 2 | Library Study Session | Felix, Ian, Cole |\n| 3 | Library Study Session | Jake, Felix, Ian |\n| 4 | Campus Café | Noah, Felix, Cole |\n| 5 | Dorm Room Chat | Jake, Felix, Cole |\n| 6 | Library Study Session | Felix, Ian, Cole |\n| 7 | Dorm Room Chat | Jake, Noah, Ian |\n| 8 | Library Study Session | Felix, Jake, Ian |\n| 9 | Campus Path | Noah, Ian, Cole |\n| 10 | Dorm Room Chat | Jake, Felix, Noah |\n| 11 | Library Study Session | Jake, Ian, Noah |\n| 12 | Campus Café | Felix, Ian, Cole |\n| 13 | Dorm Room Chat | Jake, Noah, Ian |\n| 14 | Library Study Session | Jake, Felix, Cole |\n| 15 | Campus Path | Noah, Ian, Cole |\n| 16 | Final Project Meeting | Jake, Felix, Ian, Cole | \n| Ideal Final Round | Midnight Confession | Jake, You |\n\nThe rounds are designed to show the gradual development of relationships and the shared chemistry between you and the five male characters. The final round, \"Midnight Confession,\" is the ideal setting for Jake to express his feelings towards you, setting the stage for a romantic and memorable conclusion.",
   "structured": {
     "band": "cet4",
     "theme": "minimal",
+    "love_mode": true,
     "world": {
-      "era": "现代大学校园",
-      "genre": "科幻/悬疑/心理",
-      "summary": "In the realm of 'Team Disconnects,' technology and human error create unexpected challenges in a modern university setting, where collaboration is crucial but communication is often patchy. The protagonist, isolated and facing a crucial presentation, must navigate the high-tech classroom to deliver an incredible performance amidst fear and uncertainty.",
-      "rules": "1. The protagonist must rely on technology but face its unreliability. 2. Communication with teammates is limited or non-existent. 3. The protagonist's actions must be strategic to navigate the situation. 4. Time is limited and pressure is high.",
-      "atmosphere": "tense, isolating, and technologically advanced",
+      "era": "现代校园",
+      "genre": "校园恋爱",
+      "summary": "In the bustling campus of Crestwood University, a third-year university student finds herself in a race against time, facing the challenge of leading a group presentation and navigating through a complex web of interpersonal relationships.",
+      "rules": "1. Complete the group presentation successfully. 2. Get to know the five new teammates. 3. Maintain a balance between work and personal interactions. 4. Make decisions that reflect one's character and values.",
+      "atmosphere": "Intense, yet hopeful",
       "vocab": [
         "presentation",
-        "technology",
+        "deadline",
         "teamwork",
-        "isolation",
-        "pressure",
-        "communication",
-        "technology failure",
-        "fear"
+        "interpersonal",
+        "relationship",
+        "feedback",
+        "challenge",
+        "character"
       ]
     },
     "identity": {
-      "name": "Zara",
+      "name": "Sophia Zhang",
       "gender": "女",
       "age": 21,
-      "role": "独立演讲者",
-      "background": "A highly motivated and resourceful undergraduate student, Zara has been practicing her public speaking skills throughout her college years."
+      "role": "大三传媒专业女生,课程小组组长,演示主讲人",
+      "background": "Sophia is a dedicated and ambitious university student, known for her strong leadership skills and passion for storytelling. She is a native English speaker with a keen interest in the intersection of media and technology."
     },
     "npcs": [
       {
-        "name": "Emma",
-        "gender": "女",
-        "role": "项目经理",
-        "personality": "严谨认真，有条不紊，但有时过于追求完美",
-        "relationship": "项目中的领导者，对主角有较高的期望，但在主角遇到困难时给予支持"
-      },
-      {
         "name": "Jake",
         "gender": "男",
-        "role": "技术专家",
-        "personality": "聪明机智，但有时过于自信，容易忽略细节",
-        "relationship": "主角的得力助手，对主角的技术问题提供帮助，但有时会因自信而引起矛盾"
+        "age": 20,
+        "role": "The silent tech whiz of the group",
+        "personality": "Intelligent yet reserved, Jake rarely speaks but his actions speak louder than words. His messages arrive at odd hours, but they always bring a sense of relief.",
+        "relationship": "Initially, Jake is a distant figure, always there to fix your computer issues, but never quite reaching out.",
+        "appearance": "Tall and slender, Jake has dark hair styled in a neat buzzcut, deep blue eyes, wearing a simple white t-shirt and jeans. His features are striking, almost like a drawing come to life.",
+        "profile": {
+          "personality": "Intelligent yet reserved, Jake rarely speaks but his actions speak louder than words. His messages arrive at odd hours, like a silent guardian.",
+          "hobby": "Jake loves programming, often found late at night, surrounded by code and a glowing computer screen.",
+          "redline": "Jake dislikes loud noises and chaos, preferring a quiet, organized environment.",
+          "soft": "Jake's soft spot is kindness, especially when it comes from those he cares about.",
+          "speech": "He often calls you 'You' in a gentle tone, showing his respect and attentiveness."
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_p3-03-group-presentation_jake.png"
       },
       {
         "name": "Noah",
         "gender": "男",
-        "role": "市场分析师",
-        "personality": "热情开朗，善于沟通，但有时过于乐观，缺乏危机感",
-        "relationship": "与主角关系较好，经常提供市场分析，但在关键时刻容易过于乐观而忽视风险"
+        "age": 20,
+        "role": "商学院社交达人",
+        "personality": "Noah is witty and always has a playful comment, but he's the first to take responsibility for others' mistakes.",
+        "relationship": "A friendly classmate who often helps you with assignments.",
+        "appearance": "Tall and fit, Noah has wavy brown hair, bright blue eyes, and a charming smile. He wears a stylish, professional jacket over a casual shirt, exuding a confident and approachable aura.",
+        "profile": {
+          "personality": "He often says, 'Don't worry, I've got it.'",
+          "hobby": "Noah loves analyzing market trends and enjoys playing basketball in his free time.",
+          "redline": "Don't bring up his past relationships or make him feel uncomfortable with personal questions.",
+          "soft": "Noah is touched by genuine kindness and a supportive gesture.",
+          "speech": "He calls you 'Sweetie' with a playful tone."
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_p3-03-group-presentation_noah.png"
       },
       {
-        "name": "Iris",
-        "gender": "女",
-        "role": "文案策划",
-        "personality": "创意无限，但有时过于追求独特，忽视团队合作",
-        "relationship": "主角的创意来源，经常提供新颖的想法，但在团队合作中容易与主角产生分歧"
+        "name": "Felix",
+        "gender": "男",
+        "age": 22,
+        "role": "建筑系完美主义者",
+        "personality": "Felix is meticulous and perfectionist, always striving for excellence. He speaks with a calm, thoughtful tone, often pausing to ensure his words are precise.",
+        "relationship": "A fellow architecture student who admires your work and often offers help without expecting anything in return.",
+        "appearance": "Tall and slender, Felix has chestnut hair styled in a neat, short cut, with hazel eyes reflecting intelligence. He wears a crisp, button-down shirt tucked into well-fitted trousers, exuding a professional yet approachable demeanor.",
+        "profile": {
+          "personality": "Felix is meticulous and perfectionist, always striving for excellence. He speaks with a calm, thoughtful tone, often pausing to ensure his words are precise. 'Let's not settle for good enough, it has to be perfect.'",
+          "hobby": "Felix is passionate about architecture, often found sketching intricate designs in his notebook.",
+          "redline": "Felix dislikes procrastination and disorganized workspaces.",
+          "soft": "Felix's heart is touched by genuine effort and kindness.",
+          "speech": "He calls you 'Sweetheart' with a gentle smile, his tone filled with warmth."
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_p3-03-group-presentation_felix.png"
+      },
+      {
+        "name": "Ian",
+        "gender": "男",
+        "age": 22,
+        "role": "Crestwood University's Student Council Vice President",
+        "personality": "Intelligent, witty, with a slightly mischievous smile, always ready with a joke or two",
+        "relationship": "You're a new addition to the Student Council, brought in for help just before the demonstration week.",
+        "appearance": "tall with a lean build, dark hair styled casually, amber eyes, wearing a stylish blazer over a plain shirt, exuding an air of confidence and charm",
+        "profile": {
+          "personality": "Intellectual and humorous, often with a hint of mischief in his jokes",
+          "hobby": "Playing the guitar and exploring new music scenes",
+          "redline": "Avoid discussing politics and personal failures",
+          "soft": "A gentle touch or a thoughtful gesture can warm his heart",
+          "speech": "He calls you 'Sweetheart' in a warm, teasing tone"
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_p3-03-group-presentation_ian.png"
+      },
+      {
+        "name": "Cole",
+        "gender": "男",
+        "age": 20,
+        "role": "校园篮球明星",
+        "personality": "Outgoing and lively, Cole is also surprisingly attentive and thoughtful, always remembering the little things you say.",
+        "relationship": "Cole is initially your friendly neighbor, but there's a spark that suggests more could be brewing.",
+        "appearance": "Tall and athletic, Cole has wavy brown hair, bright blue eyes, and often wears casual, stylish basketball attire. His confident posture and charming smile are hard to miss.",
+        "profile": {
+          "personality": "Outgoing and lively, Cole speaks with a friendly tone, often using phrases like 'You know what I mean?'.",
+          "hobby": "Cole loves playing basketball and enjoys watching sports games in his free time.",
+          "redline": "Cole dislikes negative talk and criticism, especially when it's unnecessary.",
+          "soft": "Cole's heart is easily touched by genuine kindness and thoughtful gestures.",
+          "speech": "He usually calls you 'Hey, you' with a warm, inviting smile."
+        },
+        "art": "https://bitlife.blupure.cn/scenarios/covers/loveart_p3-03-group-presentation_cole.png"
       }
     ],
     "timeline": {
@@ -70,787 +130,602 @@
         "month": 11,
         "day": 3
       },
-      "note": "The story unfolds on the eve of a crucial presentation, marking the start of the protagonist's intense journey."
+      "note": "恋爱攻略线,单次会话 15-25 分钟可通关一段完整攻略"
     },
     "scene_style": {
-      "env_templates": [
-        "lecture hall",
-        "dormitory",
-        "university classroom",
-        "technology lab",
-        "team meeting room",
-        "library",
-        "online platform",
-        "office space"
-      ],
-      "option_style": "choices between actions and decisions that can lead to different outcomes"
+      "env_templates": [],
+      "option_style": "romantic daily choices"
+    },
+    "love_rules": {
+      "slots": 3,
+      "lock_at": 70,
+      "he_end": {
+        "min_affection": 75,
+        "heartbeat_min": 1
+      },
+      "be_end": {
+        "min_affection": 30
+      },
+      "affection": {
+        "flirt": {
+          "favor": 1,
+          "affection": 6
+        },
+        "kind": {
+          "favor": 4,
+          "affection": 1
+        },
+        "tease": {
+          "favor": 2,
+          "affection": 2
+        },
+        "neutral": {
+          "favor": 1,
+          "affection": 0
+        },
+        "awkward": {
+          "favor": 0,
+          "affection": -2
+        },
+        "rude": {
+          "favor": -4,
+          "affection": -3
+        },
+        "reject": {
+          "favor": -3,
+          "affection": -8
+        }
+      }
+    },
+    "scenes": {
+      "heartbeat": [
+        {
+          "where": "Group Presentation Room",
+          "when": "During the intense preparation before the presentation",
+          "heartbeat": "Seeing a new teammate's determination to contribute to the group."
+        },
+        {
+          "where": "Campus Cafe",
+          "when": "After a long day of studying",
+          "heartbeat": "Finding solace in a conversation with a friendly teammate."
+        },
+        {
+          "where": "Library",
+          "when": "In moments of self-doubt",
+          "heartbeat": "Receiving encouragement from a supportive teammate."
+        }
+      ]
     },
     "first_scene": {
-      "story": "It's minutes before showtime, and you're pacing in the quiet dormitory hall. Your phone rings, and it's Emma. \"Are you okay? Where's Jake?\" she asks worriedly.\n\nYou take a deep breath, \"I don't know. He was supposed to meet me here, but he never showed up.\" The weight of the upcoming presentation hangs heavily in the air. Emma suggests, \"Why don't you come over? I can help you with the slides.\"\n\nYour mind races as you consider the options. You need to make a decision quickly. Emma is a solid choice, but... Jake is the leader, the one you've always counted on. \"I have to go back to the classroom. Maybe Jake just lost track of time.\"\n\nBut as you turn to leave, a sudden thought hits you. \"Wait, Emma, can you really make it here in time? I must get this presentation right.\" \n\nYou glance at your watch. Time is ticking. You must decide: go back to the classroom for Jake or trust in Emma's support.\n\nYou hesitate for a moment, torn between the weight of tradition and the potential of a last-minute rescue. Emma's voice echoes in your mind, \"You've got this, remember? You're more prepared than you think.\" But the thought of Jake's analytical mind and his ability to tie everything together in a coherent narrative is hard to shake off. You take a step back, taking in the room where you've spent countless hours perfecting the presentation. The slides are meticulously arranged, each fact and figure in its place. The classroom is where the magic happens, where Jake's leadership and expertise can make all the difference.\n\nAs the seconds tick by, you realize that the choice isn't just about Jake or Emma. It's about trusting your instincts and the connections you've built over the course of this project. You remember the late-night discussions, the shared laughter, and the moments of frustration that brought you all closer together. You remember Iris's calm demeanor and her ability to spot the nuances in your presentation that you might have overlooked. And you remember Noah's infectious enthusiasm, his creative touch that could elevate your presentation to something extraordinary.\n\nWith a deep breath, you make your decision. You turn back to your phone, calling Jake's number one last time. This time, it goes to voicemail. \"Hey Jake, it's me. I know I'm supposed to be at the classroom, but... I think I might need your help more than I thought. Can you meet me at the dormitory? I'll be there in five minutes.\"\n\nYou hang up, a mix of anxiety and hope filling your chest. You rush back to the dormitory, the weight of the presentation on your shoulders but the support of your team in your heart. As you step into the room, Emma's face lights up with concern. \"I'm here, let's do this.\"\n\nTogether, you work through the final details, Emma's reassurances and Jake's insights weaving a tapestry of confidence around you. Time seems to stand still as you prepare, but the clock ticks on, reminding you that the show must go on. As you step into the lecture hall, the weight of the presentation lifts slightly, replaced by the thrill of performing under pressure. You take the stage, and with the support of your team, you deliver an incredible performance, one that you'll never forget.",
+      "story": "The clock ticks louder as you rush through the library's bustling aisles, searching for the perfect book for your presentation. Your mind is a whirlwind of thoughts, and the stress is starting to get to you. Suddenly, a hand taps your shoulder, and you turn to see Jake, his eyes reflecting the dim light of the room.\n\n\"Hi, Sophia Zhang,\" he says softly, his voice a soothing balm to your frazzled nerves. \"I couldn't help but overhear your discussion about the project. You might find this useful.\"\n\nHe hands you an old, leather-bound book filled with architectural drawings. \"It's a gem from the library's special collection,\" he adds with a hint of pride.\n\n\"Thank you, Jake,\" you reply, feeling a strange warmth spread through you. As you start to flip through the pages, you can't help but notice the way his eyes meet yours, filled with a quiet understanding.\n\nJust then, Noah bursts into the room, his laughter echoing through the quietude. \"Hey, Sophia Zhang, you look like you're in a pickle,\" he says, his eyes twinkling with mischief. \"Mind if I join in?\"\n\nYou nod, and Noah pulls up a chair next to you, his energy a stark contrast to Jake's calm demeanor. \"What's the problem?\" he asks, his voice full of concern.\n\nYou explain the challenges you're facing with the presentation, and Noah listens intently, his eyes never leaving yours. \"Don't worry, Sophia Zhang,\" he says, his tone reassuring. \"We'll figure it out together.\"\n\nAs you continue to work, the pressure of the deadline looms, but the presence of Jake and Noah brings a sense of comfort. You must choose: will you let the stress consume you, or will you embrace the unexpected camaraderie that's unfolding before your eyes?\n\nThe quiet hum of the library fades into the distant laughter of other students. Jake's gaze is fixed on the pages of the book, occasionally glancing at you with a subtle nod of encouragement. Noah, on the other hand, is scanning the room, his eyes catching the flutter of a butterfly outside the window. The scent of fresh coffee mingles with the faint smell of old paper, creating an almost palpable sense of urgency. A soft knock at the door interrupts your concentration, and Felix pokes his head in, his hair slightly disheveled from a recent brainstorming session. \"Hey, I think I found a cool design idea,\" he exclaims, holding up a sketchpad. \"You guys should check this out.\" Ian, who had been silently working on his laptop, looks up and offers a playful wink. \"You know, it's moments like these that make me wish the deadline was a bit further away,\" he jokes, and the room erupts in laughter.",
       "options": [
-        "Call Jake one last time",
-        "Head back to the classroom",
-        "Accept Emma's offer to help",
-        "Review the presentation alone"
+        {
+          "text": "Ask Jake about his coding setup",
+          "love": "flirt",
+          "target": "Jake"
+        },
+        {
+          "text": "Tease Noah about his energy",
+          "love": "tease",
+          "target": "Noah"
+        },
+        {
+          "text": "Comment on Felix's sketchpad",
+          "love": "kind",
+          "target": "Felix"
+        },
+        {
+          "text": "Gently tease Ian about his guitar playing",
+          "love": "tease",
+          "target": "Ian"
+        }
       ],
       "bilingual": {
         "v": 1,
         "lines": [
           {
-            "en": "It's minutes before showtime, and you're pacing in the quiet dormitory hall.",
-            "zh": "离演出开始还有几分钟，你正安静的学生宿舍走廊里来回踱步。",
+            "en": "The clock ticks louder as you rush through the library's bustling aisles, searching for the perfect book for your presentation.",
+            "zh": "当你在图书馆熙熙攘攘的书架间匆匆穿行，为演讲寻找最合适的书时，时钟的滴答声似乎也变得更响了。",
             "words": [
               {
-                "w": "pacing",
-                "zh": "来回踱步"
+                "w": "rush through",
+                "zh": "匆忙穿过；快步经过"
               },
               {
-                "w": "showtime",
-                "zh": "演出/上场时间"
+                "w": "bustling aisles",
+                "zh": "热闹的通道/过道"
+              },
+              {
+                "w": "searching for",
+                "zh": "寻找"
               }
             ]
           },
           {
-            "en": "Your phone rings, and it's Emma.",
-            "zh": "你的电话响了，是艾玛打来的。",
+            "en": "Your mind is a whirlwind of thoughts, and the stress is starting to get to you.",
+            "zh": "你的思绪如旋风般纷乱，压力也开始让你吃不消了。",
             "words": [
               {
-                "w": "ring",
-                "zh": "（电话）响"
+                "w": "whirlwind",
+                "zh": "像旋风一样快速旋转的风；比喻混乱或令人难以承受的事物"
+              },
+              {
+                "w": "get to",
+                "zh": "开始影响（某人），常指负面影响"
+              },
+              {
+                "w": "starting to",
+                "zh": "开始发生"
               }
             ]
           },
           {
-            "en": "\"Are you okay?",
-            "zh": "你还好吗？",
+            "en": "Suddenly, a hand taps your shoulder, and you turn to see Jake, his eyes reflecting the dim light of the room.",
+            "zh": "突然，一只手拍了拍你的肩膀，你转过身，看见杰克，他的眼睛映着房间昏暗的灯光。",
             "words": [
               {
-                "w": "okay",
-                "zh": "好的；没问题"
+                "w": "taps",
+                "zh": "轻拍；轻轻敲击"
               },
               {
-                "w": "Are you...?",
-                "zh": "询问某人状况的疑问句结构"
+                "w": "reflecting",
+                "zh": "映照；反射"
+              },
+              {
+                "w": "dim light",
+                "zh": "昏暗的光"
               }
             ]
           },
           {
-            "en": "Where's Jake?\" she asks worriedly.",
-            "zh": "“杰克在哪里？”她担忧地问道。",
+            "en": "\"Hi, Sophia Zhang,\" he says softly, his voice a soothing balm to your frazzled nerves.",
+            "zh": "他轻声说道：“嗨，张素妍。”他的声音像安抚的药膏，抚平了你紧绷的神经。",
             "words": [
               {
-                "w": "worriedly",
-                "zh": "担忧地"
+                "w": "softly",
+                "zh": "轻柔地"
+              },
+              {
+                "w": "soothing balm",
+                "zh": "安抚的药膏（比喻）"
+              },
+              {
+                "w": "frazzled nerves",
+                "zh": "疲惫紧张的神经"
               }
             ]
           },
           {
-            "en": "You take a deep breath, \"I don't know.",
-            "zh": "你深吸一口气，“我不知道。",
+            "en": "\"I couldn't help but overhear your discussion about the project.",
+            "zh": "我忍不住听到了你们关于这个项目的讨论。",
             "words": [
               {
-                "w": "take a deep breath",
-                "zh": "深呼吸"
+                "w": "couldn't help but",
+                "zh": "忍不住；无法控制自己"
               },
               {
-                "w": "show up",
-                "zh": "出现"
-              }
-            ]
-          },
-          {
-            "en": "He was supposed to meet me here, but he never showed up.\"",
-            "zh": "他本该在这里等我，但他一直没出现。”",
-            "words": [
-              {
-                "w": "show up",
-                "zh": "出现"
-              }
-            ]
-          },
-          {
-            "en": "The weight of the upcoming presentation hangs heavily in the air.",
-            "zh": "即将到来的演示的沉重感在空气中弥漫。",
-            "words": [
-              {
-                "w": "hangs heavily",
-                "zh": "沉重地笼罩"
-              }
-            ]
-          },
-          {
-            "en": "Emma suggests, \"Why don't you come over?",
-            "zh": "艾玛建议道，“你过来吧？",
-            "words": [
-              {
-                "w": "come over",
-                "zh": "过来/过来玩"
-              }
-            ]
-          },
-          {
-            "en": "I can help you with the slides.\"",
-            "zh": "我可以帮你做幻灯片。”",
-            "words": [
-              {
-                "w": "slides",
-                "zh": "幻灯片"
-              }
-            ]
-          },
-          {
-            "en": "Your mind races as you consider the options.",
-            "zh": "你在考虑各种选择时，思绪纷乱。",
-            "words": [
-              {
-                "w": "mind races",
-                "zh": "思绪纷乱/大脑飞速运转"
-              }
-            ]
-          },
-          {
-            "en": "You need to make a decision quickly.",
-            "zh": "你得尽快做出决定。",
-            "words": [
-              {
-                "w": "make a decision",
-                "zh": "做决定"
+                "w": "overhear",
+                "zh": "无意中听到"
               },
               {
-                "w": "quickly",
-                "zh": "快速地"
-              }
-            ]
-          },
-          {
-            "en": "Emma is a solid choice, but...",
-            "zh": "艾玛是个可靠的选择，不过……",
-            "words": [
-              {
-                "w": "solid choice",
-                "zh": "可靠人选；稳妥之选"
-              },
-              {
-                "w": "but...",
-                "zh": "但是……"
-              }
-            ]
-          },
-          {
-            "en": "Jake is the leader, the one you've always counted on.",
-            "zh": "杰克是你们的领袖，也是你们一直可以依靠的人。",
-            "words": [
-              {
-                "w": "leader",
-                "zh": "领导；负责人"
-              },
-              {
-                "w": "counted on",
-                "zh": "依赖；信任"
-              },
-              {
-                "w": "always",
-                "zh": "总是"
-              }
-            ]
-          },
-          {
-            "en": "\"I have to go back to the classroom.",
-            "zh": "我得回教室去。",
-            "words": [
-              {
-                "w": "have to",
-                "zh": "必须；表示义务或必要"
-              },
-              {
-                "w": "go back",
-                "zh": "返回（到原来的地方）"
-              },
-              {
-                "w": "classroom",
-                "zh": "教室"
-              }
-            ]
-          },
-          {
-            "en": "Maybe Jake just lost track of time.\"",
-            "zh": "也许杰克只是忘记了时间。",
-            "words": [
-              {
-                "w": "lost track",
-                "zh": "不知道发生了什么；没注意到时间的流逝"
-              },
-              {
-                "w": "just",
-                "zh": "仅仅；只"
-              },
-              {
-                "w": "maybe",
-                "zh": "也许；可能"
-              }
-            ]
-          },
-          {
-            "en": "But as you turn to leave, a sudden thought hits you.",
-            "zh": "但当你转身准备离开时，一个突然的念头闪过你的脑海。",
-            "words": [
-              {
-                "w": "turn to leave",
-                "zh": "开始离开"
-              },
-              {
-                "w": "a sudden thought",
-                "zh": "突然出现的想法"
-              },
-              {
-                "w": "hits you",
-                "zh": "击中你（指念头浮现）"
-              }
-            ]
-          },
-          {
-            "en": "\"Wait, Emma, can you really make it here in time?",
-            "zh": "等等，艾玛，你真能及时赶到这儿吗？",
-            "words": [
-              {
-                "w": "make it",
-                "zh": "按时到达；成功抵达"
-              },
-              {
-                "w": "really",
-                "zh": "确实；真的"
-              },
-              {
-                "w": "here",
-                "zh": "这里"
-              }
-            ]
-          },
-          {
-            "en": "I must get this presentation right.\"",
-            "zh": "我必须把这次汇报做好。",
-            "words": [
-              {
-                "w": "get ... right",
-                "zh": "把事情做对/做好"
-              },
-              {
-                "w": "presentation",
-                "zh": "汇报；演示"
-              }
-            ]
-          },
-          {
-            "en": "You glance at your watch.",
-            "zh": "你瞥了一眼手表。",
-            "words": [
-              {
-                "w": "glance at",
-                "zh": "快速看一眼"
-              },
-              {
-                "w": "watch",
-                "zh": "手表"
-              }
-            ]
-          },
-          {
-            "en": "Time is ticking.",
-            "zh": "时间在滴答作响。",
-            "words": [
-              {
-                "w": "ticking",
-                "zh": "（钟表）发出滴答声；（时间）迅速流逝"
-              },
-              {
-                "w": "is ticking",
-                "zh": "现在进行时结构，表示正在发生的动作"
-              }
-            ]
-          },
-          {
-            "en": "You must decide: go back to the classroom for Jake or trust in Emma's support.",
-            "zh": "你必须做出决定：是回到教室去找杰克，还是相信艾玛会支持你。",
-            "words": [
-              {
-                "w": "decide",
-                "zh": "经过思考后做出选择"
-              },
-              {
-                "w": "go back",
-                "zh": "回到之前所在的地方"
-              },
-              {
-                "w": "trust in",
-                "zh": "相信某人会帮忙/支持"
-              }
-            ]
-          },
-          {
-            "en": "You hesitate for a moment, torn between the weight of tradition and the potential of a last-minute rescue.",
-            "zh": "你犹豫了片刻，在传统的重负与最后一刻救援的可能性之间左右为难。",
-            "words": [
-              {
-                "w": "hesitate",
-                "zh": "犹豫；迟疑"
-              },
-              {
-                "w": "torn",
-                "zh": "被撕扯/左右为难"
-              },
-              {
-                "w": "weight",
-                "zh": "分量；压力"
-              }
-            ]
-          },
-          {
-            "en": "Emma's voice echoes in your mind, \"You've got this, remember?",
-            "zh": "艾玛的声音在你脑海中回响：“你行的，记得吗？”",
-            "words": [
-              {
-                "w": "echoes",
-                "zh": "回声；声音重复再被听到"
-              },
-              {
-                "w": "in your mind",
-                "zh": "在脑海里"
-              },
-              {
-                "w": "You've got this",
-                "zh": "你行的；你能搞定"
-              }
-            ]
-          },
-          {
-            "en": "You're more prepared than you think.\"",
-            "zh": "你比自己以为的更有准备。",
-            "words": [
-              {
-                "w": "more...than",
-                "zh": "比较结构：更……比……；用于比较两件事（如：比他聪明）。"
-              },
-              {
-                "w": "prepared",
-                "zh": "形容词，表示为某事准备好或具备条件；例如：对考试准备充分。"
-              }
-            ]
-          },
-          {
-            "en": "But the thought of Jake's analytical mind and his ability to tie everything together in a coherent narrative is hard to shake off.",
-            "zh": "但一想到杰克的分析头脑，以及他能把所有事情串联成一个连贯故事的能力，就让人难以释怀。",
-            "words": [
-              {
-                "w": "shake off",
-                "zh": "摆脱（感觉、习惯）"
-              },
-              {
-                "w": "tie ... together",
-                "zh": "把……连在一起"
-              },
-              {
-                "w": "coherent narrative",
-                "zh": "清晰合理的叙述"
-              }
-            ]
-          },
-          {
-            "en": "You take a step back, taking in the room where you've spent countless hours perfecting the presentation.",
-            "zh": "你往后退了一步，打量着这间你曾耗费无数小时打磨演示的房间。",
-            "words": [
-              {
-                "w": "take a step back",
-                "zh": "向后退一步"
-              },
-              {
-                "w": "taking in",
-                "zh": "观察并领会"
-              },
-              {
-                "w": "countless",
-                "zh": "无数的"
-              }
-            ]
-          },
-          {
-            "en": "The slides are meticulously arranged, each fact and figure in its place.",
-            "zh": "幻灯片被精心整理，每一条事实和数字都各就各位。",
-            "words": [
-              {
-                "w": "meticulously",
-                "zh": "非常仔细、精确"
-              },
-              {
-                "w": "in its place",
-                "zh": "在它该在的位置；摆放得当"
-              }
-            ]
-          },
-          {
-            "en": "The classroom is where the magic happens, where Jake's leadership and expertise can make all the difference.",
-            "zh": "教室是魔法发生的地方，在这里，杰克的领导能力和专业知识可以带来决定性的改变。",
-            "words": [
-              {
-                "w": "make all the difference",
-                "zh": "产生决定性影响"
-              },
-              {
-                "w": "leadership",
-                "zh": "领导能力"
-              },
-              {
-                "w": "expertise",
-                "zh": "专业知识"
-              }
-            ]
-          },
-          {
-            "en": "As the seconds tick by, you realize that the choice isn't just about Jake or Emma.",
-            "zh": "随着秒针滴答作响，你意识到这个选择并不仅仅是在杰克和艾玛之间做出取舍。",
-            "words": [
-              {
-                "w": "tick by",
-                "zh": "（时间）慢慢流逝"
-              },
-              {
-                "w": "isn't just about",
-                "zh": "不只是关于"
-              },
-              {
-                "w": "choice",
-                "zh": "选择"
-              }
-            ]
-          },
-          {
-            "en": "It's about trusting your instincts and the connections you've built over the course of this project.",
-            "zh": "关键在于相信你的直觉，以及你在这个项目过程中建立起来的关系。",
-            "words": [
-              {
-                "w": "trusting",
-                "zh": "相信；依赖"
-              },
-              {
-                "w": "instincts",
-                "zh": "直觉；本能感觉"
-              },
-              {
-                "w": "over the course of",
-                "zh": "在……的过程中"
-              }
-            ]
-          },
-          {
-            "en": "You remember the late-night discussions, the shared laughter, and the moments of frustration that brought you all closer together.",
-            "zh": "你还记得那些深夜的讨论、共同的欢笑，以及那些让你们彼此更亲近的沮丧时刻。",
-            "words": [
-              {
-                "w": "late-night",
-                "zh": "深夜的"
-              },
-              {
-                "w": "discussions",
+                "w": "discussion",
                 "zh": "讨论"
-              },
-              {
-                "w": "shared laughter",
-                "zh": "共同的笑声"
               }
             ]
           },
           {
-            "en": "You remember Iris's calm demeanor and her ability to spot the nuances in your presentation that you might have overlooked.",
-            "zh": "你还记得伊里斯沉着冷静的举止，以及她能发现你在汇报中可能忽略的细节。",
+            "en": "You might find this useful.\"",
+            "zh": "你可能会发现这个有用。",
             "words": [
               {
-                "w": "calm demeanor",
-                "zh": "沉着冷静的举止"
+                "w": "might find",
+                "zh": "情态动词+动词；表示可能性（“可能”）"
               },
               {
-                "w": "spot",
-                "zh": "发现；注意到"
-              },
-              {
-                "w": "nuances",
-                "zh": "细微差别；细节"
+                "w": "useful",
+                "zh": "形容词，意为“有用的”"
               }
             ]
           },
           {
-            "en": "And you remember Noah's infectious enthusiasm, his creative touch that could elevate your presentation to something extraordinary.",
-            "zh": "你还记得诺亚那极具感染力的热情，以及他那富有创意的手法——它能把你的演讲提升到非凡的境界。",
+            "en": "He hands you an old, leather-bound book filled with architectural drawings.",
+            "zh": "他递给你一本旧的皮革封面书，里面满是建筑图纸。",
             "words": [
               {
-                "w": "infectious",
-                "zh": "（情绪、热情等）有感染力的"
+                "w": "leather-bound",
+                "zh": "皮面的"
               },
               {
-                "w": "creative touch",
-                "zh": "富有创意的手法/触感"
+                "w": "filled with",
+                "zh": "充满；装满"
               },
               {
-                "w": "elevate",
-                "zh": "提升；使升高"
+                "w": "architectural drawings",
+                "zh": "建筑图纸"
               }
             ]
           },
           {
-            "en": "With a deep breath, you make your decision.",
-            "zh": "你深吸一口气，然后做出了决定。",
+            "en": "\"It's a gem from the library's special collection,\" he adds with a hint of pride.",
+            "zh": "他补充道，语气里带着一丝自豪：这是图书馆特藏里的珍品。",
             "words": [
               {
-                "w": "deep breath",
-                "zh": "深呼吸"
+                "w": "gem",
+                "zh": "珍宝；非常有价值的东西"
               },
               {
-                "w": "make your decision",
-                "zh": "做决定"
+                "w": "special collection",
+                "zh": "特藏（精选藏品）"
+              },
+              {
+                "w": "hint of pride",
+                "zh": "一丝自豪"
               }
             ]
           },
           {
-            "en": "You turn back to your phone, calling Jake's number one last time.",
-            "zh": "你转回手机，最后一次拨打杰克的号码。",
+            "en": "\"Thank you, Jake,\" you reply, feeling a strange warmth spread through you.",
+            "zh": "你回答道：“谢谢你，杰克。”一股奇异的暖意在你体内蔓延开来。",
             "words": [
               {
-                "w": "turn back to",
-                "zh": "回到；返回"
+                "w": "reply",
+                "zh": "回答；回应"
               },
               {
-                "w": "calling",
-                "zh": "拨（电话）"
+                "w": "spread through",
+                "zh": "蔓延；传遍"
               },
               {
-                "w": "one last time",
-                "zh": "最后一次"
+                "w": "strange warmth",
+                "zh": "异样的温暖"
               }
             ]
           },
           {
-            "en": "This time, it goes to voicemail.",
-            "zh": "这次，电话转到了语音信箱。",
+            "en": "As you start to flip through the pages, you can't help but notice the way his eyes meet yours, filled with a quiet understanding.",
+            "zh": "当你开始翻动书页时，你会不由自主地注意到他的目光与你相遇，其中充满了一种安静的理解。",
             "words": [
               {
-                "w": "goes to voicemail",
-                "zh": "接通某人的语音信箱；响铃后被转到语音信箱"
+                "w": "flip through",
+                "zh": "快速翻页；浏览"
               },
               {
-                "w": "this time",
-                "zh": "这一次；这次"
+                "w": "can't help but",
+                "zh": "忍不住；不得不"
               },
               {
-                "w": "it goes",
-                "zh": "（电话）接通；（来电）到达"
+                "w": "quiet understanding",
+                "zh": "安静的理解"
               }
             ]
           },
           {
-            "en": "\"Hey Jake, it's me.",
-            "zh": "嘿，杰克，是我。",
+            "en": "Just then, Noah bursts into the room, his laughter echoing through the quietude.",
+            "zh": "就在这时，诺亚冲进房间，他的笑声在寂静中回荡。",
             "words": [
               {
-                "w": "it's me",
-                "zh": "这是我；用于接电话或表明身份"
+                "w": "bursts into",
+                "zh": "突然闯入；用into表示进入"
               },
               {
-                "w": "Hey",
-                "zh": "用来引起别人注意"
+                "w": "echoing",
+                "zh": "回声；echo的现在分词"
+              },
+              {
+                "w": "quietude",
+                "zh": "寂静；安静的状态"
               }
             ]
           },
           {
-            "en": "I know I'm supposed to be at the classroom, but...",
-            "zh": "我知道我本该在教室里，可是……",
+            "en": "\"Hey, Sophia Zhang, you look like you're in a pickle,\" he says, his eyes twinkling with mischief.",
+            "zh": "“嘿，Sophia Zhang，你好像遇到麻烦了。”他说道，眼睛里闪烁着顽皮的光芒。",
             "words": [
               {
-                "w": "be supposed to",
-                "zh": "应该；被期望"
+                "w": "in a pickle",
+                "zh": "陷入困境"
               },
               {
-                "w": "at the classroom",
-                "zh": "在教室里"
+                "w": "twinkling",
+                "zh": "闪闪发光"
+              },
+              {
+                "w": "with mischief",
+                "zh": "带着恶作剧的神情"
               }
             ]
           },
           {
-            "en": "I think I might need your help more than I thought.",
-            "zh": "我想我可能需要你的帮助，比我原先想的还要多。",
+            "en": "\"Mind if I join in?\"",
+            "zh": "介意我加入吗？",
             "words": [
               {
-                "w": "need your help",
-                "zh": "需要某人的帮助"
+                "w": "join in",
+                "zh": "参加；加入（活动）"
               },
               {
-                "w": "more than",
-                "zh": "超过；比……更多"
-              },
-              {
-                "w": "than I thought",
-                "zh": "比我原本以为的"
+                "w": "mind if...",
+                "zh": "你介意……吗？"
               }
             ]
           },
           {
-            "en": "Can you meet me at the dormitory?",
-            "zh": "你能在宿舍那里见我吗？",
+            "en": "You nod, and Noah pulls up a chair next to you, his energy a stark contrast to Jake's calm demeanor.",
+            "zh": "你点点头，诺亚拉过一把椅子坐到你旁边；他浑身上下那股劲儿，跟杰克那种沉稳的气场形成了鲜明对比。",
             "words": [
               {
-                "w": "meet (someone)",
-                "zh": "和某人见面"
+                "w": "nod",
+                "zh": "点头（表示同意或示意）"
               },
               {
-                "w": "dormitory",
-                "zh": "学生宿舍"
+                "w": "pull up a chair",
+                "zh": "把椅子拉近（以便坐在某人旁边）"
+              },
+              {
+                "w": "a stark contrast to",
+                "zh": "与……形成强烈反差"
               }
             ]
           },
           {
-            "en": "I'll be there in five minutes.\"",
-            "zh": "我五分钟后就到。",
+            "en": "\"What's the problem?\" he asks, his voice full of concern.",
+            "zh": "他问道：“怎么了？”，语气里满是关切。",
             "words": [
               {
-                "w": "be there",
-                "zh": "到达；抵达"
+                "w": "full of",
+                "zh": "充满；流露出强烈情感"
               },
               {
-                "w": "in five minutes",
-                "zh": "五分钟后"
+                "w": "concern",
+                "zh": "担忧；关心"
               }
             ]
           },
           {
-            "en": "You hang up, a mix of anxiety and hope filling your chest.",
-            "zh": "你挂断电话，心里既焦虑又充满希望。",
+            "en": "You explain the challenges you're facing with the presentation, and Noah listens intently, his eyes never leaving yours.",
+            "zh": "你说明自己在演讲准备中遇到的困难，诺亚专注地听着，目光始终没有离开你。",
             "words": [
               {
-                "w": "hang up",
-                "zh": "挂断（电话）"
+                "w": "explain",
+                "zh": "清楚地说明某事的含义或情况；详细说明问题"
               },
               {
-                "w": "a mix of...and...",
-                "zh": "……和……的混合"
+                "w": "face",
+                "zh": "面临（困难）；应对"
               },
               {
-                "w": "filling your chest",
-                "zh": "填满你的胸口"
+                "w": "listen intently",
+                "zh": "专心听"
               }
             ]
           },
           {
-            "en": "You rush back to the dormitory, the weight of the presentation on your shoulders but the support of your team in your heart.",
-            "zh": "你匆匆赶回宿舍，肩上扛着演讲的压力，心里却有团队的支持。",
+            "en": "\"Don't worry, Sophia Zhang,\" he says, his tone reassuring.",
+            "zh": "“别担心，Sophia Zhang，”他说道，语气很让人安心。",
             "words": [
               {
-                "w": "rush back",
-                "zh": "急忙返回"
+                "w": "reassuring",
+                "zh": "让人安心的；安抚的"
               },
               {
-                "w": "the weight of",
-                "zh": "……的沉重负担"
+                "w": "tone",
+                "zh": "说话的语气"
               },
               {
-                "w": "on your shoulders",
-                "zh": "压在你肩上"
+                "w": "don't worry",
+                "zh": "别担心"
               }
             ]
           },
           {
-            "en": "As you step into the room, Emma's face lights up with concern.",
-            "zh": "当你走进房间时，艾玛的脸上露出担忧的神情。",
+            "en": "\"We'll figure it out together.\"",
+            "zh": "我们一起想办法解决。",
             "words": [
               {
-                "w": "lights up",
-                "zh": "（因情绪）变得明亮、生动"
+                "w": "figure it out",
+                "zh": "解决问题；设法解决"
               },
               {
-                "w": "with concern",
-                "zh": "带着担忧"
+                "w": "together",
+                "zh": "一起；共同"
               }
             ]
           },
           {
-            "en": "\"I'm here, let's do this.\"",
-            "zh": "我到了，咱们开始吧。",
+            "en": "As you continue to work, the pressure of the deadline looms, but the presence of Jake and Noah brings a sense of comfort.",
+            "zh": "当你继续工作时，截止日期的压力如影随形，但有杰克和诺亚在身边，心里就踏实多了。",
             "words": [
               {
-                "w": "let's",
-                "zh": "用‘let’s’表示一起做某事（= let us）"
+                "w": "continue to work",
+                "zh": "继续工作"
               },
               {
-                "w": "do this",
-                "zh": "常用短语，意为‘现在开始/继续’"
+                "w": "pressure of the deadline",
+                "zh": "截止日期带来的压力"
+              },
+              {
+                "w": "looms",
+                "zh": "逼近；隐隐出现"
               }
             ]
           },
           {
-            "en": "Together, you work through the final details, Emma's reassurances and Jake's insights weaving a tapestry of confidence around you.",
-            "zh": "你们一起梳理最后的细节，Emma的安慰和Jake的见解交织成一张信心之网，将你们环绕。",
+            "en": "You must choose: will you let the stress consume you, or will you embrace the unexpected camaraderie that's unfolding before your eyes?",
+            "zh": "你必须做出选择：是让压力把你压垮，还是拥抱眼前正在展开的意外情谊？",
             "words": [
               {
-                "w": "work through",
-                "zh": "彻底处理；完成"
+                "w": "consume",
+                "zh": "消耗；压垮"
               },
               {
-                "w": "weave a tapestry",
-                "zh": "编织（比喻：把多方面因素组合起来）"
+                "w": "embrace",
+                "zh": "接受；拥抱"
               },
               {
-                "w": "reassurances",
-                "zh": "安慰的话"
+                "w": "unfolding",
+                "zh": "逐渐发生；展现"
               }
             ]
           },
           {
-            "en": "Time seems to stand still as you prepare, but the clock ticks on, reminding you that the show must go on.",
-            "zh": "在你准备的时候，时间仿佛静止了，但时钟继续滴答作响，提醒你演出必须继续。",
+            "en": "The quiet hum of the library fades into the distant laughter of other students.",
+            "zh": "图书馆里轻柔的嗡嗡声渐渐融入远处其他学生的笑声中。",
             "words": [
               {
-                "w": "stand still",
-                "zh": "不动；停留"
+                "w": "fades into",
+                "zh": "逐渐融入；变成……的一部分"
               },
               {
-                "w": "tick on",
-                "zh": "滴答前进"
+                "w": "distant laughter",
+                "zh": "远处传来的笑声"
               },
               {
-                "w": "the show must go on",
-                "zh": "演出必须继续"
+                "w": "quiet hum",
+                "zh": "轻柔的持续低响"
               }
             ]
           },
           {
-            "en": "As you step into the lecture hall, the weight of the presentation lifts slightly, replaced by the thrill of performing under pressure.",
-            "zh": "当你走进报告厅时，做展示的沉重感略微减轻，取而代之的是临场发挥、承受压力时的兴奋。",
+            "en": "Jake's gaze is fixed on the pages of the book, occasionally glancing at you with a subtle nod of encouragement.",
+            "zh": "杰克的目光牢牢锁定在书页上，偶尔朝你投去鼓励的、不易察觉的点头。",
             "words": [
               {
-                "w": "step into",
-                "zh": "走进（某地）"
+                "w": "gaze",
+                "zh": "目光紧盯"
               },
               {
-                "w": "the weight of ... lifts",
-                "zh": "……的重压/负担减轻"
+                "w": "fixed on",
+                "zh": "固定；盯牢"
               },
               {
-                "w": "performing under pressure",
-                "zh": "在压力下表现"
+                "w": "occasionally",
+                "zh": "偶尔；不时"
               }
             ]
           },
           {
-            "en": "You take the stage, and with the support of your team, you deliver an incredible performance, one that you'll never forget.",
-            "zh": "你走上舞台，在团队的支持下，呈现了一场令人难以置信的表演，这将是你永生难忘的经历。",
+            "en": "Noah, on the other hand, is scanning the room, his eyes catching the flutter of a butterfly outside the window.",
+            "zh": "另一方面，诺亚正在扫视房间，目光捕捉到窗外蝴蝶的轻颤。",
             "words": [
               {
-                "w": "take the stage",
-                "zh": "上台表演"
+                "w": "on the other hand",
+                "zh": "用于引出对比；‘然而’"
               },
               {
-                "w": "with the support of",
-                "zh": "在……支持下"
+                "w": "scanning",
+                "zh": "仔细查看某处"
               },
               {
-                "w": "deliver a performance",
-                "zh": "进行一场演出"
+                "w": "catch",
+                "zh": "注意到或迅速看到"
+              }
+            ]
+          },
+          {
+            "en": "The scent of fresh coffee mingles with the faint smell of old paper, creating an almost palpable sense of urgency.",
+            "zh": "新鲜咖啡的香气与旧纸淡淡的气味交织在一起，营造出一种几乎可以触摸到的紧迫感。",
+            "words": [
+              {
+                "w": "mingles with",
+                "zh": "混合；交融"
+              },
+              {
+                "w": "faint",
+                "zh": "微弱的"
+              },
+              {
+                "w": "palpable",
+                "zh": "可感知的；明显的"
+              }
+            ]
+          },
+          {
+            "en": "A soft knock at the door interrupts your concentration, and Felix pokes his head in, his hair slightly disheveled from a recent brainstorming session.",
+            "zh": "门上轻轻敲了两下，打断了你的思路；Felix探进头来，头发因刚刚的头脑风暴而略显凌乱。",
+            "words": [
+              {
+                "w": "interrupts",
+                "zh": "打断（思路/进程）"
+              },
+              {
+                "w": "concentration",
+                "zh": "专注力；注意力集中"
+              },
+              {
+                "w": "pokes his head in",
+                "zh": "把头探进去"
+              }
+            ]
+          },
+          {
+            "en": "\"Hey, I think I found a cool design idea,\" he exclaims, holding up a sketchpad.",
+            "zh": "“嘿，我想我找到了一个很酷的设计理念，”他举着素描本喊道。",
+            "words": [
+              {
+                "w": "exclaims",
+                "zh": "大声、突然地说（常带情绪）"
+              },
+              {
+                "w": "holding up",
+                "zh": "举起；抬起以展示"
+              },
+              {
+                "w": "sketchpad",
+                "zh": "小画板；用于快速记录想法的纸页"
+              }
+            ]
+          },
+          {
+            "en": "\"You guys should check this out.\"",
+            "zh": "你们应该看看这个。",
+            "words": [
+              {
+                "w": "check this out",
+                "zh": "查看；体验"
+              },
+              {
+                "w": "should",
+                "zh": "应该"
+              },
+              {
+                "w": "you guys",
+                "zh": "你们"
+              }
+            ]
+          },
+          {
+            "en": "Ian, who had been silently working on his laptop, looks up and offers a playful wink.",
+            "zh": "一直默默用笔记本电脑工作的伊恩抬起头，调皮地眨了眨眼。",
+            "words": [
+              {
+                "w": "silently",
+                "zh": "安静地；无声地"
+              },
+              {
+                "w": "work on",
+                "zh": "从事；做（工作）"
+              },
+              {
+                "w": "playful wink",
+                "zh": "调皮的眨眼"
+              }
+            ]
+          },
+          {
+            "en": "\"You know, it's moments like these that make me wish the deadline was a bit further away,\" he jokes, and the room erupts in laughter.",
+            "zh": "他说：“你知道，正是这样的时刻让我希望截止日期能再晚一点。”他开玩笑说，房间里顿时爆发出一阵笑声。",
+            "words": [
+              {
+                "w": "moments like these",
+                "zh": "像这样的时刻"
+              },
+              {
+                "w": "make me wish",
+                "zh": "使我渴望"
+              },
+              {
+                "w": "erupts in laughter",
+                "zh": "爆发出笑声"
               }
             ]
           }
