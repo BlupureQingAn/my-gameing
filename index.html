@@ -6357,7 +6357,8 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             scenarioDismissedWarningsMap: "bitlife_scenario_dismissed_warnings_map_v1",
             uiThemeMode: "bitlife_ui_theme_mode_v1"
         },
-        // 云币档位(2026-09-10 精简 4 档:砍 ¥18/¥89/¥168,¥89/¥168 与 ¥68 加赠率同为 20% 纯重复;worker CHARGE_PLANS 保留全档位以兼容历史订单结算)
+        // 云币档位(2026-09-10 精简 4 档:砍掉与 ¥68 加赠率重复的高价档;worker CHARGE_PLANS 保留全档位以兼容历史订单结算,
+        // 2026-09-12 起 worker MAX_PRODUCT_PRICE=98 兜底:超 ¥98 旧档一律禁止新购)
         chargePlans: {
             c1:  { id: "c1",  name: "1000 云币", price: "1",  coins: 2000, desc: "首充双倍 2000 · 新用户专属（复充 1100）", tag: "首充双倍" },
             c6:  { id: "c6",  name: "6000 云币", price: "6",  coins: 12000, desc: "首充双倍 12000 · 新用户专属（复充 6600）", tag: "首充双倍" },
