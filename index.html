@@ -6,6 +6,8 @@
     <meta name="color-scheme" content="only light">
     <title>云吞吞文游官网 - AI 互动剧情游戏 | 边玩文游边学英语 · 恋爱/ABO/古风/悬疑原创剧本</title>
     <link rel="canonical" href="https://bitlife.blupure.cn/">
+    <!-- rel="shortcut icon" 是 Bing/老版抓取器唯一认得的 favicon 声明,与 rel="icon" 并存不冲突 -->
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
@@ -756,37 +758,37 @@
         /* ---- 游玩页融合：状态栏 / 剧情事件 tab / 世界图谱（2026-08-25） ---- */
         /* ---- 游玩页融合：状态栏 / 剧情事件 tab / 世界图谱（2026-08-25） ---- */
         #play-status-bar {
-            padding: 10px 12px;
+            padding: 7px 11px;
             border-radius: 12px;
             background: linear-gradient(135deg, rgba(255,255,255,.97), rgba(244,240,255,.9));
             border-left: 4px solid #7b5cd6;
-            margin-bottom: 8px;
+            /* 2026-09-13 游玩页留白压缩:间距交给 #view-main 的 gap,不再叠加 margin-bottom(原 12+8=20px 双间距) */
             box-shadow: 0 4px 16px rgba(123,92,214,0.10);
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 8px 12px;
+            gap: 6px 10px;
         }
         body[data-theme="dark"] #play-status-bar {
             background: linear-gradient(135deg, rgba(26,23,36,0.97), rgba(38,30,52,0.92));
             border-left-color: #9d7bf0;
         }
         .psb-avatar {
-            width: 44px;
-            height: 44px;
+            width: 36px;
+            height: 36px;
             border-radius: 10px;
             overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 15px;
             font-weight: 800;
             color: #fff;
             flex-shrink: 0;
             box-shadow: 0 2px 8px rgba(123,92,214,0.35);
         }
         .psb-id { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-        .psb-name { font-size: 0.95rem; font-weight: 800; color: var(--text-dark); line-height: 1.2; }
+        .psb-name { font-size: 0.88rem; font-weight: 800; color: var(--text-dark); line-height: 1.2; }
         .psb-role {
             display: inline-block;
             width: fit-content;
@@ -817,9 +819,9 @@
         .psb-stats {
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: 5px;
             width: 100%;
-            padding-top: 6px;
+            padding-top: 4px;
             border-top: 1px dashed rgba(123,92,214,0.22);
         }
         .psb-stats .wy-stat-pill {
@@ -1565,6 +1567,17 @@
             box-shadow: 0 0 8px rgba(255, 110, 160, .15);
         }
         .hb-tag .hb-love { font-weight: 700; }
+        /* 语言Tag(2026-09-13):难度Tag 已废弃,卡面只标语种;词汇难度由用户学习档动态决定 */
+        .hb-tag .hb-lang, .scenario-badge.lang {
+            color: #2b6ca8;
+            border-color: rgba(43, 108, 168, .45);
+            background: rgba(43, 108, 168, .1);
+        }
+        body[data-theme="dark"] .scenario-badge.lang, body[data-theme="dark"] .hb-tag .hb-lang {
+            color: #8fc4f0;
+            border-color: rgba(143, 196, 240, .45);
+            background: rgba(143, 196, 240, .12);
+        }
         /* R1 恋爱攻略结局:HE/BE 徽标 + 英文 epilogue 双语展示 */
         .ending-badge.lhe { background: linear-gradient(135deg, #ff7e9d, #e0507a); box-shadow: 0 6px 18px rgba(255,126,157,.45); font-size: 26px; }
         .ending-badge.lbe { background: linear-gradient(135deg, #6aa8e8, #4a74b8); box-shadow: 0 6px 18px rgba(106,168,232,.4); font-size: 26px; }
@@ -1586,11 +1599,11 @@
             color: var(--text-muted);
         }
         /* R1 恋爱攻略:LoveBar(5 可攻略角色条)/心动时刻卡 overlay */
-        #play-love-bar { display: none; padding: 6px 10px 4px; gap: 8px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid color-mix(in srgb, var(--theme-primary) 18%, transparent); }
+        #play-love-bar { display: none; padding: 4px 8px 3px; gap: 6px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid color-mix(in srgb, var(--theme-primary) 18%, transparent); }
         #play-love-bar.show { display: flex; }
-        .love-npc { display: flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 12px; cursor: pointer; white-space: nowrap; background: color-mix(in srgb, var(--theme-primary) 6%, transparent); border: 1.5px solid transparent; flex: 0 0 auto; }
+        .love-npc { display: flex; align-items: center; gap: 6px; padding: 3px 7px; border-radius: 12px; cursor: pointer; white-space: nowrap; background: color-mix(in srgb, var(--theme-primary) 6%, transparent); border: 1.5px solid transparent; flex: 0 0 auto; }
         .love-npc.active { border-color: color-mix(in srgb, var(--theme-primary) 55%, transparent); }
-        .love-npc .lv-av { width: 48px; height: 64px; border-radius: 10px; overflow: hidden; flex: 0 0 auto; background: #e8d8c8; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: #8a6a4a; }
+        .love-npc .lv-av { width: 38px; height: 50px; border-radius: 10px; overflow: hidden; flex: 0 0 auto; background: #e8d8c8; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: #8a6a4a; }
         .love-npc .lv-av img { width: 100%; height: 100%; object-fit: cover; }
         .love-npc .lv-name { font-size: .72rem; font-weight: 800; color: var(--text); }
         .love-npc .lv-aff { font-size: .62rem; color: var(--text-muted); }
@@ -1618,6 +1631,12 @@
         .lv-pop .lvp-body { font-size: .78rem; line-height: 1.75; white-space: pre-wrap; }
         /* R1 立绘:结局弹窗角色半身像横幅(3:4 顶部对齐裁切,onerror 自动移除) */
         .ending-art { height: 220px; border-radius: 14px; overflow: hidden; margin: 0 0 12px; background: linear-gradient(160deg, #2b1a2e, #3c1f3f); border: 1px solid rgba(255,150,190,.28); }
+        /* 立绘/头像灯箱:全屏放大看原图,点任意处或 Esc 关闭 */
+        .img-lightbox { position: fixed; inset: 0; z-index: 2147482500; background: rgba(10,7,5,.9); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 16px; cursor: zoom-out; animation: ilbIn .18s ease; }
+        .img-lightbox img { max-width: 96vw; max-height: 84vh; border-radius: 12px; background: #14100c; box-shadow: 0 20px 60px rgba(0,0,0,.55); }
+        .img-lightbox .ilb-cap { color: #fff; font-size: .95rem; font-weight: 800; letter-spacing: .02em; }
+        .img-lightbox .ilb-hint { color: rgba(255,255,255,.6); font-size: .72rem; }
+        @keyframes ilbIn { from { opacity: 0; } to { opacity: 1; } }
         .ending-art img { width: 100%; height: 100%; object-fit: cover; object-position: center 16%; display: block; }
 
         /* ---- 设置组件（Settings Components） ---- */
@@ -1701,7 +1720,7 @@
             position: relative;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 8px;
             height: 100%;
             overflow: hidden;
         }
@@ -1711,9 +1730,11 @@
             z-index: 1;
         }
 
-        /* 顶部角色信息/状态条固定，剧情与事件各自在剩余空间滚动 */
+        /* 顶部角色信息/状态条固定，剧情与事件各自在剩余空间滚动
+           2026-09-13:补 #play-love-bar 的 flex:none——此前漏写,横滑立绘条会被 flex 压缩截断,并把剧情区挤小 */
         #view-main #play-status-bar,
-        #view-main #play-tabs {
+        #view-main #play-tabs,
+        #view-main #play-love-bar {
             flex: none;
         }
         #view-main #play-chat-area,
@@ -1722,7 +1743,7 @@
             min-height: 0;
             overflow-y: auto;
         }
-        #view-main #play-chat-area .ai-beauty-card { margin-bottom: 12px; }
+        #view-main #play-chat-area .ai-beauty-card { margin-bottom: 10px; }
 
         .settings-toggle {
             display: flex;
@@ -4805,6 +4826,10 @@
                 font-size: 0.62rem;
                 padding: 2px 6px;
             }
+            /* 窄屏:返回按钮只留图标,避免导航行折行拥挤 */
+            #top-nav-back-btn .tnb-label {
+                display: none;
+            }
             .top-mini-nav {
                 gap: 3px;
             }
@@ -4967,6 +4992,13 @@
     .lang-chip-s{border-radius:8px;padding:1px 7px;font-size:.62rem;color:#fff;background:#3f7ad8}
     .lang-band-t{font-weight:800;font-size:.92rem;color:var(--text)}
     .lang-band-d{font-size:.76rem;color:var(--text);opacity:.72;margin-top:3px;line-height:1.5}
+    /* 学习档滑动条(2026-09-13):五档递进,拖动预览、松手生效 */
+    .band-slider{-webkit-appearance:none;appearance:none;width:100%;height:26px;background:transparent;margin:10px 0 0;cursor:pointer}
+    .band-slider::-webkit-slider-runnable-track{height:8px;border-radius:999px;background:linear-gradient(90deg,#ffb347,#3f7ad8,#8a4fd8,#2f9e6e,#d84f9f)}
+    .band-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--accent,#c98b45);margin-top:-7px;box-shadow:0 2px 6px rgba(0,0,0,.22)}
+    .band-slider::-moz-range-track{height:8px;border-radius:999px;background:linear-gradient(90deg,#ffb347,#3f7ad8,#8a4fd8,#2f9e6e,#d84f9f)}
+    .band-slider::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid var(--accent,#c98b45);box-shadow:0 2px 6px rgba(0,0,0,.22)}
+    .band-scale{display:flex;justify-content:space-between;font-size:.68rem;opacity:.6;margin-top:2px}
     /* ===== P2 学习首页(2026-09-08):今日一句 / 我的进度 / 复习清单 / 学习统计 / 周报 ===== */
     .lang-today{border-radius:16px;padding:14px 15px;background:linear-gradient(135deg,rgba(124,84,240,.10),rgba(63,111,216,.07));border:1px solid rgba(124,84,240,.35)}
     .lang-today-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:.78rem;font-weight:800;color:#7c4fd8}
@@ -5127,6 +5159,9 @@
     .l6-row-band.band-cet6{background:linear-gradient(135deg,#8a4fd8,#c04fd0)}
     .l6-row-band.band-ky{background:linear-gradient(135deg,#2f9e6e,#2fc4b0)}
     .l6-row-band.band-toefl{background:linear-gradient(135deg,#d84f9f,#e0505f)}
+    .l6-row-band.lang-en{background:linear-gradient(135deg,#3f7ad8,#5f4fd8)}
+    .l6-row-band.lang-ja{background:linear-gradient(135deg,#d84f6a,#e0505f)}
+    .l6-row-band.lang-ko{background:linear-gradient(135deg,#2f9e6e,#2fc4b0)}
     .l6-row-main{flex:1;min-width:0}
     .l6-row-t{font-weight:700;font-size:.88rem;color:var(--text,#2c2c2c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .l6-row-sub{font-size:.68rem;color:var(--sub,#806a55);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -5323,6 +5358,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <button class="top-nav-btn" data-view="view-lang" onclick="switchView('view-lang')">学语言</button>
             <button class="top-nav-btn" data-view="view-settings" onclick="switchView('view-settings')">我的</button>
             <button class="top-nav-btn" id="top-nav-history-btn" onclick="toggleHistoryPanel()">历史</button>
+            <button class="top-nav-btn" id="top-nav-back-btn" onclick="goBackView()" title="返回前一页"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24" style="vertical-align:-0.15em;"><path fill="currentColor" d="M10.875 19.3L4.6 13q-.275-.275-.4-.6t-.125-.7t.125-.7t.4-.6l6.275-6.3q.275-.275.688-.288t.712.288q.275.275.275.7t-.275.7L7.8 10.9h10.4q.425 0 .713.288T19.2 11.9t-.287.712t-.713.288H7.8l4.475 4.5q.275.275.275.688t-.275.712t-.7.288t-.7-.288"/></svg><span class="tnb-label">返回前一页</span></button>
             <span id="usage-badge" onclick="MembershipService.openPanel()" style="display:none;font-weight:700;color:#6b3f00;border-radius:999px;background:linear-gradient(135deg,#ffe9a8,#ffd66b);border:1px solid #e0a93a;cursor:pointer;box-shadow:0 2px 8px rgba(224,169,58,.4);" title="点击开通/续费会员"></span>
         </div>
         <button id="top-nav-collapse-btn" class="top-nav-collapse-btn" onclick="toggleTopNavCollapse()" title="收起导航">▲</button>
@@ -5373,7 +5409,6 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <section class="card">
                 <div class="lang-sub-nav">
                     <button type="button" class="top-nav-btn active" data-view="view-lang" onclick="switchView('view-lang')">语言首页</button>
-                    <button type="button" class="top-nav-btn" data-view="view-lang-library" onclick="LangController.goLibrary()">剧本库</button>
                     <button type="button" class="top-nav-btn" data-view="view-lang-learn" onclick="LangController.goLearn()">学习中心</button>
                     <button type="button" class="top-nav-btn" data-view="view-lang-vocab" onclick="LangController.goVocab()">生词本</button>
                     <button type="button" class="top-nav-btn" data-view="view-lang-leaderboard" onclick="LangController.goLeaderboard()">排行榜</button>
@@ -5382,33 +5417,13 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <img class="lang-hall-img" src="lang/hall-top.jpg" alt="语言文游" loading="lazy">
                 <div style="margin-top:10px;">
                     <div class="list-title" style="margin:0;font-size:1.05rem;">把云吞吞当语言教练</div>
-                    <div class="list-sub" style="margin-top:2px;">英语原生文游剧本 · 边玩边学 · 五档难度匹配词库 · 点句即译，点词进生词本</div>
+                    <div class="list-sub" style="margin-top:2px;">英语原生文游剧本 · 边玩边学 · 五档词汇难度随你调 · 点句即译，点词进生词本</div>
                 </div>
-
-                <div id="lang-today-box" style="margin-top:12px;"></div>
-
-                <div class="list-title" style="margin-top:14px;">① 选择语言</div>
-                <div class="lang-picker" id="lang-picker">
-                    <button type="button" class="lang-lang-card active" onclick="LangController.selectLang('en')"><span class="lang-badge en">EN</span><span>英语</span><span class="list-sub" style="margin:0;">已上线</span></button>
-                    <button type="button" class="lang-lang-card locked" onclick="LangController.selectLang('ja')"><span class="lang-badge ja">JA</span><span>日语</span><span class="list-sub" style="margin:0;">即将上线</span></button>
-                    <button type="button" class="lang-lang-card locked" onclick="LangController.selectLang('ko')"><span class="lang-badge ko">KO</span><span>韩语</span><span class="list-sub" style="margin:0;">即将上线</span></button>
-                </div>
-
-                <div id="lang-home-band" style="margin-top:12px;"></div>
-
-                <div class="l6-cta-row">
-                    <button type="button" class="l6-cta" onclick="LangController.goImmAnchor()"><span class="l6-cta-ic">🌊</span><span>沉浸设置</span></button>
-                    <button type="button" class="l6-cta" onclick="LangController.goVocabAnchor()"><span class="l6-cta-ic">📖</span><span>生词本</span></button>
-                    <button type="button" class="l6-cta" onclick="LangController.goDrillAnchor()"><span class="l6-cta-ic">🔁</span><span>刷词</span></button>
-                </div>
-
-                <div id="lang-my-stats" style="margin-top:6px;"></div>
 
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;">
                     <div class="list-title" style="margin:0;">✨ 推荐剧本</div>
-                    <button type="button" class="mini-btn ghost" onclick="LangController.goLibrary()">查看全部 ›</button>
                 </div>
-                <div class="list-sub" id="lang-home-reco-sub">难度按你的学习档匹配</div>
+                <div class="list-sub" id="lang-home-reco-sub">左右滑动切换 · 难度按你的学习档匹配</div>
                 <div class="home-banner-wrap" id="lang-reco-wrap" style="margin-top:6px;">
                     <div class="home-banner-swiper" id="lang-home-reco"></div>
                     <div class="home-banner-dots" id="lang-reco-dots"></div>
@@ -5417,45 +5432,34 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <div id="lang-home-continue-wrap" style="display:none;margin-top:6px;">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
                         <div class="list-title" style="margin:0;">▶ 继续学习</div>
-                        <button type="button" class="mini-btn ghost" onclick="LangController.goLibrary()">去剧本库 ›</button>
                     </div>
                     <div class="list-sub">接着上次的英语进度玩</div>
                     <div id="lang-home-continue" style="margin-top:6px;"></div>
                 </div>
+
+                <div id="lang-home-lib" style="margin-top:16px;">
+                    <div class="list-title" style="margin:0;">英语剧本库</div>
+                    <div class="list-sub" id="lang-lib-sub">英语原生剧本：词汇难度按你的学习档走（学习中心可调），点卡即玩（第一次玩 = 英语开局）</div>
+
+                    <div class="l6-chips" id="lang-lib-langs">
+                        <button type="button" class="l6-chip active" data-lang="" onclick="LangController.setLibFilter('lang','')">全部</button>
+                        <button type="button" class="l6-chip" data-lang="en" onclick="LangController.setLibFilter('lang','en')">英语</button>
+                        <button type="button" class="l6-chip" data-lang="ja" onclick="LangController.setLibFilter('lang','ja')">日语</button>
+                        <button type="button" class="l6-chip" data-lang="ko" onclick="LangController.setLibFilter('lang','ko')">韩语</button>
+                    </div>
+                    <div class="l6-chips" id="lang-lib-cats"></div>
+                    <div class="l6-chips" id="lang-lib-genders">
+                        <button type="button" class="l6-chip" data-gender="" onclick="LangController.setLibFilter('gender','')">全部</button>
+                        <button type="button" class="l6-chip" data-gender="love-f" onclick="LangController.setLibFilter('gender','love-f')">💗 恋爱 · 女向</button>
+                        <button type="button" class="l6-chip" data-gender="love-m" onclick="LangController.setLibFilter('gender','love-m')">💙 恋爱 · 男向</button>
+                        <button type="button" class="l6-chip" data-gender="plain" onclick="LangController.setLibFilter('gender','plain')">📚 学习剧本</button>
+                    </div>
+                    <div class="list-sub" id="lang-lib-hint" style="margin-top:2px;"></div>
+                    <div id="lang-lib-grid"></div>
+                </div>
+
                 <div id="lang-member-cta" style="margin-top:6px;"></div>
                 <div class="list-sub" style="margin-top:12px;text-align:center;">想玩中文剧本？点主站顶部的「首页」即可，中文进度互不影响。</div>
-            </section>
-        </section>
-
-        <section id="view-lang-library" class="view-section">
-            <section class="card">
-                <div class="lang-sub-nav">
-                    <button type="button" class="top-nav-btn" data-view="view-lang" onclick="switchView('view-lang')">语言首页</button>
-                    <button type="button" class="top-nav-btn active" data-view="view-lang-library" onclick="LangController.goLibrary()">剧本库</button>
-                    <button type="button" class="top-nav-btn" data-view="view-lang-learn" onclick="LangController.goLearn()">学习中心</button>
-                    <button type="button" class="top-nav-btn" data-view="view-lang-vocab" onclick="LangController.goVocab()">生词本</button>
-                    <button type="button" class="top-nav-btn" data-view="view-lang-leaderboard" onclick="LangController.goLeaderboard()">排行榜</button>
-                </div>
-                <div class="list-title" style="margin:0;">英语剧本库</div>
-                <div class="list-sub" id="lang-lib-sub">英语原生剧本：按卡的档位学对应词库，点卡即玩（第一次玩 = 英语开局）</div>
-
-                <div class="l6-chips" id="lang-lib-bands">
-                    <button type="button" class="l6-chip active" data-band="" onclick="LangController.setLibFilter('band','')">全部</button>
-                    <button type="button" class="l6-chip" data-band="hs" onclick="LangController.setLibFilter('band','hs')">高中</button>
-                    <button type="button" class="l6-chip" data-band="cet4" onclick="LangController.setLibFilter('band','cet4')">CET4</button>
-                    <button type="button" class="l6-chip" data-band="cet6" onclick="LangController.setLibFilter('band','cet6')">CET6</button>
-                    <button type="button" class="l6-chip" data-band="ky" onclick="LangController.setLibFilter('band','ky')">考研</button>
-                    <button type="button" class="l6-chip" data-band="toefl" onclick="LangController.setLibFilter('band','toefl')">TOEFL</button>
-                </div>
-                <div class="l6-chips" id="lang-lib-cats"></div>
-                <div class="l6-chips" id="lang-lib-genders">
-                    <button type="button" class="l6-chip" data-gender="" onclick="LangController.setLibFilter('gender','')">全部</button>
-                    <button type="button" class="l6-chip" data-gender="love-f" onclick="LangController.setLibFilter('gender','love-f')">💗 恋爱 · 女向</button>
-                    <button type="button" class="l6-chip" data-gender="love-m" onclick="LangController.setLibFilter('gender','love-m')">💙 恋爱 · 男向</button>
-                    <button type="button" class="l6-chip" data-gender="plain" onclick="LangController.setLibFilter('gender','plain')">📚 学习剧本</button>
-                </div>
-                <div class="list-sub" id="lang-lib-hint" style="margin-top:2px;"></div>
-                <div id="lang-lib-grid"></div>
             </section>
         </section>
 
@@ -5463,13 +5467,21 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <section class="card">
                 <div class="lang-sub-nav">
                     <button type="button" class="top-nav-btn" data-view="view-lang" onclick="switchView('view-lang')">语言首页</button>
-                    <button type="button" class="top-nav-btn" data-view="view-lang-library" onclick="LangController.goLibrary()">剧本库</button>
                     <button type="button" class="top-nav-btn active" data-view="view-lang-learn" onclick="LangController.goLearn()">学习中心</button>
                     <button type="button" class="top-nav-btn" data-view="view-lang-vocab" onclick="LangController.goVocab()">生词本</button>
                     <button type="button" class="top-nav-btn" data-view="view-lang-leaderboard" onclick="LangController.goLeaderboard()">排行榜</button>
                 </div>
 
-                <div class="list-title" style="margin:0;" id="lang-learn-band">🎯 我的学习档 <span class="list-sub" style="margin-left:4px;">五档按难度递进，点选即生效</span></div>
+                <div class="list-title" style="margin:0;">① 选择语言</div>
+                <div class="lang-picker" id="lang-picker">
+                    <button type="button" class="lang-lang-card active" onclick="LangController.selectLang('en')"><span class="lang-badge en">EN</span><span>英语</span><span class="list-sub" style="margin:0;">已上线</span></button>
+                    <button type="button" class="lang-lang-card locked" onclick="LangController.selectLang('ja')"><span class="lang-badge ja">JA</span><span>日语</span><span class="list-sub" style="margin:0;">开发中，敬请期待</span></button>
+                    <button type="button" class="lang-lang-card locked" onclick="LangController.selectLang('ko')"><span class="lang-badge ko">KO</span><span>韩语</span><span class="list-sub" style="margin:0;">开发中，敬请期待</span></button>
+                </div>
+
+                <div id="lang-today-box" style="margin-top:12px;"></div>
+
+                <div class="list-title" style="margin:0;" id="lang-learn-band">🎯 我的学习档 <span class="list-sub" style="margin-left:4px;">拖动滑块选择，松手即生效</span></div>
                 <div class="list-sub">玩哪档卡就学哪档词库——心里没底就从 HS / CET4 的校园生活卡起步，玩着吃力或太轻松，随时回来换一档。</div>
                 <div id="lang-hint"></div>
                 <div id="lang-band-result" style="display:none;"></div>
@@ -5500,7 +5512,6 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <section class="card">
                 <div class="lang-sub-nav">
                     <button type="button" class="top-nav-btn" data-view="view-lang" onclick="switchView('view-lang')">语言首页</button>
-                    <button type="button" class="top-nav-btn" data-view="view-lang-library" onclick="LangController.goLibrary()">剧本库</button>
                     <button type="button" class="top-nav-btn" data-view="view-lang-learn" onclick="LangController.goLearn()">学习中心</button>
                     <button type="button" class="top-nav-btn active" data-view="view-lang-vocab" onclick="LangController.goVocab()">生词本</button>
                     <button type="button" class="top-nav-btn" data-view="view-lang-leaderboard" onclick="LangController.goLeaderboard()">排行榜</button>
@@ -5518,7 +5529,6 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <section class="card">
                 <div class="lang-sub-nav">
                     <button type="button" class="top-nav-btn" data-view="view-lang" onclick="switchView('view-lang')">语言首页</button>
-                    <button type="button" class="top-nav-btn" data-view="view-lang-library" onclick="LangController.goLibrary()">剧本库</button>
                     <button type="button" class="top-nav-btn" data-view="view-lang-learn" onclick="LangController.goLearn()">学习中心</button>
                     <button type="button" class="top-nav-btn" data-view="view-lang-vocab" onclick="LangController.goVocab()">生词本</button>
                     <button type="button" class="top-nav-btn active" data-view="view-lang-leaderboard" onclick="LangController.goLeaderboard()">排行榜</button>
@@ -5760,9 +5770,9 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                             <img id="display-user-avatar" src="icons/android-chrome-192x192.png" alt="我的头像" style="width:64px;height:64px;border-radius:12px;object-fit:cover;border:2px solid var(--line,#e2ccb0);background:#fff;">
                             <input id="avatar-upload" type="file" accept="image/*" style="display:none;">
                         </label>
-                        <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
-                            <input id="display-user-nickname" type="text" maxlength="16" placeholder="设置昵称（修改后自动保存）" style="width:100%;border:1px solid var(--line,#e2ccb0);border-radius:10px;background:var(--input-bg,#fffbf5);padding:8px 10px;font-size:0.9rem;font-weight:700;color:var(--text,#4b3a2a);box-sizing:border-box;">
-                            <input id="display-user-signature" type="text" maxlength="30" placeholder="写一句签名吧～" style="width:100%;border:1px solid var(--line,#e2ccb0);border-radius:10px;background:var(--input-bg,#fffbf5);padding:7px 10px;font-size:0.82rem;color:var(--text,#4b3a2a);box-sizing:border-box;">
+                        <div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0;">
+                            <div id="display-user-nickname" title="点击「编辑资料」修改昵称" onclick="openEditProfileModal()" style="width:100%;border:1px solid var(--line,#e2ccb0);border-radius:10px;background:var(--input-bg,#fffbf5);padding:8px 10px;font-size:0.9rem;font-weight:700;color:var(--text,#4b3a2a);box-sizing:border-box;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">设置昵称</div>
+                            <div id="display-user-signature" title="点击「编辑资料」修改签名" onclick="openEditProfileModal()" style="width:100%;border:1px solid var(--line,#e2ccb0);border-radius:10px;background:var(--input-bg,#fffbf5);padding:7px 10px;font-size:0.82rem;color:var(--text,#4b3a2a);box-sizing:border-box;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">写一句签名吧～</div>
                         </div>
                     </div>
                     <div id="display-user-email-row" style="font-size: 0.9rem;">邮箱：<span id="display-user-email" style="font-weight: 700;">-</span></div>
@@ -9863,6 +9873,49 @@ function rebuildChoicesBlock(body, labels = []) {
         } catch (e) { cb(""); }
     }
 
+    // NPC 头像资源统一索引(游玩页立绘 / 世界页 NPC 卡 / 档案详情 / 微信头像 全走这一处,同一 NPC 处处同图):
+    // npc.art(显式) → 用户手动换过头像(npc.avatarPinned) → 卡 structured.npcs[].art(立绘原图) → 卡 avatar → npc.avatar → 全局头像池(名字哈希)
+    function npcImageOf(npc) {
+        try {
+            if (!npc) return "";
+            const pick = (v) => (isAvatarImg(v) ? String(v) : "");
+            const own = pick(npc.art) || (npc.avatarPinned ? pick(npc.avatar) : "");
+            if (own) return own;
+            let card = null;
+            try { card = ScenarioCardService.getSelectedCard(); } catch (e) {}
+            const list = (card && card.structured && Array.isArray(card.structured.npcs)) ? card.structured.npcs : [];
+            const nm = String(npc.name || "").trim().toLowerCase();
+            const met = nm ? list.find((x) => x && String(x.name || "").trim().toLowerCase() === nm) : null;
+            return pick(met && met.art) || pick(met && met.avatar) || pick(npc.avatar)
+                || (typeof window.assignNpcAvatar === "function" ? String(window.assignNpcAvatar(npc.name, npc.gender || (met && met.gender)) || "") : "");
+        } catch (e) { return ""; }
+    }
+    window.npcImageOf = npcImageOf;
+
+    // 立绘/头像灯箱:点击 NPC 头像 → 全屏放大观赏原图;点任意处或 Esc 关闭
+    function openImageLightbox(src, caption) {
+        try {
+            const u = String(src || "");
+            if (!isAvatarImg(u)) return;
+            const old = document.getElementById("img-lightbox-el");
+            if (old) old.remove();
+            const box = document.createElement("div");
+            box.id = "img-lightbox-el";
+            box.className = "img-lightbox";
+            box.innerHTML = `<img src="${u.replace(/"/g, "%22")}" alt="">`
+                + (caption ? `<div class="ilb-cap">${MarkdownService.escapeHtml(String(caption))}</div>` : "")
+                + `<div class="ilb-hint">点击任意处关闭</div>`;
+            document.body.appendChild(box);
+            function close() {
+                try { box.remove(); document.removeEventListener("keydown", onKey); } catch (e) {}
+            }
+            const onKey = (ev) => { if (ev.key === "Escape") close(); };
+            box.addEventListener("click", close);
+            document.addEventListener("keydown", onKey);
+        } catch (e) { console.warn("[Lightbox]", e); }
+    }
+    window.openImageLightbox = openImageLightbox;
+
     const UIRenderer = (() => {
         let currentStreamingTarget = null;
         let structuredStreaming = null; // bug6: 流式结构化卡的 DOM 引用 { titleEl, timeEl, storyEl, optEls[] }
@@ -10304,7 +10357,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 const affection = Number.isFinite(Number(n.affection)) ? Number(n.affection) : 0;
                 const introRaw = (memory[n.id] && memory[n.id].summary) ? stripHtml(memory[n.id].summary) : stripHtml(n.description || "");
                 const intro = introRaw.slice(0, 60);
-                const avUrl = isAvatarImg(n.avatar) ? n.avatar : (typeof window.assignNpcAvatar === "function" ? window.assignNpcAvatar(n.name, n.gender) : "");
+                const avUrl = npcImageOf(n);
                 const fallbackChar = MarkdownService.escapeHtml(String(n.name || "?").slice(0, 1));
                 const avHtml = avUrl
                     ? `<img src="${String(avUrl).replace(/"/g, "%22")}" alt="" loading="lazy" onerror="this.parentElement.textContent=this.dataset.fb" data-fb="${fallbackChar}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;">`
@@ -10366,7 +10419,7 @@ function rebuildChoicesBlock(body, labels = []) {
                     if (_a && (_a.startsWith("http") || _a.startsWith("data:"))) artUrl = _a;
                 } catch (e) {}
                 card.innerHTML = `
-                    ${artUrl ? `<div class="ending-art"><img src="${MarkdownService.escapeHtml(String(artUrl).replace(/"/g, "%22"))}" alt="" loading="lazy" onerror="this.parentElement.remove()"></div>` : ""}
+                    ${artUrl ? `<div class="ending-art" style="cursor:zoom-in;" title="点击放大查看原图" data-lb-name="${npcName}" onclick="var im=this.querySelector('img'); if(im && window.openImageLightbox) window.openImageLightbox(im.getAttribute('src'), this.getAttribute('data-lb-name'));"><img src="${MarkdownService.escapeHtml(String(artUrl).replace(/"/g, "%22"))}" alt="" loading="lazy" onerror="this.parentElement.remove()"></div>` : ""}
                     <div class="ending-grade">
                         <div class="ending-badge ${badgeCls}">${badgeText}</div>
                         <div>
@@ -10809,7 +10862,7 @@ function rebuildChoicesBlock(body, labels = []) {
         function npcChatAvatarHtml(n, mine) {
             if (mine) return `<div class="npc-chat-avatar" title="我"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" style="display:block;margin:auto;"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg></div>`;
             const name = n && n.name ? n.name : "?";
-            const avUrl = n ? (isAvatarImg(n.avatar) ? n.avatar : (typeof window.assignNpcAvatar === "function" ? window.assignNpcAvatar(n.name, n.gender) : "")) : "";
+            const avUrl = n ? npcImageOf(n) : "";
             const fb = MarkdownService.escapeHtml(String(name).slice(0, 1));
             if (!avUrl) return `<div class="npc-chat-avatar" title="${MarkdownService.escapeHtml(name)}">${firstLetterAvatar(name, "", "width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;")}</div>`;
             return `<div class="npc-chat-avatar" title="${MarkdownService.escapeHtml(name)}"><img src="${String(avUrl).replace(/"/g, "%22")}" alt="" loading="lazy" onerror="this.parentElement.textContent=this.dataset.fb" data-fb="${fb}" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit;"></div>`;
@@ -10887,7 +10940,7 @@ function rebuildChoicesBlock(body, labels = []) {
         }
         function wxRowHtml(n, line2, timeHtml, badgeHtml, unreadHtml) {
             const cleanName = MarkdownService.escapeHtml(String(n.name || "未命名").replace(/[\(（].*?[\)）]/g, "").trim());
-            const avUrl = isAvatarImg(n.avatar) ? n.avatar : (typeof window.assignNpcAvatar === "function" ? window.assignNpcAvatar(n.name, n.gender) : "");
+            const avUrl = npcImageOf(n);
             const fb = MarkdownService.escapeHtml(String(n.name || "?").slice(0, 1));
             const avHtml = avUrl
                 ? `<img src="${String(avUrl).replace(/"/g, "%22")}" alt="" loading="lazy" onerror="this.parentElement.textContent=this.dataset.fb" data-fb="${fb}">`
@@ -11736,6 +11789,32 @@ function rebuildChoicesBlock(body, labels = []) {
         const FONT_KEY = "bitlife_font_size_v1";
         const DEFAULT_FONT_SIZE = 16;
 
+        /* 我的页展示区:昵称/签名纯文本回显(空则显示占位提示);编辑统一走「编辑资料」弹窗——展示与编辑分离 */
+        function fillProfileText(el, val, emptyText) {
+            if (!el) return;
+            const v = String(val || "").trim();
+            el.textContent = v || emptyText;
+            el.style.opacity = v ? "1" : ".55";
+        }
+        /* 账户卡刷新(头像/昵称/签名/邮箱行)——第三方登录(微信/QQ)与余额刷新后即时回显首屏;
+           社交账号的占位邮箱(内部用户名 s_qq_/s_wx_ 或 social_xxx@social.mapay)一律隐藏不外显 */
+        function refreshProfileCard() {
+            try {
+                const user = AuthService.getUserData();
+                if (!user) return;
+                const isSocial = (typeof AuthService.isSocialAccount === "function") ? AuthService.isSocialAccount() : false;
+                const emailEl = document.getElementById("display-user-email");
+                if (emailEl) emailEl.textContent = isSocial ? "-" : (user.email || AuthService.getEmail() || "-");
+                const emailRow = document.getElementById("display-user-email-row");
+                if (emailRow) emailRow.style.display = isSocial ? "none" : "";
+                fillProfileText(document.getElementById("display-user-nickname"), user.nickname, "设置昵称");
+                fillProfileText(document.getElementById("display-user-signature"), user.signature, "写一句签名吧～");
+                const avatarEl = document.getElementById("display-user-avatar");
+                if (avatarEl && user.faceimg) avatarEl.src = user.faceimg;
+                AuthService.updateUsageStatusUI();
+            } catch (e) { console.warn("[Profile] 账户卡刷新失败", e); }
+        }
+        window.refreshProfileCard = refreshProfileCard;
 
         function loadToUI() {
             const selectedScenario = ScenarioCardService.getSelectedCard();
@@ -11763,23 +11842,8 @@ function rebuildChoicesBlock(body, labels = []) {
                 if (valEl) valEl.textContent = current + "px";
             }
 
-            // 更新账户信息
-            const user = AuthService.getUserData();
-            if (user) {
-                const emailEl = document.getElementById("display-user-email");
-                if (emailEl) emailEl.textContent = user.email || AuthService.getEmail();
-                const emailRow = document.getElementById("display-user-email-row");
-                // 社交账号隐藏内部邮箱行:不能只依赖 social_uid(PB viewRule 下用户自身可能读不到该字段)
-                const isSocialAccount = !!user.social_uid || String(user.email || "").startsWith("social_");
-                if (emailRow) emailRow.style.display = isSocialAccount ? "none" : "";
-                const nickEl = document.getElementById("display-user-nickname");
-                if (nickEl) nickEl.value = user.nickname || "";
-                const sigEl = document.getElementById("display-user-signature");
-                if (sigEl) sigEl.value = user.signature || "";
-                const avatarEl = document.getElementById("display-user-avatar");
-                if (avatarEl && user.faceimg) avatarEl.src = user.faceimg;
-                AuthService.updateUsageStatusUI();
-            }
+            // 更新账户信息(昵称/签名展示与编辑分离:展示区纯文本,编辑统一走「编辑资料」弹窗)
+            refreshProfileCard();
 
             // M5:我的剧本区（播放量+收益）
             if (typeof Controller !== "undefined" && typeof Controller.loadMyCommunityCards === "function") {
@@ -11905,15 +11969,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 if (r && r.ok) {
                     closeEditProfileModal();
                     NoticeModalService.showInfo({ title: "✅ 资料已保存", descHtml: "昵称/签名/头像已保存到服务器，重新登录不会丢失。" });
-                    const u = AuthService.getUserData();
-                    if (u) {
-                        const nickEl = document.getElementById("display-user-nickname");
-                        if (nickEl) nickEl.value = u.nickname || "";
-                        const sigEl = document.getElementById("display-user-signature");
-                        if (sigEl) sigEl.value = u.signature || "";
-                        const avatarEl = document.getElementById("display-user-avatar");
-                        if (avatarEl && u.faceimg) avatarEl.src = u.faceimg;
-                    }
+                    refreshProfileCard();
                 } else {
                     if (msgEl) { msgEl.textContent = (r && r.error) ? r.error : "保存失败，请检查网络后重试"; msgEl.style.display = "block"; }
                 }
@@ -11963,10 +12019,7 @@ function rebuildChoicesBlock(body, labels = []) {
         window.phoneEditSignature = phoneEditSignature;
 
         function bindProfileAutoSave() {
-            const nickEl = document.getElementById("display-user-nickname");
-            if (nickEl) nickEl.addEventListener("change", () => saveProfile({ nickname: nickEl.value.trim() }));
-            const sigEl = document.getElementById("display-user-signature");
-            if (sigEl) sigEl.addEventListener("change", () => saveProfile({ signature: sigEl.value.trim() }));
+            // 昵称/签名已改为展示区纯文本(编辑统一走「编辑资料」弹窗),此处只保留头像上传兜底通道
             const fileEl = document.getElementById("avatar-upload");
             const avatarEl = document.getElementById("display-user-avatar");
             if (fileEl) fileEl.addEventListener("change", () => {
@@ -16772,7 +16825,7 @@ const token = delta.content || "";
                 const systemPrompt = PromptPolicyService.buildSystemPrompt({ state, scenarioSpec, beautyCardSetting, beautyModeEnabled, extraText: userText })
                     + (isLangTurn ? "\n\n" + window.LangEngine.buildInjection() : "");
                 const mainUserPrompt = PromptPolicyService.buildMainUserPrompt(userText, recentHistory, latestAiHtmlCard);
-                const rawText = (await AIRequestService.streamCompletionWithFallback({
+                let rawText = (await AIRequestService.streamCompletionWithFallback({
                     config,
                     fetchUrl,
                     headers: requestHeaders,
@@ -16790,6 +16843,36 @@ const token = delta.content || "";
                         return !EndMarkerService.hasMarker(text);
                     }
                 })).trim() || `{"title":"剧情提示","time":"${Utils.nowDateStr(StateService.get())}","story":"AI 暂时卡住了，请再对我说一次吧喵～","options":["重新说一次吧","换个说法继续","先跳过这轮"]}`;
+
+                // Bug2(2026-09-13):语言卡正文语言硬校验——正文混入中文/非目标语种时,强制整篇重写一次
+                if (isLangTurn && window.LangEngine && window.LangEngine.hasLanguageViolation && window.LangEngine.hasLanguageViolation(rawText)) {
+                    console.warn("[LangEngine] 检测到正文语言违规,发起整篇重写...");
+                    try {
+                        UIRenderer.updateStreaming("语言校准中...");
+                        const fixed = (await AIRequestService.streamCompletionWithFallback({
+                            config,
+                            fetchUrl,
+                            headers: requestHeaders,
+                            model: config.model,
+                            messages: [
+                                { role: "system", content: systemPrompt },
+                                { role: "user", content: window.LangEngine.buildLanguageFixPrompt(rawText) }
+                            ],
+                            temperature: policyConfig.temperature,
+                            onToken: (text) => {
+                                UIRenderer.updateStreaming(StatePatchService.extractPatch(EndMarkerService.trimToMarker(text)).cleaned);
+                                return !EndMarkerService.hasMarker(text);
+                            }
+                        })).trim();
+                        if (fixed && !window.LangEngine.hasLanguageViolation(fixed)) {
+                            rawText = fixed;
+                            console.log("[LangEngine] 语言校准成功");
+                        } else if (fixed && /\{\s*"(title|time|story)"\s*:/.test(fixed)) {
+                            rawText = fixed; // 二次仍有个别中文,但结构完整 → 采用,后续由前端双语辅助兜底
+                            console.warn("[LangEngine] 语言校准仍有残留中文,已采用重写稿");
+                        }
+                    } catch (e) { console.warn("[LangEngine] 语言校准请求失败:", e); }
+                }
 
 
                 const rawPatchResult = StatePatchService.extractPatch(rawText);
@@ -18398,11 +18481,28 @@ ${recent || "（无）"}
             switchView("view-settings");
         }
         let pendingViewSwitch = null;
+        // 顶部导航「返回前一页」:视图访问栈(记录来源页,返回时逐级回退)
+        let viewStack = [];
+        let pendingBackNav = false;
         const CREATION_VIEWS = ["view-create-wizard", "view-scenario-editor"];
         function isDraftLeaving(prevView, viewId) {
             if (!CREATION_VIEWS.includes(prevView) || CREATION_VIEWS.includes(viewId)) return false;
             const card = ScenarioCardService.getSelectedCard();
             return !!(card && card.status === "draft");
+        }
+        // 返回前一页:优先回退到上一个访问过的视图;无历史则回主站首页(语言会话内回语言首页沿用 M6a 规则)
+        function goBackView() {
+            try {
+                while (viewStack.length) {
+                    const target = viewStack.pop();
+                    if (!target || target === activeView || !document.getElementById(target)) continue;
+                    pendingBackNav = true;
+                    switchView(target);
+                    return;
+                }
+                pendingBackNav = true;
+                switchView("view-home");
+            } catch (e) { console.warn("[Nav] goBackView:", e); }
         }
         function switchView(viewId, silent = false) {
             const prevView = activeView;
@@ -18434,6 +18534,14 @@ ${recent || "（无）"}
         }
         function doSwitchView(viewId, silent = false) {
             const prevView = activeView;
+            // M10(2026-09-13):剧本库已并入语言首页,旧入口/旧深链(view-lang-library)统一落到语言首页
+            if (viewId === "view-lang-library") viewId = "view-lang";
+            // 记录来源页供「返回前一页」回退(返回自身导航不记,避免来回叠加)
+            if (pendingBackNav) pendingBackNav = false;
+            else if (activeView && activeView !== viewId) {
+                viewStack.push(activeView);
+                if (viewStack.length > 40) viewStack.shift();
+            }
             closeHistoryPanel();
             if (viewId === "view-settings") {
                 // 默认入口=全局默认值;openCardSettings 会先置 _cardSettingsNav 再进入(剧本内设置)
@@ -18445,7 +18553,7 @@ ${recent || "（无）"}
             const target = document.getElementById(viewId);
             if (target) target.classList.add("active");
             // M6a/M8d:语言页组(view-lang/-library/-learn/-vocab)共用一个主站 tab「学语言」高亮;页内语言子导航由 LangController.onShow 单独高亮
-            const LANG_VIEWS = ["view-lang", "view-lang-library", "view-lang-learn", "view-lang-vocab", "view-lang-leaderboard"];
+            const LANG_VIEWS = ["view-lang", "view-lang-learn", "view-lang-vocab", "view-lang-leaderboard"];
             const inLangGroup = LANG_VIEWS.includes(viewId);
             document.querySelectorAll(".nav-btn, .top-nav-btn").forEach((btn) => {
                 if (btn.closest && btn.closest(".lang-sub-nav")) return;
@@ -18501,6 +18609,8 @@ ${recent || "（无）"}
             }
             if (viewId === "view-settings" && !silent) {
                 renderMyPageLists();
+                // 切入「我的」页重刷账户卡:第三方登录/换设备/后台改资料后首屏即回显最新昵称头像
+                try { if (typeof window.refreshProfileCard === "function") window.refreshProfileCard(); } catch (e) {}
             }
             if (viewId === "view-saves" && !silent) {
                 UIRenderer.renderSaveSlots(StateService.get());
@@ -18671,7 +18781,7 @@ function openNpcProfile(npcId) {
                 </div>` : "";
 
             const npcName = getStr(npc.name);
-            const npcAvUrl = isAvatarImg(npc.avatar) ? String(npc.avatar) : (typeof window.assignNpcAvatar === "function" ? window.assignNpcAvatar(npcName, npc.gender) : "");
+            const npcAvUrl = npcImageOf(npc);
             const npcAvFb = MarkdownService.escapeHtml(npcName.slice(0, 1));
             const npcAvatarHtml = npcAvUrl
                 ? `<img src="${npcAvUrl.replace(/"/g, "%22")}" alt="" onerror="this.parentElement.textContent=this.dataset.fb" data-fb="${npcAvFb}" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit;">`
@@ -18679,7 +18789,7 @@ function openNpcProfile(npcId) {
             const desc = `
                 <div style="border-radius:14px;overflow:hidden;background:var(--card);padding:2px;">
                     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:10px;">
-                        <div style="width:54px;height:54px;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:${(typeof UIRenderer !== "undefined" && typeof UIRenderer.avatarColor === "function" ? UIRenderer.avatarColor(npcName) : "#8b5e3c")};font-size:24px;color:#fff;font-weight:700;flex:none;">${npcAvatarHtml}</div>
+                        <div style="width:54px;height:54px;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:${(typeof UIRenderer !== "undefined" && typeof UIRenderer.avatarColor === "function" ? UIRenderer.avatarColor(npcName) : "#8b5e3c")};font-size:24px;color:#fff;font-weight:700;flex:none;cursor:${npcAvUrl ? "zoom-in" : "default"};" data-lb-name="${MarkdownService.escapeHtml(npcName)}" title="${npcAvUrl ? "点击放大查看原图" : ""}" onclick="var im=this.querySelector('img'); if(im && window.openImageLightbox) window.openImageLightbox(im.getAttribute('src'), this.getAttribute('data-lb-name'));">${npcAvatarHtml}</div>
                         <div style="min-width:0;">
                             <div style="font-size:1.1rem;font-weight:800;color:var(--accent-dark);">${MarkdownService.escapeHtml(npcName)}</div>
                             <div style="font-size:.8rem;color:var(--sub);word-break:break-word;overflow-wrap:anywhere;">${MarkdownService.escapeHtml(getStr(npc.relation, "NPC"))}</div>
@@ -20401,6 +20511,11 @@ function openNpcProfile(npcId) {
                         const item = chars.find((c) => String(c.id) === id);
                         if (item) openPersonCardChat(item.cardId, item.npcId);
                     } else {
+                        // 语言学习卡历史:回语言会话(勿走 playScenarioCard,那会 exitToChinese 并载入中文档)
+                        const item = games.find((g) => String(g.id) === id);
+                        if (item && item.lang && window.LangEngine && window.LangEngine.enter) {
+                            try { window.LangEngine.enter(id); return; } catch (e) {}
+                        }
                         playScenarioCard(id);
                     }
                 });
@@ -20438,6 +20553,7 @@ function openNpcProfile(npcId) {
             if (!npc) return;
             openAvatarPickerModal(npc.avatar || "", async (val) => {
                 npc.avatar = val;
+                npc.avatarPinned = true; // 手动换过头像:统一索引里优先于卡的立绘原图,避免"换了不生效"
                 StateService.save();
                 UIRenderer.renderWorld();
                 // 微信头像与世界页同源：换头像后同步刷新微信会话/通讯录/聊天页
@@ -20833,6 +20949,7 @@ function openNpcProfile(npcId) {
                 return;
             }
             try { ScenarioPlayMetaService.setInitialized(metaId, true); } catch (e) {}
+            try { pushPlayHistory({ type: "game", id: cardId, title: (ScenarioCardService.getSelectedCard() || {}).title || "剧本", lang: true }); } catch (e) {}
             try { StateService.init(); } catch (e) {} // 会话已置位 → 读该卡 -lang 英文档,防内存残留脏档
             try { StateService.resetWithPreset(merged); } catch (e) {}
             try { PlayViewStateService.enterPlay(cardId); } catch (e) {}
@@ -21114,6 +21231,7 @@ function openNpcProfile(npcId) {
     function restartLife() { Controller.restartLife(); }
     function togglePlayDockNav() { Controller.togglePlayDockNav(); }
     function switchView(viewId) { Controller.switchView(viewId); }
+    function goBackView() { Controller.goBackView(); }
     function openCardSettings() { Controller.openCardSettings(); }
     function saveSettings() { Controller.saveSettings(); }
     function saveUserApiSettings() { Controller.saveUserApiSettings(); }
@@ -21672,7 +21790,21 @@ function openNpcProfile(npcId) {
         let _isResetMode = false;
         let _userData = null;
 
+        // 第三方登录自动建号特征:内部用户名 s_{qq|wx|...}_<uid> 与内部邮箱 social_<uid>@social.mapay
+        // 都是系统占位账号,邮箱行对用户毫无意义且形似乱码,展示侧一律隐藏
+        function isSocialAccountLabel(v) {
+            const s = String(v || "").trim();
+            if (!s) return false;
+            return /^social_/i.test(s) || /^s_(qq|wx|wechat|weibo|alipay|douyin)_/i.test(s) || /@social\.mapay$/i.test(s);
+        }
+        function isSocialAccount() {
+            const u = _userData || {};
+            if (u.social_uid) return true;
+            return isSocialAccountLabel(u.email) || isSocialAccountLabel(getEmail());
+        }
+
         // 用户数据本地缓存:页面加载时先显示缓存(不依赖网络),后台再刷新纠正
+        // social 标记随缓存落盘:PB viewRule 下用户自身读不到 social_uid,仅靠字段判定会在刷新后漏判
         function cacheUser() {
             try {
                 const u = _userData;
@@ -21682,6 +21814,7 @@ function openNpcProfile(npcId) {
                     coins: u.coins, membership_type: u.membership_type || "",
                     membership_expires_at: u.membership_expires_at || "",
                     nickname: u.nickname || "", signature: u.signature || "", faceimg: u.faceimg || "",
+                    social: isSocialAccount() ? 1 : 0,
                     ts: Date.now()
                 }));
             } catch (e) {}
@@ -21696,7 +21829,8 @@ function openNpcProfile(npcId) {
                     id: c.id, email: c.email,
                     coins: Number(c.coins ?? c.coin ?? 0), membership_type: c.membership_type || "",
                     membership_expires_at: c.membership_expires_at || "",
-                    nickname: c.nickname || "", signature: c.signature || "", faceimg: c.faceimg || ""
+                    nickname: c.nickname || "", signature: c.signature || "", faceimg: c.faceimg || "",
+                    social_uid: c.social ? "cached" : ""
                 };
             } catch (e) {}
         }
@@ -21773,6 +21907,8 @@ function openNpcProfile(npcId) {
                     _userData = data;
                     cacheUser();
                     updateUsageStatusUI();
+                    // 余额拉取同时刷新账户卡:第三方登录(微信/QQ)首屏头像/昵称/邮箱行在此就绪
+                    try { if (typeof window.refreshProfileCard === "function") window.refreshProfileCard(); } catch (e) {}
                 }
             } catch (e) {
                 console.error("刷新使用状态失败", e);
@@ -22113,13 +22249,17 @@ function openNpcProfile(npcId) {
                     method: "POST",
                     headers: { "Authorization": authHeader }
                 });
-                if (!res.ok) { clearSession(); return false; }
+                // 401/403=服务端明确拒绝(令牌失效)→清会话;其它状态码(5xx/网关/限流)=服务端故障→保留会话
+                if (!res.ok) {
+                    if (res.status === 401 || res.status === 403) { clearSession(); return false; }
+                    return "unknown";
+                }
                 const data = await res.json();
                 if (data.token) saveSession(data.token, getEmail());
                 _userData = data.record || null;
                 return true;
             } catch (e) {
-                return false;
+                return "unknown"; // 网络失败:不定罪,避免网络抖动把已登录用户踢下线
             }
         }
 
@@ -22143,9 +22283,8 @@ function openNpcProfile(npcId) {
             showAnnounce();
             const logoutBtn = document.getElementById("auth-logout-btn");
             if (logoutBtn) logoutBtn.style.display = "block";
-            // 更新设置页账户信息
-            const emailEl = document.getElementById("display-user-email");
-            if (emailEl) emailEl.textContent = email;
+            // 更新设置页账户信息(统一走账户卡刷新:微信/QQ 登录隐藏占位邮箱行,头像/昵称/签名首屏即回显)
+            try { if (typeof window.refreshProfileCard === "function") window.refreshProfileCard(); } catch (e) {}
             updateUsageStatusUI();
             // 登录数据就绪后刷新"我的"页账户卡(昵称/头像/签名/余额):
             // Controller.init 首次渲染时 _userData 尚为 null,若不刷新则微信/QQ/邮箱登录后账户卡停留默认
@@ -22165,6 +22304,8 @@ function openNpcProfile(npcId) {
             ScenarioUnlockService.syncFromServer().then(() => {
                 try { UIRenderer.renderScenarioCards(); } catch (e) {}
             }).catch(() => {});
+            // Bug3(2026-09-13):语言页/学习中心统计在解析期就渲染(早于本函数),登录后必须重绘,否则一直显示"登录后查看"
+            try { if (window.LangController && LangController.onAuthChanged) LangController.onAuthChanged(); } catch (e) {}
         }
 
         function logout() {
@@ -22183,8 +22324,19 @@ function openNpcProfile(npcId) {
             if (usageBadge) usageBadge.style.display = "none";
             const emailEl = document.getElementById("display-user-email");
             if (emailEl) emailEl.textContent = "-";
+            // 账户卡展示区同步清空:避免登出后残留上一位用户的昵称/签名/头像
+            const nickEl0 = document.getElementById("display-user-nickname");
+            if (nickEl0) { nickEl0.textContent = "设置昵称"; nickEl0.style.opacity = ".55"; }
+            const sigEl0 = document.getElementById("display-user-signature");
+            if (sigEl0) { sigEl0.textContent = "写一句签名吧～"; sigEl0.style.opacity = ".55"; }
+            const avEl0 = document.getElementById("display-user-avatar");
+            if (avEl0) avEl0.src = "icons/android-chrome-192x192.png";
+            const emailRowEl0 = document.getElementById("display-user-email-row");
+            if (emailRowEl0) emailRowEl0.style.display = "";
             // 游客态恢复锁卡展示
             try { UIRenderer.renderScenarioCards(); } catch (e) {}
+            // Bug3:登出后语言侧统计回到未登录态
+            try { if (window.LangController && LangController.onAuthChanged) LangController.onAuthChanged(); } catch (e) {}
             // 重置登录表单及 UI 状态
             _isRegisterMode = false;
             _isResetMode = false;
@@ -22214,10 +22366,18 @@ function openNpcProfile(npcId) {
                 }
                 hideOverlay();
                 const [valid] = await Promise.all([
-                    verifyToken().catch(() => false),
+                    verifyToken().catch(() => "unknown"),
                     refreshBalance().catch(() => {})
                 ]);
-                if (valid) { onLoginSuccess(getEmail()); return true; }
+                if (valid === true) { onLoginSuccess(getEmail()); return true; }
+                if (valid === "unknown") {
+                    // 网络/服务端故障:保留本地会话(缓存已回显),登录态不变,下次校验成功再纠正
+                    console.warn("[Auth] 登录态校验未完成(网络/服务端),保留本地会话");
+                    updateUsageStatusUI();
+                    try { SettingsService.loadToUI(); } catch (e) {}
+                    try { if (window.LangController && LangController.onAuthChanged) LangController.onAuthChanged(); } catch (e) {}
+                    return !!getToken();
+                }
                 clearSession();
                 clearCachedUser();
                 showOverlay();
@@ -22234,7 +22394,7 @@ function openNpcProfile(npcId) {
             if (e.key === "Enter") handleSubmit();
         });
 
-        return { init, handleSubmit, toggleMode, enterResetMode, sendCode, register, resetPassword, logout, getToken, getEmail, getUserData, refreshBalance, updateUsageStatusUI, hasMembership, socialLogin, showDoc, refreshCache: cacheUser };
+        return { init, handleSubmit, toggleMode, enterResetMode, sendCode, register, resetPassword, logout, getToken, getEmail, getUserData, refreshBalance, updateUsageStatusUI, hasMembership, socialLogin, showDoc, isSocialAccount, refreshCache: cacheUser };
     })();
 
     function hideBootScreen() {
@@ -22312,6 +22472,50 @@ function openNpcProfile(npcId) {
             try { if (card?.structured?.band) return "register: the English world bible below already sets its own register and mood — follow it exactly, keeping names and terms intact"; } catch (e) {}
             return "register: match the mood your Chinese setting implies; when in doubt, prefer slightly literary over casual";
         }
+        /* Bug2(2026-09-13):语言Tag → 输出语言锁定。
+           targetLang:卡片语言Tag(顶层 lang / structured.lang)决定正文语种;缺省英语。
+           ja/ko 词库未就绪,前端已拦(不实际调用),此处仅作兜底映射。 */
+        const LANG_MAP = { en: "English", ja: "Japanese", ko: "Korean" };
+        function targetLang() {
+            try {
+                const c = ScenarioCardService.getSelectedCard();
+                const l = String((c && (c.lang || (c.structured && c.structured.lang))) || "en").trim().toLowerCase();
+                return LANG_MAP[l] ? l : "en";
+            } catch (e) { return "en"; }
+        }
+        // 汉字/假名/谚文——目标语为非中文时出现即违规
+        const CJK_RE = /[぀-ヿ㐀-䶿一-鿿가-힯]/;
+        /* 引擎自身要求保留的中文:time 字段(月日中文格式) 与 scaffold 阶段的 bilingual.zh / heartbeat.zh 译文。
+           检测前先剥离这些合法中文字段,其余文本出现 CJK 即判违规。 */
+        function hasLanguageViolation(raw) {
+            try {
+                if (targetLang() !== "en") return false; // ja/ko 尚未上线,不做检测
+                const t = String(raw || "").trim();
+                if (!t) return false;
+                let obj = null;
+                try { obj = JSON.parse(t); } catch (e) {}
+                if (obj && typeof obj === "object") {
+                    const parts = [obj.title, obj.story].concat(Array.isArray(obj.options) ? obj.options : []);
+                    return parts.some((x) => CJK_RE.test(String(x == null ? "" : x)));
+                }
+                // 非严格 JSON(state-patch 尾块/HTML 卡/残缺 JSON):剥离合法字段后再扫
+                let s = t;
+                s = s.replace(/"time"\s*:\s*"(?:[^"\\]|\\.)*"/g, " ");
+                s = s.replace(/"zh"\s*:\s*"(?:[^"\\]|\\.)*"/g, " ");
+                s = s.replace(/<[^>]*>/g, " ");
+                return CJK_RE.test(s);
+            } catch (e) { return false; }
+        }
+        function buildLanguageFixPrompt(prevRaw) {
+            const lg = LANG_MAP[targetLang()] || "English";
+            const prev = String(prevRaw || "").slice(0, 4000);
+            return "The previous answer broke the language rule: it contains Chinese (or other non-" + lg + ") characters. Rewrite THE ENTIRE answer in " + lg + " only.\n"
+                + "- Keep exactly the same JSON shape, the same fields and the same plot, facts and names.\n"
+                + "- Keep the \"time\" field value and format unchanged (it is engine data, not story text).\n"
+                + "- Translate every single Chinese word into " + lg + "; not one Chinese character may remain in title / story / options.\n"
+                + "- Output the JSON object only — no explanations, no code fences.\n\n"
+                + "Previous answer to rewrite:\n" + prev;
+        }
         function buildInjection() {
             if (!session.cardId) return "";
             const p = readProfile();
@@ -22367,9 +22571,14 @@ function openNpcProfile(npcId) {
             const vocabRecall = recallWords.length
                 ? "The reader is re-learning these words — let them meet the words again in this scene where the context naturally allows (weave in a few at most, never force them, story flow and tone come first): " + recallWords.join(", ")
                 : "";
+            const LG = LANG_MAP[targetLang()] || "English";
             return [
-                "[ENGLISH LANGUAGE MODE — for language and output style these rules override the Chinese instructions above; story facts come from the world bible below]",
-                "1) Write ALL narration, dialogue, scene title and options in natural English. Never output Chinese inside title / story / options.",
+                "[LANGUAGE LOCK — HIGHEST PRIORITY over every Chinese instruction above; for language and output style these rules win. Story facts come from the world bible below.]",
+                "TARGET LANGUAGE: " + LG + ".",
+                "ZERO-TOLERANCE: \"title\", \"story\" and every \"options\" item may contain ONLY " + LG + " characters. Not one Chinese character (汉字), Japanese kana or Korean hangul is allowed inside the story — a single one is a critical failure of this task.",
+                "Chinese text in the world bible, category or character role fields is METADATA, not story text: translate it into " + LG + " whenever it appears in the story; never copy Chinese verbatim into title / story / options.",
+                "SELF-CHECK before answering: re-read your own title, story and options; if any non-" + LG + " character appears (proper nouns written in Latin letters are fine), rewrite that sentence in " + LG + ".",
+                "1) Write ALL narration, dialogue, scene title and options in natural " + LG + ". Never output Chinese inside title / story / options.",
                 "2) " + (englishSetting
                     ? "The 【设定文本】 world bible below is already written in English — it is the source of truth for era, rules, characters and mood. Keep the world exactly as it is: keep every name, term and rule; continue the story in the same register; never translate, summarize or rewrite the setting itself. " + tone + "."
                     : "The Chinese 【设定文本】 is the world bible (era, rules, characters, mood). Keep the world identical — translate it, don't rewrite it; " + tone + "."),
@@ -22439,10 +22648,11 @@ function openNpcProfile(npcId) {
                 try { PlayViewStateService.enterPlay(id); } catch (e) {}
                 switchView("view-main");
                 try {
-                    UIRenderer.renderTop(st); UIRenderer.renderHistory(st);
+                    UIRenderer.renderTop(st); UIRenderer.renderHistory(st.history || []);
                     UIRenderer.renderInventory(st); UIRenderer.renderSocialList(st); UIRenderer.renderSaveSlots(st);
                     if (UIRenderer.setAutoFollowBottom) UIRenderer.setAutoFollowBottom(true);
                 } catch (e) { console.warn("[LangEngine] 续玩渲染:", e); }
+                try { pushPlayHistory({ type: "game", id: id, title: card.title || "剧本", lang: true }); } catch (e) {}
                 return { mode: "continue" };
             }
             // 英语开局:本地计划初始化(零 AI)弹角色确认(复用 init-preview-modal),确认后由 Controller.startLangNewGame 落地英文开局
@@ -22462,7 +22672,7 @@ function openNpcProfile(npcId) {
             await prepareInitPreview(gender, false, {}, { cardId: id, metaId: metaId });
             return { mode: "confirm" };
         }
-        return { isLangSession, buildInjection, restoreIfNeeded, exitToChinese, enter, langSaveKey, hasLangSave, immStage };
+        return { isLangSession, buildInjection, restoreIfNeeded, exitToChinese, enter, langSaveKey, hasLangSave, immStage, targetLang, hasLanguageViolation, buildLanguageFixPrompt };
     })();
     window.LangEngine = LangEngine;
 </script>
@@ -22518,19 +22728,17 @@ window.LoveEngine = (() => {
             || list.find((x) => String(x.id || "").toLowerCase() === n)
             || list.find((x) => String(x.role || x.relationship || "").trim().toLowerCase() === n) || null;
     }
-    // R1 立绘:优先 npc.art(卡 structured.npcs[i].art,立绘大图 URL),其次自定义 avatar(http/data),否则回退首字
+    // R1 立绘:统一走全局 npcImageOf(卡 structured.npcs[].art 立绘原图 → npc.art → 用户手动头像 → 头像池),
+    // 与世界页 NPC 卡/档案详情/微信头像同一索引,保证同一 NPC 处处同图
     function artUrlOf(npc) {
         try {
             if (!npc) return "";
+            if (typeof window.npcImageOf === "function") return String(window.npcImageOf(npc) || "");
             for (const k of ["art", "avatar"]) {
                 const v = String(npc[k] || "");
                 if (v && (v.startsWith("http") || v.startsWith("data:"))) return v;
             }
-            const c = curCard();
-            const list = (c && c.structured && Array.isArray(c.structured.npcs)) ? c.structured.npcs : [];
-            const m = list.find((x) => x && String(x.name || "") === String(npc.name || ""));
-            const mv = m ? String(m.art || "") : "";
-            return (mv && (mv.startsWith("http") || mv.startsWith("data:"))) ? mv : "";
+            return "";
         } catch (e) { return ""; }
     }
     function avHtmlOf(npc, name) {
@@ -22617,22 +22825,33 @@ window.LoveEngine = (() => {
                 const isCur = cur && String(cur.name) === String(n.name || "") ? " active" : "";
                 const nm = esc(String(n.name || "?"));
                 const av = avHtmlOf(n, String(n.name || "?"));
-                return `<div class="love-npc${lockedCls}${isCur}" data-lv-npc="${esc(nm)}"><div class="lv-av">${av}</div>` +
+                return `<div class="love-npc${lockedCls}${isCur}" data-lv-npc="${esc(nm)}"><div class="lv-av" data-lv-art="1" title="点击放大立绘">${av}</div>` +
                     `<div><div class="lv-name">${nm}</div><div class="lv-aff"><b>♥ ${aff}</b> · ${esc(stageOf(aff))}</div>` +
                     `<div class="lv-heart"><i style="width:${pct}%;"></i></div></div></div>`;
             }).join("");
             box.innerHTML = html;
             box.classList.add("show");
             Array.prototype.forEach.call(box.querySelectorAll("[data-lv-npc]"), (el) => {
+                const npcObj = findNpc(state, el.getAttribute("data-lv-npc"));
                 el.addEventListener("click", (ev) => {
                     ev.stopPropagation();
                     try {
-                        const npcObj = findNpc(state, el.getAttribute("data-lv-npc"));
                         const openPop = document.getElementById("lv-pop-el");
                         if (openPop && npcObj && openPop.getAttribute("data-npc") === String(npcObj.name || "")) { closePop(); return; }
                         showNpcCard(el, npcObj);
                     } catch (e) {}
                 });
+                // 头像单独可点:全屏灯箱放大观赏立绘原图(不触发右侧角色卡弹层)
+                const avEl = el.querySelector("[data-lv-art]");
+                if (avEl) {
+                    avEl.addEventListener("click", (ev) => {
+                        ev.stopPropagation();
+                        try {
+                            const u = artUrlOf(npcObj);
+                            if (u && window.openImageLightbox) window.openImageLightbox(u, npcObj ? npcObj.name : "");
+                        } catch (e) {}
+                    });
+                }
             });
         } catch (e) { console.warn("[Love] syncBar:", e); }
     }
@@ -22668,6 +22887,19 @@ window.LoveEngine = (() => {
             `<div class="lvp-s">友善 ${esc(String(npc.favor))} · 爱慕 ${esc(String(npc.affection ?? 0))}（${esc(stageOf(npc.affection))}）</div></div></div>` +
             `<div class="lvp-body">${lines || "尚未了解的TA…"}</div>`;
         document.body.appendChild(el);
+        // 弹层头像也可点:灯箱放大看立绘原图
+        const avBox = el.querySelector(".lvp-av");
+        if (avBox) {
+            avBox.style.cursor = "zoom-in";
+            avBox.title = "点击放大查看原图";
+            avBox.addEventListener("click", (ev) => {
+                ev.stopPropagation();
+                try {
+                    const u = artUrlOf(npc);
+                    if (u && window.openImageLightbox) window.openImageLightbox(u, String(npc.name || ""));
+                } catch (e) {}
+            });
+        }
         const r = anchor.getBoundingClientRect();
         el.style.left = Math.max(8, Math.min(window.innerWidth - el.offsetWidth - 8, r.left)) + "px";
         el.style.top = Math.max(8, r.bottom + 6) + "px";
@@ -22774,7 +23006,7 @@ window.LoveEngine = (() => {
     function save() { try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch (e) { } }
     function hint(t, boxId) { var h = $(boxId || "lang-hint"); if (h) h.textContent = t || ""; }
     /* M6a:剧本库筛选状态与语言页渲染(库=英语原生卡;首页=推荐行+继续行) */
-    var libFilter = { band: "", cat: "", gender: "" };
+    var libFilter = { lang: "", cat: "", gender: "" };
     var THEME_ICON = { cottage: "🏡", "retro-paper": "🥛", glass: "🚇", fantasy: "🏰", "sci-fi-hud": "🌊", liquid: "💧", gothic: "🕯️", ink: "🖋️", cyber: "🌆", minimal: "▦" };
     /* R1 恋爱攻略卡:love 标签/向别偏好(存 localStorage lang_gender_pref_v1,O2 服务端零改动);loveMatch 供推荐排序 */
     function loveTagOf(c) {
@@ -22797,6 +23029,14 @@ window.LoveEngine = (() => {
         return true;
     }
     function bandShort(k) { return (BAND_INFO[k] && BAND_INFO[k][0]) ? BAND_INFO[k][0] : String(k || "").toUpperCase(); }
+    /* 语言Tag(2026-09-13):卡的语言决定生成语种;难度Tag 已从卡面下线,词汇难度改由用户学习档动态决定 */
+    var LANG_TAG_INFO = { en: ["EN", "英语"], ja: ["JA", "日语"], ko: ["KO", "韩语"] };
+    function langKeyOf(c) {
+        var k = String((c && (c.lang || (c.structured && c.structured.lang))) || "en").trim().toLowerCase();
+        return LANG_TAG_INFO[k] ? k : "en";
+    }
+    function langNameOf(c) { return LANG_TAG_INFO[langKeyOf(c)][1]; }
+    function langBadgeOf(c) { return '<span class="scenario-badge lang">' + langNameOf(c) + "</span>"; }
     function bandCls(k) { return (BAND_INFO[k] && BAND_INFO[k][2]) ? BAND_INFO[k][2] : ""; }
     function cardCid(c) { return String(c.id || "").replace(/"/g, "&quot;"); }
     function cardSaveOf(c) {
@@ -22829,14 +23069,14 @@ window.LoveEngine = (() => {
         var icon = THEME_ICON[String(c.theme || "")] || "📖";
         var has = cardSaveOf(c), r = cardRoundOf(c);
         var loveTag = loveTagOf(c);
-        var tagTxt = (loveTag ? '<span class="hb-love">' + loveTag + "</span> " : "") + api.esc(bandShort(c.band)) + (String(c.category_zh || "") ? " · " + api.esc(String(c.category_zh)) : "");
+        var tagTxt = (loveTag ? '<span class="hb-love">' + loveTag + "</span> " : "") + '<span class="hb-lang">' + langNameOf(c) + "</span>" + (String(c.category_zh || "") ? " · " + api.esc(String(c.category_zh)) : "");
         var playTxt = has ? "▶ 继续 · 第 " + (r || 1) + " 轮" : "立即游玩";
         return '<div data-cid="' + cardCid(c) + '" class="hb-card">' +
             '<div class="hb-cover" id="lb-cover-' + window.CoverService.safeId(c.id) + '"><img class="scc-img" alt="" loading="lazy"><span class="scc-emoji">' + icon + "</span></div>" +
             '<div class="hb-tag">' + tagTxt + "</div>" +
             '<div class="hb-title">' + api.esc(String(c.title_zh || c.title || "英语剧本")) + "</div>" +
             '<div class="hb-sub">' + api.esc(String(c.title || "")) + (has ? " · 英语进度已到第 " + (r || 1) + " 轮" : "") + "</div>" +
-            '<div class="hb-foot"><span class="hb-plays">EN 原生 · 五档词库</span>' +
+            '<div class="hb-foot"><span class="hb-plays">EN 原生 · 词库随你的学习档</span>' +
             '<span class="hb-play-btn mini-btn primary">' + playTxt + "</span></div></div>";
     }
     /* M8c:剧本库网格卡(文游首页同款 scenario-card:4:3 封面 + 徽标 + 详情/播放按钮);卡主体点击=播放,详情按钮单独弹层 */
@@ -22851,9 +23091,8 @@ window.LoveEngine = (() => {
             '<div class="list-title">' + api.esc(String(c.title_zh || c.title || "英语剧本")) + "</div>" +
             '<div class="scenario-badges">' +
             (loveTagOf(c) ? '<span class="scenario-badge love">' + loveTagOf(c) + "</span>" : "") +
-            '<span class="scenario-badge">' + api.esc(bandShort(c.band)) + "</span>" +
+            langBadgeOf(c) +
             '<span class="scenario-badge">' + api.esc(String(c.category_zh || c.category || "")) + "</span>" +
-            (has ? '<span class="scenario-badge" style="border-color:rgba(47,158,110,.6);color:#2f9e6e;background:rgba(47,158,110,.08);">第 ' + (r || 1) + " 轮</span>" : "") +
             "</div>" +
             '<div class="list-sub" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + api.esc(String(c.title || "")) + "</div>" +
             '<div class="scenario-card-btns">' +
@@ -22863,7 +23102,7 @@ window.LoveEngine = (() => {
     }
     function contRowHtml(c) {
         var r = cardRoundOf(c);
-        return '<div data-cid="' + cardCid(c) + '" class="l6-row"><div class="l6-row-band ' + bandCls(c.band) + '">' + api.esc(bandShort(c.band)) + "</div>" +
+        return '<div data-cid="' + cardCid(c) + '" class="l6-row"><div class="l6-row-band lang-' + langKeyOf(c) + '">' + LANG_TAG_INFO[langKeyOf(c)][0] + "</div>" +
             '<div class="l6-row-main"><div class="l6-row-t">' + api.esc(String(c.title_zh || c.title || "英语剧本")) + "</div>" +
             '<div class="l6-row-sub">' + api.esc(String(c.title || "")) + " · 英语进度已到第 " + (r || 1) + " 轮</div></div>" +
             '<span class="lang-badge en" style="width:auto;height:auto;border-radius:8px;padding:2px 8px;font-size:.6rem;">继续</span><span class="l6-row-go">›</span></div>';
@@ -22893,12 +23132,18 @@ window.LoveEngine = (() => {
             api.showBand();
             api.renderHome();
         },
+        /* Bug3(2026-09-13):登录/登出/会话校验变化后重绘语言侧统计。
+           语言页统计在脚本解析期就渲染过一次(早于 AuthService.init),不重绘会一直停留在"登录后查看" */
+        onAuthChanged: function () {
+            myStatsCache = null;
+            try { api.renderMyStats(); } catch (e) {}
+            try { api.renderLearnStats(true); } catch (e) {}
+        },
         /* M6a/M8d:语言页组视图进入钩子(switchView 调用);生词本独立子页进入即刷词表 */
         onShow: function (viewId) {
             api.syncSubNav(viewId);
             if (viewId === "view-lang") { api.renderHome(); return; }
-            if (viewId === "view-lang-library") { api.renderLibrary(); return; }
-            if (viewId === "view-lang-learn") { api.refresh(); api.renderLearnStats(false); return; }
+            if (viewId === "view-lang-learn") { api.refresh(); api.renderToday(); api.renderLearnStats(false); return; }
             if (viewId === "view-lang-vocab") { api.refreshVocab(); return; }
             if (viewId === "view-lang-leaderboard") { api.renderLeaderboard(); }
         },
@@ -22935,29 +23180,41 @@ window.LoveEngine = (() => {
         },
         selectLang: function (code) {
             if (code !== "en") {
-                try { NoticeModalService.showInfo({ title: "日语 / 韩语即将上线", descHtml: "先玩英语版吧——五档难度、原生英语剧本，点句即译。日韩语料与剧本正在准备中。" }); } catch (e) {}
+                var nm = code === "ja" ? "日语" : "韩语";
+                try { NoticeModalService.showInfo({ title: nm + "开发中，敬请期待", descHtml: "语料与剧本正在制作中，还不能真的切换。先玩英语版吧——五档难度、原生英语剧本，点句即译；" + nm + "上线后会用同一套玩法。" }); } catch (e) {}
                 return;
             }
             profile.lang = "en"; save();
         },
-        /* M8.5:档位纯手动——五档 chips 直选,系统不再做任何测定/建议 */
+        /* M8.5:档位纯手动,系统不做任何测定/建议;M10(2026-09-13):chips 改滑动条——拖动预览、松手生效 */
         showBand: function () {
             var box = $("lang-band-result"); if (!box) return;
             box.style.display = "block";
-            var btns = "", act = profile.band ? "改 " : "选 ";
-            for (var bi = 0; bi < BAND_ORDER.length; bi++) {
-                var k = BAND_ORDER[bi], bk = BAND_INFO[k];
-                btns += '<button type="button" class="mini-btn' + (k === profile.band ? " primary" : "") + '" onclick="LangController.setBand(\'' + k + '\')">' + act + bk[0] + "</button> ";
-            }
+            var has = !!BAND_INFO[profile.band];
+            var idx = has ? BAND_ORDER.indexOf(profile.band) : 2;
+            if (idx < 0) idx = 2;
+            var b = has ? BAND_INFO[profile.band] : BAND_INFO.cet6;
+            var ticks = BAND_ORDER.map(function (k) { return "<span>" + BAND_INFO[k][0] + "</span>"; }).join("");
+            box.innerHTML = '<div class="lang-band-hero"><div class="lang-band-chip ' + (has ? (b[2] || "") : "") + '" id="lang-band-chip">' + (has ? b[0] : "?") + "</div>" +
+                '<div style="flex:1;min-width:0;">' +
+                '<div class="lang-band-t" id="lang-band-t">' + (has ? ("你的学习档：英语 " + b[0] + " · " + b[1]) : "还没选学习档——拖动滑块挑一档") + "</div>" +
+                '<div class="lang-band-d" id="lang-band-d">' + (has ? b[3] : "五档按难度递进：校园日常从 HS / CET4 起步，都市情感试试 CET6，思辨叙事往考研 / 托福挑——松手即生效，随时可换。") + "</div>" +
+                '<input type="range" class="band-slider" id="lang-band-slider" min="0" max="4" step="1" value="' + idx + '" aria-label="学习档" oninput="LangController.previewBand(this.value)" onchange="LangController.setBandByIndex(this.value)">' +
+                '<div class="band-scale">' + ticks + "</div></div></div>";
             hint("");
-            if (!profile.band) {
-                box.innerHTML = '<div class="lang-band-hero"><div class="lang-band-chip">🎯</div><div style="flex:1;min-width:0;"><div class="lang-band-t">还没选学习档</div>' +
-                    '<div class="lang-band-d">五档按难度递进：校园日常从 HS / CET4 起步，都市情感试试 CET6，思辨叙事往考研 / 托福挑——随时可换。</div>' +
-                    '<div style="margin-top:8px;">' + btns + "</div></div></div>";
-                return;
-            }
-            var b = BAND_INFO[profile.band] || BAND_INFO.cet4;
-            box.innerHTML = '<div class="lang-band-hero"><div class="lang-band-chip ' + (b[2] || "") + '">' + b[0] + '</div><div><div class="lang-band-t">你的学习档：英语 ' + b[0] + " · " + b[1] + '</div><div class="lang-band-d">' + b[3] + '</div><div style="margin-top:8px;">' + btns + '<span class="list-sub">选档随时可以，玩哪档卡就学哪档词库</span></div></div></div>';
+        },
+        /* 拖动过程只预览文案,不落库(避免拖一次写五遍) */
+        previewBand: function (i) {
+            var k = BAND_ORDER[Number(i)]; if (!k) return;
+            var b = BAND_INFO[k];
+            var t = $("lang-band-t"), d = $("lang-band-d"), c = $("lang-band-chip");
+            if (t) t.textContent = "学习档：英语 " + b[0] + " · " + b[1] + (k === profile.band ? "（当前）" : "");
+            if (d) d.textContent = b[3];
+            if (c) { c.className = "lang-band-chip " + (b[2] || ""); c.textContent = b[0]; }
+        },
+        setBandByIndex: function (i) {
+            var k = BAND_ORDER[Number(i)]; if (!k) return;
+            api.setBand(k);
         },
         setBand: function (k) {
             if (!BAND_INFO[k]) return;
@@ -22989,9 +23246,48 @@ window.LoveEngine = (() => {
             }
             if (!silent) api.startLangBanner(box.children.length);
         },
+        /* M10(2026-09-13):语言首页推荐轮播支持左右滑动(触摸/鼠标),与主站首页同款交互;
+           水平拖动超 50px 切上一张/下一张,垂直拖动放行给页面滚动,滑动后 350ms 内拦截点击防误开卡 */
+        bindLangBannerSwipe: function () {
+            var box = $("lang-home-reco");
+            if (!box || box.dataset.swipeBound) return;
+            box.dataset.swipeBound = "1";
+            var startX = 0, startY = 0, swiped = false, active = false;
+            var begin = function (x, y) { startX = x; startY = y; swiped = false; active = true; };
+            var move = function (x, y) {
+                if (!active) return;
+                var dx = x - startX, dy = y - startY;
+                if (Math.abs(dy) > Math.abs(dx)) return;
+                if (Math.abs(dx) > 50) {
+                    swiped = true;
+                    if (dx < 0) api.goLangBanner(langBanner.idx + 1); else api.goLangBanner(langBanner.idx - 1);
+                    startX = x; startY = y;
+                }
+            };
+            var end = function () {
+                active = false;
+                if (!swiped) return;
+                var t0 = Date.now();
+                var intercept = function (e) {
+                    if (Date.now() - t0 < 350) e.stopPropagation();
+                    box.removeEventListener("click", intercept, true);
+                };
+                box.addEventListener("click", intercept, true);
+            };
+            box.addEventListener("touchstart", function (e) { var t = e.touches && e.touches[0]; if (t) begin(t.clientX, t.clientY); }, { passive: true });
+            box.addEventListener("touchmove", function (e) { var t = e.touches && e.touches[0]; if (t) move(t.clientX, t.clientY); }, { passive: true });
+            box.addEventListener("touchend", end, { passive: true });
+            box.addEventListener("mousedown", function (e) { if (e.button !== 0) return; begin(e.clientX, e.clientY); e.preventDefault(); });
+            box.addEventListener("mousemove", function (e) { move(e.clientX, e.clientY); });
+            box.addEventListener("mouseup", end);
+            box.addEventListener("mouseleave", function () { active = false; });
+        },
+        /* M10(2026-09-13):剧本库不再是独立页面——回语言首页并滚到剧本库区 */
         goLibrary: function () {
-            switchView("view-lang-library");
+            switchView("view-lang");
+            api.renderHome();
             api.renderLibrary();
+            api.anchor("#lang-home-lib");
         },
         goLearn: function () {
             switchView("view-lang-learn");
@@ -23138,6 +23434,7 @@ window.LoveEngine = (() => {
             if (sub) sub.textContent = profile.band ? ("已按你的学习档 " + bandShort(profile.band) + " 匹配推荐，点卡即玩") : "按最新上架推荐；在「学习中心」选好档后推荐按档匹配";
             var wrap = $("lang-reco-wrap");
             api.stopLangBanner();
+            api.bindLangBannerSwipe();
             if (!window.__LANG_CARDS_READY) {
                 if (wrap) wrap.style.display = "none";
                 if (!window.__LANG_CARDS_LOADING) api.loadLangCards();
@@ -23158,6 +23455,8 @@ window.LoveEngine = (() => {
             }
             api.renderContinue();
             api.renderLangHub();
+            /* 剧本库平铺在推荐轮播下方(原独立子页已合并) */
+            api.renderLibrary();
         },
         /* ---- P2 学习首页(2026-09-08):今日一句 / 我的进度 3 格 / 会员卡位 ----
            今日一句:内置双语考场景句池按北京日期轮换;「译一译」直调 gloss(与剧情点句同一配额:免费每日限量→救急包→会员);
@@ -23416,9 +23715,9 @@ window.LoveEngine = (() => {
                 ch += '<button type="button" class="l6-chip' + (libFilter.cat === cat ? " active" : "") + '" onclick="LangController.setLibFilter(\'cat\',\'' + cat.replace(/'/g, "\\'") + '\')">' + api.esc(cat) + "</button>";
             }
             cats.innerHTML = ch;
-            /* 难度 chips 高亮 */
-            var bts = document.querySelectorAll("#lang-lib-bands .l6-chip"), bi;
-            for (bi = 0; bi < bts.length; bi++) bts[bi].classList.toggle("active", (bts[bi].getAttribute("data-band") || "") === libFilter.band);
+            /* 语言Tag chips 高亮(2026-09-13:难度 chips 已下线) */
+            var bts = document.querySelectorAll("#lang-lib-langs .l6-chip"), bi;
+            for (bi = 0; bi < bts.length; bi++) bts[bi].classList.toggle("active", (bts[bi].getAttribute("data-lang") || "") === libFilter.lang);
             /* R1 恋爱向别 chips 高亮 + 激活时提示向别偏好已记住 */
             var gts = document.querySelectorAll("#lang-lib-genders .l6-chip"), gi;
             for (gi = 0; gi < gts.length; gi++) gts[gi].classList.toggle("active", (gts[gi].getAttribute("data-gender") || "") === libFilter.gender);
@@ -23432,13 +23731,13 @@ window.LoveEngine = (() => {
             var list = [], i, c;
             for (i = 0; i < lcs.length; i++) {
                 c = lcs[i]; if (!c || !c.id) continue;
-                if (libFilter.band && String(c.band || "") !== libFilter.band) continue;
+                if (libFilter.lang && langKeyOf(c) !== libFilter.lang) continue;
                 if (libFilter.cat && String(c.category_zh || c.category || "") !== libFilter.cat) continue;
                 if (!loveFilterOk(c, libFilter.gender)) continue;
                 list.push(c);
             }
             if (!list.length) {
-                rows.innerHTML = '<div class="list-sub" style="grid-column:1/-1;text-align:center;">没有符合筛选的剧本——换个难度或题材看看</div>';
+                rows.innerHTML = '<div class="list-sub" style="grid-column:1/-1;text-align:center;">没有符合筛选的剧本——换个语种或题材看看</div>';
                 hint("", "lang-lib-hint");
                 return;
             }
@@ -23446,7 +23745,7 @@ window.LoveEngine = (() => {
             rows.innerHTML = list.map(langGridCardHtml).join("");
             for (i = 0; i < list.length; i++) window.CoverService.paint("llc-cover-" + window.CoverService.safeId(list[i].id), list[i]);
             bindCardClicks(rows);
-            hint(profile.band ? "" : "点卡即玩：英语原生剧本自带档位，词库随卡走——建议先在「学习中心」选好档，推荐更准。", "lang-lib-hint");
+            hint(profile.band ? "" : "点卡即玩：英语原生剧本，词库按你在「学习中心」选的学习档走——建议先选好档，推荐与词汇难度更贴你。", "lang-lib-hint");
         },
         /* M8c:语言卡详情弹层(封面大图 + 中英标题 + 档/题材 + 英文简介 + 主角;播放按钮从弹层进入) */
         openLangDetail: function (cid) {
@@ -23466,17 +23765,17 @@ window.LoveEngine = (() => {
             var html =
                 '<div class="lgd-cover" id="lgd-cover-' + window.CoverService.safeId(c.id) + '"><img class="scc-img" alt="" loading="lazy"><span class="scc-emoji">' + (THEME_ICON[String(c.theme || "")] || "📖") + "</span></div>" +
                 '<div class="lgd-title">' + api.esc(String(c.title_zh || c.title || "英语剧本")) + "</div>" +
-                '<div class="lgd-en">' + api.esc(String(c.title || "")) + " · 英语原生剧本</div>" +
+                '<div class="lgd-en">' + api.esc(String(c.title || "")) + " · " + langNameOf(c) + "原生剧本</div>" +
                 '<div class="lgd-badges">' +
                 (loveTagOf(c) ? '<span class="scenario-badge love">' + loveTagOf(c) + "</span>" : "") +
-                '<span class="scenario-badge">' + api.esc(bandShort(c.band)) + "</span>" +
+                langBadgeOf(c) +
                 '<span class="scenario-badge">' + api.esc(String(c.category_zh || c.category || "")) + "</span>" +
                 '<span class="scenario-badge">' + api.esc(String(w.genre || "").slice(0, 20)) + "</span>" +
                 "</div>" +
                 (loveTagOf(c) ? '<div class="lgd-desc"><b>玩法：</b>恋爱攻略——5 个' + (String(c.structured.gender_target || "female") === "male" ? "可攻略女孩" : "可攻略男孩") + '等你相识、心动、走到专属结局；选项带好感影响，爱慕超过 70 会触发锁线，最后走向 HE 或 BE。</div>' : "") +
                 (heroTxt ? '<div class="lgd-desc"><b>你扮演：</b>' + api.esc(heroTxt) + "</div>" : "") +
                 (summary ? '<div class="lgd-desc"><b>故事预览（English）：</b>' + api.esc(summary) + "</div>" : "") +
-                (has ? '<div class="lgd-desc"><b>进度：</b>已到第 ' + (r || 1) + " 轮——接着上次的英语进度玩，词库随卡走。</div>" : "");
+                (has ? '<div class="lgd-desc"><b>进度：</b>已到第 ' + (r || 1) + " 轮——接着上次的英语进度玩，词库按你在「学习中心」选的学习档走。</div>" : "");
             $("lang-gd-content").innerHTML = html;
             $("lang-gd-play-btn").textContent = has ? "▶ 继续 · 第 " + (r || 1) + " 轮" : "立即游玩";
             window.CoverService.paint("lgd-cover-" + window.CoverService.safeId(c.id), c);
@@ -23505,7 +23804,6 @@ window.LoveEngine = (() => {
                     window.__LANG_CARDS_LOADING = false;
                     window.__LANG_CARDS_READY = true;
                     if (viewVisible("view-lang")) api.renderHome();
-                    if (viewVisible("view-lang-library")) api.renderLibrary();
                 })
                 .catch(function () { window.__LANG_CARDS_LOADING = false; });
         },
@@ -24215,14 +24513,18 @@ window.LoveEngine = (() => {
     var BAND_NAMES = { hs: "高中", cet4: "四级", cet6: "六级", ky: "考研", toefl: "托福" };
     var BAND_ORDER = ["hs", "cet4", "cet6", "ky", "toefl"];
     var bandAliasIdx = {};   // band -> {词形变体: 原形}
+    /* 2026-09-13:词汇难度改由"用户学习档"动态决定——剧情/点译/章节词/刷词全走这一处;
+       未选档时才退回卡内档位兜底(保证有词库可用),不再让卡的难度Tag 决定用户学什么词。 */
     function currentLangBand() {
+        var p = readProfile();
+        var ub = p && p.band;
+        if (ub && BAND_NAMES[ub]) return ub;
         try {
             var c = (typeof ScenarioCardService !== "undefined" && ScenarioCardService.getSelectedCard) ? ScenarioCardService.getSelectedCard() : null;
             var sb = c && c.structured && String(c.structured.band || "");
             if (sb) return sb;
         } catch (e) {}
-        var p = readProfile();
-        return (p && p.band) || "cet4";
+        return "cet4";
     }
     function bankAliasItem(band, w) {
         var items = langBankCache[band];
@@ -25337,7 +25639,7 @@ window.LoveEngine = (() => {
     };
 
     /* ---- 排行榜:学习时长埋点(2026-09-06)----
-       口径:英语文游游玩(view-main 且 LangEngine 会话)+ 语言首页/学习中心/生词本停留(view-lang-library 不算);
+       口径:英语文游游玩(view-main 且 LangEngine 会话)+ 语言首页/学习中心/生词本停留(剧本库已并入语言首页,同样计入);
        10s tick 连续两拍都在学且页面可见才累计该区间;累计满 60s 或页面隐藏即上报 PUT /api/lang/study(登录才记,游客丢弃);失败保留待下轮补报 */
     (function () {
         var INTERVAL_MS = 10000, FLUSH_SEC = 60;
