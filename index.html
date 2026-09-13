@@ -357,6 +357,15 @@
             padding: 3px 10px;
         }
 
+        /* 返回按钮 + 云币徽章同排:整行占位,右侧对齐,按钮在徽章左侧 */
+        .top-nav-badge-row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 6px;
+            flex-basis: 100%;
+        }
+
         .history-panel {
             position: fixed;
             top: 64px;
@@ -4826,10 +4835,6 @@
                 font-size: 0.62rem;
                 padding: 2px 6px;
             }
-            /* 窄屏:返回按钮只留图标,避免导航行折行拥挤 */
-            #top-nav-back-btn .tnb-label {
-                display: none;
-            }
             .top-mini-nav {
                 gap: 3px;
             }
@@ -4845,9 +4850,6 @@
                 flex-wrap: wrap;
                 justify-content: flex-end;
                 gap: 3px;
-                margin-left: auto;
-            }
-            #usage-badge {
                 margin-left: auto;
             }
         }
@@ -5358,8 +5360,11 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <button class="top-nav-btn" data-view="view-lang" onclick="switchView('view-lang')">学语言</button>
             <button class="top-nav-btn" data-view="view-settings" onclick="switchView('view-settings')">我的</button>
             <button class="top-nav-btn" id="top-nav-history-btn" onclick="toggleHistoryPanel()">历史</button>
-            <button class="top-nav-btn" id="top-nav-back-btn" onclick="goBackView()" title="返回前一页"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24" style="vertical-align:-0.15em;"><path fill="currentColor" d="M10.875 19.3L4.6 13q-.275-.275-.4-.6t-.125-.7t.125-.7t.4-.6l6.275-6.3q.275-.275.688-.288t.712.288q.275.275.275.7t-.275.7L7.8 10.9h10.4q.425 0 .713.288T19.2 11.9t-.287.712t-.713.288H7.8l4.475 4.5q.275.275.275.688t-.275.712t-.7.288t-.7-.288"/></svg><span class="tnb-label">返回前一页</span></button>
-            <span id="usage-badge" onclick="MembershipService.openPanel()" style="display:none;font-weight:700;color:#6b3f00;border-radius:999px;background:linear-gradient(135deg,#ffe9a8,#ffd66b);border:1px solid #e0a93a;cursor:pointer;box-shadow:0 2px 8px rgba(224,169,58,.4);" title="点击开通/续费会员"></span>
+            <!-- 返回按钮独占徽章行(flex-basis:100%),居金色云币徽章左侧;纯文字不再用箭头图标 -->
+            <span class="top-nav-badge-row" id="top-nav-badge-row">
+                <button class="top-nav-btn" id="top-nav-back-btn" onclick="goBackView()" title="返回上一页面">返回上一页面</button>
+                <span id="usage-badge" onclick="MembershipService.openPanel()" style="display:none;font-weight:700;color:#6b3f00;border-radius:999px;background:linear-gradient(135deg,#ffe9a8,#ffd66b);border:1px solid #e0a93a;cursor:pointer;box-shadow:0 2px 8px rgba(224,169,58,.4);" title="点击开通/续费会员"></span>
+            </span>
         </div>
         <button id="top-nav-collapse-btn" class="top-nav-collapse-btn" onclick="toggleTopNavCollapse()" title="收起导航">▲</button>
     </header>
@@ -21168,7 +21173,7 @@ function openNpcProfile(npcId) {
             switchView("view-scenario-editor");
             ScenarioEditorService.focusEditor();
         }
-        return { init, onSendClick, sendUserText, rerunEvent, getEndingDefs, buildEndingChecks, refreshEndingBadge, fallbackEnding, requestEnding, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, openCardSettings, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, autoDownloadAndPlay, openInitPreviewModal, closeInitPreviewModal, toggleHistoryPanel, renderPostRefPicker, clearPostRef, openPersonCardChat, prepareInitPreview, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, toggleAvatarLibraryPanel, avatarPickLib, avatarPick, avatarUpload, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, openWechatApp, closeWechatApp, switchWechatTab, openWechatChat, backToWechatList, appendEmojiToInput, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, unlockCloudSlot, saveToCloudSlot, loadFromCloudSlot, deleteCloudSlot, clearLocalCache, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, closeFullMap, placeClick, placeGo, advanceStory, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate, renderHomeDiscovery, switchSortMode, openCreationWizard, wizardPickStyle, wizardTitleCount, wizardPromptCount, wizardNext, wizardPrev, wizardConfirm, closeUploadPriceModal, confirmUploadWithPrice };
+        return { init, onSendClick, sendUserText, rerunEvent, getEndingDefs, buildEndingChecks, refreshEndingBadge, fallbackEnding, requestEnding, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, goBackView, openCardSettings, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, autoDownloadAndPlay, openInitPreviewModal, closeInitPreviewModal, toggleHistoryPanel, renderPostRefPicker, clearPostRef, openPersonCardChat, prepareInitPreview, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, toggleAvatarLibraryPanel, avatarPickLib, avatarPick, avatarUpload, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, openWechatApp, closeWechatApp, switchWechatTab, openWechatChat, backToWechatList, appendEmojiToInput, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, unlockCloudSlot, saveToCloudSlot, loadFromCloudSlot, deleteCloudSlot, clearLocalCache, openInfoModal, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, closeFullMap, placeClick, placeGo, advanceStory, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate, renderHomeDiscovery, switchSortMode, openCreationWizard, wizardPickStyle, wizardTitleCount, wizardPromptCount, wizardNext, wizardPrev, wizardConfirm, closeUploadPriceModal, confirmUploadWithPrice };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
@@ -22986,9 +22991,9 @@ window.LoveEngine = (() => {
     var BAND_INFO = {
         hs: ["HS", "高中水平", "band-hs", "对应高中新课标 3500 词（词库 3395 词）——校园、日常生活题材的卡从这档打底"],
         cet4: ["CET4", "四级水平", "band-cet4", "对应大学英语四级大纲（词库 4536 词）——校园日常、生活话题的卡正合适"],
-        cet6: ["CET6", "六级水平", "band-cet6", "对应六级词汇大纲（词库 2219 词）——都市生活、情感向的卡可挑战"],
-        ky: ["考研", "考研水平", "band-ky", "对应考研英语大纲 5530（词库 5529 词）——思辨、叙事厚重的卡挂这档"],
-        toefl: ["TOEFL", "托福水平", "band-toefl", "对应托福词汇（词库 4510 词）——科研、异域题材的高难卡在此"]
+        cet6: ["CET6", "六级水平", "band-cet6", "对应六级词汇大纲（词库 5713 词，含四级词汇）——都市生活、情感向的卡可挑战"],
+        ky: ["考研", "考研水平", "band-ky", "对应考研英语大纲 5530（词库 6277 词，含六级及以下）——思辨、叙事厚重的卡挂这档"],
+        toefl: ["TOEFL", "托福水平", "band-toefl", "对应托福词汇（词库 8128 词，含考研及以下）——科研、异域题材的高难卡在此"]
     };
     var profile = { lang: "en" };
     try { var _p = JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}"); if (_p && typeof _p === "object") profile = _p; } catch (e) { }
@@ -23453,8 +23458,9 @@ window.LoveEngine = (() => {
                 bindCardClicks(box);
                 api.startLangBanner(cards.length);
             }
-            api.renderContinue();
-            api.renderLangHub();
+            /* 各区块独立兜底:单块异常不得连带吞掉后面的剧本库渲染(2026-09-13 今日一句 esc 未定义曾致整库空白) */
+            try { api.renderContinue(); } catch (e) {}
+            try { api.renderLangHub(); } catch (e) {}
             /* 剧本库平铺在推荐轮播下方(原独立子页已合并) */
             api.renderLibrary();
         },
@@ -23508,7 +23514,7 @@ window.LoveEngine = (() => {
             var got = null;
             try { got = JSON.parse(localStorage.getItem("lang_today_g") || "null"); } catch (e) {}
             var done = !!(got && got.d === dayStr && got.en === t.en);
-            var zhBox = done && got.zh ? '<div class="lang-today-zh" id="lang-today-zh">' + esc(String(got.zh)) + "</div>" : "";
+            var zhBox = done && got.zh ? '<div class="lang-today-zh" id="lang-today-zh">' + api.esc(String(got.zh)) + "</div>" : "";
             var note = done
                 ? '<div class="lang-today-note" id="lang-today-note">本句已译过，明天换新句</div>'
                 : '<div class="lang-today-note" id="lang-today-note">' + (token()
@@ -23547,7 +23553,7 @@ window.LoveEngine = (() => {
                     } else if (d && d.code === "GLOSS_DAILY_LIMIT") {
                         note.innerHTML = "今天的点译次数用完啦（明天 08:00 刷新）" + btns(bMember);
                     } else if (d && d.code === "INSUFFICIENT_COIN") {
-                        note.innerHTML = esc(String(d.error || "点译额度已用完，云币也不足")).slice(0, 200) + btns(bPack + bMember);
+                        note.innerHTML = api.esc(String(d.error || "点译额度已用完，云币也不足")).slice(0, 200) + btns(bPack + bMember);
                     } else {
                         note.innerHTML = '<button type="button" class="lt-btn ghost" onclick="LangController.todayGloss()">译文没取到 · 点此重试</button>';
                     }
@@ -25405,7 +25411,16 @@ window.LoveEngine = (() => {
     var langBankCache = {};      // band -> items[]
     var langBankMapCache = {};   // band -> {word: item}
     var langBankLoading = {};    // band -> Promise(防并发)
-    function bankCacheKey(band) { return "lang_bank_v2_" + band; }   // v2:M6d3+ 词形 al 随档缓存,旧 v1(无 al)自动弃用
+    function bankCacheKey(band) { return "lang_bank_v3_" + band; }   // v3:2026-09-13 六级起累积并集(六级5713/考研6277/托福8128),旧 v2 弃用并清理
+    (function () {   /* v1/v2 旧词库缓存一次性清理(累加后旧档数据已过期,不删会白占空间) */
+        try {
+            var bs = ["hs", "cet4", "cet6", "ky", "toefl"];
+            for (var i = 0; i < bs.length; i++) {
+                localStorage.removeItem("lang_bank_v1_" + bs[i]);
+                localStorage.removeItem("lang_bank_v2_" + bs[i]);
+            }
+        } catch (e) {}
+    })();
     function loadLangBank(band, force) {
         band = String(band || "").trim();
         if (!band) return Promise.resolve(null);
@@ -25445,7 +25460,8 @@ window.LoveEngine = (() => {
         var map = langBankMapCache[band];
         if (!map) {
             map = langBankMapCache[band] = {};
-            for (var i = 0; i < items.length; i++) map[items[i].w] = items[i];
+            /* 查表键统一小写:考研源含 April/Bible 等 31 个专有名词原形大写,不折平则点查永远 miss */
+            for (var i = 0; i < items.length; i++) map[String(items[i].w || "").toLowerCase()] = items[i];
         }
         return map[String(word).toLowerCase()] || null;
     }
