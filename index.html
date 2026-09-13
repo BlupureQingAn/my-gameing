@@ -1557,14 +1557,13 @@
         .ending-stat span { font-size: 0.7rem; color: var(--text-muted); }
         .ending-actions { display: flex; gap: 8px; margin-top: 16px; }
         .ending-actions .mini-btn { flex: 1; }
-        /* R1 恋爱卡徽标(轮播 tag/库网格/详情):粉紫 + 心动微光 */
+        /* R1 恋爱卡徽标(轮播 tag/库网格/详情):粉紫 + 心动微光(尺寸与 .scenario-badge 一致,仅换配色) */
         .hb-tag .hb-love, .scenario-badge.love {
             color: #e0507a;
             border-color: rgba(224, 80, 122, .5);
             background: rgba(224, 80, 122, .1);
             box-shadow: 0 0 8px rgba(255, 110, 160, .15);
         }
-        .scenario-badge.love { border-radius: 7px; padding: 1px 6px; font-size: .6rem; border: 1px solid; }
         .hb-tag .hb-love { font-weight: 700; }
         /* R1 恋爱攻略结局:HE/BE 徽标 + 英文 epilogue 双语展示 */
         .ending-badge.lhe { background: linear-gradient(135deg, #ff7e9d, #e0507a); box-shadow: 0 6px 18px rgba(255,126,157,.45); font-size: 26px; }
@@ -4200,7 +4199,8 @@
             pointer-events: none;
         }
         .scenario-card-cover.has-cover .scc-img,
-        .hb-cover.has-cover .scc-img { display: block; }
+        .hb-cover.has-cover .scc-img,
+        .lgd-cover.has-cover .scc-img { display: block; }
         /* 夸克等暗夜模式若对封面容器压透明度/滤镜导致图片不可见, 强制还原原图直出 */
         .scenario-card-cover, .hb-cover, .rank-cover, .scc-img {
             opacity: 1 !important;

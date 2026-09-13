@@ -3376,7 +3376,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const status = String(url.searchParams.get("status") || "");
                 let f = `user_id='${escapePocketBaseFilterValue(uid)}'`;
                 if (status === "0" || status === "1" || status === "2") f += `&&status=${status}`;
-                const q = await pbAdminFetch(env, `/api/collections/lang_vocab/records?perPage=200&sort=-created&filter=${encodeURIComponent(f)}`);
+                const q = await pbAdminFetch(env, `/api/collections/lang_vocab/records?perPage=200&sort=-created_at&filter=${encodeURIComponent(f)}`);
                 const d = await q.json().catch(() => ({}));
                 const items = (d.items || []).map((i) => ({
                     id: i.id, lang: String(i.lang || "en"), type: String(i.type || "word"), term: String(i.term || ""),
