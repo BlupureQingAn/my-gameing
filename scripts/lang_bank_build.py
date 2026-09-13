@@ -296,11 +296,12 @@ def pb_ensure_collection(token):
     print("集合 lang_banks 已创建(fields 格式,listRule/viewRule 公开读)")
 
 
-def push_all():
+def push_all(bands=None):
+    bands = list(bands) if bands else BANDS
     token = pb_admin_token()
     pb_ensure_collection(token)
     MAX_PART = 150 * 1024  # bytes,单条记录体积上限控制
-    for band in BANDS:
+    for band in bands:
         with open(os.path.join(OUT_DIR, band + ".json"), "r", encoding="utf-8") as f:
             data = json.load(f)
         items = data["items"]
