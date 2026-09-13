@@ -1497,11 +1497,11 @@
         .npc-badge.off { background: rgba(120,120,120,0.1); color: var(--text-muted); border: 1px solid rgba(120,120,120,0.22); }
         .npc-meta { font-size: 0.72rem; color: var(--text-muted); line-height: 1.45; }
         .npc-favor { font-size: 0.74rem; font-weight: 700; }
-        /* 结局评级 modal（uugame"结束这段故事"融合） */
+        /* 结局评级 modal（uugame"结束这段故事"融合）——层级与其它弹窗对齐,避免被折叠态导航(400000)压住 */
         .ending-overlay {
             position: fixed;
             inset: 0;
-            z-index: 100000;
+            z-index: 400001;
             background: rgba(20,10,30,.65);
             backdrop-filter: blur(4px);
             display: none;
@@ -3761,20 +3761,28 @@
 
         /* ---- 弹窗组件（Modal Components） ---- */
         /* 容器 */
+        /* 弹窗容器:必须 fixed+高层级。
+           原先 absolute/z-index:10,而弹窗是 #app(position:relative 且 max-width:1120px、overflow:hidden)的直接子元素,
+           导致①桌面端遮罩只盖住中间 1120px、两侧露白②被 .wx-screen(50)/#history-panel(9998)/.ending-overlay(100000)/
+           .full-map-overlay(200000)/.heartbeat-overlay(300000)/折叠态 header(400000) 压住③内容超高被 #app 裁剪。
+           统一提到 400001:盖过所有页内浮层,仅让登录(500000)、图片灯箱、转屏提示等更高层保留其上。 */
         .modal-overlay {
-            position: absolute;
+            position: fixed;
             inset: 0;
             background: rgba(0, 0, 0, 0.35);
-            z-index: 10;
+            z-index: 400001;
             display: none;
             justify-content: center;
             align-items: center;
             padding: 14px;
         }
-        /* 提示弹窗:固定视口并置顶,不被充值窗口(z-index:999)/登录窗口(z-index:99999)/大地图(z-index:200000)覆盖 */
-        #info-modal { position: fixed; z-index: 300000; }
-        /* 换地图弹窗:从大地图内打开,须压在 full-map-overlay(200000) 之上 */
-        #map-picker-modal { position: fixed; z-index: 300000; }
+        /* 二级弹窗:由一级弹窗内部唤起(编辑资料/角色初始化里点头像 → 选择器),
+           同 z-index 时按 DOM 顺序渲染,而 #avatar-picker-modal 在 DOM 中位于 #edit-profile-modal 之前会被反盖,故单独抬一层 */
+        #avatar-picker-modal,
+        #char-chat-unlock-modal,
+        #decision-modal { z-index: 400002; }
+        /* 全局提示:登录页/其它弹窗之上都必须可见(沿用原「不被登录与充值窗口覆盖」语义,层级随体系整体上移) */
+        #info-modal { z-index: 600000; }
         #social-qq-btn:hover { filter: brightness(.95); }
         #social-wx-btn:hover { filter: brightness(.95); }
         /* 顶部加载动画:最顶层,下滑出现/丝滑缩回 */
@@ -5111,7 +5119,7 @@
     /* ===== 语言文游 M5 章末复盘(入口条 + RecapModal + 收藏闭环) ===== */
     .lg-recap-entry{display:flex;align-items:center;justify-content:center;gap:6px;margin:14px 6px 2px;padding:9px 14px;font-size:.78rem;font-weight:700;color:#7c4fd8;background:linear-gradient(115deg,rgba(124,84,216,.12),rgba(124,84,216,.05) 60%,rgba(63,111,216,.10));border:1px dashed rgba(124,84,216,.5);border-radius:999px;cursor:pointer;user-select:none;text-align:center}
     .lg-recap-entry:active{transform:scale(.98)}
-    .lg-rm-mask{position:fixed;inset:0;z-index:300002;display:flex;align-items:center;justify-content:center;background:rgba(6,8,26,.62);padding:16px;box-sizing:border-box}
+    .lg-rm-mask{position:fixed;inset:0;z-index:400001;display:flex;align-items:center;justify-content:center;background:rgba(6,8,26,.62);padding:16px;box-sizing:border-box}
     .lg-rm{width:min(600px,100%);max-height:88vh;display:flex;flex-direction:column;background:var(--card-bg,#fffdf8);border:1px solid var(--line,#e2ccb0);border-radius:20px;box-shadow:0 18px 55px rgba(8,8,40,.4);overflow:hidden}
     .lg-rm-img{width:100%;height:auto;display:block;border-radius:19px 19px 0 0;flex-shrink:0}
     .lg-rm-scroll{overflow-y:auto;padding:0 18px 16px;flex:1}
@@ -5247,7 +5255,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
 </div>
 
 <!-- ==================== 登录/注册覆盖层 ==================== -->
-<div id="auth-overlay" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--bg-page,#efe3cf);align-items:center;justify-content:center;padding:20px;">
+<div id="auth-overlay" style="display:none;position:fixed;inset:0;z-index:500000;background:var(--bg-page,#efe3cf);align-items:center;justify-content:center;padding:20px;">
     <div style="width:100%;max-width:380px;background:var(--card,#fff7ea);border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.18);padding:32px 28px;border:1px solid var(--line,#e2ccb0);">
         <div style="text-align:center;margin-bottom:24px;">
             <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px;">
@@ -5306,7 +5314,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
     </div>
 </div>
 
-<div id="membership-modal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
+<div id="membership-modal" style="display:none;position:fixed;inset:0;z-index:400001;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
     <div style="width:min(92vw,460px);max-height:85vh;overflow:auto;background:var(--card-bg,#fffdf8);border-radius:16px;padding:18px;border:1px solid var(--line);">
         <div style="display:flex;justify-content:space-between;align-items:center;">
             <div class="list-title" id="membership-title" style="margin:0;">开通会员</div>
@@ -18537,6 +18545,45 @@ ${recent || "（无）"}
             }
             doSwitchView(viewId, silent);
         }
+        /* 切页统一收口:清掉页内浮层,避免弹窗/遮罩跨页残留(2026-09-13 十三轮)。
+           只在浮层确实打开时(md- 统一用 display:flex 打开)才调对应关闭入口,
+           避免误清无关状态(pendingInitPlan、挂起的询问 Promise)。
+           decision-modal 刻意排除:阻塞式询问,强关会让挂起的 Promise 永不 resolve,
+           而草稿询问流程收到 resolve(false) 会直接删掉用户草稿。 */
+        function closeAllOverlaysOnLeave() {
+            const shown = (id) => { const el = document.getElementById(id); return !!el && el.style.display === "flex"; };
+            // 优先走各自官方关闭入口,它们会一并清理挂起的 Promise / 草稿 / 选中项等状态
+            try { if (shown("char-chat-unlock-modal")) closeCharChatUnlockModal(); } catch (e) {}   // 挂起的解锁询问按「取消」resolve(false)
+            try { if (shown("upload-price-modal")) closeUploadPriceModal(); } catch (e) {}          // 清 _pendingUploadData
+            try { if (shown("post-modal")) closePostModal(); } catch (e) {}                         // 清 _postRefCard
+            try { if (shown("comments-modal")) closeCommentsModal(); } catch (e) {}
+            try { if (shown("info-modal")) closeInfoModal(); } catch (e) {}
+            try { const em = document.getElementById("ending-modal"); if (em && em.classList.contains("show")) closeEndingModal(); } catch (e) {}
+            try { if (shown("init-preview-modal")) closeInitPreviewModal(true); } catch (e) {}      // true=不回滚视图,交给本次切页接管
+            try { if (shown("edit-profile-modal") && window.closeEditProfileModal) window.closeEditProfileModal(); } catch (e) {}
+            try { if (shown("map-picker-modal") && window.closeMapPickerModal) window.closeMapPickerModal(); } catch (e) {}
+            try { if (shown("avatar-picker-modal") && window.closeAvatarPickerModal) window.closeAvatarPickerModal(); } catch (e) {}
+            try { if (shown("lang-card-modal") && window.LangController && window.LangController.closeLangDetail) window.LangController.closeLangDetail(); } catch (e) {}
+            try { if (shown("game-detail-modal") && typeof GameDetailService !== "undefined") GameDetailService.closeGameDetail(); } catch (e) {}
+            // 会员面板只隐藏不调 closePanel:后者会清掉待支付订单,切页不应打断查单轮询
+            try { if (shown("membership-modal")) document.getElementById("membership-modal").style.display = "none"; } catch (e) {}
+            // 世界页长按菜单:absolute 定位于手机内屏,不主动收起会跨页残留;走 wxHideCtxMenu 一并清 _wxCtx
+            try { const cm = document.getElementById("wx-ctx-menu"); if (cm && cm.style.display === "block") wxHideCtxMenu(); } catch (e) {}
+            // 语言复盘弹窗与全屏地图:都是 fixed 全屏层,不关会盖在目标页面上
+            try { if (document.querySelector(".lg-rm-mask") && window.closeLangRecap) window.closeLangRecap(); } catch (e) {}
+            try { if (document.querySelector(".full-map-overlay")) closeFullMap(); } catch (e) {}
+            // 点译浮层(.lg-pop 走 .on 类):非模态,残留会浮在新页面词位上
+            try { document.querySelectorAll(".lg-pop.on").forEach((el) => el.classList.remove("on")); } catch (e) {}
+            // 恋爱角色卡浮层(动态挂 body 的 .lv-pop):摘除等价于 Love 模块的 closePop()
+            try { const lvp = document.getElementById("lv-pop-el"); if (lvp) lvp.remove(); } catch (e) {}
+            // 兜底:仍可见的弹窗一律隐藏(覆盖 init-loading 等无独立全局入口的)
+            try {
+                document.querySelectorAll(".modal-overlay").forEach((el) => {
+                    if (el.id === "decision-modal") return;
+                    if (el.style.display === "flex") el.style.display = "none";
+                });
+            } catch (e) {}
+        }
         function doSwitchView(viewId, silent = false) {
             const prevView = activeView;
             // M10(2026-09-13):剧本库已并入语言首页,旧入口/旧深链(view-lang-library)统一落到语言首页
@@ -18548,6 +18595,7 @@ ${recent || "（无）"}
                 if (viewStack.length > 40) viewStack.shift();
             }
             closeHistoryPanel();
+            closeAllOverlaysOnLeave();
             if (viewId === "view-settings") {
                 // 默认入口=全局默认值;openCardSettings 会先置 _cardSettingsNav 再进入(剧本内设置)
                 if (!window._cardSettingsNav) SettingsService.setSettingsContext(null);
@@ -25146,6 +25194,7 @@ window.LoveEngine = (() => {
         }
         document.removeEventListener("keydown", recapEsc);
     }
+    window.closeLangRecap = closeRecap;   // 供主站切页收口(closeAllOverlaysOnLeave)跨 IIFE 调用
     function recapEsc(e) { if (e && e.key === "Escape") closeRecap(); }
     /* ---- M6d5:章末词测(recap ①区 · 登录用户;题源:剧情金标命中词 > 本章候选 > 本局点查) ---- */
     var quizState = null;   // {band, qs:[{word,zh,corr,opts,pick}], idx, done, subm}
