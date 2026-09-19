@@ -8,6 +8,7 @@
 #   H5_APP_ID / H5_APP_SECRET / PAY_NOTIFY_URL
 #   MAPAY_API_URL / MAPAY_APPID / MAPAY_APPKEY
 #   XUNHU_APP_ID=201906186933 / XUNHU_APP_SECRET(签约后发) / XUNHU_NOTIFY_URL=https://ai.blupure.cn/api/xunhu/notify
+#   MAIL_TOKEN（自建发信代理 token,2026-09-19 轮换;worker 侧不得写兜底值——兜底值会随公开仓库一起泄露）
 name = "my-openai-proxy"
 main = "worker.js"
 compatibility_date = "2025-01-01"
@@ -25,3 +26,8 @@ id = "05ff1df6441843368cec0b55bb74c847"
 [[kv_namespaces]]
 binding = "DICT_EN"
 id = "12a77df4a079433db1e707f847d2b195"
+
+# 发验证码按 IP 限流计数(key rl:code:{h|d}:{ip}:{窗口},TTL 自带过期)
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "db7944ae629040bda13f1212eac76008"

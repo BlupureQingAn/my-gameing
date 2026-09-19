@@ -563,6 +563,26 @@ function getTodayStr() {
     return new Date(Date.now() + TIMEZONE_OFFSET_MS).toISOString().slice(0, 10);
 }
 
+// ---- 发验证码按 IP 限流(KV 持久化;内存限流在多 isolate 下形同虚设)----
+// 计数在成败判定之前递增(邮箱枚举探测也吃配额);KV 未绑定时降级放行,不阻断注册/登录
+const CODE_IP_LIMIT_HOUR = 8;
+const CODE_IP_LIMIT_DAY = 20;
+async function ipRateLimit(env, ip, bucket, hourly, daily) {
+    if (!env.RATE_LIMIT || !ip) return null;
+    const now = Date.now();
+    const hKey = `rl:${bucket}:h:${ip}:${Math.floor(now / 3600000)}`;
+    const dKey = `rl:${bucket}:d:${ip}:${getTodayStr()}`;
+    const [hRaw, dRaw] = await Promise.all([env.RATE_LIMIT.get(hKey), env.RATE_LIMIT.get(dKey)]);
+    const h = Number(hRaw || 0), d = Number(dRaw || 0);
+    if (h >= hourly) return { msg: "操作太频繁，请 1 小时后再试", code: "IP_HOURLY_LIMIT" };
+    if (d >= daily) return { msg: "今日操作次数已达上限，请明天再试", code: "IP_DAILY_LIMIT" };
+    await Promise.all([
+        env.RATE_LIMIT.put(hKey, String(h + 1), { expirationTtl: 3600 }),
+        env.RATE_LIMIT.put(dKey, String(d + 1), { expirationTtl: 86400 })
+    ]);
+    return null;
+}
+
 // ---- 词典兜底(GET /api/lang/dict):ECDICT 77 万词条按 strip 前 2 字符分 909 片存 DICT_EN KV ----
 const dictRate = new Map();    // IP 级限流(内存,跨 isolate 宽松可接受)
 const dictCache = new Map();   // 片解析缓存(最多 16 片,防查词连击重复拉 KV)
@@ -1783,8 +1803,9 @@ export default {
             // ---- 路由：邮箱验证码（发送/注册，自建 SMTP 代理中转；验证码仅存服务端）----
             const EMAIL_CODE_TTL_MIN = 5;          // 验证码有效期(分钟)
             const EMAIL_SEND_COOLDOWN_MS = 60000;  // 同邮箱发送冷却
-            const MAIL_API = env.MAIL_API || "http://mail.blupure.cn/mail/send"; // 自建代理(47.238.246.167 nginx→9527, 163 双邮箱轮询)
-            const MAIL_TOKEN = env.MAIL_TOKEN || "yt_mail_2026_a9Kx7QmZ";
+            const MAIL_API = env.MAIL_API || "https://mail.blupure.cn/mail/send"; // 自建代理(47.238.246.167 nginx→9527, 163 双邮箱轮询;2026-09-19 起走 HTTPS,token 与邮件正文不再明文过公网)
+            // 必读 env,不写兜底值:仓库是 public,兜底 token 等于公开(2026-09-19 已因此轮换一次)
+            const MAIL_TOKEN = env.MAIL_TOKEN || "";
             const buildMailHtml = (purpose, code) => `
                 <div style="max-width:480px;margin:0 auto;padding:24px;font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;">
                     <div style="background:linear-gradient(135deg,#7c3aed,#4f46e5);border-radius:12px;padding:20px 24px;color:#fff;">
@@ -1807,6 +1828,9 @@ export default {
                 if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 255) {
                     return errorResponse("邮箱格式不正确", 400, null, "INVALID_EMAIL");
                 }
+                // 按 IP 限流(防刷验证码/邮件轰炸/批量注册小号刷免费额度);同邮箱 60s 冷却在下面单独判定
+                const ipHit = await ipRateLimit(env, request.headers.get("CF-Connecting-IP") || "", "code", CODE_IP_LIMIT_HOUR, CODE_IP_LIMIT_DAY);
+                if (ipHit) return errorResponse(ipHit.msg, 429, null, ipHit.code);
                 // 存在性分流: 注册=邮箱必须未注册; 重置=邮箱必须已注册
                 const dupQ = await pbAdminFetch(env, `/api/collections/users/records?perPage=1&skipTotal=true&filter=${encodeURIComponent(`email='${escapePocketBaseFilterValue(email)}'`)}`);
                 const dupD = await dupQ.json().catch(() => ({}));
@@ -1820,6 +1844,9 @@ export default {
                 if (last && Date.now() - Date.parse(last.created_at || 0) < EMAIL_SEND_COOLDOWN_MS) {
                     const wait = Math.max(1, Math.ceil((EMAIL_SEND_COOLDOWN_MS - (Date.now() - Date.parse(last.created_at || 0))) / 1000));
                     return errorResponse(`发送太频繁，${wait} 秒后再试`, 429, { retryAfter: wait }, "TOO_FREQUENT");
+                }
+                if (!MAIL_TOKEN) {
+                    return errorResponse("邮件服务未配置", 500, null, "MAIL_NOT_CONFIGURED");
                 }
                 // 生成验证码并调用自建 SMTP 代理投递(验证码不回传, 仅存 PB)
                 const code = String(Math.floor(100000 + Math.random() * 900000));
@@ -1835,9 +1862,13 @@ export default {
                     // 15s 兜底:CF→自建代理公网链路抖动时快速失败,避免前端等到 20s 超时
                     signal: AbortSignal.timeout(15000)
                 }).catch(() => null);
-                let mailOk = false;
-                if (mailRes) { try { const d = await mailRes.json(); mailOk = !!(d && d.ok === true); } catch (e) {} }
+                let mailOk = false, mailErr = "";
+                if (mailRes) { try { const d = await mailRes.json(); mailOk = !!(d && d.ok === true); mailErr = (d && d.error) || ""; } catch (e) {} }
                 if (!mailOk) {
+                    // 代理侧发件配额(分钟/小时/天)触发时透传 429,别混成"服务繁忙"让用户反复重试
+                    if (mailErr.indexOf("rate limit") === 0) {
+                        return errorResponse("验证码发送已达上限，请稍后再试", 429, null, "MAIL_RATE_LIMITED");
+                    }
                     return errorResponse("邮件服务繁忙，请稍后再试", 502, null, "MAIL_SERVICE_DOWN");
                 }
                 // 作废旧码(防堆积/防旧码复用)
