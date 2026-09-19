@@ -60,6 +60,49 @@
             Object.defineProperty(navigator, "userAgent", { get: function () { return "Mozilla/5.0 (compatible; blocked)"; } });
         }
     })();
+    // 防调试(2026-09-19):屏蔽 F12 / 开发者工具快捷键 / 查看源码 / 右键菜单。
+    // 只 preventDefault 不 stopPropagation——站内自有右键菜单(wx-ctx-menu)与长按逻辑不受影响;
+    // 输入框与可编辑区放行右键,避免影响粘贴。前端防护只提高门槛,核心鉴权仍在 worker 侧。
+    (function () {
+        var BLOCK_CTX_MENU = true;   // 关掉右键屏蔽:改 false 即可(其余快捷键屏蔽保留)
+        var tipEl = null, tipTimer = 0;
+        function showTip() {
+            try {
+                if (!document.body) return;
+                if (!tipEl) {
+                    tipEl = document.createElement("div");
+                    tipEl.style.cssText = "position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2147483647;padding:10px 18px;border-radius:10px;background:rgba(0,0,0,.78);color:#fff;font-size:14px;letter-spacing:.5px;pointer-events:none;opacity:0;transition:opacity .18s";
+                    document.body.appendChild(tipEl);
+                }
+                tipEl.textContent = "开发者工具已禁用";
+                tipEl.style.opacity = "1";
+                clearTimeout(tipTimer);
+                tipTimer = setTimeout(function () { if (tipEl) tipEl.style.opacity = "0"; }, 1200);
+            } catch (e) { }
+        }
+        function editable(t) {
+            if (!t || !t.tagName) return false;
+            var n = t.tagName.toLowerCase();
+            return n === "input" || n === "textarea" || n === "select" || t.isContentEditable === true;
+        }
+        document.addEventListener("keydown", function (e) {
+            var k = String(e.key || "").toLowerCase();
+            var mod = e.ctrlKey || e.metaKey;
+            var hit = k === "f12"
+                || (mod && e.shiftKey && (k === "i" || k === "j" || k === "c" || k === "k"))
+                || (mod && !e.shiftKey && !e.altKey && k === "u")
+                || (e.metaKey && e.altKey && (k === "i" || k === "j" || k === "c"));
+            if (!hit) return;
+            e.preventDefault();
+            showTip();
+        }, true);
+        if (BLOCK_CTX_MENU) {
+            document.addEventListener("contextmenu", function (e) {
+                if (editable(e.target)) return;
+                e.preventDefault();
+            }, true);
+        }
+    })();
     </script>
     <script type="application/ld+json">
     {
