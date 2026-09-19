@@ -5530,9 +5530,9 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
 
                 <div class="list-title" style="margin:0;">① 选择语言</div>
                 <div class="lang-picker" id="lang-picker">
-                    <button type="button" class="lang-lang-card active" onclick="LangController.selectLang('en')"><span class="lang-badge en">EN</span><span>英语</span><span class="list-sub" style="margin:0;">已上线</span></button>
-                    <button type="button" class="lang-lang-card locked" onclick="LangController.selectLang('ja')"><span class="lang-badge ja">JA</span><span>日语</span><span class="list-sub" style="margin:0;">开发中，敬请期待</span></button>
-                    <button type="button" class="lang-lang-card locked" onclick="LangController.selectLang('ko')"><span class="lang-badge ko">KO</span><span>韩语</span><span class="list-sub" style="margin:0;">开发中，敬请期待</span></button>
+                    <button type="button" class="lang-lang-card active" data-lang="en" onclick="LangController.selectLang('en')"><span class="lang-badge en">EN</span><span>英语</span><span class="list-sub" style="margin:0;">已上线</span></button>
+                    <button type="button" class="lang-lang-card" data-lang="ja" onclick="LangController.selectLang('ja')"><span class="lang-badge ja">JA</span><span>日语</span><span class="list-sub" style="margin:0;">JLPT 词库已上线 · 剧本制作中</span></button>
+                    <button type="button" class="lang-lang-card" data-lang="ko" onclick="LangController.selectLang('ko')"><span class="lang-badge ko">KO</span><span>韩语</span><span class="list-sub" style="margin:0;">TOPIK 词库已上线 · 剧本制作中</span></button>
                 </div>
 
                 <div id="lang-today-box" style="margin-top:12px;"></div>
@@ -22518,7 +22518,16 @@ function openNpcProfile(npcId) {
             cet4: "player level = CET-4: plain everyday English; clear sentences of at most ~18 words; common syllabus words; idioms only if the meaning is obvious.",
             cet6: "player level = CET-6: natural everyday English; most sentences up to ~25 words; a familiar idiom is fine when the context makes its meaning obvious.",
             ky: "player level = KY (考研 postgrad-exam syllabus): broader everyday English with moderate idioms and denser expression; sentences up to ~30 words are fine.",
-            toefl: "player level = TOEFL: natural fluent English prose; idioms and literary phrasing welcome; complex sentences are fine."
+            toefl: "player level = TOEFL: natural fluent English prose; idioms and literary phrasing welcome; complex sentences are fine.",
+            /* 日语 JLPT N5-N1 / 韩语 TOPIK 初中高(2026-09-19 多语种化;日语字数按字符计,韩语按词计) */
+            "ja-n5": "player level = JLPT N5: the simplest everyday Japanese — kana plus at most ~100 basic kanji; one short clause per sentence (~15 characters); only the most common daily words; stick to です/ます polite forms.",
+            "ja-n4": "player level = JLPT N4: basic everyday Japanese — about 300 common kanji; sentences of roughly 25 characters; familiar daily vocabulary; ます/です forms with occasional plain forms.",
+            "ja-n3": "player level = JLPT N3: lower-intermediate Japanese — about 650 kanji; everyday and workplace topics; sentences up to ~40 characters; common set phrases allowed when their meaning is clear from context.",
+            "ja-n2": "player level = JLPT N2: upper-intermediate Japanese — about 1000 kanji; natural phrasing close to newspaper or magazine prose; longer sentences, common idioms and 慣用句 are fine.",
+            "ja-n1": "player level = JLPT N1: advanced Japanese — about 2000 kanji; abstract or literary topics welcome; complex sentences, 四字熟語 and nuanced register are all fine.",
+            "ko-1": "player level = TOPIK I (beginner): the simplest everyday Korean — basic vocabulary and short sentences, one clause at a time; 해요체 polite endings throughout.",
+            "ko-2": "player level = TOPIK II (intermediate): natural everyday Korean — everyday and workplace topics, connective endings and medium-length sentences; well-known idioms allowed when context makes them clear.",
+            "ko-3": "player level = TOPIK II (advanced): fluent Korean — abstract topics, news or literary register, longer sentences, 한자어 and idioms all fine."
         };
         // 语气保真词典(按题材关键词 → 英语语气指令;中文世界观不变,只换"英语说法"的分寸)
         const TONE_RULES = [
@@ -22570,9 +22579,19 @@ function openNpcProfile(npcId) {
         }
         /* Bug2(2026-09-13):语言Tag → 输出语言锁定。
            targetLang:卡片语言Tag(顶层 lang / structured.lang)决定正文语种;缺省英语。
-           ja/ko 词库未就绪,前端已拦(不实际调用),此处仅作兜底映射。 */
+           2026-09-19:日/韩上线,优先级改为 ①本会话存档语种(profile.playing.lang,抗刷新丢卡)
+           ②卡片 lang 字段 ③en——冷启动时 LANG_CARDS_ONLINE 未拉回会导致 getSelectedCard 落回中文卡,
+           只看卡片字段会把日语会话按英语提示词生成,故存档语种优先。 */
         const LANG_MAP = { en: "English", ja: "Japanese", ko: "Korean" };
         function targetLang() {
+            try {
+                const p = readProfile();
+                // 仅当存档指针与当前语言会话同一张卡时才认存档语种,避免串会话
+                if (session.cardId && p && p.playing && String(p.playing.cardId) === String(session.cardId)) {
+                    const saved = String(p.playing.lang || "").trim().toLowerCase();
+                    if (LANG_MAP[saved]) return saved;
+                }
+            } catch (e) {}
             try {
                 const c = ScenarioCardService.getSelectedCard();
                 const l = String((c && (c.lang || (c.structured && c.structured.lang))) || "en").trim().toLowerCase();
@@ -22581,25 +22600,46 @@ function openNpcProfile(npcId) {
         }
         // 汉字/假名/谚文——目标语为非中文时出现即违规
         const CJK_RE = /[぀-ヿ㐀-䶿一-鿿가-힯]/;
+        /* 各语种的字形正则(判定"混入非目标语文字"用):汉字含扩展A;假名含拗音长音;谚文含音节区 */
+        const HAN_RE = /[㐀-䶿一-鿿]/;
+        const KANA_RE = /[぀-ヿ]/;
+        const HANGUL_RE = /[가-힯ᄀ-ᇿ]/;
+        function scriptStats(s) {
+            const t = String(s || "");
+            return {
+                han: (t.match(HAN_RE) || []).length,
+                kana: (t.match(KANA_RE) || []).length,
+                hangul: (t.match(HANGUL_RE) || []).length
+            };
+        }
         /* 引擎自身要求保留的中文:time 字段(月日中文格式) 与 scaffold 阶段的 bilingual.zh / heartbeat.zh 译文。
            检测前先剥离这些合法中文字段,其余文本出现 CJK 即判违规。 */
+        /* 逐语种判定:en=混入任何中日韩字形即违规;ja=混入谚文、或通篇汉字却无一个假名(实为中文);
+           ko=混入汉字或假名。ja 的阈值(汉字>20 且假名=0)避免误伤合法的汉字词连写。 */
+        function optTextOf(x) { return (x && typeof x === "object") ? String(x.text == null ? "" : x.text) : String(x == null ? "" : x); }
+        function langViolationOf(s, lang) {
+            const st = scriptStats(s);
+            if (lang === "ja") return st.hangul > 0 || (st.han > 20 && st.kana === 0);
+            if (lang === "ko") return st.han > 0 || st.kana > 0;
+            return CJK_RE.test(String(s || ""));
+        }
         function hasLanguageViolation(raw) {
             try {
-                if (targetLang() !== "en") return false; // ja/ko 尚未上线,不做检测
+                const lang = targetLang();
                 const t = String(raw || "").trim();
                 if (!t) return false;
                 let obj = null;
                 try { obj = JSON.parse(t); } catch (e) {}
                 if (obj && typeof obj === "object") {
                     const parts = [obj.title, obj.story].concat(Array.isArray(obj.options) ? obj.options : []);
-                    return parts.some((x) => CJK_RE.test(String(x == null ? "" : x)));
+                    return parts.some((x) => langViolationOf(optTextOf(x), lang));
                 }
                 // 非严格 JSON(state-patch 尾块/HTML 卡/残缺 JSON):剥离合法字段后再扫
                 let s = t;
                 s = s.replace(/"time"\s*:\s*"(?:[^"\\]|\\.)*"/g, " ");
                 s = s.replace(/"zh"\s*:\s*"(?:[^"\\]|\\.)*"/g, " ");
                 s = s.replace(/<[^>]*>/g, " ");
-                return CJK_RE.test(s);
+                return langViolationOf(s, lang);
             } catch (e) { return false; }
         }
         function buildLanguageFixPrompt(prevRaw) {
@@ -22614,8 +22654,11 @@ function openNpcProfile(npcId) {
         }
         function buildInjection() {
             if (!session.cardId) return "";
+            const LG = LANG_MAP[targetLang()] || "English";
             const p = readProfile();
-            const band = BAND_RULE[p.band || "cet6"] || BAND_RULE.cet6;
+            const _tl = targetLang();
+            const _defBand = _tl === "ja" ? "ja-n3" : (_tl === "ko" ? "ko-2" : "cet6");
+            const band = BAND_RULE[p.band] || BAND_RULE[_defBand] || BAND_RULE.cet6;
             let round = 1;
             try {
                 const s = StateService.get();
@@ -22627,10 +22670,10 @@ function openNpcProfile(npcId) {
             try { englishSetting = !!(ScenarioCardService.getSelectedCard()?.structured?.band); } catch (e) {}
             const stg = immStage(round);
             const immText = stg.mode === "full"
-                ? "FULL IMMERSION — English only; absolutely no Chinese lines anywhere."
+                ? "FULL IMMERSION — " + LG + " only; absolutely no Chinese lines anywhere."
                 : (stg.mode === "scaffold"
-                    ? "PROGRESSIVE — round " + stg.round + "/" + stg.limit + ": add the extra JSON field \"bilingual\":{\"v\":1,\"lines\":[{...}]}. In lines, put ONE entry per sentence of \"story\", in exact sentence order: each entry is {\"en\":\"<that exact story sentence, character for character, with NO line breaks inside>\",\"zh\":\"<its natural plain-Chinese translation>\",\"words\":[{\"w\":\"<key word from this sentence>\",\"zh\":\"<its Chinese meaning>\"}]}; 1-3 words per sentence, or an empty array if none fit. \"en\" must copy each story sentence VERBATIM — same words, same punctuation, no joining or splitting of sentences. Keep every zh translation short and natural. From round " + (stg.limit + 1) + " onward never write Chinese and omit the bilingual field."
-                    : "PROGRESSIVE — round " + stg.round + " ≥ " + (IMM_SCAFFOLD_ROUNDS + 1) + ": English only from now on; no Chinese hints anymore; omit the bilingual field.");
+                    ? "PROGRESSIVE — round " + stg.round + "/" + stg.limit + ": add the extra JSON field \"bilingual\":{\"v\":1,\"lines\":[{...}]}. In lines, put ONE entry per sentence of \"story\", in exact sentence order: each entry is {\"text\":\"<that exact story sentence, character for character, with NO line breaks inside>\",\"zh\":\"<its natural plain-Chinese translation>\",\"words\":[{\"w\":\"<key word from this sentence>\",\"zh\":\"<its Chinese meaning>\"}]}; 1-3 words per sentence, or an empty array if none fit. \"text\" must copy each story sentence VERBATIM in " + LG + " — same words, same punctuation, no joining or splitting of sentences. Keep every zh translation short and natural. From round " + (stg.limit + 1) + " onward never write Chinese and omit the bilingual field."
+                    : "PROGRESSIVE — round " + stg.round + " ≥ " + (IMM_SCAFFOLD_ROUNDS + 1) + ": " + LG + " only from now on; no Chinese hints anymore; omit the bilingual field.");
             /* M6d4:本章候选词(卡档词库抽 ≤3)→ 随续写指令注入;LangAssist 已在上一卡渲染时预载词库并抽好 */
             let cands = [];
             try { const _la = window.LangAssist; if (_la && _la.getChapterWords) cands = _la.getChapterWords() || []; } catch (e) { cands = []; }
@@ -22655,8 +22698,8 @@ function openNpcProfile(npcId) {
                         ? "ROMANCE LOCK IS ON with " + _locked.name + ": keep deepening that bond. Every OTHER character must stay friendly background only — no romantic tension, flirting or advances with them from now on."
                         : "No romance lock yet, so scenes with any candidate are allowed; the system locks automatically once one bond crosses the lock threshold.";
                     return "ROMANCE ROUTE MODE — this is a romance game; your romance candidates are: " + (names.join(", ") || "(list from world bible)")
-                        + ". Options MUST be JSON objects in the options array: {\"text\":\"<English option text>\",\"love\":\"flirt|kind|tease|neutral|awkward|rude|reject\",\"target\":\"<candidate name from the list; omit only when the option involves no candidate>\"}. love means: flirt=romantic advance, kind=warm caring, tease=playful banter, neutral=plain, awkward=embarrassing misfire, rude=harsh, reject=pushing away; choose it honestly from what the option says. Give 2-3 options with at least one positive (flirt/kind/tease) aimed at the current scene partner. Never put favor/affection into any state-patch — the engine manages those two values itself. Write natural romance beats that escalate gradually with affection (small tension, eye contact, shared moments); the player's choices decide the pace. Current affection snapshot: " + rel + ". " + lockedLine
-                        + " At a real peak moment (first shared glance, near-confession, decisive touch) you may add the optional JSON field \"heartbeat\":{\"npc\":\"<candidate>\",\"en\":\"<one heartfelt English line that appears verbatim in your story>\",\"zh\":\"<natural short Chinese translation>\"} — at most one heartbeat per 3 rounds, never force it."
+                        + ". Options MUST be JSON objects in the options array: {\"text\":\"<option text in " + LG + ">\",\"love\":\"flirt|kind|tease|neutral|awkward|rude|reject\",\"target\":\"<candidate name from the list; omit only when the option involves no candidate>\"}. love means: flirt=romantic advance, kind=warm caring, tease=playful banter, neutral=plain, awkward=embarrassing misfire, rude=harsh, reject=pushing away; choose it honestly from what the option says. Give 2-3 options with at least one positive (flirt/kind/tease) aimed at the current scene partner. Never put favor/affection into any state-patch — the engine manages those two values itself. Write natural romance beats that escalate gradually with affection (small tension, eye contact, shared moments); the player's choices decide the pace. Current affection snapshot: " + rel + ". " + lockedLine
+                        + " At a real peak moment (first shared glance, near-confession, decisive touch) you may add the optional JSON field \"heartbeat\":{\"npc\":\"<candidate>\",\"en\":\"<one heartfelt line in " + LG + " that appears verbatim in your story>\",\"zh\":\"<natural short Chinese translation>\"} — at most one heartbeat per 3 rounds, never force it."
                         + " Dialogue and option wording should stay inside the target band vocabulary (rule 4) — a harder word is acceptable only when the scene truly needs it."
                         + " (Ignore the string-array options shape shown in rule 7 — in this mode always use the object shape above.)";
                 } catch (e) { return ""; }
@@ -22667,22 +22710,27 @@ function openNpcProfile(npcId) {
             const vocabRecall = recallWords.length
                 ? "The reader is re-learning these words — let them meet the words again in this scene where the context naturally allows (weave in a few at most, never force them, story flow and tone come first): " + recallWords.join(", ")
                 : "";
-            const LG = LANG_MAP[targetLang()] || "English";
+            const forbidNote = _tl === "ja"
+                ? "No Korean hangul, and no Chinese-only wording: write in Japanese with kana and kanji exactly as a native writer would — a wall of kanji with no kana, or Chinese slang that no Japanese speaker uses, is a critical failure of this task."
+                : (_tl === "ko"
+                    ? "No Chinese characters (汉字) and no Japanese kana are allowed: write in Korean hangul only — a single hanja or kana is a critical failure of this task."
+                    : "Not one Chinese character (汉字), Japanese kana or Korean hangul is allowed inside the story — a single one is a critical failure of this task.");
+            const lenTarget = _tl === "ja" ? "≈ 400-700 Japanese characters" : (_tl === "ko" ? "≈ 200-350 Korean words" : "≈ 200-350 English words");
             return [
                 "[LANGUAGE LOCK — HIGHEST PRIORITY over every Chinese instruction above; for language and output style these rules win. Story facts come from the world bible below.]",
                 "TARGET LANGUAGE: " + LG + ".",
-                "ZERO-TOLERANCE: \"title\", \"story\" and every \"options\" item may contain ONLY " + LG + " characters. Not one Chinese character (汉字), Japanese kana or Korean hangul is allowed inside the story — a single one is a critical failure of this task.",
+                "ZERO-TOLERANCE: \"title\", \"story\" and every \"options\" item may contain ONLY " + LG + " characters. " + forbidNote,
                 "Chinese text in the world bible, category or character role fields is METADATA, not story text: translate it into " + LG + " whenever it appears in the story; never copy Chinese verbatim into title / story / options.",
                 "SELF-CHECK before answering: re-read your own title, story and options; if any non-" + LG + " character appears (proper nouns written in Latin letters are fine), rewrite that sentence in " + LG + ".",
                 "1) Write ALL narration, dialogue, scene title and options in natural " + LG + ". Never output Chinese inside title / story / options.",
                 "2) " + (englishSetting
-                    ? "The 【设定文本】 world bible below is already written in English — it is the source of truth for era, rules, characters and mood. Keep the world exactly as it is: keep every name, term and rule; continue the story in the same register; never translate, summarize or rewrite the setting itself. " + tone + "."
-                    : "The Chinese 【设定文本】 is the world bible (era, rules, characters, mood). Keep the world identical — translate it, don't rewrite it; " + tone + "."),
+                    ? "The 【设定文本】 world bible below is already written in English — it is the source of truth for era, rules, characters and mood. Keep the world exactly as it is: keep every name, term and rule; continue the story in the same register, written in " + LG + "; never translate, summarize or rewrite the setting itself. " + tone + "."
+                    : "The Chinese 【设定文本】 is the world bible (era, rules, characters, mood). Keep the world identical — translate it into " + LG + ", don't rewrite it; " + tone + "."),
                 "3) The \"time\" field must keep the engine's numeric Chinese format with month and day characters, e.g. \"5月15日\" or \"第3年5月15日\" — never word-only English dates like \"May 15\".",
                 "4) " + band + ".",
                 "5) " + immText,
                 (candLine ? "6) " + candLine : ""),
-                "7) Reply with the fixed JSON only: {\"title\":\"English scene name (short)\",\"time\":\"...\",\"story\":\"...\",\"options\":[\"...\",\"...\"]" + (stg.mode === "scaffold" ? ",\"bilingual\":{\"v\":1,\"lines\":[...]}" : "") + "} — story ≈ 200-350 English words in several paragraphs, dialogue on its own lines; if the story is just starting, open in medias res with an immersive scene-setting paragraph, then give 2-3 options.",
+                "7) Reply with the fixed JSON only: {\"title\":\"<short scene name in " + LG + ">\",\"time\":\"...\",\"story\":\"...\",\"options\":[\"...\",\"...\"]" + (stg.mode === "scaffold" ? ",\"bilingual\":{\"v\":1,\"lines\":[...]}" : "") + "} — story " + lenTarget + " in several paragraphs, dialogue on its own lines; if the story is just starting, open in medias res with an immersive scene-setting paragraph, then give 2-3 options.",
                 (vocabRecall ? "8) " + vocabRecall : ""),
                 (loveBlock ? "9) " + loveBlock : "")
             ].filter(Boolean).join("\n");
@@ -22727,7 +22775,9 @@ function openNpcProfile(npcId) {
             } catch (e) {}
             session = { cardId: id, at: Date.now() };
             const p = readProfile();
-            p.playing = { cardId: id, title: String(card.title || "").slice(0, 40), category: String(card.category || ""), at: Date.now() };
+            // 语种随会话存档:冷启动 LANG_CARDS_ONLINE 未拉回时 targetLang() 仍能定语种
+            const _cl = String(card.lang || (card.structured && card.structured.lang) || "en").trim().toLowerCase();
+            p.playing = { cardId: id, title: String(card.title || "").slice(0, 40), category: String(card.category || ""), lang: LANG_MAP[_cl] ? _cl : "en", at: Date.now() };
             writeProfile(p);
             try { ScenarioCardService.setSelectedId(id); } catch (e) {}
             try { ScenarioPlayMetaService.touchPlayed(id); } catch (e) {}
@@ -23084,8 +23134,29 @@ window.LoveEngine = (() => {
         cet4: ["CET4", "四级水平", "band-cet4", "对应大学英语四级大纲（词库 4536 词）——校园日常、生活话题的卡正合适"],
         cet6: ["CET6", "六级水平", "band-cet6", "对应六级词汇大纲（词库 5713 词，含四级词汇）——都市生活、情感向的卡可挑战"],
         ky: ["考研", "考研水平", "band-ky", "对应考研英语大纲 5530（词库 6277 词，含六级及以下）——思辨、叙事厚重的卡挂这档"],
-        toefl: ["TOEFL", "托福水平", "band-toefl", "对应托福词汇（词库 8128 词，含考研及以下）——科研、异域题材的高难卡在此"]
+        toefl: ["TOEFL", "托福水平", "band-toefl", "对应托福词汇（词库 8128 词，含考研及以下）——科研、异域题材的高难卡在此"],
+        /* 日语 JLPT N5-N1 / 韩语 TOPIK 初中高（2026-09-19 多语种化；css 类复用英语五档，不新增样式） */
+        "ja-n5": ["N5", "N5 入门", "band-hs", "JLPT N5 词表 —— 假名与最基础汉字，寒暄、购物、问路等日常场景"],
+        "ja-n4": ["N4", "N4 初级", "band-cet4", "JLPT N4 词表 —— 基础日常会话，校园与家庭题材"],
+        "ja-n3": ["N3", "N3 中级", "band-cet6", "JLPT N3 词表 —— 日常与职场过渡，可读简短文章"],
+        "ja-n2": ["N2", "N2 中高级", "band-ky", "JLPT N2 词表 —— 接近报刊语体，评论与小说可读"],
+        "ja-n1": ["N1", "N1 高级", "band-toefl", "JLPT N1 词表 —— 抽象议题与文学性表达"],
+        "ko-1": ["初", "初级水平", "band-cet4", "TOPIK 初级词表 —— 基础词汇与短句，问候、点餐、购物"],
+        "ko-2": ["中", "中级水平", "band-cet6", "TOPIK 中级词表 —— 日常会话流畅，校园 / 公司 / 约会题材"],
+        "ko-3": ["高", "高级水平", "band-ky", "TOPIK 高级词表 —— 抽象议题、新闻语体与惯用语"]
     };
+    /* 档位顺序按语种分组（英语五档 / 日语 N5-N1 / 韩语初中高三级）；BAND_INFO/BAND_NAMES 用平表，
+       新档位键唯一不冲突，故只把"顺序"和"默认档"按语种分开 */
+    var BAND_ORDER_BY_LANG = {
+        en: BAND_ORDER,
+        ja: ["ja-n5", "ja-n4", "ja-n3", "ja-n2", "ja-n1"],
+        ko: ["ko-1", "ko-2", "ko-3"]
+    };
+    var BAND_DEF_BY_LANG = { en: "cet6", ja: "ja-n3", ko: "ko-2" };
+    function bandOrderOf(lang) { return BAND_ORDER_BY_LANG[lang] || BAND_ORDER; }
+    function bandDefOf(lang) { return BAND_DEF_BY_LANG[lang] || "cet6"; }
+    function curLang() { return LANG_TAG_INFO[String(profile.lang || "en")] ? String(profile.lang || "en") : "en"; }
+    window.LangBandMeta = { orderOf: bandOrderOf, defOf: bandDefOf, curLang: curLang, info: BAND_INFO };
     var profile = { lang: "en" };
     try { var _p = JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}"); if (_p && typeof _p === "object") profile = _p; } catch (e) { }
     /* M6b:在线英语专属卡(lang_cards 官方库)缓存,供列表渲染/选中卡 overlay/播放进入用 */
@@ -23217,6 +23288,7 @@ window.LoveEngine = (() => {
     var api = {
         init: function () {
             if (!$("view-lang")) return;
+            api.renderLangPicker();
             api.renderPicker();
             api.showBand();
             api.loadRemote();
@@ -23224,6 +23296,7 @@ window.LoveEngine = (() => {
             api.renderHome();
         },
         refresh: function () {
+            api.renderLangPicker();
             api.renderPicker();
             api.showBand();
             api.renderHome();
@@ -23259,9 +23332,22 @@ window.LoveEngine = (() => {
                 .then(function (d) {
                     if (!d) return;
                     var p = d.profile;
+                    // 语种随云档回来(换设备/清缓存后仍停在你的语种);语种变了要重拉该语种卡库
+                    if (p && p.lang && LANG_TAG_INFO[p.lang] && p.lang !== curLang()) {
+                        profile.lang = p.lang;
+                        var od = bandOrderOf(p.lang);
+                        if (od.indexOf(profile.band) < 0) profile.band = bandDefOf(p.lang);
+                        window.__LANG_CARDS_READY = false;
+                        window.__LANG_CARDS_LOADING = false;
+                        window.LANG_CARDS_ONLINE = [];
+                        save();
+                        api.loadLangCards(p.lang);
+                    }
                     if (p && p.band) {
                         if (p.immersion) profile.immersion = p.immersion;
-                        profile.band = p.band;
+                        // 云档 band 只在属于当前语种时才采纳(否则切语种后会被旧语种档位覆盖)
+                        if (bandOrderOf(curLang()).indexOf(p.band) >= 0) profile.band = p.band;
+                        else if (bandOrderOf(curLang()).indexOf(profile.band) < 0) profile.band = bandDefOf(curLang());
                         save();
                     } else if (profile.band || profile.immersion) {
                         saveRemote();
@@ -23274,42 +23360,65 @@ window.LoveEngine = (() => {
             var btns = box.querySelectorAll(".lang-lang-card");
             for (var i = 0; i < btns.length; i++) btns[i].classList.toggle("active", btns[i].getAttribute("data-m") === (profile.immersion || "progressive"));
         },
+        /* 2026-09-19 三语切换:写档 → 档位若不属于新语种则回落到该语种默认档 → 丢弃旧语种卡库并重拉 → 全量重渲染 */
         selectLang: function (code) {
-            if (code !== "en") {
-                var nm = code === "ja" ? "日语" : "韩语";
-                try { NoticeModalService.showInfo({ title: nm + "开发中，敬请期待", descHtml: "语料与剧本正在制作中，还不能真的切换。先玩英语版吧——五档难度、原生英语剧本，点句即译；" + nm + "上线后会用同一套玩法。" }); } catch (e) {}
-                return;
+            if (!LANG_TAG_INFO[code]) return;
+            if (code === curLang()) { api.renderLangPicker(); return; }
+            profile.lang = code;
+            if (bandOrderOf(code).indexOf(profile.band) < 0) profile.band = bandDefOf(code);
+            save(); saveRemote();
+            window.__LANG_CARDS_READY = false;
+            window.__LANG_CARDS_LOADING = false;
+            window.LANG_CARDS_ONLINE = [];
+            api.renderLangPicker();
+            api.showBand();
+            api.loadLangCards(code);
+            api.renderHome();
+            hint("已切换到" + LANG_TAG_INFO[code][1] + "——学习档与剧本库都换成" + LANG_TAG_INFO[code][1] + "的了。");
+        },
+        /* 语言首页三张语种卡:高亮当前语种(HTML 侧只写死英语卡 active,这里统一接管) */
+        renderLangPicker: function () {
+            var box = $("lang-picker"); if (!box) return;
+            var btns = box.querySelectorAll(".lang-lang-card");
+            for (var i = 0; i < btns.length; i++) {
+                btns[i].classList.toggle("active", btns[i].getAttribute("data-lang") === curLang());
             }
-            profile.lang = "en"; save();
         },
         /* M8.5:档位纯手动,系统不做任何测定/建议;M10(2026-09-13):chips 改滑动条——拖动预览、松手生效 */
         showBand: function () {
             var box = $("lang-band-result"); if (!box) return;
             box.style.display = "block";
-            var has = !!BAND_INFO[profile.band];
-            var idx = has ? BAND_ORDER.indexOf(profile.band) : 2;
-            if (idx < 0) idx = 2;
-            var b = has ? BAND_INFO[profile.band] : BAND_INFO.cet6;
-            var ticks = BAND_ORDER.map(function (k) { return "<span>" + BAND_INFO[k][0] + "</span>"; }).join("");
+            var lg = curLang(), order = bandOrderOf(lg), lname = LANG_TAG_INFO[lg][1];
+            var has = order.indexOf(profile.band) >= 0;
+            var idx = has ? order.indexOf(profile.band) : Math.min(order.indexOf(bandDefOf(lg)), order.length - 1);
+            if (idx < 0) idx = 0;
+            var b = has ? BAND_INFO[profile.band] : BAND_INFO[bandDefOf(lg)];
+            var ticks = order.map(function (k) { return "<span>" + BAND_INFO[k][0] + "</span>"; }).join("");
+            var emptyD = lg === "ja"
+                ? "五档按 JLPT 递进：N5 从假名短句起步，N3 撑起日常剧情，N2/N1 适合报刊体与抽象议题——松手即生效，随时可换。"
+                : (lg === "ko"
+                    ? "三档按 TOPIK 递进：初级从基础短句起步，中级可读日常会话，高级适合新闻与抽象表达——松手即生效，随时可换。"
+                    : "五档按难度递进：校园日常从 HS / CET4 起步，都市情感试试 CET6，思辨叙事往考研 / 托福挑——松手即生效，随时可换。");
             box.innerHTML = '<div class="lang-band-hero"><div class="lang-band-chip ' + (has ? (b[2] || "") : "") + '" id="lang-band-chip">' + (has ? b[0] : "?") + "</div>" +
                 '<div style="flex:1;min-width:0;">' +
-                '<div class="lang-band-t" id="lang-band-t">' + (has ? ("你的学习档：英语 " + b[0] + " · " + b[1]) : "还没选学习档——拖动滑块挑一档") + "</div>" +
-                '<div class="lang-band-d" id="lang-band-d">' + (has ? b[3] : "五档按难度递进：校园日常从 HS / CET4 起步，都市情感试试 CET6，思辨叙事往考研 / 托福挑——松手即生效，随时可换。") + "</div>" +
-                '<input type="range" class="band-slider" id="lang-band-slider" min="0" max="4" step="1" value="' + idx + '" aria-label="学习档" oninput="LangController.previewBand(this.value)" onchange="LangController.setBandByIndex(this.value)">' +
+                '<div class="lang-band-t" id="lang-band-t">' + (has ? ("你的学习档：" + lname + " " + b[0] + " · " + b[1]) : "还没选学习档——拖动滑块挑一档") + "</div>" +
+                '<div class="lang-band-d" id="lang-band-d">' + (has ? b[3] : emptyD) + "</div>" +
+                '<input type="range" class="band-slider" id="lang-band-slider" min="0" max="' + (order.length - 1) + '" step="1" value="' + idx + '" aria-label="学习档" oninput="LangController.previewBand(this.value)" onchange="LangController.setBandByIndex(this.value)">' +
                 '<div class="band-scale">' + ticks + "</div></div></div>";
             hint("");
         },
         /* 拖动过程只预览文案,不落库(避免拖一次写五遍) */
         previewBand: function (i) {
-            var k = BAND_ORDER[Number(i)]; if (!k) return;
+            var lg = curLang(), order = bandOrderOf(lg);
+            var k = order[Number(i)]; if (!k) return;
             var b = BAND_INFO[k];
             var t = $("lang-band-t"), d = $("lang-band-d"), c = $("lang-band-chip");
-            if (t) t.textContent = "学习档：英语 " + b[0] + " · " + b[1] + (k === profile.band ? "（当前）" : "");
+            if (t) t.textContent = "学习档：" + LANG_TAG_INFO[lg][1] + " " + b[0] + " · " + b[1] + (k === profile.band ? "（当前）" : "");
             if (d) d.textContent = b[3];
             if (c) { c.className = "lang-band-chip " + (b[2] || ""); c.textContent = b[0]; }
         },
         setBandByIndex: function (i) {
-            var k = BAND_ORDER[Number(i)]; if (!k) return;
+            var k = bandOrderOf(curLang())[Number(i)]; if (!k) return;
             api.setBand(k);
         },
         setBand: function (k) {
@@ -23428,7 +23537,7 @@ window.LoveEngine = (() => {
             if (lbLoading) return;
             lbLoading = true;
             box.innerHTML = '<div class="list-sub" style="padding:14px 0;">榜单加载中…</div>';
-            fetch(API_BASE + "/api/lang/leaderboard?span=" + encodeURIComponent(lbSpan) + "&lang=en", {
+            fetch(API_BASE + "/api/lang/leaderboard?span=" + encodeURIComponent(lbSpan) + "&lang=" + encodeURIComponent(curLearnLang()), {
                 headers: token() ? { "X-Auth-Token": "Bearer " + token() } : {}
             })
                 .then(function (r) { return r.ok ? r.json() : null; })
@@ -23494,13 +23603,15 @@ window.LoveEngine = (() => {
             var arr = lcs.slice();
             /* R1 向别偏好(有档时同样生效):匹配向别的恋爱卡最优先,再按 band 距离/上架序 */
             var pref = genderPref();
+            /* 档距按**当前语种**的档序算:英语五档/日语 N5-N1/韩语初中高三张序表混着算会把档距算成胡说 */
+            var _order = bandOrderOf(curLang());
             var my = profile.band || "";
-            var mi = my ? BAND_ORDER.indexOf(my) : -1;
+            var mi = my ? _order.indexOf(my) : -1;
             arr.sort(function (a, b) {
                 var am = loveMatch(a, pref) ? 0 : 1, bm = loveMatch(b, pref) ? 0 : 1;
                 if (am !== bm) return am - bm;
                 if (mi >= 0) {
-                    var ai = BAND_ORDER.indexOf(a.band || ""), bi = BAND_ORDER.indexOf(b.band || "");
+                    var ai = _order.indexOf(a.band || ""), bi = _order.indexOf(b.band || "");
                     var da = ai < 0 ? 99 : Math.abs(ai - mi), db = bi < 0 ? 99 : Math.abs(bi - mi);
                     if (da !== db) return da - db;
                 }
@@ -23628,7 +23739,7 @@ window.LoveEngine = (() => {
             fetch(API_BASE + "/api/lang/gloss", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token() },
-                body: JSON.stringify({ sentences: [s] })
+                body: JSON.stringify({ sentences: [s], lang: curSessionLang() })
             })
                 .then(function (r) { return r.json().catch(function () { return null; }); })
                 .then(function (d) {
@@ -23663,7 +23774,7 @@ window.LoveEngine = (() => {
             if (!token()) { el.style.display = "none"; return; }
             el.style.display = "block";
             if (myStatsCache && Date.now() - myStatsCache.at < 30000) { api.myStatsHtml(myStatsCache.data); return; }
-            fetch(API_BASE + "/api/lang/learn-stats?lang=en", { headers: { "X-Auth-Token": "Bearer " + token() } })
+            fetch(API_BASE + "/api/lang/learn-stats?lang=" + encodeURIComponent(curLearnLang()), { headers: { "X-Auth-Token": "Bearer " + token() } })
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (d) {
                     if (!d || !d.ok) return;
@@ -23700,7 +23811,7 @@ window.LoveEngine = (() => {
             }
             if (!force && myStatsCache && Date.now() - myStatsCache.at < 30000) { api.learnStatsHtml(myStatsCache.data); return; }
             box.innerHTML = '<div class="list-sub" style="padding:12px 0;">统计加载中…</div>';
-            fetch(API_BASE + "/api/lang/learn-stats?lang=en", { headers: { "X-Auth-Token": "Bearer " + token() } })
+            fetch(API_BASE + "/api/lang/learn-stats?lang=" + encodeURIComponent(curLearnLang()), { headers: { "X-Auth-Token": "Bearer " + token() } })
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (d) {
                     if (!d || !d.ok) {
@@ -23891,12 +24002,15 @@ window.LoveEngine = (() => {
             if (!window.LangEngine) { hint("英语引擎还没就绪，刷新一下再试～", "lang-lib-hint"); return; }
             window.LangEngine.enter(cid).catch(function () { hint("进入失败，请再点一次", "lang-lib-hint"); });
         },
-        loadLangCards: function () {
+        loadLangCards: function (lang) {
             if (window.__LANG_CARDS_LOADING) return;
+            var lg = LANG_TAG_INFO[lang] ? lang : curLang();
             window.__LANG_CARDS_LOADING = true;
-            fetch(API_BASE + "/api/lang/cards?lang=en")
+            fetch(API_BASE + "/api/lang/cards?lang=" + encodeURIComponent(lg))
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (d) {
+                    // 请求期间用户又切了语种 → 丢弃这次结果,别把旧语种的卡盖上去
+                    if (lg !== curLang()) { window.__LANG_CARDS_LOADING = false; return; }
                     window.LANG_CARDS_ONLINE = (d && Array.isArray(d.items)) ? d.items : [];
                     window.__LANG_CARDS_LOADING = false;
                     window.__LANG_CARDS_READY = true;
@@ -23939,7 +24053,47 @@ window.LoveEngine = (() => {
     var wordInfo = {};      // lower(w) → {w, en, zh}
     var vocabMap = {};      // lower(term) → {id,type,term,gloss_en,gloss_zh,origin,status,created_at}
     var vocabLoaded = false;
-    var wordRe = null, reDirty = true;
+    /* 会话语种(词法层用):沿用 LangEngine 的语种判定;非语言会话/未加载时按 en(行为不变) */
+    var IS_CJK_LANG = { ja: 1, ko: 1 };
+    function curSessionLang() {
+        try { if (window.LangEngine && window.LangEngine.targetLang) return window.LangEngine.targetLang(); } catch (e) {}
+        return "en";
+    }
+    /* 学习工具(刷词/词测/词库/榜单)用哪个语种:在语言会话里随会话,不在会话里随语言页所选语种。
+       不能用 curSessionLang:学习中心不在会话中,它只会回落到 en,日语词会被英语那套词形校验收掉。 */
+    function curLearnLang() {
+        try {
+            if (window.LangEngine && window.LangEngine.isLangSession && window.LangEngine.isLangSession()
+                && window.LangEngine.targetLang) return window.LangEngine.targetLang();
+        } catch (e) {}
+        try { if (window.LangBandMeta && window.LangBandMeta.curLang) return window.LangBandMeta.curLang(); } catch (e) {}
+        return "en";
+    }
+    /* 词形校验:拉丁语种沿用"3-12 位纯小写字母"(行为不变);日/韩按字形判、长度放宽到 1-20
+       ——日语有「犬」「駅」这类单字词,韩语有「밤」这类单音节词,英语那套长度下限会把它们整批滤掉 */
+    var WORD_FORM_RE = { ja: /^[ぁ-ゖァ-ヺー一-鿿々]+$/, ko: /^[가-힣]+$/ };
+    function wordFormOk(w) {
+        var s = String(w == null ? "" : w).trim(), lang = curLearnLang();
+        if (!s) return false;
+        if (IS_CJK_LANG[lang]) return s.length <= 20 && WORD_FORM_RE[lang].test(s);
+        return s.length >= 3 && s.length <= 12 && /^[a-z]+$/.test(s);
+    }
+    /* 生词回投(嵌进正文)用:比 wordFormOk 宽一档——日语「犬」这类单字词也该能复现,故不限下限;
+       英语仍要 ≥2 位且只含字母/撇号/连字符 */
+    function injectableTerm(t) {
+        var s = String(t == null ? "" : t).trim(), lang = curLearnLang();
+        if (!s || /\s/.test(s)) return false;
+        if (IS_CJK_LANG[lang]) return s.length <= 20 && WORD_FORM_RE[lang].test(s);
+        return s.length >= 2 && /^[A-Za-z'\-]+$/.test(s);
+    }
+    /* 词干:日语削尾部送假名(食べる→食べ,高い→高),韩语去 -다(먹다→먹);名词原样返回空串 */
+    function cjkStem(w, lang) {
+        var s = String(w || "");
+        if (!s) return "";
+        if (lang === "ko") return /다$/.test(s) && s.length > 1 ? s.slice(0, -1) : "";
+        return s.replace(/[ぁ-ゖー]+$/, "");
+    }
+    var wordRe = null, reDirty = true, wordReLang = "", wordSet = null, wordPoolN = 0, koStems = [];
     function noteWords(list, kind) {
         for (var i = 0; i < (list || []).length; i++) {
             var w = list[i];
@@ -23953,21 +24107,78 @@ window.LoveEngine = (() => {
         reDirty = true;
     }
     function buildWordRe() {
-        if (!reDirty) return wordRe;
-        reDirty = false;
+        var lang = curSessionLang(), cjk = !!IS_CJK_LANG[lang];
+        if (!reDirty && wordReLang === lang) return wordRe;   // 切语种要重建(池子的收词规则不同)
+        reDirty = false; wordReLang = lang;
         var terms = [], k, w;
         for (k in wordInfo) {
             if (!Object.prototype.hasOwnProperty.call(wordInfo, k)) continue;
             w = wordInfo[k].w;
             if (!w || w.length < 2 || /\s/.test(w)) continue;            // 短语(含空格)不在正文切词,走译卡 chips
-            if (/[^A-Za-z0-9'\-]/.test(w)) continue;
+            if (!cjk && /[^A-Za-z0-9'\-]/.test(w)) continue;             // 拉丁语种:非 ASCII 词形不入池
             terms.push(w);
         }
-        if (!terms.length) { wordRe = null; return null; }
+        wordPoolN = terms.length;
+        if (!terms.length) { wordRe = null; wordSet = null; koStems = []; return null; }
         terms.sort(function (a, b) { return b.length - a.length; });
+        if (cjk) {
+            /* 日/韩没有词边界,\b 锚不住,几千分支的扫描正则也跑不动 → 改「词集 + 分词器逐词判定」。
+               词集额外收词干:gloss 给的 w 是辞书形/基本形(食べる / 먹다),正文里是活用形(食べた / 먹었어요),
+               靠词干把两者接上,否则金标恒不命中。 */
+            wordSet = {};
+            koStems = [];
+            for (var t = 0; t < terms.length; t++) {
+                var tk = terms[t].toLowerCase();
+                if (wordSet[tk]) continue;
+                wordSet[tk] = 1;
+                var st = cjkStem(tk, lang);
+                if (st && st !== tk) {
+                    if (lang === "ko") { if (st.length >= 2) koStems.push(st); }
+                    else wordSet[st] = 1;
+                }
+            }
+            koStems.sort(function (a, b) { return b.length - a.length; });
+            wordRe = null;
+            return null;
+        }
+        wordSet = null; koStems = [];
         var src = "\\b(?:" + terms.map(function (s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }).join("|") + ")\\b";
         try { wordRe = new RegExp(src, "gi"); } catch (e) { wordRe = null; }
         return wordRe;
+    }
+    /* 日/韩词命中:先精确,再退词干。韩语词干前缀匹配限定 ≥2 字且长度差 ≤4,
+       防 하늘(天) 被 하- 类单字词干或 과- 类前缀误标成金标。 */
+    function cjkHit(tok) {
+        var t = String(tok || "").toLowerCase();
+        if (!t || !wordSet) return false;
+        if (wordSet[t]) return true;
+        if (koStems.length) {
+            for (var i = 0; i < koStems.length; i++) {
+                var s = koStems[i];
+                if (t.indexOf(s) === 0 && t.length <= s.length + 4) return true;
+            }
+        } else {
+            if (t.length > 1 && wordSet[t.slice(0, -1)]) return true;
+            if (t.length > 2 && wordSet[t.slice(0, -2)]) return true;
+        }
+        return false;
+    }
+    /* 日/韩分词:优先 Intl.Segmenter(ICU 词典切分,浏览器原生);不可用时退化为"按字形类别整段取"(仍可整段点查) */
+    var segCache = {};
+    function tokensOfCJK(val, lang) {
+        var out = [], i, se;
+        var Seg = (typeof Intl !== "undefined" && Intl.Segmenter) ? Intl.Segmenter : null;
+        if (Seg) {
+            se = segCache[lang] || (segCache[lang] = new Seg(lang === "ja" ? "ja" : "ko", { granularity: "word" }));
+            var it = se.segment(val);
+            for (var s of it) {
+                if (s.segment) out.push({ t: s.segment, i: s.index, word: !!s.isWordLike });
+            }
+        } else {
+            var re = lang === "ja" ? /[ぁ-ゖァ-ヺー一-鿿々]+/g : /[가-힣]+/g, m;
+            while ((m = re.exec(val))) out.push({ t: m[0], i: m.index, word: true });
+        }
+        return out;
     }
     function loadVocab(cb) {
         if (!token()) { vocabLoaded = true; if (cb) cb(); return; }
@@ -24029,7 +24240,30 @@ window.LoveEngine = (() => {
         return runs;
     }
     var ABBR = { "mr": 1, "mrs": 1, "ms": 1, "dr": 1, "st": 1, "vs": 1, "etc": 1, "e.g": 1, "i.e": 1, "no": 1, "inc": 1, "ltd": 1, "co": 1, "jr": 1, "sr": 1, "prof": 1, "capt": 1, "jan": 1, "feb": 1, "mar": 1, "apr": 1, "jun": 1, "jul": 1, "aug": 1, "sep": 1, "sept": 1, "oct": 1, "nov": 1, "dec": 1, "mt": 1, "rd": 1, "ave": 1, "approx": 1 };
+    /* 日/韩切句:句读后不要求空格(日语 。！？ 后直接接下一句),故不能走拉丁那套"后随空格才算句界";
+       日语用 。！？…,韩语另收英文句点(排除 3.5 这类小数点);连用省略号 …… 合并成一个句界 */
+    function cutSentencesCJK(text, lang) {
+        var cuts = [], s = 0, i, j, len = text.length;
+        var END = lang === "ko" ? ".!?…。！？" : "。！？!?…";
+        var CLOSE = "\"'”’)]}»」』）】";
+        for (i = 0; i < len; i++) {
+            var c = text.charAt(i);
+            if (END.indexOf(c) < 0) continue;
+            if (c === "." && /\d/.test(text.charAt(i - 1) || "") && /\d/.test(text.charAt(i + 1) || "")) continue;
+            j = i + 1;
+            while (j < len && END.indexOf(text.charAt(j)) >= 0) j++;
+            while (j < len && CLOSE.indexOf(text.charAt(j)) >= 0) j++;
+            while (j < len && (text.charAt(j) === " " || text.charAt(j) === "　" || text.charAt(j) === "\n")) j++;
+            if (j <= s) { continue; }
+            cuts.push([s, j]);
+            s = j; i = j - 1;
+        }
+        if (s < len) cuts.push([s, len]);
+        return cuts;
+    }
     function cutSentences(text) {
+        var _lang = curSessionLang();
+        if (IS_CJK_LANG[_lang]) return cutSentencesCJK(text, _lang);
         var cuts = [], s = 0, i, j, nx, len = text.length;
         for (i = 0; i < len; i++) {
             var c = text.charAt(i);
@@ -24291,7 +24525,7 @@ window.LoveEngine = (() => {
         for (i = 0; i < items.length; i++) {
             it = items[i];
             w = it.w;
-            if (!w || w.length < 3 || w.length > 12 || !/^[a-z]+$/.test(w)) continue;
+            if (!wordFormOk(w)) continue;
             if (STOPW[w]) continue;
             if (!goodPos(it.zh || "")) continue;
             if (!seen[w]) fresh.push(it);
@@ -24423,8 +24657,10 @@ window.LoveEngine = (() => {
 
 
     var WORD_TOK = /[A-Za-z][A-Za-z0-9'’-]*/g;
+    var CJK_TOKEN_RE = { ja: /[ぁ-ゖァ-ヺー一-鿿々]/, ko: /[가-힣]/ };
     function wrapWords(span) {
         var re = buildWordRe();
+        var lang = curSessionLang(), cjk = !!IS_CJK_LANG[lang];
         var kids = [], i, j, node;
         for (i = 0; i < span.childNodes.length; i++) kids.push(span.childNodes[i]);
         for (i = 0; i < kids.length; i++) {
@@ -24432,13 +24668,22 @@ window.LoveEngine = (() => {
             if (node.nodeType !== 3) continue;
             var val = node.nodeValue || "";
             if (!val) continue;
-            var frag = document.createDocumentFragment(), pos = 0, m;
-            WORD_TOK.lastIndex = 0;
-            while ((m = WORD_TOK.exec(val))) {
-                var tok = m[0];
-                if (m.index > pos) frag.appendChild(document.createTextNode(val.slice(pos, m.index)));
+            var frag = document.createDocumentFragment(), pos = 0, m, toks = [];
+            if (cjk) {
+                toks = tokensOfCJK(val, lang);
+            } else {
+                WORD_TOK.lastIndex = 0;
+                while ((m = WORD_TOK.exec(val))) toks.push({ t: m[0], i: m.index, word: true });
+            }
+            for (var ti = 0; ti < toks.length; ti++) {
+                var tok = String(toks[ti].t || ""), at = toks[ti].i;
+                // 标点/空白/拉丁人名:不包 span 也不推 pos,交给下一段的 slice 原样输出
+                if (!tok || !toks[ti].word) continue;
+                if (cjk && !CJK_TOKEN_RE[lang].test(tok)) continue;
+                if (at > pos) frag.appendChild(document.createTextNode(val.slice(pos, at)));
                 var hit = false;
-                if (re) {
+                if (cjk) hit = cjkHit(tok);
+                else if (re) {
                     re.lastIndex = 0;
                     var hm = re.exec(tok);
                     hit = !!(hm && hm[0].toLowerCase() === tok.toLowerCase());
@@ -24451,7 +24696,7 @@ window.LoveEngine = (() => {
                 if (cw) { sp.className += " lg-ch"; markSeenWord(chWords.band, cw); noteChSeen(cw); }
                 sp.appendChild(document.createTextNode(tok));
                 frag.appendChild(sp);
-                pos = m.index + tok.length;
+                pos = at + tok.length;
             }
             if (pos < val.length) frag.appendChild(document.createTextNode(val.slice(pos)));
             span.replaceChild(frag, node);
@@ -24468,7 +24713,8 @@ window.LoveEngine = (() => {
     }
     function highlightSen(sen) {
         if (!sen || sen.hDone) return;
-        if (!buildWordRe()) {                             // 词池空:词库已载则以词库兜底切(全 .lg-w 仍可点查),皆无则挂起
+        buildWordRe();
+        if (!wordRe && !wordPoolN) {                      // 词池空:词库已载则以词库兜底切(全 .lg-w 仍可点查),皆无则挂起
             if (langBankCache[currentLangBand()]) { /* fall through:词库兜底切词 */ }
             else { queuePendSen(sen); return; }
         }
@@ -24507,7 +24753,7 @@ window.LoveEngine = (() => {
         fetch(API_BASE + "/api/lang/gloss", {
             method: "POST",
             headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token() },
-            body: JSON.stringify({ sentences: take.map(function (s) { return s.text.slice(0, 500); }) })
+            body: JSON.stringify({ sentences: take.map(function (s) { return s.text.slice(0, 500); }), lang: curSessionLang() })
         })
             .then(function (r) { return r.json().catch(function () { return null; }); })
             .then(function (d) {
@@ -24607,21 +24853,53 @@ window.LoveEngine = (() => {
     }
     function hidePop() { if (pop) { pop.classList.remove("on"); pop.style.left = "-999px"; pop.style.top = "-999px"; } }
     /* ---- M6d3 点查考纲化:当前档词库命中 → 考纲徽标+词库标准释义;未命中 → AI info/整句引导 ---- */
-    var BAND_NAMES = { hs: "高中", cet4: "四级", cet6: "六级", ky: "考研", toefl: "托福" };
-    var BAND_ORDER = ["hs", "cet4", "cet6", "ky", "toefl"];
+    var BAND_NAMES = { hs: "高中", cet4: "四级", cet6: "六级", ky: "考研", toefl: "托福", "ja-n5": "N5", "ja-n4": "N4", "ja-n3": "N3", "ja-n2": "N2", "ja-n1": "N1", "ko-1": "初级", "ko-2": "中级", "ko-3": "高级" };
     var bandAliasIdx = {};   // band -> {词形变体: 原形}
     /* 2026-09-13:词汇难度改由"用户学习档"动态决定——剧情/点译/章节词/刷词全走这一处;
        未选档时才退回卡内档位兜底(保证有词库可用),不再让卡的难度Tag 决定用户学什么词。 */
+    /* 当前学习档:优先用户档,其次卡档;两者都要属于**当前语种**(否则切语种后会把英语档当日语档用/反之) */
     function currentLangBand() {
+        var lang = curLearnLang();
+        var order = (window.LangBandMeta && window.LangBandMeta.orderOf) ? window.LangBandMeta.orderOf(lang) : null;
+        function ok(k) { return !!k && (order ? order.indexOf(k) >= 0 : !!BAND_NAMES[k]); }
         var p = readProfile();
         var ub = p && p.band;
-        if (ub && BAND_NAMES[ub]) return ub;
+        if (ok(ub)) return ub;
         try {
             var c = (typeof ScenarioCardService !== "undefined" && ScenarioCardService.getSelectedCard) ? ScenarioCardService.getSelectedCard() : null;
             var sb = c && c.structured && String(c.structured.band || "");
-            if (sb) return sb;
+            if (ok(sb)) return sb;
         } catch (e) {}
-        return "cet4";
+        return (window.LangBandMeta && window.LangBandMeta.defOf) ? window.LangBandMeta.defOf(lang) : "cet4";
+    }
+    /* 日/韩词形活用回查:词库收的是辞书形/基本形(食べる / 먹다),正文里出现的是活用形(食べた / 먹었어요),
+       所以点词要能"顺词干找回去"。英语那套 -s/-ing/-ed 词形还原对日韩无效,另建词干索引。 */
+    var cjkBankIdx = {};
+    function bankLookupCJK(band, tok) {
+        var items = langBankCache[band];
+        if (!items || !items.length || !tok) return null;
+        var lang = curSessionLang(), tl = String(tok).toLowerCase();
+        if (!tl) return null;
+        var idx = cjkBankIdx[band];
+        if (!idx || idx.lang !== lang || idx.n !== items.length) {
+            idx = { lang: lang, n: items.length, exact: Object.create(null), stems: [] };
+            for (var i = 0; i < items.length; i++) {
+                var w = String(items[i].w || "");
+                if (!w) continue;
+                var k = w.toLowerCase();
+                if (!idx.exact[k]) idx.exact[k] = items[i];
+                var st = cjkStem(k, lang);
+                if (st && st !== k && (lang !== "ko" || st.length >= 2)) idx.stems.push({ s: st, it: items[i] });
+            }
+            idx.stems.sort(function (a, b) { return b.s.length - a.s.length; });
+            cjkBankIdx[band] = idx;
+        }
+        if (idx.exact[tl]) return idx.exact[tl];
+        for (var m = 0; m < idx.stems.length; m++) {
+            var sm = idx.stems[m].s;
+            if (tl.indexOf(sm) === 0 && tl.length <= sm.length + 4) return idx.stems[m].it;
+        }
+        return null;
     }
     function bankAliasItem(band, w) {
         var items = langBankCache[band];
@@ -24760,6 +25038,19 @@ window.LoveEngine = (() => {
         };
         var cached = wordInfo[key];
         if (cached) { settle(cached); return; }
+        /* 日/韩没有 ECDICT 兜底(worker 的 /api/lang/dict 只服务英语)→ 改查本档词库;
+           词库也没有就 settle(null),popup 会提示"点句子看整句翻译"而不是空转 */
+        if (IS_CJK_LANG[curSessionLang()]) {
+            var bit = null, bd = currentLangBand();
+            try { bit = bankLookupCJK(bd, term); } catch (e) {}
+            if (!bit) { try { bit = langBankItem(bd, String(term).toLowerCase()); } catch (e) {} }
+            if (bit) {
+                var infoB = { w: String(bit.w || term), en: String(bit.ph || ""), zh: String(bit.zh || ""), ph: String(bit.ph || "") };
+                wordInfo[key] = infoB;
+                settle(infoB);
+            } else settle(null);
+            return;
+        }
         fetch(API_BASE + "/api/lang/dict?q=" + encodeURIComponent(String(term).slice(0, 64)) + "&lang=en")
             .then(function (r) { return r.ok ? r.json() : null; })
             .then(function (d) {
@@ -24787,7 +25078,7 @@ window.LoveEngine = (() => {
             method: "POST",
             headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token() },
             body: JSON.stringify({
-                lang: "en", type: "word", term: String(term).slice(0, 64),
+                lang: curLearnLang(), type: "word", term: String(term).slice(0, 64),
                 gloss_en: info && info.en ? String(info.en).slice(0, 500) : "",
                 gloss_zh: info && info.zh ? String(info.zh).slice(0, 500) : "",
                 origin: origin.slice(0, 200)
@@ -24841,7 +25132,9 @@ window.LoveEngine = (() => {
         var tEl = el.querySelector(".wy-opt-text") || el;
         var t = String(tEl.textContent || "").replace(/\s+/g, " ").trim();
         for (var k = 0; k < 2; k++) t = t.replace(/^(\d+[.)、]\s*|[①②③④⑤⑥⑦⑧⑨⑩]\s*|【?选项[:：]?\s*\d*】?\s*)/, "");
-        if (!t || !/[A-Za-z]/.test(t)) return null;   // 纯中文选项不走长按翻译
+        var _sl = curSessionLang();
+        if (!t) return null;
+        if (!(_sl === "en" ? /[A-Za-z]/ : CJK_TOKEN_RE[_sl]).test(t)) return null;   // 纯中文选项不走长按翻译
         var nid = ++senSeq;
         // hDone=true:选项不做词级切分(免得双击查词与"点选项推进剧情"打架)
         var sen = { id: nid, text: t, spans: [el], expanded: false, glossEl: null, gotGloss: false, hDone: true };
@@ -25467,7 +25760,7 @@ window.LoveEngine = (() => {
             method: "POST",
             headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token() },
             body: JSON.stringify({
-                lang: "en", type: "expression", term: String(term).slice(0, 64),
+                lang: curLearnLang(), type: "expression", term: String(term).slice(0, 64),
                 gloss_zh: String(zh || "").slice(0, 500),
                 gloss_en: String(ex || "").slice(0, 500),
                 origin: String(origin).slice(0, 200)
@@ -25531,7 +25824,7 @@ window.LoveEngine = (() => {
                 }
             } catch (e) {}
         }
-        langBankLoading[band] = fetch(API_BASE + "/api/lang/bank?band=" + encodeURIComponent(band))
+        langBankLoading[band] = fetch(API_BASE + "/api/lang/bank?band=" + encodeURIComponent(band) + "&lang=" + encodeURIComponent(curLearnLang()))
             .then(function (r) { return r.json().catch(function () { return null; }); })
             .then(function (d) {
                 langBankLoading[band] = null;
@@ -25578,7 +25871,7 @@ window.LoveEngine = (() => {
         for (i = 0; i < items.length; i++) {
             it = items[i];
             w = String(it.w || "");
-            if (!w || w.length < 3 || w.length > 12 || !/^[a-z]+$/.test(w)) continue;
+            if (!wordFormOk(w)) continue;
             if (STOPW[w]) continue;
             if (!goodPos(String(it.zh || ""))) continue;
             st = prog[w] ? prog[w].state : "";
@@ -25713,7 +26006,7 @@ window.LoveEngine = (() => {
                 it = vocabMap[k];
                 if (!it || it.type === "expression") continue;
                 term = String(it.term || "").trim();
-                if (term.length < 2 || /\s|[^A-Za-z'\-]/.test(term)) continue;   // 词组/含生僻符号不注入
+                if (!injectableTerm(term)) continue;                              // 词组/含生僻符号不注入
                 if (Number(it.status || 0) >= 2) continue;                        // 已掌握毕业不打扰
                 diff = (function (b) { return b == null ? null : todayBjInt() - b; })(bjDayInt(it.created_at));
                 if (diff != null && diff >= 0 && REVIEW_DAYS.indexOf(diff) >= 0 && done.indexOf(String(it.id)) < 0) {
@@ -25769,7 +26062,7 @@ window.LoveEngine = (() => {
             if (!t) { acc = 0; return; }
             fetch(API_BASE + "/api/lang/study", {
                 method: "PUT", headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + t },
-                body: JSON.stringify({ lang: "en", seconds: Math.min(n, 600) })
+                body: JSON.stringify({ lang: curLearnLang(), seconds: Math.min(n, 600) })
             }).then(function (r) {
                 if (r.ok) { acc -= n; if (acc < 0) acc = 0; }
             }).catch(function () {});

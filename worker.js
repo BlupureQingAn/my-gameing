@@ -1178,20 +1178,43 @@ const GLOSS_MODEL_IDS = [
     "or-minimax-m3", "or-nemotron-3-super", "or-minimax-m2.7", "or-nemotron-3-ultra",
     "sf-glm-4-9b", "sf-r1-qwen3-8b", "sf-glm-z1-9b", "sf-qwen2.5-7b"
 ];
-const GLOSS_SYSTEM_PROMPT = [
-    "You are a friendly English→Chinese tutor for a Chinese learner reading English game-story scenes.",
-    "Task: for each numbered English sentence provide (a) a natural, fluent Chinese translation (zh) — not word-for-word literal; (b) 1-3 most valuable words/phrases for this learner to notice (prefer what an intermediate learner may not know; include phrasal verbs/idioms when present), each with a SHORT English explanation (en, under 20 words) and a short Chinese gloss (zh).",
-    "Rules: w should be the base form when possible (breathed → breathe); keep multi-word phrases as-is. Do not translate character or place names — keep them as-is inside the translation.",
-    'Reply ONLY with a single valid JSON object, no markdown fences, no extra text: {"items":[{"idx":0,"sentence":"exact input sentence","zh":"...","words":[{"w":"...","en":"...","zh":"..."}]}]}',
-    '"idx" must match the input numbering; "sentence" must echo the input sentence exactly.'
-].join("\n");
+// 多语种点译(2026-09-19):学习语种 → 中文。en 档提示词保持原样,行为不变。
+// 词注的 "en" 字段沿用旧键名(= 目标语的简短解释),zh = 中文释义;前端 lg-pop-en 直接渲染,无需改字段。
+const GLOSS_SYSTEM_PROMPTS = {
+    en: [
+        "You are a friendly English→Chinese tutor for a Chinese learner reading English game-story scenes.",
+        "Task: for each numbered English sentence provide (a) a natural, fluent Chinese translation (zh) — not word-for-word literal; (b) 1-3 most valuable words/phrases for this learner to notice (prefer what an intermediate learner may not know; include phrasal verbs/idioms when present), each with a SHORT English explanation (en, under 20 words) and a short Chinese gloss (zh).",
+        "Rules: w should be the base form when possible (breathed → breathe); keep multi-word phrases as-is. Do not translate character or place names — keep them as-is inside the translation.",
+        'Reply ONLY with a single valid JSON object, no markdown fences, no extra text: {"items":[{"idx":0,"sentence":"exact input sentence","zh":"...","words":[{"w":"...","en":"...","zh":"..."}]}]}',
+        '"idx" must match the input numbering; "sentence" must echo the input sentence exactly.'
+    ].join("\n"),
+    ja: [
+        "You are a friendly Japanese→Chinese tutor for a Chinese learner reading Japanese game-story scenes.",
+        "Task: for each numbered Japanese sentence provide (a) a natural, fluent Simplified Chinese translation (zh) — not word-for-word literal; (b) 1-3 most valuable words/phrases for this learner to notice (prefer what an intermediate learner may not know; include set phrases/collocations when present), each with a SHORT SIMPLE JAPANESE explanation in Japanese (en, under 20 characters, plain form, as a monolingual learner's dictionary would write) and a short Simplified Chinese gloss (zh).",
+        "Rules: w MUST be the dictionary headword form (辞書形) — verbs and adjectives in 辞書形 (食べました→食べる, 高かった→高い), nouns as-is; keep multi-word set phrases as-is. Write w in the original Japanese script (kanji/kana) exactly as a dictionary headword, never romanized. Do not translate character or place names — keep them as-is inside the translation.",
+        'Reply ONLY with a single valid JSON object, no markdown fences, no extra text: {"items":[{"idx":0,"sentence":"exact input sentence","zh":"...","words":[{"w":"...","en":"...","zh":"..."}]}]}',
+        '"idx" must match the input numbering; "sentence" must echo the input sentence exactly.'
+    ].join("\n"),
+    ko: [
+        "You are a friendly Korean→Chinese tutor for a Chinese learner reading Korean game-story scenes.",
+        "Task: for each numbered Korean sentence provide (a) a natural, fluent Simplified Chinese translation (zh) — not word-for-word literal; (b) 1-3 most valuable words/phrases for this learner to notice (prefer what an intermediate learner may not know; include collocations when present), each with a SHORT SIMPLE KOREAN explanation in Korean (en, under 20 characters, as a monolingual learner's dictionary would write) and a short Simplified Chinese gloss (zh).",
+        "Rules: w MUST be the dictionary headword form (기본형) — verbs and adjectives in -다 form with any conjugation undone (먹었어요→먹다, 예뻤다→예쁘다), nouns as-is; keep multi-word set phrases as-is. Write w in Hangul exactly as a dictionary headword, never romanized. Do not translate character or place names — keep them as-is inside the translation.",
+        'Reply ONLY with a single valid JSON object, no markdown fences, no extra text: {"items":[{"idx":0,"sentence":"exact input sentence","zh":"...","words":[{"w":"...","en":"...","zh":"..."}]}]}',
+        '"idx" must match the input numbering; "sentence" must echo the input sentence exactly.'
+    ].join("\n")
+};
+const GLOSS_LANGS = ["en", "ja", "ko"];
+const normGlossLang = (v) => GLOSS_LANGS.includes(String(v || "").trim().toLowerCase()) ? String(v).trim().toLowerCase() : "en";
+const glossSystemPrompt = (lang) => GLOSS_SYSTEM_PROMPTS[normGlossLang(lang)];
 function cleanJsonText(s) {
     s = String(s || "").trim();
     if (s.startsWith("```")) s = s.replace(/^```[a-zA-Z]*\s*/i, "").replace(/```\s*$/i, "").trim();
     const a = s.indexOf("{"), b = s.lastIndexOf("}");
     return a >= 0 && b > a ? s.slice(a, b + 1) : s;
 }
-async function callGlossModel(env, sentences) {
+async function callGlossModel(env, sentences, lang) {
+    lang = normGlossLang(lang);
+    const sysPrompt = glossSystemPrompt(lang);
     const candidates = GLOSS_MODEL_IDS.map((id) => MODEL_POOL.find((m) => m.id === id && m.enabled)).filter(Boolean);
     if (candidates.length) candidates.splice(1, 0, candidates[0]); // 首档(词注主力)瞬时超时给 1 次同档重试机会
     const errs = [];
@@ -1217,7 +1240,7 @@ async function callGlossModel(env, sentences) {
             temperature: 0.2,
             max_tokens: Math.min(8000, Math.max(3000, batch.length * 400)),
             messages: [
-                { role: "system", content: GLOSS_SYSTEM_PROMPT },
+                { role: "system", content: sysPrompt },
                 { role: "user", content: userMsg }
             ]
         };
@@ -1263,7 +1286,8 @@ async function callGlossModel(env, sentences) {
     // 有道直译兜底补 AI 漏句(≤12s,尽力而为;源快时 10 句仅约 3s;仅补 zh 无词注,词注缺失前端自动降级)
     const miss = [];
     for (let i = 0; i < sentences.length; i++) if (!aiZh[i]) miss.push(i);
-    if (miss.length) {
+    // 有道兜底只用于英语:该接口是英→中链路,日韩句拿过去可能错译,宁可留空让前端降级提示
+    if (miss.length && lang === "en") {
         const yd = await youdaoSentenceFallback(miss.map((i) => sentences[i]), 12000);
         yd.forEach((zh, k) => { if (zh) aiZh[miss[k]] = zh; });
     }
@@ -1277,7 +1301,7 @@ async function callGlossModel(env, sentences) {
                     temperature: 0.2,
                     max_tokens: Math.min(8000, Math.max(3000, sentences.length * 400)),
                     messages: [
-                        { role: "system", content: GLOSS_SYSTEM_PROMPT },
+                        { role: "system", content: sysPrompt },
                         { role: "user", content: userMsg }
                     ]
                 };
@@ -1324,9 +1348,12 @@ const RECAP_STORY_LIMIT = 8000;
 const RECAP_RATE_LIMIT_MS = 6000;
 const recapRateMap = new Map();
 let bankCache = { t: 0, data: null }; // M6d1 五档考试词库内存缓存(单 isolate,10min TTL)
-let langCardsCache = { t: 0, data: null }; // M6b 语言卡库内存缓存(单 isolate,60s TTL)
+// M6b 语言卡库内存缓存(单 isolate,60s TTL)。按语种分槽:多语种化后若沿用单槽,
+// 空结果的语种(如无卡时的 ja/ko)会把其它语种的列表一起污染 60s,故必须 lang -> {t,data}。
+let langCardsCache = {};
 // M6d2 档位化:五档值域 + 旧 a/b/c 迁移(a→cet4/b→cet6/c→ky);空/未知返回 ""
-const LANG_BANDS = ["hs", "cet4", "cet6", "ky", "toefl"];
+// 档位值域:英语五档 + 日语 N5-N1 + 韩语初中高(2026-09-19 多语种化;英语五档行为不变)
+const LANG_BANDS = ["hs", "cet4", "cet6", "ky", "toefl", "ja-n5", "ja-n4", "ja-n3", "ja-n2", "ja-n1", "ko-1", "ko-2", "ko-3"];
 const LANG_BAND_LEGACY = { a: "cet4", b: "cet6", c: "ky" };
 const normLangBand = (v) => (LANG_BANDS.includes(v) ? v : (LANG_BAND_LEGACY[v] || ""));
 const RECAP_MODEL_IDS = GLOSS_MODEL_IDS; // 同 gloss 候选链(免费 22 档;5.3 lastResort 终兜见 callRecapModel 尾)
@@ -2678,7 +2705,7 @@ export default {
                             await pbAdminFetch(env, `/api/collections/lang_cards/records/${ld.id}`, {
                                 method: "PATCH", body: JSON.stringify({ play_count: Number(ld.play_count || 0) + 1 })
                             });
-                            if (langCardsCache.data) langCardsCache = { t: 0, data: null }; // 计数刷新后失效缓存
+                            langCardsCache = {}; // 计数刷新后失效缓存
                         }
                     } catch (e) {}
                     return new Response(JSON.stringify({ ok: true, rewarded: false }), {
@@ -3786,7 +3813,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 }
                 if (!sentences.length) return errorResponse("没有可翻译的句子", 400, null, "INVALID_SENTENCES");
                 glossRateMap.set(uid, now);
-                const out = await callGlossModel(env, sentences);
+                const out = await callGlossModel(env, sentences, body.lang);
                 if (out.error) return out.error;
                 if (!isMember(auth.record)) {
                     if (glossPackMode) {
@@ -3863,7 +3890,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
             // ---- 路由:M6d1 五档考试词库(GET /api/lang/bank?band=hs|cet4|cet6|ky|toefl;公开只读;内存缓存 10min)----
             if (url.pathname === "/api/lang/bank" && request.method === "GET") {
                 const band = String(url.searchParams.get("band") || "").trim();
-                if (!["hs", "cet4", "cet6", "ky", "toefl"].includes(band)) {
+                if (!LANG_BANDS.includes(band)) {
                     return errorResponse("无效档位", 400, null, "INVALID_BAND");
                 }
                 const nowMs = Date.now();
@@ -3904,8 +3931,9 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const lang = String(url.searchParams.get("lang") || "en").trim();
                 const band = String(url.searchParams.get("band") || "").trim();
                 const nowMs = Date.now();
-                if (langCardsCache.t > nowMs - 60000 && langCardsCache.data) {
-                    let items = langCardsCache.data.filter((c) => c.lang === lang && (!band || c.band === band));
+                const cacheSlot = langCardsCache[lang];
+                if (cacheSlot && cacheSlot.t > nowMs - 60000) {
+                    let items = cacheSlot.data.filter((c) => !band || c.band === band);
                     return new Response(JSON.stringify({ ok: true, items }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
                 }
                 try {
@@ -3930,8 +3958,8 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                             unlock_count: Number(r.unlock_count || 0)
                         }))
                         .filter((c) => c.title && c.text && c.structured && typeof c.structured === "object");
-                    langCardsCache = { t: nowMs, data: items };
-                    const out = items.filter((c) => c.lang === lang && (!band || c.band === band));
+                    langCardsCache[lang] = { t: nowMs, data: items };
+                    const out = items.filter((c) => !band || c.band === band);
                     return new Response(JSON.stringify({ ok: true, items: out }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
                 } catch (e) {
                     return errorResponse("语言卡库服务暂不可用", 503, null, "LANG_CARDS_UNAVAILABLE");

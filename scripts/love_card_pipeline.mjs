@@ -247,6 +247,17 @@ function toneOf(b) { return "写作语言全英文;人称用 you(玩家);短句�
 
 const CJK = /[一-鿿]/g;
 function cjkCount(s) { return (String(s).match(CJK) || []).length; }
+/* 语种字段:主题自带 lang,缺省 en。
+   本产线的提示词链(SYS_BASE/SYS_TEXT/toneOf/EN_WARN)与质检(cjkCount≤5、storyWords 按空格计词)
+   全部是为"中文设定 → 英文正文"写的;日/韩原生卡不是改个 lang 就能出——提示词和质检都得按语种重写,
+   且需要母语审校(见 docs/prds/yuntu-ja-ko-launch-prd.md 方案 B)。
+   故这里把语种打通的同时**硬拦**非英语主题,杜绝产出"标着 ja、正文却是英文"的脏卡。 */
+const LANG_OF = (t) => String((t && t.lang) || "en").trim().toLowerCase();
+function assertLangSupported(t) {
+    const lg = LANG_OF(t);
+    if (lg !== "en") throw new Error(`主题 ${t.slug} 的 lang=${lg}:本产线当前只支持 en;日/韩原生卡需先补该语种的提示词与质检(PRD 方案 B)`);
+    return lg;
+}
 const EN_WARN = "\n(硬性检查:内容必须 100% 纯英文,任何中文/日文字符都算失败!)";
 async function genEnBlock(label, doAsk) {
     for (let i = 0; i < 3; i++) {
@@ -439,6 +450,7 @@ function qcCard(card, t) {
 }
 
 async function genOne(t) {
+    assertLangSupported(t);
     const chars = [];
     console.log(`[${t.slug}] T1 标题…`);
     const meta = await genTitle(t);
@@ -491,7 +503,10 @@ async function genOne(t) {
         first_scene: { story: fs1.story, options: fs1.options }
     };
     const card = {
-        title: meta.title, title_zh: meta.title_zh, lang: "en", band: t.band,
+        /* lang 由主题自带(缺省 en);日/韩原生卡在 TOPICS 里写 lang:"ja"/"ko" 并可覆写 genTitle/genText 等
+           提示词——本产线的提示词仍是"中文设定→英文正文",日韩原生题材属 P1/P2,
+           且母语质量未审前不上线(见 docs/prds/yuntu-ja-ko-launch-prd.md) */
+        title: meta.title, title_zh: meta.title_zh, lang: LANG_OF(t), band: t.band,
         category: t.category, category_zh: t.category_zh, theme: "minimal",
         love_mode: true, gender_target: t.target,
         text, structured
