@@ -17,8 +17,9 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 BASE = r"F:\1\下载"
 OUT_DIR = r"F:\Claude\lang_bank_out"
 PB_URL = "https://db.blupure.cn"
-PB_EMAIL = "x18325986@163.com"
-PB_PASSWORD = "x1832445986"
+# 凭据不入库(本仓库公开):F:\Claude\pb-admin.txt 两行 = 邮箱 / 密码
+_cred = open(r"F:\Claude\pb-admin.txt", encoding="utf-8").read().splitlines()
+PB_EMAIL, PB_PASSWORD = _cred[0].strip(), _cred[1].strip()
 
 BANDS = ["hs", "cet4", "cet6", "ky", "toefl"]
 BAND_NAMES = {"hs": "高中3500", "cet4": "CET4", "cet6": "六级", "ky": "考研5530", "toefl": "TOEFL"}
