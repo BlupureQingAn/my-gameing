@@ -5494,7 +5494,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 </div>
 
                 <div id="lang-home-lib" style="margin-top:16px;">
-                    <div class="list-title" style="margin:0;">英语剧本库</div>
+                    <div class="list-title" id="lang-lib-title" style="margin:0;">英语剧本库</div>
                     <div class="list-sub" id="lang-lib-sub">英语原生剧本：词汇难度按你的学习档走（学习中心可调），点卡即玩（第一次玩 = 英语开局）</div>
 
                     <div class="l6-chips" id="lang-lib-langs">
@@ -23910,10 +23910,25 @@ window.LoveEngine = (() => {
             box.innerHTML = keeps.map(contRowHtml).join("");
             bindCardClicks(box);
         },
+        /* 剧本库标题/副标题/空态按当前语种(2026-09-19:日韩入口解锁后,空库仍写"英语剧本库"会误导) */
+        renderLibMeta: function () {
+            var lg = curLang(), n = LANG_TAG_INFO[lg][1], exam = lg === "ja" ? "JLPT" : "TOPIK";
+            var t = $("lang-lib-title"), s = $("lang-lib-sub");
+            if (t) t.textContent = lg === "en" ? "英语剧本库" : (n + "剧本库");
+            if (s) s.textContent = lg === "en"
+                ? "英语原生剧本：词汇难度按你的学习档走（学习中心可调），点卡即玩（第一次玩 = 英语开局）"
+                : (n + "原生剧本：词汇难度按你的 " + exam + " 档走（学习中心可调），点卡即玩");
+        },
+        libEmptyCopy: function () {
+            var lg = curLang(), n = LANG_TAG_INFO[lg][1];
+            if (lg === "en") return "英语剧本库还是空的，稍后再来刷新看看～";
+            return n + "剧本正在制作中——" + (lg === "ja" ? "JLPT" : "TOPIK") + " 词库已可刷词/词测，剧本上线后会出现在这里～";
+        },
         renderLibrary: function () {
             var rows = $("lang-lib-grid"); if (!rows) return;
             var cats = $("lang-lib-cats"); if (!cats) return;
             var lcs = window.LANG_CARDS_ONLINE || [];
+            api.renderLibMeta();
             /* 题材 chips(动态取自库) */
             var catSet = [], ci, cc, cat;
             for (ci = 0; ci < lcs.length; ci++) { cat = String(lcs[ci].category_zh || lcs[ci].category || ""); if (cat && catSet.indexOf(cat) < 0) catSet.push(cat); }
@@ -23935,7 +23950,7 @@ window.LoveEngine = (() => {
                 if (!window.__LANG_CARDS_LOADING) api.loadLangCards();
                 return;
             }
-            if (!lcs.length) { rows.innerHTML = '<div class="list-sub" style="grid-column:1/-1;">英语剧本库还是空的，稍后再来刷新看看～</div>'; hint("", "lang-lib-hint"); return; }
+            if (!lcs.length) { rows.innerHTML = '<div class="list-sub" style="grid-column:1/-1;">' + api.esc(api.libEmptyCopy()) + '</div>'; hint("", "lang-lib-hint"); return; }
             var list = [], i, c;
             for (i = 0; i < lcs.length; i++) {
                 c = lcs[i]; if (!c || !c.id) continue;
