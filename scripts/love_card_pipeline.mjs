@@ -547,6 +547,17 @@ function impureChars(lg, s) {
     return [...new Set(hits.filter((c) => hitsOf(c, ZH_ONLY)
         || (lg === "ja" ? hitsOf(c, HANGUL) : hitsOf(c, KANA) || hitsOf(c, HAN))))].join("");
 }
+// 场景种子/地点是中文写的,模型会把其中的词整块搬进正文 —— 实测抄进韩语表的是
+// 「大学合唱团練習室」「정기演奏회」「대학二年级」,全都是 premise/setting 的原句碎片。
+// 种子里的主题词越集中越容易中(合唱团卡连挂 6 轮,别的卡侥幸没中,不是那张卡"难")。
+// 不用给每个题材手写词表:把种子文本里在该语言下非法的字直接列出来钉死,零维护、自动跟随题材。
+function seedBanHint(t) {
+    const lg = LANG_OF(t);
+    if (lg === "en") return "";   // 英卡不受这条约束(且卡片早已上线,不改其生成行为)
+    const bad = impureChars(lg, [t.premise, t.setting, t.title_seed].filter(Boolean).join(" "));
+    if (!bad) return "";
+    return `\n【场景种子与地点是中文,只给你理解剧情用,一个字都不许抄进正文。其中这些字在${S(t).label}正文里绝对不许出现:「${bad}」——正文凡是要提到这些概念,一律写${S(t).label}。】`;
+}
 // 含中文行局部返修:抽出脏行 → 让模型逐行改写成纯目标语 → 按行号原位替换。
 // 只替换对得上号的行;污染面过大或返回不可解析时返回 null,交给整段重试兜底。
 async function repairDirtyLines(t, raw) {
@@ -724,7 +735,7 @@ async function genText(t, title, chars) {
             : seg.spec + headWarn;
         const piece = await genCleanBlock(t, seg.n + "+", (warn) => askText(sp.sysText,
             `卡《${title}》${sp.label}恋爱攻略设定,分段协作写作,你只写其中一段;小节标题用 ## 开头。\n` +
-            sp.tone(t) + warn + `\n场景种子:${t.premise}。地点:${t.setting}。攻略对象名单(5 人,顺序即登场顺序):${t.names.join("/")}。\n` +
+            sp.tone(t) + warn + `\n场景种子:${t.premise}。地点:${t.setting}。攻略对象名单(5 人,顺序即登场顺序):${t.names.join("/")}。${seedBanHint(t)}\n` +
             (acc ? `前方已写内容(不要重复,顺着风格往下写):\n${acc.slice(-1500)}\n` : "") +
             `本段内容要求(从 ## 小节标题开始写):\n${want}\n` +
             `本段应约 ${seg.n} ${sp.unit}:写完后自己数一遍${sp.unit}数,不足 ${Math.round(seg.n * 0.85)} ${sp.unit} 就继续充实细节直到达标再收尾。`, 9000),
