@@ -207,6 +207,139 @@ const MODEL_POOL = [
     { id: "zp-glm-5.3-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY3", model: "glm-5.3-flash", dailyCap: Infinity, tier: 100, enabled: false, lastResort: true },
 ];
 
+// ==================== 模型名动态解析（2026-09-21）====================
+// 上游随时改名/下架：实测 DeepSeek /models 已无 deepseek-chat/deepseek-reasoner（只剩 deepseek-flash、
+// deepseek-v4-pro），池里写死的名字一旦对不上，整条路由就变成死条目。这里把池里的 model 降级成"种子名"：
+//   ① 种子名仍在上游 /models 列表里 → 原样用（现网行为零变化）
+//   ② 种子名消失 → 按 MODEL_MATCH 的同族规则补位，取 created 最新者
+//   ③ 列表拉不到 / 规则匹配为空 → 回落种子名（动态解析永不阻塞请求、永不把可用条目变成不可用）
+// 为什么"种子优先"而不是"永远取最新"：智谱 /models 返回的是"账号可见模型"，可见 ≠ 有资源包
+//   （glm-5.3 在 K3 列表里且 created 最新，但 K1/K2/K3 调它全 1113 欠费）。无脑取最新会把 glm-4.7 升成 glm-5.3 直接打挂。
+// 缓存两级：isolate 内存（热）+ KV（冷，TTL 6h）；负结果只缓存 10 分钟，避免上游无 /models 时每请求白打一次。
+// 注：讯飞 Spark 不参与动态解析——它的 model 名是端点协议常量（spark-x / lite / generalv3.5）而非版本化目录。
+const MODEL_LIST_TTL_MS = 6 * 3600 * 1000;
+const MODEL_LIST_NEG_TTL_MS = 10 * 60 * 1000;
+const modelListMem = new Map();   // 缓存键 → { at, ok, ids:[{id,created}] }
+
+// 补位规则表（按池内 id 索引；未列出的条目不参与动态解析，行为与从前完全一致）
+// 每项是"按优先级排列的正则数组"：先试保住版本号的原名，再逐级放宽到同族/同大版本。
+// 刻意不跨越工艺代（4.x 的 flash/air 不落到 5.x）——5.3 系是"始终思考"型，关不掉思考，落过去必 400/1210。
+const MODEL_MATCH = {
+    // ---- 智谱 ----
+    "zp2-glm-4.5-air": [/^glm-4\.5-air$/i, /^glm-4(\.\d+)?-air$/i],
+    "zp-glm-4.5-air": [/^glm-4\.5-air$/i, /^glm-4(\.\d+)?-air$/i],
+    "zp2-glm-4.7": [/^glm-4\.7$/i, /^glm-4(\.\d+)?$/i, /^glm-\d+(\.\d+)?$/i],
+    "zp-glm-4.7": [/^glm-4\.7$/i, /^glm-4(\.\d+)?$/i, /^glm-\d+(\.\d+)?$/i],
+    "zp2-glm-4.7-flash": [/^glm-4\.7-flash$/i, /^glm-4(\.\d+)?-flash$/i],
+    "zp-glm-4.7-flash": [/^glm-4\.7-flash$/i, /^glm-4(\.\d+)?-flash$/i],
+    "zp2-glm-4-flash": [/^glm-4-flash$/i, /^glm-4-flash(-\d+)?$/i, /^glm-4(\.\d+)?-flash$/i],
+    "zp-glm-4-flash": [/^glm-4-flash$/i, /^glm-4-flash(-\d+)?$/i, /^glm-4(\.\d+)?-flash$/i],
+    "zp2-glm-4-flash-250414": [/^glm-4-flash-250414$/i, /^glm-4-flash(-\d+)?$/i, /^glm-4(\.\d+)?-flash$/i],
+    "zp-glm-4-flash-250414": [/^glm-4-flash-250414$/i, /^glm-4-flash(-\d+)?$/i, /^glm-4(\.\d+)?-flash$/i],
+    "zp2-glm-z1-flash": [/^glm-z1-flash$/i, /^glm-z1[\w.-]*$/i],
+    "zp-glm-z1-flash": [/^glm-z1-flash$/i, /^glm-z1[\w.-]*$/i],
+    "zp2-glm-4-air": [/^glm-4-air$/i, /^glm-4(\.\d+)?-air$/i],
+    "zp-glm-4-air": [/^glm-4-air$/i, /^glm-4(\.\d+)?-air$/i],
+    "zp-glm-5.3-flash": [/^glm-5\.3-flash$/i, /^glm-5(\.\d+)?-flashx?$/i],
+    // ---- 硅基流动（catalog 用 org/model 命名，版本后缀走日期）----
+    "sf-glm-z1-9b": [/^THUDM\/GLM-Z1-9B(-\w+)?$/i, /^THUDM\/GLM-Z1[\w.-]*$/i],
+    "sf-glm-4-9b": [/^THUDM\/GLM-4-9B(-\w+)?$/i, /^THUDM\/GLM-4[\w.-]*$/i],
+    "sf-r1-qwen3-8b": [/^deepseek-ai\/DeepSeek-R1-0528-Qwen3-8B$/i, /^deepseek-ai\/DeepSeek-R1[\w.-]*$/i],
+    "sf-qwen2.5-7b": [/^Qwen\/Qwen2\.5-7B-Instruct$/i, /^Qwen\/Qwen2\.5-7B[\w.-]*$/i],
+    "sf-qwen3-8b": [/^Qwen\/Qwen3-8B$/i, /^Qwen\/Qwen3-8B[\w.-]*$/i],
+    "sf-qwen3.5-4b": [/^Qwen\/Qwen3\.5-4B$/i, /^Qwen\/Qwen3\.5-4B[\w.-]*$/i],
+    // ---- OpenRouter（免费档带 :free 后缀）----
+    "or-glm-5.2": [/^z-ai\/glm-5\.2(:free)?$/i, /^z-ai\/glm-5\.2[\w.-]*$/i],
+    "or-minimax-m3": [/^minimax\/minimax-m3(:free)?$/i, /^minimax\/minimax-m[\w.-]*$/i],
+    "or-minimax-m2.7": [/^minimax\/minimax-m2\.7(:free)?$/i, /^minimax\/minimax-m2[\w.-]*$/i],
+    "or-nemotron-3-super": [/^nvidia\/nemotron-3-super-120b-a12b(:free)?$/i, /^nvidia\/nemotron-3-super[\w.-]*$/i],
+    "or-nemotron-3-ultra": [/^nvidia\/nemotron-3-ultra-550b-a55b(:free)?$/i, /^nvidia\/nemotron-3-ultra[\w.-]*$/i],
+    "or-lfm-2.5-2.6b": [/^liquid\/lfm-2\.5-2\.6b(:free)?$/i, /^liquid\/lfm-2\.5[\w.-]*$/i],
+    "or-ox-alpha": [/^stealth\/ox-alpha$/i, /^stealth\/ox-[\w.-]*$/i],
+    // ---- NVIDIA NIM（catalog 带日期/版本后缀）----
+    "nv-nemotron-lightning": [/^nvidia\/nemotron-3\.5-lightning-30b-a3b$/i, /^nvidia\/nemotron-3\.5-lightning[\w.-]*$/i, /^nvidia\/nemotron-[\w.-]*lightning[\w.-]*$/i],
+    "nv-nemotron-super": [/^nvidia\/nemotron-3-super-120b-a12b$/i, /^nvidia\/nemotron-3-super[\w.-]*$/i],
+    "nv-nemotron-ultra": [/^nvidia\/nemotron-3-ultra-550b-a55b$/i, /^nvidia\/nemotron-3-ultra[\w.-]*$/i],
+    // ---- DeepSeek 官方（活例子：deepseek-chat / deepseek-reasoner 已从 /models 消失）----
+    "ds-deepseek-chat": [/^deepseek-chat$/i, /^deepseek-[\w.-]*flash[\w.-]*$/i, /^deepseek-[\w.-]*$/i],
+    "ds-deepseek-reasoner": [/^deepseek-reasoner$/i, /^deepseek-[\w.-]*pro[\w.-]*$/i, /^deepseek-[\w.-]*$/i],
+};
+
+function modelListKey(t) {
+    let p = String(t.url || "");
+    try { const u = new URL(p); p = u.host + u.pathname.replace(/\/$/, ""); } catch (e) {}
+    return `${t.apiKeyEnv}@${p}`;   // 按 key 分桶：/models 是账号级的，K1/K2/K3 看到的模型集不同
+}
+
+async function fetchModelList(env, t) {
+    const key = modelListKey(t);
+    const now = Date.now();
+    const mem = modelListMem.get(key);
+    if (mem && now - mem.at < (mem.ok ? MODEL_LIST_TTL_MS : MODEL_LIST_NEG_TTL_MS)) return mem;
+    const kv = env.COVER_CACHE;   // 复用现有 KV（与封面缓存共库，键前缀 ml: 隔离）
+    if (kv) {
+        try {
+            const raw = await kv.get("ml:" + key);
+            if (raw) {
+                const o = JSON.parse(raw);
+                if (o && o.ok && Array.isArray(o.ids) && o.ids.length) {
+                    const hit = { at: now, ok: true, ids: o.ids };
+                    modelListMem.set(key, hit);
+                    return hit;
+                }
+            }
+        } catch (e) {}
+    }
+    let hit = { at: now, ok: false, ids: [] };
+    const apiKey = env[t.apiKeyEnv];
+    if (apiKey) {
+        const ctrl = new AbortController();
+        const to = setTimeout(() => ctrl.abort(), 8000);
+        try {
+            const r = await fetch(String(t.url || "").replace(/\/$/, "") + "/models", {
+                headers: { Authorization: `Bearer ${apiKey}` }, signal: ctrl.signal
+            });
+            if (r.ok) {
+                const j = await r.json();
+                const arr = Array.isArray(j && j.data) ? j.data : (Array.isArray(j && j.models) ? j.models : []);
+                const ids = arr.map(x => ({
+                    id: String((x && (x.id || x.model || x.name)) || ""),
+                    created: Number((x && x.created) || 0)
+                })).filter(x => x.id);
+                if (ids.length) hit = { at: now, ok: true, ids };
+            }
+        } catch (e) {}
+        clearTimeout(to);
+    }
+    modelListMem.set(key, hit);
+    if (kv) {
+        try {
+            await kv.put("ml:" + key, JSON.stringify({ ok: hit.ok, ids: hit.ids }), {
+                expirationTtl: Math.ceil((hit.ok ? MODEL_LIST_TTL_MS : MODEL_LIST_NEG_TTL_MS) / 1000)
+            });
+        } catch (e) {}
+    }
+    return hit;
+}
+
+// 取本条池条目本次实际要发的模型名（动态解析的唯一入口；其余调用点一律走它，不许直接读 t.model）
+async function modelOf(env, t) {
+    if (!t) return "";
+    const rules = MODEL_MATCH[t.id];
+    if (!rules || !rules.length) return t.model;
+    const list = await fetchModelList(env, t);
+    if (!list.ok || !list.ids.length) return t.model;
+    if (list.ids.some(x => x.id === t.model)) return t.model;   // 种子名还活着 → 原样用，零行为变化
+    for (let i = 0; i < rules.length; i++) {
+        const hit = list.ids.filter(x => rules[i].test(x.id));
+        if (hit.length) {
+            hit.sort((a, b) => (b.created - a.created) || (b.id > a.id ? 1 : b.id < a.id ? -1 : 0));
+            return hit[0].id;
+        }
+    }
+    return t.model;
+}
+
 // 流式坏模型两类（2026-08-29 全 55 模型实测 + 2026-08-31 线上剥 format 实测定稿）:
 // 1. STREAM_NO_JSON:流式 + response_format json_object 下 content 恒空,但流式 + 去掉 format 后正常出 JSON
 //    (讯飞系实测 5/5 出内容,x1 裸 JSON,其余带 ```json 围栏——前端 stripFence 已容错)→ 保持流式仅剥 format
@@ -1236,7 +1369,7 @@ async function callGlossModel(env, sentences, lang) {
         const batch = pending.map((i) => sentences[i]);
         const userMsg = "Sentences to translate:\n" + batch.map((s, i) => `[${pending[i]}] ${s}`).join("\n");
         const reqBody = {
-            model: t.model,
+            model: await modelOf(env, t),
             temperature: 0.2,
             max_tokens: Math.min(8000, Math.max(3000, batch.length * 400)),
             messages: [
@@ -1297,7 +1430,7 @@ async function callGlossModel(env, sentences, lang) {
         if (lr) {
             try {
                 const reqBody = {
-                    model: lr.model,
+                    model: await modelOf(env, lr),
                     temperature: 0.2,
                     max_tokens: Math.min(8000, Math.max(3000, sentences.length * 400)),
                     messages: [
@@ -1378,7 +1511,7 @@ async function callRecapModel(env, story, band) {
         if (!apiKey) { errs.push(t.id + ":nokey"); continue; }
         try {
             const reqBody = {
-                model: t.model,
+                model: await modelOf(env, t),
                 temperature: 0.4,
                 max_tokens: 4000,
                 messages: [
@@ -1416,7 +1549,7 @@ async function callRecapModel(env, story, band) {
     if (lr) {
         try {
             const reqBody = {
-                model: lr.model,
+                model: await modelOf(env, lr),
                 temperature: 0.4,
                 max_tokens: 4000,
                 messages: [
@@ -1554,7 +1687,7 @@ export default {
                             const timeoutMs = converted ? 120000 : (isStream ? 15000 : 60000); // 流式仅等响应头(15s),body 透传由前端控制;非流式 60s(原 120s,2026-09-12 下调:挂死模型不再白等两分钟,实测非流式调用输出都 <1000 token)
                             const timeout = setTimeout(() => controller.abort(), timeoutMs);
                             try {
-                                const payload = { ...requestJson, model: target.model };
+                                const payload = { ...requestJson, model: await modelOf(env, target) };
                                 if (isStream && STREAM_NO_JSON.includes(target.id)) delete payload.response_format;
                                 if (converted) { payload.stream = false; upstreamNonStream = true; }
                                 // 深度推理模型(讯飞 spark-x 系/硅基思考系)默认思考模式:先输出 reasoning 再出正文,耗时数倍,强制关闭(见 applyNoThinking)
@@ -1624,7 +1757,7 @@ export default {
                                     const controller = new AbortController();
                                     const timeout = setTimeout(() => controller.abort(), isStream ? 15000 : 60000);
                                     try {
-                                        const payload = { ...requestJson, model: lr.model };
+                                        const payload = { ...requestJson, model: await modelOf(env, lr) };
                                         applyNoThinking(payload, lr);
                                         const r = await fetch((lr.url || "").replace(/\/$/, "") + "/chat/completions", {
                                             method: "POST",
@@ -1770,7 +1903,7 @@ export default {
                     try { JSON.parse(c); return true; } catch (e) { return false; }
                 };
                 for (let i = 0; i < 2 && !isGoodJson(); i++) {
-                    const retryPayload = { ...requestJson, model: usedModel.model };
+                    const retryPayload = { ...requestJson, model: await modelOf(env, usedModel) };
                     applyNoThinking(retryPayload, usedModel);
                     retryPayload.messages = [
                         ...(requestJson.messages || []),
