@@ -23177,6 +23177,18 @@ window.LoveEngine = (() => {
     function bandDefOf(lang) { return BAND_DEF_BY_LANG[lang] || "cet6"; }
     function curLang() { return LANG_TAG_INFO[String(profile.lang || "en")] ? String(profile.lang || "en") : "en"; }
     window.LangBandMeta = { orderOf: bandOrderOf, defOf: bandDefOf, curLang: curLang, info: BAND_INFO };
+    /* 学习工具(榜单/统计)取哪个语种:在语言会话里随会话,不在会话里随语言页所选语种。
+       白名单兜底不能省——targetLang() 对没打 lang 标签的卡可能给出非 en/ja/ko 的值,
+       直接拿去索引 LANG_TAG_INFO 会取到 undefined,下游 [1]/[0] 就抛 */
+    function curLearnLang() {
+        var l = "";
+        try {
+            if (window.LangEngine && window.LangEngine.isLangSession && window.LangEngine.isLangSession()
+                && window.LangEngine.targetLang) l = window.LangEngine.targetLang();
+        } catch (e) { }
+        if (!LANG_TAG_INFO[l]) l = curLang();
+        return LANG_TAG_INFO[l] ? l : "en";
+    }
     var profile = { lang: "en" };
     try { var _p = JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}"); if (_p && typeof _p === "object") profile = _p; } catch (e) { }
     /* M6b:在线英语专属卡(lang_cards 官方库)缓存,供列表渲染/选中卡 overlay/播放进入用 */
@@ -24147,13 +24159,16 @@ window.LoveEngine = (() => {
         return "en";
     }
     /* 学习工具(刷词/词测/词库/榜单)用哪个语种:在语言会话里随会话,不在会话里随语言页所选语种。
-       不能用 curSessionLang:学习中心不在会话中,它只会回落到 en,日语词会被英语那套词形校验收掉。 */
+       不能用 curSessionLang:学习中心不在会话中,它只会回落到 en,日语词会被英语那套词形校验收掉。
+       白名单兜底同样不能省:targetLang() 可能给出非 en/ja/ko 的值,下面词形校验/取词库都按它分叉。 */
     function curLearnLang() {
+        var l = "", T = { en: 1, ja: 1, ko: 1 };
         try {
             if (window.LangEngine && window.LangEngine.isLangSession && window.LangEngine.isLangSession()
-                && window.LangEngine.targetLang) return window.LangEngine.targetLang();
+                && window.LangEngine.targetLang) l = window.LangEngine.targetLang();
         } catch (e) {}
-        try { if (window.LangBandMeta && window.LangBandMeta.curLang) return window.LangBandMeta.curLang(); } catch (e) {}
+        if (T[l]) return l;
+        try { if (window.LangBandMeta && window.LangBandMeta.curLang && T[window.LangBandMeta.curLang()]) return window.LangBandMeta.curLang(); } catch (e) {}
         return "en";
     }
     /* 词形校验:拉丁语种沿用"3-12 位纯小写字母"(行为不变);日/韩按字形判、长度放宽到 1-20
