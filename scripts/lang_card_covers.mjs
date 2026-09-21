@@ -63,7 +63,10 @@ const CARDS = [
     { id: "p1z94csme7fliy5", file: "kr-r1-03-hanokstay.card.json",
       prompt: "夏日全州韩屋村传统民宿,女生系着围裙站在韩屋木质回廊上,院子里酱缸台与绿意,午后暖阳斜照瓦檐,慢时光里的心动;Jeonju hanok village anime, summer courtyard, wooden veranda, warm afternoon sunlight, gentle romance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
     { id: "s2tp5vopynmavfj", file: "kr-m1-01-band.card.json",
-      prompt: "秋日大学音乐社团练习室,男生抱着贝斯站在谱架与音箱之间,窗外银杏落叶与午后斜光,排练结束后的怦然心动;university band practice room anime, autumn ginkgo outside window, warm afternoon light, amplifier glow, youthful romance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" }
+      prompt: "秋日大学音乐社团练习室,男生抱着贝斯站在谱架与音箱之间,窗外银杏落叶与午后斜光,排练结束后的怦然心动;university band practice room anime, autumn ginkgo outside window, warm afternoon light, amplifier glow, youthful romance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
+    // 2026-09-21 批次 4:golmok(连南洞巷口咖啡馆,女向)
+    { id: "gwwe6sn832uboci", file: "kr-r1-01-golmok.card.json",
+      prompt: "首尔连南洞午后的小巷咖啡馆,女生系着围裙端着咖啡杯站在木质吧台后,窗外绿植与暖阳斜照,巷弄行人剪影与咖啡蒸汽,慢午后的心动;Seoul Yeonnam-dong alley cafe anime, warm afternoon sunlight through window, wooden counter, plants and coffee steam, cozy urban romance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" }
 ];
 
 async function pbJson(url, opts) {

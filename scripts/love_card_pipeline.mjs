@@ -528,6 +528,14 @@ function dirtyLine(lg, line) {
     // 局部返修一次都不尝试,直接堕入整段重写(模型往往同处再犯)。阈值降到 1 个即脏。
     return hitsOf(s, KANA) > 0 || hitsOf(s, HAN) > 0;
 }
+// 病灶字:必须是 dirtyLine 判定口径的忠实镜像。旧写法只查 ZH_ONLY + (ja?HANGUL:KANA),
+// 而 ko 的脏点是「假名或汉字」——汉字一个都点不出来 → 回喂给模型的「问题字就是这些:「」」是空的,
+// 它根本不知道要改哪个字,连续 4 轮卡在同一块。
+function impureChars(lg, s) {
+    const hits = (String(s || "").match(/[一-鿿가-힣ぁ-ゖァ-ヺー]/g) || []);
+    return [...new Set(hits.filter((c) => hitsOf(c, ZH_ONLY)
+        || (lg === "ja" ? hitsOf(c, HANGUL) : hitsOf(c, KANA) || hitsOf(c, HAN))))].join("");
+}
 // 含中文行局部返修:抽出脏行 → 让模型逐行改写成纯目标语 → 按行号原位替换。
 // 只替换对得上号的行;污染面过大或返回不可解析时返回 null,交给整段重试兜底。
 async function repairDirtyLines(t, raw) {
@@ -538,8 +546,7 @@ async function repairDirtyLines(t, raw) {
     if (!idx.length || idx.length > 24) return null;
     const payload = idx.map((i, k) => `${k + 1}|${lines[i].trim()}`).join("\n");
     // 指名到字:只差一两个中文字时,模型看不出哪个字不是日语,泛指"混入中文"它改不动
-    const badChars = [...new Set(idx.flatMap((i) => (lines[i].match(/[一-鿿가-힣ぁ-ゖァ-ヺー]/g) || []))
-        .filter((c) => hitsOf(c, ZH_ONLY) || (lg === "ja" ? hitsOf(c, HANGUL) : hitsOf(c, KANA))))].join("");
+    const badChars = impureChars(lg, idx.map((i) => lines[i]).join("\n"));
     const d = await askText(sp.sysText,
         `下面这段${sp.label}文本里有几行混进了中文或其他语种的字` + (badChars ? `,问题字就是这些:「${badChars}」` : "") + `。\n` +
         `请逐行把它们改成语义等价的纯${sp.label}:意思、语气、行内格式(如表格竖线、编号、缩进)全部保持不变,只把文字换成${sp.label},并保证改写后一个中文专有字都不剩。\n` +
@@ -556,23 +563,52 @@ async function repairDirtyLines(t, raw) {
     return out.join("\n");
 }
 
-async function genCleanBlock(t, label, doAsk) {
+async function genCleanBlock(t, label, doAsk, minLen = 0) {
     const sp = S(t);
-    let extra = "";
+    let extra = "", short = "";
     for (let i = 0; i < 3; i++) {
         const raw = await doAsk(i > 0 ? sp.warn + extra : "");
-        if (raw && sp.clean(raw)) return raw;
+        // 干净不等于达标:模型偶尔漏写要求里的小节(实测 520+ 的段只回了 144 字),纯度高就放行
+        // 会让整卡内容缺一大块。偏短的先存着继续要足量稿,三轮都要不到再退而求其次。
+        if (raw && sp.clean(raw)) {
+            if (sp.len(raw) >= minLen) return raw;
+            if (sp.len(raw) > sp.len(short)) short = raw;
+            extra = `\n!!!上一版只写了 ${sp.len(raw)} ${sp.unit},少于本段要求的 ${label} 很多。`
+                + `这一版必须把要求里的每个小节都写出来,并把细节写足,不要再压缩。`;
+            console.log(label + "  内容偏短(" + sp.len(raw) + " " + sp.unit + "),再要一次…");
+            continue;
+        }
         // 先试局部返修:表头/短语级污染用它救回整段,避免为几行脏字丢掉全部内容
         if (raw && LANG_OF(t) !== "en") {
             const fixed = await repairDirtyLines(t, raw).catch(() => null);
-            if (fixed && sp.clean(fixed)) { console.log(label + "  局部返修成功"); return fixed; }
+            if (fixed && sp.clean(fixed)) {
+                if (sp.len(fixed) >= minLen) { console.log(label + "  局部返修成功"); return fixed; }
+                if (sp.len(fixed) > sp.len(short)) short = fixed;
+                console.log(label + "  局部返修成功但偏短(" + sp.len(fixed) + " " + sp.unit + "),再要一次…");
+                extra = `\n!!!上一版只写了 ${sp.len(fixed)} ${sp.unit},少于本段要求的 ${label} 很多。`
+                    + `这一版必须把要求里的每个小节都写出来,并把细节写足,不要再压缩。`;
+                continue;
+            }
+            // 返修失败不能静默:否则日志里只剩"重试…",看不出是模型改不动还是压根没定位到脏行
+            if (!fixed) console.log(label + "  局部返修放弃(脏行超限或返回不可解析)");
+            else console.log(label + "  局部返修后仍不纯");
         }
         const why = sp.impure(raw) || "空内容";
-        const hits = (String(raw || "").match(/[^\n]*[一-鿿가-힣ぁ-ゖァ-ヺー][^\n]*/g) || []).slice(0, 3).map((l) => l.trim().slice(0, 120)).join(" ⏎ ");
-        // 泛泛说"禁止中文"对 flash 无效:把上一版被抄进正文的原文回喂,指名禁止
-        extra = hits ? `\n!!!上一版你把下面这段中文原样抄进了正文,这一版绝对不许再出现这些字:\n${hits}\n` : "";
-        console.log(label + "  " + why + ",重试…" + (hits ? " [" + hits + "]" : ""));
+        // 回喂给模型的样例必须取「真的脏行」:旧版取的是"含 CJK 的前 3 行",病灶在第 4 行以后时
+        // 喂进去的是干净行,模型照着重写也改不到点上(实测 kr-r1-04-choir 连续 4 轮卡同一块)。
+        const lg = LANG_OF(t);
+        const dirty = String(raw || "").split("\n").filter((l) => dirtyLine(lg, l));
+        const pick = dirty.length ? dirty : (String(raw || "").match(/[^\n]*[一-鿿가-힣ぁ-ゖァ-ヺー][^\n]*/g) || []);
+        const hits = pick.slice(0, 3).map((l) => l.trim().slice(0, 120)).join(" ⏎ ");
+        // 指名到字:日志里直接把病灶字打出来,别再让人去猜
+        const badChars = impureChars(lg, pick.join("\n"));
+        // 泛泛说"禁止中文"对 flash 无效:把上一版被抄进正文的原文回喂,指名禁止。
+        // 混的是汉字/假名时上面那句「中文原文」会误导模型去找中文,得按实际病灶换措辞。
+        extra = hits ? `\n!!!上一版你在这段里留下了不该出现的字${badChars ? "——就是这些:「" + badChars + "」" : ""}。这一版写完后逐个自检,绝对不许再出现:\n${hits}\n` : "";
+        console.log(label + "  " + why + (badChars ? " 病灶字「" + badChars + "」" : "") + ",重试…" + (hits ? " [" + hits + "]" : ""));
     }
+    // 短稿总比没卡强:三轮都没要到足量稿时,发已经过纯度关的那一版
+    if (short) { console.log(label + "  三轮均偏短,采用 " + sp.len(short) + " " + sp.unit + " 的干净稿"); return short; }
     throw new Error("三次生成均不纯净(" + sp.label + ")");
 }
 
@@ -670,7 +706,9 @@ async function genText(t, title, chars) {
             sp.tone(t) + warn + `\n场景种子:${t.premise}。地点:${t.setting}。攻略对象名单(5 人,顺序即登场顺序):${t.names.join("/")}。\n` +
             (acc ? `前方已写内容(不要重复,顺着风格往下写):\n${acc.slice(-1500)}\n` : "") +
             `本段内容要求(从 ## 小节标题开始写):\n${want}\n` +
-            `本段应约 ${seg.n} ${sp.unit}:写完后自己数一遍${sp.unit}数,不足 ${Math.round(seg.n * 0.85)} ${sp.unit} 就继续充实细节直到达标再收尾。`, 9000));
+            `本段应约 ${seg.n} ${sp.unit}:写完后自己数一遍${sp.unit}数,不足 ${Math.round(seg.n * 0.85)} ${sp.unit} 就继续充实细节直到达标再收尾。`, 9000),
+            // 放行线取 65%:够低到不会为正常的少许欠量反复重试,又能在模型整节漏写时叫它重写
+            Math.round(seg.n * 0.65));
         acc = (acc ? acc + "\n\n" : "") + piece;
         console.log("  seg " + sp.len(piece) + " " + sp.unit);
     }
