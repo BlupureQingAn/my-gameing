@@ -347,14 +347,20 @@ const TOPICS = [
 // ---- LLM 调用层(P3 同款:JSON ask / 围栏 askText / 1305-429 退避 20s / 5 次重试) ----
 async function llm(system, user, maxTok, parse) {
     const body = { model: MODEL, messages: [{ role: "system", content: system }, { role: "user", content: user }], max_tokens: Math.min(maxTok, MAX_TOK_CAP), temperature: 0.8 };
+    const TRIES = 8;
     let lastErr = "";
-    for (let tryN = 0; tryN < 5; tryN++) {
+    for (let tryN = 0; tryN < TRIES; tryN++) {
+        // 没有超时的 fetch 能把整夜挂死:卡在一个不返回的连接上,后面什么都不发生也没日志
+        const ac = new AbortController();
+        const timer = setTimeout(() => ac.abort(), 180000);
         try {
             const r = await fetch("https://open.bigmodel.cn/api/paas/v4/chat/completions", {
                 method: "POST",
+                signal: ac.signal,
                 headers: { "Authorization": "Bearer " + KEY, "Content-Type": "application/json" },
                 body: JSON.stringify(body)
             });
+            clearTimeout(timer);
             const d = await r.json().catch(() => ({}));
             if (!r.ok) throw new Error("HTTP " + r.status + " " + JSON.stringify(d.error || {}).slice(0, 160));
             const text = d.choices?.[0]?.message?.content || "";
@@ -362,9 +368,14 @@ async function llm(system, user, maxTok, parse) {
             const cleaned = text.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "").trim();
             return parse(cleaned);
         } catch (e) {
+            clearTimeout(timer);
             lastErr = String(e.message || e);
-            const wait = /(429|1305)/.test(lastErr) ? 20000 : 2500 * (tryN + 1);
-            if (tryN < 4) console.log("  LLM 重试 " + (tryN + 1) + ": " + lastErr.slice(0, 90) + " (等 " + (wait / 1000) + "s)");
+            // 5xx 是上游成串抖动(实测智谱「操作失败」连续出现 25s 以上),短退避根本熬不过去;
+            // 一张卡的每个槽位都要过这个闸,卡在最后一步等于前面全部白写,宁可多等别重跑。
+            const wait = /(429|1305)/.test(lastErr) ? 20000
+                : /HTTP 5\d\d/.test(lastErr) ? Math.min(60000, 6000 * Math.pow(2, tryN))
+                    : 2500 * (tryN + 1);
+            if (tryN < TRIES - 1) console.log("  LLM 重试 " + (tryN + 1) + ": " + lastErr.slice(0, 90) + " (等 " + (wait / 1000) + "s)");
             await new Promise((r) => setTimeout(r, wait));
         }
     }
