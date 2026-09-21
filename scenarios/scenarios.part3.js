@@ -33,7 +33,7 @@
         {
           "name": "总监·王总",
           "gender": "男",
-          "avatar": "avatars/avatar_01.jpg",
+          "avatar": "avatars/avatar_01.webp",
           "role": "产品部总监",
           "personality": "KPI 至上，口头禅'年轻人要多想想自己有什么价值'",
           "relationship": "你的直属领导，最擅长画饼与问责"
@@ -41,7 +41,7 @@
         {
           "name": "组长·老周",
           "gender": "男",
-          "avatar": "avatars/avatar_29.jpg",
+          "avatar": "avatars/avatar_29.webp",
           "role": "产品组长",
           "personality": "老油条，摸鱼大师，但关键时刻罩得住你",
           "relationship": "带你的师傅，教会你职场的第一课"
@@ -49,7 +49,7 @@
         {
           "name": "HR·苏姐",
           "gender": "女",
-          "avatar": "avatars/avatar_27.jpg",
+          "avatar": "avatars/avatar_27.webp",
           "role": "人力资源",
           "personality": "笑容职业，说话滴水不漏，掌握裁员名单",
           "relationship": "已经找你'聊'过一次绩效"
@@ -57,7 +57,7 @@
         {
           "name": "竞争对手·小陆",
           "gender": "未知",
-          "avatar": "avatars/avatar_39.jpg",
+          "avatar": "avatars/avatar_39.webp",
           "role": "同组产品经理",
           "personality": "卷王之王，凌晨三点还在群里发进度",
           "relationship": "和你抢同一条晋升线，多次在领导面前'不点名表扬自己'"
@@ -94,7 +94,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "都市轻快恋爱风",
-    "cover": "covers/scenario_preset_zc_01.jpg",
+    "cover": "covers/scenario_preset_zc_01.webp",
     "order": 16
   },
   {
@@ -128,7 +128,7 @@
         {
           "name": "院长·陈老",
           "gender": "男",
-          "avatar": "avatars/avatar_35.jpg",
+          "avatar": "avatars/avatar_35.webp",
           "role": "学院院长",
           "personality": "学术江湖的老狐狸，话只说七分",
           "relationship": "给你'画饼'时最真诚，分任务时最无情"
@@ -136,7 +136,7 @@
         {
           "name": "师兄·老赵",
           "gender": "男",
-          "avatar": "avatars/avatar_15.jpg",
+          "avatar": "avatars/avatar_15.webp",
           "role": "本学院副教授",
           "personality": "已是青椒熬出头的老前辈，劝退大师",
           "relationship": "你唯一能说真心话的人"
@@ -144,7 +144,7 @@
         {
           "name": "科研秘书·小陈",
           "gender": "未知",
-          "avatar": "avatars/avatar_19.jpg",
+          "avatar": "avatars/avatar_19.webp",
           "role": "学院科研办",
           "personality": "消息灵通，办事看人下菜碟",
           "relationship": "掌握基金申请内部节奏的第一手情报"
@@ -152,7 +152,7 @@
         {
           "name": "学生·周岚",
           "gender": "女",
-          "avatar": "avatars/avatar_25.jpg",
+          "avatar": "avatars/avatar_25.webp",
           "role": "你的研究生",
           "personality": "聪明但懒散，PPT 能力一流，实验拖沓",
           "relationship": "你的第一个学生，也是你论文产出的关键变量"
@@ -189,7 +189,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "都市轻快恋爱风",
-    "cover": "covers/scenario_preset_zc_02.jpg",
+    "cover": "covers/scenario_preset_zc_02.webp",
     "order": 17
   },
   {
@@ -223,7 +223,7 @@
         {
           "name": "导师·孙教授",
           "gender": "男",
-          "avatar": "avatars/avatar_23.jpg",
+          "avatar": "avatars/avatar_23.webp",
           "role": "博导",
           "personality": "学术水平高但管理粗糙，最爱'我再想想'和'你们年轻人要沉住气'",
           "relationship": "你的老板，掌握你的毕业大权"
@@ -231,7 +231,7 @@
         {
           "name": "同门·王姐",
           "gender": "女",
-          "avatar": "avatars/avatar_41.jpg",
+          "avatar": "avatars/avatar_41.webp",
           "role": "博三师姐",
           "personality": "组内定海神针，技术强，最会替大家挡刀",
           "relationship": "唯一愿意在深夜陪你 debug 的人"
@@ -239,7 +239,7 @@
         {
           "name": "隔壁组·小刘",
           "gender": "未知",
-          "avatar": "avatars/avatar_05.jpg",
+          "avatar": "avatars/avatar_05.webp",
           "role": "卷王博士生",
           "personality": "一年三篇顶会，走路都带风",
           "relationship": "你的对照组：每次组会都被拿来'学习'"
@@ -247,7 +247,7 @@
         {
           "name": "教务老师·李老师",
           "gender": "男",
-          "avatar": "avatars/avatar_05.jpg",
+          "avatar": "avatars/avatar_05.webp",
           "role": "研究生秘书",
           "personality": "公事公办，但偶尔心软",
           "relationship": "掌握延期申请和盲审排期的关键信息"
@@ -284,7 +284,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "都市轻快恋爱风",
-    "cover": "covers/scenario_preset_zc_03.jpg",
+    "cover": "covers/scenario_preset_zc_03.webp",
     "order": 18
   },
   {
@@ -318,7 +318,7 @@
         {
           "name": "主任·秦主任",
           "gender": "男",
-          "avatar": "avatars/avatar_05.jpg",
+          "avatar": "avatars/avatar_05.webp",
           "role": "急诊科主任",
           "personality": "严苛但护短，'你们是我带过最差的一届'是他的口头禅",
           "relationship": "你的规培带教，欣赏你的认真，也骂过你手抖"
@@ -326,7 +326,7 @@
         {
           "name": "护士长·刘姐",
           "gender": "女",
-          "avatar": "avatars/avatar_26.jpg",
+          "avatar": "avatars/avatar_26.webp",
           "role": "急诊护士长",
           "personality": "火眼金睛，处事果断，急诊科真正的老大",
           "relationship": "你的救命稻草，总在你被围攻时挺身而出",
@@ -336,7 +336,7 @@
         {
           "name": "同事·小赵",
           "gender": "未知",
-          "avatar": "avatars/avatar_04.jpg",
+          "avatar": "avatars/avatar_04.webp",
           "role": "规培同期",
           "personality": "机灵圆滑，会来事，想转行政",
           "relationship": "你的同龄对照，总是提醒你'别太拼'"
@@ -344,7 +344,7 @@
         {
           "name": "老患者·张伯",
           "gender": "男",
-          "avatar": "avatars/avatar_15.jpg",
+          "avatar": "avatars/avatar_15.webp",
           "role": "慢病老病号",
           "personality": "啰嗦但善良，隔三差五来急诊调药",
           "relationship": "急诊科的老熟人，意外成了你的'口碑源头'"
@@ -381,7 +381,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "都市轻快恋爱风",
-    "cover": "covers/scenario_preset_zc_04.jpg",
+    "cover": "covers/scenario_preset_zc_04.webp",
     "order": 19
   },
   {
@@ -415,7 +415,7 @@
         {
           "name": "站长·老马",
           "gender": "男",
-          "avatar": "avatars/avatar_14.jpg",
+          "avatar": "avatars/avatar_14.webp",
           "role": "骑手站长",
           "personality": "刀子嘴豆腐心，被平台规则压得两头难",
           "relationship": "你的上级，也是你进城后第一个关心你的人"
@@ -423,7 +423,7 @@
         {
           "name": "同行·小梅",
           "gender": "女",
-          "avatar": "avatars/avatar_06.jpg",
+          "avatar": "avatars/avatar_06.webp",
           "role": "女骑手",
           "personality": "风风火火，号称'闪电'，曾创下一天 68 单纪录",
           "relationship": "你暗恋的同行，也教过你不少避坑技巧",
@@ -433,7 +433,7 @@
         {
           "name": "客户·陈姐",
           "gender": "女",
-          "avatar": "avatars/avatar_20.jpg",
+          "avatar": "avatars/avatar_20.webp",
           "role": "写字楼白领",
           "personality": "挑剔，爱给差评，但偶尔也心软",
           "relationship": "你的'老主顾'，她的一单今天出了问题",
@@ -443,7 +443,7 @@
         {
           "name": "小男孩·豆豆",
           "gender": "男",
-          "avatar": "avatars/avatar_16.jpg",
+          "avatar": "avatars/avatar_16.webp",
           "role": "城中村小孩",
           "personality": "瘦小，懂事得让人心疼",
           "relationship": "今晚在取餐点偷盒饭被你撞见"
@@ -480,7 +480,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "都市轻快恋爱风",
-    "cover": "covers/scenario_preset_zc_05.jpg",
+    "cover": "covers/scenario_preset_zc_05.webp",
     "order": 20
   }
 ]); })();

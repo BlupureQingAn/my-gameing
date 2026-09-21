@@ -33,7 +33,7 @@
         {
           "name": "皇后乌雅氏",
           "gender": "女",
-          "avatar": "avatars/avatar_19.jpg",
+          "avatar": "avatars/avatar_19.webp",
           "role": "中宫皇后",
           "personality": "端庄慈和，绵里藏针",
           "relationship": "表面善待你，实为储位之争的操盘手"
@@ -41,7 +41,7 @@
         {
           "name": "年贵妃",
           "gender": "女",
-          "avatar": "avatars/avatar_39.jpg",
+          "avatar": "avatars/avatar_39.webp",
           "role": "宠冠六宫",
           "personality": "明艳张扬，笑里藏刀",
           "relationship": "当年构陷你私通的主谋，与皇后暗中角力",
@@ -51,7 +51,7 @@
         {
           "name": "李德海",
           "gender": "男",
-          "avatar": "avatars/avatar_04.jpg",
+          "avatar": "avatars/avatar_04.webp",
           "role": "御前总管太监",
           "personality": "见风使舵，八面玲珑",
           "relationship": "皇帝身边最信任的人，谁给的好处多就为谁说话"
@@ -59,7 +59,7 @@
         {
           "name": "春杏",
           "gender": "女",
-          "avatar": "avatars/avatar_27.jpg",
+          "avatar": "avatars/avatar_27.webp",
           "role": "贴身宫女",
           "personality": "忠厚单纯，胆小怕事",
           "relationship": "前世为你挡下毒药自缢身亡，这一世你最想护住的人",
@@ -96,7 +96,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "宏大叙事钢琴纯音乐",
-    "cover": "covers/scenario_preset_gd_01.jpg",
+    "cover": "covers/scenario_preset_gd_01.webp",
     "order": 76
   },
   {
@@ -130,7 +130,7 @@
         {
           "name": "刘尚宫",
           "gender": "女",
-          "avatar": "avatars/avatar_17.jpg",
+          "avatar": "avatars/avatar_17.webp",
           "role": "尚宫局尚宫",
           "personality": "严苛冷面，赏罚分明",
           "relationship": "掌管六局升迁，最厌恶偷奸耍滑之人"
@@ -138,7 +138,7 @@
         {
           "name": "李龟年",
           "gender": "男",
-          "avatar": "avatars/avatar_29.jpg",
+          "avatar": "avatars/avatar_29.webp",
           "role": "太乐署乐正",
           "personality": "风雅豁达，知音难求",
           "relationship": "偶然听见你哼曲，引为忘年之交",
@@ -148,7 +148,7 @@
         {
           "name": "崔明远",
           "gender": "男",
-          "avatar": "avatars/avatar_04.jpg",
+          "avatar": "avatars/avatar_04.webp",
           "role": "太子府伴读",
           "personality": "温润如玉，重情重义",
           "relationship": "与你青梅竹马，如今身份悬殊，却仍暗中照拂",
@@ -158,7 +158,7 @@
         {
           "name": "杜夫人",
           "gender": "女",
-          "avatar": "avatars/avatar_40.jpg",
+          "avatar": "avatars/avatar_40.webp",
           "role": "宰相夫人",
           "personality": "精干世故，手眼通天",
           "relationship": "赏识你的绣工，想收你为门下耳目"
@@ -193,7 +193,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "宏大叙事钢琴纯音乐",
-    "cover": "covers/scenario_preset_gd_02.jpg",
+    "cover": "covers/scenario_preset_gd_02.webp",
     "order": 77
   },
   {
@@ -227,7 +227,7 @@
         {
           "name": "萧衍",
           "gender": "男",
-          "avatar": "avatars/avatar_12.jpg",
+          "avatar": "avatars/avatar_12.webp",
           "role": "大昭昭明帝",
           "personality": "年轻冷峻，深不可测",
           "relationship": "你的钦点之人，从不表露喜怒，却总在你意料之外的地方出现"
@@ -235,7 +235,7 @@
         {
           "name": "沈贵妃",
           "gender": "女",
-          "avatar": "avatars/avatar_20.jpg",
+          "avatar": "avatars/avatar_20.webp",
           "role": "先帝旧人，贵妃",
           "personality": "雍容圆滑，滴水不漏",
           "relationship": "后宫实际掌权者，对昭华令持令人怀有复杂态度"
@@ -243,7 +243,7 @@
         {
           "name": "钦天监监正",
           "gender": "男",
-          "avatar": "avatars/avatar_14.jpg",
+          "avatar": "avatars/avatar_14.webp",
           "role": "卜算昭华令之人",
           "personality": "仙风道骨，语焉不详",
           "relationship": "曾对你说：'令出无声，祸福自渡'——你至今不明白这句话"
@@ -251,7 +251,7 @@
         {
           "name": "顾临渊",
           "gender": "男",
-          "avatar": "avatars/avatar_34.jpg",
+          "avatar": "avatars/avatar_34.webp",
           "role": "织造府少东家",
           "personality": "温文尔雅，藏锋于鞘",
           "relationship": "名义上的义兄，实际暗中查探你的身世多年"
@@ -286,7 +286,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "宏大叙事钢琴纯音乐",
-    "cover": "covers/scenario_preset_gd_03.jpg",
+    "cover": "covers/scenario_preset_gd_03.webp",
     "order": 78
   },
   {
@@ -320,7 +320,7 @@
         {
           "name": "慕容珺",
           "gender": "男",
-          "avatar": "avatars/avatar_16.jpg",
+          "avatar": "avatars/avatar_16.webp",
           "role": "玄文帝",
           "personality": "冷冽疏离，化神期修士",
           "relationship": "选你入宫似乎别有深意，他看你的眼神总带着审视"
@@ -328,7 +328,7 @@
         {
           "name": "祝皇后",
           "gender": "女",
-          "avatar": "avatars/avatar_37.jpg",
+          "avatar": "avatars/avatar_37.webp",
           "role": "中宫皇后",
           "personality": "雍容威仪，元婴期大修",
           "relationship": "修摄魂咒，后宫三千佳丽的'心魔'都由她亲手镇压"
@@ -336,7 +336,7 @@
         {
           "name": "青岩山大师姐",
           "gender": "女",
-          "avatar": "avatars/avatar_17.jpg",
+          "avatar": "avatars/avatar_17.webp",
           "role": "护道人",
           "personality": "清冷寡言，剑心通明",
           "relationship": "奉师命暗中护你，却告诫你：'宫中之事，不可全信宗门'",
@@ -346,7 +346,7 @@
         {
           "name": "曹公公",
           "gender": "男",
-          "avatar": "avatars/avatar_05.jpg",
+          "avatar": "avatars/avatar_05.webp",
           "role": "司礼监掌印",
           "personality": "油滑谄媚，深藏不露",
           "relationship": "一个会御剑的太监，你知道他绝不简单"
@@ -381,7 +381,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "宏大叙事钢琴纯音乐",
-    "cover": "covers/scenario_preset_gd_04.jpg",
+    "cover": "covers/scenario_preset_gd_04.webp",
     "order": 79
   },
   {
@@ -415,7 +415,7 @@
         {
           "name": "萧鸾",
           "gender": "男",
-          "avatar": "avatars/avatar_21.jpg",
+          "avatar": "avatars/avatar_21.webp",
           "role": "幼帝",
           "personality": "早慧沉默，三岁已能背《帝范》",
           "relationship": "你的儿子，也是你最大的软肋",
@@ -425,7 +425,7 @@
         {
           "name": "萧元衡",
           "gender": "男",
-          "avatar": "avatars/avatar_13.jpg",
+          "avatar": "avatars/avatar_13.webp",
           "role": "宗正寺卿，宗室之首",
           "personality": "老谋深算，以正统自居",
           "relationship": "一直在等你还政，好扶他的侄子上位"
@@ -433,7 +433,7 @@
         {
           "name": "温廷尉",
           "gender": "男",
-          "avatar": "avatars/avatar_31.jpg",
+          "avatar": "avatars/avatar_31.webp",
           "role": "国舅，外戚之首",
           "personality": "志大才疏，贪权好利",
           "relationship": "你名义上的盟友，实则随时准备反噬",
@@ -443,7 +443,7 @@
         {
           "name": "孟姑姑",
           "gender": "女",
-          "avatar": "avatars/avatar_26.jpg",
+          "avatar": "avatars/avatar_26.webp",
           "role": "掌印女官",
           "personality": "心细如发，忠心耿耿",
           "relationship": "教坊司旧识，如今是你唯一可以交托生死的人"
@@ -478,7 +478,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "宏大叙事钢琴纯音乐",
-    "cover": "covers/scenario_preset_gd_05.jpg",
+    "cover": "covers/scenario_preset_gd_05.webp",
     "order": 80
   }
 ]); })();

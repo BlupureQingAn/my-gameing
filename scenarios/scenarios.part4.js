@@ -33,7 +33,7 @@
         {
           "name": "掌火师兄·许青崖",
           "gender": "男",
-          "avatar": "avatars/avatar_22.jpg",
+          "avatar": "avatars/avatar_22.webp",
           "role": "丹房掌火",
           "personality": "急躁自负，屡次炸炉不肯认错",
           "relationship": "日常使唤你，却暗中记你人情"
@@ -41,7 +41,7 @@
         {
           "name": "药库管事·孙婆婆",
           "gender": "女",
-          "avatar": "avatars/avatar_25.jpg",
+          "avatar": "avatars/avatar_25.webp",
           "role": "灵草库房管事",
           "personality": "精于算计，贪小利",
           "relationship": "可求她赊药，代价是将来三倍偿还"
@@ -49,7 +49,7 @@
         {
           "name": "下山游医·温不语",
           "gender": "男",
-          "avatar": "avatars/avatar_03.jpg",
+          "avatar": "avatars/avatar_03.webp",
           "role": "神秘丹修",
           "personality": "话少疏离，出手狠辣",
           "relationship": "识破你的天赋，似有所图"
@@ -57,7 +57,7 @@
         {
           "name": "丹道长老·白鹤真人",
           "gender": "男",
-          "avatar": "avatars/avatar_31.jpg",
+          "avatar": "avatars/avatar_31.webp",
           "role": "宗门长老",
           "personality": "顽固守旧，轻视丹房杂役",
           "relationship": "你的目标是让他亲眼见证你的丹道"
@@ -93,7 +93,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "宏大叙事钢琴纯音乐",
-    "cover": "covers/scenario_preset_xx_01.jpg",
+    "cover": "covers/scenario_preset_xx_01.webp",
     "order": 21
   },
   {
@@ -127,7 +127,7 @@
         {
           "name": "屠镇的渔家女·阿蘅",
           "gender": "女",
-          "avatar": "avatars/avatar_19.jpg",
+          "avatar": "avatars/avatar_19.webp",
           "role": "荒泽边陲渔女",
           "personality": "温善坚韧，懂草药与妖兽习性",
           "relationship": "曾救过你的命，是你在世间唯一的牵挂"
@@ -135,7 +135,7 @@
         {
           "name": "黑风寨寨主·仇九",
           "gender": "男",
-          "avatar": "avatars/avatar_21.jpg",
+          "avatar": "avatars/avatar_21.webp",
           "role": "大泽匪首",
           "personality": "凶残贪婪，却极讲信用",
           "relationship": "欠你一次救命之恩，可兑现也可作废",
@@ -145,7 +145,7 @@
         {
           "name": "青云宗弟子·柳含烟",
           "gender": "男",
-          "avatar": "avatars/avatar_23.jpg",
+          "avatar": "avatars/avatar_23.webp",
           "role": "宗门天骄",
           "personality": "清高孤傲，心向大道",
           "relationship": "与你有一面之缘，立场亦敌亦友"
@@ -153,7 +153,7 @@
         {
           "name": "神秘老丐·丈八",
           "gender": "男",
-          "avatar": "avatars/avatar_11.jpg",
+          "avatar": "avatars/avatar_11.webp",
           "role": "深藏不露的散修前辈",
           "personality": "疯癫古怪，酒不离手",
           "relationship": "似乎知道你残卷的来历"
@@ -189,7 +189,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "宏大叙事钢琴纯音乐",
-    "cover": "covers/scenario_preset_xx_02.jpg",
+    "cover": "covers/scenario_preset_xx_02.webp",
     "order": 22
   },
   {
@@ -223,7 +223,7 @@
         {
           "name": "护法·血婆婆",
           "gender": "女",
-          "avatar": "avatars/avatar_27.jpg",
+          "avatar": "avatars/avatar_27.webp",
           "role": "血月殿大护法",
           "personality": "忠心狠辣，视你如己出",
           "relationship": "唯一可信之人，却总希望你走上她认定的杀伐之路"
@@ -231,7 +231,7 @@
         {
           "name": "五宗之魁·蛊王",
           "gender": "男",
-          "avatar": "avatars/avatar_15.jpg",
+          "avatar": "avatars/avatar_15.webp",
           "role": "五毒宗宗主",
           "personality": "阴毒诡诈，笑里藏刀",
           "relationship": "头号夺位者，屡次试探你的底线",
@@ -241,7 +241,7 @@
         {
           "name": "正道剑仙·谢青霜",
           "gender": "女",
-          "avatar": "avatars/avatar_19.jpg",
+          "avatar": "avatars/avatar_19.webp",
           "role": "青云剑宗掌门",
           "personality": "端方持重，信奉斩妖除魔",
           "relationship": "她是杀父疑云的另一端，亦是你必须面对的对手"
@@ -249,7 +249,7 @@
         {
           "name": "魔渊哑仆·阿默",
           "gender": "男",
-          "avatar": "avatars/avatar_33.jpg",
+          "avatar": "avatars/avatar_33.webp",
           "role": "殿中杂役",
           "personality": "沉默寡言，身世成谜",
           "relationship": "曾在你幼年流落时救过你一命"
@@ -285,7 +285,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "宏大叙事钢琴纯音乐",
-    "cover": "covers/scenario_preset_xx_03.jpg",
+    "cover": "covers/scenario_preset_xx_03.webp",
     "order": 23
   },
   {
@@ -319,7 +319,7 @@
         {
           "name": "阁主·凌霜雪",
           "gender": "女",
-          "avatar": "avatars/avatar_08.jpg",
+          "avatar": "avatars/avatar_08.webp",
           "role": "千雪剑阁阁主",
           "personality": "冷厉严苛，言出必行",
           "relationship": "你的授业恩师，也是隐瞒你身世真相的人"
@@ -327,7 +327,7 @@
         {
           "name": "同门师妹·苏澈",
           "gender": "女",
-          "avatar": "avatars/avatar_40.jpg",
+          "avatar": "avatars/avatar_40.webp",
           "role": "剑阁小师妹",
           "personality": "活泼跳脱，剑心纯粹",
           "relationship": "视你为榜样，是你在剑阁唯一的温暖"
@@ -335,7 +335,7 @@
         {
           "name": "守冢人·枯竹",
           "gender": "男",
-          "avatar": "avatars/avatar_33.jpg",
+          "avatar": "avatars/avatar_33.webp",
           "role": "剑冢守墓人",
           "personality": "沉默如石，来历不明",
           "relationship": "知晓剑冢秘密，似乎在等一个人"
@@ -343,7 +343,7 @@
         {
           "name": "魔剑·饮雪",
           "gender": "未知",
-          "avatar": "avatars/avatar_32.jpg",
+          "avatar": "avatars/avatar_32.webp",
           "role": "剑冢深处的古剑",
           "personality": "嗜杀无情，自带剑灵",
           "relationship": "夜夜以剑鸣相召，想引你拔它出鞘"
@@ -379,7 +379,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "宏大叙事钢琴纯音乐",
-    "cover": "covers/scenario_preset_xx_04.jpg",
+    "cover": "covers/scenario_preset_xx_04.webp",
     "order": 24
   },
   {
@@ -413,7 +413,7 @@
         {
           "name": "守山老怪·无名",
           "gender": "男",
-          "avatar": "avatars/avatar_10.jpg",
+          "avatar": "avatars/avatar_10.webp",
           "role": "洞府残魂",
           "personality": "玩世不恭，亦正亦邪，话里藏话",
           "relationship": "你的便宜师父，也是你最大的变数"
@@ -421,7 +421,7 @@
         {
           "name": "杂役头·刘四",
           "gender": "男",
-          "avatar": "avatars/avatar_11.jpg",
+          "avatar": "avatars/avatar_11.webp",
           "role": "杂役处管事",
           "personality": "欺软怕硬，克扣工钱",
           "relationship": "日常压迫你，暗地里却怕你知道他的把柄"
@@ -429,7 +429,7 @@
         {
           "name": "内门天骄·楚凌霄",
           "gender": "男",
-          "avatar": "avatars/avatar_29.jpg",
+          "avatar": "avatars/avatar_29.webp",
           "role": "玄天宗首席弟子",
           "personality": "骄傲磊落，剑道无双",
           "relationship": "一次善缘结下的亦敌亦友"
@@ -437,7 +437,7 @@
         {
           "name": "藏经阁老妪·文婆婆",
           "gender": "女",
-          "avatar": "avatars/avatar_20.jpg",
+          "avatar": "avatars/avatar_20.webp",
           "role": "藏经阁守阁人",
           "personality": "慈眉善目，来头惊人",
           "relationship": "允许你偷偷抄录残卷，似乎认得洞府的存在"
@@ -473,7 +473,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "宏大叙事钢琴纯音乐",
-    "cover": "covers/scenario_preset_xx_05.jpg",
+    "cover": "covers/scenario_preset_xx_05.webp",
     "order": 25
   }
 ]); })();

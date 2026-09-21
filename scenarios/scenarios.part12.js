@@ -33,7 +33,7 @@
         {
           "name": "吟游诗人·卢卡",
           "gender": "男",
-          "avatar": "avatars/avatar_16.jpg",
+          "avatar": "avatars/avatar_16.webp",
           "role": "团队'智囊'",
           "personality": "话痨，满嘴传奇故事，实际一次实战没赢过",
           "relationship": "你的队友，负责交涉和讲废话"
@@ -41,7 +41,7 @@
         {
           "name": "矮人盾卫·伯恩",
           "gender": "男",
-          "avatar": "avatars/avatar_34.jpg",
+          "avatar": "avatars/avatar_34.webp",
           "role": "团队坦克",
           "personality": "沉默寡言，怕火但死战不退",
           "relationship": "你的队友，跟你一样想干翻恶龙"
@@ -49,7 +49,7 @@
         {
           "name": "半身人盗贼·米洛",
           "gender": "男",
-          "avatar": "avatars/avatar_15.jpg",
+          "avatar": "avatars/avatar_15.webp",
           "role": "团队'吉祥物'",
           "personality": "手不老实，心眼灵活，危机时刻总消失",
           "relationship": "你的队友，也是全团最可能卖队友的人"
@@ -57,7 +57,7 @@
         {
           "name": "酒馆老板娘·玛莎",
           "gender": "女",
-          "avatar": "avatars/avatar_07.jpg",
+          "avatar": "avatars/avatar_07.webp",
           "role": "情报源",
           "personality": "豪爽毒舌，消息灵通",
           "relationship": "你欠她三杯酒钱，她也偷偷给你塞过情报"
@@ -94,7 +94,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "宏大叙事钢琴纯音乐",
-    "cover": "covers/scenario_preset_pt_01.jpg",
+    "cover": "covers/scenario_preset_pt_01.webp",
     "order": 61
   },
   {
@@ -128,7 +128,7 @@
         {
           "name": "军官·麦克雷",
           "gender": "男",
-          "avatar": "avatars/avatar_16.jpg",
+          "avatar": "avatars/avatar_16.webp",
           "role": "退役上尉",
           "personality": "勇敢直率，但脾气急躁，最不信邪",
           "relationship": "你的调查同伴，负责'解决物理问题'"
@@ -136,7 +136,7 @@
         {
           "name": "教授·韦恩",
           "gender": "男",
-          "avatar": "avatars/avatar_33.jpg",
+          "avatar": "avatars/avatar_33.webp",
           "role": "密斯卡托尼克大学",
           "personality": "谨慎博学，熟悉古老典籍，但越懂越怕",
           "relationship": "你的调查同伴，负责破解文字线索"
@@ -144,7 +144,7 @@
         {
           "name": "灯塔看守·老霍",
           "gender": "男",
-          "avatar": "avatars/avatar_23.jpg",
+          "avatar": "avatars/avatar_23.webp",
           "role": "灯塔看护人",
           "personality": "眼神躲闪，说话吞吞吐吐，常年在喝烈酒",
           "relationship": "第一个失踪者，他的灯塔藏着关键线索"
@@ -152,7 +152,7 @@
         {
           "name": "疯子·萨姆",
           "gender": "男",
-          "avatar": "avatars/avatar_32.jpg",
+          "avatar": "avatars/avatar_32.webp",
           "role": "疯人院病人",
           "personality": "时好时疯，总在画同一幅深海怪物图",
           "relationship": "他画的图和你笔记本上神秘的符号一模一样"
@@ -189,7 +189,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "宏大叙事钢琴纯音乐",
-    "cover": "covers/scenario_preset_pt_02.jpg",
+    "cover": "covers/scenario_preset_pt_02.webp",
     "order": 62
   },
   {
@@ -223,7 +223,7 @@
         {
           "name": "独眼杰克·罗哈",
           "gender": "男",
-          "avatar": "avatars/avatar_11.jpg",
+          "avatar": "avatars/avatar_11.webp",
           "role": "赤砂帮头目",
           "personality": "冷酷狡诈，戴着眼罩也能看穿人心",
           "relationship": "你的首要目标，赏金一千美元"
@@ -231,7 +231,7 @@
         {
           "name": "酒馆老板·艾达",
           "gender": "女",
-          "avatar": "avatars/avatar_40.jpg",
+          "avatar": "avatars/avatar_40.webp",
           "role": "驿站酒馆老板",
           "personality": "风情泼辣，消息最灵通",
           "relationship": "你的情报线人，也是镇上唯一劝你'别干这行'的人"
@@ -239,7 +239,7 @@
         {
           "name": "警长·布莱克",
           "gender": "女",
-          "avatar": "avatars/avatar_38.jpg",
+          "avatar": "avatars/avatar_38.webp",
           "role": "治安官",
           "personality": "老派正义，讨厌赏金猎人但需要你办事",
           "relationship": "给你派活的人，他女儿失踪案的线索在你手里"
@@ -247,7 +247,7 @@
         {
           "name": "神秘人·灰影",
           "gender": "未知",
-          "avatar": "avatars/avatar_20.jpg",
+          "avatar": "avatars/avatar_20.webp",
           "role": "身份不明",
           "personality": "话少，枪快，永远戴着灰色宽檐帽",
           "relationship": "最近总在你附近出现，盯上你了"
@@ -284,7 +284,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "宏大叙事钢琴纯音乐",
-    "cover": "covers/scenario_preset_pt_03.jpg",
+    "cover": "covers/scenario_preset_pt_03.webp",
     "order": 63
   },
   {
@@ -318,7 +318,7 @@
         {
           "name": "大副·老莫",
           "gender": "男",
-          "avatar": "avatars/avatar_29.jpg",
+          "avatar": "avatars/avatar_29.webp",
           "role": "船员",
           "personality": "技术过硬，嘴硬心软，跟船二十年",
           "relationship": "你的左膀右臂，负责把破船修成能飞的"
@@ -326,7 +326,7 @@
         {
           "name": "导航员·小七",
           "gender": "男",
-          "avatar": "avatars/avatar_01.jpg",
+          "avatar": "avatars/avatar_01.webp",
           "role": "船员",
           "personality": "少年天才，爱接私活，身上总带违禁品",
           "relationship": "你的导航员，也是全船最不安分的因素"
@@ -334,7 +334,7 @@
         {
           "name": "情报贩子·眼镜",
           "gender": "未知",
-          "avatar": "avatars/avatar_24.jpg",
+          "avatar": "avatars/avatar_24.webp",
           "role": "星港中介",
           "personality": "圆滑精明，情报真假参半",
           "relationship": "你的中间人，介绍委托也介绍坑"
@@ -342,7 +342,7 @@
         {
           "name": "帝国缉私官·薇拉",
           "gender": "女",
-          "avatar": "avatars/avatar_36.jpg",
+          "avatar": "avatars/avatar_36.webp",
           "role": "海关上尉",
           "personality": "铁面无私，嗅觉灵敏，但似乎在追查别的案子",
           "relationship": "你的天敌，已经在三个星港'巧遇'过你"
@@ -379,7 +379,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "宏大叙事钢琴纯音乐",
-    "cover": "covers/scenario_preset_pt_04.jpg",
+    "cover": "covers/scenario_preset_pt_04.webp",
     "order": 64
   },
   {
@@ -413,7 +413,7 @@
         {
           "name": "黑客·红后",
           "gender": "女",
-          "avatar": "avatars/avatar_18.jpg",
+          "avatar": "avatars/avatar_18.webp",
           "role": "神经黑客",
           "personality": "毒舌，技术顶尖，怕出门只爱窝在服务器舱",
           "relationship": "你的搭档，你负责枪她负责网"
@@ -421,7 +421,7 @@
         {
           "name": "中介·老K",
           "gender": "男",
-          "avatar": "avatars/avatar_23.jpg",
+          "avatar": "avatars/avatar_23.webp",
           "role": "街头中间人",
           "personality": "滑头，消息灵通，两面三刀",
           "relationship": "你的主要委托人，也常把你当弃子",
@@ -431,7 +431,7 @@
         {
           "name": "警探·陈",
           "gender": "男",
-          "avatar": "avatars/avatar_23.jpg",
+          "avatar": "avatars/avatar_23.webp",
           "role": "城市治安局",
           "personality": "灰色正义，睁一只眼闭一只眼",
           "relationship": "与你做过交易：你帮他查案，他放你走"
@@ -439,7 +439,7 @@
         {
           "name": "企业保镖·铁面",
           "gender": "男",
-          "avatar": "avatars/avatar_02.jpg",
+          "avatar": "avatars/avatar_02.webp",
           "role": "巨头企业雇佣兵",
           "personality": "冷漠高效，像一台没有感情的机器",
           "relationship": "曾在任务中与你交过手，生死未卜"
@@ -476,7 +476,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "宏大叙事钢琴纯音乐",
-    "cover": "covers/scenario_preset_pt_05.jpg",
+    "cover": "covers/scenario_preset_pt_05.webp",
     "order": 65
   }
 ]); })();

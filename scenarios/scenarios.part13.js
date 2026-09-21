@@ -33,7 +33,7 @@
         {
           "name": "母亲·石氏",
           "gender": "女",
-          "avatar": "avatars/avatar_41.jpg",
+          "avatar": "avatars/avatar_41.webp",
           "role": "猎户遗孀",
           "personality": "坚韧慈爱，藏着一桩秘密",
           "relationship": "她似乎早知你的身世，一直瞒着你"
@@ -41,7 +41,7 @@
         {
           "name": "小龙崽·烬儿",
           "gender": "未知",
-          "avatar": "avatars/avatar_07.jpg",
+          "avatar": "avatars/avatar_07.webp",
           "role": "你救下的幼龙",
           "personality": "黏人贪吃，通晓人心",
           "relationship": "与你血脉相连，是你在全世界的依靠"
@@ -49,7 +49,7 @@
         {
           "name": "圣殿骑士·罗恩",
           "gender": "男",
-          "avatar": "avatars/avatar_03.jpg",
+          "avatar": "avatars/avatar_03.webp",
           "role": "猎龙骑士",
           "personality": "虔诚冷峻，奉命而来",
           "relationship": "他的剑已经出鞘，态度却有一丝犹疑"
@@ -57,7 +57,7 @@
         {
           "name": "龙裔遗民·霜语",
           "gender": "女",
-          "avatar": "avatars/avatar_36.jpg",
+          "avatar": "avatars/avatar_36.webp",
           "role": "霜脊山脉的使者",
           "personality": "神秘从容，知晓古老历史",
           "relationship": "她自称是你的「同族」，来带你离开"
@@ -93,7 +93,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "朦胧梦幻科幻",
-    "cover": "covers/scenario_preset_qh_01.jpg",
+    "cover": "covers/scenario_preset_qh_01.webp",
     "order": 66
   },
   {
@@ -127,7 +127,7 @@
         {
           "name": "骨之贤者·塔洛斯",
           "gender": "男",
-          "avatar": "avatars/avatar_13.jpg",
+          "avatar": "avatars/avatar_13.webp",
           "role": "骨城亡灵法师",
           "personality": "冰冷寡言，深藏不露",
           "relationship": "你的师父，他把你从死亡里捞回，也在你身上藏着谜"
@@ -135,7 +135,7 @@
         {
           "name": "骸骨仆从·老骨",
           "gender": "男",
-          "avatar": "avatars/avatar_32.jpg",
+          "avatar": "avatars/avatar_32.webp",
           "role": "塔里的管家",
           "personality": "唠叨慈祥，记性极好",
           "relationship": "从你复活那天起就照顾你，像是认识你"
@@ -143,7 +143,7 @@
         {
           "name": "幽灵书吏·灰羽",
           "gender": "女",
-          "avatar": "avatars/avatar_38.jpg",
+          "avatar": "avatars/avatar_38.webp",
           "role": "塔中图书馆管理员",
           "personality": "博学冷漠，守口如瓶",
           "relationship": "她知道每本书的秘密，也知道你的"
@@ -151,7 +151,7 @@
         {
           "name": "守门人·狼面",
           "gender": "男",
-          "avatar": "avatars/avatar_11.jpg",
+          "avatar": "avatars/avatar_11.webp",
           "role": "骨城城门守卫",
           "personality": "沉默凶悍，刀不离手",
           "relationship": "他盯着你时的眼神，像盯着一个「逃犯」"
@@ -187,7 +187,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "朦胧梦幻科幻",
-    "cover": "covers/scenario_preset_qh_02.jpg",
+    "cover": "covers/scenario_preset_qh_02.webp",
     "order": 67
   },
   {
@@ -221,7 +221,7 @@
         {
           "name": "长老·树语",
           "gender": "未知",
-          "avatar": "avatars/avatar_25.jpg",
+          "avatar": "avatars/avatar_25.webp",
           "role": "精灵族大长老",
           "personality": "智慧温和，崇尚和平",
           "relationship": "她阻止你离开，却也默许你带走圣树之弓"
@@ -229,7 +229,7 @@
         {
           "name": "人类矿主·铁手",
           "gender": "男",
-          "avatar": "avatars/avatar_10.jpg",
+          "avatar": "avatars/avatar_10.webp",
           "role": "矿脉承包商",
           "personality": "贪婪精明，心狠手辣",
           "relationship": "矿脉的真正主人，背后是王室"
@@ -237,7 +237,7 @@
         {
           "name": "人类游侠·约翰",
           "gender": "男",
-          "avatar": "avatars/avatar_10.jpg",
+          "avatar": "avatars/avatar_10.webp",
           "role": "王室猎手",
           "personality": "豪爽直率，重信守诺",
           "relationship": "他奉命猎杀你，却在第一次见面时放走了你"
@@ -245,7 +245,7 @@
         {
           "name": "小精灵·露露",
           "gender": "女",
-          "avatar": "avatars/avatar_42.jpg",
+          "avatar": "avatars/avatar_42.webp",
           "role": "圣树上的小精灵",
           "personality": "顽皮胆小，黏人",
           "relationship": "偷偷跟着你出了森林，是你与圣树之间最后的联系"
@@ -281,7 +281,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "朦胧梦幻科幻",
-    "cover": "covers/scenario_preset_qh_03.jpg",
+    "cover": "covers/scenario_preset_qh_03.webp",
     "order": 68
   },
   {
@@ -315,7 +315,7 @@
         {
           "name": "祖父·伯恩",
           "gender": "男",
-          "avatar": "avatars/avatar_33.jpg",
+          "avatar": "avatars/avatar_33.webp",
           "role": "封锤的铸造大师",
           "personality": "沉默固执，藏着一身本事",
           "relationship": "他让你替铁炉镇打农具，从不让你碰兵器"
@@ -323,7 +323,7 @@
         {
           "name": "落魄骑士·兰斯",
           "gender": "男",
-          "avatar": "avatars/avatar_23.jpg",
+          "avatar": "avatars/avatar_23.webp",
           "role": "断剑的主人",
           "personality": "正直落魄，背负旧仇",
           "relationship": "他带着祖父锻造的断剑上门，带来一桩旧案"
@@ -331,7 +331,7 @@
         {
           "name": "镇长·铜须",
           "gender": "男",
-          "avatar": "avatars/avatar_34.jpg",
+          "avatar": "avatars/avatar_34.webp",
           "role": "铁炉镇镇长",
           "personality": "精明圆滑，见风使舵",
           "relationship": "他压着祖父的旧案，不希望有人重提"
@@ -339,7 +339,7 @@
         {
           "name": "精灵附魔师·薇拉",
           "gender": "女",
-          "avatar": "avatars/avatar_27.jpg",
+          "avatar": "avatars/avatar_27.webp",
           "role": "来访的精灵工匠",
           "personality": "冷静骄傲，手艺卓绝",
           "relationship": "她看得出断剑的蓝光，也看得出你的天赋"
@@ -375,7 +375,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "朦胧梦幻科幻",
-    "cover": "covers/scenario_preset_qh_04.jpg",
+    "cover": "covers/scenario_preset_qh_04.webp",
     "order": 69
   },
   {
@@ -409,7 +409,7 @@
         {
           "name": "学院长·梅林",
           "gender": "男",
-          "avatar": "avatars/avatar_04.jpg",
+          "avatar": "avatars/avatar_04.webp",
           "role": "赫利翁学院长",
           "personality": "慈祥深邃，知晓一切",
           "relationship": "他亲自录取你，也第一个回避你的问题"
@@ -417,7 +417,7 @@
         {
           "name": "室友·阿尔文",
           "gender": "男",
-          "avatar": "avatars/avatar_02.jpg",
+          "avatar": "avatars/avatar_02.webp",
           "role": "贵族魔法生",
           "personality": "傲慢好胜，心直口快",
           "relationship": "看不起你的出身，却总在暗处帮你"
@@ -425,7 +425,7 @@
         {
           "name": "图书管理员·安格斯",
           "gender": "男",
-          "avatar": "avatars/avatar_44.jpg",
+          "avatar": "avatars/avatar_44.webp",
           "role": "禁书区管理员",
           "personality": "古怪健忘，知识渊博",
           "relationship": "他认得海渊之院的图案"
@@ -433,7 +433,7 @@
         {
           "name": "神秘黑猫·墨",
           "gender": "未知",
-          "avatar": "avatars/avatar_23.jpg",
+          "avatar": "avatars/avatar_23.webp",
           "role": "学院里的黑猫",
           "personality": "高傲机敏，能通人语",
           "relationship": "它总在你手环发热时出现，像在等什么"
@@ -469,7 +469,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "朦胧梦幻科幻",
-    "cover": "covers/scenario_preset_qh_05.jpg",
+    "cover": "covers/scenario_preset_qh_05.webp",
     "order": 70
   }
 ]); })();

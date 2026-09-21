@@ -33,7 +33,7 @@
         {
           "name": "苏白",
           "gender": "女",
-          "avatar": "avatars/avatar_39.jpg",
+          "avatar": "avatars/avatar_39.webp",
           "role": "九尾狐仙",
           "personality": "笑面温柔，实则执念极深，尾巴是心情晴雨表",
           "relationship": "你十年前救下的白狐，回来报恩"
@@ -41,7 +41,7 @@
         {
           "name": "青崖",
           "gender": "男",
-          "avatar": "avatars/avatar_14.jpg",
+          "avatar": "avatars/avatar_14.webp",
           "role": "除妖师",
           "personality": "冷面无情，以斩妖为天职",
           "relationship": "追查苏白的妖气而来"
@@ -49,7 +49,7 @@
         {
           "name": "秋娘",
           "gender": "女",
-          "avatar": "avatars/avatar_19.jpg",
+          "avatar": "avatars/avatar_19.webp",
           "role": "客栈老板娘",
           "personality": "精明泼辣，慧眼如炬",
           "relationship": "镇上唯一敢收留你吃白饭的人"
@@ -86,7 +86,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "朦胧梦幻科幻",
-    "cover": "covers/scenario_preset_rw_01.jpg",
+    "cover": "covers/scenario_preset_rw_01.webp",
     "order": 101
   },
   {
@@ -120,7 +120,7 @@
         {
           "name": "汐",
           "gender": "女",
-          "avatar": "avatars/avatar_25.jpg",
+          "avatar": "avatars/avatar_25.webp",
           "role": "咖啡馆帮工/人鱼",
           "personality": "清冷疏离，歌声是唯一的表达，其实怕孤独",
           "relationship": "你捡回来的银发青年，身份成谜"
@@ -128,7 +128,7 @@
         {
           "name": "陈警官",
           "gender": "男",
-          "avatar": "avatars/avatar_32.jpg",
+          "avatar": "avatars/avatar_32.webp",
           "role": "海岸警卫",
           "personality": "敏锐正直，执念很强",
           "relationship": "怀疑你窝藏货船事件的目击者",
@@ -138,7 +138,7 @@
         {
           "name": "阿婆",
           "gender": "女",
-          "avatar": "avatars/avatar_06.jpg",
+          "avatar": "avatars/avatar_06.webp",
           "role": "隔壁杂货店老板",
           "personality": "絮叨热心，见识过旧事",
           "relationship": "知道你父母当年的海难另有隐情"
@@ -175,7 +175,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "朦胧梦幻科幻",
-    "cover": "covers/scenario_preset_rw_02.jpg",
+    "cover": "covers/scenario_preset_rw_02.webp",
     "order": 102
   },
   {
@@ -209,7 +209,7 @@
         {
           "name": "裴照",
           "gender": "男",
-          "avatar": "avatars/avatar_23.jpg",
+          "avatar": "avatars/avatar_23.webp",
           "role": "驭龙司少主",
           "personality": "表面冷峻狠辣，实则重情重诺",
           "relationship": "发过誓要猎尽天下龙的猎人"
@@ -217,7 +217,7 @@
         {
           "name": "阿屠",
           "gender": "女",
-          "avatar": "avatars/avatar_42.jpg",
+          "avatar": "avatars/avatar_42.webp",
           "role": "驭龙司老将",
           "personality": "嗜血残暴，追踪术了得",
           "relationship": "曾亲手斩杀你的母亲，你的仇人",
@@ -227,7 +227,7 @@
         {
           "name": "灵犀",
           "gender": "女",
-          "avatar": "avatars/avatar_17.jpg",
+          "avatar": "avatars/avatar_17.webp",
           "role": "神秘女药师",
           "personality": "深不可测，知晓上古秘辛",
           "relationship": "唯一知道龙族灭族真相的人"
@@ -264,7 +264,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "朦胧梦幻科幻",
-    "cover": "covers/scenario_preset_rw_03.jpg",
+    "cover": "covers/scenario_preset_rw_03.webp",
     "order": 103
   },
   {
@@ -298,7 +298,7 @@
         {
           "name": "艾岚",
           "gender": "男",
-          "avatar": "avatars/avatar_14.jpg",
+          "avatar": "avatars/avatar_14.webp",
           "role": "房东/吸血鬼",
           "personality": "绅士优雅，毒舌腹黑，三百年的孤独让他渴望倾听",
           "relationship": "你的房东，深夜的聊天搭子"
@@ -306,7 +306,7 @@
         {
           "name": "戴维",
           "gender": "男",
-          "avatar": "avatars/avatar_34.jpg",
+          "avatar": "avatars/avatar_34.webp",
           "role": "猎魔人",
           "personality": "严谨刻板，信仰坚定",
           "relationship": "盯上了这栋楼的异常能量波动"
@@ -314,7 +314,7 @@
         {
           "name": "房东太太",
           "gender": "女",
-          "avatar": "avatars/avatar_08.jpg",
+          "avatar": "avatars/avatar_08.webp",
           "role": "三楼租客",
           "personality": "温柔神秘，来路不明",
           "relationship": "总是深夜在楼道里浇花"
@@ -351,7 +351,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "朦胧梦幻科幻",
-    "cover": "covers/scenario_preset_rw_04.jpg",
+    "cover": "covers/scenario_preset_rw_04.webp",
     "order": 104
   },
   {
@@ -385,7 +385,7 @@
         {
           "name": "苍梧",
           "gender": "男",
-          "avatar": "avatars/avatar_44.jpg",
+          "avatar": "avatars/avatar_44.webp",
           "role": "狼族大酋长",
           "personality": "沉稳寡言，责任重于一切，人形与狼形判若两狼",
           "relationship": "救你一命的人，也是最先怀疑你的人",
@@ -395,7 +395,7 @@
         {
           "name": "阿蒂拉",
           "gender": "女",
-          "avatar": "avatars/avatar_18.jpg",
+          "avatar": "avatars/avatar_18.webp",
           "role": "部落女巫",
           "personality": "孤傲疏离，通晓古老预言",
           "relationship": "认为你是「月印」的容器，部落的变数"
@@ -403,7 +403,7 @@
         {
           "name": "小灰",
           "gender": "未知",
-          "avatar": "avatars/avatar_07.jpg",
+          "avatar": "avatars/avatar_07.webp",
           "role": "狼族幼崽",
           "personality": "调皮黏人，对世界充满好奇",
           "relationship": "你救活的小狼崽，成了你最大的盟友"
@@ -440,7 +440,7 @@
     "sourceType": "official",
     "pinned": false,
     "bgm": "朦胧梦幻科幻",
-    "cover": "covers/scenario_preset_rw_05.jpg",
+    "cover": "covers/scenario_preset_rw_05.webp",
     "order": 105
   }
 ]); })();
