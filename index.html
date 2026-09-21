@@ -17173,11 +17173,44 @@ const token = delta.content || "";
     // 2) 该 NPC 不在"当面对话"状态：优先命中分离/远程信号（离开/别处/捎信/独自/挂念…），
     //    其次名字后不紧邻说话动词（说/道/问/喊/笑…）——两人当面交谈时发微信不合理
     // 3) 低频闸门：全局 ≥4 轮剧情、同一 NPC ≥8 轮剧情才可能触发一次
+    // displayText 可能是结构化协议源码(标准 JSON 或 {{}} 双花括号)或 HTML 卡。直接对它抽引语会捞到
+    // JSON 的引号/逗号(实测会发出 "," 这种垃圾),所以先按 renderEvents 的同款口径还原成纯正文。
+    function npcStoryPlainText(displayText) {
+        const raw = String(displayText || "");
+        const ts = stripThink(raw).trim();
+        if (ts.startsWith("{{") || /^(```[^\n]*\n)?\{\s*"/.test(ts)) {
+            const sp = StructuredCardProtocolService.parseStreaming(raw.replace(/^```(?:json)?\s*\n?/, ""));
+            return String(sp.story || "").replace(/\s+/g, " ").trim();
+        }
+        return String(UIRenderer.stripHtml(raw) || "").replace(/[#*`>]/g, " ").replace(/\s+/g, " ").trim();
+    }
+    // 角色说过的台词:引号里的内容,说话人按「引号前最近出现的名字」判定;名字没出现在引号前,
+    // 再看引号后 30 字(日/韩行文常写成「"…"라고 말했다」,名字在引号后面)。
+    function npcQuotedLines(text, npcs) {
+        const out = [];
+        // 内容用非贪婪匹配到最近的收尾引号:写死长度上限会让稍长的台词整条匹配失败(旧版 40 字上限的祸根),
+        // 长度收敛放到后面按句末标点做
+        const re = /[「『“"]([^」』”"\n]+?)[」』”"]/g;
+        let m;
+        while ((m = re.exec(text))) {
+            const before = text.slice(Math.max(0, m.index - 60), m.index);
+            const after = text.slice(m.index + m[0].length, m.index + m[0].length + 30);
+            let hit = null, pos = -1;
+            for (const n of npcs) {
+                const p = before.lastIndexOf(String(n.name).trim());
+                if (p >= 0 && p > pos) { pos = p; hit = n; }
+            }
+            if (!hit) for (const n of npcs) if (after.indexOf(String(n.name).trim()) >= 0) { hit = n; break; }
+            const line = m[1].replace(/\\+$/, "").trim();
+            if (hit && line && line.length <= 600) out.push({ npc: hit, line });
+        }
+        return out;
+    }
     function maybePushNpcStoryWechat(state, displayText) {
         if (!state || !displayText) return;
         const npcs = Array.isArray(state.npcs) ? state.npcs.filter((n) => n && String(n.name || "").trim()) : [];
         if (!npcs.length) return;
-        const text = String(UIRenderer.stripHtml(displayText) || "").replace(/[#*`>]/g, " ").replace(/\s+/g, " ").trim();
+        const text = npcStoryPlainText(displayText);
         if (!text) return;
         const rounds = (state.history || []).filter((h) => h.role === "ai").length;
         const REMOTE_SIGNALS = /(离开|离去|别处|远方|远处|传来|传信|捎|来信|书信|独自|告别|相别|分离|分别|远行|北上|南下|在外|挂念|惦记|想念|盼|归来|等你|回来|回家)/;
@@ -17199,11 +17232,18 @@ const token = delta.content || "";
         const lastNpc = Number((state.wxStoryMsgRounds && state.wxStoryMsgRounds[key]) || -99);
         if (rounds - lastGlobal < 4 || rounds - lastNpc < 8) return;
         const name = String(pick.name).trim();
-        const i = text.indexOf(name);
-        const seg = text.slice(i + name.length, i + name.length + 80);
-        const q = seg.match(/[「『"“]([^」』"”]{1,40})[」』"”]/);
-        let msg = q ? q[1].trim() : seg.replace(/([。！？.!?]).*$/, "$1").trim();
-        msg = msg.slice(0, 40).trim();
+        // 只发他真说出口的那句。这轮他没台词就安静待着——发剧情叙述会变成「截断的正文第一句」,
+        // 既不是他说的话、又半句断掉(小徐 2026-09-21 报的就是这个)。
+        const mine = npcQuotedLines(text, npcs).filter((q) => q.npc === pick);
+        if (!mine.length) return;
+        const MAX = 140;
+        let msg = mine[0].line;
+        if (msg.length > MAX) {
+            const head = msg.slice(0, MAX);
+            const at = Math.max(...["。", "！", "？", "…", ".", "!", "?"].map((c) => head.lastIndexOf(c)));
+            // 收口在句末标点上,宁可短一句也不半句断
+            msg = (at > 8 ? head.slice(0, at + 1) : head).trim() + "…";
+        }
         if (!msg) return;
         if (!state.npcChats || typeof state.npcChats !== "object") state.npcChats = {};
         if (!Array.isArray(state.npcChats[key])) state.npcChats[key] = [];
@@ -20724,10 +20764,25 @@ function openNpcProfile(npcId) {
         }
         // ---- 头像库选择弹窗(4×n 网格 + 确定):游玩页头像与开局预览共用 ----
         let _avatarPickerValue = "";
+        // 恋爱卡的 NPC 立绘来自卡自带(卡 structured.npcs[].art),而换头像会把 npc.avatarPinned 置真、
+        // 在 npcImageOf 的统一索引里盖过卡的原图 → 预置立绘被顶掉。这类卡直接不给换。
+        function npcAvatarLocked() {
+            try {
+                const c = ScenarioCardService.getSelectedCard();
+                return !!(c && c.structured && c.structured.love_mode === true);
+            } catch (e) { return false; }
+        }
         function openAvatarPickerForNpc(npcId) {
             const state = StateService.get();
             const npc = (state.npcs || []).find((n) => String(n.id || "") === String(npcId || ""));
             if (!npc) return;
+            if (npcAvatarLocked()) {
+                NoticeModalService.showInfo({
+                    title: "该剧本不支持更换头像",
+                    descHtml: "恋爱剧本的角色立绘由剧本预置，更换后会破坏立绘，所以这里不能改。"
+                });
+                return;
+            }
             openAvatarPickerModal(npc.avatar || "", async (val) => {
                 npc.avatar = val;
                 npc.avatarPinned = true; // 手动换过头像:统一索引里优先于卡的立绘原图,避免"换了不生效"
