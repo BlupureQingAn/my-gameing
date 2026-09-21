@@ -54,7 +54,9 @@ const CARDS = [
     { id: "7s3afn7a74hp8n6", file: "jp-r1-03-ehon-henshuubu.card.json",
       prompt: "冬日东京神保町的出版社绘本编辑部,女生抱着画稿站在印刷机与堆叠绘本之间,窗外飘雪与室内暖黄灯,年末截稿的忙碌里悄然心动;Tokyo publishing house anime, winter snow outside window, printing press and picture books, warm office light;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
     { id: "chmpyzr9atf16sw", file: "jp-r1-04-onsen-ryokan.card.json",
-      prompt: "夏日箱根山间温泉旅馆,女生穿旅馆作务衣端着木托盘走过木质长廊,庭院绿意与汤けむり暖帘,山雾与灯笼光里的假日心动;Hakone onsen ryokan anime, summer mountains, yukata-clad staff on wooden veranda, warm lantern light, gentle romance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" }
+      prompt: "夏日箱根山间温泉旅馆,女生穿旅馆作务衣端着木托盘走过木质长廊,庭院绿意与汤けむり暖帘,山雾与灯笼光里的假日心动;Hakone onsen ryokan anime, summer mountains, yukata-clad staff on wooden veranda, warm lantern light, gentle romance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
+    { id: "hthf0tgxpq2chru", file: "kr-r1-02-webtoon.card.json",
+      prompt: "首尔合井洞网络漫画平台编辑部深夜,女生抱着分镜稿站在亮着屏幕的工位之间,窗外首尔夜景与飘雪,截稿周的紧张与心动;Seoul webtoon editorial office anime, late night desk screens, snow outside the window, city glow, sincere workplace romance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" }
 ];
 
 async function pbJson(url, opts) {
