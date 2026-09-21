@@ -5154,6 +5154,43 @@
     .lg-vr-term{font-weight:700;font-size:.85rem;color:var(--text);word-break:break-word}
     .lg-vr-gl{font-size:.72rem;color:var(--text);opacity:.78;margin-top:2px;line-height:1.5}
     .lg-vr-origin{font-size:.62rem;color:var(--sub,#806a55);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    /* 生词本 2026-09-21:双 Tab / 搜索 / 例句 / 来源筛选 / 全屏复习 */
+    .lg-vr.word{border-left:3px solid rgba(124,84,240,.55)}
+    .lg-vr.expr{border-left:3px solid rgba(216,124,63,.62);background:rgba(216,124,63,.055)}
+    .lg-vr-ctx{font-size:.7rem;color:var(--text);opacity:.8;margin-top:5px;padding:5px 8px;border-radius:8px;background:rgba(124,84,240,.06);line-height:1.55;word-break:break-word}
+    .lg-vr-ctx::before{content:"“";opacity:.5}
+    .lg-vr-ctx::after{content:"”";opacity:.5}
+    .lg-vr-ctx b{font-weight:800;color:#7c4fd8;background:rgba(124,84,240,.14);border-radius:3px;padding:0 2px}
+    .lg-tabs{display:flex;gap:8px;margin:4px 0 10px}
+    .lg-tab{flex:1;border:1px solid var(--line,#e2ccb0);background:var(--input-bg,#fff8f0);color:var(--text);border-radius:12px;padding:9px 6px;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .15s}
+    .lg-tab b{font-weight:800;opacity:.75;font-size:.72rem}
+    .lg-tab.on{background:linear-gradient(135deg,#7c4fd8,#9b6ae8);color:#fff;border-color:transparent;box-shadow:0 4px 12px rgba(124,84,240,.25)}
+    .lg-tab.on b{opacity:.9}
+    .lg-tools{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+    .lg-srch{width:100%;box-sizing:border-box;border:1px solid var(--line,#e2ccb0);background:var(--input-bg,#fff8f0);color:var(--text);border-radius:11px;padding:9px 12px;font-size:.78rem;outline:none}
+    .lg-srch:focus{border-color:rgba(124,84,240,.6)}
+    .lg-srcs{display:flex;gap:6px;flex-wrap:wrap}
+    .lg-src{border:1px solid var(--line,#e2ccb0);background:var(--input-bg,#fff8f0);color:var(--text);border-radius:999px;padding:4px 10px;font-size:.68rem;cursor:pointer;opacity:.8}
+    .lg-src.on{background:rgba(124,84,240,.15);border-color:rgba(124,84,240,.5);color:#7c4fd8;font-weight:800;opacity:1}
+    .lg-rv-go{width:100%;box-sizing:border-box;border:none;border-radius:12px;padding:11px;font-size:.82rem;font-weight:800;color:#fff;background:linear-gradient(135deg,#2f9e6e,#43b884);cursor:pointer;margin-bottom:10px}
+    .lg-rv-mask{position:fixed;inset:0;z-index:9999;background:rgba(28,20,16,.62);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:20px}
+    .lg-rv-card{width:100%;max-width:440px;max-height:82vh;overflow-y:auto;background:var(--card-bg,#fffaf4);border-radius:18px;padding:20px 18px;box-shadow:0 18px 50px rgba(0,0,0,.3)}
+    .lg-rv-top{display:flex;justify-content:space-between;align-items:center;font-size:.72rem;opacity:.7;margin-bottom:14px}
+    .lg-rv-x{cursor:pointer;font-size:1rem;padding:2px 6px;border-radius:8px}
+    .lg-rv-x:hover{background:rgba(0,0,0,.06)}
+    .lg-rv-w{font-size:1.5rem;font-weight:800;color:var(--text);text-align:center;word-break:break-word;margin-bottom:8px}
+    .lg-rv-ph{font-size:.72rem;opacity:.6;text-align:center;margin-bottom:16px;min-height:1em}
+    .lg-rv-body{margin:14px 0}
+    .lg-rv-gz{font-size:.9rem;line-height:1.6;color:var(--text)}
+    .lg-rv-hint{text-align:center;font-size:.75rem;opacity:.55;padding:16px 0}
+    .lg-rv-btn{width:100%;box-sizing:border-box;border:none;border-radius:12px;padding:11px;font-size:.82rem;font-weight:800;color:#fff;background:linear-gradient(135deg,#7c4fd8,#9b6ae8);cursor:pointer}
+    .lg-rv-st{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .lg-rv-st button{border:1px solid var(--line,#e2ccb0);background:var(--input-bg,#fff8f0);color:var(--text);border-radius:11px;padding:10px 4px;font-size:.74rem;font-weight:700;cursor:pointer}
+    .lg-rv-st button.s0{border-color:rgba(214,84,84,.5);color:#c0392b}
+    .lg-rv-st button.s1{border-color:rgba(216,124,63,.5);color:#b06a1f}
+    .lg-rv-st button.s2{border-color:rgba(47,158,110,.5);color:#2f9e6e}
+    .lg-rv-done{text-align:center;padding:24px 0}
+    .lg-rv-done b{font-size:1.1rem;display:block;margin-bottom:8px}
     .lg-st{display:flex;gap:5px;margin-top:6px}
     .lg-st button{border:1px solid var(--line,#e2ccb0);background:transparent;color:var(--sub,#806a55);font-size:.64rem;border-radius:999px;padding:2px 9px;cursor:pointer}
     .lg-st button.on-0{background:rgba(124,84,240,.16);border-color:#7c4fd8;color:#7c4fd8;font-weight:700}
@@ -5261,19 +5298,6 @@
     .lg-qz-feed .bad-t{color:#c03a49}
     .lg-qz-done{padding:10px 12px;background:var(--input-bg,#fffbf5);border:1px dashed var(--line,#e2ccb0);border-radius:11px;font-size:.76rem;color:var(--text);line-height:1.65}
     .lg-qz-sync{margin-top:8px;font-size:.66rem;color:var(--sub,#806a55)}
-    /* M6d6:考纲词刷词 */
-    .lg-drill-bar{font-size:.68rem;color:var(--sub,#806a55);margin-bottom:8px;font-weight:600}
-    .lg-drill-card{background:linear-gradient(150deg,var(--input-bg,#fffbf5),rgba(124,84,240,.07));border:1px solid var(--line,#e2ccb0);border-radius:14px;padding:18px 16px 14px;text-align:center}
-    .lg-drill-word{font-size:1.5rem;font-weight:800;color:var(--text);word-break:break-all;line-height:1.3}
-    .lg-drill-ph{display:block;font-size:.8rem;font-weight:400;color:var(--sub,#806a55);margin-top:4px}
-    .lg-drill-front-tip{font-size:.74rem;color:var(--sub,#806a55);margin-top:10px}
-    .lg-drill-zh{font-size:.9rem;color:#5b3fce;line-height:1.7;margin-top:8px;text-align:left;background:rgba(124,84,240,.07);border-radius:9px;padding:9px 11px}
-    .lg-drill-hint{font-size:.76rem;color:var(--sub,#806a55);padding:10px 4px;line-height:1.6}
-    .lg-drill-done-title{font-size:.98rem;font-weight:800;color:var(--text);margin-bottom:6px}
-    .lg-drill-done-sub{font-size:.76rem;color:var(--sub,#806a55);line-height:1.7}
-    .lg-drill-sync{margin-top:10px;font-size:.68rem;color:var(--sub,#806a55)}
-    .lg-drill-card .lg-drill-judge[data-j="1"]{background:linear-gradient(135deg,#2fbf71,#1f9a5a);color:#fff;border-color:transparent}
-    .lg-drill-card .lg-drill-judge[data-j="0"]{color:#c03a49;border-color:rgba(224,80,95,.5)}
 </style>
 <div id="boot-screen" role="status" aria-label="页面加载中">
     <div class="boot-logo"><img src="icons/android-chrome-192x192.png" alt="" style="width:36px;height:36px;vertical-align:-7px;margin-right:10px;border-radius:8px;filter:drop-shadow(0 0 10px rgba(255,214,107,.45))">云吞吞文游</div>
@@ -5548,19 +5572,9 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <button type="button" class="lang-lang-card" data-m="full" onclick="LangController.setImmersion('full')"><span style="font-size:1.35rem;">🌊</span><span>全沉浸</span><span class="list-sub" style="margin:0;">纯英语体验，辅助全部手动触发</span></button>
                 </div>
 
-                <div class="list-title" style="margin-top:18px;" id="lang-learn-stats">📊 学习统计与周报 <span class="list-sub" style="margin-left:4px;">玩英语剧本、刷词、复习都会累计学习时长</span></div>
+                <div class="list-title" style="margin-top:18px;" id="lang-learn-stats">📊 学习统计与周报 <span class="list-sub" style="margin-left:4px;">玩英语剧本、复习生词都会累计学习时长</span></div>
                 <div class="list-sub">学习数据每天自动统计：今天学了多久、连续几天打卡、生词掌握进度——进步看得见，更容易坚持。</div>
                 <div id="lang-learn-stats-box" style="margin-top:8px;"><div class="list-sub" style="padding:12px 0;">登录后查看</div></div>
-
-                <div class="list-title" style="margin-top:18px;" id="lang-learn-drill">🔁 考纲词刷词 <span class="list-sub" style="margin-left:4px;">10 词/轮 · 弱词优先 · 翻卡自评</span></div>
-                <div class="list-sub">按你的当前档词库出词：先看英文想释义，翻面核对——记住的收进「已掌握」，没记住的自动排进下轮（词测与刷词共用一份进度）。</div>
-                <div id="lang-drill-box" style="margin-top:8px;">
-                    <div class="setting-actions" style="margin-top:0;">
-                        <button class="mini-btn primary" onclick="LangAssist.startDrill(false)">▶ 开始刷词（10 词）</button>
-                        <button class="mini-btn" onclick="LangAssist.startDrill(true)">↻ 换一批</button>
-                    </div>
-                    <div class="list-sub" id="lang-drill-stat" style="margin-top:6px;">刷词与章末词测共用一份进度：弱词优先、错词下轮重逢、掌握即出池</div>
-                </div>
             </section>
         </section>
 
@@ -5576,7 +5590,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <div class="list-title" style="margin:0;" id="lang-learn-vocab">📖 我的生词本 <span class="list-sub" style="margin-left:4px;">游戏里点过的词自动收进来</span></div>
                 <img class="lg-learn-head" src="lang/vocab-head.jpg" alt="生词本" loading="lazy">
                 <div class="lg-learn-sub">玩英语剧本时：轻点句子看整句译文，点蓝色虚线的生词看释义——点过的词会收进这里，可在「新学 → 眼熟 → 已掌握」之间手动划。</div>
-                <div class="list-sub" style="margin-top:6px;">点「返回大厅」可以继续学——生词本、刷词与章末复盘收藏的表达都在这里管理。</div>
+                <div class="list-sub" style="margin-top:6px;">点「返回大厅」可以继续学——生词本与章末复盘收藏的表达都在这里管理。</div>
                 <div id="lang-learn-box" style="margin-top:8px;"></div>
             </section>
         </section>
@@ -5594,7 +5608,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <div class="list-title" style="margin:0;" id="lb-title">🏆 学习时长榜</div>
                     <button type="button" class="mini-btn ghost" onclick="LangController.refreshLeaderboard()">↻ 刷新</button>
                 </div>
-                <div class="list-sub" id="lb-sub">玩剧本 + 学习中心刷词/生词本翻记都算学习时长——每次进入自动记录，越玩越靠前。</div>
+                <div class="list-sub" id="lb-sub">玩剧本 + 生词本翻记都算学习时长——每次进入自动记录，越玩越靠前。</div>
 
                 <div class="lang-picker" id="lb-board-picker" style="margin-top:10px;">
                     <button type="button" class="lang-lang-card active" data-board="time" onclick="LangController.setLbBoard('time')"><span>⏱ 学习时长</span></button>
@@ -23341,7 +23355,7 @@ window.LoveEngine = (() => {
             try { api.renderMyStats(); } catch (e) {}
             try { api.renderLearnStats(true); } catch (e) {}
         },
-        /* M6a/M8d:语言页组视图进入钩子(switchView 调用);生词本独立子页进入即刷词表 */
+        /* M6a/M8d:语言页组视图进入钩子(switchView 调用);生词本独立子页进入即加载词表 */
         onShow: function (viewId) {
             api.syncSubNav(viewId);
             if (viewId === "view-lang") { api.renderHome(); return; }
@@ -23543,7 +23557,6 @@ window.LoveEngine = (() => {
         },
         goImmAnchor: function () { api.goLearn(); api.anchor("#lang-learn-imm"); },
         goVocabAnchor: function () { api.goVocab(); api.anchor("#lang-learn-vocab"); },
-        goDrillAnchor: function () { api.goLearn(); api.anchor("#lang-learn-drill"); },
         /* ---- 排行榜(2026-09-06):日/周/月学习时长 Top100;2026-09-21 增"无阻畅读榜"并修语种切换 ---- */
         goLeaderboard: function () {
             switchView("view-lang-leaderboard");
@@ -23629,7 +23642,7 @@ window.LoveEngine = (() => {
             if (t) t.textContent = lbBoard === "immersive" ? "📖 " + ln + "无阻畅读榜" : "🏆 " + ln + "学习时长榜";
             if (s) s.textContent = lbBoard === "immersive"
                 ? "不点生词、不看译文、一路顺畅读下去的原文字数才算——挂机刷时长在这里没用。每次进入自动累计，越读越靠前。"
-                : "玩" + ln + "剧本 + 学习中心刷词/生词本翻记都算学习时长——每次进入自动记录，越玩越靠前。";
+                : "玩" + ln + "剧本 + 生词本翻记都算学习时长——每次进入自动记录，越玩越靠前。";
         },
         lbRowsHtml: function (d, board, lang) {
             var items = d.items || [];
@@ -23944,7 +23957,7 @@ window.LoveEngine = (() => {
                 '<div class="wk-row"><span>连续学习</span><b>' + (streak > 0 ? "🔥 " + streak + " 天" : "今天开始第一段连胜") + "</b></div>" +
                 '<div class="wk-row"><span>累计学习</span><b>' + api.fmtDur(d.total_seconds || 0) + " · " + Number(d.total_days || 0) + " 天</b></div>" +
                 '<div class="wk-row"><span>本周新收生词</span><b>' + Number(d.week_new_vocab || 0) + " 个</b></div>" +
-                '<div class="wk-row"><span>刷词 / 词测练词</span><b>' + Number(d.bank_words || 0) + " 个</b></div>";
+                '<div class="wk-row"><span>词测练词</span><b>' + Number(d.bank_words || 0) + " 个</b></div>";
             var vHtml = vTotal > 0
                 ? '<div style="margin-top:10px;"><div class="wks-vt">生词掌握 <span class="list-sub" style="margin-left:2px;">已掌握 ' + vMas + " · 眼熟 " + vFam + " · 新学 " + vNew + "</span></div>" +
                     '<div class="wks-track-line"><div class="wks-vf" style="width:' + famPct + '%" title="眼熟 ' + vFam + '"></div><div class="wks-vm" style="width:' + masPct + '%" title="已掌握 ' + vMas + '"></div></div>' +
@@ -24006,7 +24019,7 @@ window.LoveEngine = (() => {
         libEmptyCopy: function () {
             var lg = curLang(), n = LANG_TAG_INFO[lg][1];
             if (lg === "en") return "英语剧本库还是空的，稍后再来刷新看看～";
-            return n + "剧本正在制作中——" + (lg === "ja" ? "JLPT" : "TOPIK") + " 词库已可刷词/词测，剧本上线后会出现在这里～";
+            return n + "剧本正在制作中——" + (lg === "ja" ? "JLPT" : "TOPIK") + " 词库已就绪，剧本上线后会出现在这里～";
         },
         renderLibrary: function () {
             var rows = $("lang-lib-grid"); if (!rows) return;
@@ -24150,15 +24163,20 @@ window.LoveEngine = (() => {
 
     /* ---- 词库(释义总表 wordInfo:gloss 关键表达 ∪ 生词本)+ 生词本(vocabMap) ---- */
     var wordInfo = {};      // lower(w) → {w, en, zh}
-    var vocabMap = {};      // lower(term) → {id,type,term,gloss_en,gloss_zh,origin,status,created_at}
+    var vocabMap = {};      // lower(term) → {id,type,term,gloss_en,gloss_zh,origin,context,status,created_at}
     var vocabLoaded = false;
+    /* 生词本视图态(2026-09-21):两个 Tab 互斥渲染,不同时铺两套内容 */
+    var vocabTab = "due";   // due=📆今日复习 | all=📚全部生词库
+    var vocabQ = "";        // Tab2 搜索词
+    var vocabSrc = "";      // Tab2 来源筛选("" = 全部)
+    var pendingCtx = "";    // 双击查词时暂存"该词所在的那句话",由 saveVocabSilent 取走
     /* 会话语种(词法层用):沿用 LangEngine 的语种判定;非语言会话/未加载时按 en(行为不变) */
     var IS_CJK_LANG = { ja: 1, ko: 1 };
     function curSessionLang() {
         try { if (window.LangEngine && window.LangEngine.targetLang) return window.LangEngine.targetLang(); } catch (e) {}
         return "en";
     }
-    /* 学习工具(刷词/词测/词库/榜单)用哪个语种:在语言会话里随会话,不在会话里随语言页所选语种。
+    /* 学习工具(词测/词库/生词本/榜单)用哪个语种:在语言会话里随会话,不在会话里随语言页所选语种。
        不能用 curSessionLang:学习中心不在会话中,它只会回落到 en,日语词会被英语那套词形校验收掉。
        白名单兜底同样不能省:targetLang() 可能给出非 en/ja/ko 的值,下面词形校验/取词库都按它分叉。 */
     function curLearnLang() {
@@ -25029,7 +25047,7 @@ window.LoveEngine = (() => {
     /* ---- M6d3 点查考纲化:当前档词库命中 → 考纲徽标+词库标准释义;未命中 → AI info/整句引导 ---- */
     var BAND_NAMES = { hs: "高中", cet4: "四级", cet6: "六级", ky: "考研", toefl: "托福", "ja-n5": "N5", "ja-n4": "N4", "ja-n3": "N3", "ja-n2": "N2", "ja-n1": "N1", "ko-1": "初级", "ko-2": "中级", "ko-3": "高级" };
     var bandAliasIdx = {};   // band -> {词形变体: 原形}
-    /* 2026-09-13:词汇难度改由"用户学习档"动态决定——剧情/点译/章节词/刷词全走这一处;
+    /* 2026-09-13:词汇难度改由"用户学习档"动态决定——剧情/点译/章节词/词测全走这一处;
        未选档时才退回卡内档位兜底(保证有词库可用),不再让卡的难度Tag 决定用户学什么词。 */
     /* 当前学习档:优先用户档,其次卡档;两者都要属于**当前语种**(否则切语种后会把英语档当日语档用/反之) */
     function currentLangBand() {
@@ -25248,6 +25266,8 @@ window.LoveEngine = (() => {
             }
         } catch (e) {}
         if (!origin) origin = "英语剧本";
+        var ctx = pendingCtx;
+        pendingCtx = "";   // 取走即清:避免把上一句的例句贴到这次查的词上
         fetch(API_BASE + "/api/lang/vocab", {
             method: "POST",
             headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token() },
@@ -25255,13 +25275,14 @@ window.LoveEngine = (() => {
                 lang: curLearnLang(), type: "word", term: String(term).slice(0, 64),
                 gloss_en: info && info.en ? String(info.en).slice(0, 500) : "",
                 gloss_zh: info && info.zh ? String(info.zh).slice(0, 500) : "",
-                origin: origin.slice(0, 200)
+                origin: origin.slice(0, 200),
+                context: ctx
             })
         })
             .then(function (r) { return r.ok ? r.json() : null; })
             .then(function (d) {
                 if (!d) { if (cb) cb(false); return; }
-                vocabMap[key] = { id: d.id || "", type: "word", term: String(term).slice(0, 64), gloss_en: info && info.en ? String(info.en) : "", gloss_zh: info && info.zh ? String(info.zh) : "", origin: origin, status: 0, created_at: "" };
+                vocabMap[key] = { id: d.id || "", type: "word", term: String(term).slice(0, 64), gloss_en: info && info.en ? String(info.en) : "", gloss_zh: info && info.zh ? String(info.zh) : "", origin: origin, context: ctx, status: 0, created_at: "" };
                 reDirty = true;
                 if (cb) cb(true);
             }).catch(function () { if (cb) cb(false); });
@@ -25400,9 +25421,12 @@ window.LoveEngine = (() => {
             var nw = Date.now();
             if (lastDbl.key === wk && nw - lastDbl.at <= 320) {
                 lastDbl.key = "";
-                openPop(wk, e.clientX, e.clientY);
                 var wSenEl = wEl.closest(".lg-sentence");   // 无阻畅读:查过词的这句不再算无阻
-                if (wSenEl) lgImm.hint(sentences[Number(wSenEl.getAttribute("data-sen"))]);
+                var wSen = wSenEl ? sentences[Number(wSenEl.getAttribute("data-sen"))] : null;
+                /* 生词本例句:记下"这个词出现的那句话",存库供日后回看在哪见到的 */
+                pendingCtx = wSen && wSen.text ? String(wSen.text).slice(0, 300) : "";
+                if (wSenEl) lgImm.hint(wSen);
+                openPop(wk, e.clientX, e.clientY);
             }
             else { lastDbl.key = wk; lastDbl.at = nw; hidePop(); }
             return;
@@ -25501,6 +25525,171 @@ window.LoveEngine = (() => {
         h += "</div>";
         return h;
     }
+    /* ---- 生词本 2026-09-21:来源归类 / 例句 / 搜索 / 双 Tab / 全屏复习 ---- */
+    /* origin 形如 卡:「XXX」 / 卡:「XXX」· 第 N 章复盘 / 英语剧本 → 归类成剧本名 */
+    function vocabSrcOf(it) {
+        var o = String((it && it.origin) || "");
+        var m = o.match(/卡:「([^」]*)」/);
+        if (m) return m[1] || "未命名卡";
+        if (!o) return "其他";
+        return o.replace(/^·\s*/, "").slice(0, 24) || "其他";
+    }
+    /* 例句:把命中的那个词加粗(大小写不敏感,只标第一处) */
+    function vocabCtxHtml(ctx, term) {
+        var c = String(ctx || "").trim();
+        if (!c) return "";
+        var t = String(term || ""), i = t ? c.toLowerCase().indexOf(t.toLowerCase()) : -1;
+        var inner = i < 0 ? esc(c)
+            : esc(c.slice(0, i)) + "<b>" + esc(c.slice(i, i + t.length)) + "</b>" + esc(c.slice(i + t.length));
+        return '<div class="lg-vr-ctx">' + inner + "</div>";
+    }
+    function vocabAllList() {
+        var keys = Object.keys(vocabMap), arr = [], i;
+        for (i = 0; i < keys.length; i++) arr.push(vocabMap[keys[i]]);
+        arr.sort(function (a, b) { var ta = a.created_at || "", tb = b.created_at || ""; return ta === tb ? 0 : (ta > tb ? -1 : 1); });
+        return arr;
+    }
+    function vocabDueHtml(rv) {
+        if (!rv.length) {
+            return '<div class="lg-vr word"><div class="lg-vr-main"><div class="lg-vr-term">今天没有到期的词 🎉</div>' +
+                '<div class="lg-vr-gl">按 1·2·4·7 天计划，到期才出现。新收的词满 1 天后进入复习。</div></div></div>';
+        }
+        return '<button type="button" class="lg-rv-go" data-act="rvgo">▶ 一键开始复习 · 全屏刷 ' + rv.length + " 词</button>" + reviewHtml(rv);
+    }
+    function vocabAllHtml(all) {
+        var srcs = {}, i, j, s;
+        for (i = 0; i < all.length; i++) srcs[vocabSrcOf(all[i])] = 1;
+        var names = Object.keys(srcs).sort();
+        var chips = "";
+        if (names.length > 1) {
+            chips = '<div class="lg-srcs"><span class="lg-src' + (vocabSrc === "" ? " on" : "") + '" data-act="vsrc" data-src="">全部 ' + all.length + "</span>";
+            for (i = 0; i < names.length; i++) {
+                var cnt = 0;
+                for (j = 0; j < all.length; j++) if (vocabSrcOf(all[j]) === names[i]) cnt++;
+                chips += '<span class="lg-src' + (vocabSrc === names[i] ? " on" : "") + '" data-act="vsrc" data-src="' + esc(names[i]) + '">' + esc(names[i]) + " " + cnt + "</span>";
+            }
+            chips += "</div>";
+        }
+        var h = '<div class="lg-tools">' +
+            '<input id="lg-vocab-q" class="lg-srch" type="search" placeholder="搜索单词 / 释义 / 例句…" value="' + esc(vocabQ) + '" autocomplete="off">' + chips + "</div>";
+        if (!all.length) return h;
+        h += '<div class="list-sub" style="margin:2px 0 8px;" id="lg-vocab-cnt"></div>';
+        var ST = [["0", "新学"], ["1", "眼熟"], ["2", "已掌握"]];
+        for (i = 0; i < all.length; i++) {
+            var it = all[i];
+            var cls = it.type === "expression" ? "expr" : "word";
+            var tname = it.type === "expression" ? "表达" : "词";
+            var gz = String(it.gloss_zh || "");
+            var ge = it.type === "expression" && String(it.gloss_en || "") ? " · 例: " + String(it.gloss_en) : "";
+            var gl = (gz + ge || "（暂无释义）").slice(0, 220);
+            var btns = "";
+            for (j = 0; j < ST.length; j++) {
+                var stv = Number(ST[j][0]);
+                btns += '<button type="button" data-act="st" data-vid="' + esc(String(it.id || "")) + '" data-status="' + stv + '" class="' + (Number(it.status) === stv ? "on-" + stv : "") + '">' + ST[j][1] + "</button>";
+            }
+            var hay = (String(it.term || "") + " " + gz + " " + String(it.gloss_en || "") + " " + String(it.context || "")).toLowerCase();
+            h += '<div class="lg-vr ' + cls + '" data-src="' + esc(vocabSrcOf(it)) + '" data-hay="' + esc(hay) + '">' +
+                '<span class="lg-vt ' + cls + '">' + tname + "</span>" +
+                '<div class="lg-vr-main"><div class="lg-vr-term">' + esc(it.term) + "</div>" +
+                '<div class="lg-vr-gl">' + esc(gl) + "</div>" +
+                vocabCtxHtml(it.context, it.term) +
+                (it.origin ? '<div class="lg-vr-origin">' + esc(String(it.origin).slice(0, 80)) + "</div>" : "") +
+                '<div class="lg-st">' + btns + "</div></div></div>";
+        }
+        return h;
+    }
+    /* 搜索/来源筛选走"就地显隐",不重绘整块——否则输入框每敲一个字就丢焦点 */
+    function vocabApplyFilter() {
+        var box = $("lang-learn-box");
+        if (!box) return;
+        var q = vocabQ.trim().toLowerCase();
+        var cards = box.querySelectorAll(".lg-vr[data-src]");
+        var shown = 0, i, c, hit;
+        for (i = 0; i < cards.length; i++) {
+            c = cards[i];
+            hit = !vocabSrc || c.getAttribute("data-src") === vocabSrc;
+            if (hit && q) hit = String(c.getAttribute("data-hay") || "").indexOf(q) >= 0;
+            c.style.display = hit ? "" : "none";
+            if (hit) shown++;
+        }
+        var cnt = $("lg-vocab-cnt");
+        if (cnt) {
+            var total = cards.length;
+            cnt.textContent = (vocabQ.trim() || vocabSrc)
+                ? "筛选出 " + shown + " 条（共 " + total + " 条，点剧情里的词会自动收进来）"
+                : "共 " + total + " 条（点剧情里的词 / 章末复盘里收藏的表达都会收进来）";
+        }
+    }
+    /* 全屏复习:覆盖层挂在 body 上,所以身后生词本重绘不会把它冲掉 */
+    var rvPlay = null;
+    function rvEnsureMask() {
+        var m = $("lg-rv-mask");
+        if (m) return m;
+        m = document.createElement("div");
+        m.id = "lg-rv-mask";
+        m.className = "lg-rv-mask";
+        m.addEventListener("click", function (e) {
+            var b = e.target && e.target.closest ? e.target.closest("[data-act]") : null;
+            if (b) {
+                var a = b.getAttribute("data-act");
+                e.preventDefault(); e.stopPropagation();
+                if (a === "rvclose") { rvPlayClose(); return; }
+                if (a === "rvshow") { if (rvPlay) { rvPlay.shown = true; rvPlayRender(); } return; }
+                if (a === "rvgrade") { rvPlayGrade(Number(b.getAttribute("data-st"))); return; }
+                return;
+            }
+            if (e.target === m) rvPlayClose();
+        }, false);
+        document.body.appendChild(m);
+        return m;
+    }
+    function rvPlayOpen(list) {
+        if (!list || !list.length) return;
+        rvPlay = { list: list.slice(), i: 0, shown: false };
+        rvPlayRender();
+    }
+    function rvPlayClose() {
+        rvPlay = null;
+        var m = $("lg-rv-mask");
+        if (m && m.parentNode) m.parentNode.removeChild(m);
+    }
+    function rvPlayGrade(st) {
+        if (!rvPlay) return;
+        var it = rvPlay.list[rvPlay.i];
+        if (!it) return;
+        if (it.id) reviewDoneAdd(String(it.id));   // 自评即复习:打过分当日不再重复提示
+        changeStatus(it.id, [0, 1, 2].indexOf(st) >= 0 ? st : 1);   // 顺带刷新身后的生词本
+        rvPlay.i++;
+        rvPlay.shown = false;
+        rvPlayRender();
+    }
+    function rvPlayRender() {
+        if (!rvPlay) { rvPlayClose(); return; }
+        var m = rvEnsureMask();
+        var it = rvPlay.list[rvPlay.i];
+        if (!it) {
+            m.innerHTML = '<div class="lg-rv-card"><div class="lg-rv-done"><b>🎉 今日复习完成</b>' +
+                '<span class="lg-rv-hint" style="padding:0 0 14px;display:block;">按 1·2·4·7 天计划，下一批到期的词会自动出现。</span>' +
+                '<button type="button" class="lg-rv-btn" data-act="rvclose">返回生词本</button></div></div>';
+            return;
+        }
+        var gz = String(it.gloss_zh || "") || "（暂无释义）";
+        var ph = it.type === "expression" ? "固定表达" : "单词";
+        m.innerHTML = '<div class="lg-rv-card">' +
+            '<div class="lg-rv-top"><span>' + (rvPlay.i + 1) + " / " + rvPlay.list.length + " · 今日复习 · " + ph + "</span>" +
+            '<span class="lg-rv-x" data-act="rvclose">✕</span></div>' +
+            '<div class="lg-rv-w">' + esc(it.term) + "</div>" +
+            '<div class="lg-rv-ph">' + (it.origin ? "来自 " + esc(vocabSrcOf(it)) : "&nbsp;") + "</div>" +
+            '<div class="lg-rv-body">' + (rvPlay.shown
+                ? '<div class="lg-rv-gz">' + esc(gz) + "</div>" + vocabCtxHtml(it.context, it.term)
+                : '<div class="lg-rv-hint">先在心里回想它的意思，再点下面揭示</div>') + "</div>" +
+            (rvPlay.shown
+                ? '<div class="lg-rv-st"><button type="button" class="s0" data-act="rvgrade" data-st="0">没记住</button>' +
+                  '<button type="button" class="s1" data-act="rvgrade" data-st="1">记住了</button>' +
+                  '<button type="button" class="s2" data-act="rvgrade" data-st="2">很熟了</button></div>'
+                : '<button type="button" class="lg-rv-btn" data-act="rvshow">显示释义与例句</button>') +
+            "</div>";
+    }
     function renderLearn() {
         var box = $("lang-learn-box");
         if (!box) return;
@@ -25513,37 +25702,19 @@ window.LoveEngine = (() => {
             loadVocab(function () { renderLearn(); });
             return;
         }
-        var rv = reviewDueList();
-        var rvHtml = rv.length ? reviewHtml(rv) : "";
-        var keys = Object.keys(vocabMap);
-        if (!keys.length) {
+        var all = vocabAllList();
+        if (!all.length) {
             box.innerHTML = '<div class="lg-vr"><div class="lg-vr-main"><div class="lg-vr-term">还没有生词</div><div class="lg-vr-gl">去玩一个英语剧本吧——游戏里点查过的词和关键表达会自动出现在这里。</div></div></div>';
             return;
         }
-        var arr = [], i, k;
-        for (k = 0; k < keys.length; k++) arr.push(vocabMap[keys[k]]);
-        arr.sort(function (a, b) { var ta = a.created_at || "", tb = b.created_at || ""; return ta === tb ? 0 : (ta > tb ? -1 : 1); });
-        var html = '<div class="list-sub" style="margin:2px 0 8px;">共 ' + arr.length + " 条（点剧情里的词 / 章末复盘里收藏的表达都会收进来）</div>";
-        var ST = [["0", "新学"], ["1", "眼熟"], ["2", "已掌握"]];
-        for (i = 0; i < arr.length; i++) {
-            var it = arr[i];
-            var cls = it.type === "expression" ? "expr" : "word";
-            var tname = it.type === "expression" ? "表达" : "词";
-            var gz = String(it.gloss_zh || "");
-            var ge = it.type === "expression" && String(it.gloss_en || "") ? " · 例: " + String(it.gloss_en) : "";
-            var gl = (gz + ge || "（暂无释义）").slice(0, 220);
-            var btns = "", s;
-            for (s = 0; s < ST.length; s++) {
-                var stv = Number(ST[s][0]);
-                btns += '<button type="button" data-act="st" data-vid="' + esc(String(it.id || "")) + '" data-status="' + stv + '" class="' + (Number(it.status) === stv ? "on-" + stv : "") + '">' + ST[s][1] + "</button>";
-            }
-            html += '<div class="lg-vr"><span class="lg-vt ' + cls + '">' + tname + "</span>" +
-                '<div class="lg-vr-main"><div class="lg-vr-term">' + esc(it.term) + "</div>" +
-                '<div class="lg-vr-gl">' + esc(gl) + "</div>" +
-                (it.origin ? '<div class="lg-vr-origin">' + esc(String(it.origin).slice(0, 80)) + "</div>" : "") +
-                '<div class="lg-st">' + btns + "</div></div></div>";
-        }
-        box.innerHTML = rvHtml + html;
+        var rv = reviewDueList();
+        box.innerHTML = '<div class="lg-tabs">' +
+            '<button type="button" class="lg-tab' + (vocabTab === "due" ? " on" : "") + '" data-act="vtab" data-tab="due">📆 今日复习 <b>' + rv.length + "</b></button>" +
+            '<button type="button" class="lg-tab' + (vocabTab === "all" ? " on" : "") + '" data-act="vtab" data-tab="all">📚 全部生词库 <b>' + all.length + "</b></button>" +
+            "</div>" +
+            (vocabTab === "due" ? vocabDueHtml(rv) : vocabAllHtml(all));
+        /* 两个 Tab 互斥:同一时刻只铺一套内容,不再上下叠着渲染 */
+        if (vocabTab === "all") vocabApplyFilter();
     }
     function changeStatus(vid, st) {
         if (!vid || !token()) return;
@@ -25570,9 +25741,28 @@ window.LoveEngine = (() => {
         var box = $("lang-learn-box");
         if (!main || !box) return;
         var boxClick = box.addEventListener("click", function (e) {
-            var b = e.target && e.target.closest ? e.target.closest('[data-act="st"], [data-act="rv"]') : null;
-            if (!b || !token()) return;
+            var b = e.target && e.target.closest
+                ? e.target.closest('[data-act="vtab"], [data-act="rvgo"], [data-act="vsrc"], [data-act="st"], [data-act="rv"]')
+                : null;
+            if (!b) return;
             var act = b.getAttribute("data-act");
+            if (act === "vtab") {                       // 双 Tab 互斥切换
+                var tb = b.getAttribute("data-tab");
+                if (tb !== "due" && tb !== "all") return;
+                if (tb !== vocabTab) { vocabTab = tb; renderLearn(); }
+                return;
+            }
+            if (act === "vsrc") {                       // 来源筛选:就地显隐,不重绘(免得搜索框丢焦点)
+                vocabSrc = String(b.getAttribute("data-src") || "");
+                var chips = box.querySelectorAll('.lg-src[data-act="vsrc"]');
+                for (var ci = 0; ci < chips.length; ci++) {
+                    chips[ci].classList.toggle("on", String(chips[ci].getAttribute("data-src") || "") === vocabSrc);
+                }
+                vocabApplyFilter();
+                return;
+            }
+            if (!token()) return;
+            if (act === "rvgo") { rvPlayOpen(reviewDueList()); return; }   // 一键开始复习 → 全屏
             if (act === "rv") {
                 var vid2 = String(b.getAttribute("data-vid") || "");
                 var st2 = Number(b.getAttribute("data-st"));
@@ -25583,6 +25773,9 @@ window.LoveEngine = (() => {
             } else {
                 changeStatus(b.getAttribute("data-vid"), Number(b.getAttribute("data-status")));
             }
+        });
+        box.addEventListener("input", function (e) {
+            if (e.target && e.target.id === "lg-vocab-q") { vocabQ = String(e.target.value || ""); vocabApplyFilter(); }
         });
         if (learnMo) return;
         learnMo = new MutationObserver(function () {
@@ -25942,13 +26135,14 @@ window.LoveEngine = (() => {
                 lang: curLearnLang(), type: "expression", term: String(term).slice(0, 64),
                 gloss_zh: String(zh || "").slice(0, 500),
                 gloss_en: String(ex || "").slice(0, 500),
-                origin: String(origin).slice(0, 200)
+                origin: String(origin).slice(0, 200),
+                context: String(ex || "").slice(0, 300)   // 表达没有"所在句",用仿写例句充当回看线索
             })
         })
             .then(function (r) { return r.json().catch(function () { return null; }); })
             .then(function (d) {
                 if (!d || !d.ok) return;
-                vocabMap[k] = { id: d.id || "", type: "expression", term: String(term).slice(0, 64), gloss_zh: String(zh || ""), gloss_en: String(ex || ""), origin: origin, status: 0, created_at: "" };
+                vocabMap[k] = { id: d.id || "", type: "expression", term: String(term).slice(0, 64), gloss_zh: String(zh || ""), gloss_en: String(ex || ""), origin: origin, context: String(ex || ""), status: 0, created_at: "" };
                 noteWords([{ w: String(term), en: "", zh: String(zh || "") }], "gloss");   // 单字词回填正文高亮库
                 reDirty = true;
                 if (btn) { btn.classList.add("saved"); btn.textContent = "✓"; }
@@ -26033,147 +26227,9 @@ window.LoveEngine = (() => {
         band = String(band || "").trim();
         return { loaded: !!langBankCache[band], loading: !!langBankLoading[band], total: langBankCache[band] ? langBankCache[band].length : 0 };
     }
-    /* ---- M6d6:考纲词刷词(view-lang ⑥;10 词/轮,出词 weak>seen>新词,翻卡自评 → lang_bank_progress 与词测同进度) ---- */
-    var drillState = null;   // {band, deck:[{w,zh,ph,ok?}], idx, okN, done, subm}
-    function drillRndTake(a, n) {
-        a = a.slice(); var out = [], k, r;
-        for (k = 0; k < n && a.length; k++) { r = Math.floor(Math.random() * a.length); out.push(a[r]); a.splice(r, 1); }
-        return out;
-    }
-    function drillBandName(band) { return (BAND_NAMES && BAND_NAMES[band]) ? BAND_NAMES[band] : String(band || "").toUpperCase(); }
-    function buildDrillDeck(band) {
-        var items = langBankCache[band];
-        if (!items || !items.length) return null;
-        var seen = loadSeen()[band] || {};
-        var prog = progByBand[band] || {};
-        var weak = [], seenn = [], nw = [], i, it, w, st;
-        for (i = 0; i < items.length; i++) {
-            it = items[i];
-            w = String(it.w || "");
-            if (!wordFormOk(w)) continue;
-            if (STOPW[w]) continue;
-            if (!goodPos(String(it.zh || ""))) continue;
-            st = prog[w] ? prog[w].state : "";
-            if (st === "learned") continue;   // 已掌握出池(与词测共用)
-            if (st === "weak") weak.push(it);
-            else if (seen[w]) seenn.push(it);
-            else nw.push(it);
-        }
-        var deck = [], j;
-        function fillFrom(arr) {
-            var t = drillRndTake(arr, 10 - deck.length), k2;
-            for (k2 = 0; k2 < t.length; k2++) deck.push(t[k2]);
-        }
-        fillFrom(weak); fillFrom(seenn); fillFrom(nw);
-        var out = [];
-        for (j = 0; j < deck.length; j++) {
-            out.push({ w: String(deck[j].w).toLowerCase(), zh: String(deck[j].zh || "").slice(0, 120), ph: String(deck[j].ph || "") });
-        }
-        return out.length ? out : null;
-    }
-    function startDrill(force) {
-        var box = document.getElementById("lang-drill-box");
-        if (!box) return;
-        if (!token()) { openLoginSheet(); return; }
-        if (drillState && !drillState.done && !force) return;   // 刷词进行中:忽略重复点击
-        drillState = null;
-        var band = currentLangBand();
-        if (!langBankCache[band] || !langBankCache[band].length) {
-            box.innerHTML = '<div class="lg-drill-hint">⏳ 正在加载 ' + drillBandName(band) + " 词库…</div>";
-            loadLangBank(band).then(function (items) {
-                if (items) readyDrill(band, null);
-                else if (box) box.innerHTML = '<div class="lg-drill-hint">词库加载失败,检查网络后重试</div>';
-            });
-            return;
-        }
-        if (!progByBand[band] && !progLoading[band]) loadProg(band);   // 弱词/已掌握同步(迟到回调不打断当前轮)
-        readyDrill(band, box);
-    }
-    function readyDrill(band, box) {
-        if (!box) box = document.getElementById("lang-drill-box");
-        if (!box) return;
-        if (drillState && !drillState.done && drillState.band === band) return;   // loadProg 迟到回调:保留当前轮
-        var deck = buildDrillDeck(band);
-        if (!deck || !deck.length) { box.innerHTML = '<div class="lg-drill-hint">这档还没有可刷的词——去「学习中心」顶部换个档再试</div>'; return; }
-        drillState = { band: band, deck: deck, idx: 0, okN: 0, done: false, subm: false };
-        renderDrillInto(box);
-    }
-    function renderDrillInto(box) {
-        if (!box) return;
-        var st = drillState;
-        if (!st) return;
-        if (st.done) { renderDrillDone(box); return; }
-        var q = st.deck[st.idx];
-        var h = '<div class="lg-drill-bar">' + drillBandName(st.band) + "档 · 第 " + (st.idx + 1) + "/" + st.deck.length + " 词" + (st.okN ? ' · 已记住 <b style="color:#1a8a4a;">' + st.okN + "</b>" : "") + "</div>";
-        h += '<div class="lg-drill-card"><div class="lg-drill-word">' + esc(q.w) + (q.ph ? '<span class="lg-drill-ph">' + esc(q.ph) + "</span>" : "") + "</div>";
-        h += '<div class="lg-drill-front-tip">🤔 先想它的中文意思,再翻面核对</div>';
-        h += '<div class="lg-drill-zh" style="display:none;">' + esc(q.zh) + "</div>";
-        h += '<div class="setting-actions" style="margin-top:10px;">';
-        h += '<button type="button" class="lg-drill-flip mini-btn primary" onclick="LangAssist.drillFlip()">翻面看释义</button>';
-        h += '<button type="button" class="lg-drill-judge mini-btn" data-j="1" style="display:none;" onclick="LangAssist.drillJudge(true)">😊 记住了</button>';
-        h += '<button type="button" class="lg-drill-judge mini-btn" data-j="0" style="display:none;" onclick="LangAssist.drillJudge(false)">🔁 没记住</button>';
-        h += "</div></div>";
-        box.innerHTML = h;
-    }
-    function drillFlip() {
-        var st = drillState, box;
-        if (!st || st.done) return;
-        box = document.getElementById("lang-drill-box");
-        if (!box) return;
-        var zh = box.querySelector(".lg-drill-zh"), flip = box.querySelector(".lg-drill-flip"), j;
-        var jud = box.querySelectorAll(".lg-drill-judge"), tip = box.querySelector(".lg-drill-front-tip");
-        if (zh) zh.style.display = "block";
-        if (flip) flip.style.display = "none";
-        if (tip) tip.style.display = "none";
-        for (j = 0; j < jud.length; j++) jud[j].style.display = "";
-    }
-    function drillJudge(ok) {
-        var st = drillState, box;
-        if (!st || st.done) return;
-        box = document.getElementById("lang-drill-box");
-        if (!box) return;
-        st.deck[st.idx].ok = !!ok;
-        if (ok) st.okN += 1;
-        if (st.idx + 1 < st.deck.length) { st.idx += 1; renderDrillInto(box); }
-        else { st.done = true; renderDrillDone(box); }
-    }
-    function renderDrillDone(box) {
-        var st = drillState;
-        if (!st) return;
-        var okN = st.okN, tot = st.deck.length;
-        var h = '<div class="lg-drill-done-title">' + (okN === tot ? "🎉 全记住了!" : "本轮完成:" + okN + "/" + tot + " 已记住") + "</div>";
-        h += '<div class="lg-drill-done-sub">' + (okN === tot ? "本轮词全部收进「已掌握」,下一轮自动出更陌生的词。" : "没记住的词会优先排进下一轮刷词——多重逢几次,自然就记住了。") + "</div>";
-        h += '<div class="lg-drill-sync">⏳ 学习进度同步中…</div>';
-        h += '<div class="setting-actions" style="margin-top:10px;"><button type="button" class="mini-btn primary" onclick="LangAssist.startDrill(true)">▶ 再来一轮</button></div>';
-        box.innerHTML = h;
-        submitDrill(box.querySelector(".lg-drill-sync"));
-    }
-    function submitDrill(syncEl) {
-        var st = drillState;
-        if (!st || !st.deck.length || st.subm) return;
-        st.subm = true;
-        var items = [], i, q;
-        for (i = 0; i < st.deck.length; i++) { q = st.deck[i]; if (typeof q.ok === "boolean") items.push({ word: q.w, ok: q.ok }); }
-        if (!items.length) return;
-        function pendAll() { for (i = 0; i < items.length; i++) pushProgPending(st.band, items[i].word, items[i].ok); }
-        fetch(API_BASE + "/api/lang/progress", {
-            method: "PUT",
-            headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token() },
-            body: JSON.stringify({ band: st.band, items: items })
-        })
-            .then(function (r) { return r.json().catch(function () { return null; }); })
-            .then(function (d) {
-                if (d && d.ok) {
-                    for (i = 0; i < items.length; i++) applyProgResult(st.band, items[i].word, items[i].ok ? "learned" : "weak");
-                    if (syncEl) syncEl.textContent = "✓ 学习进度已同步(没记住的已排进下轮)";
-                } else { pendAll(); if (syncEl) syncEl.textContent = "⚠ 同步失败,已暂存本地,联网后自动补交"; }
-            })
-            .catch(function () { pendAll(); if (syncEl) syncEl.textContent = "⚠ 同步失败,已暂存本地,联网后自动补交"; });
-    }
     window.LangAssist = {
         loadBank: loadLangBank, bankItem: langBankItem, bankStatus: langBankStatus,
         getChapterWords: getChapterWords,   // M6d4:当前章候选词(供 LangEngine 续写注入;内部触发预载/抽词)
-        startDrill: startDrill, drillFlip: drillFlip, drillJudge: drillJudge,  // M6d6:考纲词刷词(学习中心⑥)
         /* R1 生词回投取样:续写注入用;优先复习到期→未掌握新学→眼熟补位;只取单词(expression 跳过),≤10;未加载时静默触发拉取 */
         reviewVocabSample: function (max) {
             if (!vocabLoaded) { loadVocab(function () {}); return []; }

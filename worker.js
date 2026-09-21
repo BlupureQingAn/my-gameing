@@ -135,14 +135,14 @@ const MODEL_POOL = [
     { id: "or-ox-alpha",           url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "stealth/ox-alpha",                 dailyCap: 500, tier: 8, enabled: false },
     { id: "or-lfm-2.5-2.6b",       url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "liquid/lfm-2.5-2.6b:free",          dailyCap: 500, tier: 9, enabled: false },
     // ---- ChatAnywhere（2026-08-25 实测:403 "请求客户端IP不支持访问,请勿使用Cloudflare等反向代理"= 永久拒绝 CF 出口,key 再对也白耗,整池禁用;若换非 CF 出口部署可恢复）----
-    { id: "ca-gpt-4o-mini",   url: "https://bitlife.blupure.cn/ca/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-4o-mini",    dailyCap: 100, tier: 10, enabled: true },
+    { id: "ca-gpt-5.4-nano",  url: "https://bitlife.blupure.cn/ca/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-5.4-nano",   dailyCap: 100, tier: 5, enabled: true },
+    { id: "ca-gpt-4o-mini",   url: "https://bitlife.blupure.cn/ca/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-4o-mini",    dailyCap: 100, tier: 5, enabled: true },
     { id: "ca-gpt-3.5-turbo", url: "https://bitlife.blupure.cn/ca/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-3.5-turbo",  dailyCap: 100, tier: 30, enabled: true },
-    { id: "ca-gpt-4.1-mini",  url: "https://bitlife.blupure.cn/ca/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-4.1-mini",   dailyCap: 100, tier: 10, enabled: true },
+    { id: "ca-gpt-4.1-mini",  url: "https://bitlife.blupure.cn/ca/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-4.1-mini",   dailyCap: 100, tier: 5, enabled: true },
     { id: "ca-gpt-4.1-nano",  url: "https://bitlife.blupure.cn/ca/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-4.1-nano",   dailyCap: 100, tier: 10, enabled: true },
     { id: "ca-gpt-5-mini",    url: "https://bitlife.blupure.cn/ca/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-5-mini",     dailyCap: 100, tier: 10, enabled: true },
-    { id: "ca-gpt-5-nano",    url: "https://bitlife.blupure.cn/ca/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-5-nano",     dailyCap: 100, tier: 10, enabled: true },
+    { id: "ca-gpt-5-nano",    url: "https://bitlife.blupure.cn/ca/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-5-nano",     dailyCap: 100, tier: 5, enabled: true },
     { id: "ca-gpt-5.4-mini",  url: "https://bitlife.blupure.cn/ca/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-5.4-mini",   dailyCap: 100, tier: 10, enabled: false },
-    { id: "ca-gpt-5.4-nano",  url: "https://bitlife.blupure.cn/ca/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-5.4-nano",   dailyCap: 100, tier: 10, enabled: true },
     { id: "ca-deepseek-v3.2",          url: "https://bitlife.blupure.cn/ca/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "deepseek-v3.2",        dailyCap: 30, tier: 20, enabled: true },
     { id: "ca-deepseek-v4-flash",      url: "https://bitlife.blupure.cn/ca/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "deepseek-v4-flash",    dailyCap: 30, tier: 20, enabled: true },
     { id: "ca-deepseek-v4-pro",        url: "https://bitlife.blupure.cn/ca/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "deepseek-v4-pro",      dailyCap: 30, tier: 20, enabled: true },
@@ -3577,6 +3577,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const items = (d.items || []).map((i) => ({
                     id: i.id, lang: String(i.lang || "en"), type: String(i.type || "word"), term: String(i.term || ""),
                     gloss_en: String(i.gloss_en || ""), gloss_zh: String(i.gloss_zh || ""), origin: String(i.origin || ""),
+                    context: String(i.context || ""),
                     status: Number(i.status || 0), created_at: i.created_at || ""
                 }));
                 return new Response(JSON.stringify({ items, total: items.length }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
@@ -3594,17 +3595,19 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                     user_id: uid, lang, type, term,
                     gloss_en: String(body.gloss_en || "").slice(0, 500),
                     gloss_zh: String(body.gloss_zh || "").slice(0, 500),
-                    origin: String(body.origin || "").slice(0, 200)
+                    origin: String(body.origin || "").slice(0, 200),
+                    context: String(body.context || "").slice(0, 500)
                 };
                 const dupF = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'&&term='${escapePocketBaseFilterValue(term)}'`);
                 const dupQ = await pbAdminFetch(env, `/api/collections/lang_vocab/records?perPage=1&skipTotal=true&filter=${dupF}`);
                 const dupD = await dupQ.json().catch(() => ({}));
                 const dup = (dupD.items || [])[0];
                 if (dup) {
-                    // 已存在：只补空缺释义，不动 status
+                    // 已存在：只补空缺释义/例句，不动 status
                     const patch = {};
                     if (!dup.gloss_en && data.gloss_en) patch.gloss_en = data.gloss_en;
                     if (!dup.gloss_zh && data.gloss_zh) patch.gloss_zh = data.gloss_zh;
+                    if (!dup.context && data.context) patch.context = data.context;
                     if (Object.keys(patch).length) await pbAdminFetch(env, `/api/collections/lang_vocab/records/${dup.id}`, { method: "PATCH", body: JSON.stringify(patch) }).catch(() => {});
                     return new Response(JSON.stringify({ ok: true, existed: true, id: dup.id }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
                 }
