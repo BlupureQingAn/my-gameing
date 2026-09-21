@@ -42,7 +42,14 @@ const CARDS = [
     { id: "gobfm2v4ct7jpyp", file: "p3-04-flatmates.card.json",
       prompt: "傍晚合租公寓客厅,女生拿着账单簿站在窗边,厨房暖光与摊开的账单,同居日常的甜蜜拉扯;cozy shared apartment anime, warm evening interior, bills on the table, playful love;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
     { id: "m7vdb6183249yjy", file: "p3-05-debate-club.card.json",
-      prompt: "高中辩论社教室,男生站在木质辩论台后握稿发言,午后斜阳透过窗棂洒在讲台上,暖光里的青春热血与暗恋;high school debate club anime, afternoon sunlight through window, wooden podium, youthful passion;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" }
+      prompt: "高中辩论社教室,男生站在木质辩论台后握稿发言,午后斜阳透过窗棂洒在讲台上,暖光里的青春热血与暗恋;high school debate club anime, afternoon sunlight through window, wooden podium, youthful passion;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
+    // 2026-09-21 日韩卡首批:女向=r1 系(玩家为女主),男向=m1 系(玩家为男主)
+    { id: "oalanm72ta6zunk", file: "jp-r1-01-bunkasai.card.json",
+      prompt: "秋日东京私立高中的文化祭,女生抱着剧本站在放映幕布与校园灯笼之间,银杏落叶与电影研究部的暖光,青春心动;Japanese school festival anime, autumn ginkgo leaves, projector screen glow, youthful romance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
+    { id: "lr6jxevubo65ctd", file: "jp-r1-02-kissaten.card.json",
+      prompt: "秋日京都古街的喫茶店,女生坐在木质吧台前捧着咖啡杯,窗外红叶与石板路,暖色吊灯与咖啡蒸汽,古都慢时光里的心动;Kyoto old-town kissaten anime, autumn maple leaves, warm cafe interior, gentle romance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
+    { id: "cp5trkdqf9gcmj3", file: "jp-m1-01-kendo-bu.card.json",
+      prompt: "冬日日本高中剑道场,男生身穿剑道服手持竹刀立于木地板,凛冽晨光从高窗斜射,呼出的白气与道场寂静,竞技与初恋的序幕;Japanese kendo dojo anime, winter morning light through high windows, bamboo sword, quiet tension;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" }
 ];
 
 async function pbJson(url, opts) {

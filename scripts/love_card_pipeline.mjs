@@ -481,18 +481,22 @@ const LG = {
         sysText: "你是云吞吞文游的恋爱攻略向韩语编剧。长文本用围栏包裹(围栏之外不要任何东西):\n<<<START>>>\n内容\n<<<END>>>",
         tone: (t) => "写作语言全韩语(谚文,按韩语正字法分写);叙述一律第二人称,称呼玩家用 당신/너/이름+씨(按角色性格与亲疏决定,对话里按关系用 해요체/반말);短句为主,台词自然;词汇限制在" + bandZh("ko", t.band) + " 以内,像韩国青春小说与网络小说。",
         warn: "\n(硬性检查:正文必须是纯韩语谚文;严禁出现假名、汉字(한자 不用)、简体中文专有字、以及整句英文!)",
+        /* 汉字阈值必须是 0,不能像旧版那样留 3 的余量:正文是多段 genCleanBlock 拼接出来的
+           (genText 4 段 + first_scene.story),闸门按「段」判定而质检按「拼接后的全文」判定,
+           两边阈值相同也照样被拼接放大击穿——每段各带 3 个,4 段就是 10+ 个,直接卡在终局质检,
+           而质检阶段没有任何返修路径,整卡作废。段级闸门只有取 0,拼接后才是 0。 */
         impure: (s) => {
             const hangul = hitsOf(s, HANGUL), kana = hitsOf(s, KANA), han = hitsOf(s, HAN), zh = hitsOf(s, ZH_ONLY);
             if (kana) return "混入假名 " + kana + " 字";
             if (zh) return "混入简体中文专有字 " + zh + " 个";
-            if (han > 3) return "混入汉字 " + han + " 字(韩语正文不用汉字)";
+            if (han) return "混入汉字 " + han + " 字(韩语正文不用汉字)";
             if (hangul < 40) return "正文过短无法判语种";
             if (hangul / (hangul + han) < 0.9) return "谚文占比过低,疑似中文/日文";
             return "";
         },
         clean: (s) => {
             const hangul = hitsOf(s, HANGUL);
-            return hitsOf(s, KANA) === 0 && hitsOf(s, ZH_ONLY) === 0 && hitsOf(s, HAN) <= 3 && hangul >= 40;
+            return hitsOf(s, KANA) === 0 && hitsOf(s, ZH_ONLY) === 0 && hitsOf(s, HAN) === 0 && hangul >= 40;
         },
         len: (s) => (String(s || "").match(/[^\s]/g) || []).length,
         unit: "字",
@@ -520,7 +524,9 @@ function dirtyLine(lg, line) {
     if (!s.trim()) return false;
     if (hitsOf(s, ZH_ONLY)) return true;
     if (lg === "ja") return hitsOf(s, HANGUL) > 0;
-    return hitsOf(s, KANA) > 0 || hitsOf(s, HAN) > 2;
+    // ko 这里曾写 HAN > 2,导致汉字每行只漏 1 个时没有任何一行算脏 → idx 为空 →
+    // 局部返修一次都不尝试,直接堕入整段重写(模型往往同处再犯)。阈值降到 1 个即脏。
+    return hitsOf(s, KANA) > 0 || hitsOf(s, HAN) > 0;
 }
 // 含中文行局部返修:抽出脏行 → 让模型逐行改写成纯目标语 → 按行号原位替换。
 // 只替换对得上号的行;污染面过大或返回不可解析时返回 null,交给整段重试兜底。
@@ -529,7 +535,7 @@ async function repairDirtyLines(t, raw) {
     const lines = String(raw).split("\n");
     const idx = [];
     for (let i = 0; i < lines.length; i++) if (dirtyLine(lg, lines[i])) idx.push(i);
-    if (!idx.length || idx.length > 10) return null;
+    if (!idx.length || idx.length > 24) return null;
     const payload = idx.map((i, k) => `${k + 1}|${lines[i].trim()}`).join("\n");
     // 指名到字:只差一两个中文字时,模型看不出哪个字不是日语,泛指"混入中文"它改不动
     const badChars = [...new Set(idx.flatMap((i) => (lines[i].match(/[一-鿿가-힣ぁ-ゖァ-ヺー]/g) || []))
@@ -587,12 +593,20 @@ async function genCharCard(t, name, arch) {
     const sp = S(t);
     const lg = LANG_OF(t);
     const isT = lg !== "en";
-    const d = await ask(sp.sysBase,
-        sp.tone(t) + `\n为恋爱攻略卡《${name} 的人设卡》细写角色「${name}」。该卡为${t.target === "female" ? "女向(玩家为女主)" : "男向(玩家为男主)"}攻略卡,${name} 是 5 个可攻略对象之一。\n` +
-        `题材:${t.category_zh};场景:${t.setting}。\n角色原型(不得偏离):${arch}\n` +
-        `注意:${name} 是让人向往的${t.target === "female" ? "男性" : "女性"},魅力点要有层次。写外貌时突出可画性(半身像构图友好)。\n` +
-        (isT ? `除 role_zh / personality_zh / relationship_zh / age / appearance_en 外,其余字段一律用纯${sp.charLang}写,禁止混入中文。\n` : "") +
-        `输出单行 JSON:${isT ? CHAR_FIELDS_T(sp.charLang) : CHAR_FIELDS}`, 2500);
+    const KEYS = ["personality_t", "hobby_t", "redline_t", "soft_t", "speech_t"];
+    let d = null, warn = "";
+    for (let i = 0; i < 3; i++) {
+        d = await ask(sp.sysBase,
+            sp.tone(t) + `\n为恋爱攻略卡《${name} 的人设卡》细写角色「${name}」。该卡为${t.target === "female" ? "女向(玩家为女主)" : "男向(玩家为男主)"}攻略卡,${name} 是 5 个可攻略对象之一。\n` +
+            `题材:${t.category_zh};场景:${t.setting}。\n角色原型(不得偏离):${arch}\n` +
+            `注意:${name} 是让人向往的${t.target === "female" ? "男性" : "女性"},魅力点要有层次。写外貌时突出可画性(半身像构图友好)。\n` +
+            (isT ? `除 role_zh / personality_zh / relationship_zh / age / appearance_en 外,其余字段一律用纯${sp.charLang}写,禁止混入中文。\n` : "") +
+            `输出单行 JSON:${isT ? CHAR_FIELDS_T(sp.charLang) : CHAR_FIELDS}` + warn, 2500);
+        const bad = isT ? await fixFields(t, d, KEYS) : [];
+        if (!bad.length) break;
+        console.log("  人设卡 " + name + " 字段脏: " + bad.join("/") + ",重问…");
+        warn = `\n!!!上一版这些字段混进了中文,这一版必须写成纯${sp.charLang},一个汉字都不许剩:${bad.join("、")}!!!`;
+    }
     const T = (k) => String(d[k + (isT ? "_t" : "_en")] || "").trim() || String(d[k + "_en"] || "").trim();
     return {
         name, gender: t.target === "female" ? "男" : "女",
@@ -650,14 +664,19 @@ async function genWorldMeta(t, title, textHead) {
         ? `{"era":"时代/地域一句话(中文)","genre":"题材标签(中文,如:校园恋爱)","summary":"英文 4-6 句世界观综述(纯英文)","rules":"该世界对主角的 3-4 条规则(中文)","atmosphere":"氛围(中文)","vocab":["8 个本卡核心考点词(贴合${t.band})"]}`
         // 日/韩:era/genre/atmosphere 是引擎元信息(中文),summary/rules/vocab 属于设定正文(目标语)
         : `{"era":"时代/地域一句话(中文)","genre":"题材标签(中文,如:校园恋爱)","summary":"${sp.label} 4-6 句世界观综述(纯${sp.label},禁止中文)","rules":"该世界对主角的 3-4 条规则(用${sp.label}写,禁止中文)","atmosphere":"氛围(中文)","vocab":["8 个本卡核心考点词(贴合 ${bandZh(lg, t.band)},词形用${sp.label})"]}`;
-    let d = null;
+    let d = null, warn = "";
     for (let i = 0; i < 3; i++) {
         d = await ask(sp.sysBase,
             `卡《${title}》设定前段:\n${textHead}\n` +
             `输出单行 JSON:{"world":${worldSpec},"heartbeats":[{"where":"心动时刻地点(中文)","when":"触发时机/情绪条件(中文)"}]}\n` +
-            `heartbeats 必须恰好 3 个(攻略卡的核心心动节点):地点与情绪条件各不相同,覆盖不同攻略对象与不同场地。` + (i > 0 ? HB_WARN : ""), 5000);
-        if (Array.isArray(d?.heartbeats) && d.heartbeats.length >= 3) break;
-        console.log("  heartbeats " + (Array.isArray(d?.heartbeats) ? d.heartbeats.length : 0) + " 个,重问…");
+            `heartbeats 必须恰好 3 个(攻略卡的核心心动节点):地点与情绪条件各不相同,覆盖不同攻略对象与不同场地。` + (i > 0 ? HB_WARN : "") + warn, 5000);
+        const hb = Array.isArray(d?.heartbeats) ? d.heartbeats.length : 0;
+        if (hb < 3) { console.log("  heartbeats " + hb + " 个,重问…"); continue; }
+        if (lg === "en") break;
+        const bad = [...await fixFields(t, d.world, ["summary", "rules"]), ...await fixVocab(t, d.world)];
+        if (!bad.length) break;
+        console.log("  world 字段脏: " + bad.join("/") + ",重问…");
+        warn = `\n!!!上一版这些字段混进了中文,这一版必须写成纯${sp.label},一个汉字都不许剩:${bad.join("、")}!!!`;
     }
     return d;
 }
@@ -667,9 +686,17 @@ async function genIdentity(t, title, textHead) {
     const sp = S(t), lg = LANG_OF(t);
     const nameSpec = lg === "en" ? "英文名" : `${sp.charLang}名字(姓与名都要像本国人,不要英文名)`;
     const bgSpec = lg === "en" ? "英文 2-3 句背景(纯英文)" : `${sp.label} 2-3 句背景(纯${sp.label},禁止中文)`;
-    const d = await ask(sp.sysBase,
-        `卡《${title}》(${t.target === "female" ? "女向:玩家是女主" : "男向:玩家是男主"}):为主角定身份。参考前面设定,玩家以第二人称存在。\n${textHead}\n` +
-        `输出单行 JSON:{"name":"${nameSpec}","gender":"${t.identity.gender}","age":${t.identity.age},"role":"${t.identity.role_seed}(role 字段必须原样保留这段中文,禁止翻译)","background":"${bgSpec}"}`, 2000);
+    let d = null, warn = "";
+    for (let i = 0; i < 3; i++) {
+        d = await ask(sp.sysBase,
+            `卡《${title}》(${t.target === "female" ? "女向:玩家是女主" : "男向:玩家是男主"}):为主角定身份。参考前面设定,玩家以第二人称存在。\n${textHead}\n` +
+            `输出单行 JSON:{"name":"${nameSpec}","gender":"${t.identity.gender}","age":${t.identity.age},"role":"${t.identity.role_seed}(role 字段必须原样保留这段中文,禁止翻译)","background":"${bgSpec}"}` + warn, 2000);
+        const obj = d.identity || d;
+        const bad = lg === "en" ? [] : await fixFields(t, obj, ["background"]);
+        if (!bad.length) break;
+        console.log("  identity 字段脏: " + bad.join("/") + ",重问…");
+        warn = `\n!!!上一版的 background 混进了中文,这一版必须写成纯${sp.label},一个汉字都不许剩!!!`;
+    }
     return d.identity || d;
 }
 
@@ -687,7 +714,9 @@ const shortOk = (lg, s) => {
     if (lg === "en") return cjkCount(t) === 0;
     if (lg === "ja") return hitsOf(t, HANGUL) === 0 && hitsOf(t, ZH_ONLY) === 0 &&
         hitsOf(t, KANA) + hitsOf(t, HAN) >= 1 && (n < 6 || hitsOf(t, KANA) >= 1);
-    return hitsOf(t, KANA) === 0 && hitsOf(t, ZH_ONLY) === 0 && hitsOf(t, HAN) <= 1 && hitsOf(t, HANGUL) >= 1;
+    // 短字段(标题/选项/vocab 词)同样收到 0:它们会直接展示给玩家,留 1 个汉字余量
+    // 就会出现「选项中混一个中文词」这种肉眼可见的脏
+    return hitsOf(t, KANA) === 0 && hitsOf(t, ZH_ONLY) === 0 && hitsOf(t, HAN) === 0 && hitsOf(t, HANGUL) >= 1;
 };
 /* 字段级纯净度:整段判定对短字段会报"正文过短无法判语种"(那本来是给全文用的护栏),
    而 personality/background 这类字段天然只有一两句——过短时改按短文本口径判,避免好字段被误杀 */
@@ -698,6 +727,39 @@ function fieldWhy(lg, sp, v) {
     if (!w) return "";
     if (w.indexOf("正文过短") === 0) return shortOk(lg, t) ? "" : w;
     return w;
+}
+/* 字段级纯净返修:genCharCard / genWorldMeta / genIdentity 走的是裸 ask(),字段不经 genCleanBlock
+   的闸门 → 生成期无人校验,只有终局 QC 的 fieldWhy/shortOk 会拦,而 QC 阶段没有返修路径,
+   整卡直接作废(实测 jp-r1-04 的 npcs[4].personality、kr-r1-02 的 npcs[0].personality 都死在这里)。
+   就地返修目标语字段,能修好就改掉;返回仍脏的字段名(空数组=全干净),调用方据此重问。 */
+async function fixFields(t, obj, keys) {
+    const sp = S(t), lg = LANG_OF(t);
+    if (lg === "en" || !obj) return [];
+    const bad = [];
+    for (const k of keys) {
+        const v = obj[k];
+        if (typeof v !== "string" || !v.trim()) continue;
+        if (!fieldWhy(lg, sp, v)) continue;
+        const fixed = await repairDirtyLines(t, v).catch(() => null);
+        if (fixed && !fieldWhy(lg, sp, fixed)) obj[k] = fixed;
+        else bad.push(k);
+    }
+    return bad;
+}
+// vocab 是短词数组,逐词过 shortOk;返修时按行拼回去,行数对不上就整体交回重问
+async function fixVocab(t, world) {
+    const lg = LANG_OF(t);
+    const vs = Array.isArray(world && world.vocab) ? world.vocab : null;
+    if (lg === "en" || !vs) return [];
+    const badIdx = [];
+    vs.forEach((w, i) => { const s = String(w || "").trim(); if (s && !shortOk(lg, s)) badIdx.push(i); });
+    if (!badIdx.length) return [];
+    const fixed = await repairDirtyLines(t, badIdx.map((i) => String(vs[i]).trim()).join("\n")).catch(() => null);
+    if (fixed) {
+        const rep = fixed.split("\n").map((x) => x.trim()).filter(Boolean);
+        if (rep.length === badIdx.length) { badIdx.forEach((i, k) => { vs[i] = rep[k]; }); return []; }
+    }
+    return badIdx.map((i) => "vocab:" + vs[i]);
 }
 async function genFirstScene(t, title, text, chars, playerName) {
     const sp = S(t), lg = LANG_OF(t);
