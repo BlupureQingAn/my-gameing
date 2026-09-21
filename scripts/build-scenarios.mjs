@@ -53,8 +53,8 @@ for (const f of files) {
             data.timeline = { ...(data.timeline || {}), start: { year: CATEGORY_YEAR[String(item.category || "")] || 2026, month: 1, day: 1 } };
         }
         const card = makeCard({ id: item.id, title: item.title, category: item.category, data: { theme: item.theme, ...data } });
-        // 封面静态化:scenarios/covers/{id}.jpg 存在则卡片数据带 cover 相对路径,前端直接静态加载(不再走 KV/生成 API)
-        const coverFile = path.join(dir, "covers", item.id + ".jpg");
+        // 封面静态化:scenarios/covers/{id}.webp 存在则卡片数据带 cover 相对路径,前端直接静态加载(不再走 KV/生成 API)
+        const coverFile = path.join(dir, "covers", item.id + ".webp");
         library.push({
             id: card.id,
             title: card.title,
@@ -65,7 +65,7 @@ for (const f of files) {
             sourceType: "official",
             pinned: false,
             bgm: bgmFor(item.category),
-            cover: fs.existsSync(coverFile) ? "covers/" + item.id + ".jpg" : undefined
+            cover: fs.existsSync(coverFile) ? "covers/" + item.id + ".webp" : undefined
         });
     }
 }

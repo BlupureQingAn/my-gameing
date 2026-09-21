@@ -22,7 +22,7 @@
     <meta property="og:title" content="云吞吞文游官网 - AI 互动剧情游戏平台">
     <meta property="og:description" content="20+ 题材 AI 互动剧本，官方网页版无需下载 App，认准 bitlife.blupure.cn。">
     <meta property="og:url" content="https://bitlife.blupure.cn/">
-    <meta property="og:image" content="https://bitlife.blupure.cn/lang/banner-entry.jpg">
+    <meta property="og:image" content="https://bitlife.blupure.cn/lang/banner-entry.webp">
     <meta property="og:image:width" content="1600">
     <meta property="og:image:height" content="560">
     <script>
@@ -5018,7 +5018,7 @@
     .stat-roll-btn{width:22px;height:22px;border-radius:6px;border:1px solid var(--line);background:var(--input-bg);color:var(--text);font-weight:800;cursor:pointer;line-height:1;flex-shrink:0}
     .stat-roll-btn:hover{border-color:var(--accent)}
     /* ===== 语言文游 LangPlay · 入口横幅 + 语言大厅 ===== */
-    .lang-entry-banner{display:flex;align-items:center;gap:10px;margin:10px 0;padding:16px 14px;border-radius:14px;background:linear-gradient(115deg,rgba(30,24,88,.92),rgba(49,58,150,.78) 55%,rgba(106,79,216,.82)),url("lang/banner-entry.jpg") center/cover no-repeat #3d3488;color:#fff;cursor:pointer;box-shadow:0 3px 10px rgba(63,111,216,.35);text-shadow:0 1px 10px rgba(15,10,50,.65)}
+    .lang-entry-banner{display:flex;align-items:center;gap:10px;margin:10px 0;padding:16px 14px;border-radius:14px;background:linear-gradient(115deg,rgba(30,24,88,.92),rgba(49,58,150,.78) 55%,rgba(106,79,216,.82)),url("lang/banner-entry.webp") center/cover no-repeat #3d3488;color:#fff;cursor:pointer;box-shadow:0 3px 10px rgba(63,111,216,.35);text-shadow:0 1px 10px rgba(15,10,50,.65)}
     .lang-entry-banner:active{transform:scale(.99)}
     .leb-badge{flex-shrink:0;background:#fff;color:#3f4fd8;font-weight:900;font-size:.82rem;letter-spacing:.5px;padding:3px 8px;border-radius:8px}
     .leb-main{flex:1;min-width:0}
@@ -5494,7 +5494,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <button type="button" class="top-nav-btn" data-view="view-lang-leaderboard" onclick="LangController.goLeaderboard()">排行榜</button>
                 </div>
 
-                <img class="lang-hall-img" src="lang/hall-top.jpg" alt="语言文游" loading="lazy">
+                <img class="lang-hall-img" src="lang/hall-top.webp" alt="语言文游" loading="lazy">
                 <div style="margin-top:10px;">
                     <div class="list-title" style="margin:0;font-size:1.05rem;">把云吞吞当语言教练</div>
                     <div class="list-sub" style="margin-top:2px;">英语原生文游剧本 · 边玩边学 · 五档词汇难度随你调 · 点句即译，点词进生词本</div>
@@ -5588,7 +5588,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 </div>
 
                 <div class="list-title" style="margin:0;" id="lang-learn-vocab">📖 我的生词本 <span class="list-sub" style="margin-left:4px;">游戏里点过的词自动收进来</span></div>
-                <img class="lg-learn-head" src="lang/vocab-head.jpg" alt="生词本" loading="lazy">
+                <img class="lg-learn-head" src="lang/vocab-head.webp" alt="生词本" loading="lazy">
                 <div class="lg-learn-sub">玩英语剧本时：轻点句子看整句译文，点蓝色虚线的生词看释义——点过的词会收进这里，可在「新学 → 眼熟 → 已掌握」之间手动划。</div>
                 <div class="list-sub" style="margin-top:6px;">点「返回大厅」可以继续学——生词本与章末复盘收藏的表达都在这里管理。</div>
                 <div id="lang-learn-box" style="margin-top:8px;"></div>
@@ -5790,7 +5790,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                         <div class="sf-section-title"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="m15 21l-6-2.1l-4.65 1.8q-.5.2-.925-.112T3 19.75v-14q0-.325.188-.575T3.7 4.8L9 3l6 2.1l4.65-1.8q.5-.2.925.113T21 4.25v14q0 .325-.187.575t-.513.375zm-1-2.45V6.85l-4-1.4v11.7z"/></svg> 地图与地点</div>
                         <div id="sf-map-bg-picker" class="map-bg-picker"></div>
                         <div class="sf-grid">
-                            <div class="sf-full"><label class="sf-label">自定义地图图片 URL（选「自定义」时生效，或用下面的上传按钮）</label><input id="sf-map-url" type="text" placeholder="https://…/map.png"></div>
+                            <div class="sf-full"><label class="sf-label">自定义地图图片 URL（选「自定义」时生效，或用下面的上传按钮）</label><input id="sf-map-url" type="text" placeholder="https://…/map.webp"></div>
                             <div class="sf-full"><label class="sf-label">上传本地地图图片</label><input id="sf-map-file" type="file" accept="image/*" onchange="ScenarioEditorService.mapFilePicked(this)"></div>
                         </div>
                         <div class="sf-label" style="margin-top:8px;">地图地点（图钉：名称 + 位置 + 追加文本）</div>
@@ -9909,7 +9909,7 @@ function rebuildChoicesBlock(body, labels = []) {
         return { checkTimeEvents, checkRoundEvents, drainQueue, dateKey };
     })();
 
-    // 判断头像值是否为图片(dataURL/绝对URL/相对静态图路径),相对路径支持 avatars/xxx.jpg 等
+    // 判断头像值是否为图片(dataURL/绝对URL/相对静态图路径),相对路径支持 avatars/xxx.webp 等
     function isAvatarImg(v) {
         return /^(data:|https?:)/i.test(String(v || "")) || /^[a-zA-Z0-9_\-/]+\.(png|jpe?g|webp|gif|svg)$/i.test(String(v || ""));
     }
@@ -14054,7 +14054,7 @@ function rebuildChoicesBlock(body, labels = []) {
         return { groupLabel, groupClass, pinLabel, cardTags, cardEmoji, isCollected, isLiked, toggleCollectLocal, loadMyMarks, loadMyMarksNow, resetMyMarks, markCollectedLocally, markLikedLocally, getDbCollects, getDbLikes, collectSet, matchesSearch, getSearchKeyword, getCategories, getCategory, setCategory, isCollapsed, toggleCollapsed, expandAllGroups, renderFilter, hotRank, localPlays, getSortMode, setSortMode };
     })();
 
-    // ---- 封面服务：官方卡全量静态封面(scenarios/covers/*.jpg,卡片数据带 cover 路径)；社区卡走 coverUrl/用户付费 AI 生成(ensureSelf) ----
+    // ---- 封面服务：官方卡全量静态封面(scenarios/covers/*.webp,卡片数据带 cover 路径)；社区卡走 coverUrl/用户付费 AI 生成(ensureSelf) ----
     const CoverService = (() => {
         function safeId(cardId) { return String(cardId || "x").replace(/[^\w-]/g, "_"); }
         // 封面生成请求并发队列(最多 2 个 in-flight),防同时打爆生成接口
@@ -14075,12 +14075,13 @@ function rebuildChoicesBlock(body, labels = []) {
             }
         }
         async function ensure(card) {
-            // 官方卡封面静态化:卡片数据自带 cover 相对路径(scenarios/covers/*.jpg),直接浏览器静态加载,不走 KV/生成 API
-            // 分片数据里存的是 "covers/xxx.jpg",相对页面解析会变成 /covers/ → 404,归一为 /scenarios/covers/
+            // 官方卡封面静态化:卡片数据自带 cover 相对路径(scenarios/covers/*.webp),直接浏览器静态加载,不走 KV/生成 API
+            // 分片数据里存的是 "covers/xxx.webp",相对页面解析会变成 /covers/ → 404,归一为 /scenarios/covers/
             if (card?.cover) {
                 const c = String(card.cover);
                 if (/^https?:/i.test(c)) return c;
-                const m = c.match(/covers\/[^/?#]+\.jpg$/i);
+                // 不锁扩展名:2026-09-21 起全站静态图统一 WebP,锁死 .jpg 会让存量封面全 404
+                const m = c.match(/covers\/[^/?#]+\.\w+$/i);
                 return m ? `scenarios/${m[0]}` : c;
             }
             // 无静态封面的卡(不应出现:官方卡全量预生成,社区卡走 ensureSelf)返回空 → 渐变占位
@@ -20537,52 +20538,52 @@ function openNpcProfile(npcId) {
             if (fill) fill.style.width = v + "%";
         }
         const AVATAR_EMOJI_POOL = ["😀", "😎", "🥳", "🤠", "😇", "🦊", "🐯", "🐰", "🐻", "🐼", "🦁", "🐺", "🦉", "🐱", "🐶", "🌸", "🌙", "⭐", "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M4 14q0-2.625 1.25-4.675T8 5.875t2.75-2.138L12 3v3.3q0 .925.625 1.462t1.4.538q.425 0 .813-.175t.712-.575L16 7q1.8 1.05 2.9 2.912T20 14q0 2.2-1.075 4.013T16.1 20.874q.425-.6.663-1.312T17 18.05q0-1-.375-1.888t-1.075-1.587L12 11.1l-3.525 3.475q-.725.725-1.1 1.6T7 18.05q0 .8.238 1.513t.662 1.312q-1.75-1.05-2.825-2.863T4 14m8-.1l2.125 2.075q.425.425.65.95T15 18.05q0 1.225-.875 2.088T12 21t-2.125-.862T9 18.05q0-.575.225-1.112t.65-.963z'/></svg>", "🍀", "🎩", "🧣", "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M5 20v-2h14v2zm0-3.5L3.725 8.475q-.05 0-.113.013T3.5 8.5q-.625 0-1.062-.438T2 7t.438-1.062T3.5 5.5t1.063.438T5 7q0 .175-.038.325t-.087.275L8 9l3.125-4.275q-.275-.2-.45-.525t-.175-.7q0-.625.438-1.063T12 2t1.063.438T13.5 3.5q0 .375-.175.7t-.45.525L16 9l3.125-1.4q-.05-.125-.088-.275T19 7q0-.625.438-1.063T20.5 5.5t1.063.438T22 7t-.437 1.063T20.5 8.5q-.05 0-.112-.012t-.113-.013L19 16.5z'/></svg>", "💫"];
-        // 头像库：avatars/*.jpg 静态资源（128×128，脚本 avatars_compress.py 生成）
+        // 头像库：avatars/*.webp 静态资源（128×128，脚本 avatars_compress.py 生成）
         const AVATAR_LIBRARY = [
-            { name: "头像1", url: "avatars/avatar_01.jpg", gender: "male" },
-            { name: "头像2", url: "avatars/avatar_02.jpg", gender: "male" },
-            { name: "头像3", url: "avatars/avatar_03.jpg", gender: "male" },
-            { name: "头像4", url: "avatars/avatar_04.jpg", gender: "male" },
-            { name: "头像5", url: "avatars/avatar_05.jpg", gender: "male" },
-            { name: "头像6", url: "avatars/avatar_06.jpg", gender: "female" },
-            { name: "头像7", url: "avatars/avatar_07.jpg", gender: "female" },
-            { name: "头像8", url: "avatars/avatar_08.jpg", gender: "female" },
-            { name: "头像9", url: "avatars/avatar_09.jpg", gender: "female" },
-            { name: "头像10", url: "avatars/avatar_10.jpg", gender: "male" },
-            { name: "头像11", url: "avatars/avatar_11.jpg", gender: "male" },
-            { name: "头像12", url: "avatars/avatar_12.jpg", gender: "male" },
-            { name: "头像13", url: "avatars/avatar_13.jpg", gender: "male" },
-            { name: "头像14", url: "avatars/avatar_14.jpg", gender: "male" },
-            { name: "头像15", url: "avatars/avatar_15.jpg", gender: "male" },
-            { name: "头像16", url: "avatars/avatar_16.jpg", gender: "male" },
-            { name: "头像17", url: "avatars/avatar_17.jpg", gender: "female" },
-            { name: "头像18", url: "avatars/avatar_18.jpg", gender: "female" },
-            { name: "头像19", url: "avatars/avatar_19.jpg", gender: "female" },
-            { name: "头像20", url: "avatars/avatar_20.jpg", gender: "female" },
-            { name: "头像21", url: "avatars/avatar_21.jpg", gender: "male" },
-            { name: "头像22", url: "avatars/avatar_22.jpg", gender: "male" },
-            { name: "头像23", url: "avatars/avatar_23.jpg", gender: "male" },
-            { name: "头像24", url: "avatars/avatar_24.jpg", gender: "female" },
-            { name: "头像25", url: "avatars/avatar_25.jpg", gender: "female" },
-            { name: "头像26", url: "avatars/avatar_26.jpg", gender: "female" },
-            { name: "头像27", url: "avatars/avatar_27.jpg", gender: "female" },
-            { name: "头像28", url: "avatars/avatar_28.jpg", gender: "male" },
-            { name: "头像29", url: "avatars/avatar_29.jpg", gender: "male" },
-            { name: "头像30", url: "avatars/avatar_30.jpg", gender: "male" },
-            { name: "头像31", url: "avatars/avatar_31.jpg", gender: "male" },
-            { name: "头像32", url: "avatars/avatar_32.jpg", gender: "male" },
-            { name: "头像33", url: "avatars/avatar_33.jpg", gender: "male" },
-            { name: "头像34", url: "avatars/avatar_34.jpg", gender: "male" },
-            { name: "头像35", url: "avatars/avatar_35.jpg", gender: "male" },
-            { name: "头像36", url: "avatars/avatar_36.jpg", gender: "female" },
-            { name: "头像37", url: "avatars/avatar_37.jpg", gender: "female" },
-            { name: "头像38", url: "avatars/avatar_38.jpg", gender: "female" },
-            { name: "头像39", url: "avatars/avatar_39.jpg", gender: "female" },
-            { name: "头像40", url: "avatars/avatar_40.jpg", gender: "female" },
-            { name: "头像41", url: "avatars/avatar_41.jpg", gender: "female" },
-            { name: "头像42", url: "avatars/avatar_42.jpg", gender: "female" },
-            { name: "头像43", url: "avatars/avatar_43.jpg", gender: "female" },
-            { name: "头像44", url: "avatars/avatar_44.jpg", gender: "male" },
+            { name: "头像1", url: "avatars/avatar_01.webp", gender: "male" },
+            { name: "头像2", url: "avatars/avatar_02.webp", gender: "male" },
+            { name: "头像3", url: "avatars/avatar_03.webp", gender: "male" },
+            { name: "头像4", url: "avatars/avatar_04.webp", gender: "male" },
+            { name: "头像5", url: "avatars/avatar_05.webp", gender: "male" },
+            { name: "头像6", url: "avatars/avatar_06.webp", gender: "female" },
+            { name: "头像7", url: "avatars/avatar_07.webp", gender: "female" },
+            { name: "头像8", url: "avatars/avatar_08.webp", gender: "female" },
+            { name: "头像9", url: "avatars/avatar_09.webp", gender: "female" },
+            { name: "头像10", url: "avatars/avatar_10.webp", gender: "male" },
+            { name: "头像11", url: "avatars/avatar_11.webp", gender: "male" },
+            { name: "头像12", url: "avatars/avatar_12.webp", gender: "male" },
+            { name: "头像13", url: "avatars/avatar_13.webp", gender: "male" },
+            { name: "头像14", url: "avatars/avatar_14.webp", gender: "male" },
+            { name: "头像15", url: "avatars/avatar_15.webp", gender: "male" },
+            { name: "头像16", url: "avatars/avatar_16.webp", gender: "male" },
+            { name: "头像17", url: "avatars/avatar_17.webp", gender: "female" },
+            { name: "头像18", url: "avatars/avatar_18.webp", gender: "female" },
+            { name: "头像19", url: "avatars/avatar_19.webp", gender: "female" },
+            { name: "头像20", url: "avatars/avatar_20.webp", gender: "female" },
+            { name: "头像21", url: "avatars/avatar_21.webp", gender: "male" },
+            { name: "头像22", url: "avatars/avatar_22.webp", gender: "male" },
+            { name: "头像23", url: "avatars/avatar_23.webp", gender: "male" },
+            { name: "头像24", url: "avatars/avatar_24.webp", gender: "female" },
+            { name: "头像25", url: "avatars/avatar_25.webp", gender: "female" },
+            { name: "头像26", url: "avatars/avatar_26.webp", gender: "female" },
+            { name: "头像27", url: "avatars/avatar_27.webp", gender: "female" },
+            { name: "头像28", url: "avatars/avatar_28.webp", gender: "male" },
+            { name: "头像29", url: "avatars/avatar_29.webp", gender: "male" },
+            { name: "头像30", url: "avatars/avatar_30.webp", gender: "male" },
+            { name: "头像31", url: "avatars/avatar_31.webp", gender: "male" },
+            { name: "头像32", url: "avatars/avatar_32.webp", gender: "male" },
+            { name: "头像33", url: "avatars/avatar_33.webp", gender: "male" },
+            { name: "头像34", url: "avatars/avatar_34.webp", gender: "male" },
+            { name: "头像35", url: "avatars/avatar_35.webp", gender: "male" },
+            { name: "头像36", url: "avatars/avatar_36.webp", gender: "female" },
+            { name: "头像37", url: "avatars/avatar_37.webp", gender: "female" },
+            { name: "头像38", url: "avatars/avatar_38.webp", gender: "female" },
+            { name: "头像39", url: "avatars/avatar_39.webp", gender: "female" },
+            { name: "头像40", url: "avatars/avatar_40.webp", gender: "female" },
+            { name: "头像41", url: "avatars/avatar_41.webp", gender: "female" },
+            { name: "头像42", url: "avatars/avatar_42.webp", gender: "female" },
+            { name: "头像43", url: "avatars/avatar_43.webp", gender: "female" },
+            { name: "头像44", url: "avatars/avatar_44.webp", gender: "male" },
         ];
 
         // ---- NPC 头像确定性分配：按性别池 + 名字哈希，同 NPC 每次刷新头像不变 ----
@@ -25923,7 +25924,7 @@ window.LoveEngine = (() => {
         recapState = { mode: "idle", msg: "", expressions: [], writing: [] };
         recapMask.innerHTML =
             '<div class="lg-rm">' +
-                '<img class="lg-rm-img" src="lang/recap-top.jpg" alt="章末复盘" loading="lazy">' +
+                '<img class="lg-rm-img" src="lang/recap-top.webp" alt="章末复盘" loading="lazy">' +
                 '<div class="lg-rm-scroll">' +
                     '<div class="lg-rm-head">📋 第 ' + recapChapterNo() + " 章复盘<span class=\"lg-rm-close\" data-act=\"rm-close\">✕</span></div>" +
                     '<div class="lg-rm-note">每 5 轮一小章:先看看你点查过的词,再让 AI 从剧情里提炼值得收藏的表达——全都会进大厅「⑤ 我的生词本」。</div>' +

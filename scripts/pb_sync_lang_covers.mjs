@@ -1,4 +1,4 @@
-// 语言卡封面字段回填:scenarios/covers/lang_<pbId>.jpg 已落盘但 PB lang_cards.cover 为空 → PATCH 补上
+// 语言卡封面字段回填:scenarios/covers/lang_<pbId>.webp 已落盘但 PB lang_cards.cover 为空 → PATCH 补上
 // 背景:cover 是静态文件(不走 PB 文件存储),但前端/worker 是从记录字段读路径的,文件在而字段空 = 剧本库显示无封面
 // 用法: node scripts/pb_sync_lang_covers.mjs --email ADMIN --password PASS [--pb https://db.blupure.cn] [--dry]
 import fs from "node:fs";
@@ -13,7 +13,7 @@ const PASSWORD = args.password || process.env.PB_ADMIN_PASSWORD;
 if (!EMAIL || !PASSWORD) { console.error("缺少 --email/--password 或 PB_ADMIN_EMAIL/PB_ADMIN_PASSWORD"); process.exit(2); }
 const DRY = "dry" in args;
 const COVER_DIR = path.join(process.cwd(), "scenarios", "covers");
-const coverPath = (id) => `covers/lang_${id}.jpg`;
+const coverPath = (id) => `covers/lang_${id}.webp`;
 
 async function pb(url, opts) {
     const res = await fetch(url, opts);
@@ -35,7 +35,7 @@ async function main() {
     for (const c of items) {
         const want = coverPath(c.id);
         if (String(c.cover || "").trim() === want) { ok++; continue; }
-        if (!fs.existsSync(path.join(COVER_DIR, `lang_${c.id}.jpg`))) {
+        if (!fs.existsSync(path.join(COVER_DIR, `lang_${c.id}.webp`))) {
             missing++;
             console.log(`缺文件  ${c.id}  ${c.lang}  ${c.title_zh}  (cover 现为 ${JSON.stringify(c.cover || "")})`);
             continue;

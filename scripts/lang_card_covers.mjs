@@ -1,9 +1,11 @@
-// 英语卡官方封面生成:缺封面卡手写 prompt(视觉体系同中文官方卡 4:3 无字横版)→ POST 生产 cover 接口 pregen 通道
-// → 落盘 scenarios/covers/lang_{pbId}.jpg(静态文件,前端 CoverService 直接归一加载,不走 KV)
+// 语言卡官方封面生成:缺封面卡手写 prompt(视觉体系同中文官方卡 4:3 无字横版)→ POST 生产 cover 接口 pregen 通道
+// → 落盘 scenarios/covers/lang_{pbId}.webp(静态文件,前端 CoverService 直接归一加载,不走 KV)
+// 接口只吐 JPG 字节流,落盘后调 convert_to_webp.py 转 WebP 并删掉 JPG(全站静态图统一 WebP)
 // 用法: node scripts/lang_card_covers.mjs --email PB管理员邮箱 --password PB管理员密码 [--pb https://db.blupure.cn]
 // pregen key 读取: 环境变量 COVER_PREGEN_KEY_FILE(默认 F:/Claude/cover-pregen-key,worker secret COVER_PREGEN_KEY 同值)
 import fs from "node:fs";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 
 const args = Object.fromEntries(process.argv.slice(2).flatMap((a, i, arr) =>
     a.startsWith("--") ? [[a.slice(2), arr[i + 1] ?? ""]] : []
@@ -123,6 +125,13 @@ async function main() {
         const out = path.join(OUT_DIR, `lang_${c.id}.jpg`);
         fs.writeFileSync(out, buf);
         console.log(`OK   ${c.id} → lang_${c.id}.jpg ${(buf.length / 1024).toFixed(0)}KB ${r.genErr || ""}`);
+    }
+    // 生成接口只吐 JPG(单张 1.4~1.9MB),落盘后统一转 WebP —— 规则见 memory/feedback_webp_default
+    try {
+        execFileSync("py", [path.join(process.cwd(), "scripts", "convert_to_webp.py"), "--dir", OUT_DIR], { stdio: "inherit" });
+    } catch (e) {
+        console.error("⚠ WebP 转换失败(封面仍是 JPG,前端不认):", e.message);
+        process.exit(1);
     }
     process.exit(0);
 }

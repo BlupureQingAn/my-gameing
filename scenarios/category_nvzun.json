@@ -32,7 +32,7 @@
           "personality": "冷静忠诚，武艺高强",
           "relationship": "先帝留给你的最后一人，可托生死",
           "gender": "女",
-          "avatar": "avatars/avatar_17.jpg"
+          "avatar": "avatars/avatar_17.webp"
         },
         {
           "name": "叔父·云烈",
@@ -40,7 +40,7 @@
           "personality": "雄才大略，野心昭然",
           "relationship": "掌北境军权，明面恭敬，暗藏锋芒",
           "gender": "男",
-          "avatar": "avatars/avatar_14.jpg"
+          "avatar": "avatars/avatar_14.webp"
         },
         {
           "name": "首辅·韩相",
@@ -48,7 +48,7 @@
           "personality": "老谋深算，八面玲珑",
           "relationship": "三朝老臣，朝堂风向标",
           "gender": "男",
-          "avatar": "avatars/avatar_13.jpg"
+          "avatar": "avatars/avatar_13.webp"
         },
         {
           "name": "男妃·容玉",
@@ -56,7 +56,7 @@
           "personality": "温柔似水，来历成谜",
           "relationship": "他入宫前，曾是一介边城小吏之子",
           "gender": "男",
-          "avatar": "avatars/avatar_35.jpg"
+          "avatar": "avatars/avatar_35.webp"
         }
       ],
       "timeline": {
@@ -121,7 +121,7 @@
           "favor": 80,
           "affection": 0,
           "gender": "女",
-          "avatar": "avatars/avatar_37.jpg"
+          "avatar": "avatars/avatar_37.webp"
         },
         {
           "name": "少年·阿让",
@@ -129,7 +129,7 @@
           "personality": "倔强善良，心怀侠义",
           "relationship": "你被逐出师门的起因，如今在寻你",
           "gender": "男",
-          "avatar": "avatars/avatar_02.jpg"
+          "avatar": "avatars/avatar_02.webp"
         },
         {
           "name": "醉仙楼·苏三娘",
@@ -137,7 +137,7 @@
           "personality": "八面玲珑，笑里藏刀",
           "relationship": "她手里有你身世之谜的线索",
           "gender": "女",
-          "avatar": "avatars/avatar_24.jpg"
+          "avatar": "avatars/avatar_24.webp"
         },
         {
           "name": "魔教圣女·白璎",
@@ -145,7 +145,7 @@
           "personality": "亦正亦邪，锋芒毕露",
           "relationship": "她邀你入魔教，说你的身世与魔教有关",
           "gender": "女",
-          "avatar": "avatars/avatar_06.jpg"
+          "avatar": "avatars/avatar_06.webp"
         }
       ],
       "timeline": {
@@ -209,7 +209,7 @@
           "favor": 85,
           "affection": 0,
           "gender": "女",
-          "avatar": "avatars/avatar_38.jpg"
+          "avatar": "avatars/avatar_38.webp"
         },
         {
           "name": "嫡母·李氏",
@@ -217,7 +217,7 @@
           "personality": "精明威严，护犊如命",
           "relationship": "她让你当家，未必出于真心",
           "gender": "女",
-          "avatar": "avatars/avatar_09.jpg"
+          "avatar": "avatars/avatar_09.webp"
         },
         {
           "name": "账房·孙账房",
@@ -225,7 +225,7 @@
           "personality": "滑头世故，账目如水",
           "relationship": "他管账十年，最清楚侯府的窟窿",
           "gender": "男",
-          "avatar": "avatars/avatar_04.jpg"
+          "avatar": "avatars/avatar_04.webp"
         },
         {
           "name": "夫郎·沈郎",
@@ -235,7 +235,7 @@
           "favor": 85,
           "affection": 0,
           "gender": "男",
-          "avatar": "avatars/avatar_02.jpg"
+          "avatar": "avatars/avatar_02.webp"
         }
       ],
       "timeline": {
@@ -298,7 +298,7 @@
           "personality": "忠勇刚烈，快人快语",
           "relationship": "跟你打了八年仗的生死之交",
           "gender": "女",
-          "avatar": "avatars/avatar_19.jpg"
+          "avatar": "avatars/avatar_19.webp"
         },
         {
           "name": "妹妹·秦照月",
@@ -306,7 +306,7 @@
           "personality": "冷峻疏离，深不可测",
           "relationship": "她带着圣旨来接印，态度却不像来夺权的",
           "gender": "女",
-          "avatar": "avatars/avatar_39.jpg"
+          "avatar": "avatars/avatar_39.webp"
         },
         {
           "name": "军师·柳先生",
@@ -316,7 +316,7 @@
           "favor": 80,
           "affection": 0,
           "gender": "男",
-          "avatar": "avatars/avatar_22.jpg"
+          "avatar": "avatars/avatar_22.webp"
         },
         {
           "name": "敌帅·拓跋燕",
@@ -324,7 +324,7 @@
           "personality": "骁勇善战，诡计多端",
           "relationship": "与你在战场交手三次，三次平手",
           "gender": "女",
-          "avatar": "avatars/avatar_42.jpg"
+          "avatar": "avatars/avatar_42.webp"
         }
       ],
       "timeline": {
@@ -386,7 +386,7 @@
           "personality": "雷厉风行，公私分明",
           "relationship": "她忙于政务，也隐瞒着你的身世",
           "gender": "女",
-          "avatar": "avatars/avatar_17.jpg"
+          "avatar": "avatars/avatar_17.webp"
         },
         {
           "name": "同学·魏雪薇",
@@ -394,7 +394,7 @@
           "personality": "高傲骄纵，外强中干",
           "relationship": "她卡你的推荐信，理由不明",
           "gender": "女",
-          "avatar": "avatars/avatar_19.jpg"
+          "avatar": "avatars/avatar_19.webp"
         },
         {
           "name": "班主任·林老师",
@@ -402,7 +402,7 @@
           "personality": "热心负责，左右为难",
           "relationship": "她同情你，却不敢得罪教育局长",
           "gender": "女",
-          "avatar": "avatars/avatar_41.jpg"
+          "avatar": "avatars/avatar_41.webp"
         },
         {
           "name": "神秘男人·夏远",
@@ -412,7 +412,7 @@
           "favor": 85,
           "affection": 0,
           "gender": "男",
-          "avatar": "avatars/avatar_31.jpg"
+          "avatar": "avatars/avatar_31.webp"
         }
       ],
       "timeline": {

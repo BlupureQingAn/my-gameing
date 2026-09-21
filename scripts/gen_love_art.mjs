@@ -178,7 +178,7 @@ for (const cf of cardFiles) {
         if (!npc || !npc.name) continue;
         if (onlyNpc && String(npc.name).toLowerCase() !== onlyNpc) continue;
         const nm = slugify(npc.name);
-        const rel = `loveart_${slug}_${nm}.png`;
+        const rel = `loveart_${slug}_${nm}.webp`;
         const file = path.join(OUT_DIR, rel);
         if (!flags.has("force") && !flags.has("dry") && fs.existsSync(file) && fs.statSync(file).size > 1000) {
             console.log(`SKIP ${rel} 已存在`);
