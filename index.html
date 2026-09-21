@@ -20655,12 +20655,14 @@ function openNpcProfile(npcId) {
         window.assignNpcAvatar = assignNpcAvatar;
         // ---- 历史记录（play_history_v1）：剧本游玩 + 人物卡聊天，顶部「历史」按钮悬浮面板 ----
         const HISTORY_KEY = "play_history_v1";
+        // 面板上限 7 条(剧本卡+人物卡共用一个池,按时间全局淘汰),超出直接丢最早那条
+        const HISTORY_MAX = 7;
         function pushPlayHistory(entry) {
             try {
                 let list = StorageService.readJson(HISTORY_KEY, []);
                 list = list.filter((e) => !(e.type === entry.type && e.id === entry.id));
                 list.unshift({ ts: Date.now(), ...entry });
-                StorageService.writeJson(HISTORY_KEY, list.slice(0, 100));
+                StorageService.writeJson(HISTORY_KEY, list.slice(0, HISTORY_MAX));
             } catch (e) {}
         }
         function historyTimeText(ts) {
@@ -20675,6 +20677,7 @@ function openNpcProfile(npcId) {
             if (!body) return;
             let list = [];
             try { list = StorageService.readJson(HISTORY_KEY, []); } catch (e) {}
+            list = list.slice(0, HISTORY_MAX); // 老版本存下的超长列表不显示,下次写入时回落
             if (!list.length) {
                 body.innerHTML = '<div class="hp-empty">暂无历史记录<br>游玩剧本卡或人物卡聊天后会记录在这里</div>';
                 return;
