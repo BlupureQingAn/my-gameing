@@ -23,7 +23,9 @@ const input = args.file
     : fs.readFileSync(0, "utf8");
 const card = JSON.parse(input);
 
-const BANDS = ["hs", "cet4", "cet6", "ky", "toefl"];
+const BANDS = ["hs", "cet4", "cet6", "ky", "toefl",
+    "ja-n5", "ja-n4", "ja-n3", "ja-n2", "ja-n1",
+    "ko-1", "ko-2", "ko-3"];
 const LANGS = ["en", "ja", "ko"];
 const STATUSES = ["draft", "online", "offline"];
 

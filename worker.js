@@ -3528,29 +3528,59 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 }
                 return new Response(JSON.stringify({ ok: true, day_seconds: secs }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
-            // ---- 排行榜:日/周/月学习时长 Top100(GET /api/lang/leaderboard?span=&lang=)----
-            // 聚合 lang_study_days(按 user_id),并列同秒同 rank(跳跃式);登录时可带 me(自己秒数+名次,未进 100 也可显示)
+            // ---- 无阻畅读榜:阅读量上报(PUT /api/lang/immersive)----
+            // 客户端只在"句子离屏时没被查词、没开译文、且停留 ≥0.7s"才把该句原文字数计入,攒批上报。
+            // 挂机刷不出来:句子没进过视口/没停留就一个字都不计。单次 ≤3000,同日 cap 60000 只防脚本灌水。
+            if (url.pathname === "/api/lang/immersive" && request.method === "PUT") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const uid = auth.record.id;
+                const body = await request.json().catch(() => ({}));
+                const add = Math.min(3000, Math.max(1, Math.floor(Number(body.chars) || 0)));
+                const lang = String(body.lang || "en").slice(0, 8);
+                const day = getTodayStr();
+                const CAP = 60000;
+                const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'&&lang='${escapePocketBaseFilterValue(lang)}'&&day='${day}'`);
+                const q = await pbAdminFetch(env, `/api/collections/lang_immersive_days/records?perPage=1&skipTotal=true&filter=${f}`);
+                const d = await q.json().catch(() => ({}));
+                const exist = (d.items || [])[0];
+                let chars = add;
+                if (exist) {
+                    chars = Math.min(CAP, (Number(exist.chars) || 0) + add);
+                    await pbAdminFetch(env, `/api/collections/lang_immersive_days/records/${exist.id}`, { method: "PATCH", body: JSON.stringify({ chars }) });
+                } else {
+                    const r = await pbAdminFetch(env, `/api/collections/lang_immersive_days/records`, { method: "POST", body: JSON.stringify({ user_id: uid, lang, day, chars }) });
+                    if (!r.ok) return errorResponse("无阻阅读量上报失败", 500, null, "IMM_SAVE_FAILED");
+                }
+                return new Response(JSON.stringify({ ok: true, day_chars: chars }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+            }
+            // ---- 排行榜:日/周/月 Top100(GET /api/lang/leaderboard?board=&span=&lang=)----
+            // board=time(默认)按时长聚合 lang_study_days;board=immersive 按无阻阅读量聚合 lang_immersive_days。
+            // 并列同分同 rank(跳跃式);登录时可带 me(自己分数+名次,未进 100 也可显示)
             if (url.pathname === "/api/lang/leaderboard" && request.method === "GET") {
+                const board = url.searchParams.get("board") === "immersive" ? "immersive" : "time";
                 const span = url.searchParams.get("span") === "week" || url.searchParams.get("span") === "month" ? url.searchParams.get("span") : "day";
                 const lang = String(url.searchParams.get("lang") || "en").slice(0, 8);
+                const coll = board === "immersive" ? "lang_immersive_days" : "lang_study_days";
+                const scoreField = board === "immersive" ? "chars" : "seconds";
                 const start = getCnSliceStart(span);
                 const today = getTodayStr();
                 const f = encodeURIComponent(`lang='${escapePocketBaseFilterValue(lang)}'&&day>='${start}'&&day<='${today}'`);
                 const agg = {};
                 let page = 1;
                 for (;;) {
-                    const q = await pbAdminFetch(env, `/api/collections/lang_study_days/records?perPage=500&page=${page}&fields=user_id,seconds&filter=${f}`);
+                    const q = await pbAdminFetch(env, `/api/collections/${coll}/records?perPage=500&page=${page}&fields=user_id,${scoreField}&filter=${f}`);
                     const d = await q.json().catch(() => ({}));
                     const items = d.items || [];
-                    for (const it of items) agg[it.user_id] = (agg[it.user_id] || 0) + Number(it.seconds || 0);
+                    for (const it of items) agg[it.user_id] = (agg[it.user_id] || 0) + Number(it[scoreField] || 0);
                     if (items.length < 500 || !d.page || page >= (d.totalPages || page)) break;
                     page++;
                 }
-                const rows = Object.keys(agg).map((uid) => ({ uid, sec: agg[uid] }))
-                    .sort((a, b) => b.sec - a.sec || (a.uid < b.uid ? -1 : 1));
+                const rows = Object.keys(agg).map((uid) => ({ uid, score: agg[uid] }))
+                    .sort((a, b) => b.score - a.score || (a.uid < b.uid ? -1 : 1));
                 const ranks = {};
-                let lastSec = -1, lastRank = 0;
-                rows.forEach((r, i) => { if (r.sec !== lastSec) { lastRank = i + 1; lastSec = r.sec; } ranks[r.uid] = lastRank; });
+                let lastScore = -1, lastRank = 0;
+                rows.forEach((r, i) => { if (r.score !== lastScore) { lastRank = i + 1; lastScore = r.score; } ranks[r.uid] = lastRank; });
                 const top = rows.slice(0, 100);
                 const userMap = {};
                 if (top.length) {
@@ -3563,17 +3593,17 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                     user_id: r.uid, rank: ranks[r.uid],
                     nickname: String((userMap[r.uid] && (userMap[r.uid].nickname || userMap[r.uid].username)) || "").slice(0, 30),
                     faceimg: String((userMap[r.uid] && userMap[r.uid].faceimg) || "").slice(0, 500),
-                    seconds: r.sec
+                    ...(board === "immersive" ? { chars: r.score } : { seconds: r.score })
                 }));
                 let me = null;
                 try {
                     const auth = await authenticate(env, request);
                     if (auth && auth.record && agg[auth.record.id]) {
                         const mid = auth.record.id;
-                        me = { user_id: mid, seconds: agg[mid], rank: ranks[mid] };
+                        me = { user_id: mid, rank: ranks[mid], ...(board === "immersive" ? { chars: agg[mid] } : { seconds: agg[mid] }) };
                     }
                 } catch (e) {}
-                return new Response(JSON.stringify({ span, lang, start, items, me }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+                return new Response(JSON.stringify({ board, span, lang, start, items, me }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
             // ---- P2 学习统计聚合(GET /api/lang/learn-stats?lang=en;登录)----
             // 口径同排行榜(北京自然日/秒);streak=连续天数,今天没学从昨天倒推不打断;
@@ -3730,7 +3760,9 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const items = [];
                 for (const r of raws) {
                     const word = String((r && r.word) || "").trim().toLowerCase();
-                    if (!word || !/^[a-z][a-z0-9'-]*$/.test(word) || word.length > 40) continue;
+                    // 词形白名单:拉丁/假名/汉字/谚文开头。日韩词库全是 CJK 词,
+                    // 原 ASCII-only 正则会把它们**静默丢弃** → 日韩词测结果永远存不进去(整批 CJK 还会误报 INVALID_ITEMS)
+                    if (!word || !/^[a-zぁ-ゖァ-ヺー々一-龯가-힣][a-z0-9'’\-ぁ-ゖァ-ヺー々一-龯가-힣]*$/u.test(word) || word.length > 40) continue;
                     items.push({ word, ok: !!r.ok });
                 }
                 if (!items.length) return errorResponse("没有可提交的词", 400, null, "INVALID_ITEMS");

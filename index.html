@@ -5591,10 +5591,15 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 </div>
 
                 <div style="display:flex;align-items:center;justify-content:space-between;">
-                    <div class="list-title" style="margin:0;">🏆 英语学习时长榜</div>
+                    <div class="list-title" style="margin:0;" id="lb-title">🏆 学习时长榜</div>
                     <button type="button" class="mini-btn ghost" onclick="LangController.refreshLeaderboard()">↻ 刷新</button>
                 </div>
-                <div class="list-sub">玩英语剧本 + 学习中心刷词/生词本翻记都算学习时长——每次进入自动记录，越玩越靠前。</div>
+                <div class="list-sub" id="lb-sub">玩剧本 + 学习中心刷词/生词本翻记都算学习时长——每次进入自动记录，越玩越靠前。</div>
+
+                <div class="lang-picker" id="lb-board-picker" style="margin-top:10px;">
+                    <button type="button" class="lang-lang-card active" data-board="time" onclick="LangController.setLbBoard('time')"><span>⏱ 学习时长</span></button>
+                    <button type="button" class="lang-lang-card" data-board="immersive" onclick="LangController.setLbBoard('immersive')"><span>📖 无阻畅读</span></button>
+                </div>
 
                 <div class="lang-picker" id="lb-span-picker" style="margin-top:10px;">
                     <button type="button" class="lang-lang-card active" data-span="day" onclick="LangController.setLbSpan('day')"><span>今日</span></button>
@@ -8381,7 +8386,8 @@ function rebuildChoicesBlock(body, labels = []) {
                     for (let li = 0; li < rawBi.lines.length; li++) {
                         const ln = rawBi.lines[li];
                         if (!ln || typeof ln !== "object") continue;
-                        const en = String(ln.en || "").replace(/\s+/g, " ").trim();
+                        // 源语行兼容多种键名:预烤卡写 en;运行时 AI 按提示词写的是 text(AI 双语此前被整段静默丢弃)
+                        const en = String(ln.en || ln.text || ln.ja || ln.ko || "").replace(/\s+/g, " ").trim();
                         const zh = String(ln.zh || "").replace(/\s+/g, " ").trim();
                         if (!en || !zh) continue;
                         const words = [];
@@ -8390,7 +8396,8 @@ function rebuildChoicesBlock(body, labels = []) {
                                 const wd = ln.words[wi];
                                 if (!wd || typeof wd !== "object") continue;
                                 const w = String(wd.w || "").trim();
-                                if (w && /^[A-Za-z][A-Za-z' -]*$/.test(w)) words.push({ w, zh: String(wd.zh || "").trim() });
+                                // 放行 CJK:日/韩卡关键词是假名/汉字/谚文,原纯拉丁正则会全部丢弃
+                                if (w && w.length <= 40 && /^[\p{L}\p{M}'’\- ・ー]+$/u.test(w)) words.push({ w, zh: String(wd.zh || "").trim() });
                             }
                         }
                         lines.push({ en, zh, words });
@@ -18328,10 +18335,17 @@ ${recent || "（无）"}
                 const aiText = state.history[idx + 1]?.text ? UIRenderer.stripHtml(state.history[idx + 1].text).slice(0, 80) : "";
                 return `轮次${i + 1} 指令：${String(r.text || "").slice(0, 40)}\n经历：${aiText}`;
             }).join("\n");
+            // 结局正文语种跟随当前剧本:语言卡(日/韩)会话里写中文结语会与正文语种割裂
+            let epiLang = "英语", epiYou = "you";
+            try {
+                const _tl = window.LangEngine && window.LangEngine.targetLang ? window.LangEngine.targetLang() : "en";
+                if (_tl === "ja") { epiLang = "日语"; epiYou = "あなた（第二人称，自然日文语感）"; }
+                else if (_tl === "ko") { epiLang = "韩语"; epiYou = "당신/너（第二人称，自然韩文语感）"; }
+            } catch (e) {}
             const systemPrompt = `你是「云吞吞结局之书」。为这段恋爱攻略故事撰写专属结局。
 结局走向已由系统判定：${typeText}。你必须严格按此走向撰写，不可更改，也不可让角色对结局困惑。
 要求：
-1. body 用英语撰写 120-220 词的 epilogue，以第二人称 you 称呼玩家，语气像一封信或一段温柔旁白，须呼应关键互动与${npc ? npc.name : "主角"}的性格，禁止无意义堆砌。
+1. body 用${epiLang}撰写 120-220 词的 epilogue，以第二人称 ${epiYou} 称呼玩家，语气像一封信或一段温柔旁白，须呼应关键互动与${npc ? npc.name : "主角"}的性格，禁止无意义堆砌。
 2. bodyZh 将 body 完整译为中文，通顺且有文采。
 3. title 用中文，8 字以内，有意境（如"风起时心动"）。
 4. statistics 一行中文概述（历经几轮抉择、最终爱慕值、结局类型）。
@@ -22573,8 +22587,13 @@ function openNpcProfile(npcId) {
             let g = "";
             try { g = String(card?.structured?.world?.genre || "") + " " + String(card?.category || ""); } catch (e) {}
             for (let i = 0; i < TONE_RULES.length; i++) { if (TONE_RULES[i][0].test(g)) return TONE_RULES[i][1]; }
-            // M6b:语言专属卡设定本身全英文,语域照设定走,不做中文题材推断
-            try { if (card?.structured?.band) return "register: the English world bible below already sets its own register and mood — follow it exactly, keeping names and terms intact"; } catch (e) {}
+            // M6b:语言专属卡的设定正文按目标语写就,语域照设定走,不做中文题材推断
+            try {
+                if (card?.structured?.band) {
+                    const _lg = LANG_MAP[targetLang()] || "English";
+                    return "register: the " + _lg + " world bible below already sets its own register and mood — follow it exactly, keeping names and terms intact";
+                }
+            } catch (e) {}
             return "register: match the mood your Chinese setting implies; when in doubt, prefer slightly literary over casual";
         }
         /* Bug2(2026-09-13):语言Tag → 输出语言锁定。
@@ -22665,9 +22684,10 @@ function openNpcProfile(npcId) {
                 round = ((s?.history || []).filter((h) => h && h.role === "user").length || 0) + 1;
             } catch (e) {}
             const tone = toneHint(ScenarioCardService.getSelectedCard());
-            // M6b:语言专属卡(structured.band 存在)→ 设定已全英文,续写而非翻译
-            let englishSetting = false;
-            try { englishSetting = !!(ScenarioCardService.getSelectedCard()?.structured?.band); } catch (e) {}
+            // M6b:语言专属卡(structured.band 存在)→ 设定正文按目标语写就,续写而非翻译。
+            // 注意:日语卡的设定就是日文,不能一律断言"英文设定"(卡片 lang 才是判据)
+            let isLangCard = false;
+            try { isLangCard = !!(ScenarioCardService.getSelectedCard()?.structured?.band); } catch (e) {}
             const stg = immStage(round);
             const immText = stg.mode === "full"
                 ? "FULL IMMERSION — " + LG + " only; absolutely no Chinese lines anywhere."
@@ -22723,8 +22743,8 @@ function openNpcProfile(npcId) {
                 "Chinese text in the world bible, category or character role fields is METADATA, not story text: translate it into " + LG + " whenever it appears in the story; never copy Chinese verbatim into title / story / options.",
                 "SELF-CHECK before answering: re-read your own title, story and options; if any non-" + LG + " character appears (proper nouns written in Latin letters are fine), rewrite that sentence in " + LG + ".",
                 "1) Write ALL narration, dialogue, scene title and options in natural " + LG + ". Never output Chinese inside title / story / options.",
-                "2) " + (englishSetting
-                    ? "The 【设定文本】 world bible below is already written in English — it is the source of truth for era, rules, characters and mood. Keep the world exactly as it is: keep every name, term and rule; continue the story in the same register, written in " + LG + "; never translate, summarize or rewrite the setting itself. " + tone + "."
+                "2) " + (isLangCard
+                    ? "The 【设定文本】 world bible below is already written in " + LG + " — it is the source of truth for era, rules, characters and mood. Keep the world exactly as it is: keep every name, term and rule; continue the story in the same register, written in " + LG + "; never translate, summarize or rewrite the setting itself. (Some metadata fields inside it — era/genre/role/atmosphere — are engine data written in Chinese: translate them into " + LG + " if they ever surface in the story, never copy them verbatim.) " + tone + "."
                     : "The Chinese 【设定文本】 is the world bible (era, rules, characters, mood). Keep the world identical — translate it into " + LG + ", don't rewrite it; " + tone + "."),
                 "3) The \"time\" field must keep the engine's numeric Chinese format with month and day characters, e.g. \"5月15日\" or \"第3年5月15日\" — never word-only English dates like \"May 15\".",
                 "4) " + band + ".",
@@ -22810,7 +22830,7 @@ function openNpcProfile(npcId) {
             try { plan = ScenarioInitPlanService.buildLocalInitPlan(gender); } catch (e) {}
             if (!plan) {
                 session = {};
-                try { NoticeModalService.showInfo({ title: "这张剧本暂不支持英语模式", descHtml: "英语原生剧本请在「学语言 → 剧本库」里挑选；想玩中文剧本点主站顶部的「首页」即可。" }); } catch (e) {}
+                try { NoticeModalService.showInfo({ title: "这张剧本暂不支持语言学习模式", descHtml: "语言原生剧本请在「学语言 → 剧本库」里挑选；想玩中文剧本点主站顶部的「首页」即可。" }); } catch (e) {}
                 return;
             }
             // 弹确认 modal(内部走本地计划 + 语言卡性别/英文名修正);进入前先关掉可能残留的 loading
@@ -23231,7 +23251,8 @@ window.LoveEngine = (() => {
     }
     /* M8b:语言首页推荐区 = 文游首页同款 hb-card 大图轮播(4:3 封面 + 档/题材 tag + 轮次 + 播放按钮);点击卡任意处进入播放 */
     var langBanner = { idx: 0, timer: null };
-    var lbSpan = "day", lbCache = {}, lbLoading = false;   // 排行榜:当前 span/结果缓存(30s)/拉取中标志
+    var lbSpan = "day", lbBoard = "time", lbCache = {}, lbReq = 0;
+    // 排行榜:当前 span/榜别(time 时长|immersive 无阻畅读)/结果缓存(键=board|lang|span,30s)/请求序号(过期响应靠它作废)
     function langBannerHtml(c) {
         var icon = THEME_ICON[String(c.theme || "")] || "📖";
         var has = cardSaveOf(c), r = cardRoundOf(c);
@@ -23374,6 +23395,7 @@ window.LoveEngine = (() => {
             api.showBand();
             api.loadLangCards(code);
             api.renderHome();
+            api.refreshLeaderboardIfVisible();   // 榜单按语种取数,不跟着切会一直停在旧语种那批
             hint("已切换到" + LANG_TAG_INFO[code][1] + "——学习档与剧本库都换成" + LANG_TAG_INFO[code][1] + "的了。");
         },
         /* 语言首页三张语种卡:高亮当前语种(HTML 侧只写死英语卡 active,这里统一接管) */
@@ -23510,7 +23532,7 @@ window.LoveEngine = (() => {
         goImmAnchor: function () { api.goLearn(); api.anchor("#lang-learn-imm"); },
         goVocabAnchor: function () { api.goVocab(); api.anchor("#lang-learn-vocab"); },
         goDrillAnchor: function () { api.goLearn(); api.anchor("#lang-learn-drill"); },
-        /* ---- 排行榜(2026-09-06):日/周/月学习时长 Top100 ---- */
+        /* ---- 排行榜(2026-09-06):日/周/月学习时长 Top100;2026-09-21 增"无阻畅读榜"并修语种切换 ---- */
         goLeaderboard: function () {
             switchView("view-lang-leaderboard");
             api.renderLeaderboard();
@@ -23518,47 +23540,91 @@ window.LoveEngine = (() => {
         setLbSpan: function (sp) {
             if (sp !== "week" && sp !== "month") sp = "day";
             lbSpan = sp;
+            api.lbSyncPicker();
+            api.renderLeaderboard();
+        },
+        setLbBoard: function (b) {
+            lbBoard = b === "immersive" ? "immersive" : "time";
+            api.lbSyncPicker();
+            api.renderLeaderboard();
+        },
+        /* 语种切换后调用:榜单按 lang 取数,不重拉会一直停在旧语种那批数据上 */
+        refreshLeaderboardIfVisible: function () {
+            var el = $("view-lang-leaderboard");
+            if (!el || !el.classList.contains("active")) return;
+            lbCache = {};
+            lbReq++;
+            api.renderLeaderboard();
+        },
+        lbSyncPicker: function () {
             var box = $("lb-span-picker");
             if (box) {
                 var btns = box.querySelectorAll(".lang-lang-card");
-                for (var i = 0; i < btns.length; i++) btns[i].classList.toggle("active", btns[i].getAttribute("data-span") === sp);
+                for (var i = 0; i < btns.length; i++) btns[i].classList.toggle("active", btns[i].getAttribute("data-span") === lbSpan);
             }
-            api.renderLeaderboard();
+            var bb = $("lb-board-picker");
+            if (bb) {
+                var bs = bb.querySelectorAll(".lang-lang-card");
+                for (var j = 0; j < bs.length; j++) bs[j].classList.toggle("active", bs[j].getAttribute("data-board") === lbBoard);
+            }
+        },
+        lbUnit: function (lang) { return (lang || "en") === "en" ? "词" : "字"; },
+        fmtRead: function (n, lang) {
+            n = Math.max(0, Number(n) || 0);
+            var u = api.lbUnit(lang);
+            return n >= 10000 ? (n / 10000).toFixed(1) + " 万" + u : n + " " + u;
         },
         refreshLeaderboard: function () {
             lbCache = {};
+            lbReq++;              // 让在途请求作废——否则它的回调会把旧语种/旧榜别的结果写回缓存
             api.renderLeaderboard();
         },
         renderLeaderboard: function () {
             var box = $("lb-list");
             if (!box) return;
-            var c = lbCache[lbSpan];
+            api.lbSyncTitles();
+            /* 请求参数在发车前落成本地量:回调里再读全局会被用户中途切语种/切榜别改掉,
+               结果就会按新键写进缓存(旧版 lbCache[lbSpan] 的错值就是这么来的) */
+            var board = lbBoard, span = lbSpan, lang = curLearnLang();
+            var key = board + "|" + lang + "|" + span;
+            var c = lbCache[key];
             if (c && Date.now() - c.at < 30000) { box.innerHTML = c.html; api.lbMeta(c); api.lbMe(c); return; }
-            if (lbLoading) return;
-            lbLoading = true;
+            var seq = ++lbReq;
             box.innerHTML = '<div class="list-sub" style="padding:14px 0;">榜单加载中…</div>';
-            fetch(API_BASE + "/api/lang/leaderboard?span=" + encodeURIComponent(lbSpan) + "&lang=" + encodeURIComponent(curLearnLang()), {
+            fetch(API_BASE + "/api/lang/leaderboard?board=" + encodeURIComponent(board) +
+                "&span=" + encodeURIComponent(span) + "&lang=" + encodeURIComponent(lang), {
                 headers: token() ? { "X-Auth-Token": "Bearer " + token() } : {}
             })
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (d) {
-                    lbLoading = false;
+                    if (seq !== lbReq) return;    // 已被更新的请求取代,丢弃这一批
                     if (!d) { box.innerHTML = '<div class="list-sub" style="padding:14px 0;">榜单加载失败，点「↻ 刷新」重试</div>'; return; }
-                    var html = api.lbRowsHtml(d);
-                    var c2 = { at: Date.now(), html: html, meta: d, items: d.items, me: d.me };
-                    lbCache[lbSpan] = c2;
+                    var html = api.lbRowsHtml(d, board, lang);
+                    var c2 = { at: Date.now(), html: html, meta: d, items: d.items, me: d.me, board: board, lang: lang, span: span };
+                    lbCache[key] = c2;
                     box.innerHTML = html;
                     api.lbMeta(c2);
                     api.lbMe(c2);
                 })
                 .catch(function () {
-                    lbLoading = false;
+                    if (seq !== lbReq) return;
                     box.innerHTML = '<div class="list-sub" style="padding:14px 0;">网络开小差了，点「↻ 刷新」重试</div>';
                 });
         },
-        lbRowsHtml: function (d) {
+        lbSyncTitles: function () {
+            var ln = LANG_TAG_INFO[curLearnLang()][1];
+            var t = $("lb-title"), s = $("lb-sub");
+            if (t) t.textContent = lbBoard === "immersive" ? "📖 " + ln + "无阻畅读榜" : "🏆 " + ln + "学习时长榜";
+            if (s) s.textContent = lbBoard === "immersive"
+                ? "不点生词、不看译文、一路顺畅读下去的原文字数才算——挂机刷时长在这里没用。每次进入自动累计，越读越靠前。"
+                : "玩" + ln + "剧本 + 学习中心刷词/生词本翻记都算学习时长——每次进入自动记录，越玩越靠前。";
+        },
+        lbRowsHtml: function (d, board, lang) {
             var items = d.items || [];
-            if (!items.length) return '<div class="list-sub" style="padding:14px 0;">还没有人上榜——去玩英语剧本，第一个留下名字！</div>';
+            if (!items.length) return '<div class="list-sub" style="padding:14px 0;">' +
+                (board === "immersive"
+                    ? "还没有人上榜——去玩" + LANG_TAG_INFO[lang || "en"][1] + "剧本，一路无阻地读下去，第一个留下名字！"
+                    : "还没有人上榜——去玩" + LANG_TAG_INFO[lang || "en"][1] + "剧本，第一个留下名字！") + "</div>";
             var html = "", i, it, face;
             for (i = 0; i < items.length; i++) {
                 it = items[i];
@@ -23567,14 +23633,17 @@ window.LoveEngine = (() => {
                 html += '<div class="lb-row' + (d.me && d.me.user_id === it.user_id ? " lb-me" : "") + '">' +
                     '<span class="lb-rank' + (it.rank <= 3 ? " lb-top" : "") + '">' + it.rank + "</span>" + face +
                     '<span class="lb-name">' + api.esc(String(it.nickname || "云吞吞学友")) + "</span>" +
-                    '<span class="lb-sec">' + api.fmtDur(it.seconds) + "</span></div>";
+                    '<span class="lb-sec">' + (board === "immersive" ? api.fmtRead(it.chars, lang) : api.fmtDur(it.seconds)) + "</span></div>";
             }
             return html;
         },
         lbMeta: function (c) {
             var el = $("lb-meta"); if (!el) return;
             var names = { day: "今日", week: "本周", month: "本月" };
-            el.textContent = "按北京时间的" + (names[c.meta.span] || "今日") + "学习时长排名：玩英语剧本 + 学习中心/生词本都计入，前 100 名上榜。";
+            var ln = LANG_TAG_INFO[c.lang || "en"][1];
+            el.textContent = c.board === "immersive"
+                ? "按北京时间的" + (names[c.span] || "今日") + "无阻阅读量排名：只有没点生词、没开译文的句子计入，" + (api.lbUnit(c.lang) === "词" ? "英语按词数" : "按原文字数") + "，前 100 名上榜。"
+                : "按北京时间的" + (names[c.span] || "今日") + "学习时长排名：玩" + ln + "剧本 + 学习中心/生词本都计入，前 100 名上榜。";
         },
         lbMe: function (c) {
             var el = $("lb-me"); if (!el) return;
@@ -23584,7 +23653,10 @@ window.LoveEngine = (() => {
                 if (c.items[i].user_id === me.user_id) { el.style.display = "none"; el.innerHTML = ""; return; }
             }
             el.style.display = "block";
-            el.innerHTML = '<div class="lb-me-card">' + (me.rank ? "你当前第 " + me.rank + " 名" : "你还没上榜") + " · 已学 " + api.fmtDur(me.seconds) + (me.rank ? "" : "，再学一会儿就能挤进前 100") + "</div>";
+            var has = c.board === "immersive";
+            var done = has ? "已无阻读完 " + api.fmtRead(me.chars, c.lang) : "已学 " + api.fmtDur(me.seconds);
+            var tip = has ? "，再顺畅读一会儿就能挤进前 100" : "，再学一会儿就能挤进前 100";
+            el.innerHTML = '<div class="lb-me-card">' + (me.rank ? "你当前第 " + me.rank + " 名" : "你还没上榜") + " · " + done + (me.rank ? "" : tip) + "</div>";
         },
         fmtDur: function (s) {
             s = Number(s) || 0;
@@ -24324,6 +24396,74 @@ window.LoveEngine = (() => {
         if (pos < val.length) frag.appendChild(document.createTextNode(val.slice(pos)));
         parent.replaceChild(frag, node);
     }
+
+    /* ---- 无阻畅读计量(2026-09-21) ----
+       口径:一句话必须在视口里停留 ≥700ms 才算"读了";期间只要开过译文(sen.expanded)或双击查过生词,
+       这句就不计入。结算发生在句子离屏/离 DOM 时——那时它身上该有的提示手势都已经记下了。
+       挂机无效:没进过视口、或停留不到 700ms 就滚走的句子一个字都不算。攒够 60s 上报一次。 */
+    var lgImm = (function () {
+        var acc = 0, pending = [], io = null, VISIT_MS = 700, FLUSH_CHARS = 400;
+        function units(lang, text) {
+            var s = String(text || "");
+            if ((lang || "en") === "en") return s.split(/\s+/).filter(Boolean).length;
+            return (s.match(/[^\s]/g) || []).length;   // 日/韩按字计,与前端切句/排行榜单位一致
+        }
+        function settle(sen) {
+            if (!sen || !sen.immAt || sen.immDone) return;
+            var stayed = Date.now() - sen.immAt;
+            var ok = !sen.expanded && !sen.hinted && stayed >= VISIT_MS;
+            sen.immAt = 0; sen.immDone = true;
+            if (ok) acc += units(curLearnLang(), sen.text);
+        }
+        function ensureIO() {
+            if (io || typeof IntersectionObserver !== "function") return io;
+            io = new IntersectionObserver(function (es) {
+                for (var i = 0; i < es.length; i++) {
+                    var e = es[i], sen = sentences[Number(e.target.getAttribute("data-sen"))];
+                    if (!sen) continue;
+                    if (e.isIntersecting && e.intersectionRatio >= 0.5) { if (!sen.immAt) sen.immAt = Date.now(); }
+                    else settle(sen);
+                }
+            }, { threshold: [0, 0.5, 1] });
+            return io;
+        }
+        return {
+            // attachStory 每挂一章调一次:给这一章的句子登记可见性观察
+            observe: function (sens) {
+                var ob = ensureIO();
+                for (var i = 0; i < sens.length; i++) {
+                    var sen = sens[i];
+                    if (!ob || !sen || !sen.spans.length || !sen.spans[0]) continue;
+                    sen.hinted = false; sen.immAt = 0; sen.immDone = false;
+                    try { ob.observe(sen.spans[0]); } catch (e) { sen.immAt = Date.now(); }   // 无 IO 时退化为"悬挂即算",仍受 hinted 约束
+                }
+            },
+            // 双击查词时由点击委托调用:这句被"提示"过了
+            hint: function (sen) { if (sen) sen.hinted = true; },
+            // 定时器里调用:结算已经从 DOM 上摘掉的句子(离屏回调在节点移除时不可靠),并按需上报
+            tick: function (force) {
+                for (var k in sentences) {
+                    if (!Object.prototype.hasOwnProperty.call(sentences, k)) continue;
+                    var sen = sentences[k];
+                    if (!sen || !sen.immAt) continue;
+                    var el = sen.spans[0];
+                    if (!el || !el.parentNode) settle(sen);
+                    else if (force) settle(sen);
+                }
+                if (acc >= FLUSH_CHARS) lgImm.flush();
+            },
+            flush: function () {
+                var n = Math.floor(acc);
+                if (n < 1) return;
+                var t = token();
+                if (!t) { acc = 0; return; }               // 游客不计
+                fetch(API_BASE + "/api/lang/immersive", {
+                    method: "PUT", headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + t },
+                    body: JSON.stringify({ lang: curLearnLang(), chars: Math.min(n, 3000) })
+                }).then(function (r) { if (r.ok) { acc -= n; if (acc < 0) acc = 0; } }).catch(function () {});
+            }
+        };
+    })();
     /* 新手引导:首次语言卡播放教两个手势(双击查词/长按译句)。localStorage 一次即终身;会话级去重;6s 自动关或点按关闭 */
     var gGestureShown = false;
     function showGestureGuide() {
@@ -24332,8 +24472,10 @@ window.LoveEngine = (() => {
             var card = document.createElement("div");
             card.id = "lgGestureGuide";
             card.style.cssText = "position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9999;background:rgba(43,33,20,.95);color:#ffe9c9;border:1px solid rgba(255,214,150,.4);border-radius:14px;padding:12px 18px;font-size:13px;line-height:1.9;box-shadow:0 6px 24px rgba(0,0,0,.28);max-width:86vw;text-align:center;touch-action:manipulation";
-            card.innerHTML = '<div style="font-weight:bold;font-size:14px;margin-bottom:2px">📖 玩英语剧本小技巧</div>'
-                + '<div>👆 <b>长按</b>英文句子/选项 → 看整句翻译</div>'
+            var gLangZh = "英语";
+            try { gLangZh = { en: "英语", ja: "日语", ko: "韩语" }[window.LangBandMeta.curLang()] || "英语"; } catch (e) {}
+            card.innerHTML = '<div style="font-weight:bold;font-size:14px;margin-bottom:2px">📖 玩' + gLangZh + '剧本小技巧</div>'
+                + '<div>👆 <b>长按</b>' + gLangZh + '句子/选项 → 看整句翻译</div>'
                 + '<div>👆 <b>双击</b>单词 → 查词典 / 收藏生词</div>'
                 + '<div style="margin-top:4px;font-size:11px;color:#c8a97e">点一下这条提示即可关闭</div>';
             var closeGuide = function () { try { if (card.parentNode) card.parentNode.removeChild(card); } catch (e) {} };
@@ -24381,6 +24523,7 @@ window.LoveEngine = (() => {
             }
         }
         for (var n = 0; n < nodeList.length; n++) wrapNode(nodeList[n].node, nodeList[n].parts);
+        lgImm.observe(cardSens);   // 无阻畅读:登记本章句子的可见性观察
         /* M9F:双语随卡(开场/渐进前两轮)先烘烤:词注先行入池 + glossCache 预填 → scaffold 展开即时行间译文,零点译 AI;
            miss 句不标 glossFail,留待下方 queueGloss 兜底 */
         try {
@@ -24856,6 +24999,7 @@ window.LoveEngine = (() => {
         if (!sen) return;
         if (sen.expanded) { collapseSen(sen); return; }   // 已开:长按收起
         sen.expanded = true;
+        sen.hinted = true;   // 无阻畅读:看过译文就不算无阻(收起后也要记住,故另存 sticky 标记)
         if (glossCache[sen.text] || glossFail[sen.text]) fillGloss(sen);
         else { fillGloss(sen); queueGloss([sen]); }   // 未取到:先占位(加载动画),批回后自动填充
     }
@@ -25239,7 +25383,12 @@ window.LoveEngine = (() => {
             e.preventDefault(); e.stopPropagation();
             var wk = wEl.getAttribute("data-w") || wEl.textContent;
             var nw = Date.now();
-            if (lastDbl.key === wk && nw - lastDbl.at <= 320) { lastDbl.key = ""; openPop(wk, e.clientX, e.clientY); }
+            if (lastDbl.key === wk && nw - lastDbl.at <= 320) {
+                lastDbl.key = "";
+                openPop(wk, e.clientX, e.clientY);
+                var wSenEl = wEl.closest(".lg-sentence");   // 无阻畅读:查过词的这句不再算无阻
+                if (wSenEl) lgImm.hint(sentences[Number(wSenEl.getAttribute("data-sen"))]);
+            }
             else { lastDbl.key = wk; lastDbl.at = nw; hidePop(); }
             return;
         }
@@ -26092,13 +26241,15 @@ window.LoveEngine = (() => {
                 inLearn = ok;
             }
             if (acc >= FLUSH_SEC) flush();
+            lgImm.tick(!!document.hidden);   // 无阻畅读:结算离屏/已摘除的句子,并按需上报
         }
         setInterval(tick, INTERVAL_MS);
         document.addEventListener("visibilitychange", function () {
             tick();
-            if (document.hidden) flush();
+            if (document.hidden) { flush(); lgImm.flush(); }
         });
         window.addEventListener("pagehide", flush, false);
+        window.addEventListener("pagehide", function () { lgImm.flush(); }, false);
     })();
 })();
 </script>

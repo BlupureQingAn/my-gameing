@@ -50,10 +50,33 @@ function cutSentences(text) {
     if (s < len) cuts.push([s, len]);
     return cuts;
 }
-function splitByPara(text) {
+/* 日/韩切句:复制前端 LangAssist cutSentencesCJK(index.html:24275),须与其保持同步。
+   句读后不要求空格(日语 。！？ 后直接接下一句),故不能走拉丁那套"后随空格才算句界" */
+function cutSentencesCJK(text, lang) {
+    const cuts = []; let s = 0, i;
+    const END = lang === "ko" ? ".!?…。！？" : "。！？!?…";
+    const CLOSE = "\"'”’)]}»」』）】";
+    const len = text.length;
+    for (i = 0; i < len; i++) {
+        const c = text.charAt(i);
+        if (END.indexOf(c) < 0) continue;
+        if (c === "." && /\d/.test(text.charAt(i - 1) || "") && /\d/.test(text.charAt(i + 1) || "")) continue;
+        let j = i + 1;
+        while (j < len && END.indexOf(text.charAt(j)) >= 0) j++;
+        while (j < len && CLOSE.indexOf(text.charAt(j)) >= 0) j++;
+        while (j < len && (text.charAt(j) === " " || text.charAt(j) === "　" || text.charAt(j) === "\n")) j++;
+        if (j <= s) continue;
+        cuts.push([s, j]);
+        s = j; i = j - 1;
+    }
+    if (s < len) cuts.push([s, len]);
+    return cuts;
+}
+function splitByPara(text, lang) {
     const out = [];
+    const cjk = lang === "ja" || lang === "ko";
     for (const para of String(text || "").split(/\r?\n+/)) {
-        for (const [a, b] of cutSentences(para)) {
+        for (const [a, b] of (cjk ? cutSentencesCJK(para, lang) : cutSentences(para))) {
             const t = para.slice(a, b).replace(/\s+/g, " ").trim();
             if (t) out.push(t);
         }
@@ -74,12 +97,12 @@ async function getToken() {
     return d.token;
 }
 
-async function callGloss(token, sentences) {
+async function callGloss(token, sentences, lang) {
     for (let attempt = 0; attempt < 3; attempt++) {
         const res = await fetch(GLOSS_URL + "/api/lang/gloss", {
             method: "POST",
             headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token },
-            body: JSON.stringify({ sentences })
+            body: JSON.stringify({ sentences, lang: lang || "en" })
         });
         if (res.status === 429) {
             await new Promise((r) => setTimeout(r, 8000)); // 限频/忙碌退避重试
@@ -98,15 +121,16 @@ async function main() {
     if (!fsObj || !String(fsObj.story || "").trim()) { console.error("✗ structured.first_scene.story 缺失"); process.exit(3); }
     if (fsObj.bilingual && !args.force) { console.error(`✗ 已存在 bilingual(${fsObj.bilingual.lines?.length || 0} 行),重生成加 --force`); process.exit(3); }
 
-    const sentences = splitByPara(fsObj.story);
-    console.log(`✓ 切句 ${sentences.length} 句 (story ${fsObj.story.length} 字符)`);
+    const LANG = String(card.lang || "en").trim().toLowerCase();
+    const sentences = splitByPara(fsObj.story, LANG);
+    console.log(`✓ 切句 ${sentences.length} 句 (story ${fsObj.story.length} 字符, lang=${LANG})`);
     if (!sentences.length) process.exit(3);
 
     const token = await getToken();
     console.log(`✓ 登录 ${glossEmail}`);
-    const zhBy = new Map();   // en 句 → {zh, words}
+    const zhBy = new Map();   // 源语句 → {zh, words}
     async function translateBatch(batch) {
-        const items = await callGloss(token, batch);
+        const items = await callGloss(token, batch, LANG);
         for (const it of items) {
             const en = esc(it && it.sentence);
             if (!sentences.includes(en)) continue;
