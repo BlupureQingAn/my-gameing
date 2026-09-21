@@ -10763,13 +10763,20 @@ function rebuildChoicesBlock(body, labels = []) {
             // 结构化卡返回挂载后的 HTML（供历史记录存储，避免重进时渲染原始协议串）
             return mountedHtml || undefined;
         }
+        /* 长局(数百轮)全量重绘会把 DOM 和语言层的句子观察表一起撑爆 → 只渲染最近 N 条。
+           存档 state.history 不动,回看旧事件按 data-skip-msgs 偏移定位(见 enterEvent)。 */
+        const PLAY_KEEP_MSGS = 80;
         function renderHistory(history) {
             const board = document.getElementById("play-chat-area");
             board.innerHTML = "";
-            history.forEach((msg) => appendMessage(msg.role || "ai", msg.text, msg.date, false));
+            const all = history || [];
+            const skipped = Math.max(0, all.length - PLAY_KEEP_MSGS);
+            board.dataset.skipMsgs = String(skipped);
+            const view = skipped ? all.slice(skipped) : all;
+            view.forEach((msg) => appendMessage(msg.role || "ai", msg.text, msg.date, false));
             // 标记每条消息所属事件轮次（供"进入事件"滚动定位）
-            let rIdx = -1;
-            history.forEach((msg, i) => {
+            let rIdx = skipped ? all.slice(0, skipped).filter((m) => m.role === "user").length - 1 : -1;
+            view.forEach((msg, i) => {
                 if (msg.role === "user") rIdx += 1;
                 const node = board.children[i];
                 if (node) node.setAttribute("data-round", String(Math.max(0, rIdx)));
@@ -18118,8 +18125,11 @@ const token = delta.content || "";
             for (let i = start + 1; i < hist.length && hist[i].role !== "user"; i++) {
                 if (hist[i].role === "ai") targetIdx = i; // 该轮最后一条 AI 剧情卡
             }
-            const el = board && board.children[targetIdx]; // children 顺序 = history 顺序
+            // children 顺序 = history 顺序,但 renderHistory 只渲染最近 N 条,需减去被裁掉的条数
+            const skip = Number((board && board.dataset.skipMsgs) || 0) || 0;
+            const el = board && targetIdx - skip >= 0 ? board.children[targetIdx - skip] : null;
             if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+            else if (board) board.scrollTop = 0; // 目标轮次已被裁掉:退回顶部,好过原地不动
         }
         function moveToLocation(locName) {
             if (guardGenerating("AI 正在推进剧情，稍后再探索新地点。")) return;
@@ -24516,15 +24526,37 @@ window.LoveEngine = (() => {
             },
             // 双击查词时由点击委托调用:这句被"提示"过了
             hint: function (sen) { if (sen) sen.hinted = true; },
+            /* 节点从 DOM 摘除时必须显式解绑:IntersectionObserver 对已移除元素不会自动复位,
+               会一直持有引用;sentences 表也只增不减(tick 每轮线性扫全表)。 */
+            release: function (els) {
+                for (var i = 0; i < els.length; i++) {
+                    var el = els[i];
+                    if (!el || !el.getAttribute) continue;
+                    var id = Number(el.getAttribute("data-sen"));
+                    var sen = sentences[id];
+                    if (!sen) continue;
+                    settle(sen);   // 先按既有语义结算(够时长且没开译文才计入),再释放
+                    if (io) { try { io.unobserve(el); } catch (e) {} }
+                    delete sentences[id];
+                }
+            },
             // 定时器里调用:结算已经从 DOM 上摘掉的句子(离屏回调在节点移除时不可靠),并按需上报
             tick: function (force) {
                 for (var k in sentences) {
                     if (!Object.prototype.hasOwnProperty.call(sentences, k)) continue;
                     var sen = sentences[k];
-                    if (!sen || !sen.immAt) continue;
-                    var el = sen.spans[0];
-                    if (!el || !el.parentNode) settle(sen);
-                    else if (force) settle(sen);
+                    if (!sen) continue;
+                    var el = sen.spans && sen.spans[0];
+                    // 已脱离 DOM(重绘/换卡/关弹层都走这条)——结算后解绑并删表项。
+                    // chatMo 那条路只在语言会话里生效,这里兜住"非语言会话时清空 board"等漏网场景。
+                    if (el && !el.parentNode) {
+                        settle(sen);
+                        if (io) { try { io.unobserve(el); } catch (e) {} }
+                        delete sentences[k];
+                        continue;
+                    }
+                    if (!sen.immAt) continue;
+                    if (force) settle(sen);
                 }
                 if (acc >= FLUSH_CHARS) lgImm.flush();
             },
@@ -25496,6 +25528,17 @@ window.LoveEngine = (() => {
         }
         attachStory(st);
     }
+    // 剧情节点被摘除(重绘清空/换卡/裁掉的老消息)时,把里面的句子从观察表摘掉
+    function releaseStory(node) {
+        if (!node || node.nodeType !== 1) return;
+        var els = [];
+        if (node.getAttribute && node.getAttribute("data-sen")) els.push(node);
+        if (node.querySelectorAll) {
+            var inner = node.querySelectorAll("[data-sen]");
+            for (var i = 0; i < inner.length; i++) els.push(inner[i]);
+        }
+        if (els.length) lgImm.release(els);
+    }
     var chatMo = null;
     function initChatWatch() {
         var board = $("play-chat-area");
@@ -25505,6 +25548,8 @@ window.LoveEngine = (() => {
             for (var i = 0; i < muts.length; i++) {
                 var adds = muts[i].addedNodes;
                 for (var j = 0; j < adds.length; j++) tryAttach(adds[j]);
+                var rems = muts[i].removedNodes;
+                for (var k = 0; k < rems.length; k++) releaseStory(rems[k]);
             }
         });
         chatMo.observe(board, { childList: true });
