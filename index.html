@@ -14799,7 +14799,9 @@ function rebuildChoicesBlock(body, labels = []) {
 
     const HistoryCompressorService = (() => {
         // 从 HTML 卡片中提取纯文本摘要（只保留汉字内容，丢弃所有标签和代码）
-        function extractTextFromHtml(html) {
+        // limit:抽「剧情正文块」时要放宽 —— 取「上一轮剧情结尾」必须能探到正文真正的尾部,
+        // 默认 400 会在长正文里把结尾截掉,后半段的尾部切片就永远取不到结局
+        function extractTextFromHtml(html, limit = 400) {
             const raw = String(html || "");
             if (!raw.includes("<")) return raw;
             // 去掉 style/script 块
@@ -14817,7 +14819,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 .replace(/[{}()\[\]@%&=+*|\\/<>^~`"#:;]/g, " ")
                 .replace(/\s+/g, " ")
                 .trim()
-                .slice(0, 400);
+                .slice(0, limit);
         }
 
         // 压缩单条历史记录为简短摘要
@@ -14874,6 +14876,18 @@ function rebuildChoicesBlock(body, labels = []) {
             const history = Array.isArray(state.history) ? state.history : [];
             const entries = history.slice(-totalRounds * 2); // user+ai 各算一条
 
+            // entries 末位恒是**刚 push 进去的玩家输入**(sendUserText 先 pushHistory(user) 再 requestAI),
+            // 所以「最新 AI 卡」必须往前回扫,不能取 entries.length-1 —— 取错会让「上一轮剧情结尾」这个块
+            // 永远不存在,而系统规则 16 与【连贯性铁律】都在要求模型"紧接「上一轮剧情结尾」继续推进/
+            // 不得复述「上一轮剧情结尾」"→ 模型被要求接续一个不存在的块,只能照着上一幕的【开场】再写一遍
+            // (语言卡首轮最刺眼:新卡与开场卡几乎一模一样、时间线不推进)。
+            let lastAiIdx = -1;
+            for (let i = entries.length - 1; i >= 0; i--) {
+                const it = entries[i];
+                const t = String(it && it.text || "");
+                if (it && it.role === "ai" && (t.includes("<article") || t.includes("ai-beauty-card"))) { lastAiIdx = i; break; }
+            }
+
             let aiCardNo = 0;
             return entries.map((item, idx) => {
                 const isRecent = idx >= entries.length - recentFull * 2;
@@ -14885,9 +14899,10 @@ function rebuildChoicesBlock(body, labels = []) {
                     // 每张 AI 卡都注入剧情正文(不只最新一张):前面卡的剧情必须对 AI 完整可见,
                     // 否则后生成的卡不尊重前卡剧情(另起炉灶/复述改写/前后矛盾——用户反馈"篡改")
                     aiCardNo += 1;
-                    const isLatestAi = idx === entries.length - 1;
+                    const isLatestAi = idx === lastAiIdx;
                     const m = raw.match(/data-block=["']event["'][^>]*>([\s\S]*?)<\/section>/i);
-                    const body = m ? extractTextFromHtml(m[1]) : extractTextFromHtml(raw);
+                    // 抽到剧情正文块时放宽上限:否则 400 字硬顶会把长正文的结尾切掉,后面取尾也取不到结局
+                    const body = m ? extractTextFromHtml(m[1], 4000) : extractTextFromHtml(raw);
                     const opts = [];
                     const optRe = /data-choice=["']\d+["'][^>]*>([\s\S]*?)<\/div>/gi;
                     let om;
