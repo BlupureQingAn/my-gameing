@@ -577,12 +577,33 @@ async function genCleanBlock(t, label, doAsk) {
 }
 
 // ---- 槽位 1:标题 ----
+/* title_zh 必须是中文:日/韩卡上模型会把目标语标题原样回填(实错:韩卡「한옥한 달 약속」),
+   也出过繁体+下划线+误译(「截止週末_網漫編輯部_心動」)。繁体字在 HAN 区间内无法靠字形分辨,
+   但谚文/假名/下划线一票否决,能拦住绝大多数回填。 */
+function zhTitleBad(s) {
+    const t = String(s || "").trim();
+    if (hitsOf(t, HAN) < 1) return "没有汉字";
+    if (hitsOf(t, HANGUL) > 0) return "含谚文";
+    if (hitsOf(t, KANA) > 0) return "含假名";
+    if (t.indexOf("_") >= 0) return "含下划线";
+    return "";
+}
 async function genTitle(t) {
     const sp = S(t);
-    const d = await ask(sp.sysBase,
-        sp.tone(t) + `\n为恋爱攻略${sp.label}卡起名(标题体现场景与心动钩子,不剧透结局):\n场景:${t.title_seed}\n` +
-        `输出单行 JSON:{"title":"${sp.titleRule}","title_zh":"中文标题≤8字"}`, 1500);
-    return { title: String(d.title || "").trim().slice(0, 60), title_zh: String(d.title_zh || "").trim().slice(0, 30) };
+    let extra = "";
+    let out = { title: "", title_zh: "" };
+    for (let i = 0; i < 2; i++) {
+        const d = await ask(sp.sysBase,
+            sp.tone(t) + `\n为恋爱攻略${sp.label}卡起名(标题体现场景与心动钩子,不剧透结局):\n场景:${t.title_seed}\n` +
+            `输出单行 JSON:{"title":"${sp.titleRule}","title_zh":"中文标题≤8字"}` + extra, 1500);
+        out = { title: String(d.title || "").trim().slice(0, 60), title_zh: String(d.title_zh || "").trim().slice(0, 30) };
+        const bad = zhTitleBad(out.title_zh);
+        if (!bad) return out;
+        console.log("  title_zh " + bad + ",重问… [" + out.title_zh + "]");
+        // flash 看不出"哪个字不对",把上一版回喂并指名:title_zh 一律用简体中文汉字写
+        extra = `\n!!!上一版 title_zh 你写成了「${out.title_zh}」,这不是中文。title_zh 必须是简体中文汉字(不许出现${sp.label}原文、假名、谚文、下划线或英文),≤8 字。`;
+    }
+    return out;
 }
 
 // ---- 槽位 2:5 精修人设卡(一卡一角色,appearance_en 将作立绘 prompt 素材) ----
@@ -842,6 +863,7 @@ function qcCard(card, t) {
     const sp = S(t), lg = LANG_OF(t);
     if (!card.title || card.title.length < 2) errs.push("title 无效");
     if (!card.title_zh || card.title_zh.length < 2) errs.push("title_zh 无效");
+    else { const _b = zhTitleBad(card.title_zh); if (_b) errs.push("title_zh 不是中文(" + _b + "): " + card.title_zh); }
     if (!BANDS.includes(card.band)) errs.push("band 无效");
     if (card.love_mode !== true) errs.push("love_mode 缺失");
     if (card.gender_target !== t.target) errs.push("gender_target 应为 " + t.target);
