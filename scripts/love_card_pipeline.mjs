@@ -581,7 +581,9 @@ async function genCleanBlock(t, label, doAsk, minLen = 0) {
     const sp = S(t);
     let extra = "", short = "";
     for (let i = 0; i < 3; i++) {
-        const raw = await doAsk(i > 0 ? sp.warn + extra : "");
+        // 第一次也带上硬性纯净度约束:原先只有重试才带,等于第一版是"无约束生成",
+        // 全部脏点都堆在第一次上(实测 5 次采样有 1 次第一版就混进汉字)。
+        const raw = await doAsk(sp.warn + extra);
         // 干净不等于达标:模型偶尔漏写要求里的小节(实测 520+ 的段只回了 144 字),纯度高就放行
         // 会让整卡内容缺一大块。偏短的先存着继续要足量稿,三轮都要不到再退而求其次。
         if (raw && sp.clean(raw)) {
