@@ -15478,10 +15478,17 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
         function parseQueueLen(bodyText) {
             try { return Number(JSON.parse(bodyText)?.detail?.queueLen) || 0; } catch (e) { return 0; }
         }
+        function parseWorkerMsg(bodyText) {
+            try { return String((JSON.parse(bodyText) || {}).error || ""); } catch (e) { return ""; }
+        }
+        // 免费额度用完 → 引导：额度每天 8 点重置，等不及可开会员/买云币立刻继续
+        const NO_QUOTA_HINT = "（免费额度每天 8:00 重置；开通会员可不限次使用更大更快的模型池）";
         // Worker 业务错误码 → 用户可读文案（无码返回空串，调用方回退 HTTP 状态文案）
         function formatAIErrorText(bodyText) {
             const code = parseWorkerCode(bodyText);
-            if (code === "QUOTA_EXCEEDED") return "AI 服务繁忙，请稍后重试";
+            // QUOTA_EXCEEDED 两种成因(免费池临时不可用 / 今日免费额度用尽)文案完全不同,
+            // 原先把两条都压成"服务繁忙",用户会一直重试而得不到充值引导 → 透传 worker 原文再补引导
+            if (code === "QUOTA_EXCEEDED") return (parseWorkerMsg(bodyText) || "AI 服务繁忙，请稍后重试") + NO_QUOTA_HINT;
             if (code === "MEMBERSHIP_EXPIRED") return "会员已到期，已自动切换为免费额度";
             if (code === "POOL_UNAVAILABLE") return "AI 服务暂时不可用，请稍后重试";
             if (code === "INSUFFICIENT_COIN") return "云币不足，请充值或开通会员后继续（开通会员可 AI 不限次）";
@@ -15489,11 +15496,18 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             return "";
         }
         // 免费额度耗尽提示：后端在本次调用已转云币计费时返回 X-Free-Exhausted 头，每会话仅提示一次
+        // 这是免费用户第一次感知到"要花钱了"的时刻,顺手把会员价值讲清楚(弹窗自带「关闭」,不强迫开通)
         function maybeNotifyFreeQuotaExhausted() {
             try {
                 if (sessionStorage.getItem("bitlife_free_exhausted_notified")) return;
                 sessionStorage.setItem("bitlife_free_exhausted_notified", "1");
-                NoticeModalService.showInfo({ title: "提示", descHtml: "今日免费额度已耗尽，每日 08:00 刷新额度。超出的对话将消耗云币。" });
+                NoticeModalService.showInfo({
+                    title: "今日免费额度已用完",
+                    descHtml: "每天 08:00 自动刷新，超出的对话将消耗云币。<br><br>"
+                        + "💎 开通会员：AI 不限次不扣币，并可直接使用更大更快的模型池（免费额度只够排队挤有限的免费模型）。",
+                    actionText: "开通会员 ›",
+                    onAction: () => { try { MembershipService.openPanel(); } catch (e) {} }
+                });
             } catch (e) {}
         }
         function buildExtraBody(extraBody = null, cardId = "") {
@@ -15645,14 +15659,18 @@ const token = delta.content || "";
             queueBarEl = document.createElement("div");
             queueBarEl.id = "queue-bar";
             queueBarEl.style.cssText = "display:none;align-items:center;gap:8px;margin:0 0 8px;padding:8px 10px;border-radius:10px;background:linear-gradient(135deg,#fff3d6,#ffe9b8);border:1px solid #e8b84b;font-size:0.85rem;color:#6b3f00;flex-wrap:wrap;";
+            // 只有免费用户会走到排队(QUEUE_BUSY 仅在 freeMode 下返回),所以这条黄条本身就是会员引导位
             queueBarEl.innerHTML = '<span id="queue-bar-text">⚠ 模型繁忙，正在排队…</span>'
                 + '<button class="q-member" style="margin-left:auto;border:none;background:#e8b84b;color:#fff;border-radius:999px;padding:3px 10px;font-size:0.8rem;font-weight:700;cursor:pointer;">开通会员免排队 ></button>'
-                + '<button class="q-close" aria-label="关闭排队提示" style="border:none;background:none;cursor:pointer;color:#a07828;font-size:1rem;line-height:1;">×</button>';
+                + '<button class="q-close" aria-label="关闭排队提示" style="border:none;background:none;cursor:pointer;color:#a07828;font-size:1rem;line-height:1;">×</button>'
+                + '<span id="queue-bar-tip" style="flex-basis:100%;font-size:0.75rem;line-height:1.5;opacity:.9;">💎 排队是因为免费额度在挤有限的免费模型——会员直接走更大更快的模型池，AI 不限次，基本不用排队</span>';
             queueBarEl.querySelector(".q-member").onclick = () => { try { MembershipService.openPanel(); } catch (e) {} };
             queueBarEl.querySelector(".q-close").onclick = () => { queueBarCancelled = true; queueBarHide(); };
             input.parentNode.insertBefore(queueBarEl, input);
             return queueBarEl;
         }
+        const QUEUE_TIP = "💎 排队是因为免费额度在挤有限的免费模型——会员直接走更大更快的模型池，AI 不限次，基本不用排队";
+        const QUEUE_TIP_GIVEUP = "💎 免费模型一直没空位——开通会员马上切到更大更快的模型池，不用在这里干等";
         function queueBarShow(queueLen, waitedMs) {
             const bar = ensureQueueBar();
             if (!bar) return;
@@ -15660,9 +15678,13 @@ const token = delta.content || "";
             const n = Math.max(1, Number(queueLen) || 1);
             const waited = Math.floor((waitedMs || 0) / 1000);
             t.textContent = `⚠ 模型繁忙，正在排队 · 前方 ${n} 人` + (waited > 0 ? `（已等待 ${waited}s）` : "…");
+            bar.style.background = "linear-gradient(135deg,#fff3d6,#ffe9b8)";
+            bar.style.borderColor = "#e8b84b";
+            bar.style.color = "#6b3f00";
+            bar.querySelector("#queue-bar-tip").textContent = QUEUE_TIP;
             bar.style.display = "flex";
         }
-        function queueBarFail(msg) {
+        function queueBarFail(msg, giveUp) {
             const bar = ensureQueueBar();
             if (!bar) return;
             const t = bar.querySelector("#queue-bar-text");
@@ -15670,6 +15692,7 @@ const token = delta.content || "";
             bar.style.background = "linear-gradient(135deg,#ffe8e6,#ffd5d0)";
             bar.style.borderColor = "#e8a09a";
             bar.style.color = "#8c2f28";
+            bar.querySelector("#queue-bar-tip").textContent = giveUp ? QUEUE_TIP_GIVEUP : QUEUE_TIP;
             bar.style.display = "flex";
         }
         function queueBarHide() {
@@ -15686,7 +15709,7 @@ const token = delta.content || "";
                     if (e.workerCode !== "QUEUE_BUSY") { queueBarHide(); throw e; }
                     const waited = Date.now() - start;
                     if (queueBarCancelled || waited >= QUEUE_MAX_MS) {
-                        queueBarFail("当前模型繁忙，请稍后再试");
+                        queueBarFail("当前模型繁忙，请稍后再试", true);
                         throw createHttpError(429, "当前模型繁忙，请稍后再试", { workerCode: "QUEUE_BUSY", queueLen: e.queueLen });
                     }
                     queueBarShow(e.queueLen, waited);
