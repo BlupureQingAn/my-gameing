@@ -66,7 +66,10 @@ const CARDS = [
       prompt: "秋日大学音乐社团练习室,男生抱着贝斯站在谱架与音箱之间,窗外银杏落叶与午后斜光,排练结束后的怦然心动;university band practice room anime, autumn ginkgo outside window, warm afternoon light, amplifier glow, youthful romance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
     // 2026-09-21 批次 4:golmok(连南洞巷口咖啡馆,女向)
     { id: "gwwe6sn832uboci", file: "kr-r1-01-golmok.card.json",
-      prompt: "首尔连南洞午后的小巷咖啡馆,女生系着围裙端着咖啡杯站在木质吧台后,窗外绿植与暖阳斜照,巷弄行人剪影与咖啡蒸汽,慢午后的心动;Seoul Yeonnam-dong alley cafe anime, warm afternoon sunlight through window, wooden counter, plants and coffee steam, cozy urban romance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" }
+      prompt: "首尔连南洞午后的小巷咖啡馆,女生系着围裙端着咖啡杯站在木质吧台后,窗外绿植与暖阳斜照,巷弄行人剪影与咖啡蒸汽,慢午后的心动;Seoul Yeonnam-dong alley cafe anime, warm afternoon sunlight through window, wooden counter, plants and coffee steam, cozy urban romance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
+    // 2026-09-21 批次 4:choir(秋夜合唱团定期演奏会,女向)
+    { id: "24rq4p27r3aaqkv", file: "kr-r1-04-choir.card.json",
+      prompt: "深秋夜晚的大学合唱团练习室,女生抱着乐谱站在钢琴与谱架之间,窗外首尔夜色与落叶,暖黄排练灯与空荡的座椅,演奏会前夜的紧张与心动;university choir rehearsal room anime, late autumn night, piano and music stands, warm rehearsal light, Seoul city glow outside window, tender youthful romance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" }
 ];
 
 async function pbJson(url, opts) {
