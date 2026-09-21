@@ -80,10 +80,10 @@ const MODEL_POOL = [
     // 2026-09-12 付费体验提速:四条目底层同模型(spark-x),质量完全相同,差异只在端点链路 ——
     // 实测中位 TTFT: x1(/v2) 2.3s < x2b 3.2s < x2 4.4s < x2-flash(agent/v1) 4.6s(三次采样极稳,疑为 agent 预处理固定开销)
     // → x1 升 tier1 当会员首选;x2-flash 降 tier2 仍享 dailyCap 150 主力额度兜底;x1 优质额度耗尽的代价仅为每次请求多一次快失败
-    { id: "xf-spark-x1",       url: "https://spark-api-open.xf-yun.com/v2",       apiKeyEnv: "XFSPARK_X2_KEY2",       model: "spark-x", dailyCap: 10,     tier: 1, enabled: true },
+    { id: "xf-spark-x1",       url: "https://spark-api-open.xf-yun.com/v2",       apiKeyEnv: "XFSPARK_X2_KEY2",       model: "spark-x", dailyCap: 10,     tier: 1, enabled: false },
     { id: "xf-spark-x2-flash", url: "https://spark-api-open.xf-yun.com/agent/v1", apiKeyEnv: "XFSPARK_X2_FLASH_KEY", model: "spark-x", dailyCap: 150, tier: 2, enabled: true },
-    { id: "xf-spark-x2b",      url: "https://spark-api-open.xf-yun.com/x2",       apiKeyEnv: "XFSPARK_X2_KEY2",       model: "spark-x", dailyCap: 10,     tier: 2, enabled: true },
-    { id: "xf-spark-x2",       url: "https://spark-api-open.xf-yun.com/x2",       apiKeyEnv: "XFSPARK_X2_KEY",        model: "spark-x", dailyCap: 10,     tier: 2, enabled: true },
+    { id: "xf-spark-x2b",      url: "https://spark-api-open.xf-yun.com/x2",       apiKeyEnv: "XFSPARK_X2_KEY2",       model: "spark-x", dailyCap: 10,     tier: 2, enabled: false },
+    { id: "xf-spark-x2",       url: "https://spark-api-open.xf-yun.com/x2",       apiKeyEnv: "XFSPARK_X2_KEY",        model: "spark-x", dailyCap: 10,     tier: 2, enabled: false },
     { id: "xf-spark-ultra",    url: "https://spark-api-open.xf-yun.com/v1",       apiKeyEnv: "XFSPARK_ULTRA_KEY",     model: "4.0Ultra",       dailyCap: 20,     tier: 4, enabled: true },
     { id: "xf-spark-lite",     url: "https://spark-api-open.xf-yun.com/v1",       apiKeyEnv: "XFSPARK_LITE_KEY",      model: "lite",           dailyCap: Infinity, tier: 4, enabled: true },
     { id: "xf-spark-pro",      url: "https://spark-api-open.xf-yun.com/v1",       apiKeyEnv: "XFSPARK_PRO_KEY",       model: "generalv3.5",    dailyCap: 20,     tier: 5, enabled: true },
@@ -108,30 +108,30 @@ const MODEL_POOL = [
     { id: "zp2-glm-4.5-air",  url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4.5-air",     dailyCap: 600,  tier: 3, enabled: true },
     { id: "zp-glm-4.5-air",   url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4.5-air",     dailyCap: 600,  tier: 3, enabled: true },
     { id: "zp2-glm-4.7",      url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4.7",         dailyCap: 300,  tier: 3, enabled: true },
-    { id: "zp2-glm-4-air",    url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4-air",       dailyCap: 1000, tier: 3, enabled: false },
+    { id: "zp2-glm-4-air",    url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4-air",       dailyCap: 1000, tier: 3, enabled: true },
     { id: "zp-glm-4.7",       url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4.7",         dailyCap: 300,  tier: 3, enabled: false },
-    { id: "zp-glm-4-air",     url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4-air",       dailyCap: 1000, tier: 3, enabled: false },
+    { id: "zp-glm-4-air",     url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4-air",       dailyCap: 1000, tier: 3, enabled: true },
     // ---- Agnes（免费:apihub.agnes-ai.com,2026-08-25 实测可用）----
     // 2026-09-12 实测:流式非流式均被 Cloudflare error 1015(出口 IP 级限流)拦截,连续 3 次全失败 → 停用,恢复后重测
-    { id: "agnes-2.0-flash", url: "https://apihub.agnes-ai.com/v1", apiKeyEnv: "AGNES_KEY", model: "agnes-2.0-flash", dailyCap: 500, tier: 4, enabled: false },
+    { id: "agnes-2.0-flash", url: "https://apihub.agnes-ai.com/v1", apiKeyEnv: "AGNES_KEY", model: "agnes-2.0-flash", dailyCap: 500, tier: 4, enabled: true },
     // ---- OpenRouter 免费模型（2026-08-25 实测:glm-5.2 共享池偶发 429 属正常,自动 fallback;gemma-4 系列因 Google 地区限制从 CF 出口必然失败,不入池）----
     // or-glm-5.2 / or-ox-alpha / or-lfm 禁用:2026-08-29 实测 503(免费档限额)/503/2.6B 质量差
     { id: "or-glm-5.2",            url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "z-ai/glm-5.2:free",                dailyCap: 500, tier: 5, enabled: false },
     // 2026-09-12 实测:or-minimax-m3/m2.7 返回 404「This model is unavailable for free」(免费档已下架);
     // or-nemotron-3-super 200 后 11.7s 零字节停摆;or-nemotron-3-ultra 上游 32.6s(TTFT 69s)→ 4 条全停用
-    { id: "or-minimax-m3",         url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "minimax/minimax-m3:free",          dailyCap: 500, tier: 6, enabled: false },
-    { id: "or-nemotron-3-super",   url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "nvidia/nemotron-3-super-120b-a12b:free", dailyCap: 500, tier: 6, enabled: false },
+    { id: "or-minimax-m3",         url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "minimax/minimax-m3:free",          dailyCap: 500, tier: 6, enabled: true },
+    { id: "or-nemotron-3-super",   url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "nvidia/nemotron-3-super-120b-a12b:free", dailyCap: 500, tier: 6, enabled: true },
     // 2026-09-12 tier7 内部按实测 TTFT 重排:4-flash-250414(0.5-0.6s) > 4-flash(2.4-2.6s) > 4.7-flash(当前 1305 访问量过大,垫底)
     { id: "zp2-glm-4-flash-250414", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4-flash-250414", dailyCap: 5000, tier: 7,  enabled: true },
     { id: "zp-glm-4-flash-250414", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4-flash-250414", dailyCap: 5000, tier: 7,  enabled: true },
     // 2026-09-12:4.7-flash 是「拥挤型」限流——三把 key 直连均 429/1305「该模型当前访问量过大」,非欠费,高峰秒拒低谷可用;
     //   生产路径实测 zp2-glm-4.7-flash 200/首字 627ms/✅无推理(关思考字段被接受)→ K2 这条恢复启用,429 由 30s 短熔断自愈
     { id: "zp2-glm-4.7-flash",    url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4.7-flash",     dailyCap: 5000, tier: 7,  enabled: true },
-    { id: "zp-glm-4.7-flash",     url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4.7-flash",     dailyCap: 5000, tier: 7,  enabled: false },
+    { id: "zp-glm-4.7-flash",     url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY",  model: "glm-4.7-flash",     dailyCap: 5000, tier: 7,  enabled: true },
     { id: "zp2-glm-4-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY2", model: "glm-4-flash", dailyCap: 5000, tier: 7,  enabled: true },
     { id: "zp-glm-4-flash", url: "https://open.bigmodel.cn/api/paas/v4", apiKeyEnv: "ZHIPU_KEY", model: "glm-4-flash", dailyCap: 5000, tier: 7,  enabled: true },
     { id: "or-minimax-m2.7",       url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "minimax/minimax-m2.7:free",        dailyCap: 500, tier: 8, enabled: false },
-    { id: "or-nemotron-3-ultra",   url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "nvidia/nemotron-3-ultra-550b-a55b:free", dailyCap: 500, tier: 8, enabled: false },
+    { id: "or-nemotron-3-ultra",   url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "nvidia/nemotron-3-ultra-550b-a55b:free", dailyCap: 500, tier: 8, enabled: true },
     { id: "or-ox-alpha",           url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "stealth/ox-alpha",                 dailyCap: 500, tier: 8, enabled: false },
     { id: "or-lfm-2.5-2.6b",       url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "liquid/lfm-2.5-2.6b:free",          dailyCap: 500, tier: 9, enabled: false },
     // ---- ChatAnywhere（2026-08-25 实测:403 "请求客户端IP不支持访问,请勿使用Cloudflare等反向代理"= 永久拒绝 CF 出口,key 再对也白耗,整池禁用;若换非 CF 出口部署可恢复）----
@@ -151,8 +151,8 @@ const MODEL_POOL = [
     { id: "ca-gpt-5",         url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-5",          dailyCap: 5,   tier: 30, enabled: false },
     { id: "ca-deepseek-v3.2-thinking", url: "https://api.chatanywhere.tech/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "deepseek-v3.2-thinking", dailyCap: 30, tier: 95, enabled: false },
     // ---- DeepSeek 官方（池内禁用，等流量大了再启用）----
-    { id: "ds-deepseek-chat",     url: "https://api.deepseek.com/v1", apiKeyEnv: "DEEPSEEK_KEY",     model: "deepseek-chat",     dailyCap: Infinity, tier: 40, enabled: false },
-    { id: "ds-deepseek-reasoner", url: "https://api.deepseek.com/v1", apiKeyEnv: "DEEPSEEK_KEY",     model: "deepseek-reasoner", dailyCap: Infinity, tier: 40, enabled: false },
+    { id: "ds-deepseek-chat",     url: "https://api.deepseek.com/v1", apiKeyEnv: "DEEPSEEK_KEY",     model: "deepseek-chat",     dailyCap: Infinity, tier: 40, enabled: true },
+    { id: "ds-deepseek-reasoner", url: "https://api.deepseek.com/v1", apiKeyEnv: "DEEPSEEK_KEY",     model: "deepseek-reasoner", dailyCap: Infinity, tier: 40, enabled: true },
     // ---- NVIDIA（平台按 credits 计费）----
     // 2026-09-12 生产实测(流式 max_tokens=24 逐个打,走线上真实路径):20 个里 14 个已不可用——
     //   nv-gpt-oss-120b = HTTP 410 Gone(平台已下架,修复前仍排在免费池第一个候选,每轮白踩一脚再熔断);
@@ -165,7 +165,7 @@ const MODEL_POOL = [
     //   gpt-oss-20b 的 reasoning_effort 字面量校验拒绝 "none"(400)→ 无法满足禁思考硬规则,已停用
     { id: "nv-llama-3.3-70b",        url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "meta/llama-3.3-70b-instruct",        dailyCap: 100, tier: 90, enabled: false },
     { id: "nv-gpt-oss-20b",          url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "openai/gpt-oss-20b",                 dailyCap: 5000, tier: 91, enabled: false },
-    { id: "nv-nemotron-lightning",   url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/nemotron-3.5-lightning-30b-a3b", dailyCap: 5000, tier: 90, enabled: true, freeOk: true },
+    { id: "nv-nemotron-lightning",   url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/nemotron-3.5-lightning-30b-a3b", dailyCap: 5000, tier: 90, enabled: false, freeOk: true },
     { id: "nv-nemotron-ultra",       url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/nemotron-3-ultra-550b-a55b",  dailyCap: 800, tier: 93, enabled: true, freeOk: true },
     { id: "nv-nemotron-super",       url: "https://integrate.api.nvidia.com/v1", apiKeyEnv: "NVIDIA_KEY", model: "nvidia/nemotron-3-super-120b-a12b",  dailyCap: 800, tier: 94, enabled: true, freeOk: true },
     // 2026-09-12 实测:两次探测均 15s 流式头超时(此前 3-27s 抖动)→ 停用
