@@ -58,7 +58,12 @@ const CARDS = [
     { id: "chmpyzr9atf16sw", file: "jp-r1-04-onsen-ryokan.card.json",
       prompt: "夏日箱根山间温泉旅馆,女生穿旅馆作务衣端着木托盘走过木质长廊,庭院绿意与汤けむり暖帘,山雾与灯笼光里的假日心动;Hakone onsen ryokan anime, summer mountains, yukata-clad staff on wooden veranda, warm lantern light, gentle romance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
     { id: "hthf0tgxpq2chru", file: "kr-r1-02-webtoon.card.json",
-      prompt: "首尔合井洞网络漫画平台编辑部深夜,女生抱着分镜稿站在亮着屏幕的工位之间,窗外首尔夜景与飘雪,截稿周的紧张与心动;Seoul webtoon editorial office anime, late night desk screens, snow outside the window, city glow, sincere workplace romance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" }
+      prompt: "首尔合井洞网络漫画平台编辑部深夜,女生抱着分镜稿站在亮着屏幕的工位之间,窗外首尔夜景与飘雪,截稿周的紧张与心动;Seoul webtoon editorial office anime, late night desk screens, snow outside the window, city glow, sincere workplace romance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
+    // 2026-09-21 批次 3:韩卡收尾(hanokstay 人工修 title_zh;band 修掉 2 个混入汉字后过 QC)
+    { id: "p1z94csme7fliy5", file: "kr-r1-03-hanokstay.card.json",
+      prompt: "夏日全州韩屋村传统民宿,女生系着围裙站在韩屋木质回廊上,院子里酱缸台与绿意,午后暖阳斜照瓦檐,慢时光里的心动;Jeonju hanok village anime, summer courtyard, wooden veranda, warm afternoon sunlight, gentle romance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
+    { id: "s2tp5vopynmavfj", file: "kr-m1-01-band.card.json",
+      prompt: "秋日大学音乐社团练习室,男生抱着贝斯站在谱架与音箱之间,窗外银杏落叶与午后斜光,排练结束后的怦然心动;university band practice room anime, autumn ginkgo outside window, warm afternoon light, amplifier glow, youthful romance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" }
 ];
 
 async function pbJson(url, opts) {
