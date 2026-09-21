@@ -49,7 +49,12 @@ const CARDS = [
     { id: "lr6jxevubo65ctd", file: "jp-r1-02-kissaten.card.json",
       prompt: "秋日京都古街的喫茶店,女生坐在木质吧台前捧着咖啡杯,窗外红叶与石板路,暖色吊灯与咖啡蒸汽,古都慢时光里的心动;Kyoto old-town kissaten anime, autumn maple leaves, warm cafe interior, gentle romance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
     { id: "cp5trkdqf9gcmj3", file: "jp-m1-01-kendo-bu.card.json",
-      prompt: "冬日日本高中剑道场,男生身穿剑道服手持竹刀立于木地板,凛冽晨光从高窗斜射,呼出的白气与道场寂静,竞技与初恋的序幕;Japanese kendo dojo anime, winter morning light through high windows, bamboo sword, quiet tension;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" }
+      prompt: "冬日日本高中剑道场,男生身穿剑道服手持竹刀立于木地板,凛冽晨光从高窗斜射,呼出的白气与道场寂静,竞技与初恋的序幕;Japanese kendo dojo anime, winter morning light through high windows, bamboo sword, quiet tension;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
+    // 2026-09-21 批次 2 补产
+    { id: "7s3afn7a74hp8n6", file: "jp-r1-03-ehon-henshuubu.card.json",
+      prompt: "冬日东京神保町的出版社绘本编辑部,女生抱着画稿站在印刷机与堆叠绘本之间,窗外飘雪与室内暖黄灯,年末截稿的忙碌里悄然心动;Tokyo publishing house anime, winter snow outside window, printing press and picture books, warm office light;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
+    { id: "chmpyzr9atf16sw", file: "jp-r1-04-onsen-ryokan.card.json",
+      prompt: "夏日箱根山间温泉旅馆,女生穿旅馆作务衣端着木托盘走过木质长廊,庭院绿意与汤けむり暖帘,山雾与灯笼光里的假日心动;Hakone onsen ryokan anime, summer mountains, yukata-clad staff on wooden veranda, warm lantern light, gentle romance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" }
 ];
 
 async function pbJson(url, opts) {
