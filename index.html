@@ -5572,7 +5572,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <button type="button" class="lang-lang-card" data-m="full" onclick="LangController.setImmersion('full')"><span style="font-size:1.35rem;">🌊</span><span>全沉浸</span><span class="list-sub" style="margin:0;">纯英语体验，辅助全部手动触发</span></button>
                 </div>
 
-                <div class="list-title" style="margin-top:18px;" id="lang-learn-stats">📊 学习统计与周报 <span class="list-sub" style="margin-left:4px;">玩英语剧本、复习生词都会累计学习时长</span></div>
+                <div class="list-title" style="margin-top:18px;" id="lang-learn-stats">📊 学习统计与周报 <span class="list-sub" id="lang-learn-stats-sub" style="margin-left:4px;">玩英语剧本、复习生词都会累计学习时长</span></div>
                 <div class="list-sub">学习数据每天自动统计：今天学了多久、连续几天打卡、生词掌握进度——进步看得见，更容易坚持。</div>
                 <div id="lang-learn-stats-box" style="margin-top:8px;"><div class="list-sub" style="padding:12px 0;">登录后查看</div></div>
             </section>
@@ -5589,7 +5589,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
 
                 <div class="list-title" style="margin:0;" id="lang-learn-vocab">📖 我的生词本 <span class="list-sub" style="margin-left:4px;">游戏里点过的词自动收进来</span></div>
                 <img class="lg-learn-head" src="lang/vocab-head.webp" alt="生词本" loading="lazy">
-                <div class="lg-learn-sub">玩英语剧本时：轻点句子看整句译文，点蓝色虚线的生词看释义——点过的词会收进这里，可在「新学 → 眼熟 → 已掌握」之间手动划。</div>
+                <div class="lg-learn-sub" id="lang-vocab-sub">玩英语剧本时：轻点句子看整句译文，点蓝色虚线的生词看释义——点过的词会收进这里，可在「新学 → 眼熟 → 已掌握」之间手动划。</div>
                 <div class="list-sub" style="margin-top:6px;">点「返回大厅」可以继续学——生词本与章末复盘收藏的表达都在这里管理。</div>
                 <div id="lang-learn-box" style="margin-top:8px;"></div>
             </section>
@@ -23389,6 +23389,9 @@ window.LoveEngine = (() => {
     /* M8b:语言首页推荐区 = 文游首页同款 hb-card 大图轮播(4:3 封面 + 档/题材 tag + 轮次 + 播放按钮);点击卡任意处进入播放 */
     var langBanner = { idx: 0, timer: null };
     var lbSpan = "day", lbBoard = "time", lbCache = {}, lbReq = 0;
+    /* 今日一句当前展示的语种与原文:点译请求要用它当 lang(不在会话里,curSessionLang 只会给 en),
+       写缓存也要带上,免得切语种后沿用上一语种那句的译文(2026-09-21) */
+    var todayShownLang = "en", todayShownText = "";
     // 排行榜:当前 span/榜别(time 时长|immersive 无阻畅读)/结果缓存(键=board|lang|span,30s)/请求序号(过期响应靠它作废)
     function langBannerHtml(c) {
         var icon = THEME_ICON[String(c.theme || "")] || "📖";
@@ -23459,6 +23462,10 @@ window.LoveEngine = (() => {
             api.showBand();
             api.renderHome();
         },
+        /* 切语种后重拉生词本/学习中心:词表按语种分开装,不重拉就一直显示旧语种的词(2026-09-21) */
+        reloadVocabForLang: function () {
+            try { if (window.LangAssist && window.LangAssist.reloadVocab) window.LangAssist.reloadVocab(); } catch (e) {}
+        },
         /* Bug3(2026-09-13):登录/登出/会话校验变化后重绘语言侧统计。
            语言页统计在脚本解析期就渲染过一次(早于 AuthService.init),不重绘会一直停留在"登录后查看" */
         onAuthChanged: function () {
@@ -23470,8 +23477,8 @@ window.LoveEngine = (() => {
         onShow: function (viewId) {
             api.syncSubNav(viewId);
             if (viewId === "view-lang") { api.renderHome(); return; }
-            if (viewId === "view-lang-learn") { api.refresh(); api.renderToday(); api.renderLearnStats(false); return; }
-            if (viewId === "view-lang-vocab") { api.refreshVocab(); return; }
+            if (viewId === "view-lang-learn") { api.refresh(); api.renderLearnMeta(); api.renderToday(); api.renderLearnStats(false); return; }
+            if (viewId === "view-lang-vocab") { api.renderLearnMeta(); api.refreshVocab(); return; }
             if (viewId === "view-lang-leaderboard") { api.renderLeaderboard(); }
         },
         /* M8d:进入生词本子页并立即重绘词表(直接调绕开 1.5s MutationObserver 节流) */
@@ -23533,6 +23540,11 @@ window.LoveEngine = (() => {
             api.loadLangCards(code);
             api.renderHome();
             api.refreshLeaderboardIfVisible();   // 榜单按语种取数,不跟着切会一直停在旧语种那批
+            api.reloadVocabForLang(code);        // 生词本/学习中心同理:不重拉就一直显示旧语种的词
+            api.renderLearnMeta();
+            api.renderToday();                   // 今日一句换语种池
+            // 统计也要重取:光靠 renderLearnStats 内部的缓存判定不够 —— 人已经停在学习中心页时没人再调它
+            try { if ($("lang-learn-stats-box")) api.renderLearnStats(true); } catch (e) {}
             hint("已切换到" + LANG_TAG_INFO[code][1] + "——学习档与剧本库都换成" + LANG_TAG_INFO[code][1] + "的了。");
         },
         /* 语言首页三张语种卡:高亮当前语种(HTML 侧只写死英语卡 active,这里统一接管) */
@@ -23885,7 +23897,7 @@ window.LoveEngine = (() => {
         renderToday: function () {
             var box = $("lang-today-box");
             if (!box) return;
-            var pool = [
+            var P_EN = [
                 { en: "Sleeping in is tempting on weekends, but an early start makes the whole day feel longer.", tag: "四级·生活" },
                 { en: "The library stays open until ten at night during exam season, and every seat is usually taken.", tag: "校园" },
                 { en: "I practice listening every morning for twenty minutes before breakfast, and it really adds up.", tag: "四级·学习" },
@@ -23917,13 +23929,85 @@ window.LoveEngine = (() => {
                 { en: "Though the film received mixed reviews, its soundtrack alone is worth the ticket price.", tag: "四级·娱乐" },
                 { en: "Culture shock usually fades once you build a routine and find people who share your hobbies.", tag: "六级·留学" }
             ];
+            /* 日/韩句池(2026-09-21 补):难度对齐 N3-N4 / TOPIK 2-3,题材与英语池同构。
+               键一律用 s(原文),英语池沿用 en —— 取值处 `t.s || t.en` 兼容两种写法 */
+            var P_JA = [
+                { s: "週末は寝坊したくなるけれど、早起きすると一日が長く感じられる。", tag: "N4·生活" },
+                { s: "試験の前は図書館が十時まで開いていて、席はいつも埋まっている。", tag: "N4·校园" },
+                { s: "朝ごはんの前に二十分だけリスニングを練習する。積み重ねが大事だ。", tag: "N4·学习" },
+                { s: "大学の近くの部屋は家賃が高いが、通学時間を一時間節約できる。", tag: "N4·租房" },
+                { s: "面接の質問を前もって準備しておけば、当日はあまり緊張しない。", tag: "N4·求职" },
+                { s: "アルバイトはお金を稼ぐだけでなく、時間の使い方も教えてくれる。", tag: "N3·兼职" },
+                { s: "単語に慣れるほど、本番でも自然に思い出せるようになる。", tag: "N3·学习" },
+                { s: "学食はおしゃれな料理は少ないが、学生にとって一番安い選択だ。", tag: "N4·校园" },
+                { s: "一緒に勉強する人は、一人で準備する人より良い結果を出しやすい。", tag: "N3·学习" },
+                { s: "冬のインターンの申し込みは金曜日の正午で締め切られる。急いだほうがいい。", tag: "N4·实习" },
+                { s: "彼はその問題を諦めかけたとき、急に良い考えを思いついた。", tag: "N4·心理" },
+                { s: "オンライン授業は自由だが、教室の授業より自制心が必要だ。", tag: "N3·教育" },
+                { s: "大学へ行く地下鉄が去年延びて、街への移動がずっと楽になった。", tag: "N3·城市" },
+                { s: "毎日五分間の日記をつける習慣は、思った以上に良い効果がある。", tag: "N3·心理" },
+                { s: "グループ発表は成績の三割を占めるので、誰も練習を休まない。", tag: "N4·校园" },
+                { s: "天気予報は前より正確だが、それでも出かける前に天気を確かめてしまう。", tag: "N4·科技" },
+                { s: "電車の遅れは困るが、持ってきた本を読む時間ができたと思うと悪くない。", tag: "N4·出行" },
+                { s: "新入生は荷物を詰めすぎる。本当に必要なものはスーツケース一つで足りる。", tag: "N4·校园" },
+                { s: "画面の前に座り続けたら、一時間ごとに十分歩くのがいいそうだ。", tag: "N4·健康" },
+                { s: "面接官が一番感心したのは学歴ではなく、落ち着いて問題を解く姿だった。", tag: "N3·求职" },
+                { s: "月に二百元の貯金は小さく見えるが、一年分を数えると大きい。", tag: "N4·理财" },
+                { s: "彼女は給料の良い仕事を断った。夜勤で生活が乱れるのが嫌だったからだ。", tag: "N3·职场" },
+                { s: "再生可能なエネルギーはもう夢ではない。寮の屋上にも太陽光パネルがある。", tag: "N3·环保" },
+                { s: "走り始めるのに高い道具はいらない。靴と、はっきりした道順だけあればいい。", tag: "N4·健康" },
+                { s: "講師は時々話を止めて、学生が置いていかれないようにメモを取らせた。", tag: "N4·校园" },
+                { s: "短い動画を見続ける代わりに、英語の記事を一つ音読してみよう。", tag: "N3·学习" },
+                { s: "キャンパスの自転車のおかげで、バスが必要だった近距離もすぐ行ける。", tag: "N4·生活" },
+                { s: "期末が近づいて誰も寝不足になると、才能より計画表がものを言う。", tag: "N4·校园" },
+                { s: "映画の評価は分かれたが、音楽だけでもチケット代の価値はある。", tag: "N4·娱乐" },
+                { s: "文化の違いは、生活のリズムを作り、趣味の合う人を見つければ薄れていく。", tag: "N3·留学" }
+            ];
+            var P_KO = [
+                { s: "주말에는 늦잠이 끌리지만, 일찍 일어나면 하루가 더 길게 느껴진다.", tag: "TOPIK 2·生活" },
+                { s: "시험 기간에는 도서관이 열 시까지 열려 있고, 자리는 늘 꽉 차 있다.", tag: "TOPIK 2·校园" },
+                { s: "아침을 먹기 전에 이십 분씩 듣기를 연습한다. 쌓이면 분명히 도움이 된다.", tag: "TOPIK 2·学习" },
+                { s: "학교 근처 집은 월세가 비싸지만, 통학 시간을 한 시간 아낄 수 있다.", tag: "TOPIK 2·租房" },
+                { s: "면접 질문을 미리 준비해 두면, 당일에는 훨씬 덜 떨린다.", tag: "TOPIK 2·求职" },
+                { s: "아르바이트는 돈을 버는 것뿐만 아니라 시간 관리도 가르쳐 준다.", tag: "TOPIK 3·兼职" },
+                { s: "단어에 익숙해질수록 시험장에서도 자연스럽게 떠올릴 수 있다.", tag: "TOPIK 3·学习" },
+                { s: "학생 식당은 화려한 요리는 없지만, 학생에게 가장 저렴한 선택이다.", tag: "TOPIK 2·校园" },
+                { s: "같이 공부하는 사람이 혼자 준비하는 사람보다 좋은 결과를 내기 쉽다.", tag: "TOPIK 3·学习" },
+                { s: "겨울 인턴 지원은 금요일 정오에 마감되니 서두르는 게 좋다.", tag: "TOPIK 2·实习" },
+                { s: "그는 문제를 포기하려던 순간, 갑자기 좋은 생각이 떠올랐다.", tag: "TOPIK 2·心理" },
+                { s: "온라인 수업은 자유롭지만, 교실 수업보다 더 강한 자기 관리가 필요하다.", tag: "TOPIK 3·教育" },
+                { s: "대학으로 가는 지하철이 작년에 연장되어 시내에 가기가 훨씬 편해졌다.", tag: "TOPIK 3·城市" },
+                { s: "하루 오 분씩 감사 일기를 쓰는 습관은 생각보다 큰 효과가 있다.", tag: "TOPIK 3·心理" },
+                { s: "조별 발표가 성적의 삼십 퍼센트를 차지해서 아무도 연습을 빼먹지 않는다.", tag: "TOPIK 2·校园" },
+                { s: "일기예보가 더 정확해졌지만, 나가기 전에 핸드폰을 확인하는 습관은 그대로다.", tag: "TOPIK 2·科技" },
+                { s: "지하철이 늦으면 짜증 나지만, 가져온 책을 읽을 시간이 생겼다고 생각하면 낫다.", tag: "TOPIK 2·出行" },
+                { s: "신입생은 짐을 너무 많이 싸 온다. 정말 필요한 건 가방 하나면 충분하다.", tag: "TOPIK 2·校园" },
+                { s: "화면 앞에 오래 앉아 있으면 한 시간마다 십 분씩 걷는 게 좋다고 한다.", tag: "TOPIK 2·健康" },
+                { s: "면접관이 가장 감탄한 것은 학벌이 아니라 침착하게 문제를 푸는 모습이었다.", tag: "TOPIK 3·求职" },
+                { s: "한 달에 이십만 원 저축은 작아 보여도, 일 년치를 세어 보면 크다.", tag: "TOPIK 2·理财" },
+                { s: "그녀는 월급이 좋은 제안을 거절했다. 야간 근무가 생활을 망칠 것 같았기 때문이다.", tag: "TOPIK 3·职场" },
+                { s: "재생 에너지는 더 이상 먼 꿈이 아니다. 기숙사 옥상에도 태양광 패널이 있다.", tag: "TOPIK 3·环保" },
+                { s: "달리기를 시작하는 데 비싼 장비는 필요 없다. 신발과 뚜렷한 코스만 있으면 된다.", tag: "TOPIK 2·健康" },
+                { s: "강사는 가끔 설명을 멈추고, 학생들이 필기를 따라잡을 시간을 주었다.", tag: "TOPIK 2·校园" },
+                { s: "짧은 영상을 계속 보는 대신, 기사를 하나 소리 내어 읽어 보자.", tag: "TOPIK 3·学习" },
+                { s: "캠퍼스 곳곳의 공용 자전거 덕분에 버스가 필요했던 짧은 이동이 편해졌다.", tag: "TOPIK 2·生活" },
+                { s: "기말이 다가와 모두 잠이 부족해질 때는 재능보다 계획표가 이긴다.", tag: "TOPIK 2·校园" },
+                { s: "영화 평가는 갈렸지만, 음악만으로도 표값의 가치는 충분하다.", tag: "TOPIK 2·娱乐" },
+                { s: "문화 차이는 생활 리듬이 생기고 취미가 맞는 사람을 만나면 조금씩 옅어진다.", tag: "TOPIK 3·留学" }
+            ];
+            var TODAY_POOL = { en: P_EN, ja: P_JA, ko: P_KO };
             var nowBJ = new Date(Date.now() + 8 * 3600000);
             var dayStr = nowBJ.toISOString().slice(0, 10);
             var dayNum = Number(dayStr.replace(/-/g, ""));
-            var t = pool[dayNum % pool.length];
+            var lang = curLearnLang();
+            var p = TODAY_POOL[lang] || TODAY_POOL.en;
+            var t = p[dayNum % p.length];
+            todayShownLang = lang;
+            todayShownText = String(t.s || t.en || "");
             var got = null;
             try { got = JSON.parse(localStorage.getItem("lang_today_g") || "null"); } catch (e) {}
-            var done = !!(got && got.d === dayStr && got.en === t.en);
+            // 缓存键要带语种:同一天切到日语不该沿用英语那句的译文
+            var done = !!(got && got.d === dayStr && got.lang === lang && got.s === todayShownText);
             var zhBox = done && got.zh ? '<div class="lang-today-zh" id="lang-today-zh">' + api.esc(String(got.zh)) + "</div>" : "";
             var note = done
                 ? '<div class="lang-today-note" id="lang-today-note">本句已译过，明天换新句</div>'
@@ -23932,7 +24016,7 @@ window.LoveEngine = (() => {
                     : "登录后可点译今日一句（每日免费限量）") + "</div>";
             box.innerHTML = '<div class="lang-today">' +
                 '<div class="lang-today-h"><span>📅 今日一句</span><span style="font-weight:600;opacity:.85;">【' + api.esc(t.tag) + "】</span></div>" +
-                '<div class="lang-today-en" id="lang-today-en">' + api.esc(t.en) + "</div>" + zhBox + note + "</div>";
+                '<div class="lang-today-en" id="lang-today-en">' + api.esc(todayShownText) + "</div>" + zhBox + note + "</div>";
         },
         todayGloss: function () {
             var enEl = $("lang-today-en"), note = $("lang-today-note");
@@ -23947,7 +24031,8 @@ window.LoveEngine = (() => {
             fetch(API_BASE + "/api/lang/gloss", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token() },
-                body: JSON.stringify({ sentences: [s], lang: curSessionLang() })
+                // 语种跟渲染时的语言页选择走:今日一句不是会话内文本,curSessionLang() 在此只会回落成 en
+                body: JSON.stringify({ sentences: [s], lang: todayShownLang || curLearnLang() })
             })
                 .then(function (r) { return r.json().catch(function () { return null; }); })
                 .then(function (d) {
@@ -23955,7 +24040,7 @@ window.LoveEngine = (() => {
                     var dayStr = nowBJ.toISOString().slice(0, 10);
                     if (d && d.ok && d.items && d.items[0] && d.items[0].zh) {
                         var zh = String(d.items[0].zh);
-                        try { localStorage.setItem("lang_today_g", JSON.stringify({ d: dayStr, en: s, zh: zh })); } catch (e) {}
+                        try { localStorage.setItem("lang_today_g", JSON.stringify({ d: dayStr, lang: todayShownLang || curLearnLang(), s: s, zh: zh })); } catch (e) {}
                         var zhEl = $("lang-today-zh");
                         if (!zhEl) { var box = $("lang-today-box"); var enEl2 = $("lang-today-en"); if (box && enEl2) { var d2 = document.createElement("div"); d2.className = "lang-today-zh"; d2.id = "lang-today-zh"; d2.textContent = zh; enEl2.parentNode.insertBefore(d2, enEl2.nextSibling); } }
                         else { zhEl.style.display = ""; zhEl.textContent = zh; }
@@ -23981,12 +24066,13 @@ window.LoveEngine = (() => {
             if (!el) return;
             if (!token()) { el.style.display = "none"; return; }
             el.style.display = "block";
-            if (myStatsCache && Date.now() - myStatsCache.at < 30000) { api.myStatsHtml(myStatsCache.data); return; }
-            fetch(API_BASE + "/api/lang/learn-stats?lang=" + encodeURIComponent(curLearnLang()), { headers: { "X-Auth-Token": "Bearer " + token() } })
+            var want = curLearnLang();
+            if (myStatsCache && myStatsCache.lang === want && Date.now() - myStatsCache.at < 30000) { api.myStatsHtml(myStatsCache.data); return; }
+            fetch(API_BASE + "/api/lang/learn-stats?lang=" + encodeURIComponent(want), { headers: { "X-Auth-Token": "Bearer " + token() } })
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (d) {
                     if (!d || !d.ok) return;
-                    myStatsCache = { at: Date.now(), data: d };
+                    myStatsCache = { at: Date.now(), lang: want, data: d };
                     api.myStatsHtml(d);
                 }).catch(function () {});
         },
@@ -24017,9 +24103,11 @@ window.LoveEngine = (() => {
                 box.innerHTML = '<div class="list-sub" style="padding:12px 0;">登录后查看学习统计与周报——数据随账号云端同步，换设备不丢。</div>';
                 return;
             }
-            if (!force && myStatsCache && Date.now() - myStatsCache.at < 30000) { api.learnStatsHtml(myStatsCache.data); return; }
+            var want = curLearnLang();
+            // 缓存要带语种:只按时间的话,30s 内切语种会把旧语种的统计当新语种显示
+            if (!force && myStatsCache && myStatsCache.lang === want && Date.now() - myStatsCache.at < 30000) { api.learnStatsHtml(myStatsCache.data); return; }
             box.innerHTML = '<div class="list-sub" style="padding:12px 0;">统计加载中…</div>';
-            fetch(API_BASE + "/api/lang/learn-stats?lang=" + encodeURIComponent(curLearnLang()), { headers: { "X-Auth-Token": "Bearer " + token() } })
+            fetch(API_BASE + "/api/lang/learn-stats?lang=" + encodeURIComponent(want), { headers: { "X-Auth-Token": "Bearer " + token() } })
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (d) {
                     if (!d || !d.ok) {
@@ -24027,7 +24115,7 @@ window.LoveEngine = (() => {
                         if (bx) bx.innerHTML = '<div class="list-sub" style="padding:12px 0;">统计加载失败，点「刷新」重试</div>';
                         return;
                     }
-                    myStatsCache = { at: Date.now(), data: d };
+                    myStatsCache = { at: Date.now(), lang: want, data: d };
                     api.learnStatsHtml(d);
                 })
                 .catch(function () {
@@ -24073,7 +24161,7 @@ window.LoveEngine = (() => {
                 ? '<div style="margin-top:10px;"><div class="wks-vt">生词掌握 <span class="list-sub" style="margin-left:2px;">已掌握 ' + vMas + " · 眼熟 " + vFam + " · 新学 " + vNew + "</span></div>" +
                     '<div class="wks-track-line"><div class="wks-vf" style="width:' + famPct + '%" title="眼熟 ' + vFam + '"></div><div class="wks-vm" style="width:' + masPct + '%" title="已掌握 ' + vMas + '"></div></div>' +
                     '<div class="list-sub" style="margin-top:4px;">' + (vMas === vTotal ? "生词全部掌握 🎉 太强了，可以挑战更高档剧本了" : "深色段 = 已掌握进度 · 玩剧本时点词点句，生词本会自动长出来") + "</div></div>"
-                : '<div class="list-sub" style="margin-top:10px;">还没收过生词——去玩一个英语剧本，点一下不认识的字词就会自动收进生词本，开始积累吧。</div>';
+                : '<div class="list-sub" style="margin-top:10px;">还没收过生词——去玩一个' + learnLangName() + '剧本，点一下不认识的字词就会自动收进生词本，开始积累吧。</div>';
             box.innerHTML =
                 '<div class="stat-grid" style="grid-template-columns:repeat(4,1fr);margin-top:0;">' +
                 '<div class="stat-cell"><b>' + api.fmtDur(d.today_seconds || 0) + "</b><s>今日学习</s></div>" +
@@ -24131,6 +24219,16 @@ window.LoveEngine = (() => {
             var lg = curLang(), n = LANG_TAG_INFO[lg][1];
             if (lg === "en") return "英语剧本库还是空的，稍后再来刷新看看～";
             return n + "剧本正在制作中——" + (lg === "ja" ? "JLPT" : "TOPIK") + " 词库已就绪，剧本上线后会出现在这里～";
+        },
+        /* 学习中心/生词本的静态文案同样按语种改写(2026-09-21:日韩上线后仍写"玩英语剧本"会误导) */
+        renderLearnMeta: function () {
+            // 本块看不到 LangAssist 里的 learnLangName,就地取名(同 24756 处 gLangZh 的写法)
+            var n;
+            try { n = { en: "英语", ja: "日语", ko: "韩语" }[curLearnLang()] || "英语"; } catch (e) { n = "英语"; }
+            var s1 = $("lang-learn-stats-sub");
+            if (s1) s1.textContent = "玩" + n + "剧本、复习生词都会累计学习时长";
+            var s2 = $("lang-vocab-sub");
+            if (s2) s2.textContent = "玩" + n + "剧本时：轻点句子看整句译文，点蓝色虚线的生词看释义——点过的词会收进这里，可在「新学 → 眼熟 → 已掌握」之间手动划。";
         },
         renderLibrary: function () {
             var rows = $("lang-lib-grid"); if (!rows) return;
@@ -24276,6 +24374,9 @@ window.LoveEngine = (() => {
     var wordInfo = {};      // lower(w) → {w, en, zh}
     var vocabMap = {};      // lower(term) → {id,type,term,gloss_en,gloss_zh,origin,context,status,created_at}
     var vocabLoaded = false;
+    var vocabLoadedFor = "";   // vocabMap 当前装的是哪个语种的词;与 curLearnLang() 不一致就要重拉
+    var vocabReqSeq = 0;       // 请求令牌:切语种时旧请求可能后到,令牌对不上就丢弃(否则会把旧语种词表盖回来)
+    var vocabReq = null;
     /* 生词本视图态(2026-09-21):两个 Tab 互斥渲染,不同时铺两套内容 */
     var vocabTab = "due";   // due=📆今日复习 | all=📚全部生词库
     var vocabQ = "";        // Tab2 搜索词
@@ -24411,25 +24512,47 @@ window.LoveEngine = (() => {
         }
         return out;
     }
+    /* 生词本按语种分开装:切到日语就只能看到日语生词(小徐 2026-09-21 定)。
+       vocabMap 同时也是剧情页高亮用的词表,所以它会随语言页所选语种整体换掉 —— 与词库/榜单同一口径。 */
+    /* 语种中文名:本块看不到 LangPlay 那个 IIFE 里的 LANG_TAG_INFO,统一走挂 window 的 LangBandMeta
+       (同 24756 处 gLangZh 的写法),拿不到时回落英语 —— 文案而已,不该让整块渲染炸掉 */
+    function learnLangName() {
+        try { return { en: "英语", ja: "日语", ko: "韩语" }[curLearnLang()] || "英语"; } catch (e) { return "英语"; }
+    }
     function loadVocab(cb) {
-        if (!token()) { vocabLoaded = true; if (cb) cb(); return; }
-        fetch(API_BASE + "/api/lang/vocab", { headers: { "X-Auth-Token": "Bearer " + token() } })
+        var want = curLearnLang();
+        if (vocabLoaded && vocabLoadedFor === want) { if (cb) cb(); return; }
+        var seq = ++vocabReqSeq;
+        if (!token()) { vocabLoaded = true; vocabLoadedFor = want; if (cb) cb(); return; }
+        var p = fetch(API_BASE + "/api/lang/vocab?lang=" + encodeURIComponent(want), { headers: { "X-Auth-Token": "Bearer " + token() } })
             .then(function (r) { return r.ok ? r.json() : null; })
             .then(function (d) {
+                if (seq !== vocabReqSeq) return;   // 已被更新的请求取代:连渲染带缓存一起放弃
+                var nm = {}, i, it, key;
                 if (d && d.items) {
-                    var nm = {}, i, it, key;
                     for (i = 0; i < d.items.length; i++) {
                         it = d.items[i];
                         key = String(it.term || "").toLowerCase();
                         if (key) { nm[key] = it; }
                     }
-                    vocabMap = nm;
-                    noteWords(d.items, "vocab");
                 }
+                // 只标记重建,不清 wordInfo:那里还混着本局剧情注入的 gloss 表达,清掉会把正文高亮砸没。
+                // 旧语种的词留在池子里无害 —— buildWordRe 按当前语种筛词形(见其 cjk 分支)。
+                reDirty = true;
+                vocabMap = nm;
+                noteWords(d && d.items ? d.items : [], "vocab");
                 vocabLoaded = true;
+                vocabLoadedFor = want;
                 refreshAll();
                 if (cb) cb();
-            }).catch(function () { vocabLoaded = true; if (cb) cb(); });
+            }).catch(function () { if (seq === vocabReqSeq) { vocabLoaded = true; if (cb) cb(); } });
+        vocabReq = p;
+        return p;
+    }
+    /* 渲染前先把要渲染的那个语种的词表拿到手:异步没回来时旧词表还在,直接渲染会闪一屏旧语种生词 */
+    function loadVocabNow(cb) {
+        var p = loadVocab(cb);
+        if (p && p.then) { try { p.then(function () { renderLearn(); }, function () { renderLearn(); }); } catch (e) {} }
     }
     function refreshAll() {
         var k;
@@ -25398,7 +25521,7 @@ window.LoveEngine = (() => {
                 if (c && c.title) origin = "卡:「" + String(c.title).slice(0, 40) + "」";
             }
         } catch (e) {}
-        if (!origin) origin = "英语剧本";
+        if (!origin) origin = learnLangName() + "剧本";
         var ctx = pendingCtx;
         pendingCtx = "";   // 取走即清:避免把上一句的例句贴到这次查的词上
         fetch(API_BASE + "/api/lang/vocab", {
@@ -25839,18 +25962,19 @@ window.LoveEngine = (() => {
     function renderLearn() {
         var box = $("lang-learn-box");
         if (!box) return;
+        var ln = learnLangName();
         if (!token()) {
-            box.innerHTML = '<div class="lg-vr"><div class="lg-vr-main"><div class="lg-vr-term">登录后，生词本随账号同步</div><div class="lg-vr-gl">玩英语剧本时点查的单词会自动收进这里，换设备也不丢。</div></div></div>';
+            box.innerHTML = '<div class="lg-vr"><div class="lg-vr-main"><div class="lg-vr-term">登录后，生词本随账号同步</div><div class="lg-vr-gl">玩' + ln + '剧本时点查的单词会自动收进这里，换设备也不丢。</div></div></div>';
             return;
         }
-        if (!vocabLoaded) {
-            box.innerHTML = '<div class="list-sub">生词加载中…</div>';
-            loadVocab(function () { renderLearn(); });
+        if (!vocabLoaded || vocabLoadedFor !== curLearnLang()) {
+            box.innerHTML = '<div class="list-sub">' + ln + '生词加载中…</div>';
+            loadVocabNow();
             return;
         }
         var all = vocabAllList();
         if (!all.length) {
-            box.innerHTML = '<div class="lg-vr"><div class="lg-vr-main"><div class="lg-vr-term">还没有生词</div><div class="lg-vr-gl">去玩一个英语剧本吧——游戏里点查过的词和关键表达会自动出现在这里。</div></div></div>';
+            box.innerHTML = '<div class="lg-vr"><div class="lg-vr-main"><div class="lg-vr-term">还没有' + ln + '生词</div><div class="lg-vr-gl">去玩一个' + ln + '剧本吧——游戏里点查过的词和关键表达会自动出现在这里。</div></div></div>';
             return;
         }
         var rv = reviewDueList();
@@ -26375,6 +26499,7 @@ window.LoveEngine = (() => {
     }
     window.LangAssist = {
         loadBank: loadLangBank, bankItem: langBankItem, bankStatus: langBankStatus,
+        reloadVocab: loadVocabNow,          // 切语种后重拉生词本(loadVocabNow 是函数声明,提升到此处可用)
         getChapterWords: getChapterWords,   // M6d4:当前章候选词(供 LangEngine 续写注入;内部触发预载/抽词)
         /* R1 生词回投取样:续写注入用;优先复习到期→未掌握新学→眼熟补位;只取单词(expression 跳过),≤10;未加载时静默触发拉取 */
         reviewVocabSample: function (max) {
@@ -26413,7 +26538,8 @@ window.LoveEngine = (() => {
             return out.slice(0, cap);
         },
         /* M8d:生词本独立子页 — 切页钩子直接调,绕开 MutationObserver 1.5s 节流 */
-        refreshVocab: function () { loadVocab(function () { renderLearn(); }); },
+        refreshVocab: function () { loadVocabNow(); },
+        reloadVocabForLang: function () { loadVocabNow(); },
         /* M9F:渲染方挂卡后注册双语(卡首轮/渐进第 2 轮 AI 输出)→ 同步烘烤行间译文,免 AI 点译;
            attachBiAttr 供 finishStreaming 在 mountedHtml 快照前先写 data-bi(历史重放还原用) */
         attachStoryBi: attachStoryBi,

@@ -1494,6 +1494,10 @@ let langCardsCache = {};
 const LANG_BANDS = ["hs", "cet4", "cet6", "ky", "toefl", "ja-n5", "ja-n4", "ja-n3", "ja-n2", "ja-n1", "ko-1", "ko-2", "ko-3"];
 const LANG_BAND_LEGACY = { a: "cet4", b: "cet6", c: "ky" };
 const normLangBand = (v) => (LANG_BANDS.includes(v) ? v : (LANG_BAND_LEGACY[v] || ""));
+const LANG_TAGS = ["en", "ja", "ko"];
+const normLangTag = (v) => (LANG_TAGS.includes(v) ? v : "");
+/* lang_bank_progress 没有 lang 字段,靠 band 前缀分语种;学习中心「已练词数」按它分流 */
+const bandsOfLang = (lang) => LANG_BANDS.filter((b) => (lang === "en" ? !/^(ja|ko)-/.test(b) : b.startsWith(lang + "-")));
 const RECAP_MODEL_IDS = GLOSS_MODEL_IDS; // 同 gloss 候选链(免费 22 档;5.3 lastResort 终兜见 callRecapModel 尾)
 const RECAP_SYSTEM_PROMPT = [
     "You are an English-learning recap coach for a Chinese player who just finished a chapter of an English interactive story game.",
@@ -3570,7 +3574,10 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 if (auth.error) return auth.error;
                 const uid = auth.record.id;
                 const status = String(url.searchParams.get("status") || "");
+                // lang 缺省(老客户端不带)= 不过滤,行为不变;带了就按语种分流,生词本才不会三国语言混一锅
+                const langTag = normLangTag(String(url.searchParams.get("lang") || ""));
                 let f = `user_id='${escapePocketBaseFilterValue(uid)}'`;
+                if (langTag) f += `&&lang='${langTag}'`;
                 if (status === "0" || status === "1" || status === "2") f += `&&status=${status}`;
                 const q = await pbAdminFetch(env, `/api/collections/lang_vocab/records?perPage=200&sort=-created_at&filter=${encodeURIComponent(f)}`);
                 const d = await q.json().catch(() => ({}));
@@ -3783,11 +3790,12 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const days7 = [];
                 for (let i = 6; i >= 0; i--) { const dd = cnDayBack(i); days7.push({ day: dd, seconds: dayMap.get(dd) || 0 }); }
                 // 生词状态分桶(同表翻页本地计数;status 0新学/1眼熟/2已掌握)+ 本周新收(created 北京周一起)
+                // 按 lang 过滤:切到日语只看日语生词,否则三种语言的桶数是混的
                 let vTotal = 0, vNew = 0, vFam = 0, vMas = 0, weekNewVocab = 0;
                 {
                     let page = 1;
                     for (;;) {
-                        const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'`);
+                        const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'&&lang='${escapePocketBaseFilterValue(lang)}'`);
                         const q = await pbAdminFetch(env, `/api/collections/lang_vocab/records?perPage=500&page=${page}&fields=id,status,created&filter=${f}`);
                         const d = await q.json().catch(() => ({}));
                         const items = d.items || [];
@@ -3808,10 +3816,12 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                         page++;
                     }
                 }
-                // 已练词数(lang_bank_progress 词条数,词测+刷词共用)
+                // 已练词数(lang_bank_progress 词条数,词测+刷词共用);该表无 lang 字段,按语种的档位前缀分流
                 let bankWords = 0;
                 {
-                    const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'`);
+                    const bands = bandsOfLang(lang);
+                    const bf = bands.length ? `&&(${bands.map((b) => `band='${b}'`).join("||")})` : "";
+                    const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'${bf}`);
                     const q = await pbAdminFetch(env, `/api/collections/lang_bank_progress/records?perPage=1&filter=${f}`);
                     const d = await q.json().catch(() => ({}));
                     bankWords = Number(d.totalItems || 0);
