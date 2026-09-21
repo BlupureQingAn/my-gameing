@@ -8079,6 +8079,10 @@ function rebuildChoicesBlock(body, labels = []) {
                 .replace(/\[([^\[\]<>\n]{1,120})\]/g, (m, t) => `<span class="npc-dialogue">[${t}]</span>`)
                 + (streaming ? '<span class="streaming-cursor"></span>' : "");
         }
+        /* 幂等标记必须走内存:card 会被 outerHTML 快照存进 history(10695→17086),
+           若标记写进 DOM 属性,历史重放时新卡自带标记 → 这里直接 return,监听器从未绑定,
+           表现为「选项全点不动、hover 却正常」(2026-09-21 修) */
+        const choiceBoundCards = new WeakSet();
         function bindHtmlChoiceEvents(container) {
             if (!container) return;
             // 兼容两种形态:卡片被 bubble 包裹(旧)或直接平铺(自身即卡片)
@@ -8137,8 +8141,8 @@ function rebuildChoicesBlock(body, labels = []) {
                 if (isTrueChoiceNode(el)) el.classList.add("ai-choice-item");
                 else el.classList.remove("ai-choice-item");
             });
-            if (card.dataset.choiceBound === "1") return;
-            card.dataset.choiceBound = "1";
+            if (choiceBoundCards.has(card)) return;
+            choiceBoundCards.add(card);
             card.addEventListener("click", (evt) => {
                 const target = evt.target;
                 if (!(target instanceof HTMLElement)) return;
