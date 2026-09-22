@@ -6447,7 +6447,8 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
 </div>
 
 <!-- scenarios.js(142KB)与 qrcode(20KB)改 async:load 事件不再等它们,慢网下 boot 提前淡出;场景卡由 init 挂载 load 监听延迟渲染 -->
-<script src="scenarios/scenarios.js" async id="scenario-lib-script"></script>
+<!-- ?v= 缓存版本号:分片带旧 cover 路径(.jpg)被浏览器启发式缓存时会污染剧本数据,改版本号即强制取新分片;动态 partN.js 从该 src 回读版本号 -->
+<script src="scenarios/scenarios.js?v=20260922a" async id="scenario-lib-script"></script>
 <script src="scenarios/skeletons.js" async></script>
 <script src="lib/qrcode.min.js" async></script>
 <script>
@@ -14089,7 +14090,9 @@ function rebuildChoicesBlock(body, labels = []) {
                 if (/^https?:/i.test(c)) return c;
                 // 不锁扩展名:2026-09-21 起全站静态图统一 WebP,锁死 .jpg 会让存量封面全 404
                 const m = c.match(/covers\/[^/?#]+\.\w+$/i);
-                return m ? `scenarios/${m[0]}` : c;
+                if (!m) return c;
+                // 自愈:缓存里的旧分片/localStorage 可能仍是 .jpg/.png 路径(原文件已删) → 改指 .webp,免强刷
+                return `scenarios/${m[0].replace(/\.(jpe?g|png|gif)$/i, ".webp")}`;
             }
             // 无静态封面的卡(不应出现:官方卡全量预生成,社区卡走 ensureSelf)返回空 → 渐变占位
             return "";
@@ -17935,13 +17938,19 @@ const token = delta.content || "";
             const txt = ind.querySelector(".scenario-loading-text");
             if (txt) txt.textContent = scenarioChunkLoading ? "加载中…" : "下滑加载更多";
         }
+        // 分片缓存版本号:唯一真源是 <script id="scenario-lib-script" src="scenarios/scenarios.js?v=...">,动态分片回读同一个 v
+        function scenarioAssetUrl(path) {
+            const el = document.getElementById("scenario-lib-script");
+            const m = el && String(el.getAttribute("src") || "").match(/[?&]v=([^&#]+)/);
+            return m ? `${path}?v=${m[1]}` : path;
+        }
         function loadNextScenarioChunk() {
             if (scenarioChunkLoading || !scenarioChunkLeft()) return;
             scenarioChunkLoading = true;
             updateScenarioLoadingUI();
             const n = scenarioChunkLoaded + 1;
             const s = document.createElement("script");
-            s.src = `scenarios/scenarios.part${n}.js`;
+            s.src = scenarioAssetUrl(`scenarios/scenarios.part${n}.js`);
             s.onload = () => {
                 scenarioChunkLoaded = n;
                 scenarioChunkLoading = false;
@@ -17967,7 +17976,7 @@ const token = delta.content || "";
                 await new Promise((resolve) => {
                     const n = scenarioChunkLoaded + 1;
                     const s = document.createElement("script");
-                    s.src = `scenarios/scenarios.part${n}.js`;
+                    s.src = scenarioAssetUrl(`scenarios/scenarios.part${n}.js`);
                     s.onload = () => { scenarioChunkLoaded = n; scenarioChunkLoading = false; updateScenarioLoadingUI(); resolve(); };
                     s.onerror = () => { scenarioChunkLoading = false; updateScenarioLoadingUI(); resolve(); };
                     document.head.appendChild(s);
