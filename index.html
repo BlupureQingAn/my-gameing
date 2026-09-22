@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="color-scheme" content="only light">
-    <title>云吞吞文游官网 - AI 互动剧情游戏 | 边玩文游边学英语 · 恋爱/ABO/古风/悬疑原创剧本</title>
+    <title>云吞吞文游官网 - AI 互动剧情游戏 | 边玩文游学英语·日语·韩语 · 恋爱/ABO/古风/悬疑原创剧本</title>
     <link rel="canonical" href="https://bitlife.blupure.cn/">
     <!-- rel="shortcut icon" 是 Bing/老版抓取器唯一认得的 favicon 声明,与 rel="icon" 并存不冲突 -->
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
@@ -14,7 +14,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
     <link rel="manifest" href="/site.webmanifest">
     <meta name="description" content="云吞吞文游官方网站：AI 互动剧情游戏平台，恋爱、ABO、修仙、都市、悬疑等 20+ 题材原创剧本，自由选择开局、改写主角命运，与 NPC 深度互动聊天。官方网页版，浏览器即玩，无需下载任何 App，认准 bitlife.blupure.cn。">
-    <meta name="keywords" content="云吞吞,云吞吞文游,云吞吞文游官网,云吞吞官网,AI文游,互动小说,AI剧情游戏,文字游戏,恋爱游戏,修仙游戏,角色扮演">
+    <meta name="keywords" content="云吞吞,云吞吞文游,云吞吞文游官网,云吞吞官网,AI文游,互动小说,AI剧情游戏,文字游戏,恋爱游戏,修仙游戏,角色扮演,学英语,学日语,学韩语,边玩边学,剧情学英语,AI学英语,JLPT,TOPIK">
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#efe3cf">
     <meta property="og:type" content="website">
@@ -5457,10 +5457,10 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <span class="hmb-cta">去创作 ›</span>
                 </div>
                 <div id="lang-entry-banner" class="lang-entry-banner" onclick="switchView('view-lang')">
-                    <span class="leb-badge">EN</span>
+                    <span class="leb-badge" id="lang-entry-badge">EN</span>
                     <div class="leb-main">
-                        <div class="leb-title">语言文游 · 边玩文游边学英语</div>
-                        <div class="leb-sub">英语原生剧本 · 五档难度 · 点句即译 · 生词自动收</div>
+                        <div class="leb-title" id="lang-entry-title">语言文游 · 边玩文游边学英语</div>
+                        <div class="leb-sub" id="lang-entry-sub">英语原生剧本 · 五档难度 · 点句即译 · 生词自动收</div>
                     </div>
                     <span class="leb-arrow">›</span>
                 </div>
@@ -5497,7 +5497,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <img class="lang-hall-img" src="lang/hall-top.webp" alt="语言文游" loading="lazy">
                 <div style="margin-top:10px;">
                     <div class="list-title" style="margin:0;font-size:1.05rem;">把云吞吞当语言教练</div>
-                    <div class="list-sub" style="margin-top:2px;">英语原生文游剧本 · 边玩边学 · 五档词汇难度随你调 · 点句即译，点词进生词本</div>
+                    <div class="list-sub" id="lang-home-sub" style="margin-top:2px;">英语原生文游剧本 · 边玩边学 · 五档词汇难度随你调 · 点句即译，点词进生词本</div>
                 </div>
 
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;">
@@ -5513,7 +5513,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
                         <div class="list-title" style="margin:0;">▶ 继续学习</div>
                     </div>
-                    <div class="list-sub">接着上次的英语进度玩</div>
+                    <div class="list-sub" id="lang-continue-sub">接着上次的英语进度玩</div>
                     <div id="lang-home-continue" style="margin-top:6px;"></div>
                 </div>
 
@@ -5552,7 +5552,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <button type="button" class="top-nav-btn" data-view="view-lang-leaderboard" onclick="LangController.goLeaderboard()">排行榜</button>
                 </div>
 
-                <div class="list-title" style="margin:0;">① 选择语言</div>
+                <div class="list-title" style="margin:0;">🌐 选择语言 <span class="list-sub" style="margin-left:4px;">词库/剧本/生词本都按这里选的语种走</span></div>
                 <div class="lang-picker" id="lang-picker">
                     <button type="button" class="lang-lang-card active" data-lang="en" onclick="LangController.selectLang('en')"><span class="lang-badge en">EN</span><span>英语</span><span class="list-sub" style="margin:0;">已上线</span></button>
                     <button type="button" class="lang-lang-card" data-lang="ja" onclick="LangController.selectLang('ja')"><span class="lang-badge ja">JA</span><span>日语</span><span class="list-sub" style="margin:0;">JLPT 词库已上线 · 剧本制作中</span></button>
@@ -5562,14 +5562,14 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <div id="lang-today-box" style="margin-top:12px;"></div>
 
                 <div class="list-title" style="margin:0;" id="lang-learn-band">🎯 我的学习档 <span class="list-sub" style="margin-left:4px;">拖动滑块选择，松手即生效</span></div>
-                <div class="list-sub">玩哪档卡就学哪档词库——心里没底就从 HS / CET4 的校园生活卡起步，玩着吃力或太轻松，随时回来换一档。</div>
+                <div class="list-sub" id="lang-band-sub">玩哪档卡就学哪档词库——心里没底就从 HS / CET4 的校园生活卡起步，玩着吃力或太轻松，随时回来换一档。</div>
                 <div id="lang-hint"></div>
                 <div id="lang-band-result" style="display:none;"></div>
 
                 <div class="list-title" style="margin-top:18px;" id="lang-learn-imm">🌊 学习设置 · 沉浸模式 <span class="list-sub" style="margin-left:4px;">游戏中可随时改</span></div>
                 <div class="lang-picker" id="lang-immersion-picker">
                     <button type="button" class="lang-lang-card active" data-m="progressive" onclick="LangController.setImmersion('progressive')"><span style="font-size:1.35rem;">🌱</span><span>渐进沉浸 <span class="lang-badge en" style="width:auto;height:auto;border-radius:8px;padding:1px 7px;font-size:.62rem;">推荐</span></span><span class="list-sub" style="margin:0;">译文随剧情推进逐渐退场</span></button>
-                    <button type="button" class="lang-lang-card" data-m="full" onclick="LangController.setImmersion('full')"><span style="font-size:1.35rem;">🌊</span><span>全沉浸</span><span class="list-sub" style="margin:0;">纯英语体验，辅助全部手动触发</span></button>
+                    <button type="button" class="lang-lang-card" data-m="full" onclick="LangController.setImmersion('full')"><span style="font-size:1.35rem;">🌊</span><span>全沉浸</span><span class="list-sub" id="lang-imm-full-desc" style="margin:0;">纯英语体验，辅助全部手动触发</span></button>
                 </div>
 
                 <div class="list-title" style="margin-top:18px;" id="lang-learn-stats">📊 学习统计与周报 <span class="list-sub" id="lang-learn-stats-sub" style="margin-left:4px;">玩英语剧本、复习生词都会累计学习时长</span></div>
@@ -23411,9 +23411,9 @@ window.LoveEngine = (() => {
         return '<div data-cid="' + cardCid(c) + '" class="hb-card">' +
             '<div class="hb-cover" id="lb-cover-' + window.CoverService.safeId(c.id) + '"><img class="scc-img" alt="" loading="lazy"><span class="scc-emoji">' + icon + "</span></div>" +
             '<div class="hb-tag">' + tagTxt + "</div>" +
-            '<div class="hb-title">' + api.esc(String(c.title_zh || c.title || "英语剧本")) + "</div>" +
-            '<div class="hb-sub">' + api.esc(String(c.title || "")) + (has ? " · 英语进度已到第 " + (r || 1) + " 轮" : "") + "</div>" +
-            '<div class="hb-foot"><span class="hb-plays">EN 原生 · 词库随你的学习档</span>' +
+            '<div class="hb-title">' + api.esc(String(c.title_zh || c.title || (api.langName() + "剧本"))) + "</div>" +
+            '<div class="hb-sub">' + api.esc(String(c.title || "")) + (has ? " · " + api.langName() + "进度已到第 " + (r || 1) + " 轮" : "") + "</div>" +
+            '<div class="hb-foot"><span class="hb-plays">' + LANG_TAG_INFO[langKeyOf(c)][0] + ' 原生 · 词库随你的学习档</span>' +
             '<span class="hb-play-btn mini-btn primary">' + playTxt + "</span></div></div>";
     }
     /* M8c:剧本库网格卡(文游首页同款 scenario-card:4:3 封面 + 徽标 + 详情/播放按钮);卡主体点击=播放,详情按钮单独弹层 */
@@ -23425,7 +23425,7 @@ window.LoveEngine = (() => {
         return '<div data-cid="' + cardCid(c) + '" class="scenario-card"><div class="scenario-card-main">' +
             '<div class="scenario-card-cover theme-' + themeKey + '" id="llc-cover-' + window.CoverService.safeId(c.id) + '">' +
             '<img class="scc-img" alt="" loading="lazy"><span class="scc-emoji">' + icon + "</span></div>" +
-            '<div class="list-title">' + api.esc(String(c.title_zh || c.title || "英语剧本")) + "</div>" +
+            '<div class="list-title">' + api.esc(String(c.title_zh || c.title || (api.langName() + "剧本"))) + "</div>" +
             '<div class="scenario-badges">' +
             (loveTagOf(c) ? '<span class="scenario-badge love">' + loveTagOf(c) + "</span>" : "") +
             langBadgeOf(c) +
@@ -23440,9 +23440,9 @@ window.LoveEngine = (() => {
     function contRowHtml(c) {
         var r = cardRoundOf(c);
         return '<div data-cid="' + cardCid(c) + '" class="l6-row"><div class="l6-row-band lang-' + langKeyOf(c) + '">' + LANG_TAG_INFO[langKeyOf(c)][0] + "</div>" +
-            '<div class="l6-row-main"><div class="l6-row-t">' + api.esc(String(c.title_zh || c.title || "英语剧本")) + "</div>" +
-            '<div class="l6-row-sub">' + api.esc(String(c.title || "")) + " · 英语进度已到第 " + (r || 1) + " 轮</div></div>" +
-            '<span class="lang-badge en" style="width:auto;height:auto;border-radius:8px;padding:2px 8px;font-size:.6rem;">继续</span><span class="l6-row-go">›</span></div>';
+            '<div class="l6-row-main"><div class="l6-row-t">' + api.esc(String(c.title_zh || c.title || (api.langName() + "剧本"))) + "</div>" +
+            '<div class="l6-row-sub">' + api.esc(String(c.title || "")) + " · " + api.langName() + "进度已到第 " + (r || 1) + " 轮</div></div>" +
+            '<span class="lang-badge ' + langKeyOf(c) + '" style="width:auto;height:auto;border-radius:8px;padding:2px 8px;font-size:.6rem;">继续</span><span class="l6-row-go">›</span></div>';
     }
     /* ---- 云端档案同步(M2):已登录用户手选档/沉浸模式存 PB lang_profiles,换设备不丢 ---- */
     var API_BASE = /blupure\.cn$/i.test(location.hostname) ? location.origin : "https://ai.blupure.cn";
@@ -23460,6 +23460,7 @@ window.LoveEngine = (() => {
             if (!$("view-lang")) return;
             api.renderLangPicker();
             api.renderPicker();
+            api.applyLangCopy(); /* 首页入口横幅按已存语种改写(进语言页前也要对) */
             api.showBand();
             api.loadRemote();
             api.loadLangCards();
@@ -23485,7 +23486,7 @@ window.LoveEngine = (() => {
         /* M6a/M8d:语言页组视图进入钩子(switchView 调用);生词本独立子页进入即加载词表 */
         onShow: function (viewId) {
             api.syncSubNav(viewId);
-            if (viewId === "view-lang") { api.renderHome(); return; }
+            if (viewId === "view-lang") { api.applyLangCopy(); api.renderHome(); return; }
             if (viewId === "view-lang-learn") { api.refresh(); api.renderLearnMeta(); api.renderToday(); api.renderLearnStats(false); return; }
             if (viewId === "view-lang-vocab") { api.renderLearnMeta(); api.refreshVocab(); return; }
             if (viewId === "view-lang-leaderboard") { api.renderLeaderboard(); }
@@ -23876,7 +23877,7 @@ window.LoveEngine = (() => {
                 if (!window.__LANG_CARDS_LOADING) api.loadLangCards();
             } else if (!lcs.length) {
                 if (wrap) wrap.style.display = "none";
-                if (sub) sub.textContent = "英语原生剧本还在上架中，稍后再来看看～";
+                if (sub) sub.textContent = api.langName() + "原生剧本还在上架中，稍后再来看看～";
             } else {
                 if (wrap) wrap.style.display = "block";
                 var cards = api.recommendFor(lcs).slice(0, 6);
@@ -24215,6 +24216,44 @@ window.LoveEngine = (() => {
             box.innerHTML = keeps.map(contRowHtml).join("");
             bindCardClicks(box);
         },
+        /* 当前语种中文名(英语/日语/韩语):散在各处的兜底文案用它拼,避免再写死"英语" */
+        langName: function () { return LANG_TAG_INFO[curLang()][1]; },
+        /* 语种相关静态文案集中改写(2026-09-22):日韩上线后页面里仍写死"英语"会误导,
+           入口横幅/语言首页/学习中心/沉浸模式全部随当前语种;新增语种只加一行 */
+        applyLangCopy: function () {
+            var lg = curLang(), tag = LANG_TAG_INFO[lg][0];
+            var C = {
+                en: {
+                    entryTitle: "语言文游 · 边玩文游边学英语",
+                    entrySub: "英语原生剧本 · 五档难度 · 点句即译 · 生词自动收",
+                    homeSub: "英语原生文游剧本 · 边玩边学 · 五档词汇难度随你调 · 点句即译，点词进生词本",
+                    continueSub: "接着上次的英语进度玩",
+                    bandSub: "玩哪档卡就学哪档词库——心里没底就从 HS / CET4 的校园生活卡起步，玩着吃力或太轻松，随时回来换一档。",
+                    fullImmDesc: "纯英语体验，辅助全部手动触发"
+                },
+                ja: {
+                    entryTitle: "语言文游 · 边玩文游边学日语",
+                    entrySub: "日语原生剧本 · JLPT N5-N1 五档 · 点句即译 · 生词自动收",
+                    homeSub: "日语原生文游剧本 · 边玩边学 · JLPT N5-N1 词汇难度随你调 · 点句即译，点词进生词本",
+                    continueSub: "接着上次的日语进度玩",
+                    bandSub: "玩哪档卡就学哪档词库——心里没底就从 N5 / N4 的日常场景卡起步（假名短句也读得下去），玩着吃力或太轻松，随时回来换一档。",
+                    fullImmDesc: "纯日语体验，辅助全部手动触发"
+                },
+                ko: {
+                    entryTitle: "语言文游 · 边玩文游边学韩语",
+                    entrySub: "韩语原生剧本 · TOPIK 初中高三档 · 点句即译 · 生词自动收",
+                    homeSub: "韩语原生文游剧本 · 边玩边学 · TOPIK 初中高词汇难度随你调 · 点句即译，点词进生词本",
+                    continueSub: "接着上次的韩语进度玩",
+                    bandSub: "玩哪档卡就学哪档词库——心里没底就从 TOPIK 初级的生活场景卡起步（基础短句为主），玩着吃力或太轻松，随时回来换一档。",
+                    fullImmDesc: "纯韩语体验，辅助全部手动触发"
+                }
+            }[lg] || null;
+            if (!C) return;
+            var map = { "lang-entry-badge": tag, "lang-entry-title": C.entryTitle, "lang-entry-sub": C.entrySub,
+                "lang-home-sub": C.homeSub, "lang-continue-sub": C.continueSub, "lang-band-sub": C.bandSub,
+                "lang-imm-full-desc": C.fullImmDesc };
+            for (var k in map) { var el = document.getElementById(k); if (el) el.textContent = map[k]; }
+        },
         /* 剧本库标题/副标题/空态按当前语种(2026-09-19:日韩入口解锁后,空库仍写"英语剧本库"会误导) */
         renderLibMeta: function () {
             var lg = curLang(), n = LANG_TAG_INFO[lg][1], exam = lg === "ja" ? "JLPT" : "TOPIK";
@@ -24238,6 +24277,8 @@ window.LoveEngine = (() => {
             if (s1) s1.textContent = "玩" + n + "剧本、复习生词都会累计学习时长";
             var s2 = $("lang-vocab-sub");
             if (s2) s2.textContent = "玩" + n + "剧本时：轻点句子看整句译文，点蓝色虚线的生词看释义——点过的词会收进这里，可在「新学 → 眼熟 → 已掌握」之间手动划。";
+            /* 入口横幅/语言首页/学习档/沉浸模式同样随语种(2026-09-22) */
+            try { api.applyLangCopy(); } catch (e) {}
         },
         renderLibrary: function () {
             var rows = $("lang-lib-grid"); if (!rows) return;
@@ -24283,7 +24324,7 @@ window.LoveEngine = (() => {
             rows.innerHTML = list.map(langGridCardHtml).join("");
             for (i = 0; i < list.length; i++) window.CoverService.paint("llc-cover-" + window.CoverService.safeId(list[i].id), list[i]);
             bindCardClicks(rows);
-            hint(profile.band ? "" : "点卡即玩：英语原生剧本，词库按你在「学习中心」选的学习档走——建议先选好档，推荐与词汇难度更贴你。", "lang-lib-hint");
+            hint(profile.band ? "" : "点卡即玩：" + api.langName() + "原生剧本，词库按你在「学习中心」选的学习档走——建议先选好档，推荐与词汇难度更贴你。", "lang-lib-hint");
         },
         /* M8c:语言卡详情弹层(封面大图 + 中英标题 + 档/题材 + 英文简介 + 主角;播放按钮从弹层进入) */
         openLangDetail: function (cid) {
@@ -24302,7 +24343,7 @@ window.LoveEngine = (() => {
             var summary = String(w.summary || "").replace(/\s+/g, " ").trim().slice(0, 340);
             var html =
                 '<div class="lgd-cover" id="lgd-cover-' + window.CoverService.safeId(c.id) + '"><img class="scc-img" alt="" loading="lazy"><span class="scc-emoji">' + (THEME_ICON[String(c.theme || "")] || "📖") + "</span></div>" +
-                '<div class="lgd-title">' + api.esc(String(c.title_zh || c.title || "英语剧本")) + "</div>" +
+                '<div class="lgd-title">' + api.esc(String(c.title_zh || c.title || (api.langName() + "剧本"))) + "</div>" +
                 '<div class="lgd-en">' + api.esc(String(c.title || "")) + " · " + langNameOf(c) + "原生剧本</div>" +
                 '<div class="lgd-badges">' +
                 (loveTagOf(c) ? '<span class="scenario-badge love">' + loveTagOf(c) + "</span>" : "") +
