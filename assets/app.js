@@ -3711,7 +3711,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const icon = STAT_ICON_SVG[s.icon] || STAT_ICON_SVG[s.label] || STAT_ICON_SVG["✨"];
             return `<span class="psb-stat-bar"><span><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="${icon}"/></svg>${MarkdownService.escapeHtml(s.label || "")}</span><span class="stat-track"><span class="stat-fill" style="width:${pct}%;background:${color};"></span></span><span class="stat-val">${MarkdownService.escapeHtml(vStr)}</span></span>`;
         }
-        // 角色面板折叠(2026-09-22):收起后只留头像+姓名,把竖向空间还给剧情区。
+        // 角色面板折叠(2026-09-22):收起后只留头像+姓名,把竖向空间还给剧情区。**默认收起**(小徐 2026-09-22 定)。
         // 折叠态挂在容器 class 上而不是写子元素 style——renderPlayStatusBar 每次只重写 innerHTML,容器 class 不受影响。
         const PSB_COLLAPSE_KEY = "bitlife_psb_collapsed_v1";
         // 折叠箭头:google/material-design-icons navigation/expand_less/24px(收起态由 CSS rotate 180° 复用同一个图标)
@@ -3719,7 +3719,10 @@ function rebuildChoicesBlock(body, labels = []) {
         let _psbCollapsed = null;   // 内存兜底:localStorage 写失败(配额满)时本会话仍能折叠
         function isPlayStatusBarCollapsed() {
             if (_psbCollapsed !== null) return _psbCollapsed;
-            try { _psbCollapsed = localStorage.getItem(PSB_COLLAPSE_KEY) === "1"; } catch (e) { _psbCollapsed = false; }
+            let raw = null;
+            try { raw = localStorage.getItem(PSB_COLLAPSE_KEY); } catch (e) { raw = null; }
+            // 默认收起:只有**显式存过 "0"** 才算展开——没存过(新用户/清了缓存)或读不到都走默认收起
+            _psbCollapsed = raw !== "0";
             return _psbCollapsed;
         }
         function applyPlayStatusBarCollapsed() {
