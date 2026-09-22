@@ -28,6 +28,7 @@
     var vocabLoadedFor = "";   // vocabMap 当前装的是哪个语种的词;与 curLearnLang() 不一致就要重拉
     var vocabReqSeq = 0;       // 请求令牌:切语种时旧请求可能后到,令牌对不上就丢弃(否则会把旧语种词表盖回来)
     var vocabReq = null;
+    var vocabErr = "";         // ""=正常;"auth"=登录态失效;"net"=其它失败。失败绝不能渲染成"还没有生词"——那是"词被删了"
     /* 生词本视图态(2026-09-21):两个 Tab 互斥渲染,不同时铺两套内容 */
     var vocabTab = "due";   // due=📆今日复习 | all=📚全部生词库
     var vocabQ = "";        // Tab2 搜索词
@@ -174,32 +175,51 @@
         var want = curLearnLang();
         if (vocabLoaded && vocabLoadedFor === want) { if (cb) cb(); return; }
         var seq = ++vocabReqSeq;
-        if (!token()) { vocabLoaded = true; vocabLoadedFor = want; if (cb) cb(); return; }
+        if (!token()) { vocabLoaded = true; vocabLoadedFor = want; vocabErr = ""; if (cb) cb(); return; }
         var p = fetch(API_BASE + "/api/lang/vocab?lang=" + encodeURIComponent(want), { headers: { "X-Auth-Token": "Bearer " + token() } })
-            .then(function (r) { return r.ok ? r.json() : null; })
+            /* 失败必须抛出去,不能塌成 null:null 会被当成"这个语种一条词都没有",
+               于是 401/500 显示成「还没有英语生词」——用户看到的就是"我的词被删了"。
+               更要命的是下面会把 vocabMap 清空,连本地已有的词都跟着没。 */
+            .then(function (r) {
+                if (!r.ok) { var e = new Error("HTTP " + r.status); e.status = r.status; throw e; }
+                return r.json();
+            })
             .then(function (d) {
                 if (seq !== vocabReqSeq) return;   // 已被更新的请求取代:连渲染带缓存一起放弃
+                if (!d || !Array.isArray(d.items)) { var e2 = new Error("bad payload"); e2.status = 0; throw e2; }
                 var nm = {}, i, it, key;
-                if (d && d.items) {
-                    for (i = 0; i < d.items.length; i++) {
-                        it = d.items[i];
-                        key = String(it.term || "").toLowerCase();
-                        if (key) { nm[key] = it; }
-                    }
+                for (i = 0; i < d.items.length; i++) {
+                    it = d.items[i];
+                    key = String(it.term || "").toLowerCase();
+                    if (key) { nm[key] = it; }
                 }
                 // 只标记重建,不清 wordInfo:那里还混着本局剧情注入的 gloss 表达,清掉会把正文高亮砸没。
                 // 旧语种的词留在池子里无害 —— buildWordRe 按当前语种筛词形(见其 cjk 分支)。
                 reDirty = true;
                 vocabMap = nm;
-                noteWords(d && d.items ? d.items : [], "vocab");
+                noteWords(d.items, "vocab");
                 vocabLoaded = true;
                 vocabLoadedFor = want;
+                vocabErr = "";
                 refreshAll();
                 if (cb) cb();
-            }).catch(function () { if (seq === vocabReqSeq) { vocabLoaded = true; if (cb) cb(); } });
+            }).catch(function (err) {
+                if (seq !== vocabReqSeq) return;
+                /* 失败时 vocabMap 一律不动:宁可让用户继续看到上次拉到的词,也不清成空。
+                   vocabLoadedFor 必须一起写 —— 只写 vocabLoaded 的话 renderLearn 会认为
+                   "这个语种还没加载过",于是又发一次请求,无限循环卡在「生词加载中…」。 */
+                vocabLoaded = true;
+                vocabLoadedFor = want;
+                vocabErr = (err && Number(err.status) === 401) ? "auth" : "net";
+                if (cb) cb();
+            });
         vocabReq = p;
         return p;
     }
+    /* 失败态只能由显式入口解开(点重试/进生词本页/切语种/登录):打回"没加载过"再拉一次。
+       不能改成"vocabErr 时自动重拉"——MutationObserver 每 1.5s 会调一次 loadVocab,断网时会变成自转轮询。 */
+    function vocabReset() { vocabErr = ""; vocabLoaded = false; vocabLoadedFor = ""; }
+    function retryVocab() { vocabReset(); loadVocabNow(); }
     /* 渲染前先把要渲染的那个语种的词表拿到手:异步没回来时旧词表还在,直接渲染会闪一屏旧语种生词 */
     function loadVocabNow(cb) {
         var p = loadVocab(cb);
@@ -1623,6 +1643,12 @@
             loadVocabNow();
             return;
         }
+        if (vocabErr) {
+            box.innerHTML = vocabErr === "auth"
+                ? '<div class="lg-vr"><div class="lg-vr-main"><div class="lg-vr-term">登录状态过期了</div><div class="lg-vr-gl">' + ln + '生词都还在云端，重新登录就能看到。</div><button type="button" class="mini-btn ghost" data-act="vocab-login" style="margin-top:10px;">重新登录</button></div></div>'
+                : '<div class="lg-vr"><div class="lg-vr-main"><div class="lg-vr-term">' + ln + '生词没加载出来</div><div class="lg-vr-gl">网络开小差了。你的生词还在云端，点下面重试就好。</div><button type="button" class="mini-btn ghost" data-act="vocab-retry" style="margin-top:10px;">重新加载</button></div></div>';
+            return;
+        }
         var all = vocabAllList();
         if (!all.length) {
             box.innerHTML = '<div class="lg-vr"><div class="lg-vr-main"><div class="lg-vr-term">还没有' + ln + '生词</div><div class="lg-vr-gl">去玩一个' + ln + '剧本吧——游戏里点查过的词和关键表达会自动出现在这里。</div></div></div>';
@@ -1663,10 +1689,12 @@
         if (!main || !box) return;
         var boxClick = box.addEventListener("click", function (e) {
             var b = e.target && e.target.closest
-                ? e.target.closest('[data-act="vtab"], [data-act="rvgo"], [data-act="vsrc"], [data-act="st"], [data-act="rv"]')
+                ? e.target.closest('[data-act="vtab"], [data-act="rvgo"], [data-act="vsrc"], [data-act="st"], [data-act="rv"], [data-act="vocab-retry"], [data-act="vocab-login"]')
                 : null;
             if (!b) return;
             var act = b.getAttribute("data-act");
+            if (act === "vocab-retry") { retryVocab(); return; }
+            if (act === "vocab-login") { vocabReset(); openLoginSheet(); return; }   // 先打回状态,登录后 onAuthChanged 会重拉
             if (act === "vtab") {                       // 双 Tab 互斥切换
                 var tb = b.getAttribute("data-tab");
                 if (tb !== "due" && tb !== "all") return;
@@ -2090,16 +2118,48 @@
     var langBankCache = {};      // band -> items[]
     var langBankMapCache = {};   // band -> {word: item}
     var langBankLoading = {};    // band -> Promise(防并发)
-    function bankCacheKey(band) { return "lang_bank_v3_" + band; }   // v3:2026-09-13 六级起累积并集(六级5713/考研6277/托福8128),旧 v2 弃用并清理
-    (function () {   /* v1/v2 旧词库缓存一次性清理(累加后旧档数据已过期,不删会白占空间) */
+    function bankCacheKey(band) { return "lang_bank_v4_" + band; }
+    /* v4(2026-09-22):旧版把五档并集整批塞进 localStorage —— 六级起累积(六级5713/考研6277/托福8128),
+       五档合计约 265 万字符,浏览器按 UTF-16 算 ≈5MB,正好压满单源配额。setItem 抛 QuotaExceededError
+       被下面静默吞掉,于是"缓存"其实从没写进去过,每次进学习中心都要重下 300-780KB(用户反馈的"加载时间过长");
+       更糟的是配额被占满后,app 其它模块的 localStorage 写入也会开始静默失败。
+       改成预算内缓存:超预算先逐出最久未用的那档,配额仍满则清空词库缓存再试,再失败就只留内存副本。
+       v1/v2/v3 一并清理 —— 旧数据既占地方,又正是压垮配额的那批。 */
+    var BANK_CACHE_BUDGET = 1000000;   // 词库缓存总预算(字符数 ≈2MB UTF-16);余量留给存档/会话/生词本
+    var BANK_LRU_KEY = "lang_bank_lru";
+    (function () {
         try {
             var bs = ["hs", "cet4", "cet6", "ky", "toefl"];
             for (var i = 0; i < bs.length; i++) {
                 localStorage.removeItem("lang_bank_v1_" + bs[i]);
                 localStorage.removeItem("lang_bank_v2_" + bs[i]);
+                localStorage.removeItem("lang_bank_v3_" + bs[i]);
             }
+            localStorage.removeItem(BANK_LRU_KEY);
         } catch (e) {}
     })();
+    function bankCachePut(key, s) {
+        try {
+            var lru = [], i;
+            try { var a = JSON.parse(localStorage.getItem(BANK_LRU_KEY) || "[]"); if (Array.isArray(a)) lru = a; } catch (e2) {}
+            lru = lru.filter(function (x) { return x && x.k && x.k !== key && localStorage.getItem(x.k) !== null; });
+            lru.unshift({ k: key, n: s.length });
+            var tot = 0;
+            for (i = 0; i < lru.length; i++) tot += Number(lru[i].n) || 0;
+            while (lru.length > 1 && tot > BANK_CACHE_BUDGET) { tot -= Number(lru[lru.length - 1].n) || 0; localStorage.removeItem(lru.pop().k); }
+            localStorage.setItem(key, s);
+            localStorage.setItem(BANK_LRU_KEY, JSON.stringify(lru));
+            return;
+        } catch (e) {}
+        try {   // 配额被别的模块先占满了:把词库缓存全让出来再试一次
+            var all = [], j;
+            for (j = 0; j < localStorage.length; j++) { var k = localStorage.key(j); if (k && k.indexOf("lang_bank_v4_") === 0) all.push(k); }
+            for (j = 0; j < all.length; j++) localStorage.removeItem(all[j]);
+            localStorage.removeItem(BANK_LRU_KEY);
+            localStorage.setItem(key, s);
+            localStorage.setItem(BANK_LRU_KEY, JSON.stringify([{ k: key, n: s.length }]));
+        } catch (e) {}
+    }
     function loadLangBank(band, force) {
         band = String(band || "").trim();
         if (!band) return Promise.resolve(null);
@@ -2124,7 +2184,7 @@
                 langBankLoading[band] = null;
                 if (!d || !d.ok || !Array.isArray(d.items)) return null;
                 langBankCache[band] = d.items;
-                try { localStorage.setItem(bankCacheKey(band), JSON.stringify({ band: band, total: d.total || d.items.length, items: d.items })); } catch (e) {}
+                bankCachePut(bankCacheKey(band), JSON.stringify({ band: band, total: d.total || d.items.length, items: d.items }));
                 try { if (chWords.band === band && !chWords.ready) ensureChWords(); } catch (e) {}   // M6d4:词库就绪补抽本章候选
                 try { flushPendSens(); } catch (e) {}   // M6d3 补:挂起的句子补切(词库兜底)
                 return d.items;
@@ -2150,7 +2210,7 @@
     }
     window.LangAssist = {
         loadBank: loadLangBank, bankItem: langBankItem, bankStatus: langBankStatus,
-        reloadVocab: loadVocabNow,          // 切语种后重拉生词本(loadVocabNow 是函数声明,提升到此处可用)
+        reloadVocab: retryVocab,            // 切语种/重新登录后重拉生词本;走 retryVocab 才能解开上次的失败态
         getChapterWords: getChapterWords,   // M6d4:当前章候选词(供 LangEngine 续写注入;内部触发预载/抽词)
         /* R1 生词回投取样:续写注入用;优先复习到期→未掌握新学→眼熟补位;只取单词(expression 跳过),≤10;未加载时静默触发拉取 */
         reviewVocabSample: function (max) {
@@ -2188,9 +2248,10 @@
             }
             return out.slice(0, cap);
         },
-        /* M8d:生词本独立子页 — 切页钩子直接调,绕开 MutationObserver 1.5s 节流 */
-        refreshVocab: function () { loadVocabNow(); },
-        reloadVocabForLang: function () { loadVocabNow(); },
+        /* M8d:生词本独立子页 — 切页钩子直接调,绕开 MutationObserver 1.5s 节流;
+           进这一页就是明确的"我要看生词"动作,顺带把上次的失败态解开重拉 */
+        refreshVocab: retryVocab,
+        reloadVocabForLang: retryVocab,
         /* M9F:渲染方挂卡后注册双语(卡首轮/渐进第 2 轮 AI 输出)→ 同步烘烤行间译文,免 AI 点译;
            attachBiAttr 供 finishStreaming 在 mountedHtml 快照前先写 data-bi(历史重放还原用) */
         attachStoryBi: attachStoryBi,

@@ -3832,14 +3832,16 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                     let page = 1;
                     for (;;) {
                         const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'&&lang='${escapePocketBaseFilterValue(lang)}'`);
-                        const q = await pbAdminFetch(env, `/api/collections/lang_vocab/records?perPage=500&page=${page}&fields=id,status,created&filter=${f}`);
+                        /* 字段名必须是 created_at:这个集合的时间字段是自定义 autodate(不是 PB 内置 created),
+                           写错时 PB 不报错、只是把该字段整个漏掉,下面 it.created 恒 undefined → 本周新收生词永远 0 */
+                        const q = await pbAdminFetch(env, `/api/collections/lang_vocab/records?perPage=500&page=${page}&fields=id,status,created_at&filter=${f}`);
                         const d = await q.json().catch(() => ({}));
                         const items = d.items || [];
                         for (const it of items) {
                             vTotal++;
                             const st = Number(it.status || 0);
                             if (st === 1) vFam++; else if (st === 2) vMas++; else vNew++;
-                            const cISO = String(it.created || "").replace(" ", "T");
+                            const cISO = String(it.created_at || "").replace(" ", "T");
                             if (cISO) {
                                 const cd = new Date(cISO);
                                 if (!Number.isNaN(cd.getTime())) {

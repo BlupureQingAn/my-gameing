@@ -216,6 +216,7 @@
             myStatsCache = null;
             try { api.renderMyStats(); } catch (e) {}
             try { api.renderLearnStats(true); } catch (e) {}
+            api.refreshVocab();   // 重新登录后生词本要重拉:失败态的解药就在这里
         },
         /* M6a/M8d:语言页组视图进入钩子(switchView 调用);生词本独立子页进入即加载词表 */
         onShow: function (viewId) {
