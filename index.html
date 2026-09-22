@@ -5524,12 +5524,8 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <div class="list-title" id="lang-lib-title" style="margin:0;">英语剧本库</div>
                     <div class="list-sub" id="lang-lib-sub">英语原生剧本：词汇难度按你的学习档走（学习中心可调），点卡即玩（第一次玩 = 英语开局）</div>
 
-                    <div class="l6-chips" id="lang-lib-langs">
-                        <button type="button" class="l6-chip active" data-lang="" onclick="LangController.setLibFilter('lang','')">全部</button>
-                        <button type="button" class="l6-chip" data-lang="en" onclick="LangController.setLibFilter('lang','en')">英语</button>
-                        <button type="button" class="l6-chip" data-lang="ja" onclick="LangController.setLibFilter('lang','ja')">日语</button>
-                        <button type="button" class="l6-chip" data-lang="ko" onclick="LangController.setLibFilter('lang','ko')">韩语</button>
-                    </div>
+                    <!-- 这里原本有「全部/英语/日语/韩语」语种筛选行,2026-09-22 移除:
+                         本剧本库只装当前语种的卡(切语种走上方「选择语言」),再给一排语种筛选只会筛出空列表 -->
                     <div class="l6-chips" id="lang-lib-cats"></div>
                     <div class="l6-chips" id="lang-lib-genders">
                         <button type="button" class="l6-chip" data-gender="" onclick="LangController.setLibFilter('gender','')">全部</button>
@@ -5557,9 +5553,11 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
 
                 <div class="list-title" style="margin:0;">🌐 选择语言 <span class="list-sub" style="margin-left:4px;">词库/剧本/生词本都按这里选的语种走</span></div>
                 <div class="lang-picker" id="lang-picker">
-                    <button type="button" class="lang-lang-card active" data-lang="en" onclick="LangController.selectLang('en')"><span class="lang-badge en">EN</span><span>英语</span><span class="list-sub" style="margin:0;">已上线</span></button>
-                    <button type="button" class="lang-lang-card" data-lang="ja" onclick="LangController.selectLang('ja')"><span class="lang-badge ja">JA</span><span>日语</span><span class="list-sub" style="margin:0;">JLPT 词库已上线 · 剧本制作中</span></button>
-                    <button type="button" class="lang-lang-card" data-lang="ko" onclick="LangController.selectLang('ko')"><span class="lang-badge ko">KO</span><span>韩语</span><span class="list-sub" style="margin:0;">TOPIK 词库已上线 · 剧本制作中</span></button>
+                    <!-- 语种卡副标签(2026-09-22):原写「剧本制作中」,但日韩官方剧本早在库里(日语 5 张/韩语 5 张)——写死进度会随上架过期,
+                         统一改成「官方剧本持续更新中」这种不随数量失效的表述;三张卡都是静态文案,renderLangPicker 只管高亮,不接管这里 -->
+                    <button type="button" class="lang-lang-card active" data-lang="en" onclick="LangController.selectLang('en')"><span class="lang-badge en">EN</span><span>英语</span><span class="list-sub" style="margin:0;">官方剧本持续更新中</span></button>
+                    <button type="button" class="lang-lang-card" data-lang="ja" onclick="LangController.selectLang('ja')"><span class="lang-badge ja">JA</span><span>日语</span><span class="list-sub" style="margin:0;">JLPT 词库 · 官方剧本持续更新中</span></button>
+                    <button type="button" class="lang-lang-card" data-lang="ko" onclick="LangController.selectLang('ko')"><span class="lang-badge ko">KO</span><span>韩语</span><span class="list-sub" style="margin:0;">TOPIK 词库 · 官方剧本持续更新中</span></button>
                 </div>
 
                 <div id="lang-today-box" style="margin-top:12px;"></div>
@@ -23330,6 +23328,18 @@ window.LoveEngine = (() => {
     }
     var profile = { lang: "en" };
     try { var _p = JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}"); if (_p && typeof _p === "object") profile = _p; } catch (e) { }
+    /* 档位按语种各记一份(2026-09-22):profile.band 是单字段,切到日语会被日语档覆盖,切回英语就得重调。
+       bands 记住每个语种最后选的那档,切语种时先存回旧语种、再取新语种那份。
+       云端档案只有一个 band 字段(worker/PB 侧有值域校验),所以只有当前语种的档位跨设备同步,其余只在本机记住 */
+    function rememberBand(lang, band) {
+        if (!lang || !band) return;
+        if (!profile.bands || typeof profile.bands !== "object") profile.bands = {};
+        if (bandOrderOf(lang).indexOf(band) >= 0) profile.bands[lang] = band;
+    }
+    function bandForLang(lang) {
+        var b = profile.bands && profile.bands[lang];
+        return bandOrderOf(lang).indexOf(b) >= 0 ? b : "";
+    }
     /* M6b:在线英语专属卡(lang_cards 官方库)缓存,供列表渲染/选中卡 overlay/播放进入用 */
     window.LANG_CARDS_ONLINE = window.LANG_CARDS_ONLINE || [];
     window.__LANG_CARDS_READY = window.__LANG_CARDS_READY || false;
@@ -23338,13 +23348,15 @@ window.LoveEngine = (() => {
     (function () {
         var legacy = { a: "cet4", b: "cet6", c: "ky" };
         if (profile.band && legacy[profile.band]) profile.band = legacy[profile.band];
+        // 别在这里补记 bands:本行上面的 IIFE 跑在 LANG_TAG_INFO 定义之前,curLang() 会取到 undefined 并掀翻整个初始化;
+        // 老档案(只有单 band)的兜底交给 selectLang——切走前会先 rememberBand(旧语种, 当前档)
         save();
     })();
     function $(id) { return document.getElementById(id); }
     function save() { try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch (e) { } }
     function hint(t, boxId) { var h = $(boxId || "lang-hint"); if (h) h.textContent = t || ""; }
     /* M6a:剧本库筛选状态与语言页渲染(库=英语原生卡;首页=推荐行+继续行) */
-    var libFilter = { lang: "", cat: "", gender: "" };
+    var libFilter = { cat: "", gender: "" };
     var THEME_ICON = { cottage: "🏡", "retro-paper": "🥛", glass: "🚇", fantasy: "🏰", "sci-fi-hud": "🌊", liquid: "💧", gothic: "🕯️", ink: "🖋️", cyber: "🌆", minimal: "▦" };
     /* R1 恋爱攻略卡:love 标签/向别偏好(存 localStorage lang_gender_pref_v1,O2 服务端零改动);loveMatch 供推荐排序 */
     function loveTagOf(c) {
@@ -23514,9 +23526,10 @@ window.LoveEngine = (() => {
                     var p = d.profile;
                     // 语种随云档回来(换设备/清缓存后仍停在你的语种);语种变了要重拉该语种卡库
                     if (p && p.lang && LANG_TAG_INFO[p.lang] && p.lang !== curLang()) {
+                        rememberBand(curLang(), profile.band);   // 换语种前先把本机这份存回原语种名下
                         profile.lang = p.lang;
                         var od = bandOrderOf(p.lang);
-                        if (od.indexOf(profile.band) < 0) profile.band = bandDefOf(p.lang);
+                        if (od.indexOf(profile.band) < 0) profile.band = bandForLang(p.lang) || bandDefOf(p.lang);
                         window.__LANG_CARDS_READY = false;
                         window.__LANG_CARDS_LOADING = false;
                         window.LANG_CARDS_ONLINE = [];
@@ -23526,8 +23539,8 @@ window.LoveEngine = (() => {
                     if (p && p.band) {
                         if (p.immersion) profile.immersion = p.immersion;
                         // 云档 band 只在属于当前语种时才采纳(否则切语种后会被旧语种档位覆盖)
-                        if (bandOrderOf(curLang()).indexOf(p.band) >= 0) profile.band = p.band;
-                        else if (bandOrderOf(curLang()).indexOf(profile.band) < 0) profile.band = bandDefOf(curLang());
+                        if (bandOrderOf(curLang()).indexOf(p.band) >= 0) { profile.band = p.band; rememberBand(curLang(), p.band); }
+                        else if (bandOrderOf(curLang()).indexOf(profile.band) < 0) profile.band = bandForLang(curLang()) || bandDefOf(curLang());
                         save();
                     } else if (profile.band || profile.immersion) {
                         saveRemote();
@@ -23544,8 +23557,9 @@ window.LoveEngine = (() => {
         selectLang: function (code) {
             if (!LANG_TAG_INFO[code]) return;
             if (code === curLang()) { api.renderLangPicker(); return; }
+            rememberBand(curLang(), profile.band);          // 先把当前档存回旧语种名下
             profile.lang = code;
-            if (bandOrderOf(code).indexOf(profile.band) < 0) profile.band = bandDefOf(code);
+            profile.band = bandForLang(code) || bandDefOf(code);   // 新语种有记录就用记录,没有才落默认档
             save(); saveRemote();
             window.__LANG_CARDS_READY = false;
             window.__LANG_CARDS_LOADING = false;
@@ -23609,7 +23623,7 @@ window.LoveEngine = (() => {
         },
         setBand: function (k) {
             if (!BAND_INFO[k]) return;
-            profile.band = k; save(); saveRemote(); api.showBand();
+            profile.band = k; rememberBand(curLang(), k); save(); saveRemote(); api.showBand();
             hint("学习档已改为 " + BAND_INFO[k][0] + "（" + BAND_INFO[k][1] + "）——接下来玩的卡与词库按此档来。");
         },
         setImmersion: function (m) { profile.immersion = m; save(); saveRemote(); api.renderPicker(); hint(""); },
@@ -23882,7 +23896,7 @@ window.LoveEngine = (() => {
                 if (!window.__LANG_CARDS_LOADING) api.loadLangCards();
             } else if (!lcs.length) {
                 if (wrap) wrap.style.display = "none";
-                if (sub) sub.textContent = api.langName() + "原生剧本还在上架中，稍后再来看看～";
+                if (sub) sub.textContent = api.langName() + "官方剧本持续更新中，新卡上线后会出现在这里～";
             } else {
                 if (wrap) wrap.style.display = "block";
                 var cards = api.recommendFor(lcs).slice(0, 6);
@@ -24263,10 +24277,13 @@ window.LoveEngine = (() => {
                 ? "英语原生剧本：词汇难度按你的学习档走（学习中心可调），点卡即玩（第一次玩 = 英语开局）"
                 : (n + "原生剧本：词汇难度按你的 " + exam + " 档走（学习中心可调），点卡即玩");
         },
+        /* 空库文案(2026-09-22):原写「剧本正在制作中」是写死的进度声明,剧本早已上架时会变成假话;
+           改成「持续更新中」,无论库里是 0 张还是 20 张都成立。本函数只在当前语种一张线上卡都没有时才被调用 */
         libEmptyCopy: function () {
             var lg = curLang(), n = LANG_TAG_INFO[lg][1];
-            if (lg === "en") return "英语剧本库还是空的，稍后再来刷新看看～";
-            return n + "剧本正在制作中——" + (lg === "ja" ? "JLPT" : "TOPIK") + " 词库已就绪，剧本上线后会出现在这里～";
+            var tail = "官方剧本持续更新中，新卡上线后会出现在这里～";
+            if (lg === "en") return "英语剧本库暂时没有可玩的卡——" + tail;
+            return n + "剧本库暂时没有可玩的卡——" + (lg === "ja" ? "JLPT" : "TOPIK") + " 词库已就绪，" + tail;
         },
         /* 学习中心/生词本的静态文案同样按语种改写(2026-09-21:日韩上线后仍写"玩英语剧本"会误导) */
         renderLearnMeta: function () {
@@ -24294,9 +24311,7 @@ window.LoveEngine = (() => {
                 ch += '<button type="button" class="l6-chip' + (libFilter.cat === cat ? " active" : "") + '" onclick="LangController.setLibFilter(\'cat\',\'' + cat.replace(/'/g, "\\'") + '\')">' + api.esc(cat) + "</button>";
             }
             cats.innerHTML = ch;
-            /* 语言Tag chips 高亮(2026-09-13:难度 chips 已下线) */
-            var bts = document.querySelectorAll("#lang-lib-langs .l6-chip"), bi;
-            for (bi = 0; bi < bts.length; bi++) bts[bi].classList.toggle("active", (bts[bi].getAttribute("data-lang") || "") === libFilter.lang);
+            /* 语种筛选 chips 已下线(2026-09-22):库内只有当前语种的卡,语言由「选择语言」卡切换,不在这里筛 */
             /* R1 恋爱向别 chips 高亮 + 激活时提示向别偏好已记住 */
             var gts = document.querySelectorAll("#lang-lib-genders .l6-chip"), gi;
             for (gi = 0; gi < gts.length; gi++) gts[gi].classList.toggle("active", (gts[gi].getAttribute("data-gender") || "") === libFilter.gender);
@@ -24310,7 +24325,6 @@ window.LoveEngine = (() => {
             var list = [], i, c;
             for (i = 0; i < lcs.length; i++) {
                 c = lcs[i]; if (!c || !c.id) continue;
-                if (libFilter.lang && langKeyOf(c) !== libFilter.lang) continue;
                 if (libFilter.cat && String(c.category_zh || c.category || "") !== libFilter.cat) continue;
                 if (!loveFilterOk(c, libFilter.gender)) continue;
                 list.push(c);
