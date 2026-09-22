@@ -735,6 +735,34 @@
             font-size: 11px;
             padding: 3px 9px;
         }
+        /* 角色面板折叠(2026-09-22):收起后只留头像+姓名。选择器吃容器上的 .psb-collapsed,
+           子元素不带内联 style——renderPlayStatusBar 每次都重写 innerHTML,内联样式会被冲掉 */
+        .psb-toggle {
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            padding: 0;
+            border: none;
+            border-radius: 999px;
+            background: rgba(123,92,214,0.10);
+            color: #7b5cd6;
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+        }
+        .psb-toggle svg { transition: transform 0.2s ease; }
+        body[data-theme="dark"] .psb-toggle { background: rgba(157,123,240,0.16); color: #b79df5; }
+        /* 展开态箭头朝上(点=收起),收起态转 180° 朝下(点=展开);纯 CSS 翻转,避免重绘前图标不同步 */
+        #play-status-bar.psb-collapsed .psb-toggle svg { transform: rotate(180deg); }
+        #play-status-bar.psb-collapsed .psb-role,
+        #play-status-bar.psb-collapsed .psb-chips,
+        #play-status-bar.psb-collapsed .psb-stats { display: none; }
+        /* 收起后 .psb-chips 没了,它原本的 margin-left:auto 也随之失效 → 补到按钮上把这行推到最右 */
+        #play-status-bar.psb-collapsed .psb-toggle { margin-left: auto; }
+        #play-status-bar.psb-collapsed { padding-top: 5px; padding-bottom: 5px; }
         .heart-ladder { letter-spacing: 1px; color: #e05555; }
         .heart-ladder .empty { color: rgba(120,120,120,0.35); }
         .play-tabs { display: flex; gap: 6px; margin-bottom: 8px; }

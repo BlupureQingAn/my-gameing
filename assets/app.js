@@ -3711,6 +3711,36 @@ function rebuildChoicesBlock(body, labels = []) {
             const icon = STAT_ICON_SVG[s.icon] || STAT_ICON_SVG[s.label] || STAT_ICON_SVG["✨"];
             return `<span class="psb-stat-bar"><span><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="${icon}"/></svg>${MarkdownService.escapeHtml(s.label || "")}</span><span class="stat-track"><span class="stat-fill" style="width:${pct}%;background:${color};"></span></span><span class="stat-val">${MarkdownService.escapeHtml(vStr)}</span></span>`;
         }
+        // 角色面板折叠(2026-09-22):收起后只留头像+姓名,把竖向空间还给剧情区。
+        // 折叠态挂在容器 class 上而不是写子元素 style——renderPlayStatusBar 每次只重写 innerHTML,容器 class 不受影响。
+        const PSB_COLLAPSE_KEY = "bitlife_psb_collapsed_v1";
+        // 折叠箭头:google/material-design-icons navigation/expand_less/24px(收起态由 CSS rotate 180° 复用同一个图标)
+        const PSB_TOGGLE_ICON = "M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z";
+        let _psbCollapsed = null;   // 内存兜底:localStorage 写失败(配额满)时本会话仍能折叠
+        function isPlayStatusBarCollapsed() {
+            if (_psbCollapsed !== null) return _psbCollapsed;
+            try { _psbCollapsed = localStorage.getItem(PSB_COLLAPSE_KEY) === "1"; } catch (e) { _psbCollapsed = false; }
+            return _psbCollapsed;
+        }
+        function applyPlayStatusBarCollapsed() {
+            const box = document.getElementById("play-status-bar");
+            if (!box) return;
+            const c = isPlayStatusBarCollapsed();
+            box.classList.toggle("psb-collapsed", c);
+            const btn = box.querySelector(".psb-toggle");
+            if (btn) {
+                const lbl = c ? "展开角色面板" : "收起角色面板";
+                btn.setAttribute("aria-expanded", c ? "false" : "true");
+                btn.setAttribute("title", lbl);
+                btn.setAttribute("aria-label", lbl);
+            }
+        }
+        function togglePlayStatusBar() {
+            _psbCollapsed = !isPlayStatusBarCollapsed();
+            try { localStorage.setItem(PSB_COLLAPSE_KEY, _psbCollapsed ? "1" : "0"); } catch (e) { /* 配额满不影响本次折叠 */ }
+            applyPlayStatusBarCollapsed();
+        }
+        window.togglePlayStatusBar = togglePlayStatusBar;
         function renderPlayStatusBar(state) {
             const box = document.getElementById("play-status-bar");
             if (!box) return;
@@ -3744,7 +3774,9 @@ function rebuildChoicesBlock(body, labels = []) {
                     ${roleHtml}
                 </div>
                 <div class="psb-chips">${chips.join("")}</div>
+                <button type="button" class="psb-toggle" onclick="togglePlayStatusBar()"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="${PSB_TOGGLE_ICON}"/></svg></button>
                 ${statsHtml}`;
+            applyPlayStatusBarCollapsed();
         }
         // 事件分轮：按 user 消息切分 history 为"一轮事件 = 指令 + 后续回叙"
         function buildEventRounds(history) {
