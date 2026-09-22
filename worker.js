@@ -134,6 +134,18 @@ const MODEL_POOL = [
     { id: "or-nemotron-3-ultra",   url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "nvidia/nemotron-3-ultra-550b-a55b:free", dailyCap: 500, tier: 8, enabled: true },
     { id: "or-ox-alpha",           url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "stealth/ox-alpha",                 dailyCap: 500, tier: 8, enabled: false },
     { id: "or-lfm-2.5-2.6b",       url: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_KEY", model: "liquid/lfm-2.5-2.6b:free",          dailyCap: 500, tier: 9, enabled: false },
+    // ---- Cloudflare Workers AI（2026-09-22 小徐选定；免费档 10000 neurons/天，UTC 0 点重置）----
+    // 走 OpenAI 兼容 REST（/ai/v1/chat/completions），协议与池内其余条目完全一致 → 请求主循环零改动
+    // 选型 @cf/qwen/qwen3-30b-a3b-fp8：4,625 neurons/M in + 30,475 neurons/M out（$0.0509/$0.335 每 M）
+    //   2026-09-22 直连实测：单轮(system+3 轮历史,出 ~100 tokens)= 2.5-3 neurons → 10000 neurons/天 ≈ 3000 轮以上，
+    //   是目前免费池里额度最宽裕的一条；dailyCap 200 纯作保险丝(远不到额度),超额自动 fallback
+    //   上下文窗口 32,768(池内最小，够用:剧情轮总量 1-2.5k tokens)；同页 deepseek-v4-flash-0731 / v4-pro-0813 要付费档,不可选
+    // 2026-09-22 关思考/JSON 两点定稿(探针 F:/Claude/tmp/cf_ai_probe{,2,3}.py，各 6-9 次采样)：
+    //   ① Qwen3 默认开思考，且 chat_template_kwargs.enable_thinking=false 与 reasoning_effort:"none" **两法均被上游忽略**，
+    //     唯一生效写法是最后一条 user 消息尾加 /no_think(软开关，system 或 user 均可，无 system 也生效)→ 见 cfNoThink
+    //   ② 流式路径本身不稳(约 1/3 概率吐无引号紧凑体,非 format 引起；线上 A/B 已证剥 format 无效)→ 已入 STREAM_BROKEN
+    //     强制上游非流式、单块 SSE 回吐；非流式 6/6 全合法。延迟 1.1-1.4s，是池内快的
+    { id: "cf-qwen3-30b-a3b", url: "https://api.cloudflare.com/client/v4/accounts/1a48101eee18f673592e0d9e5e2d069d/ai/v1", apiKeyEnv: "CF_AI_TOKEN", model: "@cf/qwen/qwen3-30b-a3b-fp8", dailyCap: 200, tier: 6, enabled: true },
     // ---- ChatAnywhere（2026-08-25 实测:403 "请求客户端IP不支持访问,请勿使用Cloudflare等反向代理"= 永久拒绝 CF 出口,key 再对也白耗,整池禁用;若换非 CF 出口部署可恢复）----
     { id: "ca-gpt-5.4-nano",  url: "https://bitlife.blupure.cn/ca/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-5.4-nano",   dailyCap: 100, tier: 5, enabled: true },
     { id: "ca-gpt-4o-mini",   url: "https://bitlife.blupure.cn/ca/v1", apiKeyEnv: "CHATANYWHERE_KEY", model: "gpt-4o-mini",    dailyCap: 100, tier: 5, enabled: true },
@@ -353,9 +365,14 @@ async function modelOf(env, t) {
 const STREAM_NO_JSON = [
     "xf-spark-x1", "xf-spark-ultra", "xf-spark-lite", "xf-spark-pro", "xf-spark-pro128k"
 ];
+// cf-qwen3-30b-a3b：2026-09-22 实测一流式就吞正文引号({"title:…} 非法 JSON)，先按 STREAM_NO_JSON 试过剥 format——
+//   线上 A/B(带/不带 format 各 3 采样，结果完全相同)证明剥除已生效但**不是 format 引起的**：
+//   流式路径本身约 1/3 概率走"无引号紧凑体"，1/3 概率走正常 pretty JSON；非流式 6/6 全合法
+//   → 归入 STREAM_BROKEN 强制上游非流式(带 format,单块 SSE 回吐,前端 finishStreaming 整卡替换)
 const STREAM_BROKEN = [
     "or-minimax-m3", "or-minimax-m2.7", "or-nemotron-3-super", "or-nemotron-3-ultra",
-    "sf-glm-z1-9b", "sf-glm-4-9b", "sf-r1-qwen3-8b", "sf-qwen2.5-7b"
+    "sf-glm-z1-9b", "sf-glm-4-9b", "sf-r1-qwen3-8b", "sf-qwen2.5-7b",
+    "cf-qwen3-30b-a3b"
 ];
 
 // 池内全平台强制关推理思考(2026-09-07 小徐指示:所有模型关思考提速):
@@ -364,6 +381,23 @@ const STREAM_BROKEN = [
 //   硅基 enable_thinking=false(实测非思考模型 GLM-4-9B 亦 200 接受该字段,SF 忽略不适用参数→全系覆盖防边角);
 //   NVIDIA kimi 系(默认思考):网关直通 Moonshot 原生协议用 thinking.type=disabled;其余 nv 模型不推理不带字段;
 //   OpenRouter 官方统一关思考字段 reasoning.enabled=false(对不适用模型 OR 忽略,200 安全)
+// Cloudflare Workers AI 的 Qwen3 系关思考(2026-09-22 实测定稿):唯一生效写法是最后一条 user 消息尾加软开关 /no_think
+// (chat_template_kwargs.enable_thinking=false 与 reasoning_effort:"none" 均被 CF 忽略,思考照跑→输出被 reasoning 吃满)
+// 只改副本不改 requestJson.messages:后面 token 估算/JSON 重试都还要读原数组
+const cfNoThink = (payload, t) => {
+    if (!t || !(t.url || "").includes("api.cloudflare.com") || !Array.isArray(payload.messages)) return payload;
+    const msgs = payload.messages.map(m => ({ ...m }));
+    for (let i = msgs.length - 1; i >= 0; i--) {
+        const c = msgs[i].content;
+        if (msgs[i].role === "user" && typeof c === "string") {
+            if (!/\/no_think\s*$/.test(c)) msgs[i].content = c + "\n/no_think"; // 幂等:重试路径二次调用不重复追加
+            break;
+        }
+    }
+    payload.messages = msgs;
+    return payload;
+};
+
 const applyNoThinking = (payload, t) => {
     // 注意:智谱 glm-5.3-flash 是"始终思考"型——上游原文 400/1210「该模型始终思考，不支持关闭思考；请使用 low、high 或 max」
     // → 无法满足"全池关思考"硬规则,已在池内停用,勿再启用(且三账号均无其资源包,调它必 429/1113)
@@ -374,6 +408,7 @@ const applyNoThinking = (payload, t) => {
     // (2026-09-12 实测:只在 Nemotron 系可用——gpt-oss-20b 的字面量校验拒绝 "none" 并 400)
     if (["nv-nemotron-lightning", "nv-nemotron-super", "nv-nemotron-ultra"].includes(t.id)) payload.reasoning_effort = "none";
     if ((t.url || "").includes("openrouter.ai")) payload.reasoning = { enabled: false };
+    cfNoThink(payload, t);
     return payload;
 };
 
@@ -1913,11 +1948,12 @@ export default {
                 };
                 for (let i = 0; i < 2 && !isGoodJson(); i++) {
                     const retryPayload = { ...requestJson, model: await modelOf(env, usedModel) };
-                    applyNoThinking(retryPayload, usedModel);
                     retryPayload.messages = [
                         ...(requestJson.messages || []),
                         { role: "user", content: "你上一次的回复内容不是合法 JSON。请仅输出一个合法 JSON 对象，不要任何解释、围栏或多余字符。" }
                     ];
+                    // 关思考必须在 messages 组装之后调用:cfNoThink 是消息级改写(最后一条 user 尾部挂 /no_think),早调会被上面的赋值覆盖
+                    applyNoThinking(retryPayload, usedModel);
                     const retryBase = (modelUrlOverrides?.[usedModel.id] || usedModel.url).replace(/\/$/, "");
                     const ctrl = new AbortController();
                     const to = setTimeout(() => ctrl.abort(), 120000);
