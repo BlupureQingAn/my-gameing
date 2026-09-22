@@ -72,8 +72,8 @@ const MODEL_POOL = [
     // X2 主端点(200k tokens): model 名 "spark-x";X2-Flash agent 端点(2M tokens): model 名 "spark-x"
     // X2-Flash 非无限:2M token 免费包(2026-08-29 小徐报剩 1,723,155),实测剧情轮 ~1000-2500 tokens/轮 → dailyCap 150/天≈40 万 tokens/天≈撑 4 天,超额自动 fallback 后续模型
     // 小徐 2026-08-29 新授权 HTTP 服务(每服务独立系统默认 key,除 Lite 无限量外均 <20w token/年,dailyCap 20 限额度):
-    //   X2/X1.5 共用 XFSPARK_X2_KEY2(***REMOVED***):x2 端点 model=spark-x、v2 端点 model=spark-x(实测出内容)
-    //   Flash=Ctzg...(agent 端点,现有 key 在用);Lite=Amtvr...(v1 端点 model=lite,无限量);Pro=GxiG...(v1 端点 model=generalv3.5);Pro-128K=uZBk...(v1 端点 model=pro-128k)
+    //   X2/X1.5 共用 XFSPARK_X2_KEY2(密钥值存于 CF secret,不落仓库):x2 端点 model=spark-x、v2 端点 model=spark-x(实测出内容)
+    //   Flash=XFSPARK_X2_FLASH_KEY(agent 端点,现有 key 在用);Lite=XFSPARK_LITE_KEY(v1 端点 model=lite,无限量);Pro=XFSPARK_PRO_KEY(v1 端点 model=generalv3.5);Pro-128K=XFSPARK_PRO128_KEY(v1 端点 model=pro-128k)
     //   X2 系三个条目共享同一额度池(旧 XFSPARK_X2_KEY + 新 XFSPARK_X2_KEY2 的 x2/v2 端点):2026-08-29 小徐报合计剩 196,242 tokens
     //   → 三条目各 dailyCap 10(每天最多 30 次 ≈ 6 万 tokens,撑 ~3 天),超额自动 fallback 智谱/Lite;优质额度当补充不当主力
     //   主力保护:X2-Flash(agent 端点)剩 1,723,155(2M 免费包)dailyCap 150/天 ≈ 40 万 tokens/天;Lite 无限量是长期后盾
