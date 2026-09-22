@@ -5387,23 +5387,26 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <div class="list-title" id="membership-title" style="margin:0;">开通会员</div>
             <button onclick="MembershipService.closePanel()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--sub);"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z"/></svg></button>
         </div>
-        <div class="list-sub" id="membership-intro-text">会员期内 AI 对话不限次、不消耗云币；云币用于解锁剧本卡与免费额度超限后的 AI 对话。</div>
-        <!-- P2-5 权益卖点重排(2026-09-09):学习效果免费可见,会员卖「不限量 × 全解锁」 -->
+        <div class="list-sub" id="membership-intro-text">会员期内 AI 对话不限次、不消耗云币，并优先使用池内最优模型；云币用于付费社区卡解锁与免费额度超限后的 AI 对话。</div>
+        <!-- P2-5 权益卖点重排(2026-09-09)；2026-09-22 按代码实际行为校正:
+             删「新卡抢先玩」(全代码无实现)、删「非会员 1 元解锁」(不存在,官方卡永久免费且社区卡当前 0 张)、
+             删「云端进度同步」(云存档与复习计划本就不看会员,登录+云币即可)、「中文剧本 AI」去掉"中文剧本"(AI 对话不分语种) -->
         <div id="membership-benefit-box" style="margin:10px 0 2px;border:1px dashed rgba(124,84,240,.5);border-radius:14px;padding:10px 12px;background:rgba(124,84,240,.05);">
             <div style="font-size:.8rem;font-weight:900;color:#7c4fd8;margin-bottom:6px;">📊 学习数据全员可见 · 不用开会员</div>
             <div class="list-sub" style="line-height:1.7;">今日一句点译 · 学习统计与 7 日周报 · 生词本与艾宾浩斯复习计划（1·2·4·7 天）——进步看得见，才值得为效率付费。</div>
             <div style="font-size:.8rem;font-weight:900;color:#c0392b;margin:8px 0 4px;">👑 会员额外解锁</div>
             <div class="mb-rows">
-                <div class="mb-row"><span>⚡ 点译 / 复盘不限量</span><s>免费每日限量</s></div>
-                <div class="mb-row"><span>🎫 全部剧本免解锁 · 新卡抢先玩</span><s>非会员 1 元解锁</s></div>
-                <div class="mb-row"><span>☁️ 云端进度同步 · 复习计划随身走</span><s>自动续排不丢档</s></div>
-                <div class="mb-row"><span>🤖 中文剧本 AI 无限对话</span><s>免云币消耗</s></div>
+                <div class="mb-row"><span>⚡ AI 对话 / 点译 / 复盘不限量</span><s>免费每日限量</s></div>
+                <div class="mb-row"><span>🚀 优先用池内最优模型 · 不受每日配额限制</span><s>免费档常被挤到免费模型</s></div>
+                <div class="mb-row"><span>🎫 付费社区卡免云币解锁</span><s>非会员按作者定价</s></div>
+                <div class="mb-row"><span>💬 终身会员：角色卡聊天免费解锁</span><s>非终身 200 云币 / 角色</s></div>
             </div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin:10px 0;padding:10px 12px;border-radius:12px;background:var(--card-bg,#fffdf8);border:1px solid var(--line);">
             <div style="font-size:0.9rem;font-weight:700;">云币余额：<span id="membership-coin-balance" style="color:var(--accent-dark,#c0392b);">--</span></div>
         </div>
-        <div id="membership-offer-banner" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:10px 0;padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,#fff3d6,#ffe3b3);border:1px solid #e8b84b;">
+        <!-- 限时优惠条默认隐藏:2026-09-12 起终身会员原价=现价,offer 恒为关;仅当 offer 真开时才由 JS 显示 -->
+        <div id="membership-offer-banner" style="display:none;align-items:center;justify-content:space-between;gap:8px;margin:10px 0;padding:10px 12px;border-radius:12px;background:linear-gradient(135deg,#fff3d6,#ffe3b3);border:1px solid #e8b84b;">
             <div style="font-size:0.9rem;font-weight:700;color:#8a4b00;"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M4 14q0-2.625 1.25-4.675T8 5.875t2.75-2.138L12 3v3.3q0 .925.625 1.462t1.4.538q.425 0 .813-.175t.712-.575L16 7q1.8 1.05 2.9 2.912T20 14q0 2.2-1.075 4.013T16.1 20.874q.425-.6.663-1.312T17 18.05q0-1-.375-1.888t-1.075-1.587L12 11.1l-3.525 3.475q-.725.725-1.1 1.6T7 18.05q0 .8.238 1.513t.662 1.312q-1.75-1.05-2.825-2.863T4 14m8-.1l2.125 2.075q.425.425.65.95T15 18.05q0 1.225-.875 2.088T12 21t-2.125-.862T9 18.05q0-.575.225-1.112t.65-.963z"/></svg> 限时优惠进行中</div>
             <div style="font-size:0.9rem;font-weight:700;color:#d63031;">距优惠结束 <span id="membership-countdown" style="font-variant-numeric:tabular-nums;background:#fff;padding:2px 8px;border-radius:6px;border:1px solid #e8b84b;">23:59:59</span></div>
         </div>
@@ -5457,10 +5460,10 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <span class="hmb-cta">去创作 ›</span>
                 </div>
                 <div id="lang-entry-banner" class="lang-entry-banner" onclick="switchView('view-lang')">
-                    <span class="leb-badge" id="lang-entry-badge">EN</span>
+                    <span class="leb-badge" id="lang-entry-badge">英·日·韩</span>
                     <div class="leb-main">
-                        <div class="leb-title" id="lang-entry-title">语言文游 · 边玩文游边学英语</div>
-                        <div class="leb-sub" id="lang-entry-sub">英语原生剧本 · 五档难度 · 点句即译 · 生词自动收</div>
+                        <div class="leb-title" id="lang-entry-title">语言文游 · 边玩文游学英 / 日 / 韩</div>
+                        <div class="leb-sub" id="lang-entry-sub">英 / 日 / 韩原生剧本 · JLPT·TOPIK 难度分档 · 点句即译 · 生词自动收</div>
                     </div>
                     <span class="leb-arrow">›</span>
                 </div>
@@ -6521,10 +6524,10 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
         },
         // 会员档位(P1 2026-09-08 精简 3 档化:月/年+终身;周/季取消):期内 AI 对话不限次、不消耗云币
         memberPlans: {
-            monthly: { id: "monthly", name: "月度会员", price: "21", days: 30, desc: "30 天点译复盘不限量 · 全部剧本免解锁" },
-            yearly:  { id: "yearly",  name: "年度会员", price: "49", days: 365, desc: "365 天点译复盘不限量 · 全部剧本免解锁", tag: "推荐立省 80%" }
+            monthly: { id: "monthly", name: "月度会员", price: "21", days: 30, desc: "30 天 AI 对话不限量不扣币 · 付费社区卡免云币解锁" },
+            yearly:  { id: "yearly",  name: "年度会员", price: "49", days: 365, desc: "365 天 AI 对话不限量不扣币 · 付费社区卡免云币解锁", tag: "推荐立省 80%" }
         },
-        lifetimePlan: { id: "lifetime", name: "终身会员", price: "98", originalPrice: "98", desc: "永久不限量 · 全部剧本免解锁 · 新卡抢先玩" },
+        lifetimePlan: { id: "lifetime", name: "终身会员", price: "98", originalPrice: "98", desc: "永久 AI 对话不限量不扣币 · 角色卡聊天免费解锁" },
         // P1 小额直付救急包(与 worker PACK_PLANS 对齐 rescue1/rescue3;前端展示+下单用,额度由 worker extrapack 结算)
         packPlans: {
             rescue1: { id: "rescue1", name: "点译救急包", price: "1", gloss: 10, recap: 0, desc: "¥1 = 点译 10 次" },
@@ -21696,9 +21699,11 @@ function openNpcProfile(npcId) {
             const lp = AppConfig.lifetimePlan;
             const active = lifetimeOfferOn();
             const intro = document.getElementById("membership-intro-text");
-            if (intro) intro.textContent = `会员期内 AI 对话不限次、不消耗云币；云币用于解锁剧本卡与免费额度超限后的 AI 对话。终身会员${active ? `（限时 ¥${lp.price}）` : `（¥${lp.originalPrice}）`}永久不限次。`;
+            if (intro) intro.textContent = `会员期内 AI 对话不限次、不消耗云币，并优先使用池内最优模型；云币用于付费社区卡解锁与免费额度超限后的 AI 对话。终身会员${active ? `（限时 ¥${lp.price}）` : `（¥${lp.originalPrice}）`}永久不限次。`;
             const banner = document.getElementById("membership-offer-banner");
             if (banner) {
+                // 只清 innerHTML 会把金色外框留成一条空横条 → 关掉时连容器一起隐藏
+                banner.style.display = active ? "flex" : "none";
                 banner.innerHTML = active
                     ? `<div style="font-size:0.9rem;font-weight:700;color:#8a4b00;"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M4 14q0-2.625 1.25-4.675T8 5.875t2.75-2.138L12 3v3.3q0 .925.625 1.462t1.4.538q.425 0 .813-.175t.712-.575L16 7q1.8 1.05 2.9 2.912T20 14q0 2.2-1.075 4.013T16.1 20.874q.425-.6.663-1.312T17 18.05q0-1-.375-1.888t-1.075-1.587L12 11.1l-3.525 3.475q-.725.725-1.1 1.6T7 18.05q0 .8.238 1.513t.662 1.312q-1.75-1.05-2.825-2.863T4 14m8-.1l2.125 2.075q.425.425.65.95T15 18.05q0 1.225-.875 2.088T12 21t-2.125-.862T9 18.05q0-.575.225-1.112t.65-.963z"/></svg> 限时优惠进行中</div><div style="font-size:0.9rem;font-weight:700;color:#d63031;">距优惠结束 <span id="membership-countdown" style="font-variant-numeric:tabular-nums;background:#fff;padding:2px 8px;border-radius:6px;border:1px solid #e8b84b;">23:59:59</span></div>`
                     : "";
@@ -23460,7 +23465,7 @@ window.LoveEngine = (() => {
             if (!$("view-lang")) return;
             api.renderLangPicker();
             api.renderPicker();
-            api.applyLangCopy(); /* 首页入口横幅按已存语种改写(进语言页前也要对) */
+            api.applyLangCopy(); /* 按已存语种改写语言区文案(首页入口横幅固定三语种,不受影响) */
             api.showBand();
             api.loadRemote();
             api.loadLangCards();
@@ -24201,7 +24206,7 @@ window.LoveEngine = (() => {
             el.innerHTML = '<div class="member-band" onclick="MembershipService.openPanel()">' +
                 '<span style="font-size:1.55rem;">👑</span>' +
                 '<div style="flex:1;min-width:0;"><div style="font-weight:900;font-size:.88rem;">云吞吞会员</div>' +
-                '<div style="font-size:.68rem;line-height:1.5;opacity:.85;margin-top:2px;">点译复盘不限量（每天限量免费）· 全部剧本免解锁 · 生词本复习计划</div></div>' +
+                '<div style="font-size:.68rem;line-height:1.5;opacity:.85;margin-top:2px;">AI 对话 / 点译 / 复盘不限量（免费每日限量）· 优先用池内最优模型 · 付费社区卡免云币解锁</div></div>' +
                 '<span style="font-weight:900;flex-shrink:0;">开通 ›</span></div>';
         },
         renderContinue: function () {
@@ -24219,29 +24224,23 @@ window.LoveEngine = (() => {
         /* 当前语种中文名(英语/日语/韩语):散在各处的兜底文案用它拼,避免再写死"英语" */
         langName: function () { return LANG_TAG_INFO[curLang()][1]; },
         /* 语种相关静态文案集中改写(2026-09-22):日韩上线后页面里仍写死"英语"会误导,
-           入口横幅/语言首页/学习中心/沉浸模式全部随当前语种;新增语种只加一行 */
+           语言首页/学习中心/沉浸模式随当前语种;首页入口横幅固定宣传三语种(见 map 上方说明);新增语种只加一行 */
         applyLangCopy: function () {
-            var lg = curLang(), tag = LANG_TAG_INFO[lg][0];
+            var lg = curLang();
             var C = {
                 en: {
-                    entryTitle: "语言文游 · 边玩文游边学英语",
-                    entrySub: "英语原生剧本 · 五档难度 · 点句即译 · 生词自动收",
                     homeSub: "英语原生文游剧本 · 边玩边学 · 五档词汇难度随你调 · 点句即译，点词进生词本",
                     continueSub: "接着上次的英语进度玩",
                     bandSub: "玩哪档卡就学哪档词库——心里没底就从 HS / CET4 的校园生活卡起步，玩着吃力或太轻松，随时回来换一档。",
                     fullImmDesc: "纯英语体验，辅助全部手动触发"
                 },
                 ja: {
-                    entryTitle: "语言文游 · 边玩文游边学日语",
-                    entrySub: "日语原生剧本 · JLPT N5-N1 五档 · 点句即译 · 生词自动收",
                     homeSub: "日语原生文游剧本 · 边玩边学 · JLPT N5-N1 词汇难度随你调 · 点句即译，点词进生词本",
                     continueSub: "接着上次的日语进度玩",
                     bandSub: "玩哪档卡就学哪档词库——心里没底就从 N5 / N4 的日常场景卡起步（假名短句也读得下去），玩着吃力或太轻松，随时回来换一档。",
                     fullImmDesc: "纯日语体验，辅助全部手动触发"
                 },
                 ko: {
-                    entryTitle: "语言文游 · 边玩文游边学韩语",
-                    entrySub: "韩语原生剧本 · TOPIK 初中高三档 · 点句即译 · 生词自动收",
                     homeSub: "韩语原生文游剧本 · 边玩边学 · TOPIK 初中高词汇难度随你调 · 点句即译，点词进生词本",
                     continueSub: "接着上次的韩语进度玩",
                     bandSub: "玩哪档卡就学哪档词库——心里没底就从 TOPIK 初级的生活场景卡起步（基础短句为主），玩着吃力或太轻松，随时回来换一档。",
@@ -24249,8 +24248,9 @@ window.LoveEngine = (() => {
                 }
             }[lg] || null;
             if (!C) return;
-            var map = { "lang-entry-badge": tag, "lang-entry-title": C.entryTitle, "lang-entry-sub": C.entrySub,
-                "lang-home-sub": C.homeSub, "lang-continue-sub": C.continueSub, "lang-band-sub": C.bandSub,
+            /* 首页入口横幅不在改写范围内(2026-09-22):它挂在首页,是语言功能的发现入口,固定宣传三语种;
+               按当前语种改成"只学日语/只学韩语"会把另外两语种对首页访客藏起来。单语种文案留给语言页内部 */
+            var map = { "lang-home-sub": C.homeSub, "lang-continue-sub": C.continueSub, "lang-band-sub": C.bandSub,
                 "lang-imm-full-desc": C.fullImmDesc };
             for (var k in map) { var el = document.getElementById(k); if (el) el.textContent = map[k]; }
         },
