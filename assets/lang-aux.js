@@ -1626,6 +1626,62 @@
         rvPlay.shown = false;
         rvPlayRender();
     }
+    /* 复习卡的句子译文(2026-09-24):句子型收藏(章末复盘的仿写例句)连"释义"存的都是句子本身,
+       揭示后"该出译文的地方还是原句"。揭示时按句现取一次 /api/lang/gloss(与点句同一路),
+       结果落 localStorage 长期缓存 —— 同一句只翻一次,不重复吃额度;取不到就退回原样,不在本会话重试。
+       只管句子型卡片:词卡的例句译文暂不取,那是每张卡一次请求,会挤掉点译的免费额度。 */
+    var RV_TR_KEY = "lang_sen_zh_v1";
+    var rvTr = {}, rvTrBad = {};
+    (function () {
+        try {
+            var o = JSON.parse(localStorage.getItem(RV_TR_KEY) || "null");
+            if (o && typeof o === "object") for (var k in o) if (typeof o[k] === "string") rvTr[k] = o[k];
+        } catch (e) {}
+    })();
+    function rvTrSave() {
+        try {
+            var ks = Object.keys(rvTr);
+            if (ks.length > 400) {   // 攒太多砍掉前一半(键顺序=写入顺序,越靠前越旧)
+                var cut = {};
+                for (var i = Math.floor(ks.length / 2); i < ks.length; i++) cut[ks[i]] = rvTr[ks[i]];
+                rvTr = cut;
+            }
+            localStorage.setItem(RV_TR_KEY, JSON.stringify(rvTr));
+        } catch (e) {}
+    }
+    function rvTrFetch(list, cb, retried) {
+        var need = [], i, s;
+        for (i = 0; i < list.length; i++) {
+            s = String(list[i] || "").trim();
+            if (!s || rvTr[s] || rvTrBad[s] || need.indexOf(s) >= 0) continue;
+            need.push(s);
+        }
+        if (!need.length) { if (cb) cb(false); return; }
+        fetch(API_BASE + "/api/lang/gloss", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token() },
+            body: JSON.stringify({ sentences: need.map(function (x) { return x.slice(0, 500); }), lang: curLearnLang() })
+        })
+            .then(function (r) { return r.json().catch(function () { return null; }); })
+            .then(function (d) {
+                // 服务端 6s 限频:紧接着点句/上一张卡会被挡,等一等重试一次(只为这一句)
+                if (d && d.code === "GLOSS_TOO_FREQUENT" && !retried) {
+                    setTimeout(function () { rvTrFetch(list, cb, true); }, 6500);
+                    return;
+                }
+                var ok = !!(d && d.ok && Array.isArray(d.items)), got = false, j, zh;
+                for (j = 0; j < need.length; j++) {
+                    zh = ok && d.items[j] && d.items[j].zh ? String(d.items[j].zh).trim() : "";
+                    if (zh) { rvTr[need[j]] = zh; got = true; } else rvTrBad[need[j]] = true;
+                }
+                if (got) rvTrSave();
+                if (cb) cb(got);
+            })
+            .catch(function () {
+                for (var j = 0; j < need.length; j++) rvTrBad[need[j]] = true;   // 断网时不反复打
+                if (cb) cb(false);
+            });
+    }
     function rvPlayRender() {
         if (!rvPlay) { rvPlayClose(); return; }
         var m = rvEnsureMask();
@@ -1636,22 +1692,42 @@
                 '<button type="button" class="lg-rv-btn" data-act="rvclose">返回生词本</button></div></div>';
             return;
         }
+        var term = String(it.term || "");
         var gz = String(it.gloss_zh || "") || "（暂无释义）";
         var ph = it.type === "expression" ? "固定表达" : "单词";
+        var need = [], body;
+        if (rvPlay.shown) {
+            if (term && gz.trim().toLowerCase() === term.trim().toLowerCase()) {
+                // 句子型收藏(章末复盘的仿写例句)存的"释义"就是原句,译文得现取
+                var sz = rvTr[gz];
+                body = '<div class="lg-rv-gz">' +
+                    (sz ? esc(sz) : rvTrBad[gz] ? esc(gz) : "译文获取中…") + "</div>";
+                if (!sz && !rvTrBad[gz]) need.push(gz);
+            } else {
+                body = '<div class="lg-rv-gz">' + esc(gz) + "</div>" + vocabCtxHtml(it.context, term);
+            }
+        } else {
+            body = '<div class="lg-rv-hint">先在心里回想它的意思，再点下面揭示</div>';
+        }
         m.innerHTML = '<div class="lg-rv-card">' +
             '<div class="lg-rv-top"><span>' + (rvPlay.i + 1) + " / " + rvPlay.list.length + " · 今日复习 · " + ph + "</span>" +
             '<span class="lg-rv-x" data-act="rvclose">✕</span></div>' +
-            '<div class="lg-rv-w">' + esc(it.term) + "</div>" +
+            '<div class="lg-rv-w">' + esc(term) + "</div>" +
             '<div class="lg-rv-ph">' + (it.origin ? "来自 " + esc(vocabSrcOf(it)) : "&nbsp;") + "</div>" +
-            '<div class="lg-rv-body">' + (rvPlay.shown
-                ? '<div class="lg-rv-gz">' + esc(gz) + "</div>" + vocabCtxHtml(it.context, it.term)
-                : '<div class="lg-rv-hint">先在心里回想它的意思，再点下面揭示</div>') + "</div>" +
+            '<div class="lg-rv-body">' + body + "</div>" +
             (rvPlay.shown
                 ? '<div class="lg-rv-st"><button type="button" class="s0" data-act="rvgrade" data-st="0">没记住</button>' +
                   '<button type="button" class="s1" data-act="rvgrade" data-st="1">记住了</button>' +
                   '<button type="button" class="s2" data-act="rvgrade" data-st="2">很熟了</button></div>'
                 : '<button type="button" class="lg-rv-btn" data-act="rvshow">显示释义与例句</button>') +
             "</div>";
+        if (need.length) {
+            rvTrFetch(need, function (got) {
+                // 卡片没换、仍处于揭示态才重画(取回译文或确认取不到)
+                if (!rvPlay || !rvPlay.shown || rvPlay.list[rvPlay.i] !== it) return;
+                rvPlayRender();
+            });
+        }
     }
     function renderLearn() {
         var box = $("lang-learn-box");
