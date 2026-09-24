@@ -5024,7 +5024,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const s = _bgmState;
             const titleEl = document.getElementById("phone-bgm-title");
             const btn = document.getElementById("phone-bgm-play");
-            if (titleEl && s.list.length && s.idx >= 0) titleEl.textContent = `🎵 ${s.list[s.idx]?.title || "背景音乐"}`;
+            if (titleEl && s.list.length && s.idx >= 0) titleEl.textContent = s.list[s.idx]?.title || "背景音乐";
             if (btn) btn.textContent = s.playing ? "⏸" : "▶";
         }
         function bgmToggle() {
