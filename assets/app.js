@@ -71,7 +71,7 @@
             monthly: { id: "monthly", name: "月度会员", price: "21", days: 30, desc: "30 天 AI 对话不限量不扣币 · 付费社区卡免云币解锁" },
             yearly:  { id: "yearly",  name: "年度会员", price: "49", days: 365, desc: "365 天 AI 对话不限量不扣币 · 付费社区卡免云币解锁", tag: "推荐立省 80%" }
         },
-        lifetimePlan: { id: "lifetime", name: "终身会员", price: "98", originalPrice: "98", desc: "永久 AI 对话不限量不扣币 · 角色卡聊天免费解锁" },
+        lifetimePlan: { id: "lifetime", name: "终身会员", price: "98", originalPrice: "98", desc: "永久 AI 对话不限量不扣币" },
         // P1 小额直付救急包(与 worker PACK_PLANS 对齐 rescue1/rescue3;前端展示+下单用,额度由 worker extrapack 结算)
         packPlans: {
             rescue1: { id: "rescue1", name: "点译救急包", price: "1", gloss: 10, recap: 0, desc: "¥1 = 点译 10 次" },
