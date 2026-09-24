@@ -43,6 +43,11 @@
         if (!LANG_TAG_INFO[l]) l = curLang();
         return LANG_TAG_INFO[l] ? l : "en";
     }
+    /* 语种中文名:lang-aux 的 learnLangName 在它自己的 IIFE 里,本文件看不见 —— 直接调会抛
+       ReferenceError,被 learnStatsHtml 外层 .catch 吞成"网络开小差了"(2026-09-24 线上) */
+    function learnLangZh() {
+        try { return { en: "英语", ja: "日语", ko: "韩语" }[curLearnLang()] || "英语"; } catch (e) { return "英语"; }
+    }
     var profile = { lang: "en" };
     try { var _p = JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}"); if (_p && typeof _p === "object") profile = _p; } catch (e) { }
     /* 档位按语种各记一份(2026-09-22):profile.band 是单字段,切到日语会被日语档覆盖,切回英语就得重调。
@@ -908,7 +913,7 @@
                 ? '<div style="margin-top:10px;"><div class="wks-vt">生词掌握 <span class="list-sub" style="margin-left:2px;">已掌握 ' + vMas + " · 眼熟 " + vFam + " · 新学 " + vNew + "</span></div>" +
                     '<div class="wks-track-line"><div class="wks-vf" style="width:' + famPct + '%" title="眼熟 ' + vFam + '"></div><div class="wks-vm" style="width:' + masPct + '%" title="已掌握 ' + vMas + '"></div></div>' +
                     '<div class="list-sub" style="margin-top:4px;">' + (vMas === vTotal ? "生词全部掌握 🎉 太强了，可以挑战更高档剧本了" : "深色段 = 已掌握进度 · 玩剧本时点词点句，生词本会自动长出来") + "</div></div>"
-                : '<div class="list-sub" style="margin-top:10px;">还没收过生词——去玩一个' + learnLangName() + '剧本，点一下不认识的字词就会自动收进生词本，开始积累吧。</div>';
+                : '<div class="list-sub" style="margin-top:10px;">还没收过生词——去玩一个' + learnLangZh() + '剧本，点一下不认识的字词就会自动收进生词本，开始积累吧。</div>';
             box.innerHTML =
                 '<div class="stat-grid" style="grid-template-columns:repeat(4,1fr);margin-top:0;">' +
                 '<div class="stat-cell"><b>' + api.fmtDur(d.today_seconds || 0) + "</b><s>今日学习</s></div>" +
@@ -1005,9 +1010,7 @@
         },
         /* 学习中心/生词本的静态文案同样按语种改写(2026-09-21:日韩上线后仍写"玩英语剧本"会误导) */
         renderLearnMeta: function () {
-            // 本块看不到 LangAssist 里的 learnLangName,就地取名(同 24756 处 gLangZh 的写法)
-            var n;
-            try { n = { en: "英语", ja: "日语", ko: "韩语" }[curLearnLang()] || "英语"; } catch (e) { n = "英语"; }
+            var n = learnLangZh();   // 语种中文名统一走上面的 learnLangZh
             var s1 = $("lang-learn-stats-sub");
             if (s1) s1.textContent = "玩" + n + "剧本、复习生词都会累计学习时长";
             var s2 = $("lang-vocab-sub");

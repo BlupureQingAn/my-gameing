@@ -27,7 +27,7 @@
     var vocabLoaded = false;
     var vocabLoadedFor = "";   // vocabMap 当前装的是哪个语种的词;与 curLearnLang() 不一致就要重拉
     var vocabReqSeq = 0;       // 请求令牌:切语种时旧请求可能后到,令牌对不上就丢弃(否则会把旧语种词表盖回来)
-    var vocabReq = null;
+    var vocabReq = null, vocabReqFor = "";   // 在飞的请求 + 它是哪个语种的(同语种复用,避免互杀成死循环)
     var vocabErr = "";         // ""=正常;"auth"=登录态失效;"net"=其它失败。失败绝不能渲染成"还没有生词"——那是"词被删了"
     /* 生词本视图态(2026-09-21):两个 Tab 互斥渲染,不同时铺两套内容 */
     var vocabTab = "due";   // due=📆今日复习 | all=📚全部生词库
@@ -174,6 +174,14 @@
     function loadVocab(cb) {
         var want = curLearnLang();
         if (vocabLoaded && vocabLoadedFor === want) { if (cb) cb(); return; }
+        /* 同语种已有请求在飞:直接复用,别再开一个新的。开新的会把前一个响应判成"过期"丢弃,
+           而被丢弃的那次也会触发 renderLearn 再发一次请求 —— 两个请求来回互杀,
+           生词本就永远停在「加载中…」(2026-09-24 线上:进生词本页 onShow 与 goVocab 各调一次
+           retryVocab,vocabReset 后正好凑成这个死循环) */
+        if (vocabReq && vocabReqFor === want) {
+            if (cb) vocabReq.then(function () { cb(); }, function () { cb(); });
+            return vocabReq;
+        }
         var seq = ++vocabReqSeq;
         if (!token()) { vocabLoaded = true; vocabLoadedFor = want; vocabErr = ""; if (cb) cb(); return; }
         var p = fetch(API_BASE + "/api/lang/vocab?lang=" + encodeURIComponent(want), { headers: { "X-Auth-Token": "Bearer " + token() } })
@@ -214,6 +222,8 @@
                 if (cb) cb();
             });
         vocabReq = p;
+        vocabReqFor = want;
+        p.then(function () { if (vocabReq === p) { vocabReq = null; vocabReqFor = ""; } });
         return p;
     }
     /* 失败态只能由显式入口解开(点重试/进生词本页/切语种/登录):打回"没加载过"再拉一次。
@@ -1157,17 +1167,30 @@
         };
         var cached = wordInfo[key];
         if (cached) { settle(cached); return; }
-        /* 日/韩没有 ECDICT 兜底(worker 的 /api/lang/dict 只服务英语)→ 改查本档词库;
-           词库也没有就 settle(null),popup 会提示"点句子看整句翻译"而不是空转 */
+        /* 日/韩没有 ECDICT 词典(worker 的 /api/lang/dict 里 ECDICT 只服务英语)→ 先查本档词库;
+           词库没收录的词再走 worker 的有道兜底(2026-09-24:日/韩点词接网易有道翻译);
+           两边都没有才 settle(null),popup 会提示"点句子看整句翻译"而不是空转 */
         if (IS_CJK_LANG[curSessionLang()]) {
-            var bit = null, bd = currentLangBand();
+            var lg = curSessionLang(), bit = null, bd = currentLangBand();
             try { bit = bankLookupCJK(bd, term); } catch (e) {}
             if (!bit) { try { bit = langBankItem(bd, String(term).toLowerCase()); } catch (e) {} }
             if (bit) {
                 var infoB = { w: String(bit.w || term), en: String(bit.ph || ""), zh: String(bit.zh || ""), ph: String(bit.ph || "") };
                 wordInfo[key] = infoB;
                 settle(infoB);
-            } else settle(null);
+                return;
+            }
+            fetch(API_BASE + "/api/lang/dict?q=" + encodeURIComponent(String(term).slice(0, 32)) + "&lang=" + encodeURIComponent(lg))
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (d) {
+                    var infoY = null;
+                    if (d && d.hit && d.hit.zh) {
+                        infoY = { w: String(term), en: "", zh: String(d.hit.zh || ""), ph: String(d.hit.ph || "") };
+                        wordInfo[key] = infoY;
+                    }
+                    settle(infoY);
+                })
+                .catch(function () { settle(null); });
             return;
         }
         fetch(API_BASE + "/api/lang/dict?q=" + encodeURIComponent(String(term).slice(0, 64)) + "&lang=en")

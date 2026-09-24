@@ -802,6 +802,42 @@ async function youdaoWordFallback(q) {
     } catch (e) { return null; }
 }
 
+// 有道理译兜底(日/韩点词):ECDICT 只收英语词条,词库外的日韩词走这里直译。免费 demo 源同样不稳,
+// 频控/缓存独立于英语那条(4.5s 超时+10 次/10s+5 分钟缓存,失败静默回落 miss)
+const YDC_RATE = new Map();
+const YDC_CACHE = new Map();
+const YDC_MAX_CACHE = 300;
+async function youdaoCJWFallback(q, lang) {
+    if (lang !== "ja" && lang !== "ko") return null;
+    if (!q || q.length > 32) return null;
+    const now = Date.now();
+    const ck = lang + ":" + q;
+    const cached = YDC_CACHE.get(ck);
+    if (cached && now - cached.t < 300000) return cached.text || null;
+    const rl = YDC_RATE.get("g") || { t: 0, n: 0 };
+    if (now - rl.t > 10000) { rl.t = now; rl.n = 0; }
+    if (rl.n >= 10) return null;   // 兜底频控,防第三方封禁
+    rl.n++;
+    YDC_RATE.set("g", rl);
+    try {
+        const res = await fetch("https://aidemo.youdao.com/trans?q=" + encodeURIComponent(q) + "&from=" + lang + "&to=zh-CHS", {
+            headers: {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36",
+                "Referer": "https://ai.youdao.com/"
+            },
+            signal: AbortSignal.timeout(4500)
+        });
+        if (!res.ok) return null;
+        const d = await res.json().catch(() => null);
+        if (!d || String(d.errorCode) !== "0") return null;   // 411=请求过快,当作 miss
+        let text = Array.isArray(d.translation) ? String(d.translation[0] || "").trim().slice(0, 500) : "";
+        if (!text || text === q) text = "";   // 原样返回=没翻出来
+        if (YDC_CACHE.size >= YDC_MAX_CACHE) { const k0 = YDC_CACHE.keys().next().value; if (k0) YDC_CACHE.delete(k0); }
+        YDC_CACHE.set(ck, { t: now, text });
+        return text || null;
+    } catch (e) { return null; }
+}
+
 // 有道句子兜底(AI 模型池挂起/漏句时逐句直翻保底;免费源不稳:8s 超时+20 次/20s 频控+5 分钟缓存+maxMs 总预算;与单词兜底 YD_* 频控分开)
 const YDS_RATE = { t: 0, n: 0 };
 const YDS_CACHE = new Map();
@@ -3872,11 +3908,17 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
 
-            // ---- 路由:词典兜底查词(GET /api/lang/dict?q=…&lang=en;ECDICT 77 万词条 KV 分片,公开,IP 60 次/分)----
+            // ---- 路由:词典兜底查词(GET /api/lang/dict?q=…&lang=en|ja|ko;英语走 ECDICT 77 万词条 KV 分片,
+            //      日/韩走有道直译(ECDICT 只收英语词条);公开,IP 60 次/分)----
             if (url.pathname === "/api/lang/dict" && request.method === "GET") {
                 const q = String(url.searchParams.get("q") || "").trim().toLowerCase().slice(0, 64);
                 const lang = String(url.searchParams.get("lang") || "en").slice(0, 8);
-                if (!q || !/^[a-z0-9'\- ]+$/.test(q) || lang !== "en") {
+                const isEn = lang === "en", isCJK = lang === "ja" || lang === "ko";
+                // 日/韩点词取的是紧邻词形:限 20 字、不含空白、须含非 ASCII 字符(挡住拿本接口当通用翻译使)
+                const qOk = isEn
+                    ? /^[a-z0-9'\- ]+$/.test(q)
+                    : isCJK && Array.from(q).length <= 20 && !/\s/.test(q) && /[^\x00-\x7f]/.test(q);
+                if (!q || !qOk) {
                     return errorResponse("查词参数不对", 400, null, "BAD_DICT_QUERY");
                 }
                 const ip = request.headers.get("cf-connecting-ip") || "x";
@@ -3886,33 +3928,35 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 rl.n++;
                 if (rl.n > 60) return errorResponse("查词有点频繁，歇一下再试", 429, null, "DICT_TOO_FREQUENT");
                 dictRate.set(ip, rl);
-                const strip = q.replace(/[^a-z0-9]/g, "");
-                const prefix = strip.slice(0, 2) || "_";
                 let found = null;
-                try {
-                    let shard = dictCache.get(prefix);
-                    if (!shard) {
-                        const raw = await env.DICT_EN.get("d:en:" + prefix);
-                        if (raw) {
-                            shard = JSON.parse(raw);
-                            if (dictCache.size >= DICT_SHARD_CACHE_MAX) {
-                                const k0 = dictCache.keys().next().value;
-                                if (k0) dictCache.delete(k0);
-                            }
-                            dictCache.set(prefix, shard);
-                        }
-                    }
-                    if (shard) {
-                        if (shard[q]) found = { word: q, val: shard[q] };
-                        else if (q.length > 3) {
-                            for (const c of dictStemCandidates(q)) {
-                                if (shard[c]) { found = { word: c, val: shard[c] }; break; }
+                if (isEn) {
+                    const strip = q.replace(/[^a-z0-9]/g, "");
+                    const prefix = strip.slice(0, 2) || "_";
+                    try {
+                        let shard = dictCache.get(prefix);
+                        if (!shard) {
+                            const raw = await env.DICT_EN.get("d:en:" + prefix);
+                            if (raw) {
+                                shard = JSON.parse(raw);
+                                if (dictCache.size >= DICT_SHARD_CACHE_MAX) {
+                                    const k0 = dictCache.keys().next().value;
+                                    if (k0) dictCache.delete(k0);
+                                }
+                                dictCache.set(prefix, shard);
                             }
                         }
-                    }
-                } catch (e) {}
+                        if (shard) {
+                            if (shard[q]) found = { word: q, val: shard[q] };
+                            else if (q.length > 3) {
+                                for (const c of dictStemCandidates(q)) {
+                                    if (shard[c]) { found = { word: c, val: shard[c] }; break; }
+                                }
+                            }
+                        }
+                    } catch (e) {}
+                }
                 if (!found) {
-                    const yd = await youdaoWordFallback(q);
+                    const yd = isEn ? await youdaoWordFallback(q) : await youdaoCJWFallback(q, lang);
                     if (yd) found = { word: q, val: ["", yd, "", ""], src: "youdao" };
                 }
                 return new Response(JSON.stringify({
