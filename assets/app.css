@@ -325,13 +325,11 @@
             z-index: 2;
         }
 
-        /* 游玩页看不到飘落小熊的根因:剧情区是一列不透明的 .ai-beauty-card,
-           整片铺满视口,而小熊层只有 z-index:1,永远压在 .content(z-index:2)之下。
-           只在游玩页把小熊抬到内容之上——其余页维持原样,小熊仍在卡片后飘。
-           小熊层是 pointer-events:none,浮在字上也不挡任何点击。 */
-        #app:has(#view-main.active) .bear-layer {
-            z-index: 3;
-        }
+        /* 曾经在游玩页把 .bear-layer 抬到 z-index:3(为了"看见飘落小熊")。实测那样等于把小熊
+           直接铺在正文上:剧情区是一整列不透明卡片,熊只能在卡片之间露头,露出来的每一只都
+           压在字上,读起来是噪点(小徐 2026-09-26)。现在收回 z-index:1(默认值),
+           小熊仍在背景里飘,游玩页被不透明卡片挡住而已 —— 其余页观感不变。
+           想看/想关交给「我的 → 显示设置 → 飘落小熊」(html.no-bear-rain,见下)。 */
 
         /* 「我的 → 显示设置 → 飘落小熊」关掉时走的这条。用 class 挂在 <html> 上而不是
            直接 display:none 掉 #bear-layer:类名在页面脚本开跑时就写好了(loadBears),
@@ -1747,8 +1745,13 @@
         /* R1 立绘:结局弹窗角色半身像横幅(3:4 顶部对齐裁切,onerror 自动移除) */
         .ending-art { height: 220px; border-radius: 14px; overflow: hidden; margin: 0 0 12px; background: linear-gradient(160deg, #2b1a2e, #3c1f3f); border: 1px solid rgba(255,150,190,.28); }
         /* 立绘/头像灯箱:全屏放大看原图,点任意处或 Esc 关闭 */
-        .img-lightbox { position: fixed; inset: 0; z-index: 2147482500; background: rgba(10,7,5,.9); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 16px; cursor: zoom-out; animation: ilbIn .18s ease; }
-        .img-lightbox img { max-width: 96vw; max-height: 84vh; border-radius: 12px; background: #14100c; box-shadow: 0 20px 60px rgba(0,0,0,.55); }
+        .img-lightbox { position: fixed; inset: 0; z-index: 2147482500; background: rgba(10,7,5,.9); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 16px; overflow: auto; animation: ilbIn .18s ease; }
+        /* 切到原尺寸后容器可滚;此时不能再居中,否则 Chrome 里超出部分会连顶部一起裁掉 */
+        .img-lightbox.ilb-zoomed { justify-content: flex-start; }
+        .img-lightbox img { max-width: 96vw; max-height: 84vh; border-radius: 12px; background: #14100c; box-shadow: 0 20px 60px rgba(0,0,0,.55); cursor: zoom-in; }
+        .img-lightbox img.ilb-zoom { max-width: none; max-height: none; width: auto; cursor: zoom-out; }
+        .img-lightbox .ilb-x { position: fixed; top: 14px; right: 14px; width: 34px; height: 34px; border: none; border-radius: 50%; background: rgba(255,255,255,.14); color: #fff; font-size: var(--fs-3); line-height: 1; cursor: pointer; }
+        .img-lightbox .ilb-x:hover { background: rgba(255,255,255,.26); }
         .img-lightbox .ilb-cap { color: #fff; font-size: var(--fs-3); font-weight: 800; letter-spacing: .02em; }
         .img-lightbox .ilb-hint { color: rgba(255, 255, 255, .6); font-size: var(--fs-2); }
         @keyframes ilbIn { from { opacity: 0; } to { opacity: 1; } }
@@ -1966,6 +1969,19 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 8px;
             margin-top: 10px;
+        }
+        /* 2026-09-26 三线分块的小标题(开通会员 / 功能救急包 / 云币充值) */
+        .recharge-group-title {
+            font-size: var(--fs-3);
+            font-weight: 800;
+            color: var(--text);
+            margin-top: 14px;
+        }
+        .recharge-group-title:first-child {
+            margin-top: 10px;
+        }
+        .recharge-group-title + .recharge-grid {
+            margin-top: 6px;
         }
         .recharge-item {
             display: flex;
@@ -4258,9 +4274,8 @@
         }
 
         /* 卡片内那层小熊(.card-bear-host/.card-bear-layer/.card-bear 与 @keyframes fallCard)
-           已整组删除(小徐 2026-09-26):背景那层现在会透上来(游玩页由
-           #app:has(#view-main.active) .bear-layer 抬到 .content 之上),卡片里再叠一层
-           同一批熊只是重复,而且两批各自随机、位置对不上。开关也只管背景那一层。 */
+           已整组删除(小徐 2026-09-26):全站只留背景那一层熊,卡片里再叠一层同一批熊
+           只是重复,而且两批各自随机、位置对不上。开关也只管背景那一层。 */
 
         .ai-beauty-card .ai-beauty-card-title,
         .ai-beauty-card .ai-beauty-card-body {
@@ -5407,7 +5422,11 @@
     .lg-pop-say svg{width:1.05em;height:1.05em}
     .lg-pop-en{font-size:var(--fs-2);color:var(--text);opacity:.85;margin-top:3px}
     .lg-pop-zh{font-size:var(--fs-3);color:var(--text);margin-top:5px}
-    .lg-pop-foot{margin-top:8px;padding-top:7px;border-top:1px dashed color-mix(in srgb, var(--accent-2) 30%, transparent);display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:var(--fs-2);color:var(--sub)}
+    /* space-between + 不换行时,"已收进生词本 / 从生词本移除 / 在大厅…里可以划状态"三段挤一行,
+       窄屏会把最后一句挤出弹层。允许换行,文字段自身可收缩。 */
+    .lg-pop-foot{margin-top:8px;padding-top:7px;border-top:1px dashed color-mix(in srgb, var(--accent-2) 30%, transparent);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:var(--fs-2);color:var(--sub)}
+    .lg-pop-foot > span{min-width:0}
+    .lg-pop-foot .lg-vr-origin{margin-top:0}
     .lg-pop-foot .ok,.lang-today-note .ok{color:var(--ok);font-weight:700}
     .lg-pop-foot .later{color:var(--accent);font-weight:700}
     /* M9D:词双击查词(禁双击缩放)+ 弹层内「从生词本移除」 */
@@ -5439,18 +5458,31 @@
     .lg-vr-ctx::before{content:"“";opacity:.5}
     .lg-vr-ctx::after{content:"”";opacity:.5}
     .lg-vr-ctx b{font-weight:800;color:var(--accent-2);background:color-mix(in srgb, var(--accent-2) 14%, transparent);border-radius:4px;padding:0 2px}
-    .lg-tabs{display:flex;gap:8px;margin:4px 0 10px}
-    .lg-tab{flex:1;border:1px solid var(--line);background:var(--input-bg);color:var(--text);border-radius:12px;padding:9px 6px;font-size:var(--fs-2);font-weight:700;cursor:pointer;transition:background-color .15s var(--ease),border-color .15s var(--ease),color .15s var(--ease),transform .15s var(--ease)}
-    .lg-tab b{font-weight:800;opacity:.75;font-size:var(--fs-2)}
-    .lg-tab.on{background:linear-gradient(135deg,var(--block-accent-2),var(--block-accent-2-strong));color:#fff;border-color:transparent;box-shadow:0 4px 12px color-mix(in srgb, var(--accent-2) 25%, transparent)}
-    .lg-tab.on b{opacity:.9}
+    /* 双 Tab 改 Segmented Control(2026-09-26):两个等宽大按钮各自带边框,分不出"这是一组开关"
+       还是"两个并列动作";改成同一条底槽里的两块滑块,选中态只靠白底+投影抬起来。 */
+    .lg-tabs{display:flex;gap:2px;margin:4px 0 12px;padding:3px;background:color-mix(in srgb, var(--text) 7%, transparent);border-radius:13px}
+    .lg-tab{flex:1;border:none;background:transparent;color:var(--sub);border-radius:10px;padding:8px 6px;font-size:var(--fs-2);font-weight:700;cursor:pointer;transition:background-color .18s var(--ease),color .18s var(--ease),box-shadow .18s var(--ease)}
+    .lg-tab b{font-weight:800;opacity:.7;font-size:var(--fs-1);margin-left:2px}
+    .lg-tab.on{background:var(--card-bg);color:var(--text);box-shadow:0 1px 5px rgba(0,0,0,.14)}
+    .lg-tab.on b{opacity:1;color:var(--accent-2)}
     .lg-tools{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
     .lg-srch{width:100%;box-sizing:border-box;border:1px solid var(--line);background:var(--input-bg);color:var(--text);border-radius:12px;padding:9px 12px;font-size:var(--fs-2);outline:none}
     .lg-srch:focus{border-color:color-mix(in srgb, var(--accent-2) 60%, transparent)}
-    .lg-srcs{display:flex;gap:6px;flex-wrap:wrap}
-    .lg-src{border:1px solid var(--line);background:var(--input-bg);color:var(--text);border-radius:999px;padding:4px 10px;font-size:var(--fs-2);cursor:pointer;opacity:.8}
+    /* 来源可能很多(每张卡一个),wrap 之后能占掉半个屏幕,把搜索框和列表全挤下去 —— 收成一行横滑 */
+    .lg-srcs{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;padding-bottom:2px;scrollbar-width:none}
+    .lg-srcs::-webkit-scrollbar{display:none}
+    .lg-src{flex:0 0 auto;white-space:nowrap;border:1px solid var(--line);background:var(--input-bg);color:var(--text);border-radius:999px;padding:4px 10px;font-size:var(--fs-2);cursor:pointer;opacity:.8}
     .lg-src.on{background:color-mix(in srgb, var(--accent-2) 15%, transparent);border-color:color-mix(in srgb, var(--accent-2) 50%, transparent);color:var(--accent-2);font-weight:800;opacity:1}
+    /* 掌握程度筛选(与来源筛选正交,所以单独一行) */
+    .lg-stfs{display:flex;gap:6px;flex-wrap:wrap}
+    .lg-stf{border:1px solid var(--line);background:var(--input-bg);color:var(--text);border-radius:999px;padding:4px 10px;font-size:var(--fs-2);cursor:pointer;opacity:.8}
+    .lg-stf.on{background:color-mix(in srgb, var(--accent-2) 15%, transparent);border-color:color-mix(in srgb, var(--accent-2) 50%, transparent);color:var(--accent-2);font-weight:800;opacity:1}
     .lg-rv-go{width:100%;box-sizing:border-box;border:none;border-radius:12px;padding:11px;font-size:var(--fs-2);font-weight:800;color:#fff;background:linear-gradient(135deg,var(--block-ok),#43b884);cursor:pointer;margin-bottom:10px}
+    /* 复习预报:一行小字,夹在列表和 CTA 之间,不抢视觉 */
+    .lg-rv-fc{font-size:var(--fs-1);color:var(--sub);margin:-4px 0 10px;padding-left:2px;line-height:1.5}
+    /* 空状态出口:一排次级按钮(提前复习/错词重练/看全部/去玩) */
+    .lg-rv-acts{display:flex;flex-direction:column;gap:8px}
+    .lg-rv-go.ghost{background:transparent;border:1px solid color-mix(in srgb, var(--accent-2) 42%, transparent);color:var(--accent-2);margin-bottom:0}
     .lg-rv-mask{position:fixed;inset:0;z-index:9999;background:rgba(28,20,16,.62);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:20px}
     .lg-rv-card{width:100%;max-width:440px;max-height:82vh;overflow-y:auto;background:var(--card-bg);border-radius:20px;padding:20px 18px;box-shadow:0 18px 50px rgba(0,0,0,.3)}
     .lg-rv-top{display:flex;justify-content:space-between;align-items:center;font-size:var(--fs-2);opacity:.7;margin-bottom:14px}
@@ -5469,11 +5501,19 @@
     .lg-rv-st button.s2{border-color:color-mix(in srgb, var(--ok) 50%, transparent);color:var(--ok)}
     .lg-rv-done{text-align:center;padding:24px 0}
     .lg-rv-done b{font-size:var(--fs-4);display:block;margin-bottom:8px}
-    .lg-st{display:flex;gap:5px;margin-top:6px}
+    /* 音标:跟在词后,弱化处理 —— 它是"顺手看一眼"的信息,不该和词本身抢视线 */
+    .lg-vr-ipa{font-weight:400;font-size:var(--fs-1);color:var(--sub);margin-left:6px;opacity:.9}
+    /* +发音 +补查 +移出 之后一行放不下,允许换行 */
+    .lg-st{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap;align-items:center}
     .lg-st button{border:1px solid var(--line);background:transparent;color:var(--sub);font-size:var(--fs-1);border-radius:999px;padding:2px 9px;cursor:pointer}
     .lg-st button.on-0{background:color-mix(in srgb, var(--accent-2) 16%, transparent);border-color:var(--accent-2);color:var(--accent-2);font-weight:700}
-    .lg-st button.on-1{background:color-mix(in srgb, var(--accent-2-soft) 16%, transparent);border-color:var(--accent-2-soft);color:var(--accent-2-soft);font-weight:700}
+    /* 眼熟态原来用 --accent-2-soft(深蓝灰),在这块浅底上和"未选中"几乎同色,选中了也看不出来 */
+    .lg-st button.on-1{background:color-mix(in srgb, var(--warn) 16%, transparent);border-color:var(--warn);color:var(--warn);font-weight:700}
     .lg-st button.on-2{background:color-mix(in srgb, var(--ok) 18%, transparent);border-color:var(--ok);color:var(--ok);font-weight:700}
+    .lg-st button:disabled{opacity:.45;cursor:default}
+    .lg-st .lg-st-fix{color:var(--accent-2);border-color:color-mix(in srgb, var(--accent-2) 45%, transparent)}
+    .lg-st .lg-st-del{margin-left:auto;opacity:.7}
+    .lg-st .lg-st-del:hover{color:var(--danger);border-color:color-mix(in srgb, var(--danger) 45%, transparent);opacity:1}
     /* ===== 语言文游 M5 章末复盘(入口条 + RecapModal + 收藏闭环) ===== */
     .lg-recap-entry{display:flex;align-items:center;justify-content:center;gap:6px;margin:14px 6px 2px;padding:9px 14px;font-size:var(--fs-2);font-weight:700;color:var(--accent-2);background:linear-gradient(115deg,color-mix(in srgb, var(--accent-2) 12%, transparent),color-mix(in srgb, var(--accent-2) 5%, transparent) 60%,color-mix(in srgb, var(--accent-2-soft) 10%, transparent));border:1px dashed color-mix(in srgb, var(--accent-2) 50%, transparent);border-radius:999px;cursor:pointer;user-select:none;text-align:center}
     .lg-recap-entry:active{transform:scale(.98)}

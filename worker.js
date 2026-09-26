@@ -3661,7 +3661,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const items = (d.items || []).map((i) => ({
                     id: i.id, lang: String(i.lang || "en"), type: String(i.type || "word"), term: String(i.term || ""),
                     gloss_en: String(i.gloss_en || ""), gloss_zh: String(i.gloss_zh || ""), origin: String(i.origin || ""),
-                    context: String(i.context || ""),
+                    context: String(i.context || ""), ph: String(i.ph || ""),
                     status: Number(i.status || 0), created_at: i.created_at || ""
                 }));
                 return new Response(JSON.stringify({ items, total: items.length }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
@@ -3682,6 +3682,10 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                     origin: String(body.origin || "").slice(0, 200),
                     context: String(body.context || "").slice(0, 500)
                 };
+                // 音标(PB lang_vocab 的 ph 列):只在新客户端带上、且该列存在时才写 —— 列还没加时
+                // PocketBase 会整条 reject,下面靠一次重试摘掉它,不能因为多存一个音标就存不进生词
+                const ph = String(body.ph || "").trim().slice(0, 64);
+                if (ph) data.ph = ph;
                 const dupF = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'&&term='${escapePocketBaseFilterValue(term)}'`);
                 const dupQ = await pbAdminFetch(env, `/api/collections/lang_vocab/records?perPage=1&skipTotal=true&filter=${dupF}`);
                 const dupD = await dupQ.json().catch(() => ({}));
@@ -3692,10 +3696,16 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                     if (!dup.gloss_en && data.gloss_en) patch.gloss_en = data.gloss_en;
                     if (!dup.gloss_zh && data.gloss_zh) patch.gloss_zh = data.gloss_zh;
                     if (!dup.context && data.context) patch.context = data.context;
+                    if (!dup.ph && data.ph) patch.ph = data.ph;
                     if (Object.keys(patch).length) await pbAdminFetch(env, `/api/collections/lang_vocab/records/${dup.id}`, { method: "PATCH", body: JSON.stringify(patch) }).catch(() => {});
                     return new Response(JSON.stringify({ ok: true, existed: true, id: dup.id }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
                 }
-                const r = await pbAdminFetch(env, `/api/collections/lang_vocab/records`, { method: "POST", body: JSON.stringify(data) });
+                let r = await pbAdminFetch(env, `/api/collections/lang_vocab/records`, { method: "POST", body: JSON.stringify(data) });
+                if (!r.ok && data.ph) {
+                    // 多半是 PB 还没加 ph 列(400 unknown field):摘掉音标重来一次,生词本身必须存得进去
+                    delete data.ph;
+                    r = await pbAdminFetch(env, `/api/collections/lang_vocab/records`, { method: "POST", body: JSON.stringify(data) });
+                }
                 if (!r.ok) return errorResponse("生词保存失败", 500, null, "VOCAB_CREATE_FAILED");
                 const created = await r.json().catch(() => ({}));
                 return new Response(JSON.stringify({ ok: true, existed: false, id: created.id }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });

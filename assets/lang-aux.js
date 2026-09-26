@@ -33,6 +33,7 @@
     var vocabTab = "due";   // due=📆今日复习 | all=📚全部生词库
     var vocabQ = "";        // Tab2 搜索词
     var vocabSrc = "";      // Tab2 来源筛选("" = 全部)
+    var vocabSt = "";       // Tab2 掌握程度筛选("" = 全部 | "0" 新学 | "1" 眼熟 | "2" 已掌握)
     var pendingCtx = "";    // 双击查词时暂存"该词所在的那句话",由 saveVocabSilent 取走
     /* 会话语种(词法层用):沿用 LangEngine 的语种判定;非语言会话/未加载时按 en(行为不变) */
     var IS_CJK_LANG = { ja: 1, ko: 1 };
@@ -791,15 +792,35 @@
        词库这半边直连点查用的同一套表 —— langBankItem 的小写表(拉丁)/ bankLookupCJK 的词干回查(日/韩),
        免得「点得出来」和「看得出」两处判定各判各的、慢慢漂开。
        band 传空串＝词库还没载,一律不算命中:先标满再回退会闪,不如等词库到了再补标(见 flushPendSens)。 */
+    /* 词库那半边的频次下界(2026-09-26)。frq 是词频排名:a=5 / ability=783 / abandon=2182,
+       越小越常见。词库里连 the/a/and/at 都收着,而旧口径是"在库就划"——一段普通剧情能被划掉
+       一半的词,满屏虚线反而没有提示作用(小徐 2026-09-26「泛滥无分级」)。取 1000:实测
+       CET4 词库 p10=492、p25=1271,这个下界砍掉的正是"不该再提示你"的那一档。
+       日/韩词库整档没有 frq(实测 ja-n3 / ko-2 全为 0),拿不到就维持原样 ——
+       不能因为缺字段把这两个语种的标注全丢掉。 */
+    var BANK_FRQ_MIN = 1000;
+    /* 这个 token 在生词本里的状态;-1 = 不在生词本(可能只是词池里的表达) */
+    function poolStatusOf(tok) {
+        var it = vocabMap[String(tok || "").toLowerCase()];
+        return it ? (Number(it.status) || 0) : -1;
+    }
     function wordHit(tok, re, cjk, band) {
-        if (cjk) { if (cjkHit(tok)) return true; }
+        var mine = false;
+        if (cjk) { if (cjkHit(tok)) mine = true; }
         else if (re) {
             re.lastIndex = 0;
             var hm = re.exec(tok);
-            if (hm && hm[0].toLowerCase() === tok.toLowerCase()) return true;
+            if (hm && hm[0].toLowerCase() === tok.toLowerCase()) mine = true;
         }
+        /* 自己的词:已掌握(status>=2)的不再划虚线。注意只是不划,仍然可点查 ——
+           虚线是"提醒你注意",已经掌握的词一直提醒只会让提醒贬值(小徐 2026-09-26)。 */
+        if (mine) return poolStatusOf(tok) < 2;
         if (!band) return false;
-        return cjk ? !!bankLookupCJK(band, tok) : !!langBankItem(band, tok);
+        var bit = cjk ? bankLookupCJK(band, tok) : langBankItem(band, tok);
+        if (!bit) return false;
+        var frq = Number(bit.frq);
+        if (frq > 0 && frq < BANK_FRQ_MIN) return false;
+        return true;
     }
     function wrapWords(span) {
         var re = buildWordRe();
@@ -992,10 +1013,13 @@
         sen.expanded = false;
         if (sen.glossEl) { sen.glossEl.remove(); sen.glossEl = null; }
     }
-    // M9C:单击句子 = 收起已开译文(不开新译文);开译文走长按 openSen
+    /* 单击句子 = 开/收译文(2026-09-26 改)。原来单击只能"收起已开的",想开新译文必须长按 430ms ——
+       小徐要的是"点开点收",而长按在手机上本来就和选中文字打架。前两轮的沉浸 scaffold 依旧
+       自动展开(见 lgImm autoExpand,不经过这里),所以新手第一眼还是能看见双语对照。 */
     function toggleSen(sen) {
-        if (!sen || !sen.expanded) return;
-        collapseSen(sen);
+        if (!sen) return;
+        if (sen.expanded) { collapseSen(sen); return; }
+        openSen(sen);
     }
     function openSen(sen) {
         if (!sen) return;
@@ -1258,6 +1282,7 @@
                 lang: curLearnLang(), type: "word", term: String(term).slice(0, 64),
                 gloss_en: info && info.en ? String(info.en).slice(0, 500) : "",
                 gloss_zh: info && info.zh ? String(info.zh).slice(0, 500) : "",
+                ph: info && info.ph ? String(info.ph).slice(0, 64) : "",
                 origin: origin.slice(0, 200),
                 context: ctx
             })
@@ -1265,7 +1290,7 @@
             .then(function (r) { return r.ok ? r.json() : null; })
             .then(function (d) {
                 if (!d) { if (cb) cb(false); return; }
-                vocabMap[key] = { id: d.id || "", type: "word", term: String(term).slice(0, 64), gloss_en: info && info.en ? String(info.en) : "", gloss_zh: info && info.zh ? String(info.zh) : "", origin: origin, context: ctx, status: 0, created_at: "" };
+                vocabMap[key] = { id: d.id || "", type: "word", term: String(term).slice(0, 64), gloss_en: info && info.en ? String(info.en) : "", gloss_zh: info && info.zh ? String(info.zh) : "", ph: info && info.ph ? String(info.ph) : "", origin: origin, context: ctx, status: 0, created_at: "" };
                 reDirty = true;
                 if (cb) cb(true);
             }).catch(function () { if (cb) cb(false); });
@@ -1467,11 +1492,107 @@
 
     /* ---- 「我的生词本」视图(view-lang ⑤) ---- */
     var lastLearnAt = 0;
-    /* ---- P2 复习计划(2026-09-08):艾宾浩斯简化版 1/2/4/7 ----
-       词首次收录(created_at 北京日)起第 1/2/4/7 天进入「今日复习」;status=2 已掌握毕业;
-       复习动作=自评三键(没记住→留新学/记住了→眼熟/很熟了→已掌握)调 status API;
-       当日打过分即移出清单(localStorage lang_review_done_v1:{date,ids}),次日到期按计划重现 */
-    var REVIEW_DAYS = [1, 2, 4, 7];
+    /* ---- 复习计划(2026-09-26 重做:前端渐进式 SRS) ----
+       旧实现把每词的到期日锚死在「收录日 +1/2/4/7 天」这四天,复习完既不推进也不循环 ——
+       任何收录超过 7 天的词永远不再到期(实测:17 条收录于 09-05~09-16 的生词,在 09-26 当天
+       diff 全在 10~21,一条都落不进 {1,2,4,7} → 「今日复习」恒为 0,功能等于死了)。
+       现改为阶梯推进:SRS_STEPS 是「距上次复习的天数」,答对升一档、答错退回第一档;
+       从没复习过的词一律按「收录日 + 第一档」算,所以收录满一天还没复习的一律算逾期、立刻补进今日。
+       数据存 localStorage lang_srs_v1:{vid:{r:轮次,d:上次复习北京日,w:答错累计}}。
+       lang_review_done_v1(当日已自评)保留作兜底,保证同一天既推进档位又不会被重复列出。
+       status>=2 已掌握毕业、永久移出排程;这个门是单向的,但改回新学/眼熟后会按既有档位继续排
+       (旧实现在这点上更糟:改回来也永远不再到期)。复习动作=自评三键(没记住/记住了/很熟了)调 status API。 */
+    var SRS_STEPS = [1, 2, 4, 7, 15, 30];
+    var SRS_KEY = "lang_srs_v1";
+    var srsMap = {};
+    (function () {
+        try {
+            var o = JSON.parse(localStorage.getItem(SRS_KEY) || "null");
+            if (o && typeof o === "object") {
+                for (var k in o) if (o[k] && typeof o[k] === "object") srsMap[k] = o[k];
+            }
+        } catch (e) {}
+    })();
+    function srsSave() {
+        try { localStorage.setItem(SRS_KEY, JSON.stringify(srsMap)); } catch (e) {}
+    }
+    function srsStep(r) {
+        var i = Number(r) || 0;
+        if (i < 0) i = 0;
+        if (i > SRS_STEPS.length - 1) i = SRS_STEPS.length - 1;
+        return SRS_STEPS[i];
+    }
+    /* 到期日(北京日整数)。没记录 = 收录日 + 第一档 */
+    function srsDueDay(it) {
+        if (!it) return null;
+        var k = String(it.id || "");
+        var rec = k ? srsMap[k] : null;
+        if (rec && typeof rec.d === "number" && rec.d > 0) return rec.d + srsStep(rec.r);
+        var bj = bjDayInt(it.created_at);
+        return bj == null ? null : bj + SRS_STEPS[0];
+    }
+    /* 到期(含逾期);已掌握毕业的不再排 */
+    function srsIsDue(it, tday) {
+        if (!it || Number(it.status || 0) >= 2) return false;
+        var dd = srsDueDay(it);
+        return dd != null && tday >= dd;
+    }
+    /* 自评后推进档位:没记住→退回第一档并记一次错;记住了→升一档;很熟了→拉满 */
+    function srsAdvance(vid, st) {
+        if (!vid) return;
+        var rec = srsMap[vid] || { r: 0, d: 0, w: 0 };
+        var r = Number(rec.r) || 0;
+        if (st === 0) { r = 0; rec.w = (Number(rec.w) || 0) + 1; }
+        else if (st === 2) { r = SRS_STEPS.length - 1; }
+        else { r = Math.min(r + 1, SRS_STEPS.length - 1); }
+        rec.r = r;
+        rec.d = todayBjInt();
+        srsMap[vid] = rec;
+        srsSave();
+    }
+    /* 所有未毕业的词(预报、自主复习共用) */
+    function srsPool() {
+        var pool = [], k, it;
+        for (k in vocabMap) {
+            if (!Object.prototype.hasOwnProperty.call(vocabMap, k)) continue;
+            it = vocabMap[k];
+            if (!it || Number(it.status || 0) >= 2) continue;
+            pool.push(it);
+        }
+        return pool;
+    }
+    /* 未来 7 天预报:今天(含逾期)记在 d=0,只返回有词的档 */
+    function srsForecast() {
+        var tday = todayBjInt(), cnt = [], i, res = [], pool = srsPool();
+        for (i = 0; i <= 7; i++) cnt.push(0);
+        for (i = 0; i < pool.length; i++) {
+            var dd = srsDueDay(pool[i]);
+            if (dd == null) continue;
+            var rel = dd - tday;
+            if (rel < 0) rel = 0;
+            if (rel <= 7) cnt[rel]++;
+        }
+        for (i = 0; i <= 7; i++) if (cnt[i]) res.push({ d: i, n: cnt[i] });
+        return res;
+    }
+    /* 错词重练:答错过的词,错得多的在前 */
+    function srsWrongList(max) {
+        var pool = srsPool(), hit = [], i, rec;
+        for (i = 0; i < pool.length; i++) {
+            rec = srsMap[String(pool[i].id || "")];
+            if (rec && Number(rec.w) > 0) hit.push({ it: pool[i], w: Number(rec.w) });
+        }
+        hit.sort(function (a, b) { return b.w - a.w; });
+        return hit.slice(0, Math.max(1, Math.min(Number(max) || 20, 50))).map(function (x) { return x.it; });
+    }
+    /* 提前复习(自主模式):不管排程,从未毕业词里随机抽一批,治「今天没有到期的词」的憋屈 */
+    function srsFreeList(max) {
+        var pool = srsPool(), i, j, t;
+        for (i = pool.length - 1; i > 0; i--) {
+            j = Math.floor(Math.random() * (i + 1)); t = pool[i]; pool[i] = pool[j]; pool[j] = t;
+        }
+        return pool.slice(0, Math.max(1, Math.min(Number(max) || 20, 50)));
+    }
     function bjDayInt(iso) {
         var t = Date.parse(String(iso || "").replace(" ", "T"));
         return isNaN(t) ? null : Math.floor((t + 8 * 3600000) / 86400000);
@@ -1491,21 +1612,19 @@
     }
     function reviewDueList() {
         if (!vocabLoaded) return [];
-        var tday = todayBjInt(), done = reviewDoneSet(), out = [], k, it, bj, diff;
+        var tday = todayBjInt(), done = reviewDoneSet(), out = [], k, it;
         for (k in vocabMap) {
             if (!Object.prototype.hasOwnProperty.call(vocabMap, k)) continue;
             it = vocabMap[k];
-            if (Number(it.status || 0) >= 2) continue;         // 已掌握毕业
-            bj = bjDayInt(it.created_at);
-            if (bj == null) continue;
-            diff = tday - bj;
-            if (diff >= 0 && REVIEW_DAYS.indexOf(diff) >= 0 && done.indexOf(String(it.id)) < 0) out.push(it);
+            if (!srsIsDue(it, tday)) continue;
+            if (done.indexOf(String(it.id)) >= 0) continue;    // 今日已自评过
+            out.push(it);
         }
         out.sort(function (a, b) { return String(a.created_at || "") < String(b.created_at || "") ? 1 : -1; });
         return out;
     }
     function reviewHtml(rv) {
-        var h = '<div class="rv-box"><div class="rv-t">' + uiIconHtml("📅") + ' 今日复习 <span class="cap-soft">按 1·2·4·7 天计划，共 ' + rv.length + " 词</span></div>";
+        var h = '<div class="rv-box"><div class="rv-t">' + uiIconHtml("📅") + ' 今日复习 <span class="cap-soft">到期 ' + rv.length + " 词（含逾期）</span></div>";
         var i, it, isExp = function (x) { return x.type === "expression"; };
         var gz, gl;
         for (i = 0; i < rv.length; i++) {
@@ -1532,6 +1651,35 @@
         if (!o) return "其他";
         return o.replace(/^·\s*/, "").slice(0, 24) || "其他";
     }
+    /* 句子型收藏(章末复盘的仿写句)的原文 —— 它同时是翻译缓存的键。
+       老数据把句子重复写进了 gloss_zh(收藏按钮的 data-zh 直接抄了 term),新数据 gloss_zh 留空,
+       两种都返回句子本身;正常表达(有独立中文释义)返回空串,走普通渲染。 */
+    function expSentenceOf(it) {
+        if (!it || it.type !== "expression") return "";
+        var t = String(it.term || "").trim();
+        if (!t) return "";
+        var g = String(it.gloss_zh || "").trim();
+        if (!g || g.toLowerCase() === t.toLowerCase()) return t;
+        return "";
+    }
+    /* 词典释义标点规整(只作用于显示,不回写库)。ECDICT 常原样吐出中英标点混用的释义:
+       「v.盯,凝视;n.凝视」「v. （门）嘎吱作响( creak的现在分词 )」「n. 浓香, 香气\n[医] 香气」。
+       只做四件事、只动标点不动字:合并换行与多余空格、去掉圆括号内侧空格、
+       内容含汉字的圆括号转全角、夹在汉字之间的半角 , ; : 转全角。 */
+    function tidyGloss(s) {
+        var t = String(s == null ? "" : s);
+        if (!t) return t;
+        t = t.replace(/\r/g, "").replace(/[ \t]*\n+[ \t]*/g, " ").replace(/[ \t]{2,}/g, " ").replace(/^[ \t]+|[ \t]+$/g, "");
+        t = t.replace(/\(\s+/g, "(").replace(/\s+\)/g, ")");
+        t = t.replace(/(^|[；;])\s*(n|v|vt|vi|adj|adv|a|prep|pron|conj|num|art|int|aux|abbr|pl)\.(?=\S)/g, "$1$2. ");
+        if (/[一-鿿]/.test(t)) {
+            t = t.replace(/\(([^()]*[一-鿿][^()]*)\)/g, "（$1）");
+            t = t.replace(/([一-鿿])[,;:][ \t]*(?=[一-鿿])/g, function (m, a, b) {
+                return a + ({ ",": "，", ";": "；", ":": "：" })[b];
+            });
+        }
+        return t;
+    }
     /* 例句:把命中的那个词加粗(大小写不敏感,只标第一处) */
     function vocabCtxHtml(ctx, term) {
         var c = String(ctx || "").trim();
@@ -1547,12 +1695,32 @@
         arr.sort(function (a, b) { var ta = a.created_at || "", tb = b.created_at || ""; return ta === tb ? 0 : (ta > tb ? -1 : 1); });
         return arr;
     }
-    function vocabDueHtml(rv) {
-        if (!rv.length) {
-            return '<div class="lg-vr word"><div class="lg-vr-main"><div class="lg-vr-term">今天没有到期的词 ' + uiIconHtml("🎉") + '</div>' +
-                '<div class="lg-vr-gl">按 1·2·4·7 天计划，到期才出现。新收的词满 1 天后进入复习。</div></div></div>';
+    /* 复习预报:未来 7 天各有多少词到期摊成一行。今天那档不写 —— 上面的列表本身就是今天。 */
+    function srsForecastHtml() {
+        var f = srsForecast(), parts = [], i, lbl;
+        for (i = 0; i < f.length; i++) {
+            if (f[i].d === 0) continue;
+            lbl = f[i].d === 1 ? "明天" : f[i].d + " 天后";
+            parts.push(lbl + " " + f[i].n + " 词");
         }
-        return '<button type="button" class="lg-rv-go" data-act="rvgo">' + uiIconHtml("▶") + ' 一键开始复习 · 全屏刷 ' + rv.length + " 词</button>" + reviewHtml(rv);
+        if (!parts.length) return "";
+        return '<div class="lg-rv-fc">复习预报 · ' + parts.join(" · ") + "</div>";
+    }
+    function vocabDueHtml(rv) {
+        var fc = srsForecastHtml(), all = vocabAllList();
+        if (!rv.length) {
+            var wrongN = srsWrongList(50).length;
+            return '<div class="lg-vr word"><div class="lg-vr-main">' +
+                '<div class="lg-vr-term">今天没有到期的词 ' + uiIconHtml("🎉") + "</div>" +
+                '<div class="lg-vr-gl">按 1·2·4·7·15·30 天的间隔排，到期才出现。答对升一档、答错退回第一档。</div>' +
+                "</div></div>" + fc + '<div class="lg-rv-acts">' +
+                (all.length ? '<button type="button" class="lg-rv-go ghost" data-act="rvfree">提前复习 · 随机刷 ' + Math.min(all.length, 20) + " 词</button>" : "") +
+                (wrongN ? '<button type="button" class="lg-rv-go ghost" data-act="rvwrong">错词重练 · ' + wrongN + " 词</button>" : "") +
+                (all.length ? '<button type="button" class="lg-rv-go ghost" data-act="vall">查看全部生词库（' + all.length + "）</button>" : "") +
+                '<button type="button" class="lg-rv-go ghost" data-act="vplay">去玩新剧本攒新词</button>' +
+                "</div>";
+        }
+        return '<button type="button" class="lg-rv-go" data-act="rvgo">' + uiIconHtml("▶") + ' 一键开始复习 · 全屏刷 ' + rv.length + " 词</button>" + fc + reviewHtml(rv);
     }
     function vocabAllHtml(all) {
         var srcs = {}, i, j, s;
@@ -1568,31 +1736,76 @@
             }
             chips += "</div>";
         }
+        /* 掌握程度筛选:与来源筛选各占一行。来源是"我玩过哪些卡"、掌握度是"我背到哪一步",
+           两件事正交,所以不合并成一组,免得点来源把掌握度筛掉还得再点回来。 */
+        var ST = [["0", "新学"], ["1", "眼熟"], ["2", "已掌握"]];
+        var stc = [0, 0, 0];
+        for (i = 0; i < all.length; i++) { s = Number(all[i].status) || 0; if (stc[s] != null) stc[s]++; }
+        var stfs = '<div class="lg-stfs"><span class="lg-stf' + (vocabSt === "" ? " on" : "") + '" data-act="vstf" data-st="">全部 ' + all.length + "</span>";
+        for (i = 0; i < ST.length; i++) {
+            stfs += '<span class="lg-stf' + (vocabSt === ST[i][0] ? " on" : "") + '" data-act="vstf" data-st="' + ST[i][0] + '">' + ST[i][1] + " " + stc[i] + "</span>";
+        }
+        stfs += "</div>";
         var h = '<div class="lg-tools">' +
-            '<input id="lg-vocab-q" class="lg-srch" type="search" placeholder="搜索单词 / 释义 / 例句…" value="' + esc(vocabQ) + '" autocomplete="off">' + chips + "</div>";
+            '<input id="lg-vocab-q" class="lg-srch" type="search" placeholder="搜索单词 / 释义 / 例句…" value="' + esc(vocabQ) + '" autocomplete="off">' + chips + stfs + "</div>";
         if (!all.length) return h;
         h += '<div class="list-sub vocab-cnt" id="lg-vocab-cnt"></div>';
-        var ST = [["0", "新学"], ["1", "眼熟"], ["2", "已掌握"]];
+        var needTr = [];
         for (i = 0; i < all.length; i++) {
             var it = all[i];
             var cls = it.type === "expression" ? "expr" : "word";
             var tname = it.type === "expression" ? "表达" : "词";
-            var gz = String(it.gloss_zh || "");
-            var ge = it.type === "expression" && String(it.gloss_en || "") ? " · 例: " + String(it.gloss_en) : "";
-            var gl = (gz + ge || "（暂无释义）").slice(0, 220);
+            var stv0 = Number(it.status) || 0;
+            var rawZ = String(it.gloss_zh || "");
+            var sen = expSentenceOf(it);
+            var gl, senAttr = "";
+            if (sen) {
+                senAttr = ' data-sen="' + esc(sen) + '"';
+                if (rvTr[sen]) gl = rvTr[sen];
+                else if (rvTrBad[sen]) gl = "（这句的译文暂时取不到）";
+                else { gl = "译文获取中…"; needTr.push(sen); }
+            } else {
+                var ge = it.type === "expression" && String(it.gloss_en || "") ? " · 例: " + String(it.gloss_en) : "";
+                gl = tidyGloss(rawZ) + ge;
+                if (!String(gl).trim()) gl = "（暂无释义）";
+            }
+            gl = String(gl).slice(0, 220);
             var btns = "";
             for (j = 0; j < ST.length; j++) {
                 var stv = Number(ST[j][0]);
-                btns += '<button type="button" data-act="st" data-vid="' + esc(String(it.id || "")) + '" data-status="' + stv + '" class="' + (Number(it.status) === stv ? "on-" + stv : "") + '">' + ST[j][1] + "</button>";
+                btns += '<button type="button" data-act="st" data-vid="' + esc(String(it.id || "")) + '" data-status="' + stv + '" class="' + (stv0 === stv ? "on-" + stv : "") + '">' + ST[j][1] + "</button>";
             }
-            var hay = (String(it.term || "") + " " + gz + " " + String(it.gloss_en || "") + " " + String(it.context || "")).toLowerCase();
-            h += '<div class="lg-vr ' + cls + '" data-src="' + esc(vocabSrcOf(it)) + '" data-hay="' + esc(hay) + '">' +
+            /* 释义两头空的(ECDICT 没收录就存了下来)给一个现查入口 —— 走的还是首次收录那条
+               POST,worker 见到同词同人只补空字段,所以既不用新接口也不会覆盖已有释义 */
+            if (!sen && !rawZ.trim() && !String(it.gloss_en || "").trim() && String(it.term || "").trim()) {
+                btns += '<button type="button" class="lg-st-fix" data-act="vfix" data-vid="' + esc(String(it.id || "")) + '">补查释义</button>';
+            }
+            btns += '<button type="button" class="lg-st-del" data-act="del-vocab" data-vid="' + esc(String(it.id || "")) + '" data-key="' + esc(vocabKeyOfTerm(it.term)) + '">移出</button>';
+            var hay = (String(it.term || "") + " " + rawZ + " " + String(it.gloss_en || "") + " " + String(it.context || "")).toLowerCase();
+            h += '<div class="lg-vr ' + cls + '" data-src="' + esc(vocabSrcOf(it)) + '" data-mst="' + stv0 + '"' + senAttr + ' data-hay="' + esc(hay) + '">' +
                 '<span class="lg-vt ' + cls + '">' + tname + "</span>" +
-                '<div class="lg-vr-main"><div class="lg-vr-term">' + esc(it.term) + "</div>" +
+                '<div class="lg-vr-main"><div class="lg-vr-term">' + esc(it.term) +
+                (it.ph ? '<span class="lg-vr-ipa">' + esc(String(it.ph)) + "</span>" : "") +
+                sayBtnHtml(it.term) + "</div>" +
                 '<div class="lg-vr-gl">' + esc(gl) + "</div>" +
                 vocabCtxHtml(it.context, it.term) +
                 (it.origin ? '<div class="lg-vr-origin">' + esc(String(it.origin).slice(0, 80)) + "</div>" : "") +
                 '<div class="lg-st">' + btns + "</div></div></div>";
+        }
+        /* 译文取回来只改那几行释义,不整块重绘 —— 重绘会把正在输入的搜索框焦点冲掉 */
+        if (needTr.length) {
+            rvTrFetch(needTr, function (got) {
+                if (!got) return;
+                var bx = $("lang-learn-box");
+                if (!bx) return;
+                var cs = bx.querySelectorAll(".lg-vr[data-sen]"), m, zh, node;
+                for (m = 0; m < cs.length; m++) {
+                    zh = rvTr[String(cs[m].getAttribute("data-sen") || "")];
+                    if (!zh) continue;
+                    node = cs[m].querySelector(".lg-vr-gl");
+                    if (node) node.textContent = String(zh).slice(0, 220);
+                }
+            });
         }
         return h;
     }
@@ -1605,7 +1818,8 @@
         var shown = 0, i, c, hit;
         for (i = 0; i < cards.length; i++) {
             c = cards[i];
-            hit = !vocabSrc || c.getAttribute("data-src") === vocabSrc;
+            hit = (!vocabSrc || c.getAttribute("data-src") === vocabSrc)
+                && (vocabSt === "" || c.getAttribute("data-mst") === vocabSt);
             if (hit && q) hit = String(c.getAttribute("data-hay") || "").indexOf(q) >= 0;
             c.style.display = hit ? "" : "none";
             if (hit) shown++;
@@ -1613,7 +1827,7 @@
         var cnt = $("lg-vocab-cnt");
         if (cnt) {
             var total = cards.length;
-            cnt.textContent = (vocabQ.trim() || vocabSrc)
+            cnt.textContent = (vocabQ.trim() || vocabSrc || vocabSt !== "")
                 ? "筛选出 " + shown + " 条（共 " + total + " 条，点剧情里的词会自动收进来）"
                 : "共 " + total + " 条（点剧情里的词 / 章末复盘里收藏的表达都会收进来）";
         }
@@ -1655,8 +1869,9 @@
         if (!rvPlay) return;
         var it = rvPlay.list[rvPlay.i];
         if (!it) return;
-        if (it.id) reviewDoneAdd(String(it.id));   // 自评即复习:打过分当日不再重复提示
-        changeStatus(it.id, [0, 1, 2].indexOf(st) >= 0 ? st : 1);   // 顺带刷新身后的生词本
+        var gst = [0, 1, 2].indexOf(st) >= 0 ? st : 1;
+        if (it.id) { reviewDoneAdd(String(it.id)); srsAdvance(String(it.id), gst); }   // 自评即复习:推进档位 + 当日不再重复提示
+        changeStatus(it.id, gst);   // 顺带刷新身后的生词本
         rvPlay.i++;
         rvPlay.shown = false;
         rvPlayRender();
@@ -1723,7 +1938,7 @@
         var it = rvPlay.list[rvPlay.i];
         if (!it) {
             m.innerHTML = '<div class="lg-rv-card"><div class="lg-rv-done"><b>' + uiIconHtml("🎉") + ' 今日复习完成</b>' +
-                '<span class="lg-rv-hint tight">按 1·2·4·7 天计划，下一批到期的词会自动出现。</span>' +
+                '<span class="lg-rv-hint tight">答对的词会按 1·2·4·7·15·30 天的间隔越排越远，到期自己回来。</span>' +
                 '<button type="button" class="lg-rv-btn" data-act="rvclose">返回生词本</button></div></div>';
             return;
         }
@@ -1732,14 +1947,15 @@
         var ph = it.type === "expression" ? "固定表达" : "单词";
         var need = [], body;
         if (rvPlay.shown) {
-            if (term && gz.trim().toLowerCase() === term.trim().toLowerCase()) {
-                // 句子型收藏(章末复盘的仿写例句)存的"释义"就是原句,译文得现取
-                var sz = rvTr[gz];
+            var sen = expSentenceOf(it);
+            if (sen) {
+                // 句子型收藏(章末复盘的仿写例句):"释义"位存的就是原句,译文得现取
+                var sz = rvTr[sen];
                 body = '<div class="lg-rv-gz">' +
-                    (sz ? esc(sz) : rvTrBad[gz] ? esc(gz) : "译文获取中…") + "</div>";
-                if (!sz && !rvTrBad[gz]) need.push(gz);
+                    (sz ? esc(sz) : rvTrBad[sen] ? "（译文暂时取不到，先按上面的原句回看）" : "译文获取中…") + "</div>";
+                if (!sz && !rvTrBad[sen]) need.push(sen);
             } else {
-                body = '<div class="lg-rv-gz">' + esc(gz) + "</div>" + vocabCtxHtml(it.context, term);
+                body = '<div class="lg-rv-gz">' + esc(tidyGloss(gz)) + "</div>" + vocabCtxHtml(it.context, term);
             }
         } else {
             body = '<div class="lg-rv-hint">先在心里回想它的意思，再点下面揭示</div>';
@@ -1816,6 +2032,44 @@
                 renderLearn();
             }).catch(function () {});
     }
+    /* 补查释义:当年收录时词典没命中(ECDICT 未收录的专名、生造词),记录里只有词、没有释义。
+       点一下现查一次 /api/lang/dict —— 日/韩走有道兜底,英语走 ECDICT。查到就本地补上并重绘,
+       再走一次首次收录那条 POST 落库:worker 见"同人同词"只补空字段,不会覆盖已有释义、
+       更不会动 status,所以这一步是幂等的,连点也只会写同样的值。 */
+    function vocabFix(vid) {
+        if (!vid || !token()) return;
+        var key = null, it = null, k;
+        for (k in vocabMap) {
+            if (Object.prototype.hasOwnProperty.call(vocabMap, k) && String(vocabMap[k].id) === vid) { key = k; it = vocabMap[k]; break; }
+        }
+        if (!key || !it) return;
+        var term = String(it.term || "").slice(0, 64);
+        if (!term) return;
+        fetch(API_BASE + "/api/lang/dict?q=" + encodeURIComponent(term) + "&lang=" + encodeURIComponent(curLearnLang()))
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (d) {
+                var hh = d && d.hit ? d.hit : null;
+                var zh = hh && hh.zh ? String(hh.zh).slice(0, 500) : "";
+                var en = hh && hh.en ? String(hh.en).slice(0, 500) : "";
+                var phv = hh && hh.ph ? String(hh.ph).slice(0, 64) : "";
+                if (!zh && !en && !phv) {
+                    var bx = $("lang-learn-box");
+                    var bb = bx ? bx.querySelector('.lg-st-fix[data-act="vfix"][data-vid="' + vid + '"]') : null;
+                    if (bb) { bb.textContent = "词典里没有这个词"; bb.disabled = true; }
+                    return;
+                }
+                if (zh) vocabMap[key].gloss_zh = zh;
+                if (en) vocabMap[key].gloss_en = en;
+                if (phv) vocabMap[key].ph = phv;
+                if (vocabTab === "all") renderLearn();
+                return fetch(API_BASE + "/api/lang/vocab", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token() },
+                    body: JSON.stringify({ lang: curLearnLang(), type: it.type || "word", term: term, gloss_en: en, gloss_zh: zh, ph: phv })
+                });
+            })
+            .catch(function () {});
+    }
     var learnMo = null;
     function initLearnWatch() {
         var main = $("main-content");
@@ -1823,7 +2077,7 @@
         if (!main || !box) return;
         var boxClick = box.addEventListener("click", function (e) {
             var b = e.target && e.target.closest
-                ? e.target.closest('[data-act="vtab"], [data-act="rvgo"], [data-act="vsrc"], [data-act="st"], [data-act="rv"], [data-act="vocab-retry"], [data-act="vocab-login"]')
+                ? e.target.closest('[data-act="vtab"], [data-act="rvgo"], [data-act="vsrc"], [data-act="vstf"], [data-act="st"], [data-act="rv"], [data-act="vocab-retry"], [data-act="vocab-login"], [data-act="rvfree"], [data-act="rvwrong"], [data-act="vall"], [data-act="vplay"], [data-act="vfix"]')
                 : null;
             if (!b) return;
             var act = b.getAttribute("data-act");
@@ -1844,14 +2098,33 @@
                 vocabApplyFilter();
                 return;
             }
+            if (act === "vstf") {                       // 掌握程度筛选:同样就地显隐
+                var sv = String(b.getAttribute("data-st") || "");
+                vocabSt = (sv === "0" || sv === "1" || sv === "2") ? sv : "";
+                var fcs = box.querySelectorAll('.lg-stf[data-act="vstf"]');
+                for (var fi = 0; fi < fcs.length; fi++) {
+                    fcs[fi].classList.toggle("on", String(fcs[fi].getAttribute("data-st") || "") === vocabSt);
+                }
+                vocabApplyFilter();
+                return;
+            }
+            if (act === "vall") { vocabTab = "all"; renderLearn(); return; }
+            if (act === "vplay") {                      // 空状态出口:回语言首页挑新剧本(攒新词)
+                try { if (window.LangController && window.LangController.goLibrary) { window.LangController.goLibrary(); return; } } catch (e) {}
+                return;
+            }
             if (!token()) return;
+            if (act === "vfix") { vocabFix(String(b.getAttribute("data-vid") || "")); return; }
             if (act === "rvgo") { rvPlayOpen(reviewDueList()); return; }   // 一键开始复习 → 全屏
+            if (act === "rvfree") { rvPlayOpen(srsFreeList(20)); return; }  // 提前复习:不管排程随机抽
+            if (act === "rvwrong") { rvPlayOpen(srsWrongList(20)); return; }   // 错词重练:错得多的在前
             if (act === "rv") {
                 var vid2 = String(b.getAttribute("data-vid") || "");
                 var st2 = Number(b.getAttribute("data-st"));
                 if (vid2 && [0, 1, 2].indexOf(st2) >= 0) {
                     reviewDoneAdd(vid2);
-                    changeStatus(vid2, st2);   // 自评即复习:打过分当日不再重复提示
+                    srsAdvance(vid2, st2);   // 自评即复习:推进档位 + 当日不再重复提示
+                    changeStatus(vid2, st2);
                 }
             } else {
                 changeStatus(b.getAttribute("data-vid"), Number(b.getAttribute("data-status")));
@@ -2169,7 +2442,10 @@
             if (!st.expressions.length) h2 += '<div class="lg-rm-empty">这一章没有太值得单独收藏的表达,重点看看下面的仿写句吧。</div>';
             for (i2 = 0; i2 < st.writing.length; i2++) {
                 var wx = st.writing[i2];
-                h3 += '<div class="lg-rm-write"><span class="lg-rm-star' + (vocabMap[vocabKeyOfTerm(wx)] ? " saved" : "") + '" data-act="rm-star" data-term="' + esc(wx) + '" data-zh="' + esc(wx) + '" data-ex="">' + (vocabMap[vocabKeyOfTerm(wx)] ? uiIconHtml("✓") : uiIconHtml("★")) + "</span>" +
+                /* 仿写句没有中文释义,data-zh 必须留空 —— 曾经把句子本身抄进 data-zh,
+                   collectExp 原样 POST 成 gloss_zh,列表里就出现「同一条译文上下重复两遍」。
+                   留空后由 expSentenceOf 认领,译文走 rvTrFetch 现取并长期缓存。 */
+                h3 += '<div class="lg-rm-write"><span class="lg-rm-star' + (vocabMap[vocabKeyOfTerm(wx)] ? " saved" : "") + '" data-act="rm-star" data-term="' + esc(wx) + '" data-zh="" data-ex="">' + (vocabMap[vocabKeyOfTerm(wx)] ? uiIconHtml("✓") : uiIconHtml("★")) + "</span>" +
                     '<div class="lg-rm-write-main">' + esc(wx) + "</div></div>";
             }
             if (!st.writing.length) h3 += '<div class="lg-rm-empty">本章仿写例句为空——把表达的例句当仿写模板也可以。</div>';
@@ -2473,8 +2749,24 @@
     };
     wireVoices();
 
+    /* 给任意一块静态 HTML(档案弹层、详情弹层…)切词,切完就能走 document 级那套点查委托。
+       两条护栏:
+       ① 交互元素里的文字不动 —— 委托命中 .lg-word 时会 preventDefault + stopPropagation,
+          按钮文字真被包成 .lg-word,点按钮就变成了查词,按钮自己永远点不着;
+       ② 非语言会话直接返回,不给普通模式平添一堆 span。 */
+    function decorateTree(root) {
+        if (!root || !root.querySelectorAll || !langActive()) return;
+        var skip = 'a,button,input,textarea,select,label,[role="button"],[onclick],script,style,svg';
+        var all = root.querySelectorAll("*"), hosts = [], i;
+        for (i = 0; i < all.length; i++) {
+            if (all[i].closest && all[i].closest(skip)) continue;
+            hosts.push(all[i]);
+        }
+        for (i = 0; i < hosts.length; i++) wrapWords(hosts[i]);
+    }
     window.LangAssist = {
         loadBank: loadLangBank, bankItem: langBankItem, bankStatus: langBankStatus,
+        decorate: decorateTree,               // 静态 HTML 块补切词(档案/详情弹层用)
         reloadVocab: retryVocab,            // 切语种/重新登录后重拉生词本;走 retryVocab 才能解开上次的失败态
         getChapterWords: getChapterWords,   // M6d4:当前章候选词(供 LangEngine 续写注入;内部触发预载/抽词)
         /* R1 生词回投取样:续写注入用;优先复习到期→未掌握新学→眼熟补位;只取单词(expression 跳过),≤10;未加载时静默触发拉取 */
@@ -2482,7 +2774,8 @@
             if (!vocabLoaded) { loadVocab(function () {}); return []; }
             var cap = Math.max(1, Math.min(10, Number(max) || 10));
             var done = reviewDoneSet();
-            var due = [], fresh = [], seen = [], k, it, diff, term;
+            var due = [], fresh = [], seen = [], k, it, term;
+            var tday = todayBjInt();
             for (k in vocabMap) {
                 if (!Object.prototype.hasOwnProperty.call(vocabMap, k)) continue;
                 it = vocabMap[k];
@@ -2490,9 +2783,8 @@
                 term = String(it.term || "").trim();
                 if (!injectableTerm(term)) continue;                              // 词组/含生僻符号不注入
                 if (Number(it.status || 0) >= 2) continue;                        // 已掌握毕业不打扰
-                diff = (function (b) { return b == null ? null : todayBjInt() - b; })(bjDayInt(it.created_at));
-                if (diff != null && diff >= 0 && REVIEW_DAYS.indexOf(diff) >= 0 && done.indexOf(String(it.id)) < 0) {
-                    due.push(term);                                              // 复习到期 1/2/4/7 天(当日未自评)
+                if (srsIsDue(it, tday) && done.indexOf(String(it.id)) < 0) {
+                    due.push(term);                                              // 按 SRS 阶梯到期(当日未自评)
                 } else if (Number(it.status || 0) === 0) fresh.push({ t: term, c: String(it.created_at || "") });
                 else seen.push({ t: term, c: String(it.created_at || "") });
             }

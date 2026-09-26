@@ -71,11 +71,16 @@
             monthly: { id: "monthly", name: "月度会员", price: "21", days: 30, desc: "30 天 AI 对话不限量不扣币 · 付费社区卡免云币解锁" },
             yearly:  { id: "yearly",  name: "年度会员", price: "49", days: 365, desc: "365 天 AI 对话不限量不扣币 · 付费社区卡免云币解锁", tag: "推荐立省 80%" }
         },
-        lifetimePlan: { id: "lifetime", name: "终身会员", price: "98", originalPrice: "98", desc: "永久 AI 对话不限量不扣币" },
+        // 2026-09-26 小徐核对:终身会员在 worker 里走 isMember()=true(worker.js:1025),社区卡扣费分支
+        // (worker.js:2446 `if (!isMember(r) && payPrice > 0)`)根本不进 —— 权益本来就有,只是这行 desc 漏写了,
+        // 导致 ¥98 的终身卡看着比 ¥49 的年卡权益还少。补上,逻辑不动。
+        lifetimePlan: { id: "lifetime", name: "终身会员", price: "98", originalPrice: "98", desc: "永久 AI 对话不限量不扣币 · 付费社区卡免云币解锁" },
         // P1 小额直付救急包(与 worker PACK_PLANS 对齐 rescue1/rescue3;前端展示+下单用,额度由 worker extrapack 结算)
+        // 2026-09-26:desc 原来把卡面顶行(由 gloss/recap 自动生成)逐字又抄了一遍,一张卡三行说同一件事;
+        // 改成讲机制。tag「最划算」删掉(小徐拍板:¥3 单次消费品贴这名不副实)
         packPlans: {
-            rescue1: { id: "rescue1", name: "点译救急包", price: "1", gloss: 10, recap: 0, desc: "¥1 = 点译 10 次" },
-            rescue3: { id: "rescue3", name: "学习救急包", price: "3", gloss: 30, recap: 3, desc: "¥3 = 点译 30 次 + 复盘 3 次", tag: "最划算" }
+            rescue1: { id: "rescue1", name: "点译救急包", price: "1", gloss: 10, recap: 0, desc: "免费额度用完后自动接着扣" },
+            rescue3: { id: "rescue3", name: "学习救急包", price: "3", gloss: 30, recap: 3, desc: "同样单价，多送 3 次复盘" }
         },
         identityPools: {
             cnNames: ["沈知夏", "苏见微", "江望舒", "程以宁", "周晚棠", "宋栖月", "陆听岚", "秦若禾", "林清和", "许映棠", "叶若岚", "顾晚晴", "姜令仪", "白昭宁"],
@@ -1022,6 +1027,20 @@ function escapeHtml(str) {
             }
             badTextNodes.forEach((node) => node.parentNode && node.parentNode.removeChild(node));
         }
+        /* AI 卡片里的内联 SVG 装饰(自己画的星星/音符/蝴蝶结/小熊头)。模板从没要求它画这些,
+           全是模型顺手加的,而且大多 position:absolute 散在正文上 —— 在手机窄屏上就是一片
+           压在字上的碎线(小徐 2026-09-26 报的就是这个,不是背景小熊层)。
+           怎么判断"装饰"而不是"信息":有 <title>/aria-label/role=img 的是有语义的图,留着;
+           三样都没有的一律当装饰剥掉。 */
+        function stripDecorativeSvg(root) {
+            if (!(root instanceof HTMLElement)) return;
+            Array.from(root.querySelectorAll("svg")).forEach((svg) => {
+                if (svg.querySelector("title")) return;
+                if (String(svg.getAttribute("aria-label") || "").trim()) return;
+                if (String(svg.getAttribute("role") || "").toLowerCase() === "img") return;
+                svg.remove();
+            });
+        }
         function normalizeHtmlCard(text) {
             const raw = String(text || "").trim();
             const fenced = extractHtmlFromCodeFence(raw);
@@ -1055,6 +1074,7 @@ if (card && card instanceof HTMLElement) {
         nested.replaceWith(frag);
     });
     cleanupBrokenInlineSvgArtifacts(card);
+    stripDecorativeSvg(card);
     pruneEmptyElements(card);
     return card.outerHTML;
 }
@@ -2720,7 +2740,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 }
             }
             if (item.mood !== undefined) npc.mood = String(item.mood).slice(0, 16);
-            if (item.traits !== undefined && String(item.traits).trim()) npc.traits = String(item.traits).slice(0, 24);
+            if (item.traits !== undefined && String(item.traits).trim()) npc.traits = String(item.traits).slice(0, 48);
             if (item.favor !== undefined) npc.favor = Math.max(0, Math.min(100, Number(item.favor) || npc.favor || 60));
             // 双轴好感:爱慕值 affection(-100~100),仅显式 patch 提供时更新(不随 favor 漂移)
             if (item.affection !== undefined && Number.isFinite(Number(item.affection))) {
@@ -3689,7 +3709,7 @@ function rebuildChoicesBlock(body, labels = []) {
     }
     window.npcImageOf = npcImageOf;
 
-    // 立绘/头像灯箱:点击 NPC 头像 → 全屏放大观赏原图;点任意处或 Esc 关闭
+    // 立绘/头像灯箱:点击 NPC 头像 → 全屏看原图;点空白处或 Esc 关闭
     function openImageLightbox(src, caption) {
         try {
             const u = String(src || "");
@@ -3699,14 +3719,27 @@ function rebuildChoicesBlock(body, labels = []) {
             const box = document.createElement("div");
             box.id = "img-lightbox-el";
             box.className = "img-lightbox";
-            box.innerHTML = `<img src="${u.replace(/"/g, "%22")}" alt="${MarkdownService.escapeHtml(String(caption || "图片"))}">`
+            box.innerHTML = `<button type="button" class="ilb-x" aria-label="关闭">✕</button>`
+                + `<img src="${u.replace(/"/g, "%22")}" alt="${MarkdownService.escapeHtml(String(caption || "图片"))}">`
                 + (caption ? `<div class="ilb-cap">${MarkdownService.escapeHtml(String(caption))}</div>` : "")
-                + `<div class="ilb-hint">点击任意处关闭</div>`;
+                + `<div class="ilb-hint">点图片看原尺寸 · 点空白处关闭</div>`;
             document.body.appendChild(box);
             function close() {
                 try { box.remove(); document.removeEventListener("keydown", onKey); } catch (e) {}
             }
             const onKey = (ev) => { if (ev.key === "Escape") close(); };
+            /* 原来只能整屏看一张压进 84vh 的缩略图 —— 立绘本来就细长,压完比头像大不了多少,
+               点进来等于什么都没放大(小徐 2026-09-26 说"功能空洞")。点图切成原尺寸、容器可滚,
+               再点收回适应屏幕。 */
+            const img = box.querySelector("img");
+            const hint = box.querySelector(".ilb-hint");
+            if (img) img.addEventListener("click", (ev) => {
+                ev.stopPropagation();
+                const zoomed = img.classList.toggle("ilb-zoom");
+                box.classList.toggle("ilb-zoomed", zoomed);
+                if (hint) hint.textContent = zoomed ? "点图片收回适应屏幕 · 点空白处关闭" : "点图片看原尺寸 · 点空白处关闭";
+                if (zoomed) box.scrollTop = 0;
+            });
             box.addEventListener("click", close);
             document.addEventListener("keydown", onKey);
         } catch (e) { console.warn("[Lightbox]", e); }
@@ -9732,7 +9765,7 @@ const token = delta.content || "";
                         identity: String(n?.profile?.identity || "").slice(0, 40),
                         residence: String(n?.profile?.residence || "").slice(0, 40),
                         appearance: String(n?.profile?.appearance || "").slice(0, 80),
-                        personality: String(n?.profile?.personality || "").slice(0, 80),
+                        personality: String(n?.profile?.personality || "").slice(0, 200),
                         goal: String(n?.profile?.goal || "").slice(0, 80),
                         secret: String(n?.profile?.secret || "").slice(0, 80),
                         firstImpression: String(n?.profile?.firstImpression || "").slice(0, 80)
@@ -10470,11 +10503,16 @@ const token = delta.content || "";
                 favor: Number.isFinite(Number(n.favor)) ? Math.max(-100, Math.min(100, Number(n.favor))) : 65,
                 affection: Number.isFinite(Number(n.affection)) ? Math.max(-100, Math.min(100, Number(n.affection))) : 0,
                 status: "在线",
-                mood: String(n.personality || "").split(/[，,。]/)[0].trim().slice(0, 8) || "平静",
-                traits: String(n.personality || "").slice(0, 48),
+                /* 心情/特质/性格曾经全是同一个 n.personality 切三刀:第 8 字当心情、第 48 字当特质、
+                   第 80 字当性格。结果档案里「特质」是「性格」的前 48 字截断,俩格子念同一段话,
+                   而且心情那一刀会把 "Warm and calculating" 切成 mood="Warm" —— 中文界面里的
+                   英文碎词就从这儿来(小徐 2026-09-26 报的截图)。三格各有各的源:
+                   心情只认模型显式给的 n.mood,特质只认 n.traits/n.attributes,性格才是 personality 全文。 */
+                mood: String(n.mood || "").trim().slice(0, 12),
+                traits: String(n.traits || n.attributes || "").trim().slice(0, 48),
                 profile: {
                     identity: String(n.role || "").slice(0, 40),
-                    personality: String(n.personality || "").slice(0, 80),
+                    personality: String(n.personality || "").slice(0, 200),
                     relationship: String(n.relationship || "").slice(0, 80),
                     secret: String(n.secret || "").slice(0, 80)
                 }
@@ -12817,7 +12855,12 @@ ${recent || "（无）"}
         }
         function openInfoModal(title, desc, actionText, onAction) {
             document.getElementById("info-modal-title").innerText = title;
-            document.getElementById("info-modal-desc").innerHTML = desc;
+            const descBox = document.getElementById("info-modal-desc");
+            descBox.innerHTML = desc;
+            /* 语言文游里，档案/详情弹层里的英文字也是可查词 —— 之前只有剧情气泡能点，
+               点进来的人名、性格、初印象一律点不动（小徐 2026-09-26）。切词走语言引擎
+               同一套 wrapWords，词库命中才划虚线，非语言会话里这个函数直接 no-op。 */
+            try { if (window.LangAssist && window.LangAssist.decorate) window.LangAssist.decorate(descBox); } catch (e) {}
             const actionBtn = document.getElementById("info-modal-action");
             if (actionText && onAction) {
                 actionBtn.style.display = "block";
@@ -15668,16 +15711,25 @@ function openNpcProfile(npcId) {
             const current = AuthService.getUserData()?.membership_type || "";
             const lp = AppConfig.lifetimePlan;
             const cdActive = lifetimeOfferOn();
-            // 会员档（月/年）：期内 AI 对话不限次、不消耗云币
-            let planCards = Object.values(AppConfig.memberPlans).map(p =>
+            // 2026-09-26 三线分块:原来会员/救急包/云币混在一个九宫格里按「月 年 包 包 币 币 币 币 终身」排,
+            // 月年终身被拆散、终身永远落在最后一格,用户横看竖看都比不出三档价差。改成小标题分组,终身与月年同排。
+            const group = (title, cards) =>
+                `<div class="recharge-group-title">${title}</div><div class="recharge-grid">${cards}</div>`;
+            // 会员线(月/年/终身):期内 AI 对话不限次、不消耗云币
+            const memberCards = Object.values(AppConfig.memberPlans).map(p =>
                 `<div class="recharge-item ${selectedPlan === p.id ? "active" : ""}" onclick="MembershipService.selectPlan('${p.id}')">
                     <div class="recharge-coins">${p.tag ? `<span style="font-size:var(--fs-1);color:var(--btn-primary-text);background:var(--accent);padding:1px 6px;border-radius:8px;margin-right:4px;vertical-align:2px;">${p.tag}</span>` : ""}<span style="font-size:var(--fs-2);color:var(--accent-2-strong);font-weight:800;">¥${p.price}</span><span style="font-size:var(--fs-2);color:var(--sub);margin-left:4px;">= ${p.days} 天</span></div>
                     <div class="recharge-price">${p.name}${current === p.id ? "（当前）" : ""}</div>
                     <div class="recharge-price">${p.desc}</div>
                 </div>`
-            ).join("");
+            ).join("") + `
+                <div class="recharge-item ${selectedPlan === lp.id ? "active" : ""}" onclick="MembershipService.selectPlan('${lp.id}')">
+                    <div class="recharge-coins">${cdActive ? `<span style="font-size:var(--fs-2);color:var(--sub);text-decoration:line-through;margin-right:4px;">¥${lp.originalPrice}</span>¥${lp.price}<span style="font-size:var(--fs-1);color:var(--btn-primary-text);background:var(--accent);padding:1px 6px;border-radius:8px;margin-left:4px;vertical-align:2px;">限时</span>` : `<span style="font-size:var(--fs-3);color:var(--danger);font-weight:800;">¥${lp.originalPrice}</span>`}</div>
+                    <div class="recharge-price">${lp.name}${current === lp.id ? "（当前）" : ""}</div>
+                    <div class="recharge-price">${lp.desc}</div>
+                </div>`;
             // 小额救急包(¥1/¥3 直付):免费额度用完后先扣包额度,再扣云币(与 worker PACK_PLANS 对齐)
-            planCards += Object.values(AppConfig.packPlans).map(p =>
+            const packCards = Object.values(AppConfig.packPlans).map(p =>
                 `<div class="recharge-item ${selectedPlan === p.id ? "active" : ""}" onclick="MembershipService.selectPlan('${p.id}')">
                     <div class="recharge-coins">${p.tag ? `<span style="font-size:var(--fs-1);color:var(--btn-primary-text);background:var(--accent);padding:1px 6px;border-radius:8px;margin-right:4px;vertical-align:2px;">${p.tag}</span>` : ""}<span style="font-size:var(--fs-2);color:var(--ok);font-weight:800;">¥${p.price}</span><span style="font-size:var(--fs-2);color:var(--sub);margin-left:4px;">= 点译 ${p.gloss} 次${p.recap ? ` + 复盘 ${p.recap} 次` : ""}</span></div>
                     <div class="recharge-price">${p.name}</div>
@@ -15685,20 +15737,14 @@ function openNpcProfile(npcId) {
                 </div>`
             ).join("");
             // 云币档：解锁剧本卡 + 免费额度超限后的 AI 对话
-            planCards += Object.values(AppConfig.chargePlans).map(p =>
+            const coinCards = Object.values(AppConfig.chargePlans).map(p =>
                 `<div class="recharge-item ${selectedPlan === p.id ? "active" : ""}" onclick="MembershipService.selectPlan('${p.id}')">
                     <div class="recharge-coins">${p.tag ? `<span style="font-size:var(--fs-1);color:var(--btn-primary-text);background:var(--accent);padding:1px 6px;border-radius:8px;margin-right:4px;vertical-align:2px;">${p.tag}</span>` : ""}¥${p.price}<span style="font-size:var(--fs-2);color:var(--sub);margin-left:4px;">=${p.coins} 云币</span></div>
                     <div class="recharge-price">${p.name}</div>
                     <div class="recharge-price">${p.desc}</div>
                 </div>`
             ).join("");
-            planCards += `
-                <div class="recharge-item ${selectedPlan === lp.id ? "active" : ""}" onclick="MembershipService.selectPlan('${lp.id}')">
-                    <div class="recharge-coins">${cdActive ? `<span style="font-size:var(--fs-2);color:var(--sub);text-decoration:line-through;margin-right:4px;">¥${lp.originalPrice}</span>¥${lp.price}<span style="font-size:var(--fs-1);color:var(--btn-primary-text);background:var(--accent);padding:1px 6px;border-radius:8px;margin-left:4px;vertical-align:2px;">限时</span>` : `<span style="font-size:var(--fs-3);color:var(--danger);font-weight:800;">¥${lp.originalPrice}</span>`}</div>
-                    <div class="recharge-price">${lp.name}${current === lp.id ? "（当前）" : ""}</div>
-                    <div class="recharge-price">${lp.desc}</div>
-                </div>`;
-            grid.innerHTML = planCards;
+            grid.innerHTML = group("开通会员", memberCards) + group("功能救急包", packCards) + group("云币充值", coinCards);
             updateLifetimePriceTexts();
         }
         // 终身会员一次性限时机制:每用户从首次打开充值面板起 24h 优惠(2026-09-12 起终身统一 ¥98,两档同值=限时 UI 不再展示)
