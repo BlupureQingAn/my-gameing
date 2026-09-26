@@ -2768,6 +2768,12 @@
         loadBank: loadLangBank, bankItem: langBankItem, bankStatus: langBankStatus,
         decorate: decorateTree,               // 静态 HTML 块补切词(档案/详情弹层用)
         reloadVocab: retryVocab,            // 切语种/重新登录后重拉生词本;走 retryVocab 才能解开上次的失败态
+        /* 学习中心的「进入今日复习」要用:页签状态 vocabTab 只在本文件里,外面改不到,
+           先拨到 due 再整页跳转,免得落到用户上次停留的「全部生词库」(2026-09-26) */
+        openDueTab: function () {
+            vocabTab = "due";
+            if (window.LangController && window.LangController.goVocab) window.LangController.goVocab();
+        },
         getChapterWords: getChapterWords,   // M6d4:当前章候选词(供 LangEngine 续写注入;内部触发预载/抽词)
         /* R1 生词回投取样:续写注入用;优先复习到期→未掌握新学→眼熟补位;只取单词(expression 跳过),≤10;未加载时静默触发拉取 */
         reviewVocabSample: function (max) {

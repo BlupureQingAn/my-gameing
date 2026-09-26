@@ -3876,6 +3876,9 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 while (dayMap.get(cur) > 0) { streak++; cur = cnDayBack(streak + 1); }
                 const days7 = [];
                 for (let i = 6; i >= 0; i--) { const dd = cnDayBack(i); days7.push({ day: dd, seconds: dayMap.get(dd) || 0 }); }
+                // 近 30 日(2026-09-26):学习中心「本月学习热力」折叠区用;dayMap 本来就是全量拉的,再切一段不额外查库
+                const days30 = [];
+                for (let i = 29; i >= 0; i--) { const dd = cnDayBack(i); days30.push({ day: dd, seconds: dayMap.get(dd) || 0 }); }
                 // 生词状态分桶(同表翻页本地计数;status 0新学/1眼熟/2已掌握)+ 本周新收(created 北京周一起)
                 // 按 lang 过滤:切到日语只看日语生词,否则三种语言的桶数是混的
                 let vTotal = 0, vNew = 0, vFam = 0, vMas = 0, weekNewVocab = 0;
@@ -3917,7 +3920,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 }
                 return new Response(JSON.stringify({
                     ok: true, lang, today, today_seconds: todaySeconds, total_seconds: totalSeconds, total_days: dayList.length,
-                    week_seconds: weekSeconds, week_start: weekStart, streak, days7,
+                    week_seconds: weekSeconds, week_start: weekStart, streak, days7, days30,
                     vocab: { total: vTotal, new: vNew, familiar: vFam, mastered: vMas },
                     week_new_vocab: weekNewVocab, bank_words: bankWords
                 }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });

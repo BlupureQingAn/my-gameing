@@ -4,7 +4,9 @@
     var PROFILE_KEY = "lang_profile_v1";
     var BAND_ORDER = ["hs", "cet4", "cet6", "ky", "toefl"];
     var BAND_INFO = {
-        hs: ["HS", "高中水平", "band-hs", "对应高中新课标 3500 词（词库 3395 词）——校园、日常生活题材的卡从这档打底"],
+        /* 标签写「高中」不写「HS」(2026-09-26):HS = High School 是美式学制缩写,国内考生一眼认不出,
+           滑块刻度上四个英文字母缩写并排时尤其费解。档位键仍是 hs,只改展示文案与说明 */
+        hs: ["高中", "高中水平", "band-hs", "对应高中新课标 3500 词（词库 3395 词）——校园、日常生活题材的卡从这档打底"],
         cet4: ["CET4", "四级水平", "band-cet4", "对应大学英语四级大纲（词库 4536 词）——校园日常、生活话题的卡正合适"],
         cet6: ["CET6", "六级水平", "band-cet6", "对应六级词汇大纲（词库 5713 词，含四级词汇）——都市生活、情感向的卡可挑战"],
         ky: ["考研", "考研水平", "band-ky", "对应考研英语大纲 5530（词库 6277 词，含六级及以下）——思辨、叙事厚重的卡挂这档"],
@@ -155,9 +157,13 @@
     /* M8b:语言首页推荐区 = 文游首页同款 hb-card 大图轮播(4:3 封面 + 档/题材 tag + 轮次 + 详情/播放按钮);卡主体点击进入播放,详情按钮单独弹层 */
     var langBanner = { idx: 0, timer: null };
     var lbSpan = "day", lbBoard = "time", lbCache = {}, lbReq = 0;
-    /* 今日一句当前展示的语种与原文:点译请求要用它当 lang(不在会话里,curSessionLang 只会给 en),
-       写缓存也要带上,免得切语种后沿用上一语种那句的译文(2026-09-21) */
+    /* 今日一句当前展示的语种与原文:朗读要按它选发音语种,展开状态按天记录时要带上它们,
+       免得切语种后沿用上一语种那句的状态(2026-09-21,2026-09-26) */
     var todayShownLang = "en", todayShownText = "";
+    var TODAY_ZH_KEY = "lang_today_zh_v1";
+    /* 30 天热力图默认收起(2026-09-26):一个月里没学的那些天会连成一大片空格,
+       一上来就铺开是「空白羞耻」;要看的自己点开。渲染期只读、点开时改 */
+    var heatOpen = false;
     // 排行榜:当前 span/榜别(time 时长|immersive 无阻畅读)/结果缓存(键=board|lang|span,30s)/请求序号(过期响应靠它作废)
     function langBannerHtml(c) {
         var icon = themeIcon(c);
@@ -383,7 +389,7 @@
                 ? "五档按 JLPT 递进：N5 从假名短句起步，N3 撑起日常剧情，N2/N1 适合报刊体与抽象议题——松手即生效，随时可换。"
                 : (lg === "ko"
                     ? "三档按 TOPIK 递进：初级从基础短句起步，中级可读日常会话，高级适合新闻与抽象表达——松手即生效，随时可换。"
-                    : "五档按难度递进：校园日常从 HS / CET4 起步，都市情感试试 CET6，思辨叙事往考研 / 托福挑——松手即生效，随时可换。");
+                    : "五档按难度递进：校园日常从高中 / 四级起步，都市情感试试六级，思辨叙事往考研 / 托福挑——松手即生效，随时可换。");
             box.innerHTML = '<div class="lang-band-hero"><div class="lang-band-chip ' + (has ? (b[2] || "") : "") + '" id="lang-band-chip">' + (has ? b[0] : "?") + "</div>" +
                 '<div class="grow">' +
                 '<div class="lang-band-t" id="lang-band-t">' + (has ? ("你的学习档：" + lname + " " + b[0] + " · " + b[1]) : "还没选学习档——拖动滑块挑一档") + "</div>" +
@@ -707,8 +713,8 @@
             api.renderLibrary();
         },
         /* ---- P2 学习首页(2026-09-08):今日一句 / 我的进度 3 格 / 会员卡位 ----
-           今日一句:内置双语考场景句池按北京日期轮换;「译一译」直调 gloss(与剧情点句同一配额:免费每日限量→救急包→会员);
-           点译成功本地记 lang_today_g:{d,en,zh},当天重进不再重复扣额度 */
+           今日一句:内置双语考场景句池按北京日期轮换;译文与原文同在池子里(见 ZH 表上方说明),
+           点「显示中文译文」只是本地显隐,不调接口、不登录、不占任何配额;朗读走 LangSpeech */
         renderLangHub: function () {
             api.renderToday();
             api.renderMyStats();
@@ -815,6 +821,42 @@
                 { s: "영화 평가는 갈렸지만, 음악만으로도 표값의 가치는 충분하다.", tag: "TOPIK 2·娱乐" },
                 { s: "문화 차이는 생활 리듬이 생기고 취미가 맞는 사람을 만나면 조금씩 옅어진다.", tag: "TOPIK 3·留学" }
             ];
+            /* 今日一句的中文译文(2026-09-26):日/韩池本就是英语池那 30 句的逐句对译,所以三语种共用
+               一份下标对齐的译文表 —— 加句子时三处池子和这张表要一起加,下标错位会串句。
+               译文内置之后「译一译」不再调 /api/lang/gloss:固定 30 句的东西每次现译既慢又占配额,
+               更糟的是它当时被当成收费点(免费每日限量/会员不限量),小徐评审时点掉了这个设计。 */
+            var ZH = [
+                "周末睡懒觉很诱人，但早起会让一整天都显得更长。",
+                "考试季图书馆开到晚上十点，座位通常都坐满了。",
+                "我每天早上早饭前练二十分钟听力，日积月累真的很有用。",
+                "在学校附近租房更贵，但每天至少能省下一小时通勤时间。",
+                "如果提前把面试问题准备好，真到了现场会镇定得多。",
+                "兼职在填满钱包的同时，也教会你管理时间。",
+                "对一个词越熟悉，在压力下就越容易想起它。",
+                "校园食堂也许没有花哨的菜品，但对学生来说始终是最实惠的选择。",
+                "组队学习的同学，往往比独自备考的人考得更好。",
+                "冬季实习项目的报名本周五中午截止，别拖到最后。",
+                "他正要放弃那道题时，忽然灵光一闪。",
+                "网课给了你自由，但它比线下课更考验自制力。",
+                "通往大学城的地铁去年延长了，去市区方便了许多。",
+                "每天花五分钟写感恩日记，这个简单的习惯会带来意想不到的收获。",
+                "小组展示占期末成绩的三成，所以谁也不敢不排练。",
+                "天气预报比过去准多了，可每次出门前人们还是会先看一眼手机。",
+                "火车晚点确实恼人，但也意外给了你读完手上这一章的时间。",
+                "新生总爱带太多东西，其实必需品一个行李箱加一个背包就够。",
+                "医生建议在屏幕前每坐一小时就起身走十分钟。",
+                "最打动雇主的不是他的学历，而是他沉着解决问题的方式。",
+                "每月存两百元看着不起眼，可算上一整年就不一样了。",
+                "她拒绝了那份高薪工作，因为夜班会把她的作息彻底打乱。",
+                "可再生能源不再是遥远的梦，宿舍楼顶已经装上了太阳能板。",
+                "开始跑步不需要昂贵装备，一双鞋和一条清楚的路线就够了。",
+                "讲师不时停顿一下，好让听众记笔记时跟得上。",
+                "与其一直刷短视频，不如朗读一篇文章，先给嘴巴热热身。",
+                "校园里随处可见的公共自行车，让过去得坐公交的短途变得很方便。",
+                "到了期末周人人缺觉的时候，一份清晰的计划比天赋更管用。",
+                "这部电影评价两极，但光是配乐就值回票价。",
+                "一旦建立起日常节奏、找到兴趣相投的人，文化冲击就会慢慢淡去。"
+            ];
             var TODAY_POOL = { en: P_EN, ja: P_JA, ko: P_KO };
             var nowBJ = new Date(Date.now() + 8 * 3600000);
             var dayStr = nowBJ.toISOString().slice(0, 10);
@@ -824,62 +866,34 @@
             var t = p[dayNum % p.length];
             todayShownLang = lang;
             todayShownText = String(t.s || t.en || "");
-            var got = null;
-            try { got = JSON.parse(localStorage.getItem("lang_today_g") || "null"); } catch (e) {}
-            // 缓存键要带语种:同一天切到日语不该沿用英语那句的译文
-            var done = !!(got && got.d === dayStr && got.lang === lang && got.s === todayShownText);
-            var zhBox = done && got.zh ? '<div class="lang-today-zh" id="lang-today-zh">' + api.esc(String(got.zh)) + "</div>" : "";
-            var note = done
-                ? '<div class="lang-today-note" id="lang-today-note">本句已译过，明天换新句</div>'
-                : '<div class="lang-today-note" id="lang-today-note">' + (token()
-                    ? '<button type="button" class="lt-btn" onclick="LangController.todayGloss()">译一译</button> <span class="note-in">免费每天限量，会员不限量</span>'
-                    : '<button type="button" class="lt-btn" onclick="AuthService.openLogin()">去登录</button> <span class="note-in">登录后可点译今日一句（每日免费限量）</span>') + "</div>";
+            var zh = String(ZH[dayNum % ZH.length] || "");
+            var shown = false;
+            try { var tg = JSON.parse(localStorage.getItem(TODAY_ZH_KEY) || "null"); shown = !!(tg && tg.d === dayStr && tg.lang === lang && tg.s === todayShownText && tg.on); } catch (e) {}
+            var zhBox = '<div class="lang-today-zh" id="lang-today-zh"' + (shown ? "" : " hidden") + ">" + api.esc(zh) + "</div>";
+            var canSay = false;
+            try { canSay = !!(window.LangSpeech && LangSpeech.supported()); } catch (e) {}
+            var note = '<div class="lang-today-note" id="lang-today-note">' +
+                '<button type="button" class="lt-btn" id="lang-today-reveal" onclick="LangController.todayReveal()">' + uiIconHtml("👁️") + (shown ? " 隐藏中文译文" : " 显示中文译文") + "</button>" +
+                (canSay ? '<button type="button" class="lt-btn ghost" onclick="LangController.todaySpeak()">' + uiIconHtml("🔊") + " 朗读</button>" : "") +
+                '<span class="note-in">免费 · 无需登录</span></div>';
             box.innerHTML = '<div class="lang-today">' +
                 '<div class="lang-today-h"><span>' + uiIconHtml("📅") + ' 今日一句</span><span class="cap-soft">【' + api.esc(t.tag) + "】</span></div>" +
                 '<div class="lang-today-en" id="lang-today-en">' + api.esc(todayShownText) + "</div>" + zhBox + note + "</div>";
         },
-        todayGloss: function () {
-            var enEl = $("lang-today-en"), note = $("lang-today-note");
-            if (!enEl || !note) return;
-            if (!token()) { note.innerHTML = '<button type="button" class="lt-btn" onclick="AuthService.openLogin()">去登录</button> <span class="note-in">登录后可点译今日一句（每日免费限量）</span>'; return; }
-            var s = enEl.textContent.replace(/\s+/g, " ").trim().slice(0, 500);
-            if (!s) return;
-            var btns = function (h) { return '<div class="btn-row">' + h + "</div>"; };
-            var bPack = '<button type="button" class="lt-btn ghost" onclick="LangController.openPack()">小额直付 ¥1/¥3</button>';
-            var bMember = '<button type="button" class="lt-btn ghost" onclick="MembershipService.openPanel()">开通会员不限量</button>';
-            note.innerHTML = '<span class="lg-gload"><i></i><i></i><i></i></span><span class="note-in">译文生成中…</span>';
-            fetch(API_BASE + "/api/lang/gloss", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token() },
-                // 语种跟渲染时的语言页选择走:今日一句不是会话内文本,curSessionLang() 在此只会回落成 en
-                body: JSON.stringify({ sentences: [s], lang: todayShownLang || curLearnLang() })
-            })
-                .then(function (r) { return r.json().catch(function () { return null; }); })
-                .then(function (d) {
-                    var nowBJ = new Date(Date.now() + 8 * 3600000);
-                    var dayStr = nowBJ.toISOString().slice(0, 10);
-                    if (d && d.ok && d.items && d.items[0] && d.items[0].zh) {
-                        var zh = String(d.items[0].zh);
-                        try { localStorage.setItem("lang_today_g", JSON.stringify({ d: dayStr, lang: todayShownLang || curLearnLang(), s: s, zh: zh })); } catch (e) {}
-                        var zhEl = $("lang-today-zh");
-                        if (!zhEl) { var box = $("lang-today-box"); var enEl2 = $("lang-today-en"); if (box && enEl2) { var d2 = document.createElement("div"); d2.className = "lang-today-zh"; d2.id = "lang-today-zh"; d2.textContent = zh; enEl2.parentNode.insertBefore(d2, enEl2.nextSibling); } }
-                        else { zhEl.style.display = ""; zhEl.textContent = zh; }
-                        note.innerHTML = '<span class="ok">' + uiIconHtml("✓") + ' 已译好</span><span class="note-in">点剧情里的句子同样即点即译；点词自动进生词本</span>';
-                    } else if (d && d.code === "GLOSS_DAILY_LIMIT") {
-                        note.innerHTML = "今天的点译次数用完啦（明天 08:00 刷新）" + btns(bMember);
-                    } else if (d && d.code === "INSUFFICIENT_COIN") {
-                        note.innerHTML = api.esc(String(d.error || "点译额度已用完，云币也不足")).slice(0, 200) + btns(bPack + bMember);
-                    } else {
-                        note.innerHTML = '<button type="button" class="lt-btn ghost" onclick="LangController.todayGloss()">译文没取到 · 点此重试</button>';
-                    }
-                })
-                .catch(function () {
-                    var note2 = $("lang-today-note");
-                    if (note2) note2.innerHTML = '<button type="button" class="lt-btn ghost" onclick="LangController.todayGloss()">译文没取到 · 点此重试</button>';
-                });
+        /* 译文展开/收起:纯前端显隐,不发请求 */
+        todayReveal: function () {
+            var zhEl = $("lang-today-zh"), btn = $("lang-today-reveal");
+            if (!zhEl) return;
+            var wasOpen = !zhEl.hasAttribute("hidden");
+            if (wasOpen) zhEl.setAttribute("hidden", ""); else zhEl.removeAttribute("hidden");
+            try {
+                var nowBJ = new Date(Date.now() + 8 * 3600000);
+                localStorage.setItem(TODAY_ZH_KEY, JSON.stringify({ d: nowBJ.toISOString().slice(0, 10), lang: todayShownLang, s: todayShownText, on: !wasOpen }));
+            } catch (e) {}
+            if (btn) btn.innerHTML = uiIconHtml("👁️") + (wasOpen ? " 显示中文译文" : " 隐藏中文译文");
         },
-        openPack: function () {
-            try { MembershipService.selectPlan("rescue3"); MembershipService.openPanel(); } catch (e) {}
+        todaySpeak: function () {
+            try { if (window.LangSpeech && LangSpeech.say) LangSpeech.say(todayShownText, todayShownLang || curLearnLang()); } catch (e) {}
         },
         renderMyStats: function () {
             var el = $("lang-my-stats");
@@ -908,11 +922,13 @@
                 '<div class="stat-cell"><b>' + (Number(v.mastered || 0) + Number(v.familiar || 0)) + " / " + Number(v.total || 0) + "</b><s>已掌握/生词</s></div>" +
                 "</div>";
             var weekNew = Number(d.week_new_vocab || 0);
-            var line = "本周已学 " + api.fmtDur(d.week_seconds || 0) + " · 累计 " + Number(d.total_days || 0) + " 天 · 已练词 " + Number(d.bank_words || 0) +
+            /* 「已练词」不再显示(2026-09-26):它数的是 lang_bank_progress 里的词条数,而那个表
+               目前没有任何功能在写,线上恒定 0 —— 一个永远是 0 的字段挂在首页只会让人觉得功能坏了 */
+            var line = "本周已学 " + api.fmtDur(d.week_seconds || 0) + " · 累计 " + Number(d.total_days || 0) + " 天" +
                 (weekNew > 0 ? " · 本周新收 " + weekNew + " 词" : "");
             el.innerHTML = grid +
                 '<div class="list-head list-loose"><div class="list-sub list-flush">' + line + "</div>" +
-                '<button type="button" class="mini-btn ghost" onclick="LangController.goLearnStats()">统计与周报 ›</button></div>';
+                '<button type="button" class="mini-btn ghost" onclick="LangController.goLearnStats()">学习统计 ›</button></div>';
         },
         /* P2-4 学习中心统计周报区(2026-09-09):7 日柱状+本周小结+生词掌握条;数据同 learn-stats 单接口
            force=true 绕过 30s 缓存强制刷新(点击「统计与周报」进入时) */
@@ -933,7 +949,7 @@
                 .then(function (d) {
                     if (!d || !d.ok) {
                         var bx = $("lang-learn-stats-box");
-                        if (bx) bx.innerHTML = '<div class="list-sub list-empty">统计加载失败，点「刷新」重试</div>';
+                        if (bx) bx.innerHTML = '<div class="list-sub list-empty">统计没取到——退出重进本页会自动重试</div>';
                         return;
                     }
                     myStatsCache = { at: Date.now(), lang: want, data: d };
@@ -941,61 +957,90 @@
                 })
                 .catch(function () {
                     var bx = $("lang-learn-stats-box");
-                    if (bx) bx.innerHTML = '<div class="list-sub list-empty">网络开小差了，点「刷新」重试</div>';
+                    if (bx) bx.innerHTML = '<div class="list-sub list-empty">网络开小差了——退出重进本页会自动重试</div>';
                 });
         },
+        /* 学习统计(2026-09-26 重构):同一页里「四格 + 7 日柱状 + 五行小结」把
+           今日/本周/连续/累计各说了两到三遍,数据没多、页面全是复读;柱状图在没学的那几天
+           还是一排空底框,看着像坏了。现在改成:四格只留四个不重复的数 → 本周七格打卡胶囊
+           (学过的点亮,空的是个小圆点,不画空柱子)→ 折叠起来的 30 天热力 → 掌握进度 + 复习入口。
+           「🔄 刷新统计」也删了:它把自己摆在页面上等于承认数据会过期,而进页面本来就强制取数。 */
         learnStatsHtml: function (d) {
             var box = $("lang-learn-stats-box");
             if (!box) return;
             var today = String(d.today || "");
-            var d7 = d.days7 || [], maxS = 1, i, it, s;
-            for (i = 0; i < d7.length; i++) { s = Number(d7[i].seconds) || 0; if (s > maxS) maxS = s; }
             var wd = ["日", "一", "二", "三", "四", "五", "六"];
+            var i, it, s;
             function wkLab(dayStr) {
                 try { var dt = new Date(Date.parse(String(dayStr) + "T00:00:00Z") + 8 * 3600000); return "周" + wd[dt.getUTCDay()]; } catch (e) { return ""; }
             }
-            var cols = "", mini = "";
+            var d7 = d.days7 || [], caps = "", hit7 = 0;
             for (i = 0; i < d7.length; i++) {
                 it = d7[i];
                 s = Number(it.seconds) || 0;
-                var pct = Math.max(2, Math.round(s / maxS * 100));
-                var m = Math.floor(s / 60);
-                cols += '<div class="wks-col"><div class="wks-track"><div class="wks-bar' + (String(it.day) === today ? " today" : "") + '" style="height:' + pct + '%" title="' + api.esc(String(it.day)) + " " + api.fmtDur(s) + '"></div></div>' +
-                    '<div class="wks-lab">' + wkLab(it.day) + "</div>" +
-                    '<div class="wks-mins">' + (m > 0 ? m + " 分" : "·") + "</div></div>";
-                if (s > 0) mini = "近 7 天你学了 " + api.fmtDur(s);
+                if (s > 0) hit7++;
+                /* 中文星期写两遍(胶囊里 + 悬停说明):ttl 里的日期是"2026-09-26"这种,
+                   手机上悬停不出来,所以可见的那一格必须自带星期 */
+                caps += '<div class="stk-cap' + (s > 0 ? " on" : "") + (String(it.day) === today ? " today" : "") + '" title="' + api.esc(String(it.day)) + " " + api.fmtDur(s) + '">' +
+                    '<span class="stk-cap-d">' + (s > 0 ? uiIconHtml("🔥") : "") + '</span><span class="stk-cap-l">' + wkLab(it.day) + "</span></div>";
             }
+            var d30 = d.days30 || [], heat = "";
+            for (i = 0; i < d30.length; i++) {
+                it = d30[i];
+                s = Number(it.seconds) || 0;
+                /* 档位先算成整串再拼进去:直接写 class="hm-cell hm-' + lv + '" 的话,
+                   lang_skeleton_test 的类名提取器会把裸标识符 lv 当成一个类名,报「没定义」 */
+                var lv = s <= 0 ? 0 : (s < 300 ? 1 : (s < 900 ? 2 : 3));
+                var hcls = "hm-cell hm-" + lv + (String(it.day) === today ? " today" : "");
+                heat += '<span class="' + hcls + '" title="' + api.esc(String(it.day)) + " " + api.fmtDur(s) + '"></span>';
+            }
+            var heatBlock = d30.length
+                ? '<div class="list-loose"><button type="button" class="hm-head" onclick="LangController.toggleHeat()">' +
+                    uiIconHtml("🗓️") + " 查看本月学习热力分布" +
+                    '<span class="hm-caret" id="lang-heat-caret">' + (heatOpen ? uiIconHtml("▴") : uiIconHtml("▾")) + "</span></button>" +
+                    '<div class="hm-grid" id="lang-heat-grid"' + (heatOpen ? "" : " hidden") + ">" + heat + "</div></div>"
+                : "";
             var v = d.vocab || {};
             var vTotal = Number(v.total || 0);
             var vMas = Number(v.mastered || 0), vFam = Number(v.familiar || 0), vNew = Number(v.new || 0);
             var masPct = vTotal ? Math.round(vMas / vTotal * 100) : 0;
             var famPct = vTotal ? Math.round(vFam / vTotal * 100) : 0;
             var streak = Number(d.streak || 0);
-            var weekS = Number(d.week_seconds || 0);
-            var rows =
-                '<div class="wk-row"><span>本周学习</span><b>' + api.fmtDur(weekS) + "</b></div>" +
-                '<div class="wk-row"><span>连续学习</span><b>' + (streak > 0 ? uiIconHtml("🔥") + " " + streak + " 天" : "今天开始第一段连胜") + "</b></div>" +
-                '<div class="wk-row"><span>累计学习</span><b>' + api.fmtDur(d.total_seconds || 0) + " · " + Number(d.total_days || 0) + " 天</b></div>" +
-                '<div class="wk-row"><span>本周新收生词</span><b>' + Number(d.week_new_vocab || 0) + " 个</b></div>" +
-                '<div class="wk-row"><span>词测练词</span><b>' + Number(d.bank_words || 0) + " 个</b></div>";
             var vHtml = vTotal > 0
-                ? '<div class="list-loose"><div class="wks-vt">生词掌握 <span class="list-sub note-in">已掌握 ' + vMas + " · 眼熟 " + vFam + " · 新学 " + vNew + "</span></div>" +
+                ? '<div class="list-loose"><div class="wks-t">' + uiIconHtml("📖") + ' 词汇掌握进度 <span class="list-sub note-in">共 ' + vTotal + ' 个生词</span></div>' +
                     '<div class="wks-track-line"><div class="wks-vf" style="width:' + famPct + '%" title="眼熟 ' + vFam + '"></div><div class="wks-vm" style="width:' + masPct + '%" title="已掌握 ' + vMas + '"></div></div>' +
-                    '<div class="list-sub">' + (vMas === vTotal ? "生词全部掌握 " + uiIconHtml("🎉") + " 太强了，可以挑战更高档剧本了" : "深色段 = 已掌握进度 · 玩剧本时点词点句，生词本会自动长出来") + "</div></div>"
-                : '<div class="list-sub list-loose">还没收过生词——去玩一个' + learnLangZh() + '剧本，点一下不认识的字词就会自动收进生词本，开始积累吧。</div>';
+                    '<div class="list-sub">已掌握 ' + vMas + " · 眼熟 " + vFam + " · 新学 " + vNew +
+                    (vMas === vTotal ? " —— 全部掌握 " + uiIconHtml("🎉") + " 可以挑战更高一档的剧本了" : "；在生词本里点「已掌握」把学会的划掉") + "</div></div>"
+                : '<div class="list-sub list-loose">还没收过生词——玩一局' + learnLangZh() + '剧本，轻点一下不认识的字词就会按你的学习档收进生词本。</div>';
             box.innerHTML =
                 '<div class="stat-grid stat-grid-4">' +
                 '<div class="stat-cell"><b>' + api.fmtDur(d.today_seconds || 0) + "</b><s>今日学习</s></div>" +
-                '<div class="stat-cell"><b>' + api.fmtDur(weekS) + "</b><s>本周学习</s></div>" +
-                '<div class="stat-cell"><b>' + (streak > 0 ? uiIconHtml("🔥") + " " : "") + streak + "</b><s>连续天数</s></div>" +
-                '<div class="stat-cell"><b>' + Number(d.total_days || 0) + "</b><s>累计天数</s></div>" +
+                '<div class="stat-cell"><b>' + (streak > 0 ? uiIconHtml("🔥") + " " : "") + streak + " 天</b><s>连续打卡</s></div>" +
+                '<div class="stat-cell"><b>' + Number(d.week_new_vocab || 0) + " 个</b><s>本周新收生词</s></div>" +
+                '<div class="stat-cell"><b>' + Number(d.total_days || 0) + " 天</b><s>累计天数</s></div>" +
                 "</div>" +
-                '<div class="list-loose"><div class="wks-t">近 7 日学习</div><div class="wks-cols">' + cols + "</div>" +
-                (mini ? '<div class="list-sub list-center">' + mini + "，坚持就是胜利 " + uiIconHtml("💪") + "</div>" : '<div class="list-sub list-center">这 7 天还没开始——从「今日一句」或推荐剧本的第一句开始吧</div>') +
+                '<div class="list-sub list-center list-loose">累计学习 ' + api.fmtDur(d.total_seconds || 0) + " · 本周 " + api.fmtDur(d.week_seconds || 0) + "</div>" +
+                '<div class="list-loose"><div class="wks-t">本周打卡进展 <span class="list-sub note-in">' + hit7 + " / 7 天</span></div>" +
+                '<div class="stk-caps">' + caps + "</div>" +
+                (hit7 ? "" : '<div class="list-sub list-center">这 7 天还没开始——从「今日一句」或推荐剧本的第一句开始吧</div>') +
                 "</div>" +
-                '<div class="list-loose"><div class="wks-t">本周小结</div></div>' + rows +
+                heatBlock +
                 vHtml +
-                '<div class="list-loose list-center"><button type="button" class="lt-btn ghost" onclick="LangController.renderLearnStats(true)">' + uiIconHtml("↻") + ' 刷新统计</button></div>';
+                '<div class="list-loose list-center"><button type="button" class="lt-btn" onclick="LangController.goReviewDue()">' + uiIconHtml("🚀") + ' 进入今日复习</button>' +
+                '<div class="list-sub list-center note-in">按记忆曲线排好到期的词，几分钟过一遍</div></div>';
+        },
+        toggleHeat: function () {
+            var grid = $("lang-heat-grid"), caret = $("lang-heat-caret");
+            if (!grid) return;
+            heatOpen = grid.hasAttribute("hidden");
+            if (heatOpen) grid.removeAttribute("hidden"); else grid.setAttribute("hidden", "");
+            if (caret) caret.innerHTML = uiIconHtml(heatOpen ? "▴" : "▾");
+        },
+        /* 学习中心 → 生词本的「今日复习」页签:默认页签就是 due,但用户可能上次停在「全部生词库」,
+           所以这里显式把页签拨回去再跳,不然 CTA 会落到另一个列表上 */
+        goReviewDue: function () {
+            try { if (window.LangAssist && LangAssist.openDueTab) { LangAssist.openDueTab(); return; } } catch (e) {}
+            api.goVocab();
         },
         goLearnStats: function () {
             api.goLearn();
@@ -1040,7 +1085,7 @@
                 en: {
                     homeSub: "英语原生文游剧本 · 边玩边学 · 五档词汇难度随你调 · 点句即译，点词进生词本",
                     continueSub: "接着上次的英语进度玩",
-                    bandSub: "玩哪档卡就学哪档词库——心里没底就从 HS / CET4 的校园生活卡起步，玩着吃力或太轻松，随时回来换一档。",
+                    bandSub: "玩哪档卡就学哪档词库——心里没底就从高中 / 四级的校园生活卡起步，玩着吃力或太轻松，随时回来换一档。",
                     fullImmDesc: "纯英语体验，辅助全部手动触发"
                 },
                 ja: {

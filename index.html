@@ -146,7 +146,7 @@
         ]
     }
     </script>
-    <link rel="stylesheet" href="assets/app.css?v=20260926m">
+    <link rel="stylesheet" href="assets/app.css?v=20260926o">
 </head>
 <body>
 
@@ -468,7 +468,11 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <button type="button" class="top-nav-btn" data-view="view-lang-leaderboard" onclick="LangController.goLeaderboard()">排行榜</button>
                 </div>
 
-                <div class="list-title"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg> 选择语言 <span class="list-sub">词库/剧本/生词本都按这里选的语种走</span></div>
+                <!-- 今日一句提到最前(2026-09-26 评审):它是这个页面上唯一每天会变、也唯一能立刻
+                     抓住人的东西;原先排在「选择语言」入口之后,等于把黄金位让给了一个低频设置项 -->
+                <div id="lang-today-box" class="list-start"></div>
+
+                <div class="list-title list-start"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg> 选择语言 <span class="list-sub">词库/剧本/生词本都按这里选的语种走</span></div>
                 <!-- 语种卡行(2026-09-25 移除):三张卡并排是为三种语言定制的,语言一多就放不下。
                      换成一行「当前语种 → 选择页」入口;语种清单只在 lang-play.js 的 LANG_PICK_LIST 里维护一份,
                      这里的内容由 renderLangPicker() 按当前语种改写(两份入口共用一套 data-cur-* 属性) -->
@@ -479,10 +483,8 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <span class="lang-cur-go">选择语言 ›</span>
                 </button>
 
-                <div id="lang-today-box" class="list-start"></div>
-
                 <div class="list-title list-start" id="lang-learn-band"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> 我的学习档 <span class="list-sub">拖动滑块选择，松手即生效</span></div>
-                <div class="list-sub" id="lang-band-sub">玩哪档卡就学哪档词库——心里没底就从 HS / CET4 的校园生活卡起步，玩着吃力或太轻松，随时回来换一档。</div>
+                <div class="list-sub" id="lang-band-sub">玩哪档卡就学哪档词库——心里没底就从高中 / 四级的校园生活卡起步，玩着吃力或太轻松，随时回来换一档。</div>
                 <div id="lang-hint"></div>
                 <div id="lang-band-result" style="display:none;"></div>
 
@@ -492,8 +494,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <button type="button" class="lang-lang-card" data-m="full" onclick="LangController.setImmersion('full')"><span class="lang-icon"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12q2.5 2 5 0t5 0 5 0 5 0"/><path d="M2 19q2.5 2 5 0t5 0 5 0 5 0"/><path d="M2 5q2.5 2 5 0t5 0 5 0 5 0"/></svg></span><span>全沉浸</span><span class="list-sub" id="lang-imm-full-desc">纯英语体验，辅助全部手动触发</span></button>
                 </div>
 
-                <div class="list-title list-start" id="lang-learn-stats"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg> 学习统计与周报 <span class="list-sub" id="lang-learn-stats-sub">玩英语剧本、复习生词都会累计学习时长</span></div>
-                <div class="list-sub">学习数据每天自动统计：今天学了多久、连续几天打卡、生词掌握进度——进步看得见，更容易坚持。</div>
+                <div class="list-title list-start" id="lang-learn-stats"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg> 学习统计 <span class="list-sub" id="lang-learn-stats-sub">玩英语剧本、复习生词都会累计学习时长</span></div>
                 <div id="lang-learn-stats-box" class="card-rows"><div class="list-sub list-empty">登录后查看</div></div>
             </section>
         </section>
@@ -1453,7 +1454,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
 <script src="lib/qrcode.min.js" async></script>
 <script src="assets/app.js?v=20260926m"></script>
 <script src="assets/love-engine.js?v=20260924a"></script>
-<script src="assets/lang-play.js?v=20260926k"></script>
-<script src="assets/lang-aux.js?v=20260926m"></script>
+<script src="assets/lang-play.js?v=20260926o"></script>
+<script src="assets/lang-aux.js?v=20260926o"></script>
 </body>
 </html>

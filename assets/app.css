@@ -5216,20 +5216,24 @@
 
     /* 启动页(2026-09-22)：从「深蓝夜色 + 金色发光 + 呼吸/扫光」改成纸张底 + 墨色字。
        这是用户看到的第一屏，原来那种发光字与流动高光是典型的「游戏化」观感，
-       跟出版物质感冲突；骨架块保留(它承担加载时的占位信息)，只去掉流光。 */
-    #boot-screen{position:fixed;inset:0;z-index:99998;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:var(--bg-soft,#faf7f2);transition:opacity var(--dur-3,280ms) var(--ease,ease);font-family:var(--font-sans,system-ui);overflow:hidden;color:var(--text,#1a1714)}
+       跟出版物质感冲突；骨架块保留(它承担加载时的占位信息)，只去掉流光。
+       2026-09-26 小徐：加载页**永远深色**，不再跟主题走。两条理由：①这是进应用前的
+       过渡屏，浅色主题下先闪一块纸白再切进界面(或反过来)本身就是一次视觉断点；
+       ②这一屏渲染时 data-theme 未必已经落到 DOM 上，用 var() 反而会先画错再纠正。
+       所以整块写死深色档的字面值 —— 取的正是 body[data-theme="dark"] 那套墨底/暖字。 */
+    #boot-screen{--boot-bg:#1c1713;--boot-card:#231d18;--boot-line:#352d25;--boot-ink:#ece5db;--boot-sub:#a3988c;position:fixed;inset:0;z-index:99998;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:var(--boot-bg);transition:opacity var(--dur-3,280ms) var(--ease,ease);font-family:var(--font-sans,system-ui);overflow:hidden;color:var(--boot-ink)}
     #boot-screen.boot-done{opacity:0;pointer-events:none}
-    .boot-logo{font-family:var(--font-serif,serif);font-size:var(--fs-6);font-weight:600;letter-spacing:6px;color:var(--text,#1a1714)}
-    .boot-sub{font-size:var(--fs-2);color:var(--sub,#6b625a);letter-spacing:3px}
-    .boot-seo{margin-top:10px;max-width:min(560px,82vw);text-align:center;color:var(--sub,#6b625a)}
-    .boot-seo-title{font-size:var(--fs-2);font-weight:600;color:var(--text,#1a1714);letter-spacing:1px;margin:0 0 6px}
+    .boot-logo{font-family:var(--font-serif,serif);font-size:var(--fs-6);font-weight:600;letter-spacing:6px;color:var(--boot-ink)}
+    .boot-sub{font-size:var(--fs-2);color:var(--boot-sub);letter-spacing:3px}
+    .boot-seo{margin-top:10px;max-width:min(560px,82vw);text-align:center;color:var(--boot-sub)}
+    .boot-seo-title{font-size:var(--fs-2);font-weight:600;color:var(--boot-ink);letter-spacing:1px;margin:0 0 6px}
     .boot-seo-text{font-size:var(--fs-2);line-height:1.8;margin:0;opacity:.9}
     .boot-cards{width:min(620px,86vw);display:flex;flex-direction:column;gap:12px;margin-top:4px}
-    .boot-card{background:var(--card,#fffdfa);border:1px solid var(--line,#e6e0d6);border-radius:var(--radius-lg,12px);padding:16px 18px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden}
-    .boot-bar{height:11px;border-radius:5px;background:color-mix(in srgb, var(--text,#1a1714) 7%, transparent);}
+    .boot-card{background:var(--boot-card);border:1px solid var(--boot-line);border-radius:var(--radius-lg,12px);padding:16px 18px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden}
+    .boot-bar{height:11px;border-radius:5px;background:color-mix(in srgb, var(--boot-ink) 7%, transparent);}
     .boot-bar.w{width:36%}.boot-bar.l{width:86%}.boot-bar.m{width:62%}.boot-bar.s{width:44%}
     .boot-row{display:flex;gap:8px;margin-top:4px}
-    .boot-opt{flex:1;height:24px;border-radius:5px;background:color-mix(in srgb, var(--text,#1a1714) 5%, transparent)}
+    .boot-opt{flex:1;height:24px;border-radius:5px;background:color-mix(in srgb, var(--boot-ink) 5%, transparent)}
     /* ===== 设置页:叙事控制 ===== */
     .nc-row{display:flex;align-items:center;gap:8px;font-size:var(--fs-3)}
     .nc-row .nc-label{min-width:74px;color:var(--sub);flex-shrink:0}
@@ -5363,26 +5367,32 @@
     .rv-gl{font-size:var(--fs-2);color:var(--text);opacity:.72;margin-top:1px;word-break:break-word}
     .rv-got{border:none;background:var(--block-ok);color:#fff;font-size:var(--fs-1);font-weight:800;border-radius:999px;padding:4px 11px;cursor:pointer;flex-shrink:0}
     .rv-more{border:1px dashed color-mix(in srgb, var(--ok) 50%, transparent);background:transparent;color:var(--ok);font-size:var(--fs-2);font-weight:800;border-radius:10px;padding:6px 0;width:100%;cursor:pointer;margin-top:6px}
-    .wk-bars{display:flex;align-items:flex-end;gap:5px;height:58px;margin:10px 2px 3px}
-    .wk-bar{flex:1;border-radius:5px 5px 0 0;background:linear-gradient(180deg,var(--block-accent-2),#c4a8f2);min-height:3px}
-    .wk-bar.today{background:linear-gradient(180deg,var(--block-ok-up),#7adfc9)}
-    .wk-day{flex:1;text-align:center;font-size:var(--fs-1);color:var(--sub)}
-    .wk-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px dashed var(--line);font-size:var(--fs-2)}
-    .wk-row:last-child{border-bottom:none}
-    .wk-row b{color:var(--accent-2)}
-    /* P2-4 学习中心统计周报(2026-09-09):wks-* 自成体系,不依赖上面的 .wk-bars 布局 */
-    .wks-cols{display:flex;gap:5px;margin-top:8px}
-    .wks-col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px}
-    .wks-track{width:100%;height:58px;display:flex;align-items:flex-end;justify-content:center;background:color-mix(in srgb, var(--accent-2) 6%, transparent);border-radius:8px;overflow:hidden}
-    .wks-bar{width:64%;min-height:2px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--block-accent-2),#c8aef2);transition:height .25s}
-    .wks-bar.today{background:linear-gradient(180deg,var(--block-ok-up),#8ce3cf)}
-    .wks-lab{font-size:var(--fs-1);font-weight:700;color:var(--sub);line-height:1.2}
-    .wks-mins{font-size:var(--fs-1);color:var(--sub);opacity:.75;line-height:1.2}
+    /* P2-4 学习中心统计(2026-09-09 立,2026-09-26 评审后重构)
+       旧版是「四格 + 7 日柱状图 + 五行小结」:同一批数字在一屏里说了三遍,柱子没学的那天
+       还是一排空底框,看着像加载失败。现在换成——四格只留四个不重复的数 → 本周七格打卡胶囊
+       (学过的点亮,没学的是颗小圆点,不画空柱子)→ 折叠的 30 天热力 → 掌握进度条 + 复习入口。
+       所有色值都走 color-mix(var(...)),不写死,深色主题自动跟着 token 换。 */
     .wks-t{font-size:var(--fs-2);font-weight:800;color:var(--text);margin-top:4px}
-    .wks-vt{font-size:var(--fs-2);font-weight:800;color:var(--text);margin-bottom:4px}
     .wks-track-line{display:flex;height:9px;border-radius:6px;overflow:hidden;background:color-mix(in srgb, var(--accent-2) 15%, transparent)}
     .wks-track-line .wks-vf{background:linear-gradient(90deg,#f0a63c,#f7cf6b);height:100%}
     .wks-track-line .wks-vm{background:linear-gradient(90deg,var(--block-accent-2),var(--block-accent-2-soft));height:100%}
+    /* 本周七格:flex:1 让七格正好铺满一行,窄屏也不用横滑 */
+    .stk-caps{display:flex;gap:6px;margin-top:8px}
+    .stk-cap{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 0 5px;border-radius:12px;border:1px solid var(--line);background:var(--input-bg)}
+    .stk-cap-d{display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:var(--fs-2);line-height:1;background:color-mix(in srgb, var(--sub) 18%, transparent)}
+    .stk-cap.on .stk-cap-d{background:linear-gradient(135deg,var(--block-ok-up),var(--block-ok))}
+    .stk-cap.today{border-color:color-mix(in srgb, var(--accent-2) 60%, transparent)}
+    .stk-cap-l{font-size:var(--fs-1);font-weight:700;color:var(--sub);line-height:1.2}
+    .stk-cap.on .stk-cap-l{color:var(--text)}
+    /* 30 天热力:10 列正好摆成三排,空白天是淡底格(有形状)而不是留白 */
+    .hm-head{display:flex;align-items:center;gap:6px;width:100%;border:none;background:transparent;color:var(--text);font-size:var(--fs-2);font-weight:800;padding:4px 0;cursor:pointer;text-align:left}
+    .hm-caret{margin-left:auto;color:var(--sub)}
+    .hm-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;margin-top:8px}
+    .hm-cell{aspect-ratio:1;border-radius:5px;background:color-mix(in srgb, var(--sub) 14%, transparent)}
+    .hm-cell.hm-1{background:color-mix(in srgb, var(--accent-2) 30%, transparent)}
+    .hm-cell.hm-2{background:color-mix(in srgb, var(--accent-2) 62%, transparent)}
+    .hm-cell.hm-3{background:var(--accent-2)}
+    .hm-cell.today{box-shadow:0 0 0 2px color-mix(in srgb, var(--accent-2) 45%, transparent)}
     .mb-rows{margin-top:2px}
     .mb-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:4px 0;font-size:var(--fs-2);font-weight:700;color:var(--text)}
     .mb-row s{font-size:var(--fs-1);color:var(--sub);font-style:normal;font-weight:600;flex-shrink:0}
