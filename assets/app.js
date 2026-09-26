@@ -14793,17 +14793,22 @@ function openNpcProfile(npcId) {
             if (panel.style.display === "none") {
                 // 挂在开它的那枚按钮正下方(与 toggleNavMenu 同一套写法):面板贴着入口,
                 // 才看得出来「这是那枚按钮开出来的」。取不到按钮时退回顶栏高度,不至于飘到页外。
+                renderHistoryPanel();
+                // 先显示出来再定位：面板宽度是 min(340px, 100vw - 24px)，夹取要用实测宽度。
+                panel.style.display = "block";
                 const btn = document.getElementById("top-nav-history-btn");
                 const r = btn ? btn.getBoundingClientRect() : null;
                 if (r && r.bottom) {
+                    // 右缘对准按钮右缘，但得夹在视口内(2026-09-26 修)：按钮右边还排着「菜单」和
+                    // 「收起导航」两枚按钮，那段距离在手机上就有 130px 上下，加上 340px 的面板
+                    // 超过屏宽，面板会整块顶出屏幕左边。夹到 [8, 视口宽 - 面板宽 - 8]。
+                    const vw = window.innerWidth;
                     panel.style.top = Math.round(r.bottom + 6) + "px";
-                    panel.style.right = Math.max(8, Math.round(window.innerWidth - r.right)) + "px";
+                    panel.style.right = Math.max(8, Math.min(vw - panel.offsetWidth - 8, Math.round(vw - r.right))) + "px";
                 } else {
                     const header = document.getElementById("top-nav-bar");
                     if (header) panel.style.top = (header.offsetHeight + 8) + "px";
                 }
-                renderHistoryPanel();
-                panel.style.display = "block";
             } else {
                 closeHistoryPanel();
             }
@@ -16857,9 +16862,14 @@ function openNpcProfile(npcId) {
     window.ModeGate = ModeGate;
 
     // 登录页 z-index 500000 压着弹窗的 450000，所以要等它让开；最多等 16 秒就不再打扰。
+    // 加载页(99998)也压不住它——弹窗一弹就盖在加载页上，等 onload 把加载页收掉、首页在弹窗
+    // 底下渲染出来，看着像「我还没选，页面自己跳过去了」。所以加载页没淡出前一律不弹(2026-09-26 修)；
+    // 等加载页这段不计入 16 秒预算(那个预算只留给「登录层压着」这种真需要等的场面)。
     (function waitForModePick() {
         let n = 0;
         const t = setInterval(() => {
+            const boot = document.getElementById("boot-screen");
+            if (boot && !boot.classList.contains("boot-done")) return;
             if (ModeGate.maybeShow() || ++n > 40) clearInterval(t);
         }, 400);
     })();
