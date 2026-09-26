@@ -388,7 +388,19 @@
             document.querySelector(".chat-footer .composer").style.display = enableGamePanels ? "flex" : "none";
             PlayDockService.apply();
         }
-        return { apply };
+        // 语言页组：语言首页/学习/单词本/排行榜/语言选择。顶栏「学语言」与每页自己的
+        // 语言子导航把这几个当**平级目的地**，所以它们是一组。
+        const LANG_VIEWS = new Set(["view-lang", "view-lang-learn", "view-lang-vocab", "view-lang-leaderboard", "view-lang-picker"]);
+        // 一场游玩里的这些页同理（手机设置页只能从手机进，也归这组）。它是单列并进来、
+        // 而不是塞进 PLAY_VIEWS —— PLAY_VIEWS 还管着聊天底栏与快捷动作的显隐，
+        // 而手机设置页要沉浸，不能跟着显示底栏。
+        const PLAY_PAGE_VIEWS = new Set([...PLAY_VIEWS, "view-phone-settings"]);
+        // 顶部「返回」的粒度 = **页组**：同组内的页互相切换算同一页，只记「进组/出组」那一步。
+        // 不这么干的话，组内来回点几下，返回就变成在刚点过的那几页之间弹，
+        // 而不是回上一页（实测：剧情页→背包、单词本→排行榜，两处都会弹）。
+        const PAGE_GROUPS = [PLAY_PAGE_VIEWS, LANG_VIEWS];
+        const samePageGroup = (a, b) => PAGE_GROUPS.some((g) => g.has(a) && g.has(b));
+        return { apply, LANG_VIEWS, samePageGroup };
     })();
 
     const ChatPolicyConfigService = (() => {
@@ -483,15 +495,15 @@
 
     // 大地图地点池：地点名由"主城·场景"构成，图标按场景词映射（StateService 与 UIRenderer 共用）
     const MAP_PLACE_POOL = [
-        { n: "市集", i: "🛒" }, { n: "酒馆", i: "🍺" }, { n: "城郊", i: "🌾" }, { n: "码头", i: "⚓" },
-        { n: "学府", i: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M10 14h4v-2h-4zm0-3h8V9h-8zm0-3h8V6h-8zM8 18q-.825 0-1.412-.587T6 16V4q0-.825.588-1.412T8 2h12q.825 0 1.413.588T22 4v12q0 .825-.587 1.413T20 18zm-4 4q-.825 0-1.412-.587T2 20V6h2v14h14v2z'/></svg>" }, { n: "庙宇", i: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M1 21v-4l2-2V9L1 7V3h2v2h2V3h2v2h2V3h2v4L9 9v1h6V9l-2-2V3h2v2h2V3h2v2h2V3h2v4l-2 2v6l2 2v4h-9v-3q0-.825-.587-1.412T12 16t-1.412.588T10 18v3z'/></svg>" }, { n: "工坊", i: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='m18.9 21l-5.475-5.475l2.1-2.1L21 18.9zM5.1 21L3 18.9L9.9 12l-1.7-1.7l-.7.7l-1.275-1.275v2.05l-.7.7L2.5 9.45l.7-.7h2.05L4 7.5l3.55-3.55q.5-.5 1.075-.725T9.8 3t1.175.225t1.075.725l-2.3 2.3L11 7.5l-.7.7L12 9.9l2.25-2.25q-.1-.275-.162-.575t-.063-.6q0-1.475 1.013-2.488t2.487-1.012q.375 0 .713.075t.687.225L16.45 5.75l1.8 1.8l2.475-2.475q.175.35.238.687t.062.713q0 1.475-1.012 2.488t-2.488 1.012q-.3 0-.6-.05t-.575-.175z'/></svg>" }, { n: "茶馆", i: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M4 21v-2h16v2zm4-4q-1.65 0-2.825-1.175T4 13V3h16q.825 0 1.413.588T22 5v3q0 .825-.587 1.413T20 10h-2v3q0 1.65-1.175 2.825T14 17zm10-9h2V5h-2z'/></svg>" },
-        { n: "广场", i: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M5 17v-7h2v7zm6 0v-7h2v7zm-9 4v-2h20v2zm15-4v-7h2v7zM2 8V6l10-5l10 5v2z'/></svg>" }, { n: "森林", i: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M13 22v-3h4v3zm-6 0v-4H0l3.85-6H2L9 2l7 10h-1.85l3.875 6H11v4zm12.25-4L16 13h1.925l-5.3-7.575L15 2l7 10h-1.85L24 18z'/></svg>" }, { n: "河畔", i: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='m1 18l6-8l4.5 6h2.525l-3.775-5L14 6l9 12z'/></svg>" }, { n: "街巷", i: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M6.175 19.825Q5 18.65 5 17V8.825Q4.125 8.5 3.563 7.738T3 6q0-1.25.875-2.125T6 3t2.125.875T9 6q0 .975-.562 1.738T7 8.825V17q0 .825.588 1.413T9 19t1.413-.587T11 17V7q0-1.65 1.175-2.825T15 3t2.825 1.175T19 7v8.175q.875.325 1.438 1.088T21 18q0 1.25-.875 2.125T18 21t-2.125-.875T15 18q0-.975.563-1.75T17 15.175V7q0-.825-.587-1.412T15 5t-1.412.588T13 7v10q0 1.65-1.175 2.825T9 21t-2.825-1.175'/></svg>" }
+        { n: "市集", i: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='m2.05 2.05 1.099-.028a1 1 0 0 1 1.008.815l2.69 14.347A1 1 0 0 0 7.83 18H18'/><path d='M4.563 5h16.435a1 1 0 0 1 .981 1.204l-1.026 6.226A2 2 0 0 1 18.962 14H6.25'/><circle cx='18' cy='20' r='2'/><circle cx='8' cy='20' r='2'/></svg>" }, { n: "酒馆", i: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M17 11h1a3 3 0 0 1 0 6h-1'/><path d='M9 12v6'/><path d='M13 12v6'/><path d='M14 7.5c-1 0-1.44.5-3 .5s-2-.5-3-.5-1.72.5-2.5.5a2.5 2.5 0 0 1 0-5c.78 0 1.57.5 2.5.5S9.44 2 11 2s2 1.5 3 1.5 1.72-.5 2.5-.5a2.5 2.5 0 0 1 0 5c-.78 0-1.5-.5-2.5-.5Z'/><path d='M5 8v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8'/></svg>" }, { n: "城郊", i: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M2 22 16 8'/><path d='M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z'/><path d='M7.47 8.53 9 7l1.53 1.53a3.5 3.5 0 0 1 0 4.94L9 15l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z'/><path d='M11.47 4.53 13 3l1.53 1.53a3.5 3.5 0 0 1 0 4.94L13 11l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z'/><path d='M20 2h2v2a4 4 0 0 1-4 4h-2V6a4 4 0 0 1 4-4Z'/><path d='M11.47 17.47 13 19l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L5 19l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z'/><path d='M15.47 13.47 17 15l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L9 15l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z'/><path d='M19.47 9.47 21 11l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L13 11l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z'/></svg>" }, { n: "码头", i: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M12 6v16'/><path d='m19 13 2-1a9 9 0 0 1-18 0l2 1'/><path d='M9 11h6'/><circle cx='12' cy='4' r='2'/></svg>" },
+        { n: "学府", i: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M14 21v-3a2 2 0 0 0-4 0v3'/><path d='M18 4.933V21'/><path d='m4 6 7.106-3.79a2 2 0 0 1 1.788 0L20 6'/><path d='m6 11-3.52 2.147a1 1 0 0 0-.48.854V19a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a1 1 0 0 0-.48-.853L18 11'/><path d='M6 4.933V21'/><circle cx='12' cy='9' r='2'/></svg>" }, { n: "庙宇", i: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M10 5V3'/><path d='M14 5V3'/><path d='M15 21v-3a3 3 0 0 0-6 0v3'/><path d='M18 3v8'/><path d='M18 5H6'/><path d='M22 11H2'/><path d='M22 9v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9'/><path d='M6 3v8'/></svg>" }, { n: "工坊", i: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M10 9h4'/><path d='M12 7v5'/><path d='M14 21v-3a2 2 0 0 0-4 0v3'/><path d='m18 9 3.52 2.147a1 1 0 0 1 .48.854V19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6.999a1 1 0 0 1 .48-.854L6 9'/><path d='M6 21V7a1 1 0 0 1 .376-.782l5-3.999a1 1 0 0 1 1.249.001l5 4A1 1 0 0 1 18 7v14'/></svg>" }, { n: "茶馆", i: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M10 2v2'/><path d='M14 2v2'/><path d='M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1'/><path d='M6 2v2'/></svg>" },
+        { n: "广场", i: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M10 18v-7'/><path d='M11.119 2.205a2 2 0 0 1 1.762 0l7.84 3.846A.5.5 0 0 1 20.5 7h-17a.5.5 0 0 1-.22-.949z'/><path d='M14 18v-7'/><path d='M18 18v-7'/><path d='M3 22h18'/><path d='M6 18v-7'/></svg>" }, { n: "森林", i: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M10 10v.2A3 3 0 0 1 8.9 16H5a3 3 0 0 1-1-5.8V10a3 3 0 0 1 6 0Z'/><path d='M7 16v6'/><path d='M13 19v3'/><path d='M12 19h8.3a1 1 0 0 0 .7-1.7L18 14h.3a1 1 0 0 0 .7-1.7L16 9h.2a1 1 0 0 0 .8-1.7L13 3l-1.4 1.5'/></svg>" }, { n: "河畔", i: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='m8 3 4 8 5-5 5 15H2L8 3z'/></svg>" }, { n: "街巷", i: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><circle cx='6' cy='19' r='3'/><path d='M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15'/><circle cx='18' cy='5' r='3'/></svg>" }
     ];
     // 题材→开局地点池（图标复用 MAP_PLACE_POOL 素材，地点不再拼"主城·"前缀、不再千篇一律）
     const THEME_LOCATION_POOL = {
         urban: [
             { n: "中央广场", i: MAP_PLACE_POOL[8].i }, { n: "河滨公园", i: MAP_PLACE_POOL[9].i }, { n: "老城街巷", i: MAP_PLACE_POOL[11].i },
-            { n: "商业街", i: MAP_PLACE_POOL[11].i }, { n: "地铁站", i: "🚇" }, { n: "城市边缘", i: MAP_PLACE_POOL[2].i }
+            { n: "商业街", i: MAP_PLACE_POOL[11].i }, { n: "地铁站", i: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M8 3.1V7a4 4 0 0 0 8 0V3.1'/><path d='m9 15-1-1'/><path d='m15 15 1-1'/><path d='M9 19c-2.8 0-5-2.2-5-5v-4a8 8 0 0 1 16 0v4c0 2.8-2.2 5-5 5Z'/><path d='m8 19-2 3'/><path d='m16 19 2 3'/></svg>" }, { n: "城市边缘", i: MAP_PLACE_POOL[2].i }
         ],
         campus: [
             { n: "教学楼", i: MAP_PLACE_POOL[4].i }, { n: "操场", i: MAP_PLACE_POOL[8].i }, { n: "图书馆", i: MAP_PLACE_POOL[4].i },
@@ -522,6 +534,162 @@
             { n: "河畔", i: MAP_PLACE_POOL[10].i }, { n: "公园", i: MAP_PLACE_POOL[9].i }, { n: "酒馆", i: MAP_PLACE_POOL[1].i }
         ]
     };
+    // 图标位统一解析：emoji / 中文标签 → Material Symbols path → 内联 SVG。
+    // 手机应用、NPC 属性、初始属性这几处的 icon 可能来自作者或 AI，穷举不完，
+    // 所以**认不出来的原样透传**（不吞作者的 emoji），已经是 SVG 的直接放行。
+    // UI 图标：lucide v1.47.0（ISC）描边式，多元素。键仍是 emoji / 中文属性名。
+    // 值 = 可直接塞进 <svg> 的整段内部标记（单引号属性）；消费点见 uiIconHtml / statBarHtml。
+    const UI_ICON_SVG = {
+        "❤️": "<path d='M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5'/><path d='M3.22 13H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27'/>",
+        "💔": "<path d='M12.409 5.824c-.702.792-1.15 1.496-1.415 2.166l2.153 2.156a.5.5 0 0 1 0 .707l-2.293 2.293a.5.5 0 0 0 0 .707L12 15'/><path d='M13.508 20.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5a5.5 5.5 0 0 1 9.591-3.677.6.6 0 0 0 .818.001A5.5 5.5 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5z'/>",
+        "⚡": "<path d='M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z'/>",
+        "💰": "<path d='M13.744 17.736a6 6 0 1 1-7.48-7.48'/><path d='M15 6h1v4'/><path d='m6.134 14.768.866-.5 2 3.464'/><circle cx='16' cy='8' r='6'/>",
+        "✨": "<path d='M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z'/><path d='M20 2v4'/><path d='M22 4h-4'/><circle cx='4' cy='20' r='2'/>",
+        "😊": "<path d='M15 10V9'/><path d='M16.472 15a6 6 0 01-8.943 0'/><path d='M9 10V9'/><circle cx='12' cy='12' r='10'/>",
+        "💎": "<path d='M10.5 3 8 9l4 13 4-13-2.5-6'/><path d='M17 3a2 2 0 0 1 1.6.8l3 4a2 2 0 0 1 .013 2.382l-7.99 10.986a2 2 0 0 1-3.247 0l-7.99-10.986A2 2 0 0 1 2.4 7.8l2.998-3.997A2 2 0 0 1 7 3z'/><path d='M2 9h20'/>",
+        "👑": "<path d='M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z'/><path d='M5 21h14'/>",
+        "健康": "<path d='M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5'/><path d='M3.22 13H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27'/>",
+        "心情": "<path d='M15 10V9'/><path d='M16.472 15a6 6 0 01-8.943 0'/><path d='M9 10V9'/><circle cx='12' cy='12' r='10'/>",
+        "魅力": "<path d='M10.5 3 8 9l4 13 4-13-2.5-6'/><path d='M17 3a2 2 0 0 1 1.6.8l3 4a2 2 0 0 1 .013 2.382l-7.99 10.986a2 2 0 0 1-3.247 0l-7.99-10.986A2 2 0 0 1 2.4 7.8l2.998-3.997A2 2 0 0 1 7 3z'/><path d='M2 9h20'/>",
+        "权势": "<path d='M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z'/><path d='M5 21h14'/>",
+        "🌀": "<path d='m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72'/><path d='m14 7 3 3'/><path d='M5 6v4'/><path d='M19 14v4'/><path d='M10 2v2'/><path d='M7 8H3'/><path d='M21 16h-4'/><path d='M11 3H9'/>",
+        "灵力": "<path d='m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72'/><path d='m14 7 3 3'/><path d='M5 6v4'/><path d='M19 14v4'/><path d='M10 2v2'/><path d='M7 8H3'/><path d='M21 16h-4'/><path d='M11 3H9'/>",
+        "📚": "<path d='m16 6 4 14'/><path d='M12 6v14'/><path d='M8 8v12'/><path d='M4 4v16'/>",
+        "学识": "<path d='m16 6 4 14'/><path d='M12 6v14'/><path d='M8 8v12'/><path d='M4 4v16'/>",
+        "💼": "<path d='M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16'/><rect width='20' height='14' x='2' y='6' rx='2'/>",
+        "事业": "<path d='M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16'/><rect width='20' height='14' x='2' y='6' rx='2'/>",
+        "🌱": "<path d='M14 9.536V7a4 4 0 0 1 4-4h1.5a.5.5 0 0 1 .5.5V5a4 4 0 0 1-4 4 4 4 0 0 0-4 4c0 2 1 3 1 5a5 5 0 0 1-1 3'/><path d='M4 9a5 5 0 0 1 8 4 5 5 0 0 1-8-4'/><path d='M5 21h14'/>",
+        "成长": "<path d='M14 9.536V7a4 4 0 0 1 4-4h1.5a.5.5 0 0 1 .5.5V5a4 4 0 0 1-4 4 4 4 0 0 0-4 4c0 2 1 3 1 5a5 5 0 0 1-1 3'/><path d='M4 9a5 5 0 0 1 8 4 5 5 0 0 1-8-4'/><path d='M5 21h14'/>",
+        "◻️": "<path d='M5 12h14'/>",
+        "⚓": "<path d='M12 6v16'/><path d='m19 13 2-1a9 9 0 0 1-18 0l2 1'/><path d='M9 11h6'/><circle cx='12' cy='4' r='2'/>",
+        "⚖️": "<path d='M12 3v18'/><path d='m19 8 3 8a5 5 0 0 1-6 0zV7'/><path d='M3 7h1a17 17 0 0 0 8-2 17 17 0 0 0 8 2h1'/><path d='m5 8 3 8a5 5 0 0 1-6 0zV7'/><path d='M7 21h10'/>",
+        "⛰️": "<path d='m8 3 4 8 5-5 5 15H2L8 3z'/>",
+        "✅": "<circle cx='12' cy='12' r='10'/><path d='m16 9-5.5 5.5L8 12'/>",
+        "➕": "<path d='M5 12h14'/><path d='M12 5v14'/>",
+        "⭐": "<path d='M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z'/>",
+        "容貌": "<path d='M3 7V5a2 2 0 0 1 2-2h2'/><path d='M17 3h2a2 2 0 0 1 2 2v2'/><path d='M21 17v2a2 2 0 0 1-2 2h-2'/><path d='M7 21H5a2 2 0 0 1-2-2v-2'/><path d='M8 14s1.5 2 4 2 4-2 4-2'/><path d='M9 9h.01'/><path d='M15 9h.01'/>",
+        "🃏": "<path d='M12.832 8.445a1 1 0 00-1.589-.098l-2.075 3.098a1 1 0 000 1.11l2 3a1 1 0 001.664 0l2-3a1 1 0 000-1.11z'/><rect x='5' y='2' width='14' height='20' rx='2'/>",
+        "🌃": "<path d='M10 12h4'/><path d='M10 8h4'/><path d='M14 21v-3a2 2 0 0 0-4 0v3'/><path d='M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2'/><path d='M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16'/>",
+        "🌊": "<path d='M2 12q2.5 2 5 0t5 0 5 0 5 0'/><path d='M2 19q2.5 2 5 0t5 0 5 0 5 0'/><path d='M2 5q2.5 2 5 0t5 0 5 0 5 0'/>",
+        "🌏": "<circle cx='12' cy='12' r='10'/><path d='M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20'/><path d='M2 12h20'/>",
+        "🌐": "<circle cx='12' cy='12' r='10'/><path d='M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20'/><path d='M2 12h20'/>",
+        "🌟": "<path d='M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z'/>",
+        "🌾": "<path d='M2 22 16 8'/><path d='M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z'/><path d='M7.47 8.53 9 7l1.53 1.53a3.5 3.5 0 0 1 0 4.94L9 15l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z'/><path d='M11.47 4.53 13 3l1.53 1.53a3.5 3.5 0 0 1 0 4.94L13 11l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z'/><path d='M20 2h2v2a4 4 0 0 1-4 4h-2V6a4 4 0 0 1 4-4Z'/><path d='M11.47 17.47 13 19l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L5 19l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z'/><path d='M15.47 13.47 17 15l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L9 15l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z'/><path d='M19.47 9.47 21 11l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L13 11l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z'/>",
+        "🌿": "<path d='M11 20a10 10 0 0010-10 25.9 25.9 0 00-1.04-7.281 1 1 0 00-1.755-.325C15.833 5.5 13 5.5 9.8 6.1A7 7 0 0011 20'/><path d='M2 21a5 5 0 012.911-4.544C7.613 15.212 8.351 15.24 11 13'/>",
+        "🍺": "<path d='M17 11h1a3 3 0 0 1 0 6h-1'/><path d='M9 12v6'/><path d='M13 12v6'/><path d='M14 7.5c-1 0-1.44.5-3 .5s-2-.5-3-.5-1.72.5-2.5.5a2.5 2.5 0 0 1 0-5c.78 0 1.57.5 2.5.5S9.44 2 11 2s2 1.5 3 1.5 1.72-.5 2.5-.5a2.5 2.5 0 0 1 0 5c-.78 0-1.5-.5-2.5-.5Z'/><path d='M5 8v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V8'/>",
+        "🎁": "<path d='M12 7v14'/><path d='M20 11v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8'/><path d='M7.5 7a1 1 0 0 1 0-5A4.8 8 0 0 1 12 7a4.8 8 0 0 1 4.5-5 1 1 0 0 1 0 5'/><rect x='3' y='7' width='18' height='4' rx='1'/>",
+        "🎉": "<path d='M5.8 11.3 2 22l10.7-3.79'/><path d='M4 3h.01'/><path d='M22 8h.01'/><path d='M15 2h.01'/><path d='M22 20h.01'/><path d='m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10'/><path d='m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11c-.11.7-.72 1.22-1.43 1.22H17'/><path d='m11 2 .33.82c.34.86-.2 1.82-1.11 1.98C9.52 4.9 9 5.52 9 6.23V7'/><path d='M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2Z'/>",
+        "🎫": "<path d='M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z'/><path d='M13 5v2'/><path d='M13 17v2'/><path d='M13 11v2'/>",
+        "🎭": "<path d='M18 11c-1.5 0-2.5.5-3 2'/><path d='M4 6a2 2 0 0 0-2 2v4a5 5 0 0 0 5 5 8 8 0 0 1 5 2 8 8 0 0 1 5-2 5 5 0 0 0 5-5V8a2 2 0 0 0-2-2h-3a8 8 0 0 0-5 2 8 8 0 0 0-5-2z'/><path d='M6 11c1.5 0 2.5.5 3 2'/>",
+        "🎮": "<line x1='6' x2='10' y1='11' y2='11'/><line x1='8' x2='8' y1='9' y2='13'/><line x1='15' x2='15.01' y1='12' y2='12'/><line x1='18' x2='18.01' y1='10' y2='10'/><path d='M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z'/>",
+        "🎯": "<circle cx='12' cy='12' r='10'/><circle cx='12' cy='12' r='6'/><circle cx='12' cy='12' r='2'/>",
+        "🎲": "<rect width='12' height='12' x='2' y='10' rx='2' ry='2'/><path d='m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6'/><path d='M6 18h.01'/><path d='M10 14h.01'/><path d='M15 6h.01'/><path d='M18 9h.01'/>",
+        "🎵": "<path d='M9 18V5l12-2v13'/><circle cx='6' cy='18' r='3'/><circle cx='18' cy='16' r='3'/>",
+        "🏆": "<path d='M10 14.66V17a1 1 0 0 1-1 1 2 2 0 0 0-2 2v2'/><path d='M14 14.66V17a1 1 0 0 0 1 1 2 2 0 0 1 2 2v2'/><path d='M17.916 10H19.5A2.5 2.5 0 0 0 22 7.5V5a1 1 0 0 0-1-1h-3'/><path d='M4 22h16'/><path d='M6 9a6 6 0 0 0 12 0V3a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1z'/><path d='M6.084 10H4.5A2.5 2.5 0 0 1 2 7.5V5a1 1 0 0 1 1-1h3'/>",
+        "🏠": "<path d='M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8'/><path d='M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/>",
+        "🏡": "<path d='M8.62 13.8A2.25 2.25 0 1 1 12 10.836a2.25 2.25 0 1 1 3.38 2.966l-2.626 2.856a.998.998 0 0 1-1.507 0z'/><path d='M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/>",
+        "🏪": "<path d='M15 21v-5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5'/><path d='M17.774 10.31a1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.451 0 1.12 1.12 0 0 0-1.548 0 2.5 2.5 0 0 1-3.452 0 1.12 1.12 0 0 0-1.549 0 2.5 2.5 0 0 1-3.77-3.248l2.889-4.184A2 2 0 0 1 7 2h10a2 2 0 0 1 1.653.873l2.895 4.192a2.5 2.5 0 0 1-3.774 3.244'/><path d='M4 10.95V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8.05'/>",
+        "🏫": "<path d='M14 21v-3a2 2 0 0 0-4 0v3'/><path d='M18 4.933V21'/><path d='m4 6 7.106-3.79a2 2 0 0 1 1.788 0L20 6'/><path d='m6 11-3.52 2.147a1 1 0 0 0-.48.854V19a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a1 1 0 0 0-.48-.853L18 11'/><path d='M6 4.933V21'/><circle cx='12' cy='9' r='2'/>",
+        "💗": "<path d='M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5'/>",
+        "💘": "<path d='M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5'/>",
+        "💬": "<path d='M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719'/>",
+        "📂": "<path d='m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2'/>",
+        "📊": "<path d='M3 3v16a2 2 0 0 0 2 2h16'/><path d='M18 17V9'/><path d='M13 17V5'/><path d='M8 17v-3'/>",
+        "📖": "<path d='M12 5v16'/><path d='M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z'/>",
+        "📝": "<path d='M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4'/><path d='M2 6h4'/><path d='M2 10h4'/><path d='M2 14h4'/><path d='M2 18h4'/><path d='M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z'/>",
+        "📦": "<path d='M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z'/><path d='M12 22V12'/><polyline points='3.29 7 12 12 20.71 7'/><path d='m7.5 4.27 9 5.15'/>",
+        "🔁": "<path d='m17 2 4 4-4 4'/><path d='M3 11v-1a4 4 0 0 1 4-4h14'/><path d='m7 22-4-4 4-4'/><path d='M21 13v1a4 4 0 0 1-4 4H3'/>",
+        "🔄": "<path d='M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8'/><path d='M21 3v5h-5'/><path d='M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16'/><path d='M8 16H3v5'/>",
+        "🔊": "<path d='M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z'/><path d='M16 9a5 5 0 0 1 0 6'/><path d='M19.364 18.364a9 9 0 0 0 0-12.728'/>",
+        "🔓": "<rect width='18' height='11' x='3' y='11' rx='2' ry='2'/><path d='M7 11V7a5 5 0 0 1 9.9-1'/>",
+        "🔔": "<path d='M10.268 21a2 2 0 0 0 3.464 0'/><path d='M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326'/>",
+        "🔤": "<path d='m5 8 6 6'/><path d='m4 14 6-6 2-3'/><path d='M2 5h12'/><path d='M7 2h1'/><path d='m22 22-5-10-5 10'/><path d='M14 18h6'/>",
+        "🔮": "<path d='M20.341 6.484A10 10 0 0 1 10.266 21.85'/><path d='M3.659 17.516A10 10 0 0 1 13.74 2.152'/><circle cx='12' cy='12' r='3'/><circle cx='19' cy='5' r='2'/><circle cx='5' cy='19' r='2'/>",
+        "🕵️": "<path d='M3 7V5a2 2 0 0 1 2-2h2'/><path d='M17 3h2a2 2 0 0 1 2 2v2'/><path d='M21 17v2a2 2 0 0 1-2 2h-2'/><path d='M7 21H5a2 2 0 0 1-2-2v-2'/><circle cx='12' cy='12' r='3'/><path d='m16 16-1.9-1.9'/>",
+        "🕸️": "<path d='M18 5h4'/><path d='M20 3v4'/><path d='M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401'/>",
+        "🗑": "<path d='M10 11v6'/><path d='M14 11v6'/><path d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6'/><path d='M3 6h18'/><path d='M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/>",
+        "🗑️": "<path d='M10 11v6'/><path d='M14 11v6'/><path d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6'/><path d='M3 6h18'/><path d='M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/>",
+        "🚀": "<path d='M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5'/><path d='M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09'/><path d='M9 12a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.4 22.4 0 0 1-4 2z'/><path d='M9 12H4s.55-3.03 2-4c1.62-1.08 5 .05 5 .05'/>",
+        "🚇": "<path d='M8 3.1V7a4 4 0 0 0 8 0V3.1'/><path d='m9 15-1-1'/><path d='m15 15 1-1'/><path d='M9 19c-2.8 0-5-2.2-5-5v-4a8 8 0 0 1 16 0v4c0 2.8-2.2 5-5 5Z'/><path d='m8 19-2 3'/><path d='m16 19 2 3'/>",
+        "🚶": "<path d='M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z'/><path d='M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z'/><path d='M16 17h4'/><path d='M4 13h4'/>",
+        "🛒": "<path d='m2.05 2.05 1.099-.028a1 1 0 0 1 1.008.815l2.69 14.347A1 1 0 0 0 7.83 18H18'/><path d='M4.563 5h16.435a1 1 0 0 1 .981 1.204l-1.026 6.226A2 2 0 0 1 18.962 14H6.25'/><circle cx='18' cy='20' r='2'/><circle cx='8' cy='20' r='2'/>",
+        "🛠️": "<path d='M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z'/>",
+        "🤝": "<path d='m11 17 2 2a1 1 0 1 0 3-3'/><path d='m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4'/><path d='m21 3 1 11h-2'/><path d='M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3'/><path d='M3 4h8'/>",
+        "🧊": "<path d='M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z'/><path d='m3.3 7 8.7 5 8.7-5'/><path d='M12 22V12'/>",
+        "🧍": "<circle cx='12' cy='5' r='1'/><path d='m9 20 3-6 3 6'/><path d='m6 8 6 2 6-2'/><path d='M12 10v4'/>",
+        "🧟": "<path d='m12.5 17-.5-1-.5 1h1z'/><path d='M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z'/><circle cx='15' cy='12' r='1'/><circle cx='9' cy='12' r='1'/>",
+        "🧹": "<path d='m16 22-1-4'/><path d='M19 14a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2h-3a1 1 0 0 1-1-1V4a2 2 0 0 0-4 0v5a1 1 0 0 1-1 1H6a2 2 0 0 0-2 2v1a1 1 0 0 0 1 1'/><path d='M19 14H5l-1.973 6.767A1 1 0 0 0 4 22h16a1 1 0 0 0 .973-1.233z'/><path d='m8 22 1-4'/>",
+        "⏭": "<path d='M21 4v16'/><path d='M6.029 4.285A2 2 0 0 0 3 6v12a2 2 0 0 0 3.029 1.715l9.997-5.998a2 2 0 0 0 .003-3.432z'/>",
+        "⏮": "<path d='M17.971 4.285A2 2 0 0 1 21 6v12a2 2 0 0 1-3.029 1.715l-9.997-5.998a2 2 0 0 1-.003-3.432z'/><path d='M3 20V4'/>",
+        "⏱": "<line x1='10' x2='14' y1='2' y2='2'/><line x1='12' x2='15' y1='14' y2='11'/><circle cx='12' cy='14' r='8'/>",
+        "⏱️": "<line x1='10' x2='14' y1='2' y2='2'/><line x1='12' x2='15' y1='14' y2='11'/><circle cx='12' cy='14' r='8'/>",
+        "⏳": "<path d='M5 22h14'/><path d='M5 2h14'/><path d='M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22'/><path d='M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2'/>",
+        "⏵": "<path d='M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z'/>",
+        "⏸": "<rect x='14' y='3' width='5' height='18' rx='1'/><rect x='5' y='3' width='5' height='18' rx='1'/>",
+        "⚠️": "<path d='m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3'/><path d='M12 9v4'/><path d='M12 17h.01'/>",
+        "❄️": "<path d='m10 20-1.25-2.5L6 18'/><path d='M10 4 8.75 6.5 6 6'/><path d='m14 20 1.25-2.5L18 18'/><path d='m14 4 1.25 2.5L18 6'/><path d='m17 21-3-6h-4'/><path d='m17 3-3 6 1.5 3'/><path d='M2 12h6.5L10 9'/><path d='m20 10-1.5 2 1.5 2'/><path d='M22 12h-6.5L14 15'/><path d='m4 10 1.5 2L4 14'/><path d='m7 21 3-6-1.5-3'/><path d='m7 3 3 6h4'/>",
+        "🌆": "<path d='M12 10h.01'/><path d='M12 14h.01'/><path d='M12 6h.01'/><path d='M16 10h.01'/><path d='M16 14h.01'/><path d='M16 6h.01'/><path d='M8 10h.01'/><path d='M8 14h.01'/><path d='M8 6h.01'/><path d='M9 22v-3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3'/><rect x='4' y='2' width='16' height='20' rx='2'/>",
+        "🌼": "<circle cx='12' cy='12' r='3'/><path d='M12 16.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 1 1 12 7.5a4.5 4.5 0 1 1 4.5 4.5 4.5 4.5 0 1 1-4.5 4.5'/><path d='M12 7.5V9'/><path d='M7.5 12H9'/><path d='M16.5 12H15'/><path d='M12 16.5V15'/><path d='m8 8 1.88 1.88'/><path d='M14.12 9.88 16 8'/><path d='m8 16 1.88-1.88'/><path d='M14.12 14.12 16 16'/>",
+        "🏰": "<path d='M10 5V3'/><path d='M14 5V3'/><path d='M15 21v-3a3 3 0 0 0-6 0v3'/><path d='M18 3v8'/><path d='M18 5H6'/><path d='M22 11H2'/><path d='M22 9v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9'/><path d='M6 3v8'/>",
+        "🏷": "<path d='M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z'/><circle cx='7.5' cy='7.5' r='.5' fill='currentColor'/>",
+        "👆": "<path d='M22 14a8 8 0 0 1-8 8'/><path d='M18 11v-1a2 2 0 0 0-2-2a2 2 0 0 0-2 2'/><path d='M14 10V9a2 2 0 0 0-2-2a2 2 0 0 0-2 2v1'/><path d='M10 9.5V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v10'/><path d='M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15'/>",
+        "💧": "<path d='M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z'/>",
+        "💪": "<path d='M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z'/><path d='m2.5 21.5 1.4-1.4'/><path d='m20.1 3.9 1.4-1.4'/><path d='M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z'/><path d='m9.6 14.4 4.8-4.8'/>",
+        "📅": "<path d='M8 2v3'/><path d='M16 2v3'/><rect x='3' y='3' width='18' height='18' rx='2'/><path d='M3 9h18'/>",
+        "📆": "<path d='M8 2v3'/><path d='M16 2v3'/><rect x='3' y='3' width='18' height='18' rx='2'/><path d='M3 9h18'/><path d='M8 13h.01'/><path d='M12 13h.01'/><path d='M16 13h.01'/><path d='M8 17h.01'/><path d='M12 17h.01'/><path d='M16 17h.01'/>",
+        "📋": "<rect width='8' height='4' x='8' y='2' rx='1' ry='1'/><path d='M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2'/><path d='M12 11h4'/><path d='M12 16h4'/><path d='M8 11h.01'/><path d='M8 16h.01'/>",
+        "📡": "<path d='M18 12a6 6 0 00-6-6'/><path d='M2.824 10.459a8 8 0 0010.717 10.717c.558-.276.623-1.012.183-1.452l-9.448-9.448c-.44-.44-1.176-.375-1.452.183'/><path d='M22 12A10 10 0 0012 2'/><path d='m9 15 4-4'/>",
+        "🔒": "<rect width='18' height='11' x='3' y='11' rx='2' ry='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/>",
+        "🔥": "<path d='M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4'/>",
+        "🕯️": "<path d='M12 12v6'/><path d='M4.077 10.615A1 1 0 0 0 5 12h14a1 1 0 0 0 .923-1.385l-3.077-7.384A2 2 0 0 0 15 2H9a2 2 0 0 0-1.846 1.23Z'/><path d='M8 20a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1z'/>",
+        "🖋️": "<path d='M15.707 21.293a1 1 0 0 1-1.414 0l-1.586-1.586a1 1 0 0 1 0-1.414l5.586-5.586a1 1 0 0 1 1.414 0l1.586 1.586a1 1 0 0 1 0 1.414z'/><path d='m18 13-1.375-6.874a1 1 0 0 0-.746-.776L3.235 2.028a1 1 0 0 0-1.207 1.207L5.35 15.879a1 1 0 0 0 .776.746L13 18'/><path d='m2.3 2.3 7.286 7.286'/><circle cx='11' cy='11' r='2'/>",
+        "🥛": "<path d='M8 2h8'/><path d='M9 2v2.789a4 4 0 0 1-.672 2.219l-.656.984A4 4 0 0 0 7 10.212V20a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-9.789a4 4 0 0 0-.672-2.219l-.656-.984A4 4 0 0 1 15 4.788V2'/><path d='M7 15a6.472 6.472 0 0 1 5 0 6.47 6.47 0 0 0 5 0'/>",
+        // 语言模块批 B2:裸字符伪图标纳入同一张表。▶ 取 circle-play 而不是 lucide 的 play —
+        // 为了和 index.html 里「继续学习」那枚同形(跨页同一件东西不许两个长相);
+        // ♀/♂/💗 与语言选择页「恋爱 · 女向 / 男向」芯片同源(venus / mars / heart),
+        // 三向别一律描边,不许两个描边夹一个彩色 emoji。⏳ 本表已有,不重复。
+        "▶": "<path d='M9 9.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997A1 1 0 0 1 9 14.996z'/><circle cx='12' cy='12' r='10'/>",
+        "↻": "<path d='M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8'/><path d='M21 3v5h-5'/><path d='M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16'/><path d='M8 16H3v5'/>",
+        "✓": "<path d='M20 6 9 17l-5-5'/>",
+        "✗": "<path d='M18 6 6 18'/><path d='m6 6 12 12'/>",
+        "★": "<path d='M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z'/>",
+        "♀": "<path d='M12 15v7'/><path d='M9 19h6'/><circle cx='12' cy='9' r='6'/>",
+        "♂": "<path d='M16 3h5v5'/><path d='m21 3-6.75 6.75'/><circle cx='10' cy='14' r='6'/>",
+        "💗": "<path d='M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5'/>",
+    };
+    function uiIconHtml(v) {
+        const s = String(v == null ? "" : v).trim();
+        if (!s) return "";
+        if (s.slice(0, 4).toLowerCase() === "<svg") return s;
+        const d = UI_ICON_SVG[s];
+        // escapeHtml 是 MarkdownService 内部函数（那个 IIFE 里缩进是 0，别被误导成顶层）
+        if (!d) return MarkdownService.escapeHtml(s);
+        return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'>" + d + "</svg>";
+    }
+    // 异常 → 用户看得懂的话。fetch 在断网/跨域被拦时抛的是浏览器原生 TypeError("Failed to fetch"),
+    // 这种串甩给用户等于没说;统一在展示层翻译。业务文案(如"账号或密码错误")原样放行。
+    function humanErrorMessage(e, fallback) {
+        const fb = fallback || "操作失败，请稍后重试";
+        const raw = e && e.message != null ? String(e.message) : (typeof e === "string" ? e : "");
+        const t = raw.trim();
+        // 中止/超时优先于空消息兜底:abort 抛出的 DOMException 常带空 message
+        if (e && (e.name === "AbortError" || e.name === "TimeoutError")) return t || "请求超时，请重试";
+        if (!t) return fb;
+        // 网络层原生报错(各浏览器措辞不同)
+        if (/failed to fetch|networkerror|load failed|network request failed|fetch failed|err_(network|connection|internet|address|name)|net::/i.test(t)) {
+            const localPreview = /^(127\.0\.0\.1|localhost|\[::1\])$/.test(location.hostname);
+            console.warn("[humanError] 网络层失败:", t, "| origin=" + location.origin);
+            return localPreview
+                ? "连不上后端服务（本地预览需联网，也可能是跨域被拦），请检查网络后重试"
+                : "网络连接失败，请检查网络后重试";
+        }
+        // 浏览器/JS 原生异常(TypeError/Cannot read…)不该给用户看,原文只进控制台
+        if (/^(typeerror|referenceerror|syntaxerror|rangeerror|evalerror|uncaught|internalerror)\b/i.test(t) || /\bis not a function\b|\bcannot read\b|\bof undefined\b|\bof null\b/i.test(t)) {
+            console.warn("[humanError] 脚本异常:", t);
+            return fb;
+        }
+        return t;
+    }
     function themeKeyOf(genre, category) {
         const text = `${String(genre || "")}${String(category || "")}`;
         if (/校园/.test(text)) return "campus";
@@ -559,7 +727,7 @@
     function mapIconOf(name) {
         const tail = String(name || "").split("·").pop();
         const hit = MAP_PLACE_POOL.find((p) => p.n === tail);
-        return hit ? hit.i : "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M13.413 11.413Q14 10.825 14 10t-.587-1.412T12 8t-1.412.588T10 10t.588 1.413T12 12t1.413-.587M12 22q-4.025-3.425-6.012-6.362T4 10.2q0-3.75 2.413-5.975T12 2t5.588 2.225T20 10.2q0 2.5-1.987 5.438T12 22'/></svg>";
+        return hit ? hit.i : "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0'/><circle cx='12' cy='10' r='3'/></svg>";
     }
     function generateNearbyLocations(base) {
         const baseName = String(base || "").trim();
@@ -570,7 +738,7 @@
             return pool.slice(0, 4).map((p) => ({ name: p.n, icon: p.i }));
         }
         const others = pool.slice(0, 3).map((p) => ({ name: p.n, icon: p.i }));
-        return [{ name: baseName, icon: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M13.413 11.413Q14 10.825 14 10t-.587-1.412T12 8t-1.412.588T10 10t.588 1.413T12 12t1.413-.587M12 22q-4.025-3.425-6.012-6.362T4 10.2q0-3.75 2.413-5.975T12 2t5.588 2.225T20 10.2q0 2.5-1.987 5.438T12 22'/></svg>" }, ...others];
+        return [{ name: baseName, icon: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0'/><circle cx='12' cy='10' r='3'/></svg>" }, ...others];
     }
     const StateService = (() => {
         // 兼容字符串形态旧数据("标签：值"),统一为 {label,value} 对象数组,否则背包页渲染出空白气泡
@@ -972,22 +1140,22 @@ function getSkeletonHtml(themeMode = "light", state = null) {
             const base = "<article class=\"ai-beauty-card wenyou-card\" style=\"--theme-primary:{THEME_PRIMARY};--theme-secondary:{THEME_SECONDARY};--card-bg:transparent;--text-main:{TEXT_MAIN};--text-muted:{TEXT_MUTED};--border-radius:{BORDER_RADIUS};--card-shadow:none;position:relative;overflow:hidden;background:transparent;border-radius:var(--border-radius);box-shadow:none;border:1px solid color-mix(in srgb,var(--theme-primary) 30%,transparent);color:var(--text-main)\">" +
                 "<div style=\"position:relative;padding:8px\">" +
                 "<header class=\"wy-header ai-beauty-card-title\" style=\"display:flex;flex-direction:column;align-items:center;text-align:center;padding:24px 15px 20px;background:transparent;position:relative;\">" +
-                "<div style=\"font-size:0.9rem;font-weight:800;letter-spacing:4px;color:var(--theme-secondary);margin-bottom:10px;text-transform:uppercase;opacity:0.85;\">✦ {当前文游/世界设定名称} ✦</div>" +
-                "<h2 class=\"wy-role-name\" style=\"font-size:1.65rem;font-weight:900;margin:0 0 12px 0;color:var(--theme-primary);line-height:1.35;letter-spacing:2px;\">{当前剧情章节标题}</h2>" +
-                "<div style=\"display:inline-flex;align-items:center;gap:10px;padding:5px 18px;background:transparent;border-radius:999px;font-size:0.82rem;color:var(--text-muted);border:1px solid color-mix(in srgb,var(--text-muted) 30%,transparent);\"><span style=\"color:var(--theme-primary);font-weight:bold;\">⏱️</span> <span>{TIME_TEXT}</span></div>" +
+                "<div style=\"font-size:var(--fs-3);font-weight:800;letter-spacing:4px;color:var(--theme-secondary);margin-bottom:10px;text-transform:uppercase;opacity:0.85;\">✦ {当前文游/世界设定名称} ✦</div>" +
+                "<h2 class=\"wy-role-name\" style=\"font-size:var(--fs-5);font-weight:900;margin:0 0 12px 0;color:var(--theme-primary);line-height:1.35;letter-spacing:2px;\">{当前剧情章节标题}</h2>" +
+                "<div style=\"display:inline-flex;align-items:center;gap:10px;padding:5px 18px;background:transparent;border-radius:999px;font-size:var(--fs-2);color:var(--text-muted);border:1px solid color-mix(in srgb,var(--text-muted) 30%,transparent);\"><span style=\"color:var(--theme-primary);font-weight:bold;\">⏱️</span> <span>{TIME_TEXT}</span></div>" +
                 "</header>" +
-                "<div class=\"wy-divider\" style=\"display:flex;align-items:center;gap:10px;margin:14px 0 12px\"><span style=\"flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--theme-primary),transparent)\"></span><span class=\"wy-divider-icon\" style=\"padding:0 10px;color:var(--theme-secondary);font-size:1rem\">{DIVIDER_EMOJI}</span><span style=\"flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--theme-secondary),transparent)\"></span></div>" +
+                "<div class=\"wy-divider\" style=\"display:flex;align-items:center;gap:10px;margin:14px 0 12px\"><span style=\"flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--theme-primary),transparent)\"></span><span class=\"wy-divider-icon\" style=\"padding:0 10px;color:var(--theme-secondary);font-size:var(--fs-3)\">{DIVIDER_EMOJI}</span><span style=\"flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--theme-secondary),transparent)\"></span></div>" +
                 "<section class=\"ai-beauty-card-body\">" +
                 "<section class=\"wy-stats\" data-block=\"status\" style=\"display:flex;flex-direction:column;gap:8px;margin-top:12px;padding:12px;border-radius:16px;background:transparent;border:1px solid color-mix(in srgb,var(--theme-secondary) 20%,transparent)\">" + statusBlock + "</section>" +
-                "<section data-block=\"relations\" style=\"margin-top:12px;padding:12px 14px;border-radius:16px;background:transparent;border:1px solid color-mix(in srgb,var(--theme-secondary) 20%,transparent)\"><div style=\"font-size:12px;font-weight:700;color:var(--theme-secondary);margin-bottom:8px\"><svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M1 20v-2.8q0-.85.438-1.562T2.6 14.55q1.55-.775 3.15-1.162T9 13t3.25.388t3.15 1.162q.725.375 1.163 1.088T17 17.2V20zm18 0v-3q0-1.1-.612-2.113T16.65 13.15q1.275.15 2.4.513t2.1.887q.9.5 1.375 1.112T23 17v3zM6.175 10.825Q5 9.65 5 8t1.175-2.825T9 4t2.825 1.175T13 8t-1.175 2.825T9 12t-2.825-1.175m11.65 0Q16.65 12 15 12q-.275 0-.7-.062t-.7-.138q.675-.8 1.038-1.775T15 8t-.362-2.025T13.6 4.2q.35-.125.7-.163T15 4q1.65 0 2.825 1.175T19 8t-1.175 2.825'/></svg> 人物关系</div><div style=\"display:flex;flex-wrap:wrap;gap:8px\">{RELATIONS_HTML}</div></section>" +
-                "<section data-block=\"event\" style=\"margin-top:14px;padding:14px 15px;border-radius:16px;background:transparent;border:1px solid color-mix(in srgb,var(--theme-primary) 20%,transparent);\"><div style=\"display:inline-flex;align-items:center;gap:6px;padding:4px 10px;margin-bottom:10px;border-radius:999px;background:transparent;border:1px solid var(--theme-primary);color:var(--theme-primary);font-size:12px;font-weight:700\">剧情正文</div><div class=\"wy-content\" style=\"line-height:1.78;color:var(--text-main)\">{MAIN_STORY_TEXT}</div></section>" +
-                "<section data-block=\"thought\" style=\"margin-top:12px;padding:12px 14px;border-radius:16px;background:transparent;border:1px dashed color-mix(in srgb,var(--theme-secondary) 40%,transparent)\"><div style=\"font-size:12px;font-weight:700;color:var(--theme-secondary);margin-bottom:8px\">AI想法</div><div class=\"wy-content\" style=\"color:var(--text-main);line-height:1.7\">{AI_THOUGHT_TEXT}</div></section>" +
+                "<section data-block=\"relations\" style=\"margin-top:12px;padding:12px 14px;border-radius:16px;background:transparent;border:1px solid color-mix(in srgb,var(--theme-secondary) 20%,transparent)\"><div style=\"font-size:var(--fs-2);font-weight:700;color:var(--theme-secondary);margin-bottom:8px\"><svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/><path d='M16 3.128a4 4 0 0 1 0 7.744'/><path d='M22 21v-2a4 4 0 0 0-3-3.87'/><circle cx='9' cy='7' r='4'/></svg> 人物关系</div><div style=\"display:flex;flex-wrap:wrap;gap:8px\">{RELATIONS_HTML}</div></section>" +
+                "<section data-block=\"event\" style=\"margin-top:14px;padding:14px 15px;border-radius:16px;background:transparent;border:1px solid color-mix(in srgb,var(--theme-primary) 20%,transparent);\"><div style=\"display:inline-flex;align-items:center;gap:6px;padding:4px 10px;margin-bottom:10px;border-radius:999px;background:transparent;border:1px solid var(--theme-primary);color:var(--theme-primary);font-size:var(--fs-2);font-weight:700\">剧情正文</div><div class=\"wy-content\" style=\"line-height:1.78;color:var(--text-main)\">{MAIN_STORY_TEXT}</div></section>" +
+                "<section data-block=\"thought\" style=\"margin-top:12px;padding:12px 14px;border-radius:16px;background:transparent;border:1px dashed color-mix(in srgb,var(--theme-secondary) 40%,transparent)\"><div style=\"font-size:var(--fs-2);font-weight:700;color:var(--theme-secondary);margin-bottom:8px\">AI想法</div><div class=\"wy-content\" style=\"color:var(--text-main);line-height:1.7\">{AI_THOUGHT_TEXT}</div></section>" +
                 "<section class=\"wy-options\" data-block=\"choices\" style=\"display:flex;flex-direction:column;gap:10px;margin-top:14px\">" +
                 "<div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_1}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:transparent;border:1px solid var(--theme-primary);color:var(--theme-primary);\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:var(--theme-primary);color:#fff\">{OPT_ICON_1}</span><span>1. {OPT_TEXT_1}</span></div>" +
                 "<div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_2}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:transparent;border:1px solid var(--theme-secondary);color:var(--theme-secondary);\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:var(--theme-secondary);color:#fff\">{OPT_ICON_2}</span><span>2. {OPT_TEXT_2}</span></div>" +
                 "<div class=\"wy-option-btn\" data-choice=\"{OPT_TEXT_3}\" style=\"display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:transparent;border:1px solid var(--theme-primary);color:var(--theme-primary);\"><span class=\"wy-opt-icon\" style=\"display:grid;place-items:center;min-width:28px;height:28px;border-radius:999px;background:var(--theme-primary);color:#fff\">{OPT_ICON_3}</span><span>3. {OPT_TEXT_3}</span></div>" +
                 "</section>" +
-                "<div class=\"wy-footer-decor\" data-block=\"hint\" style=\"margin-top:16px;padding:12px 14px;border-radius:16px;text-align:center;background:transparent;color:var(--text-muted);font-size:.88rem\">{BOTTOM_DECOR} 提示：可直接点击上方按钮继续剧情 {BOTTOM_DECOR}</div>" +
+                "<div class=\"wy-footer-decor\" data-block=\"hint\" style=\"margin-top:16px;padding:12px 14px;border-radius:16px;text-align:center;background:transparent;color:var(--text-muted);font-size:var(--fs-3)\">{BOTTOM_DECOR} 提示：可直接点击上方按钮继续剧情 {BOTTOM_DECOR}</div>" +
                 "</section></div></article>";
 
             // 3. 将标签背景设为透明
@@ -997,7 +1165,7 @@ function getSkeletonHtml(themeMode = "light", state = null) {
             ).map((t, i) => {
                 const borderStyle = i % 2 === 0 ? `var(--theme-primary)` : `var(--theme-secondary)`;
                 const display = t.value ? `${t.label}：${t.value}` : t.label;
-                return `<span style="padding:4px 10px;border-radius:999px;background:transparent;border:1px solid color-mix(in srgb, ${borderStyle} 50%, transparent);color:var(--text-main);font-size:12px;font-weight:700;">${display}</span>`;
+                return `<span style="padding:4px 10px;border-radius:999px;background:transparent;border:1px solid color-mix(in srgb, ${borderStyle} 50%, transparent);color:var(--text-main);font-size:var(--fs-2);font-weight:700;">${display}</span>`;
             }).join("");
 
             const npcs = Array.isArray(state && state.npcs) ? state.npcs.slice(0, 5) : [];
@@ -1005,17 +1173,17 @@ function getSkeletonHtml(themeMode = "light", state = null) {
             const npcRelationsHtml = npcs.length
                 ? npcs.map((n) => {
                     const favor = Math.max(0, Math.min(100, Number(n.favor) || 50));
-                    const favorColor = favor >= 70 ? "var(--theme-primary)" : favor >= 40 ? "var(--theme-secondary)" : "#e74c3c";
+                    const favorColor = favor >= 70 ? "var(--theme-primary)" : favor >= 40 ? "var(--theme-secondary)" : "var(--danger)";
                     const favorBar = `<div style="height:4px;border-radius:2px;background:rgba(0,0,0,.1);margin-top:4px;overflow:hidden;"><div style="height:100%;width:${favor}%;background:${favorColor};border-radius:2px;"></div></div>`;
                     const affection = Number(n.affection);
                     const affTxt = Number.isFinite(affection) && affection !== 0 ? ` · ♥${affection}` : "";
-                    return `<div style="display:flex;flex-direction:column;padding:8px 10px;border-radius:12px;background:transparent;border:1px solid color-mix(in srgb,var(--theme-secondary) 30%,transparent);min-width:80px;flex:1;"><div style="font-weight:700;font-size:.85rem;color:var(--theme-primary)">${n.name}</div><div style="font-size:.75rem;color:var(--text-muted);margin-top:2px;">${n.relation || ""}${n.gender ? "·" + n.gender : ""}</div>${favorBar}<div style="font-size:.72rem;color:${favorColor};margin-top:2px;text-align:right;">${favor}好感${affTxt}</div></div>`;
+                    return `<div style="display:flex;flex-direction:column;padding:8px 10px;border-radius:12px;background:transparent;border:1px solid color-mix(in srgb,var(--theme-secondary) 30%,transparent);min-width:80px;flex:1;"><div style="font-weight:700;font-size:var(--fs-3);color:var(--theme-primary)">${n.name}</div><div style="font-size:var(--fs-2);color:var(--text-muted);margin-top:2px;">${n.relation || ""}${n.gender ? "·" + n.gender : ""}</div>${favorBar}<div style="font-size:var(--fs-2);color:${favorColor};margin-top:2px;text-align:right;">${favor}好感${affTxt}</div></div>`;
                 }).join("")
-                : `<div style="font-size:.82rem;color:var(--text-muted);padding:4px 0;">暂无关键人物</div>`;
+                : `<div style="font-size:var(--fs-2);color:var(--text-muted);padding:4px 0;">暂无关键人物</div>`;
 
             const nonForcedBase = base.replaceAll("background:transparent", "background:{按美化设定自定义}");
             const enrichedBase = nonForcedBase
-                .replace("font-size:1.65rem;", "font-size:1.65rem;letter-spacing:0.02em;")
+                .replace("font-size:var(--fs-5);", "font-size:var(--fs-5);letter-spacing:0.02em;")
                 .replace(`✨ ${statusPanelLabel}：{STATS_HTML}`, `✨ ${statusPanelLabel}<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">{STATS_HTML}</div>`)
                 .replace(`🏷 关键标签：${tagsHtml}`, `🏷 关键标签<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;">${tagSpans}</div>`)
                 .replace("{RELATIONS_HTML}", npcRelationsHtml);
@@ -1265,7 +1433,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 const affMatch = text.match(/(?:爱慕|心动|情愫)\s*[:：]?\s*(-?\d{1,3})/);
                 if (!favorMatch && !affMatch) return;
                 const favor = favorMatch ? Math.max(0, Math.min(100, Number(favorMatch[1]) || 0)) : null;
-                const favorColor = favor !== null ? (favor >= 70 ? "var(--theme-primary)" : favor >= 40 ? "var(--theme-secondary)" : "#e74c3c") : "#e74c3c";
+                const favorColor = favor !== null ? (favor >= 70 ? "var(--theme-primary)" : favor >= 40 ? "var(--theme-secondary)" : "var(--danger)") : "var(--danger)";
                 const filled = favor !== null ? Math.max(0, Math.min(5, Math.round(favor / 20))) : 0;
                 const hearts = `${"❤️".repeat(filled)}${"🤍".repeat(5 - filled)}`;
                 const affection = affMatch ? Math.max(-100, Math.min(100, Number(affMatch[1]) || 0)) : null;
@@ -1273,7 +1441,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 const visual = document.createElement("div");
                 visual.setAttribute("data-favor-visual", "1");
                 visual.style.cssText = "margin-top:6px;";
-                visual.innerHTML = (favor !== null ? `<div style="height:5px;border-radius:999px;background:color-mix(in srgb,var(--text-muted) 25%, transparent);overflow:hidden;"><div style="height:100%;width:${favor}%;background:${favorColor};border-radius:999px;"></div></div>` : "") + (affection !== null ? `<div style="margin-top:3px;font-size:.72rem;color:#e84393;opacity:.95;">♥ 爱慕 ${affection}</div>` : "") + (favor !== null ? `<div style="margin-top:4px;font-size:.72rem;letter-spacing:1px;color:${favorColor};opacity:.92;">${hearts}</div>` : "");
+                visual.innerHTML = (favor !== null ? `<div style="height:5px;border-radius:999px;background:color-mix(in srgb,var(--text-muted) 25%, transparent);overflow:hidden;"><div style="height:100%;width:${favor}%;background:${favorColor};border-radius:999px;"></div></div>` : "") + (affection !== null ? `<div style="margin-top:3px;font-size:var(--fs-2);color:var(--love);opacity:.95;">♥ 爱慕 ${affection}</div>` : "") + (favor !== null ? `<div style="margin-top:4px;font-size:var(--fs-2);letter-spacing:1px;color:${favorColor};opacity:.92;">${hearts}</div>` : "");
                 parent.insertBefore(visual, lineEl);
             });
         }
@@ -1322,8 +1490,8 @@ function rebuildChoicesBlock(body, labels = []) {
                 if (!hasBlock("relations")) {
                     const div = document.createElement("section");
                     div.setAttribute("data-block", "relations");
-                    div.style.cssText = "margin-top:12px;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,rgba(255,255,255,.92),rgba(240,248,255,.88));border:1px solid rgba(200,220,255,.4)";
-                    div.innerHTML = "<div style=\"font-size:12px;font-weight:700;color:var(--theme-secondary);margin-bottom:8px\"><svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M1 20v-2.8q0-.85.438-1.562T2.6 14.55q1.55-.775 3.15-1.162T9 13t3.25.388t3.15 1.162q.725.375 1.163 1.088T17 17.2V20zm18 0v-3q0-1.1-.612-2.113T16.65 13.15q1.275.15 2.4.513t2.1.887q.9.5 1.375 1.112T23 17v3zM6.175 10.825Q5 9.65 5 8t1.175-2.825T9 4t2.825 1.175T13 8t-1.175 2.825T9 12t-2.825-1.175m11.65 0Q16.65 12 15 12q-.275 0-.7-.062t-.7-.138q.675-.8 1.038-1.775T15 8t-.362-2.025T13.6 4.2q.35-.125.7-.163T15 4q1.65 0 2.825 1.175T19 8t-1.175 2.825'/></svg> 人物关系</div><div style=\"font-size:.82rem;color:var(--text-muted)\">暂无关键人物</div>";
+                    div.style.cssText = "margin-top:12px;padding:12px 14px;border-radius:16px;background:var(--ct-bg-soft, var(--card-soft));border:1px solid var(--ct-line, var(--line))";
+                    div.innerHTML = "<div style=\"font-size:var(--fs-2);font-weight:700;color:var(--theme-secondary);margin-bottom:8px\"><svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/><path d='M16 3.128a4 4 0 0 1 0 7.744'/><path d='M22 21v-2a4 4 0 0 0-3-3.87'/><circle cx='9' cy='7' r='4'/></svg> 人物关系</div><div style=\"font-size:var(--fs-2);color:var(--text-muted)\">暂无关键人物</div>";
                     // 插在 event 之前
                     const eventBlock = getDirectBlockMap(body).get("event");
                     if (eventBlock) body.insertBefore(div, eventBlock);
@@ -1827,7 +1995,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 ? `<section class="card-stats" data-block="status">${(fields.stats || []).map((s) => `<span class="card-stat-pill"><b>${MarkdownService.escapeHtml(s.key)}</b> <span class="card-stat-value">${MarkdownService.escapeHtml(s.value)}</span></span>`).join("")}</section>`
                 : "";
             const itemsHtml = (fields.items || []).length
-                ? `<section class="card-items">📦 ${(fields.items || []).map((i) => {
+                ? `<section class="card-items"><svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z'/><path d='M12 22V12'/><polyline points='3.29 7 12 12 20.71 7'/><path d='m7.5 4.27 9 5.15'/></svg> ${(fields.items || []).map((i) => {
                     // 协议对象形态(op 操作项)取显示名渲染,纯同步项无显示名则跳过
                     const itemName = (i && typeof i === "object") ? (i.label || i.name || i.key || "") : String(i);
                     return itemName ? `<span class="card-item-pill">${MarkdownService.escapeHtml(itemName)}</span>` : "";
@@ -2900,12 +3068,12 @@ function rebuildChoicesBlock(body, labels = []) {
         }
         function inferStatIcon(label = "") {
             const t = toCanonicalStatLabel(label);
-            if (/体力|健康|生命/.test(t)) return "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M13.4 21.9L12 20.5l3.55-3.55l-8.5-8.5L3.5 12l-1.4-1.4l1.4-1.45l-1.4-1.4l2.1-2.1L2.8 4.2l1.4-1.4l1.45 1.4l2.1-2.1l1.4 1.4l1.45-1.4L12 3.5L8.45 7.05l8.5 8.5L20.5 12l1.4 1.4l-1.4 1.45l1.4 1.4l-2.1 2.1l1.4 1.45l-1.4 1.4l-1.45-1.4l-2.1 2.1l-1.4-1.4z'/></svg>";
-            if (/心情|情绪|精神/.test(t)) return "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M11 4V1h2v3zm0 19v-3h2v3zm9-10v-2h3v2zM1 13v-2h3v2zm17.7-6.3l-1.4-1.4l1.75-1.8l1.45 1.45zM4.95 20.5L3.5 19.05l1.8-1.75l1.4 1.4zm14.1 0l-1.75-1.8l1.4-1.4l1.8 1.75zM5.3 6.7L3.5 4.95L4.95 3.5L6.7 5.3zm2.45 9.55Q6 14.5 6 12t1.75-4.25T12 6t4.25 1.75T18 12t-1.75 4.25T12 18t-4.25-1.75'/></svg>";
-            if (/学识|智力|智慧/.test(t)) return "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M10 14h4v-2h-4zm0-3h8V9h-8zm0-3h8V6h-8zM8 18q-.825 0-1.412-.587T6 16V4q0-.825.588-1.412T8 2h12q.825 0 1.413.588T22 4v12q0 .825-.587 1.413T20 18zm-4 4q-.825 0-1.412-.587T2 20V6h2v14h14v2z'/></svg>";
+            if (/体力|健康|生命/.test(t)) return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z'/><path d='m2.5 21.5 1.4-1.4'/><path d='m20.1 3.9 1.4-1.4'/><path d='M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z'/><path d='m9.6 14.4 4.8-4.8'/></svg>";
+            if (/心情|情绪|精神/.test(t)) return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='4'/><path d='M12 2v2'/><path d='M12 20v2'/><path d='m4.93 4.93 1.41 1.41'/><path d='m17.66 17.66 1.41 1.41'/><path d='M2 12h2'/><path d='M20 12h2'/><path d='m6.34 17.66-1.41 1.41'/><path d='m19.07 4.93-1.41 1.41'/></svg>";
+            if (/学识|智力|智慧/.test(t)) return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M14 21v-3a2 2 0 0 0-4 0v3'/><path d='M18 4.933V21'/><path d='m4 6 7.106-3.79a2 2 0 0 1 1.788 0L20 6'/><path d='m6 11-3.52 2.147a1 1 0 0 0-.48.854V19a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a1 1 0 0 0-.48-.853L18 11'/><path d='M6 4.933V21'/><circle cx='12' cy='9' r='2'/></svg>";
             if (/魅力|声望|名望/.test(t)) return "✨";
-            if (/财富|金钱|银两|资产/.test(t)) return "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M3 20q-.825 0-1.412-.587T1 18V7h2v11h17v2zm4-4q-.825 0-1.412-.587T5 14V6q0-.825.588-1.412T7 4h14q.825 0 1.413.588T23 6v8q0 .825-.587 1.413T21 16zm2-2q0-.825-.587-1.412T7 12v2zm10 0h2v-2q-.825 0-1.412.588T19 14m-5-1q1.25 0 2.125-.875T17 10t-.875-2.125T14 7t-2.125.875T11 10t.875 2.125T14 13M7 8q.825 0 1.413-.587T9 6H7zm14 0V6h-2q0 .825.588 1.413T21 8'/></svg>";
-            if (/武力|战力|修为|灵力/.test(t)) return "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='m19.05 21.6l-2.925-2.9l-2.2 2.2l-.7-.7q-.575-.575-.575-1.425t.575-1.425l4.225-4.225q.575-.575 1.425-.575t1.425.575l.7.7l-2.2 2.2l2.9 2.925q.3.3.3.7t-.3.7l-1.25 1.25q-.3.3-.7.3t-.7-.3M22 5.9L10.65 17.25l.125.1q.575.575.575 1.425t-.575 1.425l-.7.7l-2.2-2.2l-2.925 2.9q-.3.3-.7.3t-.7-.3L2.3 20.35q-.3-.3-.3-.7t.3-.7l2.9-2.925l-2.2-2.2l.7-.7q.575-.575 1.425-.575t1.425.575l.1.125L18 1.9h4zM6.95 10.85L2 5.9v-4h4l4.95 4.95z'/></svg>";
+            if (/财富|金钱|银两|资产/.test(t)) return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17'/><path d='m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9'/><path d='m2 16 6 6'/><circle cx='16' cy='9' r='2.9'/><circle cx='6' cy='5' r='3'/></svg>";
+            if (/武力|战力|修为|灵力/.test(t)) return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='m13 19 6-6'/><path d='M14.5 17.5 3.586 6.586A2 2 0 013 5.172V3h2.172a2 2 0 011.414.586L17.5 14.5'/><path d='m14.828 6.172 2.586-2.586A2 2 0 0118.828 3H21v2.172a2 2 0 01-.586 1.414l-2.586 2.586'/><path d='m16 16 4 4'/><path d='m19 21 2-2'/><path d='m5 14 4 4'/><path d='m5 21-2-2'/><path d='M7.5 16.5 4 20'/></svg>";
             return "✨";
         }
         function normalizeStatusTag(raw = "") {
@@ -3663,7 +3831,11 @@ function rebuildChoicesBlock(body, labels = []) {
         function avatarColor(name) {
             let h = 0;
             for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
-            return `hsl(${h}, 68%, 55%)`;
+            // 这个函数管两处:角色头像底色,以及 renderPlayStatusBar 里没进 STAT_COLORS 的属性条填充色
+            // (健康/心情/魅力/权势都走这条兜底)。原来 68%/55% 是全色轮高饱和:
+            // 「心情」被 hash 成洋红、「健康」被 hash 成亮蓝,压在纸/墨/砖红上像贴纸。
+            // 保留 hash(同名同色,可区分),只把饱和度砍到 30%、明度压到 42%,变成水墨感的哑色。
+            return `hsl(${h}, 30%, 42%)`;
         }
         function heartLadder(value, max = 100, bipolar = false) {
             let v = Number(value) || 0;
@@ -3676,31 +3848,8 @@ function rebuildChoicesBlock(body, labels = []) {
         }
         // 游玩页融合：状态栏（头像/名字/身份/体力/时间/地点/属性进度条/存档）
         const STAT_COLORS = { 容貌: "#8B5E3C", 体质: "#E8793C", 智力: "#4CAF50", 魅力: "#9C6ADE", 体能: "#26A69A", 道德: "#E53935", 道德值: "#E53935" };
-        // stats icon emoji → Material Symbols path（未命中按 label 兜底，再统一用星标）
-        const STAT_ICON_SVG = {
-            "❤️": "M2 9V6q0-.825.588-1.412T4 4h16q.825 0 1.413.588T22 6v3h-2V6H4v3zm2 11q-.825 0-1.412-.587T2 18v-3h2v3h16v-3h2v3q0 .825-.587 1.413T20 20zm6.525-3.137q.25-.138.375-.413l3.1-6.2l1.1 2.2q.125.275.375.413T16 13h6v-2h-5.375L14.9 7.55q-.125-.275-.375-.387T14 7.05t-.525.113t-.375.387l-3.1 6.2l-1.1-2.2q-.125-.275-.375-.413T8 11H2v2h5.375L9.1 16.45q.125.275.375.413T10 17t.525-.137M12 12",
-            "💔": "M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55l-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z",
-            "⚡": "m8 22l1-7H4l9-13h2l-1 8h6L10 22z",
-            "💰": "M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z",
-            "✨": "m12 17.27l4.15 2.51c.76.46 1.69-.22 1.49-1.08l-1.1-4.72 3.67-3.18c.67-.58.31-1.68-.57-1.75l-4.83-.41-1.89-4.46c-.34-.81-1.5-.81-1.84 0L9.19 8.63l-4.83.41c-.88.07-1.24 1.17-.57 1.75l3.67 3.18-1.1 4.72c-.2.86.73 1.54 1.49 1.08z",
-            // 需求一：svg-search 下载的 Material Symbols outline（monitor-heart / mood / diamond / workspace-premium）
-            "😊": "M15.5 11q.625 0 1.063-.437T17 9.5t-.437-1.062T15.5 8t-1.062.438T14 9.5t.438 1.063T15.5 11m-7 0q.625 0 1.063-.437T10 9.5t-.437-1.062T8.5 8t-1.062.438T7 9.5t.438 1.063T8.5 11m6.588 5.538Q16.475 15.575 17.1 14H6.9q.625 1.575 2.013 2.538T12 17.5t3.088-.962M8.1 21.213q-1.825-.788-3.175-2.138T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22t-3.9-.788m9.575-3.537Q20 15.35 20 12t-2.325-5.675T12 4T6.325 6.325T4 12t2.325 5.675T12 20t5.675-2.325",
-            "💎": "M12 21L2 9l3-6h14l3 6zM9.625 8h4.75l-1.5-3h-1.75zM11 16.675V10H5.45zm2 0L18.55 10H13zM16.6 8h2.65l-1.5-3H15.1zM4.75 8H7.4l1.5-3H6.25z",
-            "👑": "m9.675 13.7l.875-2.85L8.25 9h2.85l.9-2.8l.9 2.8h2.85l-2.325 1.85l.875 2.85l-2.3-1.775zM6 23v-7.725q-.95-1.05-1.475-2.4T4 10q0-3.35 2.325-5.675T12 2t5.675 2.325T20 10q0 1.525-.525 2.875T18 15.275V23l-6-2zm10.25-8.75Q18 12.5 18 10t-1.75-4.25T12 4T7.75 5.75T6 10t1.75 4.25T12 16t4.25-1.75M8 20.025L12 19l4 1.025v-3.1q-.875.5-1.888.788T12 18t-2.113-.288T8 16.926zm4-1.55",
-            "健康": "M2 9V6q0-.825.588-1.412T4 4h16q.825 0 1.413.588T22 6v3h-2V6H4v3zm2 11q-.825 0-1.412-.587T2 18v-3h2v3h16v-3h2v3q0 .825-.587 1.413T20 20zm6.525-3.137q.25-.138.375-.413l3.1-6.2l1.1 2.2q.125.275.375.413T16 13h6v-2h-5.375L14.9 7.55q-.125-.275-.375-.387T14 7.05t-.525.113t-.375.387l-3.1 6.2l-1.1-2.2q-.125-.275-.375-.413T8 11H2v2h5.375L9.1 16.45q.125.275.375.413T10 17t.525-.137M12 12",
-            "心情": "M15.5 11q.625 0 1.063-.437T17 9.5t-.437-1.062T15.5 8t-1.062.438T14 9.5t.438 1.063T15.5 11m-7 0q.625 0 1.063-.437T10 9.5t-.437-1.062T8.5 8t-1.062.438T7 9.5t.438 1.063T8.5 11m6.588 5.538Q16.475 15.575 17.1 14H6.9q.625 1.575 2.013 2.538T12 17.5t3.088-.962M8.1 21.213q-1.825-.788-3.175-2.138T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22t-3.9-.788m9.575-3.537Q20 15.35 20 12t-2.325-5.675T12 4T6.325 6.325T4 12t2.325 5.675T12 20t5.675-2.325",
-            "魅力": "M12 21L2 9l3-6h14l3 6zM9.625 8h4.75l-1.5-3h-1.75zM11 16.675V10H5.45zm2 0L18.55 10H13zM16.6 8h2.65l-1.5-3H15.1zM4.75 8H7.4l1.5-3H6.25z",
-            "权势": "m9.675 13.7l.875-2.85L8.25 9h2.85l.9-2.8l.9 2.8h2.85l-2.325 1.85l.875 2.85l-2.3-1.775zM6 23v-7.725q-.95-1.05-1.475-2.4T4 10q0-3.35 2.325-5.675T12 2t5.675 2.325T20 10q0 1.525-.525 2.875T18 15.275V23l-6-2zm10.25-8.75Q18 12.5 18 10t-1.75-4.25T12 4T7.75 5.75T6 10t1.75 4.25T12 16t4.25-1.75M8 20.025L12 19l4 1.025v-3.1q-.875.5-1.888.788T12 18t-2.113-.288T8 16.926zm4-1.55",
-            // BGM 2.0 后补: 灵力/学识/事业/成长 专属下载 SVG(auto-awesome / school / work / eco)
-            "🌀": "M19 8.3q-.125 0-.263-.075T18.55 8l-.8-1.75l-1.75-.8q-.15-.05-.225-.187T15.7 5q0-.125.075-.262T16 4.55l1.75-.8l.8-1.75q.05-.15.188-.225T19 1.7q.125 0 .263.075T19.45 2l.8 1.75l1.75.8q.15.05.225.188T22.3 5q0 .125-.075.263T22 5.45l-1.75.8l-.8 1.75q-.05.15-.188.225T19 8.3Zm0 14q-.125 0-.263-.075T18.55 22l-.8-1.75l-1.75-.8q-.15-.05-.225-.188T15.7 19q0-.125.075-.263T16 18.55l1.75-.8l.8-1.75q.05-.15.188-.225T19 15.7q.125 0 .263.075t.187.225l.8 1.75l1.75.8q.15.05.225.188T22.3 19q0 .125-.075.263T22 19.45l-1.75.8l-.8 1.75q-.05.15-.188.225T19 22.3ZM9 18.575q-.275 0-.525-.15T8.1 18l-1.6-3.5L3 12.9q-.275-.125-.425-.375T2.425 12q0-.275.15-.525T3 11.1l3.5-1.6L8.1 6q.125-.275.375-.425T9 5.425q.275 0 .525.15T9.9 6l1.6 3.5l3.5 1.6q.275.125.425.375t.15.525q0 .275-.15.525T15 12.9l-3.5 1.6L9.9 18q-.125.275-.375.425t-.525.15Zm0-3.425L10 13l2.15-1L10 11L9 8.85L8 11l-2.15 1L8 13l1 2.15ZM9 12Z",
-            "灵力": "M19 8.3q-.125 0-.263-.075T18.55 8l-.8-1.75l-1.75-.8q-.15-.05-.225-.187T15.7 5q0-.125.075-.262T16 4.55l1.75-.8l.8-1.75q.05-.15.188-.225T19 1.7q.125 0 .263.075T19.45 2l.8 1.75l1.75.8q.15.05.225.188T22.3 5q0 .125-.075.263T22 5.45l-1.75.8l-.8 1.75q-.05.15-.188.225T19 8.3Zm0 14q-.125 0-.263-.075T18.55 22l-.8-1.75l-1.75-.8q-.15-.05-.225-.188T15.7 19q0-.125.075-.263T16 18.55l1.75-.8l.8-1.75q.05-.15.188-.225T19 15.7q.125 0 .263.075t.187.225l.8 1.75l1.75.8q.15.05.225.188T22.3 19q0 .125-.075.263T22 19.45l-1.75.8l-.8 1.75q-.05.15-.188.225T19 22.3ZM9 18.575q-.275 0-.525-.15T8.1 18l-1.6-3.5L3 12.9q-.275-.125-.425-.375T2.425 12q0-.275.15-.525T3 11.1l3.5-1.6L8.1 6q.125-.275.375-.425T9 5.425q.275 0 .525.15T9.9 6l1.6 3.5l3.5 1.6q.275.125.425.375t.15.525q0 .275-.15.525T15 12.9l-3.5 1.6L9.9 18q-.125.275-.375.425t-.525.15Zm0-3.425L10 13l2.15-1L10 11L9 8.85L8 11l-2.15 1L8 13l1 2.15ZM9 12Z",
-            "📚": "M6.05 17.775q-.5-.275-.775-.737T5 16v-4.8L2.6 9.875q-.275-.15-.4-.375T2.075 9t.125-.5t.4-.375l8.45-4.6q.225-.125.463-.188T12 3.275t.488.063t.462.187l9.525 5.2q.25.125.388.363T23 9.6V16q0 .425-.288.713T22 17t-.712-.288T21 16v-5.9l-2 1.1V16q0 .575-.275 1.038t-.775.737l-5 2.7q-.225.125-.462.188t-.488.062t-.488-.062t-.462-.188zM12 12.7L18.85 9L12 5.3L5.15 9zm0 6.025l5-2.7V12.25l-4.025 2.225q-.225.125-.475.188t-.5.062t-.5-.062t-.475-.188L7 12.25v3.775zm0-3",
-            "学识": "M6.05 17.775q-.5-.275-.775-.737T5 16v-4.8L2.6 9.875q-.275-.15-.4-.375T2.075 9t.125-.5t.4-.375l8.45-4.6q.225-.125.463-.188T12 3.275t.488.063t.462.187l9.525 5.2q.25.125.388.363T23 9.6V16q0 .425-.288.713T22 17t-.712-.288T21 16v-5.9l-2 1.1V16q0 .575-.275 1.038t-.775.737l-5 2.7q-.225.125-.462.188t-.488.062t-.488-.062t-.462-.188zM12 12.7L18.85 9L12 5.3L5.15 9zm0 6.025l5-2.7V12.25l-4.025 2.225q-.225.125-.475.188t-.5.062t-.5-.062t-.475-.188L7 12.25v3.775zm0-3",
-            "💼": "M4 21q-.825 0-1.412-.587T2 19V8q0-.825.588-1.412T4 6h4V4q0-.825.588-1.412T10 2h4q.825 0 1.413.588T16 4v2h4q.825 0 1.413.588T22 8v11q0 .825-.587 1.413T20 21zm0-2h16V8H4zm6-13h4V4h-4zM4 19V8z",
-            "事业": "M4 21q-.825 0-1.412-.587T2 19V8q0-.825.588-1.412T4 6h4V4q0-.825.588-1.412T10 2h4q.825 0 1.413.588T16 4v2h4q.825 0 1.413.588T22 8v11q0 .825-.587 1.413T20 21zm0-2h16V8H4zm6-13h4V4h-4zM4 19V8z",
-            "🌱": "M5.4 19.6Q4.275 18.475 3.637 17T3 13.95t.6-3.112T5.55 7.95q1.5-1.5 4.238-2.275t7.087-.65q.65.025 1.2.275t.975.675t.675.988T20 8.175q.05 2.05-.112 3.788t-.526 3.137t-.924 2.488T17.1 19.45q-1.325 1.325-2.812 1.938T11.25 22q-1.625 0-3.175-.638T5.4 19.6m2.8-.4q.725.425 1.488.613T11.25 20q1.15 0 2.275-.462t2.15-1.488q.45-.45.913-1.263t.8-2.124t.512-3.175t.05-4.438q-1.225-.05-2.762-.037t-3.063.237t-2.9.725t-2.25 1.375q-1.125 1.125-1.55 2.225T5 13.7q0 1.475.563 2.588t.987 1.562q1.05-2 2.775-3.838T13.35 11q-1.8 1.575-3.137 3.563T8.2 19.2m0 0",
-            "成长": "M5.4 19.6Q4.275 18.475 3.637 17T3 13.95t.6-3.112T5.55 7.95q1.5-1.5 4.238-2.275t7.087-.65q.65.025 1.2.275t.975.675t.675.988T20 8.175q.05 2.05-.112 3.788t-.526 3.137t-.924 2.488T17.1 19.45q-1.325 1.325-2.812 1.938T11.25 22q-1.625 0-3.175-.638T5.4 19.6m2.8-.4q.725.425 1.488.613T11.25 20q1.15 0 2.275-.462t2.15-1.488q.45-.45.913-1.263t.8-2.124t.512-3.175t.05-4.438q-1.225-.05-2.762-.037t-3.063.237t-2.9.725t-2.25 1.375q-1.125 1.125-1.55 2.225T5 13.7q0 1.475.563 2.588t.987 1.562q1.05-2 2.775-3.838T13.35 11q-1.8 1.575-3.137 3.563T8.2 19.2m0 0"
-        };
+        // stats icon emoji → Material Symbols path 已上提到顶层 UI_ICON_SVG，
+        // 因为手机应用 / NPC 属性 / 初始属性那几个模块也要用它解析渲染
         function statBarHtml(s) {
             const vStr = String(s.value ?? "");
             const parts = vStr.split("/");
@@ -3708,14 +3857,14 @@ function rebuildChoicesBlock(body, labels = []) {
             const max = parts.length > 1 ? parseFloat(parts[1]) : 100;
             const pct = Number.isFinite(val) && max > 0 ? Math.min(100, Math.max(0, (val / max) * 100)) : 0;
             const color = STAT_COLORS[s.label] || avatarColor(s.label || "?");
-            const icon = STAT_ICON_SVG[s.icon] || STAT_ICON_SVG[s.label] || STAT_ICON_SVG["✨"];
-            return `<span class="psb-stat-bar"><span><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="${icon}"/></svg>${MarkdownService.escapeHtml(s.label || "")}</span><span class="stat-track"><span class="stat-fill" style="width:${pct}%;background:${color};"></span></span><span class="stat-val">${MarkdownService.escapeHtml(vStr)}</span></span>`;
+            const icon = UI_ICON_SVG[s.icon] || UI_ICON_SVG[s.label] || UI_ICON_SVG["✨"];
+            return `<span class="psb-stat-bar"><span><svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'>${icon}</svg>${MarkdownService.escapeHtml(s.label || "")}</span><span class="stat-track"><span class="stat-fill" style="width:${pct}%;background:${color};"></span></span><span class="stat-val">${MarkdownService.escapeHtml(vStr)}</span></span>`;
         }
         // 角色面板折叠(2026-09-22):收起后只留头像+姓名,把竖向空间还给剧情区。**默认收起**(小徐 2026-09-22 定)。
         // 折叠态挂在容器 class 上而不是写子元素 style——renderPlayStatusBar 每次只重写 innerHTML,容器 class 不受影响。
         const PSB_COLLAPSE_KEY = "bitlife_psb_collapsed_v1";
-        // 折叠箭头:google/material-design-icons navigation/expand_less/24px(收起态由 CSS rotate 180° 复用同一个图标)
-        const PSB_TOGGLE_ICON = "M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z";
+        // 折叠箭头:lucide v1.47.0 chevron-up(收起态由 CSS rotate 180° 复用同一个图标)
+        const PSB_TOGGLE_ICON = "m18 15-6-6-6 6";
         let _psbCollapsed = null;   // 内存兜底:localStorage 写失败(配额满)时本会话仍能折叠
         function isPlayStatusBarCollapsed() {
             if (_psbCollapsed !== null) return _psbCollapsed;
@@ -3759,9 +3908,9 @@ function rebuildChoicesBlock(body, labels = []) {
                     : "");
             const name = state.name || "未命名";
             const chips = [];
-            if (energy) chips.push(`<span class="psb-chip energy"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="m8 22l1-7H4l9-13h2l-1 8h6L10 22z"/></svg>${MarkdownService.escapeHtml(energy.value)}</span>`);
-            if (timeText) chips.push(`<span class="psb-chip"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M12 14q-.425 0-.712-.288T11 13t.288-.712T12 12t.713.288T13 13t-.288.713T12 14m-4.712-.288Q7 13.426 7 13t.288-.712T8 12t.713.288T9 13t-.288.713T8 14t-.712-.288M16 14q-.425 0-.712-.288T15 13t.288-.712T16 12t.713.288T17 13t-.288.713T16 14m-4 4q-.425 0-.712-.288T11 17t.288-.712T12 16t.713.288T13 17t-.288.713T12 18m-4.712-.288Q7 17.426 7 17t.288-.712T8 16t.713.288T9 17t-.288.713T8 18t-.712-.288M16 18q-.425 0-.712-.288T15 17t.288-.712T16 16t.713.288T17 17t-.288.713T16 18M5 22q-.825 0-1.412-.587T3 20V6q0-.825.588-1.412T5 4h1V2h2v2h8V2h2v2h1q.825 0 1.413.588T21 6v14q0 .825-.587 1.413T19 22zm0-2h14V10H5z"/></svg> ${timeText}</span>`);
-            if (state.location && state.location !== "待生成") chips.push(`<span class="psb-chip"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M13.413 11.413Q14 10.825 14 10t-.587-1.412T12 8t-1.412.588T10 10t.588 1.413T12 12t1.413-.587M12 22q-4.025-3.425-6.012-6.362T4 10.2q0-3.75 2.413-5.975T12 2t5.588 2.225T20 10.2q0 2.5-1.987 5.438T12 22"/></svg> ${MarkdownService.escapeHtml(state.location)}</span>`);
+            if (energy) chips.push(`<span class="psb-chip energy"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z"/></svg>${MarkdownService.escapeHtml(energy.value)}</span>`);
+            if (timeText) chips.push(`<span class="psb-chip"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v3"/><path d="M16 2v3"/><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg> ${timeText}</span>`);
+            if (state.location && state.location !== "待生成") chips.push(`<span class="psb-chip"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg> ${MarkdownService.escapeHtml(state.location)}</span>`);
             const statsHtml = coreStats.length
                 ? `<div class="psb-stats">${coreStats.map(statBarHtml).join("")}</div>`
                 : "";
@@ -3777,7 +3926,7 @@ function rebuildChoicesBlock(body, labels = []) {
                     ${roleHtml}
                 </div>
                 <div class="psb-chips">${chips.join("")}</div>
-                <button type="button" class="psb-toggle" onclick="togglePlayStatusBar()"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="${PSB_TOGGLE_ICON}"/></svg></button>
+                <button type="button" class="psb-toggle" onclick="togglePlayStatusBar()"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="${PSB_TOGGLE_ICON}"/></svg></button>
                 ${statsHtml}`;
             applyPlayStatusBarCollapsed();
         }
@@ -3893,7 +4042,7 @@ function rebuildChoicesBlock(body, labels = []) {
             grid.innerHTML = MAP_LIBRARY.map((m) => {
                 const key = m.url.replace("maps/", "").replace(".webp", "");
                 const sel = !isCustom && _mapPickerValue === key;
-                return `<div data-map-key="${key}" style="position:relative;cursor:pointer;border:2px solid ${sel ? "var(--accent)" : "transparent"};border-radius:10px;overflow:hidden;padding-top:66%;background:var(--input-bg);" onclick="_mapGridPick(this)"><img src="${m.url}" alt="${MarkdownService.escapeHtml(m.name)}" loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:block;"><span style="position:absolute;left:4px;bottom:3px;font-size:0.62rem;font-weight:800;color:#fff;background:rgba(0,0,0,0.55);padding:1px 6px;border-radius:999px;">${MarkdownService.escapeHtml(m.name)}</span></div>`;
+                return `<div data-map-key="${key}" style="position:relative;cursor:pointer;border:2px solid ${sel ? "var(--accent)" : "transparent"};border-radius:10px;overflow:hidden;padding-top:66%;background:var(--input-bg);" onclick="_mapGridPick(this)"><img src="${m.url}" alt="${MarkdownService.escapeHtml(m.name)}" loading="lazy" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:block;"><span style="position:absolute;left:4px;bottom:3px;font-size:var(--fs-1);font-weight:800;color:var(--on-image);background:var(--img-scrim);padding:1px 6px;border-radius:999px;">${MarkdownService.escapeHtml(m.name)}</span></div>`;
             }).join("");
             const okBtn = document.getElementById("map-picker-ok-btn");
             okBtn.onclick = async () => {
@@ -3953,7 +4102,7 @@ function rebuildChoicesBlock(body, labels = []) {
                     `<i class="pmap-dot" style="left:${Math.min(100, Math.max(0, Number(p.x) || 0))}%;top:${Math.min(100, Math.max(0, Number(p.y) || 0))}%"></i>`).join("");
                 const img = map.src ? `<img src="${map.src}" alt="地图" loading="lazy">` : "";
                 return `<div class="play-map-bar play-map-thumbbar" onclick="showFullMap()">
-                    <div class="pmap-thumb">${img}${dots}<span class="pmap-title"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="m15 21l-6-2.1l-4.65 1.8q-.5.2-.925-.112T3 19.75v-14q0-.325.188-.575T3.7 4.8L9 3l6 2.1l4.65-1.8q.5-.2.925.113T21 4.25v14q0 .325-.187.575t-.513.375zm-1-2.45V6.85l-4-1.4v11.7z"/></svg> 大地图</span></div>
+                    <div class="pmap-thumb">${img}${dots}<span class="pmap-title"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/></svg> 大地图</span></div>
                     <div class="list-sub" style="margin-top:4px;">${places.length} 个地点 · 点击地图选择地点</div>
                 </div>`;
             }
@@ -3963,7 +4112,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 const active = l.name === cur;
                 return `<button type="button" class="map-chip${active ? " current" : ""}" onclick="moveToLocation('${MarkdownService.escapeHtml(l.name).replace(/'/g, "\\'")}')">${l.icon || mapIconOf(l.name)} ${MarkdownService.escapeHtml(l.name)}</button>`;
             }).join("");
-            return `<div class="play-map-bar"><span style="font-size:0.76rem;font-weight:800;color:var(--text-muted);"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="m15 21l-6-2.1l-4.65 1.8q-.5.2-.925-.112T3 19.75v-14q0-.325.188-.575T3.7 4.8L9 3l6 2.1l4.65-1.8q.5-.2.925.113T21 4.25v14q0 .325-.187.575t-.513.375zm-1-2.45V6.85l-4-1.4v11.7z"/></svg> 大地图</span>${chips}<button type="button" class="map-open-btn" onclick="showFullMap()"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="m15 21l-6-2.1l-4.65 1.8q-.5.2-.925-.112T3 19.75v-14q0-.325.188-.575T3.7 4.8L9 3l6 2.1l4.65-1.8q.5-.2.925.113T21 4.25v14q0 .325-.187.575t-.513.375zm-1-2.45V6.85l-4-1.4v11.7z"/></svg> 完整地图</button></div>`;
+            return `<div class="play-map-bar"><span style="font-size:var(--fs-2);font-weight:800;color:var(--text-muted);"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/></svg> 大地图</span>${chips}<button type="button" class="map-open-btn" onclick="showFullMap()"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/></svg> 完整地图</button></div>`;
         }
         function renderPlayEventList() {
             const box = document.getElementById("play-event-area");
@@ -3974,7 +4123,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const rounds = buildEventRounds(state.history);
             const mapHtml = renderPlayMapBar(state);
             if (!rounds.length) {
-                box.innerHTML = `${mapHtml}<div class="list-sub" style="opacity:0.6;padding:6px 2px;"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M12 14q-.425 0-.712-.288T11 13t.288-.712T12 12t.713.288T13 13t-.288.713T12 14m-4.712-.288Q7 13.426 7 13t.288-.712T8 12t.713.288T9 13t-.288.713T8 14t-.712-.288M16 14q-.425 0-.712-.288T15 13t.288-.712T16 12t.713.288T17 13t-.288.713T16 14m-4 4q-.425 0-.712-.288T11 17t.288-.712T12 16t.713.288T13 17t-.288.713T12 18m-4.712-.288Q7 17.426 7 17t.288-.712T8 16t.713.288T9 17t-.288.713T8 18t-.712-.288M16 18q-.425 0-.712-.288T15 17t.288-.712T16 16t.713.288T17 17t-.288.713T16 18M5 22q-.825 0-1.412-.587T3 20V6q0-.825.588-1.412T5 4h1V2h2v2h8V2h2v2h1q.825 0 1.413.588T21 6v14q0 .825-.587 1.413T19 22zm0-2h14V10H5z"/></svg> 暂无事件记录，先推进一段剧情吧</div>`;
+                box.innerHTML = `${mapHtml}<div class="list-sub" style="opacity:0.6;padding:6px 2px;"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v3"/><path d="M16 2v3"/><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg> 暂无事件记录，先推进一段剧情吧</div>`;
                 return;
             }
             const latest = rounds[rounds.length - 1];
@@ -3986,19 +4135,19 @@ function rebuildChoicesBlock(body, labels = []) {
                 const title = (titleM ? String(titleM[1] || titleM[2] || titleM[3] || "").trim() : UIRenderer.stripHtml(raw0).replace(/\s+/g, " ").slice(0, 26)) || r.userText || "（空指令）";
                 return `<div class="event-card">
                     <div class="event-card-main">
-                        <div class="event-card-title"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6 22q-.825 0-1.412-.587T4 20V4q0-.825.588-1.412T6 2h12q.825 0 1.413.588T20 4v16q0 .825-.587 1.413T18 22zm5-11l2.5-1.5L16 11V4h-5z"/></svg> ${MarkdownService.escapeHtml(title)}</div>
-                        <div class="event-card-meta">${r.date ? `<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M12 14q-.425 0-.712-.288T11 13t.288-.712T12 12t.713.288T13 13t-.288.713T12 14m-4.712-.288Q7 13.426 7 13t.288-.712T8 12t.713.288T9 13t-.288.713T8 14t-.712-.288M16 14q-.425 0-.712-.288T15 13t.288-.712T16 12t.713.288T17 13t-.288.713T16 14m-4 4q-.425 0-.712-.288T11 17t.288-.712T12 16t.713.288T13 17t-.288.713T12 18m-4.712-.288Q7 17.426 7 17t.288-.712T8 16t.713.288T9 17t-.288.713T8 18t-.712-.288M16 18q-.425 0-.712-.288T15 17t.288-.712T16 16t.713.288T17 17t-.288.713T16 18M5 22q-.825 0-1.412-.587T3 20V6q0-.825.588-1.412T5 4h1V2h2v2h8V2h2v2h1q.825 0 1.413.588T21 6v14q0 .825-.587 1.413T19 22zm0-2h14V10H5z'/></svg> ${MarkdownService.escapeHtml(r.date)}` : ""} · ${r.texts.length} 段回叙</div>
+                        <div class="event-card-title"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/><path d="M8 11h8"/><path d="M8 7h6"/></svg> ${MarkdownService.escapeHtml(title)}</div>
+                        <div class="event-card-meta">${r.date ? `<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M8 2v3'/><path d='M16 2v3'/><rect x='3' y='3' width='18' height='18' rx='2'/><path d='M3 9h18'/></svg> ${MarkdownService.escapeHtml(r.date)}` : ""} · ${r.texts.length} 段回叙</div>
                     </div>
                     <div class="event-card-actions">
-                        <button type="button" class="event-btn" onclick="showEventDetail(${i})"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6 22q-.825 0-1.412-.587T4 20V4q0-.825.588-1.412T6 2h12q.825 0 1.413.588T20 4v16q0 .825-.587 1.413T18 22zm5-11l2.5-1.5L16 11V4h-5z"/></svg> 详情</button>
-                        <button type="button" class="event-btn" onclick="editEvent(${i})"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M3 21v-4.25L16.2 3.575q.3-.275.663-.425t.762-.15t.775.15t.65.45L20.425 5q.3.275.438.65T21 6.4q0 .4-.137.763t-.438.662L7.25 21zM17.6 7.8L19 6.4L17.6 5l-1.4 1.4z"/></svg> 编辑</button>
-                        <button type="button" class="event-btn" onclick="enterEvent(${i})">⏵ 回顾</button>
-                        <button type="button" class="event-rerun-btn event-rerun-disabled" onclick="rerunEventComingSoon()">🔄 重刷</button>
+                        <button type="button" class="event-btn" onclick="showEventDetail(${i})"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/><path d="M8 11h8"/><path d="M8 7h6"/></svg> 详情</button>
+                        <button type="button" class="event-btn" onclick="editEvent(${i})"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg> 编辑</button>
+                        <button type="button" class="event-btn" onclick="enterEvent(${i})"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg> 回顾</button>
+                        <button type="button" class="event-rerun-btn event-rerun-disabled" onclick="rerunEventComingSoon()"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg> 重刷</button>
                     </div>
                 </div>`;
             };
             box.innerHTML = `${mapHtml}
-                <div class="play-event-head"><span><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M12 14q-.425 0-.712-.288T11 13t.288-.712T12 12t.713.288T13 13t-.288.713T12 14m-4.712-.288Q7 13.426 7 13t.288-.712T8 12t.713.288T9 13t-.288.713T8 14t-.712-.288M16 14q-.425 0-.712-.288T15 13t.288-.712T16 12t.713.288T17 13t-.288.713T16 14m-4 4q-.425 0-.712-.288T11 17t.288-.712T12 16t.713.288T13 17t-.288.713T12 18m-4.712-.288Q7 17.426 7 17t.288-.712T8 16t.713.288T9 17t-.288.713T8 18t-.712-.288M16 18q-.425 0-.712-.288T15 17t.288-.712T16 16t.713.288T17 17t-.288.713T16 18M5 22q-.825 0-1.412-.587T3 20V6q0-.825.588-1.412T5 4h1V2h2v2h8V2h2v2h1q.825 0 1.413.588T21 6v14q0 .825-.587 1.413T19 22zm0-2h14V10H5z"/></svg> 当前事件</span><span class="list-sub">探索地图可触发新的事件</span></div>
+                <div class="play-event-head"><span><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2v3"/><path d="M16 2v3"/><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg> 当前事件</span><span class="list-sub">探索地图可触发新的事件</span></div>
                 ${cardHtml(latest, rounds.length - 1)}
                 ${past.length ? `<details class="event-past"><summary>往期与已完结（${past.length}）</summary>${past.map((r, j) => cardHtml(r, j)).join("")}</details>` : ""}`;
         }
@@ -4032,18 +4181,18 @@ function rebuildChoicesBlock(body, labels = []) {
                         <div class="npc-name">${MarkdownService.escapeHtml(n.name || "未命名")}</div>
                         <span class="npc-badge ${appeared ? "on" : "off"}">${appeared ? "已登场" : "未登场"}</span>
                     </div>
-                    <div class="npc-favor">⭐ 友善 ${favor} ${heartLadder(favor)}</div>
+                    <div class="npc-favor"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg> 友善 ${favor} ${heartLadder(favor)}</div>
                     <div class="npc-favor">♥ 爱慕 ${affection > 0 ? "+" : ""}${affection} ${heartLadder(affection, 100, true)}</div>
                     <div class="npc-meta">${MarkdownService.escapeHtml(n.relation || "关系未明")} · 同地点 ${MarkdownService.escapeHtml(state.location || "未知")}${n.status ? ` · ${MarkdownService.escapeHtml(n.status)}` : ""}${n.mood ? ` · ${MarkdownService.escapeHtml(n.mood)}` : ""}</div>
                     ${intro ? `<div class="npc-intro">${MarkdownService.escapeHtml(intro)}${introRaw.length > 60 ? "…" : ""}</div>` : ""}
                 </div>`;
             };
             const groupHtml = (opened, title, list) => list.length
-                ? `<details class="npc-group ${opened ? "on" : "off"}"${opened ? " open" : ""}><summary>${opened ? "✅" : "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M6 22q-.825 0-1.412-.587T4 20V10q0-.825.588-1.412T6 8h1V6q0-2.075 1.463-3.537T12 1t3.538 1.463T17 6v2h1q.825 0 1.413.588T20 10v10q0 .825-.587 1.413T18 22zm7.413-5.587Q14 15.825 14 15t-.587-1.412T12 13t-1.412.588T10 15t.588 1.413T12 17t1.413-.587M9 8h6V6q0-1.25-.875-2.125T12 3t-2.125.875T9 6z'/></svg>"} ${title}（${list.length}）</summary><div class="npc-grid">${list.map((n) => card(n)).join("")}</div></details>`
+                ? `<details class="npc-group ${opened ? "on" : "off"}"${opened ? " open" : ""}><summary>${opened ? "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='10'/><path d='m16 9-5.5 5.5L8 12'/></svg>" : "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><rect width='18' height='11' x='3' y='11' rx='2' ry='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg>"} ${title}（${list.length}）</summary><div class="npc-grid">${list.map((n) => card(n)).join("")}</div></details>`
                 : "";
             grid.innerHTML = npcs.length
                 ? groupHtml(true, "已登场人物", on) + groupHtml(false, "未登场人物", off)
-                : '<div class="list-sub" style="opacity:0.6;"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M8.1 21.213q-1.825-.788-3.175-2.138T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22t-3.9-.788M11 19.95V18q-.825 0-1.412-.587T9 16v-1l-4.8-4.8q-.075.45-.137.9T4 12q0 3.025 1.988 5.3T11 19.95m6.9-2.55q1.025-1.125 1.563-2.512T20 12q0-2.45-1.362-4.475T15 4.6V5q0 .825-.587 1.413T13 7h-2v2q0 .425-.288.713T10 10H8v2h6q.425 0 .713.288T15 13v3h1q.65 0 1.175.388T17.9 17.4"/></svg> 还没有可互动的角色</div>';
+                : '<div class="list-sub" style="opacity:0.6;"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg> 还没有可互动的角色</div>';
             // 事件页已搬入世界页：图谱 → 地图条 → 事件列表（renderPlayEventList 内含 renderPlayMapBar）
             try { renderPlayEventList(); } catch (e) {}
         }
@@ -4095,8 +4244,8 @@ function rebuildChoicesBlock(body, labels = []) {
                     ${result.bodyZh ? `<div class="ending-body love-zh">${MarkdownService.escapeHtml(String(result.bodyZh))}</div>` : ""}
                     <div class="ending-stats">${stats.map((s) => `<div class="ending-stat"><b>${s.v}</b><span>${s.l}</span></div>`).join("")}</div>
                     <div class="ending-actions">
-                        <button class="mini-btn ghost" onclick="closeEndingModal()"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M2 22V4q0-.825.588-1.412T4 2h16q.825 0 1.413.588T22 4v12q0 .825-.587 1.413T20 18H6z"/></svg> 继续回溯</button>
-                        <button class="mini-btn primary" onclick="restartLife()">🔁 开启新攻略</button>
+                        <button class="mini-btn ghost" onclick="closeEndingModal()"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/></svg> 继续回溯</button>
+                        <button class="mini-btn primary" onclick="restartLife()"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg> 开启新攻略</button>
                     </div>`;
                 modal.classList.add("show");
                 return;
@@ -4122,8 +4271,8 @@ function rebuildChoicesBlock(body, labels = []) {
                 <div class="ending-body">${MarkdownService.escapeHtml(result.body || "……")}</div>
                 <div class="ending-stats">${stats.map((s) => `<div class="ending-stat"><b>${s.v}</b><span>${s.l}</span></div>`).join("")}</div>
                 <div class="ending-actions">
-                    <button class="mini-btn ghost" onclick="closeEndingModal()"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M2 22V4q0-.825.588-1.412T4 2h16q.825 0 1.413.588T22 4v12q0 .825-.587 1.413T20 18H6z"/></svg> 继续回溯</button>
-                    <button class="mini-btn primary" onclick="restartLife()">🔁 开启新人生</button>
+                    <button class="mini-btn ghost" onclick="closeEndingModal()"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/></svg> 继续回溯</button>
+                    <button class="mini-btn primary" onclick="restartLife()"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg> 开启新人生</button>
                 </div>`;
             modal.classList.add("show");
         }
@@ -4182,7 +4331,6 @@ function rebuildChoicesBlock(body, labels = []) {
                     HtmlCardService.applyReadableTextColors(node);
                     AiResponseLayoutService.bindHtmlChoiceEvents(node);
                     AiResponseLayoutService.injectStatsIntoCard(node);
-                    VisualEffects.decorateAiCardBears(node);
                 }
                 scrollToBottom();
                 return node;
@@ -4274,7 +4422,6 @@ function rebuildChoicesBlock(body, labels = []) {
                     HtmlCardService.applyReadableTextColors(node);
                     AiResponseLayoutService.bindHtmlChoiceEvents(node);
                     AiResponseLayoutService.injectStatsIntoCard(node);
-                    VisualEffects.decorateAiCardBears(node);
                     /* M9F 双语随卡(渐进 scaffold 轮):data-bi 先落属性(进历史快照),快照后烘烤 → 行间译文免 AI 点译 */
                     if (structuredFields.bilingual && window.LangAssist) {
                         try { window.LangAssist.attachBiAttr(node, structuredFields.bilingual); } catch (e) {}
@@ -4296,7 +4443,6 @@ function rebuildChoicesBlock(body, labels = []) {
                     HtmlCardService.applyReadableTextColors(node);
                     AiResponseLayoutService.bindHtmlChoiceEvents(node);
                     AiResponseLayoutService.injectStatsIntoCard(node);
-                    VisualEffects.decorateAiCardBears(node);
                 }
             } else if (hasHtmlCard) {
                 const warningHtml = options.conflictDetected
@@ -4309,7 +4455,6 @@ function rebuildChoicesBlock(body, labels = []) {
                     HtmlCardService.applyReadableTextColors(node);
                     AiResponseLayoutService.bindHtmlChoiceEvents(node);
                     AiResponseLayoutService.injectStatsIntoCard(node);
-                    VisualEffects.decorateAiCardBears(node);
                 }
             } else if (StructuredCardProtocolService.isStructured(normalizedText) || /^(```[^\n]*\n)?\{\s*"/.test(normalizedText)) {
                 // 残缺结构化 JSON({{ 前缀或裸 { 开头但六字段不齐/解析失败) → 兜底结构化卡(提取已定型的 title/time/story), 杜绝源码上屏与入历史
@@ -4326,7 +4471,6 @@ function rebuildChoicesBlock(body, labels = []) {
                     HtmlCardService.applyReadableTextColors(node);
                     AiResponseLayoutService.bindHtmlChoiceEvents(node);
                     AiResponseLayoutService.injectStatsIntoCard(node);
-                    VisualEffects.decorateAiCardBears(node);
                     mountedHtml = node.outerHTML;
                 }
             } else {
@@ -4385,7 +4529,6 @@ function rebuildChoicesBlock(body, labels = []) {
                 HtmlCardService.applyReadableTextColors(target);
                 AiResponseLayoutService.bindHtmlChoiceEvents(target);
                 AiResponseLayoutService.injectStatsIntoCard(target);
-                VisualEffects.decorateAiCardBears(target);
             } else if (hasHtmlCard) {
                 const warningHtml = options.conflictDetected
                     ? '<div class="ai-card-warning">⚠️ 检测到设定冲突，已自动纠偏重试一次。</div>'
@@ -4397,7 +4540,6 @@ function rebuildChoicesBlock(body, labels = []) {
                 HtmlCardService.applyReadableTextColors(target);
                 AiResponseLayoutService.bindHtmlChoiceEvents(target);
                 AiResponseLayoutService.injectStatsIntoCard(target);
-                VisualEffects.decorateAiCardBears(target);
             } else {
                 node.classList.remove("html-host");
                 node.innerHTML = AiResponseLayoutService.renderAiMessage(String(text || ""), false);
@@ -4416,16 +4558,31 @@ function rebuildChoicesBlock(body, labels = []) {
             const list = document.getElementById("inventory-list");
             if (!list) return;
             list.innerHTML = "";
-            (state.inventory || []).forEach((item, idx) => {
+            const items = state.inventory || [];
+            // 开局背包是空的(物品全靠剧情协议获得)，所以「空」才是这页的常态。
+            // 之前没有这一支，新玩家点进来看到的是一个 60px 高的标题和一片空白，
+            // 既不知道这里该有什么，也不知道怎么让它有东西。
+            if (!items.length) {
+                list.innerHTML = '<span class="list-sub">背包是空的。剧情里获得的物品会自动收进这里。</span>';
+                return;
+            }
+            items.forEach((item, idx) => {
                 const row = document.createElement("div");
                 row.className = "swipe-row";
                 row.dataset.itemId = String(item.id || "");
                 row.dataset.itemIndex = String(idx);
+                // 物品字段来自 AI 的 state-patch，是外部输入，按同文件其它渲染处(社区动态/NPC 列表)的做法转义
+                const name = MarkdownService.escapeHtml(item.name || "未命名物品");
+                const type = MarkdownService.escapeHtml(item.type || "道具");
+                const effect = MarkdownService.escapeHtml(item.effect || "none");
+                // upsertInventory 会给 count 兜底，但预设/旧存档可能没有；缺了就不显示数量，不显示 undefined
+                const count = Number(item.count);
+                const countHtml = Number.isFinite(count) ? ` ×${count}` : "";
                 row.innerHTML = `
                     <div class="list-row swipe-main">
                         <div>
-                            <div class="list-title">${item.name} ×${item.count}</div>
-                            <div class="list-sub">${item.type}｜${item.effect}</div>
+                            <div class="list-title">${name}${countHtml}</div>
+                            <div class="list-sub">${type}｜${effect}</div>
                         </div>
                         <button class="tiny-btn" data-op="open">查看/使用</button>
                     </div>
@@ -4549,7 +4706,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 if (av && isAvatarImg(av)) {
                     return `<div class="npc-chat-avatar" title="我" style="cursor:pointer;" onclick="openPersonCardSelfAvatarPicker()"><img src="${String(av).replace(/"/g, "%22")}" alt="" onerror="this.parentElement.textContent='我'" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit;"></div>`;
                 }
-                return `<div class="npc-chat-avatar" title="我" style="cursor:pointer;background:var(--accent,#5b5bd6);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;" onclick="openPersonCardSelfAvatarPicker()">我</div>`;
+                return `<div class="npc-chat-avatar" title="我" style="cursor:pointer;background:var(--accent);color:var(--btn-primary-text);display:flex;align-items:center;justify-content:center;font-weight:700;" onclick="openPersonCardSelfAvatarPicker()">我</div>`;
             }
             const st = StateService.get();
             const av = st ? st.avatar : "";
@@ -4742,20 +4899,22 @@ function rebuildChoicesBlock(body, labels = []) {
                 const row = document.createElement("div");
                 row.className = "list-row";
                 const meta = slot.data?.meta;
+                if (!meta) row.classList.add("is-empty");
+                // 空槽位只留「保存」：此刻点读取/删除不会有任何反应——
+                // loadFromSlot 拿到 null 直接 return，deleteSlot 删一个不存在的 key 再重渲染出同一页。
+                // 与下方云槽位同一写法；接线也必须用 querySelectorAll，否则取不到按钮时 .onclick 会抛异常。
+                const btns = `<button class="tiny-btn" data-op="save">${meta ? "覆盖" : "保存"}</button>` +
+                    (meta ? `<button class="tiny-btn" data-op="load">读取</button><button class="tiny-btn" data-op="del">删除</button>` : "");
                 row.innerHTML = `
                     <div>
-                        <div class="list-title">槽位 ${slot.index} ${meta ? "✅" : "（空）"}</div>
+                        <div class="list-title">槽位 ${slot.index}${meta ? " <svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='10'/><path d='m16 9-5.5 5.5L8 12'/></svg>" : "（空）"}</div>
                         <div class="list-sub">${meta ? `${meta.name}｜${meta.time}｜${meta.savedAt}` : "暂无存档"}</div>
                     </div>
-                    <div style="display:flex; gap:6px;">
-                        <button class="tiny-btn" data-op="save">覆盖</button>
-                        <button class="tiny-btn" data-op="load">读取</button>
-                        <button class="tiny-btn" data-op="del">删除</button>
-                    </div>
+                    <div style="display:flex; gap:6px;">${btns}</div>
                 `;
-                row.querySelector('[data-op="save"]').onclick = () => Controller.saveToSlot(slot.index);
-                row.querySelector('[data-op="load"]').onclick = () => Controller.loadFromSlot(slot.index);
-                row.querySelector('[data-op="del"]').onclick = () => Controller.deleteSlot(slot.index);
+                row.querySelectorAll('[data-op="save"]').forEach((b) => { b.onclick = () => Controller.saveToSlot(slot.index); });
+                row.querySelectorAll('[data-op="load"]').forEach((b) => { b.onclick = () => Controller.loadFromSlot(slot.index); });
+                row.querySelectorAll('[data-op="del"]').forEach((b) => { b.onclick = () => Controller.deleteSlot(slot.index); });
                 box.appendChild(row);
             });
             renderCloudSlots(box);
@@ -4763,17 +4922,21 @@ function rebuildChoicesBlock(body, labels = []) {
         // 云存档区：每剧本 3 槽,未解锁显示 🔒 + 解锁按钮（200 币/槽,一次性）
         function renderCloudSlots(box) {
             const sec = document.createElement("div");
+            sec.className = "save-slots-cloud";
             sec.style.marginTop = "14px";
             box.appendChild(sec);
             if (!AuthService.getToken()) {
-                sec.innerHTML = '<div class="list-sub"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6.5 20q-2.275 0-3.887-1.575T1 14.575q0-1.95 1.175-3.475T5.25 9.15q.625-2.3 2.5-3.725T12 4q2.925 0 4.963 2.038T19 11q1.725.2 2.863 1.488T23 15.5q0 1.875-1.312 3.188T18.5 20z"/></svg> 云存档：登录后每剧本可解锁 3 个槽位（200 币/槽，一次性），跨设备同步进度。本地存档为浏览器共享（换账号仍自动加载）。</div>';
+                // 页首那句已经完整说过本地/云存档的规则，这里再抄一遍等于同一屏看到两遍同一句话，
+                // 而且「本地存档为浏览器共享」出现在云存档分区里位置也不对。这里只留分区自己的定位。
+                sec.innerHTML = '<div class="list-sub"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg> 云存档：登录后每剧本解锁 3 槽。</div>' +
+                    '<div class="btn-row mid"><button type="button" class="mini-btn ghost" onclick="AuthService.openLogin()">去登录</button></div>';
                 return;
             }
-            sec.innerHTML = '<div class="list-sub"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6.5 20q-2.275 0-3.887-1.575T1 14.575q0-1.95 1.175-3.475T5.25 9.15q.625-2.3 2.5-3.725T12 4q2.925 0 4.963 2.038T19 11q1.725.2 2.863 1.488T23 15.5q0 1.875-1.312 3.188T18.5 20z"/></svg> 云存档加载中...</div>';
+            sec.innerHTML = '<div class="list-sub"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg> 云存档加载中…</div>';
             const cardId = ScenarioCardService.getSelectedId();
             SaveSlotService.fetchCloudSaves(cardId).then((cloud) => {
                 if (!cloud) {
-                    sec.innerHTML = '<div class="list-sub"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6.5 20q-2.275 0-3.887-1.575T1 14.575q0-1.95 1.175-3.475T5.25 9.15q.625-2.3 2.5-3.725T12 4q2.925 0 4.963 2.038T19 11q1.725.2 2.863 1.488T23 15.5q0 1.875-1.312 3.188T18.5 20z"/></svg> 云存档加载失败，请稍后重试。</div>';
+                    sec.innerHTML = '<div class="list-sub"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg> 云存档加载失败，请稍后重试。</div>';
                     return;
                 }
                 const coins = Number(cloud.coins || 0);
@@ -4785,8 +4948,8 @@ function rebuildChoicesBlock(body, labels = []) {
                         try { const parsed = JSON.parse(saved.data); meta = parsed.meta; } catch (e) {}
                     }
                     const title = unlocked
-                        ? `云槽位 ${idx} ${meta ? "✅" : "（空）"}`
-                        : `云槽位 ${idx} <svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M6 22q-.825 0-1.412-.587T4 20V10q0-.825.588-1.412T6 8h1V6q0-2.075 1.463-3.537T12 1t3.538 1.463T17 6v2h1q.825 0 1.413.588T20 10v10q0 .825-.587 1.413T18 22zm7.413-5.587Q14 15.825 14 15t-.587-1.412T12 13t-1.412.588T10 15t.588 1.413T12 17t1.413-.587M9 8h6V6q0-1.25-.875-2.125T12 3t-2.125.875T9 6z'/></svg>（未解锁 · ${SaveSlotService.CLOUD_SLOT_PRICE} 币）`;
+                        ? `云槽位 ${idx}${meta ? " <svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='10'/><path d='m16 9-5.5 5.5L8 12'/></svg>" : "（空）"}`
+                        : `云槽位 ${idx} <svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><rect width='18' height='11' x='3' y='11' rx='2' ry='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg>（未解锁 · ${SaveSlotService.CLOUD_SLOT_PRICE} 币）`;
                     const desc = meta ? `${meta.name}｜${meta.time}｜${meta.savedAt}` : (unlocked ? "暂无存档" : "解锁后可跨设备存档");
                     const btns = unlocked
                         ? `<button class="tiny-btn" data-op="c-save">${meta ? "覆盖" : "保存"}</button>` +
@@ -4800,13 +4963,13 @@ function rebuildChoicesBlock(body, labels = []) {
                         <div style="display:flex; gap:6px;">${btns}</div>
                     </div>`;
                 }).join("");
-                sec.innerHTML = `<div class="list-sub" style="margin-bottom:4px;"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6.5 20q-2.275 0-3.887-1.575T1 14.575q0-1.95 1.175-3.475T5.25 9.15q.625-2.3 2.5-3.725T12 4q2.925 0 4.963 2.038T19 11q1.725.2 2.863 1.488T23 15.5q0 1.875-1.312 3.188T18.5 20z"/></svg> 云存档（跨设备 · 余额 ${coins} 币）</div>${rows}`;
+                sec.innerHTML = `<div class="list-sub" style="margin-bottom:4px;"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg> 云存档（跨设备 · 余额 ${coins} 币）</div>${rows}`;
                 sec.querySelectorAll('[data-op="c-unlock"]').forEach((b, i) => { b.onclick = () => Controller.unlockCloudSlot(SaveSlotService.CLOUD_SLOTS[i]); });
                 sec.querySelectorAll('[data-op="c-save"]').forEach((b, i) => { b.onclick = () => Controller.saveToCloudSlot(SaveSlotService.CLOUD_SLOTS[i]); });
                 sec.querySelectorAll('[data-op="c-load"]').forEach((b, i) => { b.onclick = () => Controller.loadFromCloudSlot(SaveSlotService.CLOUD_SLOTS[i]); });
                 sec.querySelectorAll('[data-op="c-del"]').forEach((b, i) => { b.onclick = () => Controller.deleteCloudSlot(SaveSlotService.CLOUD_SLOTS[i]); });
             }).catch(() => {
-                sec.innerHTML = '<div class="list-sub"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6.5 20q-2.275 0-3.887-1.575T1 14.575q0-1.95 1.175-3.475T5.25 9.15q.625-2.3 2.5-3.725T12 4q2.925 0 4.963 2.038T19 11q1.725.2 2.863 1.488T23 15.5q0 1.875-1.312 3.188T18.5 20z"/></svg> 云存档加载失败，请稍后重试。</div>';
+                sec.innerHTML = '<div class="list-sub"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg> 云存档加载失败，请稍后重试。</div>';
             });
         }
         let _homeOnlineCards = [];   // 在线社区卡列表（首页剧本库合并展示）
@@ -4912,16 +5075,16 @@ function rebuildChoicesBlock(body, labels = []) {
                             <img class="scc-img" alt="${MarkdownService.escapeHtml(String(card.title || ""))} 封面" loading="lazy">
                             <span class="scc-emoji">${ScenarioCardViewService.cardEmoji(card.theme)}</span>
                             </div>
-                        <div class="list-title">${lock.locked ? '<span style="color:#e67e22;margin-right:4px;"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6 22q-.825 0-1.412-.587T4 20V10q0-.825.588-1.412T6 8h1V6q0-2.075 1.463-3.537T12 1t3.538 1.463T17 6v2h1q.825 0 1.413.588T20 10v10q0 .825-.587 1.413T18 22zm7.413-5.587Q14 15.825 14 15t-.587-1.412T12 13t-1.412.588T10 15t.588 1.413T12 17t1.413-.587M9 8h6V6q0-1.25-.875-2.125T12 3t-2.125.875T9 6z"/></svg></span>' : ""}${card.title}</div>
+                        <div class="list-title">${lock.locked ? '<span style="color:var(--warn);margin-right:4px;"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>' : ""}${card.title}</div>
                         <div class="scenario-badges">${tags.map((t) => `<span class="scenario-badge ${ScenarioCardViewService.groupClass(card)}">${MarkdownService.escapeHtml(t)}</span>`).join("")}</div>
                         <div class="list-sub">${authorLine(card)}</div>
                         <div class="scenario-card-btns">
                             <button class="tiny-btn" data-op="detail">详情</button>
-                            <button class="tiny-btn primary" data-op="play">${card.online ? "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='m12 16l-5-5l1.4-1.45l2.6 2.6V4h2v8.15l2.6-2.6L17 11zm-6 4q-.825 0-1.412-.587T4 18v-3h2v3h12v-3h2v3q0 .825-.587 1.413T18 20z'/></svg> 下载游玩" : (lock.locked ? "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M6 22q-.825 0-1.412-.587T4 20V10q0-.825.588-1.412T6 8h1V6q0-2.075 1.463-3.537T12 1t3.538 1.463T17 6v2h1q.825 0 1.413.588T20 10v10q0 .825-.587 1.413T18 22zm7.413-5.587Q14 15.825 14 15t-.587-1.412T12 13t-1.412.588T10 15t.588 1.413T12 17t1.413-.587M9 8h6V6q0-1.25-.875-2.125T12 3t-2.125.875T9 6z'/></svg> 解锁" : "立即游玩")}</button>
+                            <button class="tiny-btn primary" data-op="play">${card.online ? "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M12 15V3'/><path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'/><path d='m7 10 5 5 5-5'/></svg> 下载游玩" : (lock.locked ? "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><rect width='18' height='11' x='3' y='11' rx='2' ry='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg> 解锁" : "立即游玩")}</button>
                         </div>
                     </div>
                     <div class="scenario-card-actions">
-                        <button class="scenario-action-btn collect${collected ? " on" : ""}" data-op="swipe-collect">${collected ? '<svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="m12 17.275l-4.15 2.5q-.275.175-.575.15t-.525-.2t-.35-.437t-.05-.588l1.1-4.725L3.775 10.8q-.25-.225-.312-.513t.037-.562t.3-.45t.55-.225l4.85-.425l1.875-4.45q.125-.3.388-.45t.537-.15t.537.15t.388.45l1.875 4.45l4.85.425q.35.05.55.225t.3.45t.038.563t-.313.512l-3.675 3.175l1.1 4.725q.075.325-.05.588t-.35.437t-.525.2t-.575-.15z"/></svg> 取消收藏' : '<svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="m8.85 16.825l3.15-1.9l3.15 1.925l-.825-3.6l2.775-2.4l-3.65-.325l-1.45-3.4l-1.45 3.375l-3.65.325l2.775 2.425zm3.15.45l-4.15 2.5q-.275.175-.575.15t-.525-.2t-.35-.437t-.05-.588l1.1-4.725L3.775 10.8q-.25-.225-.312-.513t.037-.562t.3-.45t.55-.225l4.85-.425l1.875-4.45q.125-.3.388-.45t.537-.15t.537.15t.388.45l1.875 4.45l4.85.425q.35.05.55.225t.3.45t.038.563t-.313.512l-3.675 3.175l1.1 4.725q.075.325-.05.588t-.35.437t-.525.2t-.575-.15zm0-5.025"/></svg> 收藏'}</button>
+                        <button class="scenario-action-btn collect${collected ? " on" : ""}" data-op="swipe-collect">${collected ? '<svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" fill="currentColor"/></svg> 取消收藏' : '<svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg> 收藏'}</button>
                     </div>
                 `;
                 row.querySelector('[data-op="play"]').onclick = () => {
@@ -4964,8 +5127,8 @@ function rebuildChoicesBlock(body, labels = []) {
         }
         const DEFAULT_PHONE_APPS = {
             func: [
-                { icon: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M2 22V4q0-.825.588-1.412T4 2h16q.825 0 1.413.588T22 4v12q0 .825-.587 1.413T20 18H6z'/></svg>", label: "微信", action: "chat" },
-                { icon: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M18 13v-2h4v2zm1.2 7L16 17.6l1.2-1.6l3.2 2.4zm-2-12L16 6.4L19.2 4l1.2 1.6zM5 19v-4H4q-.825 0-1.412-.587T2 13v-2q0-.825.588-1.412T4 9h4l5-3v12l-5-3H7v4zm9-3.65v-6.7q.675.6 1.088 1.463T15.5 12t-.413 1.888T14 15.35'/></svg>", label: "论坛", action: "forum" },
+                { icon: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719'/></svg>", label: "微信", action: "chat" },
+                { icon: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z'/><path d='M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14'/><path d='M8 6v8'/></svg>", label: "论坛", action: "forum" },
                 { icon: "📦", label: "应用商店", action: "store" },
                 { icon: "🛒", label: "商店", action: "shop" }
             ],
@@ -5090,6 +5253,9 @@ function rebuildChoicesBlock(body, labels = []) {
             const shell = document.getElementById("view-phone");
             if (!shell) return;
             try { PhoneSettingsService.apply(); } catch (e) {}
+            // 发音小组件就挂在这一页上:进手机页时把开关/语速/音色填一遍
+            // (以前这一屏只有设置页,进设置页才刷;搬下来后不刷就会显示上一次的旧值)
+            try { PhoneSettingsService.refreshUI(); } catch (e) {}
             const name = state.name || "旅人";
             const av = document.getElementById("phone-avatar");
             const nm = document.getElementById("phone-user-name");
@@ -5123,7 +5289,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 const arr = list && list.length ? list : fallback;
                 el.style.display = arr && arr.length ? "" : "none";
                 const badge = unreadTotal > 0 ? `<span class="phone-app-badge">${unreadTotal > 99 ? "99+" : unreadTotal}</span>` : "";
-                el.innerHTML = arr.map((a) => `<button type="button" class="phone-app-btn" data-app-id="${String(a.id || "").replace(/'/g, "\\'")}" onclick="phoneAppTap('${String(a.action || "").replace(/'/g, "\\'")}')"><span class="app-icon">${a.icon || "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M7 23q-.825 0-1.412-.587T5 21V3q0-.825.588-1.412T7 1h10q.825 0 1.413.588T19 3v3.1q.45.175.725.55T20 7.5v2q0 .475-.275.85T19 10.9V21q0 .825-.587 1.413T17 23zm5.713-17.287Q13 5.424 13 5t-.288-.712T12 4t-.712.288T11 5t.288.713T12 6t.713-.288'/></svg>"}${a.action === "chat" ? badge : ""}</span><span class="phone-app-label">${MarkdownService.escapeHtml(a.label || "")}</span></button>`).join("");
+                el.innerHTML = arr.map((a) => `<button type="button" class="phone-app-btn" data-app-id="${String(a.id || "").replace(/'/g, "\\'")}" onclick="phoneAppTap('${String(a.action || "").replace(/'/g, "\\'")}')"><span class="app-icon">${uiIconHtml(a.icon) || "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><rect width='14' height='20' x='5' y='2' rx='2' ry='2'/><path d='M12 18h.01'/></svg>"}${a.action === "chat" ? badge : ""}</span><span class="phone-app-label">${MarkdownService.escapeHtml(a.label || "")}</span></button>`).join("");
             };
             fillApps(apps && apps.func, DEFAULT_PHONE_APPS.func, document.getElementById("phone-apps-func"));
             fillApps(apps && apps.more, DEFAULT_PHONE_APPS.more, document.getElementById("phone-apps-more"));
@@ -5252,7 +5418,7 @@ function rebuildChoicesBlock(body, labels = []) {
                     await bgmRebuild();
                     NoticeModalService.showInfo({ title: "导入成功", descHtml: `已导入「${MarkdownService.escapeHtml(String(f.name).slice(0, 40))}」，可点击播放。` });
                 } catch (e) {
-                    NoticeModalService.showInfo({ title: "导入失败", descHtml: String((e && e.message) || e || "未知错误") });
+                    NoticeModalService.showInfo({ title: "导入失败", descHtml: MarkdownService.escapeHtml(humanErrorMessage(e, "未知错误")) });
                 }
             };
             input.click();
@@ -5285,7 +5451,7 @@ function rebuildChoicesBlock(body, labels = []) {
 
     // ---- 手机专属设置页：BGM 开关/音量、消息通知、主题色、字体大小 ----
     const PhoneSettingsService = (() => {
-        const DEFAULTS = { bgm: true, bgmVolume: 1, notify: true, theme: "#5b5bd6", fontSize: 1, wallpaper: "" };
+        const DEFAULTS = { bgm: true, bgmVolume: 1, notify: true, theme: "#5b5bd6", fontSize: 1, wallpaper: "", tts: true, ttsRate: 1, ttsVoice: null };
         const WALLPAPER_DEFAULTS = [
             { id: "default1", label: "默认壁纸 1", url: "wallpapers/phone-wallpaper-1.webp" },
             { id: "default2", label: "默认壁纸 2", url: "wallpapers/phone-wallpaper-2.webp" }
@@ -5293,12 +5459,29 @@ function rebuildChoicesBlock(body, labels = []) {
         function wallpaperOf(ps) {
             return String(ps.wallpaper || "").trim() || WALLPAPER_DEFAULTS[0].url;
         }
-        const THEME_DOTS = ["#5b5bd6", "#e07a5f", "#2a9d8f", "#e9c46a", "#9b5de5", "#f15bb5"];
         const FONT_MAP = { "小": 0.9, "中": 1, "大": 1.15 };
         function get() {
             const s = StateService.get();
             if (!s.phoneSettings || typeof s.phoneSettings !== "object") s.phoneSettings = { ...DEFAULTS };
-            return s.phoneSettings;
+            /* 后加的设置项(单词发音那三项)在老存档里没有:在这儿补齐一次,后面所有读写就不必各自兜底。
+               补的只能是原始值/null——对象会被所有人共用同一份引用,故 ttsVoice 缺省是 null,
+               由 setTtsVoice 首次手选时才建立。 */
+            const ps = s.phoneSettings;
+            for (const k in DEFAULTS) if (!(k in ps)) ps[k] = DEFAULTS[k];
+            return ps;
+        }
+        /* 手机设置住在存档里,而存档只在剧情动作时才写:调完设置立刻关网页,这次改动就丢了。
+           发音这几项改完顺手存一次。(老设置项没这一步,是历史遗留,不在这里一并改。) */
+        function persist() { try { StateService.save(); } catch (e) {} }
+        /* 念一个示例词:换开关/换音色时让用户当场听见这台设备出不出声、是什么嗓音。
+           LangSpeech 在 lang-aux.js(本文件之后加载),按「可能没有」处理。 */
+        function saySample() {
+            try {
+                const LS = window.LangSpeech;
+                if (!LS || !LS.supported()) return;
+                const code = LS.learnCode();
+                LS.say(LS.sample(code), code);
+            } catch (e) {}
         }
         function apply() {
             const ps = get();
@@ -5322,29 +5505,86 @@ function rebuildChoicesBlock(body, labels = []) {
             const notEl = document.getElementById("ps-notify");
             const volEl = document.getElementById("ps-volume");
             const volVal = document.getElementById("ps-vol-val");
+            const ttsEl = document.getElementById("ps-tts");
+            const rateEl = document.getElementById("ps-tts-rate");
+            const rateVal = document.getElementById("ps-tts-rate-val");
             if (bgmEl) bgmEl.checked = !!ps.bgm;
             if (notEl) notEl.checked = !!ps.notify;
             if (volEl) volEl.value = Math.round((ps.bgmVolume || 1) * 100);
             if (volVal) volVal.textContent = `${Math.round((ps.bgmVolume || 1) * 100)}%`;
+            if (ttsEl) ttsEl.checked = ps.tts !== false;
+            if (rateEl) rateEl.value = Math.round((ps.ttsRate || 1) * 100);
+            if (rateVal) rateVal.textContent = `${(ps.ttsRate || 1).toFixed(1)}×`;
+            refreshVoiceOptions();
+            // 这三组都是「一组里选一个」，除了描出选中态，还得把它说给读屏——
+            // 光有 .active 类，读屏听到的是三个一模一样的按钮。
+            // 色点的名字在 data-c、颜色也在 data-c，这里把它画出来。以前颜色是 HTML 上再写一遍
+            // 的行内 background，同一份色号存了两处，改一处就有一处对不上。
+            // 画在这里是安全的：进这一屏只有 switchView("view-phone-settings") 一条路，它紧接着就调 refreshUI。
             document.querySelectorAll("#ps-theme-grid .phone-theme-dot").forEach((d) => {
-                d.classList.toggle("active", d.dataset.c === ps.theme);
+                d.style.background = d.dataset.c;
+                const on = d.dataset.c === ps.theme;
+                d.classList.toggle("active", on);
+                d.setAttribute("aria-pressed", on ? "true" : "false");
             });
             document.querySelectorAll("#ps-font-size .mini-btn").forEach((b) => {
                 const target = FONT_MAP[b.textContent] || 1;
-                b.classList.toggle("active", Math.abs((ps.fontSize || 1) - target) < 0.01);
+                const on = Math.abs((ps.fontSize || 1) - target) < 0.01;
+                b.classList.toggle("active", on);
+                b.setAttribute("aria-pressed", on ? "true" : "false");
             });
             const curWp = String(ps.wallpaper || "").trim();
             document.querySelectorAll("#ps-wallpaper .mini-btn").forEach((b) => {
                 const d = WALLPAPER_DEFAULTS.find((x) => x.id === b.dataset.wp);
-                b.classList.toggle("active", d ? (d.url === curWp || (!curWp && d.id === "default1")) : false);
+                const on = d ? (d.url === curWp || (!curWp && d.id === "default1")) : false;
+                b.classList.toggle("active", on);
+                b.setAttribute("aria-pressed", on ? "true" : "false");
             });
         }
         function toggle(key) {
             const ps = get();
-            ps[key] = !ps[key];
+            // tts 缺省是「开」:老存档里没有这个键,直接取反会得到 true(看起来像刚被打开)。
+            // 问「现在是不是开着」再取反,才和 get() 补的默认值一致。
+            ps[key] = key === "tts" ? !(ps.tts !== false) : !ps[key];
             if (key === "bgm") UIRenderer.bgmSetEnabled(ps.bgm);
-            if (key === "notify" && ps.notify) NoticeModalService.showInfo({ title: "🔔 消息通知", descHtml: "通知已开启，收到新消息时会提醒你。" });
+            if (key === "notify" && ps.notify) NoticeModalService.showInfo({ title: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M10.268 21a2 2 0 0 0 3.464 0'/><path d='M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326'/></svg> 消息通知", descHtml: "通知已开启，收到新消息时会提醒你。" });
+            if (key === "tts" && ps.tts) saySample();
+            persist();
             refreshUI();
+        }
+        /* 音色下拉:选项来自设备(各端音色名完全不同),只能运行时填。
+           选「自动」= 不存覆盖值,交回 LangSpeech 按打分挑(女声优先)。 */
+        function refreshVoiceOptions() {
+            const sel = document.getElementById("ps-tts-voice");
+            if (!sel) return;
+            const LS = window.LangSpeech;
+            const add = (val, label) => { const o = document.createElement("option"); o.value = val; o.textContent = label; sel.appendChild(o); };
+            sel.textContent = "";
+            if (!LS || !LS.supported()) { add("", "此浏览器不支持语音朗读"); sel.disabled = true; return; }
+            const code = LS.learnCode();
+            const list = LS.options(code);
+            const ps = get();
+            const cur = (ps.ttsVoice && typeof ps.ttsVoice === "object" && ps.ttsVoice[code]) || "";
+            // 音色列表在 Chrome 上是异步到货的,可能这一趟还是空;到货后 LangSpeech 会再叫一次这里
+            sel.disabled = !list.length;
+            add("", list.length ? "自动（女声优先）" : "暂无可用音色");
+            list.forEach((v) => add(v.uri, v.label));
+            sel.value = cur && list.some((v) => v.uri === cur) ? cur : "";
+        }
+        function setTtsRate(v) {
+            const ps = get();
+            ps.ttsRate = Math.max(0.5, Math.min(1.6, Number(v) / 100));
+            const val = document.getElementById("ps-tts-rate-val");
+            if (val) val.textContent = `${ps.ttsRate.toFixed(1)}×`;
+            persist();
+        }
+        function setTtsVoice(uri) {
+            const ps = get();
+            const code = window.LangSpeech ? window.LangSpeech.learnCode() : "en";
+            if (!ps.ttsVoice || typeof ps.ttsVoice !== "object") ps.ttsVoice = {};
+            if (uri) ps.ttsVoice[code] = String(uri); else delete ps.ttsVoice[code];
+            persist();
+            saySample();   // 换音色当场念一句:不响一下,用户没法知道选中的是什么嗓音
         }
         function setVolume(v) {
             const ps = get();
@@ -5394,7 +5634,7 @@ function rebuildChoicesBlock(body, labels = []) {
                         ps.wallpaper = dataUrl;
                         apply();
                         refreshUI();
-                        if (typeof NoticeModalService !== "undefined") NoticeModalService.showInfo({ title: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M5 21q-.825 0-1.412-.587T3 19V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v14q0 .825-.587 1.413T19 21zm1-4h12l-3.75-5l-3 4L9 13z'/></svg> 壁纸已更换", descHtml: "自定义壁纸已生效，返回手机页查看效果。" });
+                        if (typeof NoticeModalService !== "undefined") NoticeModalService.showInfo({ title: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><rect width='18' height='18' x='3' y='3' rx='2' ry='2'/><circle cx='9' cy='9' r='2'/><path d='m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21'/></svg> 壁纸已更换", descHtml: "自定义壁纸已生效，返回手机页查看效果。" });
                     };
                     img.onerror = () => {};
                     img.src = String(reader.result);
@@ -5403,7 +5643,7 @@ function rebuildChoicesBlock(body, labels = []) {
             };
             up.click();
         }
-        return { get, apply, refreshUI, toggle, setVolume, setTheme, setFont, setWallpaper, uploadWallpaper };
+        return { get, apply, refreshUI, toggle, setVolume, setTheme, setFont, setWallpaper, uploadWallpaper, setTtsRate, setTtsVoice };
     })();
     window.PhoneSettingsService = PhoneSettingsService;
 
@@ -5423,37 +5663,24 @@ function rebuildChoicesBlock(body, labels = []) {
                 layer.appendChild(b);
             }
         }
-        function decorateAiCardBears(container) {
-            if (!(container instanceof HTMLElement)) return;
-            const cards = container.classList.contains("ai-beauty-card")
-                ? [container]
-                : Array.from(container.querySelectorAll(".ai-beauty-card"));
-            const bears = ["🧸", "ʕ•ᴥ•ʔ", "ʕ·ᴥ·ʔ", "🧸"];
-            cards.forEach((card) => {
-                if (!(card instanceof HTMLElement)) return;
-                const host = card.querySelector(':scope > div[style*="position:relative"][style*="padding:8px"]') || card;
-                if (!(host instanceof HTMLElement)) return;
-                if (host.querySelector(":scope > .card-bear-layer")) return;
-                host.classList.add("card-bear-host");
-                const layer = document.createElement("div");
-                layer.className = "card-bear-layer";
-                const count = 7;
-                for (let i = 0; i < count; i++) {
-                    const b = document.createElement("span");
-                    b.className = "card-bear";
-                    b.innerText = bears[i % bears.length];
-                    b.style.left = `${Math.random() * 100}%`;
-                    b.style.animationDuration = `${7 + Math.random() * 5.8}s`;
-                    b.style.animationDelay = `${Math.random() * 8}s`;
-                    b.style.fontSize = `${12 + Math.random() * 8}px`;
-                    layer.appendChild(b);
-                }
-                const firstHeader = host.querySelector(':scope > .ai-beauty-card-title, :scope > header');
-                if (firstHeader && firstHeader.parentElement === host) host.insertBefore(layer, firstHeader);
-                else host.insertBefore(layer, host.firstChild);
-            });
+        /* 卡片内那层「飘落小熊」已删(小徐 2026-09-26):背景那层现在会透上来——游玩页
+           由 #app:has(#view-main.active) .bear-layer 抬到 .content 之上,卡片再叠一层
+           同一批熊只是重复,还各自随机、对不上。要关就关背景那一层,全站一起关。 */
+        /* 「我的 → 显示设置 → 飘落小熊」。只挂一个 class 在 <html> 上(样式在 app.css),
+           这里不碰 DOM 里的 .bear —— createBears() 只在 init() 里跑一次,而它见到
+           层里已有元素就早退;真把元素删了,再打开开关就再也长不回来了。
+           藏起来的层是 display:none,不参与渲染,动画自然也不跑,不白烧 CPU。 */
+        const BEAR_KEY = "bitlife_bear_rain_v1";
+        function setBears(on) {
+            document.documentElement.classList.toggle("no-bear-rain", !on);
+            localStorage.setItem(BEAR_KEY, on ? "1" : "0");
+            return on;
         }
-        return { createBears, decorateAiCardBears };
+        function loadBears() {
+            // 缺省是开:只有明确存过 "0" 才算关(老用户没这个键,不能被默认成关掉招牌)
+            setBears(localStorage.getItem(BEAR_KEY) !== "0");
+        }
+        return { createBears, loadBears, setBears };
     })();
 
     const SettingsService = (() => {
@@ -5528,6 +5755,9 @@ function rebuildChoicesBlock(body, labels = []) {
             if (typeof MembershipService !== "undefined" && typeof MembershipService.updateLifetimePriceTexts === "function") {
                 MembershipService.updateLifetimePriceTexts();
             }
+            // 表单刚按卡载入完 —— 未存盘编辑提醒的基准就在这一刻拍（此后表单与卡一致）。
+            // ScenarioCardControllerService 在同一条闭包里，虽然定义在下面，但这里是运行时调用。
+            try { ScenarioCardControllerService.markEditorClean(); } catch (e) {}
         }
         function saveFromUI() {
             const selectedScenario = ScenarioCardService.getSelectedCard();
@@ -5589,7 +5819,7 @@ function rebuildChoicesBlock(body, labels = []) {
         function openAvatarPickerForProfile() {
             const user = AuthService.getUserData();
             if (!user?.id) {
-                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后即可从头像库选择并保存头像。" });
+                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后即可从头像库选择并保存头像。", actionText: "去登录", onAction: () => AuthService.openLogin() });
                 return;
             }
             openAvatarPickerModal(user.faceimg || "", async (val) => {
@@ -5603,7 +5833,7 @@ function rebuildChoicesBlock(body, labels = []) {
         let _editProfileAvatar = "";
         function openEditProfileModal() {
             const user = AuthService.getUserData();
-            if (!user?.id) { NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后即可编辑并保存资料。" }); return; }
+            if (!user?.id) { NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后即可编辑并保存资料。", actionText: "去登录", onAction: () => AuthService.openLogin() }); return; }
             _editProfileAvatar = user.faceimg || "";
             const avEl = document.getElementById("edit-profile-avatar");
             if (avEl) avEl.src = _editProfileAvatar || "icons/android-chrome-192x192.png";
@@ -5639,7 +5869,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 const r = await saveProfile({ nickname, signature, faceimg: _editProfileAvatar });
                 if (r && r.ok) {
                     closeEditProfileModal();
-                    NoticeModalService.showInfo({ title: "✅ 资料已保存", descHtml: "昵称/签名/头像已保存到服务器，重新登录不会丢失。" });
+                    NoticeModalService.showInfo({ title: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='10'/><path d='m16 9-5.5 5.5L8 12'/></svg> 资料已保存", descHtml: "昵称/签名/头像已保存到服务器，重新登录不会丢失。" });
                     refreshProfileCard();
                 } else {
                     if (msgEl) { msgEl.textContent = (r && r.error) ? r.error : "保存失败，请检查网络后重试"; msgEl.style.display = "block"; }
@@ -5665,7 +5895,7 @@ function rebuildChoicesBlock(body, labels = []) {
             input.maxLength = 30;
             input.value = current;
             input.placeholder = "写一句签名吧～（30字内）";
-            input.style.cssText = "width:100%;border:1px solid var(--accent);border-radius:8px;background:var(--input-bg,#fff);padding:4px 8px;font-size:0.72rem;outline:none;";
+            input.style.cssText = "width:100%;border:1px solid var(--accent);border-radius:8px;background:var(--input-bg);padding:4px 8px;font-size:var(--fs-2);outline:none;";
             el.textContent = "";
             el.appendChild(input);
             input.focus();
@@ -5741,6 +5971,8 @@ function rebuildChoicesBlock(body, labels = []) {
                         || ScenarioEditorService.emptyStructuredFromText(content);
                     ScenarioEditorService.syncFormFromCard({ structured: parsed, text: content });
                     ScenarioCardService.updateSelectedCard({ text: content, structured: parsed });
+                    // 导入即落库：表单与卡此刻一致，同样拍基准，免得「刚导入就提示未保存」
+                    try { ScenarioCardControllerService.markEditorClean(); } catch (e) {}
                     NoticeModalService.showInfo({ title: "导入完成", descHtml: "设定导入成功" });
                 };
                 reader.onerror = () => NoticeModalService.showInfo({ title: "导入失败", descHtml: "无法读取文件" });
@@ -5823,7 +6055,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const npcs = Array.isArray(state.npcs) ? state.npcs : [];
             const ids = Object.keys(memory);
             if (!ids.length) {
-                NoticeModalService.showInfo({ title: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M11 15h2l.15-1.25q.2-.075.363-.175t.287-.225l1.15.5l1-1.7l-1-.75q.05-.2.05-.4t-.05-.4l1-.75l-1-1.7l-1.15.5q-.125-.125-.288-.225t-.362-.175L13 7h-2l-.15 1.25q-.2.075-.363.175t-.287.225l-1.15-.5l-1 1.7l1 .75Q9 10.8 9 11t.05.4l-1 .75l1 1.7l1.15-.5q.125.125.288.225t.362.175zm-.062-2.937Q10.5 11.625 10.5 11t.438-1.062T12 9.5t1.063.438T13.5 11t-.437 1.063T12 12.5t-1.062-.437M6 22v-4.3q-1.425-1.3-2.212-3.037T3 11q0-3.75 2.625-6.375T12 2q3.125 0 5.538 1.838t3.137 4.787l1.3 5.125q.125.475-.175.863T21 15h-2v3q0 .825-.587 1.413T17 20h-2v2z'/></svg> 记忆管理", descHtml: "暂无 NPC 记忆。角色登场并交谈后会自动记录长期记忆。" });
+                NoticeModalService.showInfo({ title: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915'/><circle cx='12' cy='12' r='3'/></svg> 记忆管理", descHtml: "暂无 NPC 记忆。角色登场并交谈后会自动记录长期记忆。" });
                 return;
             }
             const items = ids.map((id) => {
@@ -5838,7 +6070,7 @@ function rebuildChoicesBlock(body, labels = []) {
                     <button type="button" class="mini-btn ghost" style="flex:none;" onclick="SettingsService.clearNpcMemory('${String(id).replace(/'/g, "")}')">清空</button>
                 </div>`;
             }).join("");
-            NoticeModalService.showInfo({ title: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M11 15h2l.15-1.25q.2-.075.363-.175t.287-.225l1.15.5l1-1.7l-1-.75q.05-.2.05-.4t-.05-.4l1-.75l-1-1.7l-1.15.5q-.125-.125-.288-.225t-.362-.175L13 7h-2l-.15 1.25q-.2.075-.363.175t-.287.225l-1.15-.5l-1 1.7l1 .75Q9 10.8 9 11t.05.4l-1 .75l1 1.7l1.15-.5q.125.125.288.225t.362.175zm-.062-2.937Q10.5 11.625 10.5 11t.438-1.062T12 9.5t1.063.438T13.5 11t-.437 1.063T12 12.5t-1.062-.437M6 22v-4.3q-1.425-1.3-2.212-3.037T3 11q0-3.75 2.625-6.375T12 2q3.125 0 5.538 1.838t3.137 4.787l1.3 5.125q.125.475-.175.863T21 15h-2v3q0 .825-.587 1.413T17 20h-2v2z'/></svg> 记忆管理", descHtml: `<div style="max-height:300px;overflow-y:auto;">${items}</div><div class="list-sub" style="margin-top:6px;">清空后该角色的长期记忆将重新累积。</div>` });
+            NoticeModalService.showInfo({ title: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915'/><circle cx='12' cy='12' r='3'/></svg> 记忆管理", descHtml: `<div style="max-height:300px;overflow-y:auto;">${items}</div><div class="list-sub" style="margin-top:6px;">清空后该角色的长期记忆将重新累积。</div>` });
         }
         function clearNpcMemory(npcId) {
             const state = StateService.get();
@@ -5856,7 +6088,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 if (cid) {
                     const card = (typeof ScenarioCardService !== "undefined") ? ScenarioCardService.loadCards().find((c) => String(c.id || "") === String(cid)) : null;
                     hintEl.style.display = "block";
-                    hintEl.textContent = `⚙️ 当前正在编辑剧本「${card ? String(card.title || "") : "当前剧本"}」的独立设置（不影响其他剧本）。「我的」页修改的是全局默认值，所有剧本未单独设置时继承。`;
+                    hintEl.textContent = `当前正在编辑剧本「${card ? String(card.title || "") : "当前剧本"}」的独立设置（不影响其他剧本）。「我的」页修改的是全局默认值，所有剧本未单独设置时继承。`;
                 } else {
                     hintEl.style.display = "none";
                 }
@@ -5881,6 +6113,9 @@ function rebuildChoicesBlock(body, labels = []) {
         return { loadToUI, saveFromUI, saveUserApiFromUI, getApiConfig, applyFontSize, loadFontSize, onFontSizeInput, getScenarioText, getScenarioTextForModel, getBeautyCardSetting, getChatPolicyConfig, getThinkingPayloadForCard, importScenarioFromFile, bindProfileAutoSave, setSettingsContext, getSettingsContext, getNarrative, saveNarrative, applyNarrativeUI, buildNarrativePrompt, openMemoryManager, clearNpcMemory, loadNarrativeToUI, getMapOverride, setMapOverride };
     })();
     SettingsService.loadFontSize();
+    // 与 loadFontSize 同一时机(页面脚本开跑、首次绘制之前):在这里定下小熊开关,
+    // 关掉的人不会先看见一帧飞熊再看着它消失。
+    VisualEffects.loadBears();
 
     const ScenarioSpecSanitizerService = (() => {
         const IGNORE_PATTERNS = [
@@ -5995,6 +6230,9 @@ function rebuildChoicesBlock(body, labels = []) {
         { key: "cottage", name: "田园小屋", swatch: "#7cb87c" }
     ];
     const ScenarioEditorService = (() => {
+        // 封面生成价格：服务端按同一个数扣费，客户端这里是唯一来源。
+        // 原先「100」写死在按钮文案、成功提示、服务端三处，改价必漏一处。
+        const COVER_COIN_COST = 100;
         function renderThemePicker() {
             const box = el("scenario-theme-picker");
             if (!box) return;
@@ -6197,7 +6435,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 `<select class="sf-npc-gender" title="性别（决定开局头像分配）"><option value="">性别</option><option ${gval === "男" ? "selected" : ""}>男</option><option ${gval === "女" ? "selected" : ""}>女</option><option ${gval === "未知" ? "selected" : ""}>未知</option></select>` +
                 `<input class="sf-npc-favor" type="number" min="-100" max="100" placeholder="友善初值" title="友善值 -100~100（留空=65）" value="${favor === "" ? "" : favor}">` +
                 `<input class="sf-npc-affection" type="number" min="-100" max="100" placeholder="爱慕初值" title="爱慕值 -100~100（留空=0）" value="${affection === "" ? "" : affection}">` +
-                `<button class="sf-npc-del" title="删除" onclick="ScenarioEditorService.removeNpcRow(this)"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z"/></svg></button>`;
+                `<button class="sf-npc-del" title="删除" onclick="ScenarioEditorService.removeNpcRow(this)"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>`;
             list.appendChild(row);
         }
         function removeNpcRow(btn) {
@@ -6219,7 +6457,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 `<input class="sf-attr-init" type="number" min="0" placeholder="初值" value="${init === "" ? "" : init}">` +
                 `<input class="sf-attr-max" type="number" min="1" placeholder="上限（留空=100）" value="${max === "" ? "" : max}">` +
                 `<input class="sf-attr-icon" type="text" placeholder="图标 emoji（可选）" value="${val(attr.icon)}">` +
-                `<button class="sf-npc-del" title="删除" onclick="ScenarioEditorService.removeAttrRow(this)"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z"/></svg></button>`;
+                `<button class="sf-npc-del" title="删除" onclick="ScenarioEditorService.removeAttrRow(this)"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>`;
             list.appendChild(row);
         }
         function removeAttrRow(btn) {
@@ -6239,7 +6477,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 `<select class="sf-fe-trigger"><option value="date"${trigger === "date" ? " selected" : ""}>按日期</option><option value="round"${trigger === "round" ? " selected" : ""}>按第N次推进</option></select>` +
                 `<input class="sf-fe-target" type="text" placeholder="日期如 9-1，或回合数如 5" value="${val(target)}">` +
                 `<textarea class="sf-fe-desc" placeholder="事件内容（到点自动触发并推进剧情）" style="min-height:44px;">${val(evt.desc)}</textarea>` +
-                `<button class="sf-npc-del" title="删除" onclick="ScenarioEditorService.removeFixedEventRow(this)"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z"/></svg></button>`;
+                `<button class="sf-npc-del" title="删除" onclick="ScenarioEditorService.removeFixedEventRow(this)"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>`;
             list.appendChild(row);
         }
         function removeFixedEventRow(btn) {
@@ -6258,7 +6496,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 `<input class="sf-in-key" type="text" placeholder="目标属性名" value="${val(income.key)}">` +
                 `<input class="sf-in-amount" type="number" placeholder="每次增量" value="${Number.isFinite(Number(income.amount)) ? Number(income.amount) : ""}">` +
                 `<input class="sf-in-desc" type="text" placeholder="说明（可选）" value="${val(income.desc)}">` +
-                `<button class="sf-npc-del" title="删除" onclick="ScenarioEditorService.removeIncomeRow(this)"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z"/></svg></button>`;
+                `<button class="sf-npc-del" title="删除" onclick="ScenarioEditorService.removeIncomeRow(this)"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>`;
             list.appendChild(row);
         }
         function removeIncomeRow(btn) {
@@ -6342,7 +6580,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 `<input class="sf-map-y" type="number" min="0" max="100" placeholder="Y%" title="纵向位置 %" value="${y || ""}">` +
                 `<input class="sf-map-desc" type="text" placeholder="追加文本（可空）" value="${String(place.desc || "").replace(/"/g, "&quot;")}">` +
                 `<button class="mini-btn ghost sf-map-pick" title="在地图上点选位置" onclick="ScenarioEditorService.pickPlacePos(this)">选点</button>` +
-                `<button class="sf-npc-del" title="删除" onclick="ScenarioEditorService.removeMapPlaceRow(this)"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z"/></svg></button>`;
+                `<button class="sf-npc-del" title="删除" onclick="ScenarioEditorService.removeMapPlaceRow(this)"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>`;
             list.appendChild(row);
             renderMapPreview();
         }
@@ -6383,7 +6621,7 @@ function rebuildChoicesBlock(body, labels = []) {
             row.innerHTML =
                 `<input class="sf-wb-keyword" type="text" placeholder="关键词（命中即注入）" value="${String(entry.keyword || "").replace(/"/g, "&quot;")}">` +
                 `<input class="sf-wb-content" type="text" placeholder="世界书条目内容（≤200字）" value="${String(entry.content || "").replace(/"/g, "&quot;")}">` +
-                `<button class="sf-npc-del" title="删除" onclick="ScenarioEditorService.removeWorldbookRow(this)"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z"/></svg></button>`;
+                `<button class="sf-npc-del" title="删除" onclick="ScenarioEditorService.removeWorldbookRow(this)"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>`;
             list.appendChild(row);
         }
         function removeWorldbookRow(btn) {
@@ -6404,7 +6642,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 `<select class="sf-end-type">${typeSel}</select>` +
                 `<input class="sf-end-npcid" type="text" placeholder="NPC（favor/affection 用）" value="${String(ending.npcId || "").replace(/"/g, "&quot;")}">` +
                 `<input class="sf-end-target" type="text" placeholder="目标值/事件名" value="${String(ending.target || "").replace(/"/g, "&quot;")}">` +
-                `<button class="sf-npc-del" title="删除" onclick="ScenarioEditorService.removeEndingRow(this)"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z"/></svg></button>`;
+                `<button class="sf-npc-del" title="删除" onclick="ScenarioEditorService.removeEndingRow(this)"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>`;
             list.appendChild(row);
         }
         function removeEndingRow(btn) {
@@ -6697,7 +6935,7 @@ function rebuildChoicesBlock(body, labels = []) {
         function coverPreviewEl() { return el("scenario-cover-preview"); }
         function coverMsg(text, isError) {
             const m = el("sf-cover-msg");
-            if (m) { m.textContent = text || ""; m.style.color = isError ? "#c0392b" : "var(--sub,#806a55)"; }
+            if (m) { m.textContent = text || ""; m.style.color = isError ? "var(--danger)" : "var(--sub)"; }
         }
         function syncCoverFromCard(card) {
             _coverUrl = String(card?.coverUrl || "");
@@ -6750,7 +6988,7 @@ function rebuildChoicesBlock(body, labels = []) {
                     if (pv) { pv.style.backgroundImage = `url("${_coverUrl}")`; pv.textContent = ""; }
                     if (el("scenario-cover-remove")) el("scenario-cover-remove").style.display = "";
                     coverMsg("封面已上传，保存后生效");
-                } catch (e) { coverMsg(String(e.message || e), true); }
+                } catch (e) { coverMsg(humanErrorMessage(e, "封面处理失败，请换一张图试试"), true); }
             };
             input.click();
         }
@@ -6761,8 +6999,16 @@ function rebuildChoicesBlock(body, labels = []) {
             if (!isSelf) { coverMsg("仅自定义卡可 AI 生成封面，官方卡已内置封面", true); return; }
             const prompt = (el("sf-cover-prompt")?.value || "").trim().slice(0, 200);
             if (!prompt) { coverMsg("请先填写 AI 生成提示词", true); return; }
-            if (!AuthService.getToken()) { coverMsg("请先登录后再生成封面", true); return; }
-            coverMsg("⏳ 正在生成封面（约 10-40 秒），请稍候...");
+            if (!AuthService.getToken()) { NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后才能 AI 生成封面。", actionText: "去登录", onAction: () => AuthService.openLogin() }); return; }
+            // 生成即扣费且不可撤回，先问一次（云槽位解锁同样标价同样先问）
+            const ok = await NoticeModalService.confirm({
+                title: "AI 生成封面",
+                descHtml: `将依据你填写的提示词生成封面，<b>一次性扣除 ${COVER_COIN_COST} 云币</b>（云币不足会生成失败且不扣费）。确定生成吗？`,
+                okText: "开始生成",
+                cancelText: "取消"
+            });
+            if (!ok) return;
+            coverMsg("正在生成封面（约 10-40 秒），请稍候…");
             try {
                 const r = await CoverService.ensureSelf(card, { prompt, force: true });
                 if (r.error) { coverMsg(r.error, true); return; }
@@ -6771,8 +7017,8 @@ function rebuildChoicesBlock(body, labels = []) {
                 const pv = coverPreviewEl();
                 if (pv) { pv.style.backgroundImage = `url("${_coverUrl}")`; pv.textContent = ""; }
                 if (el("scenario-cover-remove")) el("scenario-cover-remove").style.display = "";
-                coverMsg("✅ 封面生成成功，保存后生效（已扣除 100 云币）");
-            } catch (e) { coverMsg("生成失败：" + String(e.message || e), true); }
+                coverMsg(`封面生成成功，保存后生效（已扣除 ${COVER_COIN_COST} 云币）`);
+            } catch (e) { coverMsg("生成失败：" + humanErrorMessage(e, "请稍后重试"), true); }
         }
         function removeCover() {
             _coverUrl = "";
@@ -6781,7 +7027,7 @@ function rebuildChoicesBlock(body, labels = []) {
             if (el("scenario-cover-remove")) el("scenario-cover-remove").style.display = "none";
             coverMsg("");
         }
-        return { readForm, writeForm, focusEditor, renderThemePicker, parseTextToStructured, emptyStructuredFromText, addNpcRow, removeNpcRow, syncFormFromCard, readStructuredForm, mapBgImage, renderMapBgPicker, selectMapBg, mapFilePicked, currentMapBg, renderMapPreview, addMapPlaceRow, removeMapPlaceRow, pickPlacePos, addWorldbookRow, removeWorldbookRow, addEndingRow, removeEndingRow, addAttrRow, removeAttrRow, addFixedEventRow, removeFixedEventRow, addIncomeRow, removeIncomeRow, syncCoverFromCard, getCurrentCover, pickCoverFile, aiGenCover, removeCover };
+        return { COVER_COIN_COST, readForm, writeForm, focusEditor, renderThemePicker, parseTextToStructured, emptyStructuredFromText, addNpcRow, removeNpcRow, syncFormFromCard, readStructuredForm, mapBgImage, renderMapBgPicker, selectMapBg, mapFilePicked, currentMapBg, renderMapPreview, addMapPlaceRow, removeMapPlaceRow, pickPlacePos, addWorldbookRow, removeWorldbookRow, addEndingRow, removeEndingRow, addAttrRow, removeAttrRow, addFixedEventRow, removeFixedEventRow, addIncomeRow, removeIncomeRow, syncCoverFromCard, getCurrentCover, pickCoverFile, aiGenCover, removeCover };
     })();
 
     const SaveSlotService = (() => {
@@ -7465,16 +7711,16 @@ function rebuildChoicesBlock(body, labels = []) {
         }
         function cardEmoji(themeKey) {
             const k = String(themeKey || "").toLowerCase();
-            if (k.includes("retro")) return "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M8 18h8v-2H8zm0-4h8v-2H8zm-2 8q-.825 0-1.412-.587T4 20V4q0-.825.588-1.412T6 2h8l6 6v12q0 .825-.587 1.413T18 22zm7-13h5l-5-5z'/></svg>";
-            if (k.includes("cyber") || k.includes("sci-fi")) return "🌃";
-            if (k.includes("ink")) return "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M6 21q-1.125 0-2.225-.55T2 19q.65 0 1.325-.513T4 17q0-1.25.875-2.125T7 14t2.125.875T10 17q0 1.65-1.175 2.825T6 21m5.75-6L9 12.25l8.95-8.95q.275-.275.688-.288t.712.288l1.35 1.35q.3.3.3.7t-.3.7z'/></svg>";
-            if (k.includes("glass")) return "🧊";
-            if (k.includes("liquid")) return "🌊";
-            if (k.includes("gothic")) return "🕸️";
-            if (k.includes("minimal")) return "◻️";
-            if (k.includes("fantasy")) return "🔮";
-            if (k.includes("cottage")) return "🏡";
-            return "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M6 22q-.825 0-1.412-.587T4 20V4q0-.825.588-1.412T6 2h12q.825 0 1.413.588T20 4v16q0 .825-.587 1.413T18 22zm5-11l2.5-1.5L16 11V4h-5z'/></svg>";
+            if (k.includes("retro")) return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M15 12h-5'/><path d='M15 8h-5'/><path d='M19 17V5a2 2 0 0 0-2-2H4'/><path d='M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3'/></svg>";
+            if (k.includes("cyber") || k.includes("sci-fi")) return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M10 12h4'/><path d='M10 8h4'/><path d='M14 21v-3a2 2 0 0 0-4 0v3'/><path d='M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2'/><path d='M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16'/></svg>";
+            if (k.includes("ink")) return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='m11 10 3 3'/><path d='M6.5 21A3.5 3.5 0 1 0 3 17.5a2.62 2.62 0 0 1-.708 1.792A1 1 0 0 0 3 21z'/><path d='M9.969 17.031 21.378 5.624a1 1 0 0 0-3.002-3.002L6.967 14.031'/></svg>";
+            if (k.includes("glass")) return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z'/><path d='m3.3 7 8.7 5 8.7-5'/><path d='M12 22V12'/></svg>";
+            if (k.includes("liquid")) return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M2 12q2.5 2 5 0t5 0 5 0 5 0'/><path d='M2 19q2.5 2 5 0t5 0 5 0 5 0'/><path d='M2 5q2.5 2 5 0t5 0 5 0 5 0'/></svg>";
+            if (k.includes("gothic")) return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M18 5h4'/><path d='M20 3v4'/><path d='M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401'/></svg>";
+            if (k.includes("minimal")) return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14'/></svg>";
+            if (k.includes("fantasy")) return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M20.341 6.484A10 10 0 0 1 10.266 21.85'/><path d='M3.659 17.516A10 10 0 0 1 13.74 2.152'/><circle cx='12' cy='12' r='3'/><circle cx='19' cy='5' r='2'/><circle cx='5' cy='19' r='2'/></svg>";
+            if (k.includes("cottage")) return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M8.62 13.8A2.25 2.25 0 1 1 12 10.836a2.25 2.25 0 1 1 3.38 2.966l-2.626 2.856a.998.998 0 0 1-1.507 0z'/><path d='M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/></svg>";
+            return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20'/><path d='M8 11h8'/><path d='M8 7h6'/></svg>";
         }
         // 收藏状态：登录用户以数据库为准(card_collects/card_likes 内存缓存)；游客回退本地集合/热度表
         let _dbCollects = null; // Set|null; null=未加载(未登录/游客)
@@ -7539,7 +7785,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const id = String(cardId || "");
             if (!id) return;
             if (!AuthService.getToken()) {
-                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后可以收藏卡片，收藏会同步到账号。" });
+                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后可以收藏卡片，收藏会同步到账号。", actionText: "去登录", onAction: () => AuthService.openLogin() });
                 return;
             }
             if (!_dbCollects) await loadMyMarksNow();
@@ -7993,7 +8239,7 @@ function rebuildChoicesBlock(body, labels = []) {
                     <div class="list-sub">${tags.map((t) => MarkdownService.escapeHtml(t)).join(" · ")}</div>
                 </div>
                 <button class="tiny-btn" data-op="detail">详情</button>
-                <button class="tiny-btn" data-op="play">${lock.locked ? "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M6 22q-.825 0-1.412-.587T4 20V10q0-.825.588-1.412T6 8h1V6q0-2.075 1.463-3.537T12 1t3.538 1.463T17 6v2h1q.825 0 1.413.588T20 10v10q0 .825-.587 1.413T18 22zm7.413-5.587Q14 15.825 14 15t-.587-1.412T12 13t-1.412.588T10 15t.588 1.413T12 17t1.413-.587M9 8h6V6q0-1.25-.875-2.125T12 3t-2.125.875T9 6z'/></svg> 解锁" : "游玩"}</button>
+                <button class="tiny-btn" data-op="play">${lock.locked ? "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><rect width='18' height='11' x='3' y='11' rx='2' ry='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg> 解锁" : "游玩"}</button>
                 <div class="recent-actions"><button class="scenario-action-btn collect" data-op="uncollect">☆ 取消收藏</button></div>
             </div>`;
         }).join("");
@@ -8584,7 +8830,7 @@ function rebuildChoicesBlock(body, labels = []) {
             const blocks = order.map(name => {
                 if (name === "time") return `<section class="wy-meta" data-block="time">⏱️ {当前时间}</section>`;
                 if (name === "status") return `<section class="wy-stats" data-block="status"><div>✨ ${statusPanelLabel}：{数值变化}</div></section>`;
-                if (name === "relations") return `<section data-block="relations"><div><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M1 20v-2.8q0-.85.438-1.562T2.6 14.55q1.55-.775 3.15-1.162T9 13t3.25.388t3.15 1.162q.725.375 1.163 1.088T17 17.2V20zm18 0v-3q0-1.1-.612-2.113T16.65 13.15q1.275.15 2.4.513t2.1.887q.9.5 1.375 1.112T23 17v3zM6.175 10.825Q5 9.65 5 8t1.175-2.825T9 4t2.825 1.175T13 8t-1.175 2.825T9 12t-2.825-1.175m11.65 0Q16.65 12 15 12q-.275 0-.7-.062t-.7-.138q.675-.8 1.038-1.775T15 8t-.362-2.025T13.6 4.2q.35-.125.7-.163T15 4q1.65 0 2.825 1.175T19 8t-1.175 2.825"/></svg> 人物关系</div><div>{NPC状态}</div></section>`;
+                if (name === "relations") return `<section data-block="relations"><div><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg> 人物关系</div><div>{NPC状态}</div></section>`;
                 if (name === "event") return `<section class="wy-content" data-block="event"><div>【剧情正文：不少于300字】</div></section>`;
                 if (name === "thought") return `<section class="wy-content" data-block="thought"><div>AI想法：{思考}</div></section>`;
                 if (name === "choices") return `<section class="wy-options" data-block="choices">{1-3个选项按钮}</section>`;
@@ -8708,7 +8954,7 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
     const blocks = order.map(name => {
         if (name === "time") return `<section class="wy-meta" data-block="time">⏱️ {TIME_TEXT}</section>`;
         if (name === "status") return `<section class="wy-stats" data-block="status"><div>✨ ${statusPanelLabel}：{STATS_HTML}</div></section>`;
-        if (name === "relations") return `<section data-block="relations"><div><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M1 20v-2.8q0-.85.438-1.562T2.6 14.55q1.55-.775 3.15-1.162T9 13t3.25.388t3.15 1.162q.725.375 1.163 1.088T17 17.2V20zm18 0v-3q0-1.1-.612-2.113T16.65 13.15q1.275.15 2.4.513t2.1.887q.9.5 1.375 1.112T23 17v3zM6.175 10.825Q5 9.65 5 8t1.175-2.825T9 4t2.825 1.175T13 8t-1.175 2.825T9 12t-2.825-1.175m11.65 0Q16.65 12 15 12q-.275 0-.7-.062t-.7-.138q.675-.8 1.038-1.775T15 8t-.362-2.025T13.6 4.2q.35-.125.7-.163T15 4q1.65 0 2.825 1.175T19 8t-1.175 2.825"/></svg> 人物关系</div><div>{RELATIONS_HTML}</div></section>`;
+        if (name === "relations") return `<section data-block="relations"><div><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg> 人物关系</div><div>{RELATIONS_HTML}</div></section>`;
         if (name === "event") return `<section class="wy-content" data-block="event"><div>{MAIN_STORY_TEXT}</div></section>`;
         if (name === "thought") return `<section class="wy-content" data-block="thought"><div>想法：{AI_THOUGHT_TEXT}</div></section>`;
         if (name === "choices") return `<section class="wy-options" data-block="choices">{1-3个选项按钮}</section>`;
@@ -8987,7 +9233,7 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
         let cancelledFlag = false;
         function open(text) {
             cancelledFlag = false;
-            document.getElementById("init-loading-desc").innerText = text || "加载中，请稍候...";
+            document.getElementById("init-loading-desc").innerText = text || "加载中，请稍候…";
             const bar = document.getElementById("init-loading-progress");
             if (bar) bar.style.width = "8%";
             document.getElementById("init-loading-modal").style.display = "flex";
@@ -9148,7 +9394,7 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
                         const delay = baseDelay * (i + 1);
                         console.warn(`[重试 ${i + 1}/${maxRetries}] 服务器繁忙 (${e.status || e.message})，等待 ${delay}ms...`);
                         if (typeof UIRenderer !== "undefined" && UIRenderer.updateStreaming) {
-                            UIRenderer.updateStreaming(`[系统：当前服务器拥挤，正在排队重试 (${i + 1}/${maxRetries})，请稍候...]`);
+                            UIRenderer.updateStreaming(`[系统：当前服务器拥挤，正在排队重试 (${i + 1}/${maxRetries})，请稍候…]`);
                         }
                         await new Promise(resolve => setTimeout(resolve, delay));
                         continue;
@@ -9273,12 +9519,12 @@ const token = delta.content || "";
             if (!input || !input.parentNode) return null;
             queueBarEl = document.createElement("div");
             queueBarEl.id = "queue-bar";
-            queueBarEl.style.cssText = "display:none;align-items:center;gap:8px;margin:0 0 8px;padding:8px 10px;border-radius:10px;background:linear-gradient(135deg,#fff3d6,#ffe9b8);border:1px solid #e8b84b;font-size:0.85rem;color:#6b3f00;flex-wrap:wrap;";
+            queueBarEl.style.cssText = "display:none;align-items:center;gap:8px;margin:0 0 8px;padding:8px 10px;border-radius:10px;background:linear-gradient(135deg,var(--coin-soft),color-mix(in srgb,var(--coin) 24%,var(--card)));border:1px solid var(--coin-line);font-size:var(--fs-3);color:var(--coin-ink);flex-wrap:wrap;";
             // 只有免费用户会走到排队(QUEUE_BUSY 仅在 freeMode 下返回),所以这条黄条本身就是会员引导位
-            queueBarEl.innerHTML = '<span id="queue-bar-text">⚠ 模型繁忙，正在排队…</span>'
-                + '<button class="q-member" style="margin-left:auto;border:none;background:#e8b84b;color:#fff;border-radius:999px;padding:3px 10px;font-size:0.8rem;font-weight:700;cursor:pointer;">开通会员免排队 ></button>'
-                + '<button class="q-close" aria-label="关闭排队提示" style="border:none;background:none;cursor:pointer;color:#a07828;font-size:1rem;line-height:1;">×</button>'
-                + '<span id="queue-bar-tip" style="flex-basis:100%;font-size:0.75rem;line-height:1.5;opacity:.9;">💎 排队是因为免费额度在挤有限的免费模型——会员直接走更大更快的模型池，AI 不限次，基本不用排队</span>';
+            queueBarEl.innerHTML = '<span id="queue-bar-text"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> 模型繁忙，正在排队…</span>'
+                + '<button class="q-member" style="margin-left:auto;border:none;background:var(--coin);color:var(--coin-ink-strong);border-radius:999px;padding:3px 10px;font-size:var(--fs-2);font-weight:700;cursor:pointer;">开通会员免排队 ></button>'
+                + '<button class="q-close" aria-label="关闭排队提示" style="border:none;background:none;cursor:pointer;color:var(--coin-ink);font-size:var(--fs-3);line-height:1;">×</button>'
+                + '<span id="queue-bar-tip" style="flex-basis:100%;font-size:var(--fs-2);line-height:1.5;opacity:.9;">💎 排队是因为免费额度在挤有限的免费模型——会员直接走更大更快的模型池，AI 不限次，基本不用排队</span>';
             queueBarEl.querySelector(".q-member").onclick = () => { try { MembershipService.openPanel(); } catch (e) {} };
             queueBarEl.querySelector(".q-close").onclick = () => { queueBarCancelled = true; queueBarHide(); };
             input.parentNode.insertBefore(queueBarEl, input);
@@ -9509,7 +9755,7 @@ const token = delta.content || "";
                 return base;
             }
             if (/校园|学校|考试|社团|大学|高中/.test(text)) {
-                base.push({ key: "knowledge", label: "学识", icon: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M10 14h4v-2h-4zm0-3h8V9h-8zm0-3h8V6h-8zM8 18q-.825 0-1.412-.587T6 16V4q0-.825.588-1.412T8 2h12q.825 0 1.413.588T22 4v12q0 .825-.587 1.413T20 18zm-4 4q-.825 0-1.412-.587T2 20V6h2v14h14v2z'/></svg>", value: 64 });
+                base.push({ key: "knowledge", label: "学识", icon: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M14 21v-3a2 2 0 0 0-4 0v3'/><path d='M18 4.933V21'/><path d='m4 6 7.106-3.79a2 2 0 0 1 1.788 0L20 6'/><path d='m6 11-3.52 2.147a1 1 0 0 0-.48.854V19a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a1 1 0 0 0-.48-.853L18 11'/><path d='M6 4.933V21'/><circle cx='12' cy='9' r='2'/></svg>", value: 64 });
                 return base;
             }
             if (/职场|公司|创业|商业|谈判/.test(text)) {
@@ -10738,8 +10984,8 @@ const token = delta.content || "";
                     if (error?.workerCode === "QUOTA_EXCEEDED") extraHint = "\n\n点击右上角「当前会员类型」可开通会员，立即不限量。";
                     else if (error?.workerCode === "MEMBERSHIP_EXPIRED") extraHint = "\n\n会员已到期，点击右上角「当前会员类型」可立即续费。";
                     else if (error?.workerCode === "INSUFFICIENT_COIN") extraHint = "\n\n「我的」→ 充值/云币可购买云币，或开通会员解锁 AI 不限次。";
-                    // 网络层 reject 可能是裸对象/字符串/无 message，兜底显示可读文案,杜绝 "undefined"
-                    const errText = error?.message || (typeof error === "string" ? error : "网络连接中断，请稍后重试");
+                    // 网络层 reject 可能是裸对象/字符串/无 message;humanErrorMessage 连 "Failed to fetch" 一并翻掉
+                    const errText = humanErrorMessage(error, "网络连接中断，请稍后重试");
                     UIRenderer.finishStreaming(`⚠️ 连接失败：${errText}${extraHint}\n\n请检查网络后重试。`, { conflictDetected: false });
                 }
             } finally {
@@ -10860,21 +11106,48 @@ const token = delta.content || "";
     }
 
     const ScenarioCardControllerService = (() => {
-        function saveScenarioCard({ renderAll }) {
+        // 「点保存会写进去的东西」只有这一个来源：保存与脏判定共用它，字段增删自动同步。
+        // 另立一份字段清单的话，加一个字段就静默漏一个（E2 硬编码 3 处、漏掉 29 处的教训）。
+        function editorPayload() {
             const form = ScenarioEditorService.readForm();
-            const selectedCardId = ScenarioCardService.getSelectedId();
-            const payload = {
-                title: form.title || "未命名设定",
-                theme: form.theme,
-                coverUrl: ScenarioEditorService.getCurrentCover() || undefined
-            };
             // 结构化表单永远展开：以分区表单为准，生成结构化数据 + 渲染文本
             const r = ScenarioEditorService.readStructuredForm();
-            payload.structured = r.structured;
-            payload.text = r.text || AppConfig.defaultScenario;
-            ScenarioCardService.updateSelectedCard(payload);
+            return {
+                title: form.title || "未命名设定",
+                theme: form.theme,
+                coverUrl: ScenarioEditorService.getCurrentCover() || undefined,
+                structured: r.structured,
+                text: r.text || AppConfig.defaultScenario
+            };
+        }
+        // 归一成字符串再比。undefined 必须先落成 null —— JSON.stringify(undefined) 返回的是
+        // **undefined 而不是字符串**，两边都缺封面时那句 !== 会成立（假阳性）。
+        // 顺带：整份序列化成**字符串**存基准，不存对象引用 —— editorPayload() 里的 structured
+        // 是活对象，存引用的话用户一改、基准跟着变，就永远判不脏（静默失效，比假阳性更难发现）。
+        const canonPayload = (v) => JSON.stringify(v === undefined ? null : v);
+        // 脏判定的基准 = 「表单刚按卡载入完那一刻」的表单快照（markEditorClean 负责拍）。
+        //
+        // 不能拿 editorPayload() 直接和卡比：表单里有**派生**字段，跟卡里存的原样天然不同 ——
+        //   · text：由 structured 回渲染出来，而卡里存的是作者写的原文；
+        //   · structured.theme：主题选择器塞进去的，卡里那份没有。
+        // 官方卡尤其如此（它的 structured 本来就是从 text 解析出来的，回渲染必然不同），
+        // 那样会比出「每张卡每次离开都弹窗」。基准取表单自己的快照，两边同源，
+        // 这两处差异同时消失，而且加字段照样自动同步。
+        let _formBaseline = null;
+        function markEditorClean() {
+            try { _formBaseline = canonPayload(editorPayload()); } catch (e) { _formBaseline = null; }
+        }
+        function saveScenarioCard({ renderAll }) {
+            ScenarioCardService.updateSelectedCard(editorPayload());
+            markEditorClean();   // 存过了：此刻表单就是卡的现状
             renderAll();
             NoticeModalService.showInfo({ title: "保存成功", descHtml: "设定卡片已保存" });
+        }
+        // 编辑器里是否还有没保存的改动。基准为 null = 表单从没按卡载入过 ——
+        // 那就不存在「可丢的编辑」，返回 false，宁可不打扰。
+        function isEditorDirty() {
+            if (_formBaseline === null) return false;
+            return canonPayload(editorPayload()) !== _formBaseline;
         }
         function createScenarioCard({ renderAll, switchView }) {
             ScenarioCardService.createCard();
@@ -10904,7 +11177,7 @@ const token = delta.content || "";
             SettingsService.loadToUI();
             renderAll();
         }
-        return { saveScenarioCard, createScenarioCard, openScenarioCardSettings, deleteScenarioCard };
+        return { saveScenarioCard, createScenarioCard, openScenarioCardSettings, deleteScenarioCard, isEditorDirty, markEditorClean };
     })();
 
     // ---- 作品详情页：热度/角色榜/打赏榜（官方卡本地热度，社区卡走 API）----
@@ -10940,16 +11213,16 @@ const token = delta.content || "";
         }
         function themeEmojiOf(themeKey) {
             const k = String(themeKey || "").toLowerCase();
-            if (k.includes("retro")) return "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M8 18h8v-2H8zm0-4h8v-2H8zm-2 8q-.825 0-1.412-.587T4 20V4q0-.825.588-1.412T6 2h8l6 6v12q0 .825-.587 1.413T18 22zm7-13h5l-5-5z'/></svg>";
-            if (k.includes("cyber") || k.includes("sci-fi")) return "🌃";
-            if (k.includes("ink")) return "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M6 21q-1.125 0-2.225-.55T2 19q.65 0 1.325-.513T4 17q0-1.25.875-2.125T7 14t2.125.875T10 17q0 1.65-1.175 2.825T6 21m5.75-6L9 12.25l8.95-8.95q.275-.275.688-.288t.712.288l1.35 1.35q.3.3.3.7t-.3.7z'/></svg>";
-            if (k.includes("glass")) return "🧊";
-            if (k.includes("liquid")) return "🌊";
-            if (k.includes("gothic")) return "🕸️";
-            if (k.includes("minimal")) return "◻️";
-            if (k.includes("fantasy")) return "🔮";
-            if (k.includes("cottage")) return "🏡";
-            return "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M6 22q-.825 0-1.412-.587T4 20V4q0-.825.588-1.412T6 2h12q.825 0 1.413.588T20 4v16q0 .825-.587 1.413T18 22zm5-11l2.5-1.5L16 11V4h-5z'/></svg>";
+            if (k.includes("retro")) return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M15 12h-5'/><path d='M15 8h-5'/><path d='M19 17V5a2 2 0 0 0-2-2H4'/><path d='M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3'/></svg>";
+            if (k.includes("cyber") || k.includes("sci-fi")) return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M10 12h4'/><path d='M10 8h4'/><path d='M14 21v-3a2 2 0 0 0-4 0v3'/><path d='M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2'/><path d='M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16'/></svg>";
+            if (k.includes("ink")) return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='m11 10 3 3'/><path d='M6.5 21A3.5 3.5 0 1 0 3 17.5a2.62 2.62 0 0 1-.708 1.792A1 1 0 0 0 3 21z'/><path d='M9.969 17.031 21.378 5.624a1 1 0 0 0-3.002-3.002L6.967 14.031'/></svg>";
+            if (k.includes("glass")) return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z'/><path d='m3.3 7 8.7 5 8.7-5'/><path d='M12 22V12'/></svg>";
+            if (k.includes("liquid")) return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M2 12q2.5 2 5 0t5 0 5 0 5 0'/><path d='M2 19q2.5 2 5 0t5 0 5 0 5 0'/><path d='M2 5q2.5 2 5 0t5 0 5 0 5 0'/></svg>";
+            if (k.includes("gothic")) return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M18 5h4'/><path d='M20 3v4'/><path d='M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401'/></svg>";
+            if (k.includes("minimal")) return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14'/></svg>";
+            if (k.includes("fantasy")) return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M20.341 6.484A10 10 0 0 1 10.266 21.85'/><path d='M3.659 17.516A10 10 0 0 1 13.74 2.152'/><circle cx='12' cy='12' r='3'/><circle cx='19' cy='5' r='2'/><circle cx='5' cy='19' r='2'/></svg>";
+            if (k.includes("cottage")) return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M8.62 13.8A2.25 2.25 0 1 1 12 10.836a2.25 2.25 0 1 1 3.38 2.966l-2.626 2.856a.998.998 0 0 1-1.507 0z'/><path d='M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/></svg>";
+            return "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20'/><path d='M8 11h8'/><path d='M8 7h6'/></svg>";
         }
         const fmtNum = (n) => Number(n || 0) >= 10000 ? (Number(n || 0) / 10000).toFixed(1) + "万" : String(Number(n || 0));
         function roleIdOf(n) { return String(n.id || n.name || "role").replace(/[^\w-]/g, "_"); }
@@ -10961,7 +11234,7 @@ const token = delta.content || "";
             if (!modal) return;
             modal.style.display = "flex";
             document.getElementById("gd-title").textContent = "作品详情";
-            document.getElementById("gd-content").innerHTML = '<span class="list-sub">加载中...</span>';
+            document.getElementById("gd-content").innerHTML = '<span class="list-sub">加载中…</span>';
             try {
                 if (card && card.sourceType === "official") {
                     const hot = hotOf(cardId);
@@ -10992,7 +11265,8 @@ const token = delta.content || "";
                     return;
                 }
                 if (!AuthService.getToken()) {
-                    document.getElementById("gd-content").innerHTML = '<span class="list-sub">登录后可查看社区作品详情。</span>';
+                    document.getElementById("gd-content").innerHTML = '<span class="list-sub">登录后可查看社区作品详情。</span>' +
+                    '<div class="btn-row mid"><button type="button" class="mini-btn ghost" onclick="AuthService.openLogin()">去登录</button></div>';
                     return;
                 }
                 const res = await fetch(`${AppConfig.proxy.baseUrl}/api/game/detail?id=${encodeURIComponent(cardId)}`, {
@@ -11031,10 +11305,10 @@ const token = delta.content || "";
             </div>`;
             if (!d.local && d.author) {
                 html += `<div class="gd-author-row">
-                    ${d.author.faceimg ? `<img class="gd-donor-avatar" src="${MarkdownService.escapeHtml(d.author.faceimg)}" alt="${MarkdownService.escapeHtml(d.author.nickname || "匿")}的头像" onerror="this.style.display='none'">` : `<span class="gd-donor-avatar" style="display:flex;align-items:center;justify-content:center;">${firstLetterAvatar(d.author.nickname || "匿", "", "width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;color:#fff;")}</span>`}
+                    ${d.author.faceimg ? `<img class="gd-donor-avatar" src="${MarkdownService.escapeHtml(d.author.faceimg)}" alt="${MarkdownService.escapeHtml(d.author.nickname || "匿")}的头像" onerror="this.style.display='none'">` : `<span class="gd-donor-avatar" style="display:flex;align-items:center;justify-content:center;">${firstLetterAvatar(d.author.nickname || "匿", "", "width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:var(--fs-2);color:#fff;")}</span>`}
                     <span style="font-weight:700;color:var(--text);">${MarkdownService.escapeHtml(d.author.nickname || "匿名作者")}</span>
                     <span class="list-sub">作品作者</span>
-                    <button class="mini-btn primary" style="margin-left:auto;flex-shrink:0;" onclick="Controller.gameDonate('${card.id}')"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M3 20q-.825 0-1.412-.587T1 18V7h2v11h17v2zm4-4q-.825 0-1.412-.587T5 14V6q0-.825.588-1.412T7 4h14q.825 0 1.413.588T23 6v8q0 .825-.587 1.413T21 16zm2-2q0-.825-.587-1.412T7 12v2zm10 0h2v-2q-.825 0-1.412.588T19 14m-5-1q1.25 0 2.125-.875T17 10t-.875-2.125T14 7t-2.125.875T11 10t.875 2.125T14 13M7 8q.825 0 1.413-.587T9 6H7zm14 0V6h-2q0 .825.588 1.413T21 8"/></svg> 打赏</button>
+                    <button class="mini-btn primary" style="margin-left:auto;flex-shrink:0;" onclick="Controller.gameDonate('${card.id}')"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17"/><path d="m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9"/><path d="m2 16 6 6"/><circle cx="16" cy="9" r="2.9"/><circle cx="6" cy="5" r="3"/></svg> 打赏</button>
                 </div>`;
             }
             html += `<div class="gd-hot-bar">
@@ -11051,7 +11325,7 @@ const token = delta.content || "";
                 const hasIdentity = ["name", "gender", "age", "background"].some((k) => String(identity[k] || "").trim());
                 const hasTimeline = (ts.year || ts.month || ts.day) || timeline.note;
                 if (hasWorld || hasIdentity || npcs.length || hasTimeline) {
-                    html += `<div class="gd-sec-title"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6 22q-.825 0-1.412-.587T4 20V4q0-.825.588-1.412T6 2h12q.825 0 1.413.588T20 4v16q0 .825-.587 1.413T18 22zm5-11l2.5-1.5L16 11V4h-5z"/></svg> 剧本设定</div><div class="gd-setting-block">`;
+                    html += `<div class="gd-sec-title"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/><path d="M8 11h8"/><path d="M8 7h6"/></svg> 剧本设定</div><div class="gd-setting-block">`;
                     if (world.era || world.genre) html += `<div class="gd-setting-line"><span class="list-sub">时代题材</span><span><b>${MarkdownService.escapeHtml(String(world.era || "未知"))}</b>${world.genre ? " · " + MarkdownService.escapeHtml(String(world.genre)) : ""}</span></div>`;
                     if (String(world.summary || "").trim()) html += `<div class="gd-setting-line"><span class="list-sub">简介</span><span>${MarkdownService.escapeHtml(String(world.summary).trim())}</span></div>`;
                     if (String(world.atmosphere || "").trim()) html += `<div class="gd-setting-line"><span class="list-sub">氛围</span><span>${MarkdownService.escapeHtml(String(world.atmosphere).trim())}</span></div>`;
@@ -11107,7 +11381,7 @@ const token = delta.content || "";
             if (d.donors && d.donors.length) {
                 html += d.donors.slice(0, 10).map((u, i) => `<div class="gd-donor-row">
                     <span style="width:18px;color:${i < 3 ? "#d4a017" : "var(--sub)"};font-weight:800;">${i + 1}</span>
-                    ${u.user.faceimg ? `<img class="gd-donor-avatar" src="${MarkdownService.escapeHtml(u.user.faceimg)}" alt="${MarkdownService.escapeHtml(u.user.nickname || "神")}的头像" onerror="this.style.display='none'">` : `<span class="gd-donor-avatar" style="display:flex;align-items:center;justify-content:center;">${firstLetterAvatar(u.user.nickname || "神", "", "width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;color:#fff;")}</span>`}
+                    ${u.user.faceimg ? `<img class="gd-donor-avatar" src="${MarkdownService.escapeHtml(u.user.faceimg)}" alt="${MarkdownService.escapeHtml(u.user.nickname || "神")}的头像" onerror="this.style.display='none'">` : `<span class="gd-donor-avatar" style="display:flex;align-items:center;justify-content:center;">${firstLetterAvatar(u.user.nickname || "神", "", "width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:var(--fs-2);color:#fff;")}</span>`}
                     <span class="gd-donor-name">${MarkdownService.escapeHtml(u.user.nickname || "神秘玩家")}</span>
                     <span class="gd-donor-amt">${fmtNum(u.amount)} 币</span>
                 </div>`).join("");
@@ -11116,7 +11390,7 @@ const token = delta.content || "";
             }
             // 官方卡/社区卡详情均有讨论区(评论按 card_id 存查，无官方限制)
             html += `<div class="gd-sec-title"><img class="ic" src="icons/chat.svg" alt=""> 讨论区</div>
-                <div id="gd-reviews-box" style="margin-bottom:6px;"><span class="list-sub">加载中...</span></div>
+                <div id="gd-reviews-box" style="margin-bottom:6px;"><span class="list-sub">加载中…</span></div>
                 <div class="gd-rev-input">
                     <input id="gd-rev-input" maxlength="200" placeholder="写下你的评论…（200字以内）" onkeydown="if(event.key==='Enter')Controller.postGameReview()">
                     <button class="mini-btn primary" onclick="Controller.postGameReview()">评论</button>
@@ -11130,7 +11404,7 @@ const token = delta.content || "";
         async function toggleLike(cardId) {
             // 官方卡/社区卡统一走 API(点赞入库, 全站同步); 未登录提示
             if (!AuthService.getToken()) {
-                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后可以点赞作品，点赞会同步到账号。" });
+                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后可以点赞作品，点赞会同步到账号。", actionText: "去登录", onAction: () => AuthService.openLogin() });
                 return;
             }
             const on = !(await currentState(cardId)).liked;
@@ -11149,7 +11423,7 @@ const token = delta.content || "";
         async function toggleCollect(cardId) {
             // 官方卡/社区卡统一走 API(收藏入库, 全站同步); 未登录提示
             if (!AuthService.getToken()) {
-                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后可以收藏作品，收藏会同步到账号。" });
+                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后可以收藏作品，收藏会同步到账号。", actionText: "去登录", onAction: () => AuthService.openLogin() });
                 return;
             }
             const on = !(await currentState(cardId)).collected;
@@ -11174,13 +11448,13 @@ const token = delta.content || "";
         }
         async function donate(cardId, amount) {
             if (!AuthService.getToken()) {
-                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后可以打赏作者。" });
+                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后可以打赏作者。", actionText: "去登录", onAction: () => AuthService.openLogin() });
                 return;
             }
             if (![1, 5, 10].includes(Number(amount))) {
                 // 批9.12：作者信息旁「打赏」入口 → 弹三档选择（每日同一作者限 1 次）
                 NoticeModalService.showInfo({
-                    title: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M3 20q-.825 0-1.412-.587T1 18V7h2v11h17v2zm4-4q-.825 0-1.412-.587T5 14V6q0-.825.588-1.412T7 4h14q.825 0 1.413.588T23 6v8q0 .825-.587 1.413T21 16zm2-2q0-.825-.587-1.412T7 12v2zm10 0h2v-2q-.825 0-1.412.588T19 14m-5-1q1.25 0 2.125-.875T17 10t-.875-2.125T14 7t-2.125.875T11 10t.875 2.125T14 13M7 8q.825 0 1.413-.587T9 6H7zm14 0V6h-2q0 .825.588 1.413T21 8'/></svg> 打赏作者",
+                    title: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17'/><path d='m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9'/><path d='m2 16 6 6'/><circle cx='16' cy='9' r='2.9'/><circle cx='6' cy='5' r='3'/></svg> 打赏作者",
                     descHtml: `<div class="list-sub" style="margin-bottom:8px;">云币将直接进入作者账户，每日同一作者限 1 次：</div><div style="display:flex;gap:8px;">${[1, 5, 10].map((a) => `<button class="gd-donate-btn" style="flex:1;" onclick="Controller.gameDonate('${cardId}',${a})">${a} 币</button>`).join("")}</div>`
                 });
                 return;
@@ -11197,13 +11471,13 @@ const token = delta.content || "";
                 NoticeModalService.showInfo({ title: "打赏失败", descHtml: d.error || "请稍后重试" });
                 return;
             }
-            NoticeModalService.showInfo({ title: "🎁 打赏成功", descHtml: `已送出 ${amount} 云币给作者，你的余额：${d.coins} 币` });
+            NoticeModalService.showInfo({ title: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M12 7v14'/><path d='M20 11v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8'/><path d='M7.5 7a1 1 0 0 1 0-5A4.8 8 0 0 1 12 7a4.8 8 0 0 1 4.5-5 1 1 0 0 1 0 5'/><rect x='3' y='7' width='18' height='4' rx='1'/></svg> 打赏成功", descHtml: `已送出 ${amount} 云币给作者，你的余额：${d.coins} 币` });
             openGameDetail(cardId);
         }
         async function roleHot(cardId, roleId) {
             // 批9.12：爱心点赞，每日每角色限 1 次，再点取消
             if (!AuthService.getToken()) {
-                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后可以点赞。" });
+                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后可以点赞。", actionText: "去登录", onAction: () => AuthService.openLogin() });
                 return;
             }
             const res = await fetch(`${AppConfig.proxy.baseUrl}/api/characters/like`, {
@@ -11216,7 +11490,7 @@ const token = delta.content || "";
                 NoticeModalService.showInfo({ title: "点赞失败", descHtml: d.error || "请稍后重试" });
                 return;
             }
-            NoticeModalService.showInfo({ title: d.liked ? "❤️ 已点赞" : "💔 已取消点赞", descHtml: d.liked ? "今日已为 TA 点赞，感谢你的支持！" : "已取消点赞，可随时再点回来。" });
+            NoticeModalService.showInfo({ title: d.liked ? "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5'/></svg> 已点赞" : "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M12.409 5.824c-.702.792-1.15 1.496-1.415 2.166l2.153 2.156a.5.5 0 0 1 0 .707l-2.293 2.293a.5.5 0 0 0 0 .707L12 15'/><path d='M13.508 20.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5a5.5 5.5 0 0 1 9.591-3.677.6.6 0 0 0 .818.001A5.5 5.5 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5z'/></svg> 已取消点赞", descHtml: d.liked ? "今日已为 TA 点赞，感谢你的支持！" : "已取消点赞，可随时再点回来。" });
             openGameDetail(cardId);
         }
         async function loadCharFavs() {
@@ -11237,7 +11511,7 @@ const token = delta.content || "";
         }
         async function toggleRoleFavorite(cardId, roleId, btn) {
             if (!AuthService.getToken()) {
-                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后可以收藏人物卡。" });
+                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后可以收藏人物卡。", actionText: "去登录", onAction: () => AuthService.openLogin() });
                 return;
             }
             const key = cardId + "::" + roleId;
@@ -11253,18 +11527,22 @@ const token = delta.content || "";
                 });
                 const d = await res.json().catch(() => ({}));
                 if (!res.ok) throw new Error(d.error || "操作失败");
-                NoticeModalService.showInfo({ title: willFav ? "⭐ 已收藏" : "取消收藏", descHtml: willFav ? "该人物卡已加入你的收藏。" : "已从收藏移除。" });
+                NoticeModalService.showInfo({ title: willFav ? "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z'/></svg> 已收藏" : "取消收藏", descHtml: willFav ? "该人物卡已加入你的收藏。" : "已从收藏移除。" });
             } catch (e) {
                 // 回滚本地状态
                 prev ? _charFavs.add(key) : _charFavs.delete(key);
                 if (btn) { btn.classList.toggle("on", prev); btn.innerHTML = prev ? '<img class="ic" src="icons/star.svg" alt=""> 已收藏' : '<img class="ic" src="icons/star.svg" alt=""> 收藏'; }
-                NoticeModalService.showInfo({ title: "操作失败", descHtml: e.message || "请稍后重试" });
+                NoticeModalService.showInfo({ title: "操作失败", descHtml: MarkdownService.escapeHtml(humanErrorMessage(e, "请稍后重试")) });
             }
         }
         async function renderReviewsInto(box, cardId, replyHandler) {
             if (!box) return;
-            if (!AuthService.getToken()) { box.innerHTML = '<span class="list-sub">登录后参与讨论。</span>'; return; }
-            box.innerHTML = '<span class="list-sub">加载中...</span>';
+            if (!AuthService.getToken()) {
+                box.innerHTML = '<span class="list-sub">登录后参与讨论。</span>' +
+                    '<div class="btn-row mid"><button type="button" class="mini-btn ghost" onclick="AuthService.openLogin()">去登录</button></div>';
+                return;
+            }
+            box.innerHTML = '<span class="list-sub">加载中…</span>';
             const doReply = typeof replyHandler === "string" && replyHandler ? replyHandler : "Controller.replyGameReview";
             try {
                 const res = await fetch(`${AppConfig.proxy.baseUrl}/api/game/reviews?card_id=${encodeURIComponent(cardId)}&limit=50`, {
@@ -11342,7 +11620,7 @@ const token = delta.content || "";
             const content = String(input?.value || "").trim();
             if (!content) return;
             if (!_forumCardId) return;
-            if (!AuthService.getToken()) { NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后参与讨论。" }); return; }
+            if (!AuthService.getToken()) { NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后参与讨论。", actionText: "去登录", onAction: () => AuthService.openLogin() }); return; }
             try {
                 const res = await fetch(`${AppConfig.proxy.baseUrl}/api/game/reviews`, {
                     method: "POST",
@@ -11371,7 +11649,7 @@ const token = delta.content || "";
             if (!content) return;
             const card = currentDetailCard();
             if (!card) return;
-            if (!AuthService.getToken()) { NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后参与讨论。" }); return; }
+            if (!AuthService.getToken()) { NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后参与讨论。", actionText: "去登录", onAction: () => AuthService.openLogin() }); return; }
             try {
                 const res = await fetch(`${AppConfig.proxy.baseUrl}/api/game/reviews`, {
                     method: "POST",
@@ -11396,31 +11674,89 @@ const token = delta.content || "";
     // ---- 官方模板市场：分组浏览 + 一键复制到工作区 ----
     const TemplateMarketService = (() => {
         const SK_EMOJI = { "校园": "🏫", "职场": "💼", "修仙": "⛰️", "科幻": "🚀", "恋爱": "💘", "悬疑": "🕵️", "经营": "🏪", "末世": "🧟" };
+        // 骨架库是 async 脚本。慢网下可能还没到；也可能在用户进这一页之前就失败了，
+        // 那时 load/error 早就发完，事件永远等不到——所以状态得自己记着
+        let libState = "loading"; // loading | ready | error
+        const lib = () => (Array.isArray(window.SKELETON_LIBRARY) ? window.SKELETON_LIBRARY : []);
+        const searchEl = () => document.getElementById("template-market-search");
+
+        // 三态文案都带「下一步」，不留死胡同
+        function stateHtml(kind) {
+            if (kind === "loading") return '<div class="tpl-state">骨架模板加载中…</div>';
+            if (kind === "error") {
+                return '<div class="tpl-state">'
+                    + '<div class="tpl-state-strong">骨架模板没能加载出来</div>'
+                    + '<div>多半是网络断了，重连后点下面重试一次就好。</div>'
+                    + '<div class="tpl-state-actions"><button class="mini-btn" onclick="Controller.reloadTemplateMarket()">重新加载</button></div>'
+                    + "</div>";
+            }
+            const kw = String(searchEl()?.value || "").trim();
+            return '<div class="tpl-state">'
+                + `<div class="tpl-state-strong">没有匹配「${MarkdownService.escapeHtml(kw)}」的骨架</div>`
+                + '<div>换个词试试：题材（校园、修仙）、或身份设定（学生、剑修）。</div>'
+                + '<div class="tpl-state-actions"><button class="mini-btn" onclick="Controller.clearTemplateSearch()">清空搜索词</button></div>'
+                + "</div>";
+        }
+
+        // 重新拉一次骨架库。上一次的失败响应（含断网期间的）可能已被浏览器缓存，
+        // 所以必须换查询串，否则重试拿回来的还是那份失败结果
+        function reload() {
+            const stale = document.getElementById("skeleton-lib-retry");
+            if (stale && stale.parentNode) stale.parentNode.removeChild(stale);
+            libState = "loading";
+            if (lib().length) { libState = "ready"; return render(); }
+            const base = document.getElementById("skeleton-lib-script");
+            if (!base) { libState = "error"; return render(); }
+            const s = document.createElement("script");
+            s.id = "skeleton-lib-retry";
+            s.src = base.src.split("?")[0] + "?v=" + Date.now();
+            s.async = true;
+            s.onload = () => { libState = lib().length ? "ready" : "error"; render(); };
+            s.onerror = () => { libState = "error"; render(); };
+            document.head.appendChild(s);
+            render();
+        }
+        // 首屏那个 async 标签自己失败时走到这里（成功走 init 里的 load 监听）
+        function markFailed() {
+            if (libState === "ready") return;
+            libState = "error";
+            render();
+        }
+        function clearSearch() {
+            const el = searchEl();
+            if (el) { el.value = ""; el.focus(); }
+            render();
+        }
+
         function render() {
             const box = document.getElementById("template-market-groups");
             if (!box) return;
-            const lib = Array.isArray(window.SKELETON_LIBRARY) ? window.SKELETON_LIBRARY : [];
-            if (!lib.length) { box.innerHTML = '<span class="list-sub">骨架模板加载中，请稍候...</span>'; return; }
-            const keyword = String(document.getElementById("template-market-search")?.value || "").trim().toLowerCase();
-            let cards = lib.filter((c) => {
+            const all = lib();
+            if (!all.length) { box.innerHTML = stateHtml(libState === "error" ? "error" : "loading"); return; }
+            libState = "ready";
+            const keyword = String(searchEl()?.value || "").trim().toLowerCase();
+            const cards = all.filter((c) => {
                 if (!keyword) return true;
                 const hay = `${c.title || ""} ${c.category || ""} ${(c.guide?.roleHint) || ""} ${(c.guide?.prompt) || ""}`.toLowerCase();
                 return hay.includes(keyword);
             });
-            if (!cards.length) { box.innerHTML = '<span class="list-sub">未找到匹配的骨架模板。</span>'; return; }
+            if (!cards.length) { box.innerHTML = stateHtml("empty"); return; }
             let html = "";
             cards.forEach((c) => {
-                const steps = (c.guide?.steps || []).slice(0, 2);
+                const allSteps = c.guide?.steps || [];
+                const steps = allSteps.slice(0, 2);
+                const restCount = allSteps.length - steps.length;
                 const stats = c.guide?.stats || {};
                 const statLine = Object.entries(stats).map(([k, v]) => `${k} ${v}`).join(" · ");
                 html += `<div class="tpl-card">
-                    <div class="tpl-cover">${SK_EMOJI[c.category] || "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M6 22q-.825 0-1.412-.587T4 20V4q0-.825.588-1.412T6 2h12q.825 0 1.413.588T20 4v16q0 .825-.587 1.413T18 22zm5-11l2.5-1.5L16 11V4h-5z'/></svg>"}</div>
+                    <div class="tpl-cover">${uiIconHtml(SK_EMOJI[c.category]) || "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20'/><path d='M8 11h8'/><path d='M8 7h6'/></svg>"}</div>
                     <div class="tpl-main">
-                        <div class="tpl-title">${MarkdownService.escapeHtml(c.title)} <span class="list-sub" style="font-size:12px;">空白骨架 · 新手引导</span></div>
+                        <div class="tpl-title">${MarkdownService.escapeHtml(c.title)}</div>
                         <div class="tpl-sub">${MarkdownService.escapeHtml(c.guide?.roleHint || "")}${statLine ? " · " + MarkdownService.escapeHtml(statLine) : ""}</div>
-                        <div class="sk-steps">${steps.map((s) => `<div class="sk-step">· ${MarkdownService.escapeHtml(s)}</div>`).join("")}</div>
+                        <ol class="sk-steps">${steps.map((s) => `<li class="sk-step">${MarkdownService.escapeHtml(s)}</li>`).join("")}</ol>
+                        ${restCount > 0 ? `<div class="sk-step-more">卡里还有 ${restCount} 步引导</div>` : ""}
                         <div class="tpl-actions">
-                            <button class="mini-btn primary" onclick="Controller.useSkeletonTemplate('${c.id}')">✨ 使用模板</button>
+                            <button class="mini-btn primary" onclick="Controller.useSkeletonTemplate('${c.id}')"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></svg> 使用模板</button>
                         </div>
                     </div>
                 </div>`;
@@ -11452,7 +11788,7 @@ const token = delta.content || "";
             Controller.switchView("view-scenario-editor");
             ScenarioEditorService.focusEditor();
         }
-        return { render, useTemplate };
+        return { render, reload, clearSearch, markFailed, useTemplate };
     })();
 
     const Controller = (() => {
@@ -11490,6 +11826,14 @@ const token = delta.content || "";
                 });
             } else {
                 DiscoverService.renderHomeDiscovery();
+            }
+            // skeletons.js 同理 async:成功补画骨架模板页,失败记成 error 好让那页给出「重新加载」
+            if (!Array.isArray(window.SKELETON_LIBRARY)) {
+                const k = document.getElementById("skeleton-lib-script");
+                if (k) {
+                    k.addEventListener("load", () => { try { TemplateMarketService.render(); } catch (e) { console.error("骨架库延迟渲染失败", e); } });
+                    k.addEventListener("error", () => { try { TemplateMarketService.markFailed(); } catch (e) { console.error("骨架库失败态渲染失败", e); } });
+                }
             }
             // 场景库滚动懒加载:首片 12 张(scenarios.js)先渲染,下滑到底动态注入 partN.js 补全
             bindScenarioChunkScroll();
@@ -11604,6 +11948,14 @@ const token = delta.content || "";
                 darkModeInput.addEventListener("change", () => {
                     ThemeService.setMode(darkModeInput.checked ? "dark" : "light");
                 });
+            }
+            // 背景飘落小熊开关:即时生效并持久化(同上面暗夜模式那条)。勾选态不写死在 HTML 里——
+            // loadBears() 已经按存储值定过 <html> 的 class,这里照着那个 class 回读,
+            // 免得「存的是关、HTML 却默认勾上」这种两处对不上的情况。
+            const bearRainInput = document.getElementById("ui-bear-rain-enabled");
+            if (bearRainInput) {
+                bearRainInput.checked = !document.documentElement.classList.contains("no-bear-rain");
+                bearRainInput.addEventListener("change", () => VisualEffects.setBears(bearRainInput.checked));
             }
             // 我的页:昵称/签名/头像即时保存
             try { SettingsService.bindProfileAutoSave(); } catch (e) {}
@@ -11732,7 +12084,7 @@ const token = delta.content || "";
             if (!r) return;
             const body = (r.texts || []).map((t) => UIRenderer.stripHtml(t)).join("\n\n");
             NoticeModalService.showInfo({
-                title: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M14 9.9V8.2q.825-.35 1.688-.525T17.5 7.5q.65 0 1.275.1T20 7.85v1.6q-.6-.225-1.213-.337T17.5 9q-.95 0-1.825.238T14 9.9m0 5.5v-1.7q.825-.35 1.688-.525T17.5 13q.65 0 1.275.1t1.225.25v1.6q-.6-.225-1.213-.338T17.5 14.5q-.95 0-1.825.225T14 15.4m0-2.75v-1.7q.825-.35 1.688-.525t1.812-.175q.65 0 1.275.1T20 10.6v1.6q-.6-.225-1.213-.338T17.5 11.75q-.95 0-1.825.238T14 12.65m-1 4.4q1.1-.525 2.213-.788T17.5 16q.9 0 1.763.15T21 16.6V6.7q-.825-.35-1.713-.525T17.5 6q-1.175 0-2.325.3T13 7.2zM12 20q-1.2-.95-2.6-1.475T6.5 18q-1.05 0-2.062.275T2.5 19.05q-.525.275-1.012-.025T1 18.15V6.1q0-.275.138-.525T1.55 5.2q1.175-.575 2.413-.888T6.5 4q1.45 0 2.838.375T12 5.5q1.275-.75 2.663-1.125T17.5 4q1.3 0 2.538.313t2.412.887q.275.125.413.375T23 6.1v12.05q0 .575-.487.875t-1.013.025q-.925-.5-1.937-.775T17.5 18q-1.5 0-2.9.525T12 20'/></svg> " + MarkdownService.escapeHtml(String(r.userText || "").slice(0, 18)),
+                title: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M12 5v16'/><path d='M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z'/></svg> " + MarkdownService.escapeHtml(String(r.userText || "").slice(0, 18)),
                 descHtml: `<div class="list-sub">${MarkdownService.escapeHtml(r.date || "某日")} · ${r.texts.length} 段回叙</div><div style="white-space:pre-wrap;margin-top:6px;">${MarkdownService.escapeHtml(body || "（该事件暂无正文）")}</div>`
             });
         }
@@ -11791,8 +12143,8 @@ const token = delta.content || "";
                 return `<button type="button" class="map-chip${active ? " current" : ""}" style="margin:3px;" onclick="moveToLocation('${MarkdownService.escapeHtml(l.name).replace(/'/g, "\\'")}');closeInfoModal()">${l.icon || mapIconOf(l.name)} ${MarkdownService.escapeHtml(l.name)}</button>${desc}`;
             }).join(" ");
             NoticeModalService.showInfo({
-                title: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='m15 21l-6-2.1l-4.65 1.8q-.5.2-.925-.112T3 19.75v-14q0-.325.188-.575T3.7 4.8L9 3l6 2.1l4.65-1.8q.5-.2.925.113T21 4.25v14q0 .325-.187.575t-.513.375zm-1-2.45V6.85l-4-1.4v11.7z'/></svg> 完整地图",
-                descHtml: `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;">${items}</div><div class="list-sub" style="margin-top:8px;">点击地点前往探索，可触发新的事件；<button type="button" class="event-btn" onclick="advanceStory();closeInfoModal()">🌏 大世界</button> 可去更远的地方。</div>`
+                title: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z'/><path d='M15 5.764v15'/><path d='M9 3.236v15'/></svg> 完整地图",
+                descHtml: `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;">${items}</div><div class="list-sub" style="margin-top:8px;">点击地点前往探索，可触发新的事件；<button type="button" class="event-btn" onclick="advanceStory();closeInfoModal()"><svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='10'/><path d='M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20'/><path d='M2 12h20'/></svg> 大世界</button> 可去更远的地方。</div>`
             });
         }
         function openFullMapOverlay(map) {
@@ -11804,7 +12156,7 @@ const token = delta.content || "";
                 const name = MarkdownService.escapeHtml(String(p.name || ""));
                 const px = Math.min(94, Math.max(6, Number(p.x) || 0)); // 留边距:pin 中心不贴图缘,配合 translate(-50%) 不会漂出图片
                 const py = Math.min(94, Math.max(6, Number(p.y) || 0));
-                return `<button type="button" class="fullmap-pin${active ? " current" : ""}" style="left:${px}%;top:${py}%" onclick="placeClick('${name.replace(/'/g, "\\'")}')"><span class="pin-icon"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M13.413 11.413Q14 10.825 14 10t-.587-1.412T12 8t-1.412.588T10 10t.588 1.413T12 12t1.413-.587M12 22q-4.025-3.425-6.012-6.362T4 10.2q0-3.75 2.413-5.975T12 2t5.588 2.225T20 10.2q0 2.5-1.987 5.438T12 22"/></svg></span><span class="pin-name">${name}</span></button>`;
+                return `<button type="button" class="fullmap-pin${active ? " current" : ""}" style="left:${px}%;top:${py}%" onclick="placeClick('${name.replace(/'/g, "\\'")}')"><span class="pin-icon"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg></span><span class="pin-name">${name}</span></button>`;
             }).join("");
             const img = map.src ? `<img src="${map.src}" alt="地图">` : "";
             const overlay = document.createElement("div");
@@ -11812,7 +12164,7 @@ const token = delta.content || "";
             overlay.className = "full-map-overlay";
             overlay.onclick = closeFullMap;
             overlay.innerHTML = `<div class="full-map-frame" onclick="event.stopPropagation()">
-                <div class="full-map-head"><span style="font-weight:800;"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="m15 21l-6-2.1l-4.65 1.8q-.5.2-.925-.112T3 19.75v-14q0-.325.188-.575T3.7 4.8L9 3l6 2.1l4.65-1.8q.5-.2.925.113T21 4.25v14q0 .325-.187.575t-.513.375zm-1-2.45V6.85l-4-1.4v11.7z"/></svg> 大地图</span><span class="list-sub">当前：${MarkdownService.escapeHtml(cur || "未知")}</span><span style="display:flex;gap:6px;"><button type="button" class="mini-btn ghost" style="flex:none;" onclick="openMapPickerForPlay()"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="m15 21l-6-2.1l-4.65 1.8q-.5.2-.925-.112T3 19.75v-14q0-.325.188-.575T3.7 4.8L9 3l6 2.1l4.65-1.8q.5-.2.925.113T21 4.25v14q0 .325-.187.575t-.513.375zm-1-2.45V6.85l-4-1.4v11.7z"/></svg> 换地图</button><button type="button" class="mini-btn ghost" style="flex:none;" onclick="closeFullMap()"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z"/></svg> 关闭</button></span></div>
+                <div class="full-map-head"><span style="font-weight:800;"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/></svg> 大地图</span><span class="list-sub">当前：${MarkdownService.escapeHtml(cur || "未知")}</span><span style="display:flex;gap:6px;"><button type="button" class="mini-btn ghost" style="flex:none;" onclick="openMapPickerForPlay()"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/></svg> 换地图</button><button type="button" class="mini-btn ghost" style="flex:none;" onclick="closeFullMap()"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> 关闭</button></span></div>
                 <div class="full-map-canvas"><div class="fullmap-stage">${img}<div class="fullmap-pins">${pins}</div></div></div>
                 <div class="full-map-foot list-sub">${(map.places || []).length ? "点击图钉前往对应地点，可触发新的事件" : "这张地图还没有地点，去编辑器添加图钉吧"}</div>
             </div>`;
@@ -11829,8 +12181,8 @@ const token = delta.content || "";
             closeFullMap(); // 点地点必关图,有详情则弹框,无详情直接前往
             if (loc && loc.desc) {
                 NoticeModalService.showInfo({
-                    title: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M13.413 11.413Q14 10.825 14 10t-.587-1.412T12 8t-1.412.588T10 10t.588 1.413T12 12t1.413-.587M12 22q-4.025-3.425-6.012-6.362T4 10.2q0-3.75 2.413-5.975T12 2t5.588 2.225T20 10.2q0 2.5-1.987 5.438T12 22'/></svg> " + MarkdownService.escapeHtml(String(loc.name || "")),
-                    descHtml: `${MarkdownService.escapeHtml(String(loc.desc).slice(0, 300))}<div style="margin-top:12px;"><button type="button" class="mini-btn primary" onclick="placeGo('${safe}')">🚶 前往</button></div>`
+                    title: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0'/><circle cx='12' cy='10' r='3'/></svg> " + MarkdownService.escapeHtml(String(loc.name || "")),
+                    descHtml: `${MarkdownService.escapeHtml(String(loc.desc).slice(0, 300))}<div style="margin-top:12px;"><button type="button" class="mini-btn primary" onclick="placeGo('${safe}')"><svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M4 16v-2.38C4 11.5 2.97 10.5 3 8c.03-2.72 1.49-6 4.5-6C9.37 2 10 3.8 10 5.5c0 3.11-2 5.66-2 8.68V16a2 2 0 1 1-4 0Z'/><path d='M20 20v-2.38c0-2.12 1.03-3.12 1-5.62-.03-2.72-1.49-6-4.5-6C14.63 6 14 7.8 14 9.5c0 3.11 2 5.66 2 8.68V20a2 2 0 1 0 4 0Z'/><path d='M16 17h4'/><path d='M4 13h4'/></svg> 前往</button></div>`
                 });
                 return;
             }
@@ -11864,7 +12216,7 @@ const token = delta.content || "";
         let _npcFavCache = [];
         async function openNpcImport() {
             if (!AuthService.getToken()) {
-                NoticeModalService.showInfo({ title: "⭐ 从收藏引入", descHtml: "请先登录，收藏的角色才能引入到世界里。" });
+                NoticeModalService.showInfo({ title: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z'/></svg> 从收藏引入", descHtml: "请先登录，收藏的角色才能引入到世界里。" });
                 return;
             }
             const state = StateService.get();
@@ -11876,14 +12228,14 @@ const token = delta.content || "";
                 _npcFavCache = (d.items || []).filter((f) => f && f.name && !known.has(String(f.character_id || ("fav_" + f.name))));
             } catch (e) {}
             if (!_npcFavCache.length) {
-                NoticeModalService.showInfo({ title: "⭐ 从收藏引入", descHtml: "收藏夹里没有可引入的角色。在社区给喜欢的人物卡点亮收藏后，这里就能引入啦。" });
+                NoticeModalService.showInfo({ title: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z'/></svg> 从收藏引入", descHtml: "收藏夹里没有可引入的角色。在社区给喜欢的人物卡点亮收藏后，这里就能引入啦。" });
                 return;
             }
             const items = _npcFavCache.map((f, i) =>
                 `<button type="button" class="event-btn" style="margin:3px;text-align:left;" onclick="importNpcFromCollection(${i})">${MarkdownService.escapeHtml(String(f.name || "?").slice(0, 1))} ${MarkdownService.escapeHtml(f.name || "未命名")} · ${MarkdownService.escapeHtml(f.role || "关系未明")}<span class="list-sub">（来自「${MarkdownService.escapeHtml(String(f.card_title || "").slice(0, 10))}」）</span></button>`
             ).join("");
             NoticeModalService.showInfo({
-                title: "⭐ 从收藏引入",
+                title: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z'/></svg> 从收藏引入",
                 descHtml: `<div class="list-sub" style="margin-bottom:6px;">收藏夹中尚未登场的角色，点击引入：</div><div style="display:flex;flex-direction:column;gap:4px;">${items}</div>`
             });
         }
@@ -11904,11 +12256,11 @@ const token = delta.content || "";
             StateService.save();
             UIRenderer.renderWorld();
             closeInfoModal();
-            NoticeModalService.showInfo({ title: "✅ 引入成功", descHtml: `${MarkdownService.escapeHtml(f.name || "这位角色")} 已登场，快去世界页看看吧～` });
+            NoticeModalService.showInfo({ title: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='10'/><path d='m16 9-5.5 5.5L8 12'/></svg> 引入成功", descHtml: `${MarkdownService.escapeHtml(f.name || "这位角色")} 已登场，快去世界页看看吧～` });
         }
         function openNewNpcModal() {
             NoticeModalService.showInfo({
-                title: "➕ 新建 NPC",
+                title: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12h14'/><path d='M12 5v14'/></svg> 新建 NPC",
                 descHtml: `<div style="display:flex;flex-direction:column;gap:8px;">
                     <input id="new-npc-name" type="text" placeholder="角色名字（必填）" maxlength="12">
                     <div style="display:flex;gap:8px;">
@@ -12138,7 +12490,7 @@ ${recent || "（无）"}
             const btn = document.querySelector(".story-end-btn");
             if (!btn) return;
             const checks = buildEndingChecks(state);
-            const base = "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='m4 4l2 4h3L7 4h2l2 4h3l-2-4h2l2 4h3l-2-4h3q.825 0 1.413.588T22 6v12q0 .825-.587 1.413T20 20H4q-.825 0-1.412-.587T2 18V6q0-.825.588-1.412T4 4'/></svg> 这段故事（AI 结局评定）";
+            const base = "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M4 3 2 5v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z'/><path d='M6 8h4'/><path d='M6 18h4'/><path d='m12 3-2 2v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z'/><path d='M14 8h4'/><path d='M14 18h4'/><path d='m20 3-2 2v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z'/></svg> 这段故事（AI 结局评定）";
             if (checks.met.length) {
                 btn.textContent = `${base} ✅可达成`;
                 btn.title = `已满足 ${checks.met.length} 个结局条件：${checks.met.map((c) => c.name).join("、")}`;
@@ -12204,7 +12556,7 @@ ${recent || "（无）"}
             const loveRes = isLove ? window.LoveEngine.resolveEnding(state) : null;
             const checks = buildEndingChecks(state);
             const metHtml = checks.met.length
-                ? `<div style="margin-top:10px;padding:8px 10px;border-radius:10px;background:color-mix(in srgb,var(--theme-primary) 12%,transparent);font-size:.82rem;"><b>✅ 已满足结局条件</b><ul style="margin:6px 0 0 14px;padding:0;">${checks.met.map((c) => `<li>${MarkdownService.escapeHtml(c.name)}（${MarkdownService.escapeHtml(c.desc)}）</li>`).join("")}</ul></div>`
+                ? `<div style="margin-top:10px;padding:8px 10px;border-radius:10px;background:color-mix(in srgb,var(--theme-primary) 12%,transparent);font-size:var(--fs-2);"><b><svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='10'/><path d='m16 9-5.5 5.5L8 12'/></svg> 已满足结局条件</b><ul style="margin:6px 0 0 14px;padding:0;">${checks.met.map((c) => `<li>${MarkdownService.escapeHtml(c.name)}（${MarkdownService.escapeHtml(c.desc)}）</li>`).join("")}</ul></div>`
                 : "";
             let descHtml;
             if (isLove && loveRes && loveRes.npc) {
@@ -12218,7 +12570,7 @@ ${recent || "（无）"}
             const ok = await NoticeModalService.confirm({
                 title: isLove ? "为这段心动画上句点？" : "结束这段故事？",
                 descHtml,
-                okText: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='m4 4l2 4h3L7 4h2l2 4h3l-2-4h2l2 4h3l-2-4h3q.825 0 1.413.588T22 6v12q0 .825-.587 1.413T20 20H4q-.825 0-1.412-.587T2 18V6q0-.825.588-1.412T4 4'/></svg> 开始评定",
+                okText: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M4 3 2 5v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z'/><path d='M6 8h4'/><path d='M6 18h4'/><path d='m12 3-2 2v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z'/><path d='M14 8h4'/><path d='M14 18h4'/><path d='m20 3-2 2v15c0 .6.4 1 1 1h2c.6 0 1-.4 1-1V5Z'/></svg> 开始评定",
                 cancelText: "再想想"
             });
             if (!ok) return;
@@ -12261,6 +12613,14 @@ ${recent || "（无）"}
             const card = ScenarioCardService.getSelectedCard();
             return !!(card && card.status === "draft");
         }
+        // 已保存的卡改了没保存就走 —— 上面那条只认草稿卡，这一类此前是静默丢改动。
+        // 脏判定交给卡控制器（它比的是「保存会写什么」与「卡里现有什么」，不是另抄的字段清单）。
+        function isSavedEditorLeaving(prevView, viewId) {
+            if (prevView !== "view-scenario-editor" || CREATION_VIEWS.includes(viewId)) return false;
+            const card = ScenarioCardService.getSelectedCard();
+            if (!card || card.status === "draft") return false;   // 草稿卡归上面那条，别重复问两遍
+            try { return ScenarioCardControllerService.isEditorDirty(); } catch (e) { return false; }
+        }
         // 返回前一页:优先回退到上一个访问过的视图;无历史则回主站首页(语言会话内回语言首页沿用 M6a 规则)
         function goBackView() {
             try {
@@ -12289,7 +12649,7 @@ ${recent || "（无）"}
                 const card = ScenarioCardService.getSelectedCard();
                 pendingViewSwitch = { viewId, silent };
                 DecisionModalService.show({
-                    title: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M21 7v12q0 .825-.587 1.413T19 21H5q-.825 0-1.412-.587T3 19V5q0-.825.588-1.412T5 3h12zm-6.875 10.125Q15 16.25 15 15t-.875-2.125T12 12t-2.125.875T9 15t.875 2.125T12 18t2.125-.875M6 10h9V6H6z'/></svg> 保留草稿？",
+                    title: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z'/><path d='M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7'/><path d='M7 3v4a1 1 0 0 0 1 1h7'/></svg> 保留草稿？",
                     descHtml: `《${MarkdownService.escapeHtml(String(card?.title || "未命名新卡"))}》尚未上传到网站。<br><span class="list-sub">保留：存入浏览器缓存，可稍后继续编辑；放弃：删除本次创作。</span>`,
                     okText: "保留草稿",
                     cancelText: "放弃"
@@ -12297,6 +12657,28 @@ ${recent || "（无）"}
                     const pv = pendingViewSwitch;
                     pendingViewSwitch = null;
                     if (!keep && card) { try { ScenarioCardService.deleteCard(card.id); } catch (e) {} }
+                    doSwitchView(pv.viewId, pv.silent);
+                });
+                return;
+            }
+            // 已保存的卡：改了没保存就离开。两个选项**都会离开**（照紧邻的草稿弹窗约定：
+            // ok=保留、cancel=放弃），所以误点不会静默丢稿 —— 丢稿必须明确选「放弃修改」。
+            if (!pendingViewSwitch && isSavedEditorLeaving(prevView, viewId)) {
+                const card = ScenarioCardService.getSelectedCard();
+                pendingViewSwitch = { viewId, silent };
+                DecisionModalService.show({
+                    title: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z'/><path d='M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7'/><path d='M7 3v4a1 1 0 0 0 1 1h7'/></svg> 有未保存的修改",
+                    descHtml: `《${MarkdownService.escapeHtml(String(card?.title || "未命名设定"))}》的改动还没保存。<br><span class="list-sub">保留：先保存再离开；放弃：本次改动丢失。</span>`,
+                    okText: "保存并离开",
+                    cancelText: "放弃修改"
+                }).then((keep) => {
+                    const pv = pendingViewSwitch;
+                    pendingViewSwitch = null;
+                    if (keep) { try { ScenarioCardControllerService.saveScenarioCard({ renderAll }); } catch (e) {} }
+                    // 「放弃修改」得把表单也退回去：只做「不写盘 + 离开」的话，用户走首页顶栏
+                    // 「返回前一页」再进来（那条路是裸 switchView，不重载表单），会带着这批
+                    // 已放弃的内容又看到一遍、又被问一遍。表单按卡重载走 loadToUI 这个唯一来源。
+                    else { try { SettingsService.loadToUI(); } catch (e) {} }
                     doSwitchView(pv.viewId, pv.silent);
                 });
                 return;
@@ -12349,8 +12731,15 @@ ${recent || "（无）"}
             // 记录来源页供「返回前一页」回退(返回自身导航不记,避免来回叠加)
             if (pendingBackNav) pendingBackNav = false;
             else if (activeView && activeView !== viewId) {
-                viewStack.push(activeView);
-                if (viewStack.length > 40) viewStack.shift();
+                // 每个**页组**（一场游玩、语言页组）在返回栈里只占**一格**：同组内的页
+                // 互相切来切去都算同一页。不这么干的话，「返回」就不是「回上一页」，
+                // 而是在刚点过的那几页之间来回弹（实测：剧情页按返回落回刚开过的背包页，
+                // 语言页组同理在 单词本↔排行榜 之间弹）。各组名单复用各页组自己那份，
+                // 不另立会漂移的清单。
+                if (!NavigationVisibilityService.samePageGroup(activeView, viewId)) {
+                    viewStack.push(activeView);
+                    if (viewStack.length > 40) viewStack.shift();
+                }
             }
             closeHistoryPanel();
             closeAllOverlaysOnLeave();
@@ -12364,8 +12753,7 @@ ${recent || "（无）"}
             const target = document.getElementById(viewId);
             if (target) target.classList.add("active");
             // M6a/M8d:语言页组(view-lang/-library/-learn/-vocab)共用一个主站 tab「学语言」高亮;页内语言子导航由 LangController.onShow 单独高亮
-            const LANG_VIEWS = ["view-lang", "view-lang-learn", "view-lang-vocab", "view-lang-leaderboard"];
-            const inLangGroup = LANG_VIEWS.includes(viewId);
+            const inLangGroup = NavigationVisibilityService.LANG_VIEWS.has(viewId);
             document.querySelectorAll(".nav-btn, .top-nav-btn").forEach((btn) => {
                 if (btn.closest && btn.closest(".lang-sub-nav")) return;
                 const bv = btn.dataset.view;
@@ -12450,13 +12838,19 @@ ${recent || "（无）"}
             const state = StateService.get();
             const item = (state.inventory || []).find((it) => it.id === itemId);
             if (!item) return;
-            const desc = `类型：${item.type}<br>数量：${item.count}<br>效果：${item.effect}<br>描述：${item.desc}`;
+            // openInfoModal 把 desc 当 HTML 写入，四个字段都是 AI 产出，逐个转义
+            const esc = MarkdownService.escapeHtml;
+            const desc = `类型：${esc(item.type)}<br>数量：${esc(item.count)}<br>效果：${esc(item.effect)}<br>描述：${esc(item.desc)}`;
             openInfoModal(`物品：${item.name}`, desc, "使用", () => useItem(itemId));
         }
         function useItem(itemId) {
             const state = StateService.get();
             const item = (state.inventory || []).find((it) => it.id === itemId);
             if (!item || item.count <= 0) return;
+            // 必须挡在扣数量之前：末尾那句 sendUserText 在生成中会静默 return，
+            // 若先扣后发，玩家看到的是「物品少了一个、屏幕上什么都没发生」，而且再也拿不回来。
+            // 和其它进剧情的入口(重刷事件/编辑事件/探索新地点)共用同一道闸。
+            if (guardGenerating("AI 正在推进剧情，稍后再使用物品。")) return;
             // M4:本地效果规则即时生效并扣数量(背包页立即可见)
             item.count -= 1;
             StatsService.applyEffect(state, item.effect);
@@ -12491,7 +12885,7 @@ function openNpcProfile(npcId) {
             };
 
             const favor = Math.max(0, Math.min(100, Number(npc.favor) || 0));
-            const favorColor = favor >= 70 ? "#2ecc71" : favor >= 40 ? "var(--accent)" : "#e74c3c";
+            const favorColor = favor >= 70 ? "var(--ok)" : favor >= 40 ? "var(--accent)" : "var(--danger)";
             const favorLabel = favor >= 80 ? "挚友" : favor >= 60 ? "友好" : favor >= 40 ? "普通" : favor >= 20 ? "疏远" : "敌对";
             const profile = (npc.profile && typeof npc.profile === 'object') ? npc.profile : {};
             const npcStats = Array.isArray(npc.stats) && npc.stats.length > 0 ? npc.stats : null;
@@ -12501,8 +12895,8 @@ function openNpcProfile(npcId) {
             const favorBar = `
                 <div style="margin:10px 0 4px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                        <span style="font-size:.78rem;color:var(--sub);">好感度</span>
-                        <span style="font-size:.82rem;font-weight:700;color:${favorColor};">${favor} · ${favorLabel}</span>
+                        <span style="font-size:var(--fs-2);color:var(--sub);">好感度</span>
+                        <span style="font-size:var(--fs-2);font-weight:700;color:${favorColor};">${favor} · ${favorLabel}</span>
                     </div>
                     <div style="height:6px;border-radius:3px;background:rgba(0,0,0,.08);overflow:hidden;">
                         <div style="height:100%;width:${favor}%;background:${favorColor};border-radius:3px;transition:width .4s;"></div>
@@ -12514,8 +12908,8 @@ function openNpcProfile(npcId) {
             const affectionBar = `
                 <div style="margin:10px 0 4px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                        <span style="font-size:.78rem;color:var(--sub);">爱慕值</span>
-                        <span style="font-size:.82rem;font-weight:700;color:${affectionColor};">${affection > 0 ? "+" + affection : affection} · ${affectionLabel}</span>
+                        <span style="font-size:var(--fs-2);color:var(--sub);">爱慕值</span>
+                        <span style="font-size:var(--fs-2);font-weight:700;color:${affectionColor};">${affection > 0 ? "+" + affection : affection} · ${affectionLabel}</span>
                     </div>
                     <div style="height:6px;border-radius:3px;background:rgba(0,0,0,.08);overflow:hidden;">
                         <div style="height:100%;width:${Math.abs(affection)}%;background:${affectionColor};border-radius:3px;transition:width .4s;"></div>
@@ -12538,9 +12932,9 @@ function openNpcProfile(npcId) {
                 statsPanelHtml = `<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px;">
                     ${npcStats.map(s => `
                         <div style="padding:8px 10px;border-radius:12px;background:var(--card-soft);border:1px solid rgba(176,134,82,0.15);text-align:center;">
-                            <div style="font-size:1.1rem;">${MarkdownService.escapeHtml(getStr(s.icon, "✨"))}</div>
-                            <div style="font-size:.72rem;color:var(--sub);margin-top:2px;">${MarkdownService.escapeHtml(getStr(s.label))}</div>
-                            <div style="font-size:1rem;font-weight:800;color:var(--accent-dark);margin-top:2px;">${getStr(s.value)}</div>
+                            <div style="font-size:var(--fs-4);">${uiIconHtml(getStr(s.icon, "✨"))}</div>
+                            <div style="font-size:var(--fs-2);color:var(--sub);margin-top:2px;">${MarkdownService.escapeHtml(getStr(s.label))}</div>
+                            <div style="font-size:var(--fs-3);font-weight:800;color:var(--accent-dark);margin-top:2px;">${getStr(s.value)}</div>
                         </div>`).join("")}
                    </div>`;
             } else {
@@ -12552,8 +12946,8 @@ function openNpcProfile(npcId) {
                         { label: "特质", value: getStr(npc.traits) }
                     ].filter(r => r.value).map(r => `
                         <div class="list-row" style="margin-bottom:0;flex-direction:column;align-items:flex-start;padding:6px 10px;">
-                            <div class="list-sub" style="font-size:.72rem;">${r.label}</div>
-                            <div class="list-title" style="font-size:.85rem;">${MarkdownService.escapeHtml(r.value)}</div>
+                            <div class="list-sub" style="font-size:var(--fs-2);">${r.label}</div>
+                            <div class="list-title" style="font-size:var(--fs-3);">${MarkdownService.escapeHtml(r.value)}</div>
                         </div>`).join("")}
                    </div>`;
             }
@@ -12565,8 +12959,8 @@ function openNpcProfile(npcId) {
                 { label: "初印象", value: getStr(profile.firstImpression) }
             ].filter(r => r.value).map(r => `
                 <div style="margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--card-soft);border:1px solid rgba(0,0,0,0.05);">
-                    <div style="font-size:.72rem;color:var(--sub);margin-bottom:2px;">${r.label}</div>
-                    <div style="font-size:.85rem;color:var(--text);">${MarkdownService.escapeHtml(r.value)}</div>
+                    <div style="font-size:var(--fs-2);color:var(--sub);margin-bottom:2px;">${r.label}</div>
+                    <div style="font-size:var(--fs-3);color:var(--text);">${MarkdownService.escapeHtml(r.value)}</div>
                 </div>`).join("");
 
             const memoryTagSections = [
@@ -12580,14 +12974,14 @@ function openNpcProfile(npcId) {
                     .filter(Boolean)
                     .slice(0, 6);
                 if (!list.length) return "";
-                const chips = list.map((txt) => `<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;border:1px solid rgba(176,134,82,0.28);background:rgba(176,134,82,0.08);font-size:.74rem;color:var(--sub);">${MarkdownService.escapeHtml(txt)}</span>`).join("");
-                return `<div style="margin-top:8px;"><div style="font-size:.74rem;font-weight:700;color:var(--accent-dark);margin-bottom:4px;">${group.label}</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${chips}</div></div>`;
+                const chips = list.map((txt) => `<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;border:1px solid rgba(176,134,82,0.28);background:rgba(176,134,82,0.08);font-size:var(--fs-2);color:var(--sub);">${MarkdownService.escapeHtml(txt)}</span>`).join("");
+                return `<div style="margin-top:8px;"><div style="font-size:var(--fs-2);font-weight:700;color:var(--accent-dark);margin-bottom:4px;">${group.label}</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${chips}</div></div>`;
             }).join("");
             const hasMemoryContent = !!(mem && (getStr(mem.summary).trim() || memoryTagSections));
             const memoryHtml = hasMemoryContent ? `
                 <div style="margin-top:12px;padding:10px 12px;border-radius:12px;background:rgba(176,134,82,0.05);border:1px dashed rgba(176,134,82,0.3);">
-                    <div style="font-size:.78rem;font-weight:700;color:var(--accent-dark);margin-bottom:6px;">📝 记忆往事</div>
-                    ${mem.summary ? `<div style="font-size:.82rem;color:var(--sub);margin-bottom:4px;">${MarkdownService.escapeHtml(getStr(mem.summary))}</div>` : ""}
+                    <div style="font-size:var(--fs-2);font-weight:700;color:var(--accent-dark);margin-bottom:6px;"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4"/><path d="M2 6h4"/><path d="M2 10h4"/><path d="M2 14h4"/><path d="M2 18h4"/><path d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/></svg> 记忆往事</div>
+                    ${mem.summary ? `<div style="font-size:var(--fs-2);color:var(--sub);margin-bottom:4px;">${MarkdownService.escapeHtml(getStr(mem.summary))}</div>` : ""}
                     ${memoryTagSections}
                 </div>` : "";
 
@@ -12600,10 +12994,10 @@ function openNpcProfile(npcId) {
             const desc = `
                 <div style="border-radius:14px;overflow:hidden;background:var(--card);padding:2px;">
                     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:10px;">
-                        <div style="width:54px;height:54px;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:${(typeof UIRenderer !== "undefined" && typeof UIRenderer.avatarColor === "function" ? UIRenderer.avatarColor(npcName) : "#8b5e3c")};font-size:24px;color:#fff;font-weight:700;flex:none;cursor:${npcAvUrl ? "zoom-in" : "default"};" data-lb-name="${MarkdownService.escapeHtml(npcName)}" title="${npcAvUrl ? "点击放大查看原图" : ""}" onclick="var im=this.querySelector('img'); if(im && window.openImageLightbox) window.openImageLightbox(im.getAttribute('src'), this.getAttribute('data-lb-name'));">${npcAvatarHtml}</div>
+                        <div style="width:54px;height:54px;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:${(typeof UIRenderer !== "undefined" && typeof UIRenderer.avatarColor === "function" ? UIRenderer.avatarColor(npcName) : "#8b5e3c")};font-size:var(--fs-5);color:#fff;font-weight:700;flex:none;cursor:${npcAvUrl ? "zoom-in" : "default"};" data-lb-name="${MarkdownService.escapeHtml(npcName)}" title="${npcAvUrl ? "点击放大查看原图" : ""}" onclick="var im=this.querySelector('img'); if(im && window.openImageLightbox) window.openImageLightbox(im.getAttribute('src'), this.getAttribute('data-lb-name'));">${npcAvatarHtml}</div>
                         <div style="min-width:0;">
-                            <div style="font-size:1.1rem;font-weight:800;color:var(--accent-dark);">${MarkdownService.escapeHtml(npcName)}</div>
-                            <div style="font-size:.8rem;color:var(--sub);word-break:break-word;overflow-wrap:anywhere;">${MarkdownService.escapeHtml(getStr(npc.relation, "NPC"))}</div>
+                            <div style="font-size:var(--fs-4);font-weight:800;color:var(--accent-dark);">${MarkdownService.escapeHtml(npcName)}</div>
+                            <div style="font-size:var(--fs-2);color:var(--sub);word-break:break-word;overflow-wrap:anywhere;">${MarkdownService.escapeHtml(getStr(npc.relation, "NPC"))}</div>
                         </div>
                     </div>
                     ${favorBar}
@@ -12907,7 +13301,7 @@ function openNpcProfile(npcId) {
         // 解锁检查：未登录提示；老用户本地存量不追溯；云端已解锁直进；否则确认弹窗付费
         async function ensureCharChatUnlocked(cardId, npcId, npcName, cardName, localMsgs) {
             if (!AuthService.getToken()) {
-                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后可以解锁角色卡聊天，聊天记录会云存档跟随账户。" });
+                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后可以解锁角色卡聊天，聊天记录会云存档跟随账户。", actionText: "去登录", onAction: () => AuthService.openLogin() });
                 return false;
             }
             if (localMsgs && localMsgs.length) return true; // 老用户已有聊天记录 → 不追溯收费
@@ -13062,7 +13456,7 @@ function openNpcProfile(npcId) {
                 _personChat.messages.push({ from: "npc", text: visible, ts: Date.now() });
                 savePersonChats();
             } catch (e) {
-                _personChat.messages.push({ from: "npc", text: `⚠️ 对话失败：${e.message}`, ts: Date.now() });
+                _personChat.messages.push({ from: "npc", text: `⚠️ 对话失败：${humanErrorMessage(e, "请稍后重试")}`, ts: Date.now() });
                 savePersonChats();
             } finally {
                 if (title) title.innerText = _personChat.npcName;
@@ -13266,7 +13660,7 @@ function openNpcProfile(npcId) {
                 t.renderChat();
             } catch (e) {
                 const list = (state.npcChats && state.npcChats[chatKey]) || [];
-                list.push({ from: "npc", text: `⚠️ 对话失败：${e.message}`, ts: Date.now() });
+                list.push({ from: "npc", text: `⚠️ 对话失败：${humanErrorMessage(e, "请稍后重试")}`, ts: Date.now() });
                 StateService.save();
                 t.renderChat();
             } finally {
@@ -13322,7 +13716,7 @@ function openNpcProfile(npcId) {
         // ---- 云存档操作 ----
         async function unlockCloudSlot(slotIndex) {
             const cardId = ScenarioCardService.getSelectedId();
-            if (!AuthService.getToken()) { NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后解锁云存档槽位。" }); return; }
+            if (!AuthService.getToken()) { NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后解锁云存档槽位。", actionText: "去登录", onAction: () => AuthService.openLogin() }); return; }
             const ok = await NoticeModalService.confirm({
                 title: "解锁云存档槽位",
                 descHtml: `解锁后可在云端保存该剧本进度（跨设备同步，一次性扣 ${SaveSlotService.CLOUD_SLOT_PRICE} 云币）。确定解锁槽位 ${slotIndex} 吗？`
@@ -13332,25 +13726,25 @@ function openNpcProfile(npcId) {
                 const d = await SaveSlotService.unlockCloudSlot(cardId, slotIndex);
                 NoticeModalService.showInfo({ title: "解锁成功", descHtml: `云槽位 ${slotIndex} 已解锁，剩余 ${d.coins} 云币。` });
             } catch (e) {
-                NoticeModalService.showInfo({ title: "解锁失败", descHtml: e.message || "请稍后重试" });
+                NoticeModalService.showInfo({ title: "解锁失败", descHtml: MarkdownService.escapeHtml(humanErrorMessage(e, "请稍后重试")) });
             }
             renderAll();
             switchView("view-saves");
         }
         async function saveToCloudSlot(slotIndex) {
             const cardId = ScenarioCardService.getSelectedId();
-            if (!AuthService.getToken()) { NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后使用云存档。" }); return; }
+            if (!AuthService.getToken()) { NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后使用云存档。", actionText: "去登录", onAction: () => AuthService.openLogin() }); return; }
             try {
                 await SaveSlotService.saveToCloudSlot(cardId, slotIndex, StateService.get());
                 NoticeModalService.showInfo({ title: "已保存到云端", descHtml: `云槽位 ${slotIndex} 已同步（含头像与地图配置）。` });
             } catch (e) {
-                NoticeModalService.showInfo({ title: "云端保存失败", descHtml: e.message || "请稍后重试" });
+                NoticeModalService.showInfo({ title: "云端保存失败", descHtml: MarkdownService.escapeHtml(humanErrorMessage(e, "请稍后重试")) });
             }
             renderAll();
             switchView("view-saves");
         }
         async function loadFromCloudSlot(slotIndex) {
-            if (!AuthService.getToken()) { NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后使用云存档。" }); return; }
+            if (!AuthService.getToken()) { NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后使用云存档。", actionText: "去登录", onAction: () => AuthService.openLogin() }); return; }
             try {
                 const cloud = await SaveSlotService.fetchCloudSaves(ScenarioCardService.getSelectedId());
                 const saved = cloud && cloud.slots && cloud.slots[slotIndex];
@@ -13363,7 +13757,7 @@ function openNpcProfile(npcId) {
                 renderAll();
                 switchView("view-main");
             } catch (e) {
-                NoticeModalService.showInfo({ title: "云端读取失败", descHtml: e.message || "请稍后重试" });
+                NoticeModalService.showInfo({ title: "云端读取失败", descHtml: MarkdownService.escapeHtml(humanErrorMessage(e, "请稍后重试")) });
             }
         }
         async function deleteCloudSlot(slotIndex) {
@@ -13374,7 +13768,7 @@ function openNpcProfile(npcId) {
                 await SaveSlotService.deleteCloudSlot(cardId, slotIndex);
                 NoticeModalService.showInfo({ title: "已删除", descHtml: "云端存档已删除。" });
             } catch (e) {
-                NoticeModalService.showInfo({ title: "删除失败", descHtml: e.message || "请稍后重试" });
+                NoticeModalService.showInfo({ title: "删除失败", descHtml: MarkdownService.escapeHtml(humanErrorMessage(e, "请稍后重试")) });
             }
             renderAll();
             switchView("view-saves");
@@ -13492,7 +13886,7 @@ function openNpcProfile(npcId) {
                 InitLoadingService.close();
                 NoticeModalService.showInfo({
                     title: "重置官方剧本失败",
-                    descHtml: MarkdownService.escapeHtml(String(e?.message || e || "未知错误"))
+                    descHtml: MarkdownService.escapeHtml(humanErrorMessage(e, "未知错误"))
                 });
                 return false;
             }
@@ -13550,8 +13944,8 @@ function openNpcProfile(npcId) {
                 }
             }
             if (!AuthService.getToken()) {
-                const ok = await DecisionModalService.show({ title: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M6 22q-.825 0-1.412-.587T4 20V10q0-.825.588-1.412T6 8h1V6q0-2.075 1.463-3.537T12 1t3.538 1.463T17 6v2h1q.825 0 1.413.588T20 10v10q0 .825-.587 1.413T18 22zm7.413-5.587Q14 15.825 14 15t-.587-1.412T12 13t-1.412.588T10 15t.588 1.413T12 17t1.413-.587M9 8h6V6q0-1.25-.875-2.125T12 3t-2.125.875T9 6z'/></svg> 请先登录", descHtml: "上传剧本卡需要登录账号。", okText: "去登录", cancelText: "取消" });
-                if (ok) { const overlay = document.getElementById("auth-overlay"); if (overlay) overlay.style.display = "flex"; }
+                const ok = await DecisionModalService.show({ title: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><rect width='18' height='11' x='3' y='11' rx='2' ry='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg> 请先登录", descHtml: "上传剧本卡需要登录账号。", okText: "去登录", cancelText: "取消" });
+                if (ok) AuthService.openLogin();
                 return;
             }
             const data = { ...selected, text: selected.text, structured: selected.structured || null };
@@ -13604,7 +13998,7 @@ function openNpcProfile(npcId) {
                 } catch (e) { /* 静默 */ }
                 NoticeModalService.showInfo({ title: "已提交审核", descHtml: `《${MarkdownService.escapeHtml(String(payload.title || "未命名剧本"))}》已上传${price > 0 ? `，解锁定价 ${price} 云币` : "（免费）"}。审核通过后他人可游玩。` });
             } catch (e) {
-                NoticeModalService.showInfo({ title: "上传失败", descHtml: MarkdownService.escapeHtml(String(e.message || e).slice(0, 100)) });
+                NoticeModalService.showInfo({ title: "上传失败", descHtml: MarkdownService.escapeHtml(humanErrorMessage(e, "上传失败，请稍后重试").slice(0, 100)) });
             } finally {
                 TopLoader.hide();
                 _pendingUploadData = null;
@@ -13615,10 +14009,11 @@ function openNpcProfile(npcId) {
             const container = document.getElementById("my-community-cards");
             if (!container) return;
             if (!AuthService.getToken()) {
-                container.innerHTML = '<span class="list-sub">登录后查看你的剧本收益。</span>';
+                container.innerHTML = '<span class="list-sub">登录后查看你的剧本收益。</span>' +
+                    '<div class="btn-row mid"><button type="button" class="mini-btn ghost" onclick="AuthService.openLogin()">去登录</button></div>';
                 return;
             }
-            container.innerHTML = '<span class="list-sub">加载中...</span>';
+            container.innerHTML = '<span class="list-sub">加载中…</span>';
             TopLoader.show("加载剧本中...");
             try {
                 const res = await fetch(`${AppConfig.proxy.baseUrl}/api/cards/community?mine=1`, {
@@ -13634,14 +14029,14 @@ function openNpcProfile(npcId) {
                     // 解锁分成 = 价格一半（免费卡无解锁分成），与 worker unlock 路由一致
                     const unlockReward = Number(c.unlock_price || 0) > 0 ? Math.max(1, Math.floor(Number(c.unlock_price) / 2)) : 0;
                     const reward = Number(c.earned_plays || 0) * 30 + Number(c.unlock_count || 0) * unlockReward;
-                    const status = c.status === "approved" ? '<span style="color:#2e8b57;">已上架</span>' : (c.status === "pending" ? '<span style="color:#e67e22;">审核中</span>' : '<span style="color:#c0392b;">未通过</span>');
+                    const status = c.status === "approved" ? '<span style="color:var(--ok);">已上架</span>' : (c.status === "pending" ? '<span style="color:var(--warn);">审核中</span>' : '<span style="color:var(--danger);">未通过</span>');
                     return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin-top:6px;background:var(--card-soft);">
                         <div style="min-width:0;">
-                            <div style="font-weight:700;font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${MarkdownService.escapeHtml(c.title || "未命名")}</div>
+                            <div style="font-weight:700;font-size:var(--fs-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${MarkdownService.escapeHtml(c.title || "未命名")}</div>
                             <div class="list-sub" style="margin-top:2px;">播放 ${Number(c.play_count || 0)} 次｜${status}</div>
                         </div>
                         <div style="text-align:right;margin-left:8px;">
-                            <div style="font-weight:800;color:var(--accent-dark);"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M3 20q-.825 0-1.412-.587T1 18V7h2v11h17v2zm4-4q-.825 0-1.412-.587T5 14V6q0-.825.588-1.412T7 4h14q.825 0 1.413.588T23 6v8q0 .825-.587 1.413T21 16zm2-2q0-.825-.587-1.412T7 12v2zm10 0h2v-2q-.825 0-1.412.588T19 14m-5-1q1.25 0 2.125-.875T17 10t-.875-2.125T14 7t-2.125.875T11 10t.875 2.125T14 13M7 8q.825 0 1.413-.587T9 6H7zm14 0V6h-2q0 .825.588 1.413T21 8"/></svg> ${reward} 币</div>
+                            <div style="font-weight:800;color:var(--accent-dark);"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17"/><path d="m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9"/><path d="m2 16 6 6"/><circle cx="16" cy="9" r="2.9"/><circle cx="6" cy="5" r="3"/></svg> ${reward} 币</div>
                             <div class="list-sub">${Number(c.earned_plays || 0)} 轮计佣${Number(c.unlock_count || 0) > 0 ? ` · ${Number(c.unlock_count || 0)} 次解锁 ×${unlockReward}` : ""}${Number(c.unlock_price || 0) > 0 ? ` · 定价 ${c.unlock_price} 币` : " · 免费"}</div>
                         </div>
                     </div>`;
@@ -13678,7 +14073,7 @@ function openNpcProfile(npcId) {
         function feedAvatar(author) {
             const name = escapeForHtml(author?.nickname || "玩家");
             if (author?.faceimg) return `<img class="feed-avatar" src="${escapeForHtml(author.faceimg)}" alt="">`;
-            return `<span class="feed-avatar" style="display:inline-flex;align-items:center;justify-content:center;font-size:0.8rem;">${name.slice(0, 1)}</span>`;
+            return `<span class="feed-avatar" style="display:inline-flex;align-items:center;justify-content:center;font-size:var(--fs-2);">${name.slice(0, 1)}</span>`;
         }
         function renderFeedPost(p) {
             const liked = !!p.liked_by_me;
@@ -13687,7 +14082,7 @@ function openNpcProfile(npcId) {
                 ? `<button class="follow-btn${p.following ? " following" : ""}" onclick="Controller.toggleFollow('${escapeForHtml(p.author.id)}', this)">${p.following ? "已关注" : "关注"}</button>`
                 : "";
             const ref = p.card_id
-                ? `<div class="feed-ref" onclick="Controller.openFeedCard('${escapeForHtml(p.card_id)}')">🃏 ${escapeForHtml(feedCardTitle(p))}</div>`
+                ? `<div class="feed-ref" onclick="Controller.openFeedCard('${escapeForHtml(p.card_id)}')"><svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M12.832 8.445a1 1 0 00-1.589-.098l-2.075 3.098a1 1 0 000 1.11l2 3a1 1 0 001.664 0l2-3a1 1 0 000-1.11z'/><rect x='5' y='2' width='14' height='20' rx='2'/></svg> ${escapeForHtml(feedCardTitle(p))}</div>`
                 : "";
             const img = p.image_data
                 ? `<img class="feed-img" src="${escapeForHtml(p.image_data)}" alt="帖子图片">`
@@ -13723,10 +14118,11 @@ function openNpcProfile(npcId) {
             const container = document.getElementById("community-feed-list");
             if (!container) return;
             if (!AuthService.getToken()) {
-                container.innerHTML = '<span class="list-sub">登录后查看社区动态。</span>';
+                container.innerHTML = '<span class="list-sub">登录后查看社区动态。</span>' +
+                    '<div class="btn-row mid"><button type="button" class="mini-btn ghost" onclick="AuthService.openLogin()">去登录</button></div>';
                 return;
             }
-            container.innerHTML = '<span class="list-sub">加载中...</span>';
+            container.innerHTML = '<span class="list-sub">加载中…</span>';
             try {
                 const res = await fetch(`${AppConfig.proxy.baseUrl}/api/feed`, {
                     headers: { "X-Auth-Token": "Bearer " + AuthService.getToken() }
@@ -13754,8 +14150,12 @@ function openNpcProfile(npcId) {
         async function loadCommunityChars() {
             const container = document.getElementById("community-chars-list");
             if (!container) return;
-            if (!AuthService.getToken()) { container.innerHTML = '<span class="list-sub">登录后查看人物卡。</span>'; return; }
-            container.innerHTML = '<span class="list-sub">加载中...</span>';
+            if (!AuthService.getToken()) {
+                container.innerHTML = '<span class="list-sub">登录后查看人物卡。</span>' +
+                    '<div class="btn-row mid"><button type="button" class="mini-btn ghost" onclick="AuthService.openLogin()">去登录</button></div>';
+                return;
+            }
+            container.innerHTML = '<span class="list-sub">加载中…</span>';
             // 批9.12:人物卡 1:1 头像封面 + 爱心数 + 收藏 + 聊天按钮
             const charCard = (c, favBtn) => {
                 const av = String(c.avatar || "").trim() ||
@@ -13807,7 +14207,7 @@ function openNpcProfile(npcId) {
                 patchLocalNpc(hot);
                 patchLocalNpc(favs);
                 const favBtn = (c) => `<button class="mini-btn" onclick="Controller.toggleCharacterFav('${escapeForHtml(c.card_id)}','${escapeForHtml(c.character_id)}',this)">${favs.some(f => f.card_id === c.card_id && f.character_id === c.character_id) ? '<img class="ic" src="icons/star.svg" alt=""> 已收藏' : '<img class="ic" src="icons/star.svg" alt=""> 收藏'}</button>`;
-                let html = `<div class="gd-sec-title"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M4 14q0-2.625 1.25-4.675T8 5.875t2.75-2.138L12 3v3.3q0 .925.625 1.462t1.4.538q.425 0 .813-.175t.712-.575L16 7q1.8 1.05 2.9 2.912T20 14q0 2.2-1.075 4.013T16.1 20.874q.425-.6.663-1.312T17 18.05q0-1-.375-1.888t-1.075-1.587L12 11.1l-3.525 3.475q-.725.725-1.1 1.6T7 18.05q0 .8.238 1.513t.662 1.312q-1.75-1.05-2.825-2.863T4 14m8-.1l2.125 2.075q.425.425.65.95T15 18.05q0 1.225-.875 2.088T12 21t-2.125-.862T9 18.05q0-.575.225-1.112t.65-.963z"/></svg> 热聊人物卡榜</div>`;
+                let html = `<div class="gd-sec-title"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4"/></svg> 热聊人物卡榜</div>`;
                 // 批9.12:榜内容 = 爱心前10人物 + 官方剧本全部NPC（按爱心数排序，无爱心也展示）；自定义本地卡不再补充
                 const seen = new Set();
                 const rankCards = [];
@@ -13839,7 +14239,7 @@ function openNpcProfile(npcId) {
                 }
                 html += `<div class="gd-sec-title"><img class="ic" src="icons/star.svg" alt=""> 我的收藏</div>`;
                 if (favs.length) {
-                    html += favs.map((c) => charCard({ card_id: c.card_id, character_id: c.character_id, name: c.name, role: c.role, card_title: c.card_title, pens: 0, favs: 1, avatar: c.avatar, gender: c.gender }, `<button class="mini-btn" onclick="Controller.toggleCharacterFav('${escapeForHtml(c.card_id)}','${escapeForHtml(c.character_id)}',this)"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z"/></svg> 取消</button>`)).join("");
+                    html += favs.map((c) => charCard({ card_id: c.card_id, character_id: c.character_id, name: c.name, role: c.role, card_title: c.card_title, pens: 0, favs: 1, avatar: c.avatar, gender: c.gender }, `<button class="mini-btn" onclick="Controller.toggleCharacterFav('${escapeForHtml(c.card_id)}','${escapeForHtml(c.character_id)}',this)"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> 取消</button>`)).join("");
                 } else {
                     html += '<span class="list-sub">还没有收藏人物卡，在作品详情页角色榜点 <img class="ic" src="icons/star.svg" alt=""> 收藏。</span>';
                 }
@@ -13873,7 +14273,7 @@ function openNpcProfile(npcId) {
                     const c = cards.find((x) => String(x.id) === el.dataset.id);
                     if (!c) return;
                     _postRefCard = c;
-                    document.getElementById("post-card-ref").innerHTML = `将引用：${MarkdownService.escapeHtml(c.title)} <span class="post-ref-remove" onclick="Controller.clearPostRef()"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z"/></svg> 移除</span>`;
+                    document.getElementById("post-card-ref").innerHTML = `将引用：${MarkdownService.escapeHtml(c.title)} <span class="post-ref-remove" onclick="Controller.clearPostRef()"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> 移除</span>`;
                     listEl.innerHTML = "";
                 };
             });
@@ -13886,7 +14286,7 @@ function openNpcProfile(npcId) {
         }
         function openPostModal() {
             if (!AuthService.getToken()) {
-                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后才能发布动态。" });
+                NoticeModalService.showInfo({ title: "请先登录", descHtml: "登录后才能发布动态。", actionText: "去登录", onAction: () => AuthService.openLogin() });
                 return;
             }
             _postRefCard = null;
@@ -13981,7 +14381,7 @@ function openNpcProfile(npcId) {
         async function openPostComments(postId) {
             _commentsTargetPostId = postId;
             const list = document.getElementById("comments-list");
-            list.innerHTML = '<span class="list-sub">加载中...</span>';
+            list.innerHTML = '<span class="list-sub">加载中…</span>';
             document.getElementById("comment-input").value = "";
             document.getElementById("comments-modal").style.display = "flex";
             try {
@@ -14036,10 +14436,11 @@ function openNpcProfile(npcId) {
             const container = document.getElementById("community-cards-browse");
             if (!container) return;
             if (!AuthService.getToken()) {
-                container.innerHTML = '<span class="list-sub">登录后浏览社区剧本。</span>';
+                container.innerHTML = '<span class="list-sub">登录后浏览社区剧本。</span>' +
+                    '<div class="btn-row mid"><button type="button" class="mini-btn ghost" onclick="AuthService.openLogin()">去登录</button></div>';
                 return;
             }
-            container.innerHTML = '<span class="list-sub">加载中...</span>';
+            container.innerHTML = '<span class="list-sub">加载中…</span>';
             try {
                 const res = await fetch(`${AppConfig.proxy.baseUrl}/api/cards/community`, {
                     headers: { "X-Auth-Token": "Bearer " + AuthService.getToken() }
@@ -14052,7 +14453,7 @@ function openNpcProfile(npcId) {
                 }
                 container.innerHTML = items.map(c => `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin-top:6px;background:var(--card-soft);">
                     <div style="min-width:0;">
-                        <div style="font-weight:700;font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeForHtml(c.title || "未命名")}</div>
+                        <div style="font-weight:700;font-size:var(--fs-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeForHtml(c.title || "未命名")}</div>
                         <div class="list-sub" style="margin-top:2px;">播放 ${Number(c.play_count || 0)} 次</div>
                     </div>
                     <div style="display:flex;gap:6px;flex-shrink:0;">
@@ -14136,9 +14537,9 @@ function openNpcProfile(npcId) {
         }
         // ---- 创建角色增强：属性重掷/微调 + 头像三通道 ----
         const INIT_STAT_DEFS = [
-            { label: "容貌", icon: "❤️" },
+            { label: "容貌", icon: "" },
             { label: "体质", icon: "❤️" },
-            { label: "智力", icon: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M11 15h2l.15-1.25q.2-.075.363-.175t.287-.225l1.15.5l1-1.7l-1-.75q.05-.2.05-.4t-.05-.4l1-.75l-1-1.7l-1.15.5q-.125-.125-.288-.225t-.362-.175L13 7h-2l-.15 1.25q-.2.075-.363.175t-.287.225l-1.15-.5l-1 1.7l1 .75Q9 10.8 9 11t.05.4l-1 .75l1 1.7l1.15-.5q.125.125.288.225t.362.175zm-.062-2.937Q10.5 11.625 10.5 11t.438-1.062T12 9.5t1.063.438T13.5 11t-.437 1.063T12 12.5t-1.062-.437M6 22v-4.3q-1.425-1.3-2.212-3.037T3 11q0-3.75 2.625-6.375T12 2q3.125 0 5.538 1.838t3.137 4.787l1.3 5.125q.125.475-.175.863T21 15h-2v3q0 .825-.587 1.413T17 20h-2v2z'/></svg>" },
+            { label: "智力", icon: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915'/><circle cx='12' cy='12' r='3'/></svg>" },
             { label: "魅力", icon: "✨" },
             { label: "道德", icon: "⚖️" }
         ];
@@ -14150,7 +14551,7 @@ function openNpcProfile(npcId) {
             list.innerHTML = INIT_STAT_DEFS.map((d) => {
                 const v = Math.max(0, Math.min(100, Number(_initStatValues[d.label]) || 50));
                 return `<div class="stat-roll-line">
-                    <span class="stat-roll-name">${d.icon} ${d.label}</span>
+                    <span class="stat-roll-name">${uiIconHtml(d.icon || d.label)} ${d.label}</span>
                     <span class="stat-roll-val" id="stat-val-${d.label}">${v}</span>
                     <div class="stat-roll-bar"><div class="stat-roll-fill" style="width:${v}%;"></div></div>
                     <button type="button" class="stat-roll-btn" onclick="statAdjust('${d.label}',-5)">−</button>
@@ -14181,7 +14582,7 @@ function openNpcProfile(npcId) {
             const fill = document.querySelector(`#stat-val-${label}`)?.parentElement?.querySelector(".stat-roll-fill");
             if (fill) fill.style.width = v + "%";
         }
-        const AVATAR_EMOJI_POOL = ["😀", "😎", "🥳", "🤠", "😇", "🦊", "🐯", "🐰", "🐻", "🐼", "🦁", "🐺", "🦉", "🐱", "🐶", "🌸", "🌙", "⭐", "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M4 14q0-2.625 1.25-4.675T8 5.875t2.75-2.138L12 3v3.3q0 .925.625 1.462t1.4.538q.425 0 .813-.175t.712-.575L16 7q1.8 1.05 2.9 2.912T20 14q0 2.2-1.075 4.013T16.1 20.874q.425-.6.663-1.312T17 18.05q0-1-.375-1.888t-1.075-1.587L12 11.1l-3.525 3.475q-.725.725-1.1 1.6T7 18.05q0 .8.238 1.513t.662 1.312q-1.75-1.05-2.825-2.863T4 14m8-.1l2.125 2.075q.425.425.65.95T15 18.05q0 1.225-.875 2.088T12 21t-2.125-.862T9 18.05q0-.575.225-1.112t.65-.963z'/></svg>", "🍀", "🎩", "🧣", "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M5 20v-2h14v2zm0-3.5L3.725 8.475q-.05 0-.113.013T3.5 8.5q-.625 0-1.062-.438T2 7t.438-1.062T3.5 5.5t1.063.438T5 7q0 .175-.038.325t-.087.275L8 9l3.125-4.275q-.275-.2-.45-.525t-.175-.7q0-.625.438-1.063T12 2t1.063.438T13.5 3.5q0 .375-.175.7t-.45.525L16 9l3.125-1.4q-.05-.125-.088-.275T19 7q0-.625.438-1.063T20.5 5.5t1.063.438T22 7t-.437 1.063T20.5 8.5q-.05 0-.112-.012t-.113-.013L19 16.5z'/></svg>", "💫"];
+        const AVATAR_EMOJI_POOL = ["😀", "😎", "🥳", "🤠", "😇", "🦊", "🐯", "🐰", "🐻", "🐼", "🦁", "🐺", "🦉", "🐱", "🐶", "🌸", "🌙", "⭐", "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4'/></svg>", "🍀", "🎩", "🧣", "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15'/><path d='M11 12 5.12 2.2'/><path d='m13 12 5.88-9.8'/><path d='M8 7h8'/><circle cx='12' cy='17' r='5'/><path d='M12 18v-2h-.5'/></svg>", "💫"];
         // 头像库：avatars/*.webp 静态资源（128×128，脚本 avatars_compress.py 生成）
         const AVATAR_LIBRARY = [
             { name: "头像1", url: "avatars/avatar_01.webp", gender: "male" },
@@ -14293,8 +14694,8 @@ function openNpcProfile(npcId) {
                     </div>
                 </div>`;
             body.innerHTML =
-                (games.length ? `<div class="hp-group-title">🎮 剧本卡</div>${games.map((e) => rowHtml(e, "🎮")).join("")}` : "") +
-                (chars.length ? `<div class="hp-group-title"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M2 22V4q0-.825.588-1.412T4 2h16q.825 0 1.413.588T22 4v12q0 .825-.587 1.413T20 18H6z"/></svg> 人物卡</div>${chars.map((e) => rowHtml(e, "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M2 22V4q0-.825.588-1.412T4 2h16q.825 0 1.413.588T22 4v12q0 .825-.587 1.413T20 18H6z'/></svg>")).join("")}` : "");
+                (games.length ? `<div class="hp-group-title"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><line x1="6" x2="10" y1="11" y2="11"/><line x1="8" x2="8" y1="9" y2="13"/><line x1="15" x2="15.01" y1="12" y2="12"/><line x1="18" x2="18.01" y1="10" y2="10"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"/></svg> 剧本卡</div>${games.map((e) => rowHtml(e, "🎮")).join("")}` : "") +
+                (chars.length ? `<div class="hp-group-title"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719"/></svg> 人物卡</div>${chars.map((e) => rowHtml(e, "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719'/></svg>")).join("")}` : "");
             body.querySelectorAll(".hp-row").forEach((el) => {
                 const type = el.dataset.hp;
                 const id = el.dataset.id;
@@ -14347,8 +14748,17 @@ function openNpcProfile(npcId) {
             const panel = document.getElementById("history-panel");
             if (!panel) return;
             if (panel.style.display === "none") {
-                const header = document.getElementById("top-nav-bar");
-                if (header) panel.style.top = (header.offsetHeight + 8) + "px";
+                // 挂在开它的那枚按钮正下方(与 toggleNavMenu 同一套写法):面板贴着入口,
+                // 才看得出来「这是那枚按钮开出来的」。取不到按钮时退回顶栏高度,不至于飘到页外。
+                const btn = document.getElementById("top-nav-history-btn");
+                const r = btn ? btn.getBoundingClientRect() : null;
+                if (r && r.bottom) {
+                    panel.style.top = Math.round(r.bottom + 6) + "px";
+                    panel.style.right = Math.max(8, Math.round(window.innerWidth - r.right)) + "px";
+                } else {
+                    const header = document.getElementById("top-nav-bar");
+                    if (header) panel.style.top = (header.offsetHeight + 8) + "px";
+                }
                 renderHistoryPanel();
                 panel.style.display = "block";
             } else {
@@ -14404,8 +14814,49 @@ function openNpcProfile(npcId) {
             const collapsed = header.classList.toggle("collapsed");
             btn.textContent = collapsed ? "▼" : "▲";
             btn.title = collapsed ? "展开导航" : "收起导航";
+            /* 收起时菜单按钮随 .top-mini-nav 一起 display:none，面板不关就会浮在空顶栏下面 */
+            if (collapsed) closeNavMenu();
         }
         window.toggleTopNavCollapse = toggleTopNavCollapse;
+
+        /* 顶栏「菜单」下拉。位置不写死 CSS，按按钮实测矩形定位——
+           折叠态与横竖屏下顶栏高度不同，写死 top 一定会错位。 */
+        function closeNavMenu() {
+            const menu = document.getElementById("nav-menu");
+            const btn = document.getElementById("nav-menu-btn");
+            if (menu) menu.style.display = "none";
+            if (btn) btn.setAttribute("aria-expanded", "false");
+        }
+        function toggleNavMenu(ev) {
+            /* 不拦就会冒泡到下面的 document 监听，把刚打开的面板立刻关掉 */
+            if (ev) ev.stopPropagation();
+            const menu = document.getElementById("nav-menu");
+            const btn = document.getElementById("nav-menu-btn");
+            if (!menu || !btn) return;
+            if (menu.style.display !== "none") { closeNavMenu(); return; }
+            menu.style.display = "flex";
+            btn.setAttribute("aria-expanded", "true");
+            const r = btn.getBoundingClientRect();
+            menu.style.top = Math.round(r.bottom + 6) + "px";
+            menu.style.right = Math.max(8, Math.round(window.innerWidth - r.right)) + "px";
+        }
+        window.toggleNavMenu = toggleNavMenu;
+        window.closeNavMenu = closeNavMenu;
+
+        /* 菜单的三个关闭条件集中在一个监听里：点面板内入口、点面板外、按 Esc。
+           用 closest 判断，不必给每个入口再加一行 onclick。 */
+        document.addEventListener("click", function (e) {
+            const menu = document.getElementById("nav-menu");
+            if (!menu || menu.style.display === "none") return;
+            const t = e.target;
+            if (!t || typeof t.closest !== "function") return;
+            /* 按钮自身由 toggleNavMenu 处理开合，这里不插手 */
+            if (t.closest("#nav-menu-btn")) return;
+            closeNavMenu();
+        });
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") closeNavMenu();
+        });
         function openAvatarPickerModal(initialValue, onConfirm) {
             const modal = document.getElementById("avatar-picker-modal");
             const grid = document.getElementById("avatar-picker-grid");
@@ -14681,9 +15132,11 @@ function openNpcProfile(npcId) {
                 InitLoadingService.close();
                 if (InitLoadingService.isCancelled()) return;
                 const title = "初始化解析失败";
+                // errMsg 原文要留给 detectMissingFields 做缺失项识别(它按中文关键字正则匹配),
+                // 只有展示那一处翻成人话
                 const errMsg = String(e?.message || e || "");
                 const missingFields = InitFlowService.detectMissingFields(errMsg);
-                const desc = InitFlowService.buildInitFailDesc(errMsg, missingFields);
+                const desc = InitFlowService.buildInitFailDesc(humanErrorMessage(errMsg, "初始化失败，请稍后重试"), missingFields);
                 const doRetry = await DecisionModalService.show({ title, descHtml: desc, okText: "重导模板并重试", cancelText: "返回" });
                 if (doRetry) {
                     const selectedId = ScenarioCardService.getSelectedId();
@@ -14710,7 +15163,7 @@ function openNpcProfile(npcId) {
                         } catch (e2) {
                             InitLoadingService.close();
                             pendingInitPlan = null;
-                            StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(StateService.get()), text: `> ⚠️ 重试仍失败：${e2?.message || e2 || "未知错误"}` });
+                            StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(StateService.get()), text: `> ⚠️ 重试仍失败：${humanErrorMessage(e2, "未知错误")}` });
                             StateService.save();
                             renderAll();
                         }
@@ -14841,6 +15294,8 @@ function openNpcProfile(npcId) {
         async function toggleCharacterFav(cardId, roleId) { await GameDetailService.toggleRoleFavorite(cardId, roleId, null); loadCommunityChars(); }
         function renderTemplateMarket() { TemplateMarketService.render(); }
         function useSkeletonTemplate(cardId) { TemplateMarketService.useTemplate(cardId); }
+        function reloadTemplateMarket() { TemplateMarketService.reload(); }
+        function clearTemplateSearch() { TemplateMarketService.clearSearch(); }
         function renderHomeDiscovery() { DiscoverService.renderHomeDiscovery(); }
         function switchSortMode(mode) {
             ScenarioCardViewService.setSortMode(mode);
@@ -14858,14 +15313,27 @@ function openNpcProfile(npcId) {
         let wizardStep = 1;
         let wizardStyle = "healing";
         function renderWizardStep() {
-            const titles = { 1: "步骤 1/3 · 选择文风", 2: "步骤 2/3 · 描述游戏", 3: "步骤 3/3 · 确认生成" };
-            document.getElementById("wizard-step-title").textContent = titles[wizardStep];
             document.getElementById("wizard-step-1").style.display = wizardStep === 1 ? "" : "none";
             document.getElementById("wizard-step-2").style.display = wizardStep === 2 ? "" : "none";
             document.getElementById("wizard-step-3").style.display = wizardStep === 3 ? "" : "none";
             document.getElementById("wizard-prev-btn").style.display = wizardStep > 1 ? "" : "none";
             document.getElementById("wizard-next-btn").style.display = wizardStep < 3 ? "" : "none";
             document.getElementById("wizard-go-btn").style.display = wizardStep === 3 ? "" : "none";
+            // 步骤条：已完成的上色表示「点得回去」，当前步走 aria-current
+            document.querySelectorAll("#wizard-steps .wz-step").forEach((b) => {
+                const n = Number(b.dataset.step);
+                b.classList.toggle("active", n === wizardStep);
+                b.classList.toggle("done", n < wizardStep);
+                if (n === wizardStep) b.setAttribute("aria-current", "step");
+                else b.removeAttribute("aria-current");
+            });
+        }
+        // 三段都是可选的（标题/描述留空照样能建卡），所以允许自由跳步，不设前置门槛
+        function wizardGoStep(n) {
+            const to = Math.min(3, Math.max(1, Number(n) || 1));
+            if (to === wizardStep) return;
+            wizardStep = to;
+            renderWizardStep();
         }
         function openCreationWizard() {
             // 有未上传草稿 → 提示继续编辑（草稿卡不出现在首页列表，只能从这里恢复）
@@ -14952,9 +15420,18 @@ function openNpcProfile(npcId) {
             let gen = null;
             if (flags.summary || flags.rules || flags.stats || flags.identity || flags.npcs || flags.opening) {
                 const goBtn = document.getElementById("wizard-go-btn");
-                if (goBtn) { goBtn.disabled = true; goBtn.textContent = "AI 生成中…"; }
+                // 生成要等十几到几十秒，只有文字变化不够——补转圈，让「在跑」和「卡住」能分开
+                if (goBtn) {
+                    goBtn.disabled = true;
+                    goBtn.classList.add("is-loading");
+                    goBtn.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span>AI 生成中…';
+                }
                 gen = await ScenarioInitPlanService.wizardGenerateContent({ title, prompt, styleMeta: styleMeta.option, polish, flags });
-                if (goBtn) { goBtn.disabled = false; goBtn.textContent = "确认生成"; }
+                if (goBtn) {
+                    goBtn.disabled = false;
+                    goBtn.classList.remove("is-loading");
+                    goBtn.textContent = "确认生成";
+                }
             }
             if (gen) {
                 if (flags.summary && typeof gen.summary === "string" && gen.summary.trim()) card.structured.world.summary = gen.summary.trim();
@@ -14979,7 +15456,7 @@ function openNpcProfile(npcId) {
                     card.structured.first_scene.options = Array.isArray(gen.opening.options) ? gen.opening.options.map((o) => String(o).trim()).filter(Boolean).slice(0, 4) : [];
                 }
             } else if (flags.summary || flags.rules || flags.stats || flags.identity || flags.npcs || flags.opening) {
-                NoticeModalService.showInfo({ title: "AI 生成失败", descHtml: "已创建空白卡，可在编辑器中手动填写设定。" });
+                NoticeModalService.showInfo({ title: "AI 生成失败", descHtml: "已创建空白卡，设定字段留空，可在编辑器中手动填写。<br>想再试一次 AI 生成，请重新进入创作向导新建一张卡。" });
             }
             let rest;
             try {
@@ -14997,7 +15474,7 @@ function openNpcProfile(npcId) {
             switchView("view-scenario-editor");
             ScenarioEditorService.focusEditor();
         }
-        return { init, onSendClick, sendUserText, rerunEvent, getEndingDefs, buildEndingChecks, refreshEndingBadge, fallbackEnding, requestEnding, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, goBackView, openCardSettings, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, autoDownloadAndPlay, openInitPreviewModal, closeInitPreviewModal, toggleHistoryPanel, renderPostRefPicker, clearPostRef, openPersonCardChat, prepareInitPreview, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, toggleAvatarLibraryPanel, avatarPickLib, avatarPick, avatarUpload, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, openWechatApp, closeWechatApp, switchWechatTab, openWechatChat, backToWechatList, appendEmojiToInput, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, unlockCloudSlot, saveToCloudSlot, loadFromCloudSlot, deleteCloudSlot, clearLocalCache, openInfoModal, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, closeFullMap, placeClick, placeGo, advanceStory, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate, renderHomeDiscovery, switchSortMode, openCreationWizard, wizardPickStyle, wizardTitleCount, wizardPromptCount, wizardNext, wizardPrev, wizardConfirm, closeUploadPriceModal, confirmUploadWithPrice };
+        return { init, onSendClick, sendUserText, rerunEvent, getEndingDefs, buildEndingChecks, refreshEndingBadge, fallbackEnding, requestEnding, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, goBackView, openCardSettings, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, autoDownloadAndPlay, openInitPreviewModal, closeInitPreviewModal, toggleHistoryPanel, closeHistoryPanel, renderPostRefPicker, clearPostRef, openPersonCardChat, prepareInitPreview, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, toggleAvatarLibraryPanel, avatarPickLib, avatarPick, avatarUpload, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, openWechatApp, closeWechatApp, switchWechatTab, openWechatChat, backToWechatList, appendEmojiToInput, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, unlockCloudSlot, saveToCloudSlot, loadFromCloudSlot, deleteCloudSlot, clearLocalCache, openInfoModal, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, closeFullMap, placeClick, placeGo, advanceStory, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate, reloadTemplateMarket, clearTemplateSearch, renderHomeDiscovery, switchSortMode, openCreationWizard, wizardPickStyle, wizardTitleCount, wizardPromptCount, wizardNext, wizardPrev, wizardGoStep, wizardConfirm, closeUploadPriceModal, confirmUploadWithPrice };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
@@ -15036,6 +15513,8 @@ function openNpcProfile(npcId) {
     function clearPostImage() { Controller.clearPostImage(); }
     function renderTemplateMarket() { Controller.renderTemplateMarket(); }
     function useSkeletonTemplate(cardId) { Controller.useSkeletonTemplate(cardId); }
+    function reloadTemplateMarket() { Controller.reloadTemplateMarket(); }
+    function clearTemplateSearch() { Controller.clearTemplateSearch(); }
     function renderHomeDiscovery() { Controller.renderHomeDiscovery(); }
     function switchSortMode(mode) { Controller.switchSortMode(mode); }
     function openCreationWizard() { Controller.openCreationWizard(); }
@@ -15044,6 +15523,7 @@ function openNpcProfile(npcId) {
     function wizardPromptCount() { Controller.wizardPromptCount(); }
     function wizardNext() { Controller.wizardNext(); }
     function wizardPrev() { Controller.wizardPrev(); }
+    function wizardGoStep(n) { Controller.wizardGoStep(n); }
     function wizardConfirm() { Controller.wizardConfirm(); }
     function bgmToggle() { UIRenderer.bgmToggle(); }
     function bgmNext() { UIRenderer.bgmNext(); }
@@ -15077,6 +15557,7 @@ function openNpcProfile(npcId) {
     function openInitPreviewModal() { Controller.openInitPreviewModal(); }
     function closeInitPreviewModal() { Controller.closeInitPreviewModal(); }
     function toggleHistoryPanel() { Controller.toggleHistoryPanel(); }
+    function closeHistoryPanel() { Controller.closeHistoryPanel(); }
     function renderPostRefPicker(v) { Controller.renderPostRefPicker(v); }
     function openPersonCardChat(cardId, npcId) { Controller.openPersonCardChat(cardId, npcId); }
     function clearPostRef() { Controller.clearPostRef(); }
@@ -15190,7 +15671,7 @@ function openNpcProfile(npcId) {
             // 会员档（月/年）：期内 AI 对话不限次、不消耗云币
             let planCards = Object.values(AppConfig.memberPlans).map(p =>
                 `<div class="recharge-item ${selectedPlan === p.id ? "active" : ""}" onclick="MembershipService.selectPlan('${p.id}')">
-                    <div class="recharge-coins">${p.tag ? `<span style="font-size:0.65rem;color:#fff;background:linear-gradient(135deg,#8e44ad,#6c3483);padding:1px 6px;border-radius:8px;margin-right:4px;vertical-align:2px;">${p.tag}</span>` : ""}<span style="font-size:0.8rem;color:#7c3aed;font-weight:800;">¥${p.price}</span><span style="font-size:0.7rem;color:#a89580;margin-left:4px;">= ${p.days} 天</span></div>
+                    <div class="recharge-coins">${p.tag ? `<span style="font-size:var(--fs-1);color:var(--btn-primary-text);background:var(--accent);padding:1px 6px;border-radius:8px;margin-right:4px;vertical-align:2px;">${p.tag}</span>` : ""}<span style="font-size:var(--fs-2);color:var(--accent-2-strong);font-weight:800;">¥${p.price}</span><span style="font-size:var(--fs-2);color:var(--sub);margin-left:4px;">= ${p.days} 天</span></div>
                     <div class="recharge-price">${p.name}${current === p.id ? "（当前）" : ""}</div>
                     <div class="recharge-price">${p.desc}</div>
                 </div>`
@@ -15198,7 +15679,7 @@ function openNpcProfile(npcId) {
             // 小额救急包(¥1/¥3 直付):免费额度用完后先扣包额度,再扣云币(与 worker PACK_PLANS 对齐)
             planCards += Object.values(AppConfig.packPlans).map(p =>
                 `<div class="recharge-item ${selectedPlan === p.id ? "active" : ""}" onclick="MembershipService.selectPlan('${p.id}')">
-                    <div class="recharge-coins">${p.tag ? `<span style="font-size:0.65rem;color:#fff;background:linear-gradient(135deg,#27ae60,#1e8449);padding:1px 6px;border-radius:8px;margin-right:4px;vertical-align:2px;">${p.tag}</span>` : ""}<span style="font-size:0.8rem;color:#16a34a;font-weight:800;">¥${p.price}</span><span style="font-size:0.7rem;color:#a89580;margin-left:4px;">= 点译 ${p.gloss} 次${p.recap ? ` + 复盘 ${p.recap} 次` : ""}</span></div>
+                    <div class="recharge-coins">${p.tag ? `<span style="font-size:var(--fs-1);color:var(--btn-primary-text);background:var(--accent);padding:1px 6px;border-radius:8px;margin-right:4px;vertical-align:2px;">${p.tag}</span>` : ""}<span style="font-size:var(--fs-2);color:var(--ok);font-weight:800;">¥${p.price}</span><span style="font-size:var(--fs-2);color:var(--sub);margin-left:4px;">= 点译 ${p.gloss} 次${p.recap ? ` + 复盘 ${p.recap} 次` : ""}</span></div>
                     <div class="recharge-price">${p.name}</div>
                     <div class="recharge-price">${p.desc}</div>
                 </div>`
@@ -15206,14 +15687,14 @@ function openNpcProfile(npcId) {
             // 云币档：解锁剧本卡 + 免费额度超限后的 AI 对话
             planCards += Object.values(AppConfig.chargePlans).map(p =>
                 `<div class="recharge-item ${selectedPlan === p.id ? "active" : ""}" onclick="MembershipService.selectPlan('${p.id}')">
-                    <div class="recharge-coins">${p.tag ? `<span style="font-size:0.65rem;color:#fff;background:linear-gradient(135deg,#f39c12,#e67e22);padding:1px 6px;border-radius:8px;margin-right:4px;vertical-align:2px;">${p.tag}</span>` : ""}¥${p.price}<span style="font-size:0.7rem;color:#a89580;margin-left:4px;">=${p.coins} 云币</span></div>
+                    <div class="recharge-coins">${p.tag ? `<span style="font-size:var(--fs-1);color:var(--btn-primary-text);background:var(--accent);padding:1px 6px;border-radius:8px;margin-right:4px;vertical-align:2px;">${p.tag}</span>` : ""}¥${p.price}<span style="font-size:var(--fs-2);color:var(--sub);margin-left:4px;">=${p.coins} 云币</span></div>
                     <div class="recharge-price">${p.name}</div>
                     <div class="recharge-price">${p.desc}</div>
                 </div>`
             ).join("");
             planCards += `
                 <div class="recharge-item ${selectedPlan === lp.id ? "active" : ""}" onclick="MembershipService.selectPlan('${lp.id}')">
-                    <div class="recharge-coins">${cdActive ? `<span style="font-size:0.75rem;color:#a89580;text-decoration:line-through;margin-right:4px;">¥${lp.originalPrice}</span>¥${lp.price}<span style="font-size:0.65rem;color:#fff;background:linear-gradient(135deg,#e74c3c,#c0392b);padding:1px 6px;border-radius:8px;margin-left:4px;vertical-align:2px;">限时</span>` : `<span style="font-size:0.95rem;color:#c0392b;font-weight:800;">¥${lp.originalPrice}</span>`}</div>
+                    <div class="recharge-coins">${cdActive ? `<span style="font-size:var(--fs-2);color:var(--sub);text-decoration:line-through;margin-right:4px;">¥${lp.originalPrice}</span>¥${lp.price}<span style="font-size:var(--fs-1);color:var(--btn-primary-text);background:var(--accent);padding:1px 6px;border-radius:8px;margin-left:4px;vertical-align:2px;">限时</span>` : `<span style="font-size:var(--fs-3);color:var(--danger);font-weight:800;">¥${lp.originalPrice}</span>`}</div>
                     <div class="recharge-price">${lp.name}${current === lp.id ? "（当前）" : ""}</div>
                     <div class="recharge-price">${lp.desc}</div>
                 </div>`;
@@ -15287,7 +15768,7 @@ function openNpcProfile(npcId) {
                 // 只清 innerHTML 会把金色外框留成一条空横条 → 关掉时连容器一起隐藏
                 banner.style.display = active ? "flex" : "none";
                 banner.innerHTML = active
-                    ? `<div style="font-size:0.9rem;font-weight:700;color:#8a4b00;"><svg class="wx-ui-icon" fill="currentColor" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" d="M4 14q0-2.625 1.25-4.675T8 5.875t2.75-2.138L12 3v3.3q0 .925.625 1.462t1.4.538q.425 0 .813-.175t.712-.575L16 7q1.8 1.05 2.9 2.912T20 14q0 2.2-1.075 4.013T16.1 20.874q.425-.6.663-1.312T17 18.05q0-1-.375-1.888t-1.075-1.587L12 11.1l-3.525 3.475q-.725.725-1.1 1.6T7 18.05q0 .8.238 1.513t.662 1.312q-1.75-1.05-2.825-2.863T4 14m8-.1l2.125 2.075q.425.425.65.95T15 18.05q0 1.225-.875 2.088T12 21t-2.125-.862T9 18.05q0-.575.225-1.112t.65-.963z"/></svg> 限时优惠进行中</div><div style="font-size:0.9rem;font-weight:700;color:#d63031;">距优惠结束 <span id="membership-countdown" style="font-variant-numeric:tabular-nums;background:#fff;padding:2px 8px;border-radius:6px;border:1px solid #e8b84b;">23:59:59</span></div>`
+                    ? `<div style="font-size:var(--fs-3);font-weight:700;color:var(--coin-ink);"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4"/></svg> 限时优惠进行中</div><div style="font-size:var(--fs-3);font-weight:700;color:var(--danger);">距优惠结束 <span id="membership-countdown" style="font-variant-numeric:tabular-nums;background:var(--card);padding:2px 8px;border-radius:6px;border:1px solid var(--coin-line);">23:59:59</span></div>`
                     : "";
             }
             const st = document.getElementById("membership-settings-text");
@@ -15316,16 +15797,16 @@ function openNpcProfile(npcId) {
             const isMobile = /Android|iPhone|iPad|iPod|Mobile|Windows Phone/i.test(navigator.userAgent || "");
             // PC 扫码模式：仅桌面端展示虎皮椒 url_qrcode 二维码
             if (!isMobile && order.qrUrl) {
-                payArea.innerHTML = `<div class="list-sub" style="margin:8px 0;color:var(--accent-dark);font-weight:700;">✅ 订单创建成功，请使用微信扫码支付</div>
+                payArea.innerHTML = `<div class="list-sub" style="margin:8px 0;color:var(--accent-dark);font-weight:700;"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m16 9-5.5 5.5L8 12"/></svg> 订单创建成功，请使用微信扫码支付</div>
                     <div class="list-sub" style="margin-top:6px;">订单号：${order.orderNo}</div>
-                    <img src="${order.qrUrl}" alt="微信支付二维码" style="width:180px;height:180px;margin:10px auto;display:block;border-radius:8px;background:#fff;padding:4px;">
+                    <img src="${order.qrUrl}" alt="微信支付二维码" style="width:180px;height:180px;margin:10px auto;display:block;border-radius:8px;background:var(--qr-bg);padding:4px;">
                     <div class="list-sub" style="margin-top:6px;">二维码 5 分钟内有效，扫码后请在手机上完成支付</div>
                     <div class="list-sub" style="margin-top:8px;">${tip}</div>`;
                 return;
             }
             // H5 支付：jump_url 收银台跳转
             if (autoRedirect) {
-                payArea.innerHTML = `<div class="list-sub" style="margin:8px 0;color:var(--accent-dark);font-weight:700;">✅ 订单创建成功，正在跳转${payMethodName}收银台…</div>
+                payArea.innerHTML = `<div class="list-sub" style="margin:8px 0;color:var(--accent-dark);font-weight:700;"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m16 9-5.5 5.5L8 12"/></svg> 订单创建成功，正在跳转${payMethodName}收银台…</div>
                     <div class="list-sub" style="margin-top:6px;">订单号：${order.orderNo}</div>
                     <a class="mini-btn primary" style="display:inline-block;text-decoration:none;text-align:center;margin-top:10px;" href="${order.jumpUrl}" target="_blank" rel="noopener">若未自动跳转，点击前往收银台</a>`;
                 setTimeout(() => { window.location.href = order.jumpUrl; }, 800);
@@ -15374,8 +15855,8 @@ function openNpcProfile(npcId) {
                 renderOrder(_currentOrder, true);
                 startPoll(data.orderNo);
             } catch (e) {
-                const msg = e.name === "AbortError" ? "订单创建超时，请稍后重试（支付网关繁忙）" : (e.message || "创建订单失败");
-                if (payArea) payArea.innerHTML = `<div class="list-sub" style="color:#c0392b;">${MarkdownService.escapeHtml(msg)}</div>`;
+                const msg = e.name === "AbortError" ? "订单创建超时，请稍后重试（支付网关繁忙）" : humanErrorMessage(e, "创建订单失败");
+                if (payArea) payArea.innerHTML = `<div class="list-sub" style="color:var(--danger);">${MarkdownService.escapeHtml(msg)}</div>`;
             } finally {
                 clearTimeout(timer);
                 _creatingOrder = false;
@@ -15400,7 +15881,7 @@ function openNpcProfile(npcId) {
                         closePanel();
                         const isCharge = !!AppConfig.chargePlans[paidPlanId];
                         const isMemberPlan = paidPlanId === "lifetime" || !!AppConfig.memberPlans[paidPlanId];
-                        NoticeModalService.showInfo({ title: "🎉 支付成功", descHtml: isCharge ? "云币已到账，快去解锁社区作品或畅玩吧！" : (isMemberPlan ? "会员已开通，AI 对话不限次畅玩！" : "操作成功") });
+                        NoticeModalService.showInfo({ title: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M5.8 11.3 2 22l10.7-3.79'/><path d='M4 3h.01'/><path d='M22 8h.01'/><path d='M15 2h.01'/><path d='M22 20h.01'/><path d='m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10'/><path d='m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11c-.11.7-.72 1.22-1.43 1.22H17'/><path d='m11 2 .33.82c.34.86-.2 1.82-1.11 1.98C9.52 4.9 9 5.52 9 6.23V7'/><path d='M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2Z'/></svg> 支付成功", descHtml: isCharge ? "云币已到账，快去解锁社区作品或畅玩吧！" : (isMemberPlan ? "会员已开通，AI 对话不限次畅玩！" : "操作成功") });
                         await AuthService.refreshBalance();
                         AuthService.updateUsageStatusUI();
                     }
@@ -15418,8 +15899,8 @@ function openNpcProfile(npcId) {
 
     // ==================== AppStoreService (手机应用商店:安装应用到主屏) ====================
     const INSTALLABLE_APPS = [
-        { id: "theater", label: "平行小剧场", icon: "🎭", desc: "穿越平行时空的迷你剧场", action: "theater" },
-        { id: "marriage", label: "姻缘一线牵", icon: "💘", desc: "红线一牵，良缘一线", action: "date" }
+        { id: "theater", label: "平行小剧场", icon: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M18 11c-1.5 0-2.5.5-3 2'/><path d='M4 6a2 2 0 0 0-2 2v4a5 5 0 0 0 5 5 8 8 0 0 1 5 2 8 8 0 0 1 5-2 5 5 0 0 0 5-5V8a2 2 0 0 0-2-2h-3a8 8 0 0 0-5 2 8 8 0 0 0-5-2z'/><path d='M6 11c1.5 0 2.5.5 3 2'/></svg>", desc: "穿越平行时空的迷你剧场", action: "theater" },
+        { id: "marriage", label: "姻缘一线牵", icon: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><path d='M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5'/></svg>", desc: "红线一牵，良缘一线", action: "date" }
     ];
     const INSTALLED_APPS_KEY = "bitlife_installed_apps_v1";
     const AppStoreService = (() => {
@@ -15460,7 +15941,7 @@ function openNpcProfile(npcId) {
             if (!box) return;
             box.innerHTML = INSTALLABLE_APPS.map((a) => {
                 const has = isInstalled(a.id);
-                return `<div class="appstore-row"><span class="appstore-icon">${a.icon}</span><div class="appstore-meta"><div class="appstore-name">${MarkdownService.escapeHtml(a.label)}</div><div class="appstore-desc">${MarkdownService.escapeHtml(a.desc)}</div></div><button type="button" class="appstore-btn ${has ? "installed" : "install"}" onclick="AppStoreService.toggleInstall('${a.id}')">${has ? "已安装" : "安装"}</button></div>`;
+                return `<div class="appstore-row"><span class="appstore-icon">${uiIconHtml(a.icon)}</span><div class="appstore-meta"><div class="appstore-name">${MarkdownService.escapeHtml(a.label)}</div><div class="appstore-desc">${MarkdownService.escapeHtml(a.desc)}</div></div><button type="button" class="appstore-btn ${has ? "installed" : "install"}" onclick="AppStoreService.toggleInstall('${a.id}')">${has ? "已安装" : "安装"}</button></div>`;
             }).join("");
         }
         function toggleInstall(id) {
@@ -15580,18 +16061,17 @@ function openNpcProfile(npcId) {
             const price = payPrice(card);
             if (lock.needLogin) {
                 const ok = await DecisionModalService.show({
-                    title: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M6 22q-.825 0-1.412-.587T4 20V10q0-.825.588-1.412T6 8h1V6q0-2.075 1.463-3.537T12 1t3.538 1.463T17 6v2h1q.825 0 1.413.588T20 10v10q0 .825-.587 1.413T18 22zm7.413-5.587Q14 15.825 14 15t-.587-1.412T12 13t-1.412.588T10 15t.588 1.413T12 17t1.413-.587M9 8h6V6q0-1.25-.875-2.125T12 3t-2.125.875T9 6z'/></svg> 请先登录",
+                    title: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><rect width='18' height='11' x='3' y='11' rx='2' ry='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg> 请先登录",
                     descHtml: `该作品解锁需 <b>${price} 云币</b>（永久拥有）。<br>登录后即可解锁，云币不足可充值或开通会员。`,
                     okText: "去登录", cancelText: "取消"
                 });
                 if (!ok) return false;
-                const overlay = document.getElementById("auth-overlay");
-                if (overlay) overlay.style.display = "flex";
+                AuthService.openLogin();
                 return false;
             }
-            const halfTag = card?.halfOff ? `<span style="color:#e67e22;">（限免半价）</span>` : "";
+            const halfTag = card?.halfOff ? `<span style="color:var(--warn);">（限免半价）</span>` : "";
             const ok = await DecisionModalService.show({
-                title: "<svg class='wx-ui-icon' fill='currentColor' width='1em' height='1em' viewBox='0 0 24 24'><path fill='currentColor' d='M6 22q-.825 0-1.412-.587T4 20V10q0-.825.588-1.412T6 8h1V6q0-2.075 1.463-3.537T12 1t3.538 1.463T17 6v2h1q.825 0 1.413.588T20 10v10q0 .825-.587 1.413T18 22zm7.413-5.587Q14 15.825 14 15t-.587-1.412T12 13t-1.412.588T10 15t.588 1.413T12 17t1.413-.587M9 8h6V6q0-1.25-.875-2.125T12 3t-2.125.875T9 6z'/></svg> 未解锁",
+                title: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><rect width='18' height='11' x='3' y='11' rx='2' ry='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg> 未解锁",
                 descHtml: `解锁《${MarkdownService.escapeHtml(card.title)}》需 <b>${price} 云币</b>（永久拥有，终身会员免费）${halfTag}。`,
                 okText: "立即解锁", cancelText: "取消"
             });
@@ -15599,11 +16079,11 @@ function openNpcProfile(npcId) {
             try {
                 await unlock(card.id);
                 await AuthService.refreshBalance();
-                NoticeModalService.showInfo({ title: "🔓 解锁成功", descHtml: `已解锁《${MarkdownService.escapeHtml(card.title)}》，永久畅玩！` });
+                NoticeModalService.showInfo({ title: "<svg class='wx-ui-icon' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' width='1em' height='1em' viewBox='0 0 24 24' aria-hidden='true'><rect width='18' height='11' x='3' y='11' rx='2' ry='2'/><path d='M7 11V7a5 5 0 0 1 9.9-1'/></svg> 解锁成功", descHtml: `已解锁《${MarkdownService.escapeHtml(card.title)}》，永久畅玩！` });
                 UIRenderer.renderScenarioCards();
                 return true;
             } catch (e) {
-                NoticeModalService.showInfo({ title: "解锁失败", descHtml: MarkdownService.escapeHtml(e.message || "请重试") });
+                NoticeModalService.showInfo({ title: "解锁失败", descHtml: MarkdownService.escapeHtml(humanErrorMessage(e, "请重试")) });
                 return false;
             }
         }
@@ -15776,7 +16256,7 @@ function openNpcProfile(npcId) {
         }
         function setLoading(on) {
             const btn = document.getElementById("auth-submit-btn");
-            if (btn) { btn.disabled = on; btn.textContent = on ? "请稍候..." : (_isResetMode ? "重置密码" : _isRegisterMode ? "注册" : "登录"); }
+            if (btn) { btn.disabled = on; btn.textContent = on ? "请稍候…" : (_isResetMode ? "重置密码" : _isRegisterMode ? "注册" : "登录"); }
             if (on) TopLoader.show("登录中..."); else TopLoader.hide();
         }
 
@@ -15792,6 +16272,10 @@ function openNpcProfile(npcId) {
             const toggleBtn = document.getElementById("auth-toggle-btn");
             const forgotBtn = document.getElementById("auth-forgot-btn");
             const submitBtn = document.getElementById("auth-submit-btn");
+            // 首个输入框三种模式共用,但只有登录收用户名:注册/找回密码必须跟着改文案,
+            // 否则会出现"写着邮箱或用户名、其实只认邮箱"的误导(2026-09-24 小徐报)
+            const emailInput = document.getElementById("auth-email");
+            const pwInput = document.getElementById("auth-password");
             if (_isResetMode) {
                 if (pw2) pw2.style.display = "none";
                 if (uname) { uname.style.display = "none"; uname.value = ""; }
@@ -15800,6 +16284,8 @@ function openNpcProfile(npcId) {
                 if (toggleBtn) toggleBtn.textContent = "← 返回登录";
                 if (forgotBtn) forgotBtn.style.display = "none";
                 if (submitBtn) submitBtn.textContent = "重置密码";
+                if (emailInput) { emailInput.placeholder = "邮箱"; emailInput.autocomplete = "email"; }
+                if (pwInput) pwInput.autocomplete = "new-password";
             } else if (_isRegisterMode) {
                 if (pw2) pw2.style.display = "block";
                 if (uname) uname.style.display = "block";
@@ -15808,6 +16294,8 @@ function openNpcProfile(npcId) {
                 if (toggleBtn) toggleBtn.textContent = "已有账号？点击登录";
                 if (forgotBtn) forgotBtn.style.display = "none";
                 if (submitBtn) submitBtn.textContent = "注册";
+                if (emailInput) { emailInput.placeholder = "邮箱"; emailInput.autocomplete = "email"; }
+                if (pwInput) pwInput.autocomplete = "new-password";
             } else {
                 if (pw2) pw2.style.display = "none";
                 if (uname) { uname.style.display = "none"; uname.value = ""; }
@@ -15816,6 +16304,8 @@ function openNpcProfile(npcId) {
                 if (toggleBtn) toggleBtn.textContent = "没有账号？点击注册";
                 if (forgotBtn) forgotBtn.style.display = "";
                 if (submitBtn) submitBtn.textContent = "登录";
+                if (emailInput) { emailInput.placeholder = "邮箱或用户名"; emailInput.autocomplete = "username"; }
+                if (pwInput) pwInput.autocomplete = "current-password";
             }
             // 复位验证码按钮(切模式时终止倒计时)
             const sendBtn = document.getElementById("auth-send-code-btn");
@@ -15890,7 +16380,7 @@ function openNpcProfile(npcId) {
                     await login(account, password);
                 }
             } catch (e) {
-                showError(e.message || "操作失败，请重试");
+                showError(humanErrorMessage(e, "操作失败，请重试"));
             } finally {
                 setLoading(false);
             }
@@ -16101,7 +16591,7 @@ function openNpcProfile(npcId) {
             sessionStorage.setItem(ANNOUNCE_KEY, "1");
             NoticeModalService.showInfo({
                 title: "公告",
-                descHtml: "<div style='font-size:1.05rem;font-weight:700;color:#845f35;text-align:center;padding:6px 0;'>欢迎来到云吞吞文游!!</div><div style='text-align:center;color:var(--sub,#806a55);font-size:0.85rem;margin-top:6px;'>愿你在每个故事里，遇见另一个自己</div>"
+                descHtml: "<div style='font-size:var(--fs-3);font-weight:700;color:#845f35;text-align:center;padding:6px 0;'>欢迎来到云吞吞文游!!</div><div style='text-align:center;color:var(--sub,#806a55);font-size:var(--fs-3);margin-top:6px;'>愿你在每个故事里，遇见另一个自己</div>"
             });
         }
 
@@ -16225,7 +16715,7 @@ function openNpcProfile(npcId) {
             if (e.key === "Enter") handleSubmit();
         });
 
-        return { init, handleSubmit, toggleMode, enterResetMode, sendCode, register, resetPassword, logout, getToken, getEmail, getUserData, refreshBalance, updateUsageStatusUI, hasMembership, socialLogin, showDoc, isSocialAccount, refreshCache: cacheUser };
+        return { init, handleSubmit, toggleMode, enterResetMode, sendCode, register, resetPassword, logout, getToken, getEmail, getUserData, refreshBalance, updateUsageStatusUI, hasMembership, socialLogin, showDoc, isSocialAccount, refreshCache: cacheUser, openLogin: showOverlay, hideLogin: hideOverlay };
     })();
 
     function hideBootScreen() {
@@ -16235,11 +16725,107 @@ function openNpcProfile(npcId) {
         setTimeout(() => b.remove(), 400);
     }
 
+    /* ===== 模式选择(2026-09-22)：首次进站问一次「学语言 / 玩文游」 =====
+       动机：两拨用户的入口诉求相反——学语言的希望一进来就能学，玩文游的希望一进来就看剧本。
+       与其把首页做成谁都不满意的折中排序，不如让他们自己选一次并记住。
+       记住的不只是徽章上那两个字：**下次进站直接落在自己那一侧的首页**（2026-09-26 补。
+       此前选过「学语言」的人再进来仍落在文游首页——徽章写着「学语言」却没跟上，等于白选）。
+       只存「选择结果」不存「问过没有」：没存过就等于没选过，清了缓存再问一次是对的。
+       模式的三个入口共用这一份状态——首次弹窗、顶部常驻徽章、我的页分段控件。 */
+    const ModeGate = (() => {
+        const KEY = "bitlife_mode_v1";
+        const LABEL = { learn: "学语言", play: "玩文游" };
+        // 「选了之后落在哪一页」只有这一份：pick（当场跳）与 landOnModeHome（下次进站跳）共用。
+        const HOME_OF = { learn: "view-lang", play: "view-home" };
+
+        function get() {
+            try {
+                const v = localStorage.getItem(KEY);
+                return (v === "learn" || v === "play") ? v : null;
+            } catch (e) { return null; }
+        }
+
+        function modal() { return document.getElementById("mode-pick-modal"); }
+
+        function close() {
+            const el = modal();
+            if (el) el.style.display = "none";
+        }
+
+        // 三个入口的显示状态一次性刷完，避免某个入口显示成上一次的值
+        function paint() {
+            const cur = get();
+            const chip = document.getElementById("mode-chip-label");
+            // 光写「学语言」会跟菜单里那行同名入口撞在一起，看着像第二个「学语言」页面入口。
+            // 加上「首页模式：」这层前缀，它才读得出是「选哪个首页」的开关而不是跳转。
+            if (chip) chip.textContent = cur ? "首页模式：" + LABEL[cur] : "选择首页模式";
+            [["learn", "set-mode-learn"], ["play", "set-mode-play"]].forEach(([m, id]) => {
+                const b = document.getElementById(id);
+                if (b) b.classList.toggle("on", cur === m);
+            });
+        }
+
+        function open() {
+            paint();
+            const el = modal();
+            if (el) el.style.display = "flex";
+        }
+
+        // keepHere: 在「我的」里改模式时不应该把人弹走
+        function pick(m, keepHere) {
+            if (m !== "learn" && m !== "play") return;
+            try { localStorage.setItem(KEY, m); } catch (e) { /* 存不了也要让本次跳转生效 */ }
+            close();
+            paint();
+            if (keepHere) return;
+            try { switchView(HOME_OF[m]); } catch (e) {}
+        }
+
+        // true = 不用再等了(已经弹了或早就选过)；false = 登录页还压在上面，等它让开
+        function maybeShow() {
+            if (get()) { paint(); return true; }
+            const auth = document.getElementById("auth-overlay");
+            if (auth && auth.style.display && auth.style.display !== "none") return false;
+            open();
+            return true;
+        }
+
+        // 冷启动落页：选过模式的人**下次进站直接落在自己那一侧的首页**（学语言 → 语言首页）。
+        // 只在进站时做一次；没选过就不动，交给首次弹窗（pick 自己会跳）。
+        // 「已经在目标页」用 DOM 上的 active 类判，不读 Controller 内部的 activeView——那个变量在
+        // Controller 的闭包里，ModeGate 这层拿不到。
+        let landedOnModeHome = false;
+        function landOnModeHome() {
+            if (landedOnModeHome) return;
+            const m = get();
+            if (!m) return;
+            landedOnModeHome = true;
+            const target = HOME_OF[m];
+            const cur = document.querySelector(".view-section.active");
+            if (cur && cur.id === target) return;   // 已在目标页就别白切一次：切页会重跑那一页的进入钩子
+            try { switchView(target); } catch (e) {}
+        }
+
+        return { get, pick, open, close, paint, maybeShow, landOnModeHome };
+    })();
+    window.ModeGate = ModeGate;
+
+    // 登录页 z-index 500000 压着弹窗的 450000，所以要等它让开；最多等 16 秒就不再打扰。
+    (function waitForModePick() {
+        let n = 0;
+        const t = setInterval(() => {
+            if (ModeGate.maybeShow() || ++n > 40) clearInterval(t);
+        }, 400);
+    })();
+
     window.onload = () => {
         // 先渲染本地数据(秒开),登录验证后台进行——慢网下不再白屏等待 auth
         try { Controller.init(); } catch (e) { console.error("初始化失败", e); }
         hideBootScreen();
         AuthService.init();
+        try { ModeGate.paint(); } catch (e) {}
+        // 落页放在 init 之后：上面那次首次渲染会把页面切到默认首页，落页得在它之后才不被冲掉。
+        try { ModeGate.landOnModeHome(); } catch (e) {}
     };
 
     /* ===== 语言文游 M3:英语生成引擎(旁挂 play 管线,零重构;英语档存档键 -lang 隔离) =====

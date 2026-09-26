@@ -79,12 +79,14 @@
     function hint(t, boxId) { var h = $(boxId || "lang-hint"); if (h) h.textContent = t || ""; }
     /* M6a:剧本库筛选状态与语言页渲染(库=英语原生卡;首页=推荐行+继续行) */
     var libFilter = { cat: "", gender: "" };
-    var THEME_ICON = { cottage: "🏡", "retro-paper": "🥛", glass: "🚇", fantasy: "🏰", "sci-fi-hud": "🌊", liquid: "💧", gothic: "🕯️", ink: "🖋️", cyber: "🌆", minimal: "▦" };
+    /* 主题图标复用文游首页同一套 lucide 描边（app.js cardEmoji），不再另维护一张 emoji 表 */
+    function themeIcon(c) { return ScenarioCardViewService.cardEmoji(String((c && c.theme) || "")); }
     /* R1 恋爱攻略卡:love 标签/向别偏好(存 localStorage lang_gender_pref_v1,O2 服务端零改动);loveMatch 供推荐排序 */
     function loveTagOf(c) {
         var st = (c && c.structured) || {};
         if (st.love_mode !== true) return "";
-        return "💗 恋爱" + (st.gender_target === "male" ? " · 男向" : st.gender_target === "female" ? " · 女向" : "");
+        var g = st.gender_target;
+        return uiIconHtml(g === "male" ? "♂" : g === "female" ? "♀" : "💗") + " 恋爱" + (g === "male" ? " · 男向" : g === "female" ? " · 女向" : "");
     }
     function genderPref() { try { return localStorage.getItem("lang_gender_pref_v1") || ""; } catch (e) { return ""; } }
     function saveGenderPref(g) { try { if (g) localStorage.setItem("lang_gender_pref_v1", g); else localStorage.removeItem("lang_gender_pref_v1"); } catch (e) {} }
@@ -103,6 +105,22 @@
     function bandShort(k) { return (BAND_INFO[k] && BAND_INFO[k][0]) ? BAND_INFO[k][0] : String(k || "").toUpperCase(); }
     /* 语言Tag(2026-09-13):卡的语言决定生成语种;难度Tag 已从卡面下线,词汇难度改由用户学习档动态决定 */
     var LANG_TAG_INFO = { en: ["EN", "英语"], ja: ["JA", "日语"], ko: ["KO", "韩语"] };
+    /* 选择页语种清单(2026-09-25,小徐「为了以后支持更多语言」):加一门语言 = 这里加一行 + 往 icons/flags/ 放一张旗。
+       就绪与否**不看这张表**,看 LANG_TAG_INFO 里有没有(词库/剧本/引擎都挂在那个 key 上)——
+       两处各写一份 ready 标记迟早会不同步。flag 名对应 icons/flags/{flag}.svg(circle-flags 下载,非手写)。 */
+    var LANG_PICK_LIST = [
+        { code: "en", name: "英语", flag: "us", flagAlt: "美国", sub: "四六级 · 考研 · 托福" },
+        { code: "es", name: "西班牙语", flag: "es", flagAlt: "西班牙" },
+        { code: "ja", name: "日语", flag: "jp", flagAlt: "日本", sub: "JLPT N5–N1" },
+        { code: "ko", name: "韩语", flag: "kr", flagAlt: "韩国", sub: "TOPIK 初中高" },
+        { code: "it", name: "意大利语", flag: "it", flagAlt: "意大利" },
+        { code: "fr", name: "法语", flag: "fr", flagAlt: "法国" }
+    ];
+    function langReady(code) { return !!LANG_TAG_INFO[code]; }
+    function langMetaOf(code) {
+        for (var i = 0; i < LANG_PICK_LIST.length; i++) if (LANG_PICK_LIST[i].code === code) return LANG_PICK_LIST[i];
+        return null;
+    }
     function langKeyOf(c) {
         var k = String((c && (c.lang || (c.structured && c.structured.lang))) || "en").trim().toLowerCase();
         return LANG_TAG_INFO[k] ? k : "en";
@@ -134,7 +152,7 @@
             els[i].addEventListener("click", (function (cid) { return function () { api.enterCard(cid); }; })(els[i].getAttribute("data-cid")));
         }
     }
-    /* M8b:语言首页推荐区 = 文游首页同款 hb-card 大图轮播(4:3 封面 + 档/题材 tag + 轮次 + 播放按钮);点击卡任意处进入播放 */
+    /* M8b:语言首页推荐区 = 文游首页同款 hb-card 大图轮播(4:3 封面 + 档/题材 tag + 轮次 + 详情/播放按钮);卡主体点击进入播放,详情按钮单独弹层 */
     var langBanner = { idx: 0, timer: null };
     var lbSpan = "day", lbBoard = "time", lbCache = {}, lbReq = 0;
     /* 今日一句当前展示的语种与原文:点译请求要用它当 lang(不在会话里,curSessionLang 只会给 en),
@@ -142,38 +160,41 @@
     var todayShownLang = "en", todayShownText = "";
     // 排行榜:当前 span/榜别(time 时长|immersive 无阻畅读)/结果缓存(键=board|lang|span,30s)/请求序号(过期响应靠它作废)
     function langBannerHtml(c) {
-        var icon = THEME_ICON[String(c.theme || "")] || "📖";
+        var icon = themeIcon(c);
         var has = cardSaveOf(c), r = cardRoundOf(c);
         var loveTag = loveTagOf(c);
         var tagTxt = (loveTag ? '<span class="hb-love">' + loveTag + "</span> " : "") + '<span class="hb-lang">' + langNameOf(c) + "</span>" + (String(c.category_zh || "") ? " · " + api.esc(String(c.category_zh)) : "");
-        var playTxt = has ? "▶ 继续 · 第 " + (r || 1) + " 轮" : "立即游玩";
+        var playTxt = has ? uiIconHtml("▶") + " 继续 · 第 " + (r || 1) + " 轮" : "立即游玩";
         return '<div data-cid="' + cardCid(c) + '" class="hb-card">' +
             '<div class="hb-cover" id="lb-cover-' + window.CoverService.safeId(c.id) + '"><img class="scc-img" alt="' + api.esc(String(c.title_zh || c.title || (api.langName() + "剧本"))) + ' 封面" loading="lazy"><span class="scc-emoji">' + icon + "</span></div>" +
             '<div class="hb-tag">' + tagTxt + "</div>" +
             '<div class="hb-title">' + api.esc(String(c.title_zh || c.title || (api.langName() + "剧本"))) + "</div>" +
             '<div class="hb-sub">' + api.esc(String(c.title || "")) + (has ? " · " + api.langName() + "进度已到第 " + (r || 1) + " 轮" : "") + "</div>" +
             '<div class="hb-foot"><span class="hb-plays">' + LANG_TAG_INFO[langKeyOf(c)][0] + ' 原生 · 词库随你的学习档</span>' +
+            '<button type="button" class="tiny-btn hb-detail" onclick="event.stopPropagation();LangController.openLangDetail(\'' + cardCid(c) + '\')">详情</button>' +
             '<span class="hb-play-btn mini-btn primary">' + playTxt + "</span></div></div>";
     }
     /* M8c:剧本库网格卡(文游首页同款 scenario-card:4:3 封面 + 徽标 + 详情/播放按钮);卡主体点击=播放,详情按钮单独弹层 */
     function langGridCardHtml(c) {
-        var icon = THEME_ICON[String(c.theme || "")] || "📖";
+        var icon = themeIcon(c);
         var has = cardSaveOf(c), r = cardRoundOf(c);
         var themeKey = String(c.theme || "").replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase();
-        var playTxt = has ? "▶ 继续 · 第 " + (r || 1) + " 轮" : "立即游玩";
+        var playTxt = has ? uiIconHtml("▶") + " 继续 · 第 " + (r || 1) + " 轮" : "立即游玩";
         return '<div data-cid="' + cardCid(c) + '" class="scenario-card"><div class="scenario-card-main">' +
             '<div class="scenario-card-cover theme-' + themeKey + '" id="llc-cover-' + window.CoverService.safeId(c.id) + '">' +
             '<img class="scc-img" alt="' + api.esc(String(c.title_zh || c.title || (api.langName() + "剧本"))) + ' 封面" loading="lazy"><span class="scc-emoji">' + icon + "</span></div>" +
             '<div class="list-title">' + api.esc(String(c.title_zh || c.title || (api.langName() + "剧本"))) + "</div>" +
+            // 中文名和英文名是同一条信息的两种写法，标签夹在中间会把阅读顺序切断。
+            // 顺序：标题 → 英文副标题 → 标签 → 按钮。
+            '<div class="list-sub list-ellip">' + api.esc(String(c.title || "")) + "</div>" +
             '<div class="scenario-badges">' +
             (loveTagOf(c) ? '<span class="scenario-badge love">' + loveTagOf(c) + "</span>" : "") +
             langBadgeOf(c) +
             '<span class="scenario-badge">' + api.esc(String(c.category_zh || c.category || "")) + "</span>" +
             "</div>" +
-            '<div class="list-sub" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + api.esc(String(c.title || "")) + "</div>" +
             '<div class="scenario-card-btns">' +
             '<button class="tiny-btn" onclick="event.stopPropagation();LangController.openLangDetail(\'' + cardCid(c) + '\')">详情</button>' +
-            '<button class="tiny-btn primary">' + playTxt + "</button>" +
+            '<button class="tiny-btn primary' + (has ? " is-resume" : "") + '">' + playTxt + "</button>" +
             "</div></div></div>";
     }
     function contRowHtml(c) {
@@ -181,7 +202,7 @@
         return '<div data-cid="' + cardCid(c) + '" class="l6-row"><div class="l6-row-band lang-' + langKeyOf(c) + '">' + LANG_TAG_INFO[langKeyOf(c)][0] + "</div>" +
             '<div class="l6-row-main"><div class="l6-row-t">' + api.esc(String(c.title_zh || c.title || (api.langName() + "剧本"))) + "</div>" +
             '<div class="l6-row-sub">' + api.esc(String(c.title || "")) + " · " + api.langName() + "进度已到第 " + (r || 1) + " 轮</div></div>" +
-            '<span class="lang-badge ' + langKeyOf(c) + '" style="width:auto;height:auto;border-radius:8px;padding:2px 8px;font-size:.6rem;">继续</span><span class="l6-row-go">›</span></div>';
+            '<span class="lang-badge ' + langKeyOf(c) + ' text">继续</span><span class="l6-row-go">›</span></div>';
     }
     /* ---- 云端档案同步(M2):已登录用户手选档/沉浸模式存 PB lang_profiles,换设备不丢 ---- */
     var API_BASE = /blupure\.cn$/i.test(location.hostname) ? location.origin : "https://ai.blupure.cn";
@@ -197,6 +218,7 @@
     var api = {
         init: function () {
             if (!$("view-lang")) return;
+            api.renderPickerPage();
             api.renderLangPicker();
             api.renderPicker();
             api.applyLangCopy(); /* 按已存语种改写语言区文案(首页入口横幅固定三语种,不受影响) */
@@ -229,7 +251,9 @@
             if (viewId === "view-lang") { api.applyLangCopy(); api.renderHome(); return; }
             if (viewId === "view-lang-learn") { api.refresh(); api.renderLearnMeta(); api.renderToday(); api.renderLearnStats(false); return; }
             if (viewId === "view-lang-vocab") { api.renderLearnMeta(); api.refreshVocab(); return; }
-            if (viewId === "view-lang-leaderboard") { api.renderLeaderboard(); }
+            if (viewId === "view-lang-leaderboard") { api.renderLeaderboard(); return; }
+            /* 选择页:每次进来重画一遍(列表本体不变,只重算高亮),顺带清掉上次的提示语 */
+            if (viewId === "view-lang-picker") { api.renderPickerPage(); hint("", "langpick-hint"); }
         },
         /* M8d:进入生词本子页并立即重绘词表(直接调绕开 1.5s MutationObserver 节流) */
         refreshVocab: function () {
@@ -299,13 +323,51 @@
             try { if ($("lang-learn-stats-box")) api.renderLearnStats(true); } catch (e) {}
             hint("已切换到" + LANG_TAG_INFO[code][1] + "——学习档与剧本库都换成" + LANG_TAG_INFO[code][1] + "的了。");
         },
-        /* 语言首页三张语种卡:高亮当前语种(HTML 侧只写死英语卡 active,这里统一接管) */
-        renderLangPicker: function () {
-            var box = $("lang-picker"); if (!box) return;
-            var btns = box.querySelectorAll(".lang-lang-card");
-            for (var i = 0; i < btns.length; i++) {
-                btns[i].classList.toggle("active", btns[i].getAttribute("data-lang") === curLang());
+        /* 选择页列表(2026-09-25):由 LANG_PICK_LIST 生成——加语种只动那张表,不必改 HTML。
+           未就绪的语种照旧列出来但 disabled(用户能看见路线图,点了不会有反应) */
+        renderPickerPage: function () {
+            var box = $("langpick-list"); if (!box) return;
+            var html = "";
+            for (var i = 0; i < LANG_PICK_LIST.length; i++) {
+                var L = LANG_PICK_LIST[i], ready = langReady(L.code);
+                html += '<button type="button" class="langpick-opt' + (ready ? "" : " is-soon") + '"' +
+                    ' data-lang="' + L.code + '"' + (ready ? ' onclick="LangController.pickLang(\'' + L.code + '\')"' : " disabled") + ">" +
+                    '<img class="langpick-flag" src="icons/flags/' + L.flag + '.svg" alt="' + api.esc(L.flagAlt || L.name) + '">' +
+                    '<span class="langpick-text"><span class="langpick-name">' + api.esc(L.name) + "</span>" +
+                    (L.sub ? '<span class="langpick-sub">' + api.esc(L.sub) + "</span>" : "") + "</span>" +
+                    '<span class="langpick-tag' + (ready ? "" : " soon") + '">' + (ready ? "" : "即将上线") + "</span>" +
+                    "</button>";
             }
+            box.innerHTML = html;
+            api.renderLangPicker();
+        },
+        /* 高亮当前语种:选择页的列表项 + 两处「当前语种」入口行(语言首页 / 学习中心)。
+           入口行没有 id(两份),统一按 .lang-cur-entry + data-cur-* 改写,免得复制 id 撞车 */
+        renderLangPicker: function () {
+            var i, lg = curLang();
+            var opts = document.querySelectorAll("#langpick-list .langpick-opt");
+            for (i = 0; i < opts.length; i++) {
+                var on = opts[i].getAttribute("data-lang") === lg;
+                opts[i].classList.toggle("active", on);
+                var tag = opts[i].querySelector(".langpick-tag");
+                if (tag && !tag.classList.contains("soon")) tag.textContent = on ? "当前" : "";
+                if (on) opts[i].setAttribute("aria-current", "true"); else opts[i].removeAttribute("aria-current");
+            }
+            var m = langMetaOf(lg) || LANG_PICK_LIST[0];
+            var rows = document.querySelectorAll(".lang-cur-entry");
+            for (i = 0; i < rows.length; i++) {
+                var f = rows[i].querySelector("[data-cur-flag]"), n = rows[i].querySelector("[data-cur-name]"), s = rows[i].querySelector("[data-cur-sub]");
+                if (f) { f.src = "icons/flags/" + m.flag + ".svg"; f.alt = m.flagAlt || m.name; }
+                if (n) n.textContent = m.name;
+                if (s) s.textContent = m.sub || "";
+            }
+        },
+        /* 选择页点选(2026-09-25):未就绪的语种忽略(按钮已 disabled,但程序调用/老页面缓存仍可能进来);
+           就绪的先切语种再退回上一页——用户从哪进来就回哪去,那一页已按新语种重渲染 */
+        pickLang: function (code) {
+            if (!langReady(code)) { hint("这门语言还在开发中，先试试别的～", "langpick-hint"); return; }
+            api.selectLang(code);
+            if (typeof window.goBackView === "function") window.goBackView();
         },
         /* M8.5:档位纯手动,系统不做任何测定/建议;M10(2026-09-13):chips 改滑动条——拖动预览、松手生效 */
         showBand: function () {
@@ -323,7 +385,7 @@
                     ? "三档按 TOPIK 递进：初级从基础短句起步，中级可读日常会话，高级适合新闻与抽象表达——松手即生效，随时可换。"
                     : "五档按难度递进：校园日常从 HS / CET4 起步，都市情感试试 CET6，思辨叙事往考研 / 托福挑——松手即生效，随时可换。");
             box.innerHTML = '<div class="lang-band-hero"><div class="lang-band-chip ' + (has ? (b[2] || "") : "") + '" id="lang-band-chip">' + (has ? b[0] : "?") + "</div>" +
-                '<div style="flex:1;min-width:0;">' +
+                '<div class="grow">' +
                 '<div class="lang-band-t" id="lang-band-t">' + (has ? ("你的学习档：" + lname + " " + b[0] + " · " + b[1]) : "还没选学习档——拖动滑块挑一档") + "</div>" +
                 '<div class="lang-band-d" id="lang-band-d">' + (has ? b[3] : emptyD) + "</div>" +
                 '<input type="range" class="band-slider" id="lang-band-slider" min="0" max="' + (order.length - 1) + '" step="1" value="' + idx + '" aria-label="学习档" oninput="LangController.previewBand(this.value)" onchange="LangController.setBandByIndex(this.value)">' +
@@ -490,7 +552,7 @@
             var c = lbCache[key];
             if (c && Date.now() - c.at < 30000) { box.innerHTML = c.html; api.lbMeta(c); api.lbMe(c); return; }
             var seq = ++lbReq;
-            box.innerHTML = '<div class="list-sub" style="padding:14px 0;">榜单加载中…</div>';
+            box.innerHTML = '<div class="list-sub list-empty">榜单加载中…</div>';
             fetch(API_BASE + "/api/lang/leaderboard?board=" + encodeURIComponent(board) +
                 "&span=" + encodeURIComponent(span) + "&lang=" + encodeURIComponent(lang), {
                 headers: token() ? { "X-Auth-Token": "Bearer " + token() } : {}
@@ -498,7 +560,7 @@
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (d) {
                     if (seq !== lbReq) return;    // 已被更新的请求取代,丢弃这一批
-                    if (!d) { box.innerHTML = '<div class="list-sub" style="padding:14px 0;">榜单加载失败，点「↻ 刷新」重试</div>'; return; }
+                    if (!d) { box.innerHTML = '<div class="list-sub list-empty">榜单加载失败，点「刷新」重试</div>'; return; }
                     var html = api.lbRowsHtml(d, board, lang);
                     var c2 = { at: Date.now(), html: html, meta: d, items: d.items, me: d.me, board: board, lang: lang, span: span };
                     lbCache[key] = c2;
@@ -508,20 +570,20 @@
                 })
                 .catch(function () {
                     if (seq !== lbReq) return;
-                    box.innerHTML = '<div class="list-sub" style="padding:14px 0;">网络开小差了，点「↻ 刷新」重试</div>';
+                    box.innerHTML = '<div class="list-sub list-empty">网络开小差了，点「刷新」重试</div>';
                 });
         },
         lbSyncTitles: function () {
             var ln = LANG_TAG_INFO[curLearnLang()][1];
             var t = $("lb-title"), s = $("lb-sub");
-            if (t) t.textContent = lbBoard === "immersive" ? "📖 " + ln + "无阻畅读榜" : "🏆 " + ln + "学习时长榜";
+            if (t) t.innerHTML = lbBoard === "immersive" ? uiIconHtml("📖") + " " + ln + "无阻畅读榜" : uiIconHtml("🏆") + " " + ln + "学习时长榜";
             if (s) s.textContent = lbBoard === "immersive"
                 ? "不点生词、不看译文、一路顺畅读下去的原文字数才算——挂机刷时长在这里没用。每次进入自动累计，越读越靠前。"
                 : "玩" + ln + "剧本 + 生词本翻记都算学习时长——每次进入自动记录，越玩越靠前。";
         },
         lbRowsHtml: function (d, board, lang) {
             var items = d.items || [];
-            if (!items.length) return '<div class="list-sub" style="padding:14px 0;">' +
+            if (!items.length) return '<div class="list-sub list-empty">' +
                 (board === "immersive"
                     ? "还没有人上榜——去玩" + LANG_TAG_INFO[lang || "en"][1] + "剧本，一路无阻地读下去，第一个留下名字！"
                     : "还没有人上榜——去玩" + LANG_TAG_INFO[lang || "en"][1] + "剧本，第一个留下名字！") + "</div>";
@@ -573,8 +635,14 @@
         },
         recommendFor: function (lcs) {
             var arr = lcs.slice();
-            /* R1 向别偏好(有档时同样生效):匹配向别的恋爱卡最优先,再按 band 距离/上架序 */
-            var pref = genderPref();
+            /* R1 向别偏好(有档时同样生效):匹配向别的恋爱卡最优先,再按 band 距离/上架序。
+               两个坑一起修(2026-09-26 小徐「语言首页动态展示的剧本应当展示恋爱女性向的卡」):
+               ①存进 localStorage 的是筛选 chip 的取值(love-f/love-m),卡上写的却是 female/male,
+                 旧代码直接拿两边比字符串,**永远不相等**——向别偏好在推荐里从来没生效过,这里翻一次;
+               ②没存过偏好时按女向算。首页轮播是 recommendFor 唯一的调用方,所以这条默认值只落在轮播上;
+                 用户在剧本库点过「恋爱·男向」存下的偏好照样盖过它。 */
+            var gp = genderPref();
+            var pref = gp === "love-m" ? "male" : "female";
             /* 档距按**当前语种**的档序算:英语五档/日语 N5-N1/韩语初中高三张序表混着算会把档距算成胡说 */
             var _order = bandOrderOf(curLang());
             var my = profile.band || "";
@@ -600,12 +668,12 @@
                 if (profile.band) {
                     var b = BAND_INFO[profile.band] || BAND_INFO.cet4;
                     hb.innerHTML = '<div class="lang-band-hero"><div class="lang-band-chip ' + (b[2] || "") + '">' + api.esc(b[0]) + "</div>" +
-                        '<div style="flex:1;min-width:0;"><div class="lang-band-t">你的学习档：英语 ' + api.esc(b[0]) + " · " + api.esc(b[1]) + "</div>" +
+                        '<div class="grow"><div class="lang-band-t">你的学习档：英语 ' + api.esc(b[0]) + " · " + api.esc(b[1]) + "</div>" +
                         '<div class="lang-band-d">' + api.esc(b[3]) + "</div></div></div>";
                 } else {
-                    hb.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:12px 13px;border-radius:14px;border:1px dashed var(--line,#e2ccb0);background:var(--input-bg,#fff8f0);">' +
-                        '<span style="font-size:1.35rem;">🎯</span><div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:.85rem;">还没选学习档</div>' +
-                        '<div class="list-sub" style="margin-top:1px;">挑一个档，推荐与词库会按它匹配；不选也能直接开玩</div></div>' +
+                    hb.innerHTML = '<div class="lang-emptytip">' +
+                        '<span class="lang-icon">' + uiIconHtml("🎯") + '</span><div class="grow"><div class="lang-tip-t">还没选学习档</div>' +
+                        '<div class="list-sub">挑一个档，推荐与词库会按它匹配；不选也能直接开玩</div></div>' +
                         '<button type="button" class="mini-btn primary" onclick="LangController.goLearn()">去选档</button></div>';
                 }
             }
@@ -764,22 +832,22 @@
             var note = done
                 ? '<div class="lang-today-note" id="lang-today-note">本句已译过，明天换新句</div>'
                 : '<div class="lang-today-note" id="lang-today-note">' + (token()
-                    ? '<button type="button" class="lt-btn" onclick="LangController.todayGloss()">译一译</button> <span style="margin-left:4px;">免费每天限量，会员不限量</span>'
-                    : "登录后可点译今日一句（每日免费限量）") + "</div>";
+                    ? '<button type="button" class="lt-btn" onclick="LangController.todayGloss()">译一译</button> <span class="note-in">免费每天限量，会员不限量</span>'
+                    : '<button type="button" class="lt-btn" onclick="AuthService.openLogin()">去登录</button> <span class="note-in">登录后可点译今日一句（每日免费限量）</span>') + "</div>";
             box.innerHTML = '<div class="lang-today">' +
-                '<div class="lang-today-h"><span>📅 今日一句</span><span style="font-weight:600;opacity:.85;">【' + api.esc(t.tag) + "】</span></div>" +
+                '<div class="lang-today-h"><span>' + uiIconHtml("📅") + ' 今日一句</span><span class="cap-soft">【' + api.esc(t.tag) + "】</span></div>" +
                 '<div class="lang-today-en" id="lang-today-en">' + api.esc(todayShownText) + "</div>" + zhBox + note + "</div>";
         },
         todayGloss: function () {
             var enEl = $("lang-today-en"), note = $("lang-today-note");
             if (!enEl || !note) return;
-            if (!token()) { note.innerHTML = "登录后可点译今日一句（每日免费限量）"; return; }
+            if (!token()) { note.innerHTML = '<button type="button" class="lt-btn" onclick="AuthService.openLogin()">去登录</button> <span class="note-in">登录后可点译今日一句（每日免费限量）</span>'; return; }
             var s = enEl.textContent.replace(/\s+/g, " ").trim().slice(0, 500);
             if (!s) return;
-            var btns = function (h) { return '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">' + h + "</div>"; };
+            var btns = function (h) { return '<div class="btn-row">' + h + "</div>"; };
             var bPack = '<button type="button" class="lt-btn ghost" onclick="LangController.openPack()">小额直付 ¥1/¥3</button>';
             var bMember = '<button type="button" class="lt-btn ghost" onclick="MembershipService.openPanel()">开通会员不限量</button>';
-            note.innerHTML = '<span class="lg-gload"><i></i><i></i><i></i></span><span style="margin-left:6px;">译文生成中…</span>';
+            note.innerHTML = '<span class="lg-gload"><i></i><i></i><i></i></span><span class="note-in">译文生成中…</span>';
             fetch(API_BASE + "/api/lang/gloss", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token() },
@@ -796,7 +864,7 @@
                         var zhEl = $("lang-today-zh");
                         if (!zhEl) { var box = $("lang-today-box"); var enEl2 = $("lang-today-en"); if (box && enEl2) { var d2 = document.createElement("div"); d2.className = "lang-today-zh"; d2.id = "lang-today-zh"; d2.textContent = zh; enEl2.parentNode.insertBefore(d2, enEl2.nextSibling); } }
                         else { zhEl.style.display = ""; zhEl.textContent = zh; }
-                        note.innerHTML = '<span style="font-weight:800;color:#2f9e6e;">✓ 已译好</span><span style="margin-left:6px;">点剧情里的句子同样即点即译；点词自动进生词本</span>';
+                        note.innerHTML = '<span class="ok">' + uiIconHtml("✓") + ' 已译好</span><span class="note-in">点剧情里的句子同样即点即译；点词自动进生词本</span>';
                     } else if (d && d.code === "GLOSS_DAILY_LIMIT") {
                         note.innerHTML = "今天的点译次数用完啦（明天 08:00 刷新）" + btns(bMember);
                     } else if (d && d.code === "INSUFFICIENT_COIN") {
@@ -836,14 +904,14 @@
             var v = d.vocab || {};
             var grid = '<div class="stat-grid">' +
                 '<div class="stat-cell"><b>' + api.fmtDur(d.today_seconds || 0) + "</b><s>今日学习</s></div>" +
-                '<div class="stat-cell"><b>' + (streak > 0 ? "🔥 " : "") + streak + " 天</b><s>连续学习</s></div>" +
+                '<div class="stat-cell"><b>' + (streak > 0 ? uiIconHtml("🔥") + " " : "") + streak + " 天</b><s>连续学习</s></div>" +
                 '<div class="stat-cell"><b>' + (Number(v.mastered || 0) + Number(v.familiar || 0)) + " / " + Number(v.total || 0) + "</b><s>已掌握/生词</s></div>" +
                 "</div>";
             var weekNew = Number(d.week_new_vocab || 0);
             var line = "本周已学 " + api.fmtDur(d.week_seconds || 0) + " · 累计 " + Number(d.total_days || 0) + " 天 · 已练词 " + Number(d.bank_words || 0) +
                 (weekNew > 0 ? " · 本周新收 " + weekNew + " 词" : "");
             el.innerHTML = grid +
-                '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;"><div class="list-sub" style="margin:0;">' + line + "</div>" +
+                '<div class="list-head list-loose"><div class="list-sub list-flush">' + line + "</div>" +
                 '<button type="button" class="mini-btn ghost" onclick="LangController.goLearnStats()">统计与周报 ›</button></div>';
         },
         /* P2-4 学习中心统计周报区(2026-09-09):7 日柱状+本周小结+生词掌握条;数据同 learn-stats 单接口
@@ -852,19 +920,20 @@
             var box = $("lang-learn-stats-box");
             if (!box) return;
             if (!token()) {
-                box.innerHTML = '<div class="list-sub" style="padding:12px 0;">登录后查看学习统计与周报——数据随账号云端同步，换设备不丢。</div>';
+                box.innerHTML = '<div class="list-sub list-empty">登录后查看学习统计与周报——数据随账号云端同步，换设备不丢。</div>' +
+                    '<div class="btn-row mid"><button type="button" class="mini-btn ghost" onclick="AuthService.openLogin()">去登录</button></div>';
                 return;
             }
             var want = curLearnLang();
             // 缓存要带语种:只按时间的话,30s 内切语种会把旧语种的统计当新语种显示
             if (!force && myStatsCache && myStatsCache.lang === want && Date.now() - myStatsCache.at < 30000) { api.learnStatsHtml(myStatsCache.data); return; }
-            box.innerHTML = '<div class="list-sub" style="padding:12px 0;">统计加载中…</div>';
+            box.innerHTML = '<div class="list-sub list-empty">统计加载中…</div>';
             fetch(API_BASE + "/api/lang/learn-stats?lang=" + encodeURIComponent(want), { headers: { "X-Auth-Token": "Bearer " + token() } })
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (d) {
                     if (!d || !d.ok) {
                         var bx = $("lang-learn-stats-box");
-                        if (bx) bx.innerHTML = '<div class="list-sub" style="padding:12px 0;">统计加载失败，点「刷新」重试</div>';
+                        if (bx) bx.innerHTML = '<div class="list-sub list-empty">统计加载失败，点「刷新」重试</div>';
                         return;
                     }
                     myStatsCache = { at: Date.now(), lang: want, data: d };
@@ -872,7 +941,7 @@
                 })
                 .catch(function () {
                     var bx = $("lang-learn-stats-box");
-                    if (bx) bx.innerHTML = '<div class="list-sub" style="padding:12px 0;">网络开小差了，点「刷新」重试</div>';
+                    if (bx) bx.innerHTML = '<div class="list-sub list-empty">网络开小差了，点「刷新」重试</div>';
                 });
         },
         learnStatsHtml: function (d) {
@@ -905,28 +974,28 @@
             var weekS = Number(d.week_seconds || 0);
             var rows =
                 '<div class="wk-row"><span>本周学习</span><b>' + api.fmtDur(weekS) + "</b></div>" +
-                '<div class="wk-row"><span>连续学习</span><b>' + (streak > 0 ? "🔥 " + streak + " 天" : "今天开始第一段连胜") + "</b></div>" +
+                '<div class="wk-row"><span>连续学习</span><b>' + (streak > 0 ? uiIconHtml("🔥") + " " + streak + " 天" : "今天开始第一段连胜") + "</b></div>" +
                 '<div class="wk-row"><span>累计学习</span><b>' + api.fmtDur(d.total_seconds || 0) + " · " + Number(d.total_days || 0) + " 天</b></div>" +
                 '<div class="wk-row"><span>本周新收生词</span><b>' + Number(d.week_new_vocab || 0) + " 个</b></div>" +
                 '<div class="wk-row"><span>词测练词</span><b>' + Number(d.bank_words || 0) + " 个</b></div>";
             var vHtml = vTotal > 0
-                ? '<div style="margin-top:10px;"><div class="wks-vt">生词掌握 <span class="list-sub" style="margin-left:2px;">已掌握 ' + vMas + " · 眼熟 " + vFam + " · 新学 " + vNew + "</span></div>" +
+                ? '<div class="list-loose"><div class="wks-vt">生词掌握 <span class="list-sub note-in">已掌握 ' + vMas + " · 眼熟 " + vFam + " · 新学 " + vNew + "</span></div>" +
                     '<div class="wks-track-line"><div class="wks-vf" style="width:' + famPct + '%" title="眼熟 ' + vFam + '"></div><div class="wks-vm" style="width:' + masPct + '%" title="已掌握 ' + vMas + '"></div></div>' +
-                    '<div class="list-sub" style="margin-top:4px;">' + (vMas === vTotal ? "生词全部掌握 🎉 太强了，可以挑战更高档剧本了" : "深色段 = 已掌握进度 · 玩剧本时点词点句，生词本会自动长出来") + "</div></div>"
-                : '<div class="list-sub" style="margin-top:10px;">还没收过生词——去玩一个' + learnLangZh() + '剧本，点一下不认识的字词就会自动收进生词本，开始积累吧。</div>';
+                    '<div class="list-sub">' + (vMas === vTotal ? "生词全部掌握 " + uiIconHtml("🎉") + " 太强了，可以挑战更高档剧本了" : "深色段 = 已掌握进度 · 玩剧本时点词点句，生词本会自动长出来") + "</div></div>"
+                : '<div class="list-sub list-loose">还没收过生词——去玩一个' + learnLangZh() + '剧本，点一下不认识的字词就会自动收进生词本，开始积累吧。</div>';
             box.innerHTML =
-                '<div class="stat-grid" style="grid-template-columns:repeat(4,1fr);margin-top:0;">' +
+                '<div class="stat-grid stat-grid-4">' +
                 '<div class="stat-cell"><b>' + api.fmtDur(d.today_seconds || 0) + "</b><s>今日学习</s></div>" +
                 '<div class="stat-cell"><b>' + api.fmtDur(weekS) + "</b><s>本周学习</s></div>" +
-                '<div class="stat-cell"><b>' + (streak > 0 ? "🔥 " : "") + streak + "</b><s>连续天数</s></div>" +
+                '<div class="stat-cell"><b>' + (streak > 0 ? uiIconHtml("🔥") + " " : "") + streak + "</b><s>连续天数</s></div>" +
                 '<div class="stat-cell"><b>' + Number(d.total_days || 0) + "</b><s>累计天数</s></div>" +
                 "</div>" +
-                '<div style="margin-top:12px;"><div class="wks-t">近 7 日学习</div><div class="wks-cols">' + cols + "</div>" +
-                (mini ? '<div class="list-sub" style="margin-top:3px;text-align:center;">' + mini + "，坚持就是胜利 💪</div>" : '<div class="list-sub" style="margin-top:3px;text-align:center;">这 7 天还没开始——从「今日一句」或推荐剧本的第一句开始吧</div>') +
+                '<div class="list-loose"><div class="wks-t">近 7 日学习</div><div class="wks-cols">' + cols + "</div>" +
+                (mini ? '<div class="list-sub list-center">' + mini + "，坚持就是胜利 " + uiIconHtml("💪") + "</div>" : '<div class="list-sub list-center">这 7 天还没开始——从「今日一句」或推荐剧本的第一句开始吧</div>') +
                 "</div>" +
-                '<div class="wks-t" style="margin-top:12px;">本周小结</div>' + rows +
+                '<div class="list-loose"><div class="wks-t">本周小结</div></div>' + rows +
                 vHtml +
-                '<div style="margin-top:10px;text-align:center;"><button type="button" class="lt-btn ghost" onclick="LangController.renderLearnStats(true)">↻ 刷新统计</button></div>';
+                '<div class="list-loose list-center"><button type="button" class="lt-btn ghost" onclick="LangController.renderLearnStats(true)">' + uiIconHtml("↻") + ' 刷新统计</button></div>';
         },
         goLearnStats: function () {
             api.goLearn();
@@ -937,14 +1006,17 @@
             var el = $("lang-member-cta");
             if (!el) return;
             var m = false;
-            try { m = !!(window.AuthService && AuthService.hasMembership && AuthService.hasMembership()); } catch (e) {}
+            // 守卫不能写 window.AuthService：它是 app.js 的顶层 const，只在内联处理器与
+            // 全局词法环境里可见，取 window 上的同名属性永远是 undefined —— 那样这里恒为 false，
+            // 会员推广条对已开通会员也会照显。裸标识符在同一文件里本来就能用（调用那半就是这么写的）。
+            try { m = !!(AuthService.hasMembership && AuthService.hasMembership()); } catch (e) {}
             if (m) { el.style.display = "none"; return; }
             el.style.display = "block";
             el.innerHTML = '<div class="member-band" onclick="MembershipService.openPanel()">' +
-                '<span style="font-size:1.55rem;">👑</span>' +
-                '<div style="flex:1;min-width:0;"><div style="font-weight:900;font-size:.88rem;">云吞吞会员</div>' +
-                '<div style="font-size:.68rem;line-height:1.5;opacity:.85;margin-top:2px;">AI 对话 / 点译 / 复盘不限量（免费每日限量）· 优先用池内最优模型 · 付费社区卡免云币解锁</div></div>' +
-                '<span style="font-weight:900;flex-shrink:0;">开通 ›</span></div>';
+                '<span class="lang-icon">' + uiIconHtml("👑") + '</span>' +
+                '<div class="grow"><div class="member-band-t">云吞吞会员</div>' +
+                '<div class="member-band-d">AI 对话 / 点译 / 复盘不限量（免费每日限量）· 优先用池内最优模型 · 付费社区卡免云币解锁</div></div>' +
+                '<span class="member-band-go">开通 ›</span></div>';
         },
         renderContinue: function () {
             var wrap = $("lang-home-continue-wrap"); if (!wrap) return;
@@ -1038,11 +1110,11 @@
             for (gi = 0; gi < gts.length; gi++) gts[gi].classList.toggle("active", (gts[gi].getAttribute("data-gender") || "") === libFilter.gender);
             /* 列表 */
             if (!window.__LANG_CARDS_READY) {
-                rows.innerHTML = '<div class="list-sub" style="grid-column:1/-1;">剧本加载中…</div>';
+                rows.innerHTML = '<div class="list-sub grid-all">剧本加载中…</div>';
                 if (!window.__LANG_CARDS_LOADING) api.loadLangCards();
                 return;
             }
-            if (!lcs.length) { rows.innerHTML = '<div class="list-sub" style="grid-column:1/-1;">' + api.esc(api.libEmptyCopy()) + '</div>'; hint("", "lang-lib-hint"); return; }
+            if (!lcs.length) { rows.innerHTML = '<div class="list-sub grid-all">' + api.esc(api.libEmptyCopy()) + '</div>'; hint("", "lang-lib-hint"); return; }
             var list = [], i, c;
             for (i = 0; i < lcs.length; i++) {
                 c = lcs[i]; if (!c || !c.id) continue;
@@ -1051,7 +1123,7 @@
                 list.push(c);
             }
             if (!list.length) {
-                rows.innerHTML = '<div class="list-sub" style="grid-column:1/-1;text-align:center;">没有符合筛选的剧本——换个语种或题材看看</div>';
+                rows.innerHTML = '<div class="list-sub grid-all list-center">没有符合筛选的剧本——换个语种或题材看看</div>';
                 hint("", "lang-lib-hint");
                 return;
             }
@@ -1077,7 +1149,7 @@
             var heroTxt = [String(idn.role || ""), String(idn.background || "")].filter(function (x) { return x; }).join("；").slice(0, 160);
             var summary = String(w.summary || "").replace(/\s+/g, " ").trim().slice(0, 340);
             var html =
-                '<div class="lgd-cover" id="lgd-cover-' + window.CoverService.safeId(c.id) + '"><img class="scc-img" alt="' + api.esc(String(c.title_zh || c.title || (api.langName() + "剧本"))) + ' 封面" loading="lazy"><span class="scc-emoji">' + (THEME_ICON[String(c.theme || "")] || "📖") + "</span></div>" +
+                '<div class="lgd-cover" id="lgd-cover-' + window.CoverService.safeId(c.id) + '"><img class="scc-img" alt="' + api.esc(String(c.title_zh || c.title || (api.langName() + "剧本"))) + ' 封面" loading="lazy"><span class="scc-emoji">' + themeIcon(c) + "</span></div>" +
                 '<div class="lgd-title">' + api.esc(String(c.title_zh || c.title || (api.langName() + "剧本"))) + "</div>" +
                 '<div class="lgd-en">' + api.esc(String(c.title || "")) + " · " + langNameOf(c) + "原生剧本</div>" +
                 '<div class="lgd-badges">' +
@@ -1091,7 +1163,7 @@
                 (summary ? '<div class="lgd-desc"><b>故事预览（English）：</b>' + api.esc(summary) + "</div>" : "") +
                 (has ? '<div class="lgd-desc"><b>进度：</b>已到第 ' + (r || 1) + " 轮——接着上次的英语进度玩，词库按你在「学习中心」选的学习档走。</div>" : "");
             $("lang-gd-content").innerHTML = html;
-            $("lang-gd-play-btn").textContent = has ? "▶ 继续 · 第 " + (r || 1) + " 轮" : "立即游玩";
+            $("lang-gd-play-btn").innerHTML = has ? uiIconHtml("▶") + " 继续 · 第 " + (r || 1) + " 轮" : "立即游玩";
             window.CoverService.paint("lgd-cover-" + window.CoverService.safeId(c.id), c);
         },
         closeLangDetail: function () {

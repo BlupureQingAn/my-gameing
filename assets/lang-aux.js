@@ -441,13 +441,13 @@
             if (document.getElementById("lgGestureGuide")) return;
             var card = document.createElement("div");
             card.id = "lgGestureGuide";
-            card.style.cssText = "position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9999;background:rgba(43,33,20,.95);color:#ffe9c9;border:1px solid rgba(255,214,150,.4);border-radius:14px;padding:12px 18px;font-size:13px;line-height:1.9;box-shadow:0 6px 24px rgba(0,0,0,.28);max-width:86vw;text-align:center;touch-action:manipulation";
+            card.className = "lg-toast";
             var gLangZh = "英语";
             try { gLangZh = { en: "英语", ja: "日语", ko: "韩语" }[window.LangBandMeta.curLang()] || "英语"; } catch (e) {}
-            card.innerHTML = '<div style="font-weight:bold;font-size:14px;margin-bottom:2px">📖 玩' + gLangZh + '剧本小技巧</div>'
-                + '<div>👆 <b>长按</b>' + gLangZh + '句子/选项 → 看整句翻译</div>'
-                + '<div>👆 <b>双击</b>单词 → 查词典 / 收藏生词</div>'
-                + '<div style="margin-top:4px;font-size:11px;color:#c8a97e">点一下这条提示即可关闭</div>';
+            card.innerHTML = '<div class="lg-toast-t">' + uiIconHtml("📖") + ' 玩' + gLangZh + '剧本小技巧</div>'
+                + '<div>' + uiIconHtml("👆") + ' <b>长按</b>' + gLangZh + '句子/选项 → 看整句翻译</div>'
+                + '<div>' + uiIconHtml("👆") + ' <b>双击</b>单词 → 查词典 / 收藏生词</div>'
+                + '<div class="lg-toast-sub">点一下这条提示即可关闭</div>';
             var closeGuide = function () { try { if (card.parentNode) card.parentNode.removeChild(card); } catch (e) {} };
             card.addEventListener("pointerdown", function (e) {
                 e.stopPropagation();
@@ -526,7 +526,7 @@
                 var ce = document.createElement("div");
                 ce.className = "lg-recap-entry";
                 ce.setAttribute("data-act", "recap-open");
-                ce.textContent = "📋 第 " + Math.floor(rn / 5) + " 章小结 · 看看这 5 轮你学到啥 →";
+                ce.innerHTML = uiIconHtml("📋") + " 第 " + Math.floor(rn / 5) + " 章小结 · 看看这 5 轮你学到啥 →";
                 st.appendChild(ce);
             }
         }
@@ -786,9 +786,28 @@
 
     var WORD_TOK = /[A-Za-z][A-Za-z0-9'’-]*/g;
     var CJK_TOKEN_RE = { ja: /[ぁ-ゖァ-ヺー一-鿿々]/, ko: /[가-힣]/ };
+    /* 一个词该不该划虚线:词池(生词本∪gloss 关键表达)命中,**或用户当前那档考纲词库收了这个词**。
+       小徐 2026-09-26:只要是用户词库(高考/CET4…)里的单词就该标出来。
+       词库这半边直连点查用的同一套表 —— langBankItem 的小写表(拉丁)/ bankLookupCJK 的词干回查(日/韩),
+       免得「点得出来」和「看得出」两处判定各判各的、慢慢漂开。
+       band 传空串＝词库还没载,一律不算命中:先标满再回退会闪,不如等词库到了再补标(见 flushPendSens)。 */
+    function wordHit(tok, re, cjk, band) {
+        if (cjk) { if (cjkHit(tok)) return true; }
+        else if (re) {
+            re.lastIndex = 0;
+            var hm = re.exec(tok);
+            if (hm && hm[0].toLowerCase() === tok.toLowerCase()) return true;
+        }
+        if (!band) return false;
+        return cjk ? !!bankLookupCJK(band, tok) : !!langBankItem(band, tok);
+    }
     function wrapWords(span) {
         var re = buildWordRe();
         var lang = curSessionLang(), cjk = !!IS_CJK_LANG[lang];
+        /* 档位在这里解一次就够:currentLangBand() 要读 profile、还要问选中的卡,
+           放进按词的循环里会让切句慢一个量级。 */
+        var band = currentLangBand();
+        if (!langBankCache[band]) band = "";
         var kids = [], i, j, node;
         for (i = 0; i < span.childNodes.length; i++) kids.push(span.childNodes[i]);
         for (i = 0; i < kids.length; i++) {
@@ -809,13 +828,7 @@
                 if (!tok || !toks[ti].word) continue;
                 if (cjk && !CJK_TOKEN_RE[lang].test(tok)) continue;
                 if (at > pos) frag.appendChild(document.createTextNode(val.slice(pos, at)));
-                var hit = false;
-                if (cjk) hit = cjkHit(tok);
-                else if (re) {
-                    re.lastIndex = 0;
-                    var hm = re.exec(tok);
-                    hit = !!(hm && hm[0].toLowerCase() === tok.toLowerCase());
-                }
+                var hit = wordHit(tok, re, cjk, band);
                 var sp = document.createElement("span");
                 sp.className = hit ? "lg-word" : "lg-w";
                 sp.setAttribute("data-w", tok);
@@ -829,6 +842,16 @@
             if (pos < val.length) frag.appendChild(document.createTextNode(val.slice(pos)));
             span.replaceChild(frag, node);
         }
+        /* 这一段可能上一轮就切过了(词库是异步后到的),那一轮没有词库可判,全落成了 .lg-w。
+           wrapWords 对文本节点是幂等的(只切 textNode,已包的 span 不再进),所以不会重复包词,
+           但也就永远不会回头看那些 .lg-w —— 不补这一步,词库到货后虚线一个都不会亮。
+           只升格 .lg-w → .lg-word,不动 .lg-ch(金标另有来源,别在这里抢)。 */
+        var olds = span.querySelectorAll ? span.querySelectorAll(".lg-w") : [];
+        for (var oi = 0; oi < olds.length; oi++) {
+            if (wordHit(olds[oi].getAttribute("data-w") || "", re, cjk, band)) {
+                olds[oi].className = olds[oi].className.replace(/\blg-w\b/, "lg-word");
+            }
+        }
     }
     var pendSens = [];   // M6d3 补:M6d4 词库兜底切词——词池词库皆空时挂起,词库到后补切(非登录也能全词点查)
     function queuePendSen(sen) {
@@ -838,6 +861,15 @@
     function flushPendSens() {
         var a = pendSens; pendSens = [];
         for (var i = 0; i < a.length; i++) if (a[i] && !a[i].hDone) highlightSen(a[i]);
+        /* 考纲词库异步到货,而句子通常更早切完(hDone=true,上面那条循环管不到它们)。
+           重跑一遍 wrapWords,把已切好的 .lg-w 按新词库升格成 .lg-word。
+           本函数的调用方只有 loadLangBank 的两条到货路径(本地缓存命中 / 网络返回),所以补标挂这儿。 */
+        for (var k in sentences) {
+            if (!Object.prototype.hasOwnProperty.call(sentences, k)) continue;
+            var s = sentences[k];
+            if (!s || !s.hDone) continue;
+            for (var j = 0; j < s.spans.length; j++) { var sp = s.spans[j]; if (sp && sp.parentNode) wrapWords(sp); }
+        }
     }
     function highlightSen(sen) {
         if (!sen || sen.hDone) return;
@@ -942,16 +974,16 @@
             inner = '<div class="lg-inter-zh">' + esc(String(d.zh)) + "</div>";
         } else if (glossFail[sen.text]) {
             inner = '<div class="lg-gloss-note">' + (noAuth
-                ? "登录后即可使用点句翻译"
+                ? '登录后即可使用点句翻译 <button type="button" class="lg-gloss-close" data-act="gloss-login">去登录</button>'
                 : (glossBlocked
                     ? (glossCoinMsg
-                        ? esc(glossCoinMsg) + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;"><button type="button" class="lg-gloss-close" data-act="buy-pack">小额直付 ¥1/¥3</button><button type="button" class="lg-gloss-close" data-act="buy-member">开通会员不限量</button></div>'
+                        ? esc(glossCoinMsg) + '<div class="btn-row"><button type="button" class="lg-gloss-close" data-act="buy-pack">小额直付 ¥1/¥3</button><button type="button" class="lg-gloss-close" data-act="buy-member">开通会员不限量</button></div>'
                         : "今天的点译次数用完啦，明天 08:00 刷新；开通会员可点更多")
                     : '<button type="button" class="lg-gloss-close" data-act="retry">译文没取到 · 点此重试</button>')) + "</div>";
         } else {
             inner = '<div class="lg-gloss-note">' + (noAuth
-                ? "登录后即可使用点句翻译"
-                : '<span class="lg-gload"><i></i><i></i><i></i></span><span style="margin-left:6px;">译文生成中…</span>') + "</div>";
+                ? '登录后即可使用点句翻译 <button type="button" class="lg-gloss-close" data-act="gloss-login">去登录</button>'
+                : '<span class="lg-gload"><i></i><i></i><i></i></span><span class="note-in">译文生成中…</span>') + "</div>";
         }
         card.innerHTML = inner;
     }
@@ -1076,24 +1108,25 @@
         html += '<div class="lg-pop-w">' + esc(disp);
         if (hit && hit.it.ph) html += '<span class="lg-pop-ph">' + esc(hit.it.ph) + "</span>";
         else if (info && info.ph) html += '<span class="lg-pop-ph">' + esc(info.ph) + "</span>";
+        html += sayBtnHtml(disp);   // 小喇叭:手机设置里关掉「单词发音」后这里就不出（在念的是当前会话语种）
         html += "</div>";
         if (hit) {
             html += '<div class="lg-pop-zh">' + esc(hit.it.zh) + "</div>";
         } else {
             if (info && info.en) html += '<div class="lg-pop-en">' + esc(info.en) + "</div>";
             if (info && info.zh) html += '<div class="lg-pop-zh">' + esc(info.zh) + "</div>";
-            if (!info) html += '<div class="lg-pop-zh" style="opacity:.62;">考纲词库和全量词典里都没有这个词——点它所在的句子，看整句译文里怎么理解。</div>';
+            if (!info) html += '<div class="lg-pop-zh dim">考纲词库和全量词典里都没有这个词——点它所在的句子，看整句译文里怎么理解。</div>';
         }
         html += '<div class="lg-pop-foot">';
         if (inVocab) {
             var vk = String(disp).toLowerCase(), vi = vocabMap[vk] || null;
-            html += '<span class="ok">✓ 已收进生词本</span>';
+            html += '<span class="ok">' + uiIconHtml("✓") + ' 已收进生词本</span>';
             if (vi && vi.id) html += '<button type="button" class="lg-pop-del" data-act="del-vocab" data-vid="' + esc(vi.id) + '" data-key="' + esc(vk) + '">从生词本移除</button>';
             html += '<span class="lg-vr-origin">在大厅「我的生词本」里可以划状态</span>';
         } else if (token()) {
             html += '<span class="later">正在自动收进生词本…</span>';
         } else {
-            html += '<span class="later">登录后，点查的词会自动收进生词本</span>';
+            html += '<span class="later">登录后，点查的词会自动收进生词本</span><button type="button" class="lg-gloss-close" data-act="gloss-login">去登录</button>';
         }
         html += "</div>";
         p.innerHTML = html;
@@ -1104,7 +1137,7 @@
         var info = wordInfo[key] || null;
         var p = ensurePop();
         p.dataset.dw = key;   // 本词标记:迟到的兜底查询回调据此放弃已被新词接管的弹层
-        p.innerHTML = '<div class="lg-pop-w">' + esc(String(term)) + '</div><div class="lg-pop-zh" style="opacity:.62;">查词中…</div>';
+        p.innerHTML = '<div class="lg-pop-w">' + esc(String(term)) + '</div><div class="lg-pop-zh dim">查词中…</div>';
         p.classList.add("on");
         p.style.left = "-999px";
         p.style.top = "-999px";
@@ -1346,6 +1379,8 @@
             var act = actEl.getAttribute("data-act");
             if (act === "buy-pack") { e.preventDefault(); e.stopPropagation(); buyPackFlow(); return; }
             if (act === "buy-member") { e.preventDefault(); e.stopPropagation(); openMemberPanel(); return; }
+            if (act === "gloss-login") { e.preventDefault(); e.stopPropagation(); openLoginSheet(); return; }
+            if (act === "say") { e.preventDefault(); e.stopPropagation(); sayOne(String(actEl.getAttribute("data-say") || ""), curSessionLang()); return; }
             var g = actEl.closest(".lg-gloss");
             var sen = g ? sentences[Number(g.getAttribute("data-sen"))] : null;
             if (sen) {
@@ -1470,16 +1505,16 @@
         return out;
     }
     function reviewHtml(rv) {
-        var h = '<div class="rv-box"><div class="rv-t">📅 今日复习 <span style="font-weight:600;opacity:.8;">按 1·2·4·7 天计划，共 ' + rv.length + " 词</span></div>";
+        var h = '<div class="rv-box"><div class="rv-t">' + uiIconHtml("📅") + ' 今日复习 <span class="cap-soft">按 1·2·4·7 天计划，共 ' + rv.length + " 词</span></div>";
         var i, it, isExp = function (x) { return x.type === "expression"; };
         var gz, gl;
         for (i = 0; i < rv.length; i++) {
             it = rv[i];
             gz = String(it.gloss_zh || "");
             gl = (gz || "（暂无释义）").slice(0, 200);
-            h += '<div class="rv-item"><div class="rv-term"><div class="rv-w" id="rvw-' + esc(String(it.id)) + '">' + esc(it.term) + (isExp(it) ? '<span style="font-size:.58rem;color:#b06a1f;margin-left:5px;">表达</span>' : "") + "</div>" +
+            h += '<div class="rv-item"><div class="rv-term"><div class="rv-w" id="rvw-' + esc(String(it.id)) + '">' + esc(it.term) + (isExp(it) ? '<span class="rv-exp-tag">表达</span>' : "") + "</div>" +
                 '<div class="rv-gl">' + esc(gl) + "</div>" +
-                '<div class="lg-st" style="margin-top:4px;">' +
+                '<div class="lg-st">' +
                 '<button type="button" data-act="rv" data-vid="' + esc(String(it.id)) + '" data-st="0">没记住</button>' +
                 '<button type="button" data-act="rv" data-vid="' + esc(String(it.id)) + '" data-st="1">记住了</button>' +
                 '<button type="button" data-act="rv" data-vid="' + esc(String(it.id)) + '" data-st="2">很熟了</button>' +
@@ -1514,10 +1549,10 @@
     }
     function vocabDueHtml(rv) {
         if (!rv.length) {
-            return '<div class="lg-vr word"><div class="lg-vr-main"><div class="lg-vr-term">今天没有到期的词 🎉</div>' +
+            return '<div class="lg-vr word"><div class="lg-vr-main"><div class="lg-vr-term">今天没有到期的词 ' + uiIconHtml("🎉") + '</div>' +
                 '<div class="lg-vr-gl">按 1·2·4·7 天计划，到期才出现。新收的词满 1 天后进入复习。</div></div></div>';
         }
-        return '<button type="button" class="lg-rv-go" data-act="rvgo">▶ 一键开始复习 · 全屏刷 ' + rv.length + " 词</button>" + reviewHtml(rv);
+        return '<button type="button" class="lg-rv-go" data-act="rvgo">' + uiIconHtml("▶") + ' 一键开始复习 · 全屏刷 ' + rv.length + " 词</button>" + reviewHtml(rv);
     }
     function vocabAllHtml(all) {
         var srcs = {}, i, j, s;
@@ -1536,7 +1571,7 @@
         var h = '<div class="lg-tools">' +
             '<input id="lg-vocab-q" class="lg-srch" type="search" placeholder="搜索单词 / 释义 / 例句…" value="' + esc(vocabQ) + '" autocomplete="off">' + chips + "</div>";
         if (!all.length) return h;
-        h += '<div class="list-sub" style="margin:2px 0 8px;" id="lg-vocab-cnt"></div>';
+        h += '<div class="list-sub vocab-cnt" id="lg-vocab-cnt"></div>';
         var ST = [["0", "新学"], ["1", "眼熟"], ["2", "已掌握"]];
         for (i = 0; i < all.length; i++) {
             var it = all[i];
@@ -1687,8 +1722,8 @@
         var m = rvEnsureMask();
         var it = rvPlay.list[rvPlay.i];
         if (!it) {
-            m.innerHTML = '<div class="lg-rv-card"><div class="lg-rv-done"><b>🎉 今日复习完成</b>' +
-                '<span class="lg-rv-hint" style="padding:0 0 14px;display:block;">按 1·2·4·7 天计划，下一批到期的词会自动出现。</span>' +
+            m.innerHTML = '<div class="lg-rv-card"><div class="lg-rv-done"><b>' + uiIconHtml("🎉") + ' 今日复习完成</b>' +
+                '<span class="lg-rv-hint tight">按 1·2·4·7 天计划，下一批到期的词会自动出现。</span>' +
                 '<button type="button" class="lg-rv-btn" data-act="rvclose">返回生词本</button></div></div>';
             return;
         }
@@ -1734,7 +1769,7 @@
         if (!box) return;
         var ln = learnLangName();
         if (!token()) {
-            box.innerHTML = '<div class="lg-vr"><div class="lg-vr-main"><div class="lg-vr-term">登录后，生词本随账号同步</div><div class="lg-vr-gl">玩' + ln + '剧本时点查的单词会自动收进这里，换设备也不丢。</div></div></div>';
+            box.innerHTML = '<div class="lg-vr"><div class="lg-vr-main"><div class="lg-vr-term">登录后，生词本随账号同步</div><div class="lg-vr-gl">玩' + ln + '剧本时点查的单词会自动收进这里，换设备也不丢。</div></div><button type="button" class="lg-gloss-close" data-act="vocab-login">去登录</button></div>';
             return;
         }
         if (!vocabLoaded || vocabLoadedFor !== curLearnLang()) {
@@ -1744,8 +1779,8 @@
         }
         if (vocabErr) {
             box.innerHTML = vocabErr === "auth"
-                ? '<div class="lg-vr"><div class="lg-vr-main"><div class="lg-vr-term">登录状态过期了</div><div class="lg-vr-gl">' + ln + '生词都还在云端，重新登录就能看到。</div><button type="button" class="mini-btn ghost" data-act="vocab-login" style="margin-top:10px;">重新登录</button></div></div>'
-                : '<div class="lg-vr"><div class="lg-vr-main"><div class="lg-vr-term">' + ln + '生词没加载出来</div><div class="lg-vr-gl">网络开小差了。你的生词还在云端，点下面重试就好。</div><button type="button" class="mini-btn ghost" data-act="vocab-retry" style="margin-top:10px;">重新加载</button></div></div>';
+                ? '<div class="lg-vr"><div class="lg-vr-main"><div class="lg-vr-term">登录状态过期了</div><div class="lg-vr-gl">' + ln + '生词都还在云端，重新登录就能看到。</div><button type="button" class="mini-btn ghost list-loose" data-act="vocab-login">重新登录</button></div></div>'
+                : '<div class="lg-vr"><div class="lg-vr-main"><div class="lg-vr-term">' + ln + '生词没加载出来</div><div class="lg-vr-gl">网络开小差了。你的生词还在云端，点下面重试就好。</div><button type="button" class="mini-btn ghost list-loose" data-act="vocab-retry">重新加载</button></div></div>';
             return;
         }
         var all = vocabAllList();
@@ -1755,8 +1790,8 @@
         }
         var rv = reviewDueList();
         box.innerHTML = '<div class="lg-tabs">' +
-            '<button type="button" class="lg-tab' + (vocabTab === "due" ? " on" : "") + '" data-act="vtab" data-tab="due">📆 今日复习 <b>' + rv.length + "</b></button>" +
-            '<button type="button" class="lg-tab' + (vocabTab === "all" ? " on" : "") + '" data-act="vtab" data-tab="all">📚 全部生词库 <b>' + all.length + "</b></button>" +
+            '<button type="button" class="lg-tab' + (vocabTab === "due" ? " on" : "") + '" data-act="vtab" data-tab="due">' + uiIconHtml("📆") + ' 今日复习 <b>' + rv.length + "</b></button>" +
+            '<button type="button" class="lg-tab' + (vocabTab === "all" ? " on" : "") + '" data-act="vtab" data-tab="all">' + uiIconHtml("📚") + ' 全部生词库 <b>' + all.length + "</b></button>" +
             "</div>" +
             (vocabTab === "due" ? vocabDueHtml(rv) : vocabAllHtml(all));
         /* 两个 Tab 互斥:同一时刻只铺一套内容,不再上下叠着渲染 */
@@ -1931,7 +1966,7 @@
             '<div class="lg-rm">' +
                 '<img class="lg-rm-img" src="lang/recap-top.webp" alt="章末复盘" loading="lazy">' +
                 '<div class="lg-rm-scroll">' +
-                    '<div class="lg-rm-head">📋 第 ' + recapChapterNo() + " 章复盘<span class=\"lg-rm-close\" data-act=\"rm-close\">✕</span></div>" +
+                    '<div class="lg-rm-head">' + uiIconHtml("📋") + ' 第 ' + recapChapterNo() + " 章复盘<span class=\"lg-rm-close\" data-act=\"rm-close\">✕</span></div>" +
                     '<div class="lg-rm-note">每 5 轮一小章:先看看你点查过的词,再让 AI 从剧情里提炼值得收藏的表达——全都会进大厅「⑤ 我的生词本」。</div>' +
                     '<div id="lg-rm-sec1"></div><div id="lg-rm-sec2"></div><div id="lg-rm-sec3"></div>' +
                 "</div>" +
@@ -2032,7 +2067,7 @@
             for (i = 0; i < q.opts.length; i++) if (q.opts[i] === q.corr) { b = box.querySelector('[data-opt="' + i + '"]'); if (b) b.classList.add("ok"); }
         }
         var feed = box.querySelector(".lg-qz-feed");
-        if (feed) feed.innerHTML = right ? '<span class="ok-t">✓ 答对了</span>' : '<span class="bad-t">✗ 记一下:' + esc(q.word) + ' = ' + esc(q.zh.slice(0, 60)) + "</span>";
+        if (feed) feed.innerHTML = right ? '<span class="ok-t">' + uiIconHtml("✓") + ' 答对了</span>' : '<span class="bad-t">' + uiIconHtml("✗") + ' 记一下:' + esc(q.word) + ' = ' + esc(q.zh.slice(0, 60)) + "</span>";
         setTimeout(function () { qzNext(); }, right ? 620 : 2100);   // 答错多停留读释义
     }
     function qzNext() {
@@ -2055,8 +2090,8 @@
         var box = document.getElementById("lg-rm-sec1");
         if (!box) return;
         box.innerHTML = '<div class="lg-rm-sec">① 本章词测<span class="list-sub">' + esc(String(st.band).toUpperCase()) + ' · 掌握 ' + okN + '/' + st.qs.length + '</span></div>' +
-            '<div class="lg-qz-done">' + (all ? '🎉 全对,本章学习词都掌握了!下章继续遇见新词。' : '答对 ' + okN + '/' + st.qs.length + ' 题。答错的词已标为弱词,下一章剧情会优先安排它们重逢,留意金标词就好。') + '</div>' +
-            '<div class="lg-qz-sync">⏳ 学习进度同步中…</div>';
+            '<div class="lg-qz-done">' + (all ? uiIconHtml("🎉") + ' 全对,本章学习词都掌握了!下章继续遇见新词。' : '答对 ' + okN + '/' + st.qs.length + ' 题。答错的词已标为弱词,下一章剧情会优先安排它们重逢,留意金标词就好。') + '</div>' +
+            '<div class="lg-qz-sync">' + uiIconHtml("⏳") + ' 学习进度同步中…</div>';
         submitQuiz(box.querySelector(".lg-qz-sync"));
     }
     function submitQuiz(syncEl) {
@@ -2079,10 +2114,10 @@
             .then(function (d) {
                 if (d && d.ok) {
                     for (i = 0; i < items.length; i++) applyProgResult(st.band, items[i].word, items[i].ok ? "learned" : "weak");
-                    if (syncEl) syncEl.textContent = "✓ 学习进度已同步云端(错词进入下章重测队列)";
-                } else { pendAll(); if (syncEl) syncEl.textContent = "⚠ 同步失败,进度已暂存本地,联网后自动补交"; }
+                    if (syncEl) syncEl.innerHTML = uiIconHtml("✓") + " 学习进度已同步云端(错词进入下章重测队列)";
+                } else { pendAll(); if (syncEl) syncEl.innerHTML = uiIconHtml("⚠️") + " 同步失败,进度已暂存本地,联网后自动补交"; }
             })
-            .catch(function () { pendAll(); if (syncEl) syncEl.textContent = "⚠ 同步失败,进度已暂存本地,联网后自动补交"; });
+            .catch(function () { pendAll(); if (syncEl) syncEl.innerHTML = uiIconHtml("⚠️") + " 同步失败,进度已暂存本地,联网后自动补交"; });
     }
     function fillRecapWords() {
         var box = document.getElementById("lg-rm-sec1");
@@ -2097,7 +2132,7 @@
         arr.reverse();
         var h = '<div class="lg-rm-sec">① 本局点查过的词<span class="list-sub">进卡以来点过即自动收生词本</span></div>';
         if (!arr.length) {
-            h += '<div class="lg-rm-empty">本局还没点查词——点剧情里 <span style="color:#7c4fd8;font-weight:800;">蓝色虚线</span> 的生词就会自动收进生词本,也会出现在这里。</div>';
+            h += '<div class="lg-rm-empty">本局还没点查词——点剧情里 <span class="lg-hl">蓝色虚线</span> 的生词就会自动收进生词本,也会出现在这里。</div>';
         } else {
             h += '<div class="lg-rm-words">';
             for (var i = 0; i < Math.min(arr.length, 30); i++) {
@@ -2118,28 +2153,28 @@
             h2 += '<div class="lg-rm-empty">登录后即可让 AI 读本章剧情,提炼 3-6 条高频表达与仿写句,一键收藏、云端同步。</div>';
             h2 += '<button type="button" class="lg-rm-gen light" data-act="rm-login">先去登录</button>';
         } else if (st.mode === "busy") {
-            h2 += '<button type="button" class="lg-rm-gen" disabled>⏳ AI 正在读这一章…（约 10 秒）</button>';
+            h2 += '<button type="button" class="lg-rm-gen" disabled>' + uiIconHtml("⏳") + ' AI 正在读这一章…（约 10 秒）</button>';
         } else if (st.mode === "err") {
-            h2 += '<div class="lg-rm-empty" style="color:#c94857;">' + esc(st.msg || "生成失败") + "</div>";
-            if (st.needPay) h2 += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;"><button type="button" class="lg-rm-gen light" data-act="buy-pack">小额直付 ¥1/¥3</button><button type="button" class="lg-rm-gen light" data-act="buy-member">开通会员不限量</button></div>';
-            h2 += '<button type="button" class="lg-rm-gen" data-act="rm-gen">↻ 重试生成</button>';
+            h2 += '<div class="lg-rm-empty err">' + esc(st.msg || "生成失败") + "</div>";
+            if (st.needPay) h2 += '<div class="btn-row mid"><button type="button" class="lg-rm-gen light" data-act="buy-pack">小额直付 ¥1/¥3</button><button type="button" class="lg-rm-gen light" data-act="buy-member">开通会员不限量</button></div>';
+            h2 += '<button type="button" class="lg-rm-gen" data-act="rm-gen">' + uiIconHtml("↻") + ' 重试生成</button>';
         } else if (st.mode === "done") {
             var i2, x;
             for (i2 = 0; i2 < st.expressions.length; i2++) {
                 x = st.expressions[i2];
-                h2 += '<div class="lg-rm-exp"><span class="lg-rm-star' + (vocabMap[vocabKeyOfTerm(x.en)] ? " saved" : "") + '" data-act="rm-star" data-term="' + esc(x.en) + '" data-zh="' + esc(x.zh) + '" data-ex="' + esc(x.example) + '">' + (vocabMap[vocabKeyOfTerm(x.en)] ? "✓" : "★") + "</span>" +
+                h2 += '<div class="lg-rm-exp"><span class="lg-rm-star' + (vocabMap[vocabKeyOfTerm(x.en)] ? " saved" : "") + '" data-act="rm-star" data-term="' + esc(x.en) + '" data-zh="' + esc(x.zh) + '" data-ex="' + esc(x.example) + '">' + (vocabMap[vocabKeyOfTerm(x.en)] ? uiIconHtml("✓") : uiIconHtml("★")) + "</span>" +
                     '<div class="lg-rm-exp-main"><div class="lg-rm-exp-en">' + esc(x.en) + '</div><div class="lg-rm-exp-zh">' + esc(x.zh) + '</div>' +
                     (x.example ? '<div class="lg-rm-exp-ex">例: ' + esc(x.example) + "</div>" : "") + "</div></div>";
             }
             if (!st.expressions.length) h2 += '<div class="lg-rm-empty">这一章没有太值得单独收藏的表达,重点看看下面的仿写句吧。</div>';
             for (i2 = 0; i2 < st.writing.length; i2++) {
                 var wx = st.writing[i2];
-                h3 += '<div class="lg-rm-write"><span class="lg-rm-star' + (vocabMap[vocabKeyOfTerm(wx)] ? " saved" : "") + '" data-act="rm-star" data-term="' + esc(wx) + '" data-zh="' + esc(wx) + '" data-ex="">' + (vocabMap[vocabKeyOfTerm(wx)] ? "✓" : "★") + "</span>" +
+                h3 += '<div class="lg-rm-write"><span class="lg-rm-star' + (vocabMap[vocabKeyOfTerm(wx)] ? " saved" : "") + '" data-act="rm-star" data-term="' + esc(wx) + '" data-zh="' + esc(wx) + '" data-ex="">' + (vocabMap[vocabKeyOfTerm(wx)] ? uiIconHtml("✓") : uiIconHtml("★")) + "</span>" +
                     '<div class="lg-rm-write-main">' + esc(wx) + "</div></div>";
             }
             if (!st.writing.length) h3 += '<div class="lg-rm-empty">本章仿写例句为空——把表达的例句当仿写模板也可以。</div>';
         } else {
-            h2 += '<button type="button" class="lg-rm-gen" data-act="rm-gen">✨ 生成剧情高频表达 + 仿写例句（AI 读本章剧情）</button>';
+            h2 += '<button type="button" class="lg-rm-gen" data-act="rm-gen">' + uiIconHtml("✨") + ' 生成剧情高频表达 + 仿写例句（AI 读本章剧情）</button>';
         }
         b2.innerHTML = h2;
         b3.innerHTML = h3;
@@ -2193,13 +2228,12 @@
                 vocabMap[k] = { id: d.id || "", type: "expression", term: String(term).slice(0, 64), gloss_zh: String(zh || ""), gloss_en: String(ex || ""), origin: origin, context: String(ex || ""), status: 0, created_at: "" };
                 noteWords([{ w: String(term), en: "", zh: String(zh || "") }], "gloss");   // 单字词回填正文高亮库
                 reDirty = true;
-                if (btn) { btn.classList.add("saved"); btn.textContent = "✓"; }
+                if (btn) { btn.classList.add("saved"); btn.innerHTML = uiIconHtml("✓"); }
             }).catch(function () {});
     }
     function openLoginSheet() {
-        var ov = document.getElementById("auth-overlay");
-        if (ov) ov.style.display = "flex";
-        else hint("请先登录账号");
+        // 登录层唯一开合点;AuthService 未就绪时退回文字提示
+        try { AuthService.openLogin(); } catch (e) { hint("请先登录账号"); }
     }
     function handleRecapAct(el, act) {
         if (!el) return;
@@ -2307,6 +2341,138 @@
         band = String(band || "").trim();
         return { loaded: !!langBankCache[band], loading: !!langBankLoading[band], total: langBankCache[band] ? langBankCache[band].length : 0 };
     }
+    /* ---- 单词发音(2026-09-26):点译弹层里的小喇叭 + 手机设置里的发音设置 ----
+       只用浏览器自带的 speechSynthesis,不引第三方音频:免流量、免鉴权、离线也在。
+       音色不点名:各端名字完全不一样(Windows 是 Microsoft Huihui/Yaoyao,安卓是 Google 普通话…),
+       点名一个就等于在别的设备上没声音。改成按名字打分挑——「名字像女声」加分、「像男声」减分、
+       本机离线音色再加分(在线音色如 Google 在国内常静默失败);挑不出就交给系统默认。
+       小徐要的「兼容各种用户端浏览器默认女声」就是靠这层打分,而不是写死某个音色名。
+       音色列表是异步到货的(Chrome 首帧 getVoices() 就是空数组),到货后叫手机设置页重画一次下拉。 */
+    var SAY_CODE = { en: "en-US", ja: "ja-JP", ko: "ko-KR" };
+    var SAY_SAMPLE = { en: "hello", ja: "こんにちは", ko: "안녕하세요" };
+    var FEMALE_HINT = ["zira", "aria", "jenny", "michelle", "ana", "samantha", "karen", "moira", "tessa",
+        "xiaoxiao", "xiaoyi", "huihui", "yaoyao", "nanami", "ayumi", "haruka", "kyoko", "sayaka",
+        "sunhi", "heami", "yuna", "female", "woman"];
+    var MALE_HINT = ["david", "mark", "guy", "george", "james", "ryan", "steffan", "eric", "roger",
+        "ichiro", "keita", "injoon", "gook", "kangkang", "male", "man "];
+    var liveUtts = [];   // 正在念的 utterance 必须有人持有:被 GC 掉会念到一半断音(Chrome/iOS 实测)
+    var voicesWired = false;
+
+    function saySupported() {
+        return !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+    }
+    function sayCode(lang) { return SAY_CODE[String(lang || "en").slice(0, 2)] || "en-US"; }
+    /* 发音设置住在手机设置里(存档内的 phoneSettings),这里只读。读取时兜底:
+       老存档没有这几个新键,tts 缺省当作开(缺省不发音等于功能没上线)。 */
+    function sayPref() {
+        var ps = null;
+        try { ps = (window.PhoneSettingsService && PhoneSettingsService.get()) || null; } catch (e) { ps = null; }
+        ps = ps || {};
+        var rate = Number(ps.ttsRate);
+        return {
+            on: ps.tts !== false,
+            rate: (rate >= 0.5 && rate <= 1.6) ? rate : 1,
+            /* 手选音色覆盖表 { en: voiceURI }:老存档里没有,首次手选时才由手机设置页建立。
+               不在 DEFAULTS 里放 {}——对象会被所有用户共用同一份引用。 */
+            store: (ps.ttsVoice && typeof ps.ttsVoice === "object") ? ps.ttsVoice : null
+        };
+    }
+    function allVoices() {
+        try { return window.speechSynthesis.getVoices() || []; } catch (e) { return []; }
+    }
+    function voicesFor(code) {
+        var c = String(code || "en-US").toLowerCase().slice(0, 2);
+        /* 按语言主标签匹配:同一语种会出现 en-GB / en_US 等写法,只比前两位 */
+        return allVoices().filter(function (v) {
+            return String(v.lang || "").replace("_", "-").toLowerCase().indexOf(c) === 0;
+        });
+    }
+    function scoreVoice(v) {
+        var n = String(v.name || "").toLowerCase(), s = 0, i;
+        for (i = 0; i < FEMALE_HINT.length; i++) { if (n.indexOf(FEMALE_HINT[i]) >= 0) { s += 100; break; } }
+        for (i = 0; i < MALE_HINT.length; i++) { if (n.indexOf(MALE_HINT[i]) >= 0) { s -= 100; break; } }
+        if (v.localService) s += 20;
+        return s;
+    }
+    function pickVoice(code, store) {
+        var list = voicesFor(code);
+        if (!list.length) return null;
+        var ov = store && store[String(code).slice(0, 2)];
+        for (var i = 0; i < list.length; i++) if (list[i].voiceURI === ov) return list[i];
+        return list.slice().sort(function (a, b) { return scoreVoice(b) - scoreVoice(a); })[0];
+    }
+    /* 念一段文本。返回 false = 没念成(该语种一个音色都没有 / 浏览器不支持),
+       调用方据此决定要不要说话,引擎自己不弹窗、不打扰。 */
+    function sayOne(text, lang) {
+        var t = String(text == null ? "" : text).trim();
+        if (!t || !saySupported()) return false;
+        var p = sayPref(), code = sayCode(lang);
+        if (!voicesFor(code).length) return false;
+        try {
+            window.speechSynthesis.cancel();   // 连点小喇叭:后一次压掉前一次,不叠着念
+            liveUtts.length = 0;
+            var u = new SpeechSynthesisUtterance(t);
+            u.lang = code;
+            u.rate = p.rate;
+            var v = pickVoice(code, p.store);
+            if (v) u.voice = v;
+            liveUtts.push(u);
+            var drop = function () { liveUtts = liveUtts.filter(function (x) { return x !== u; }); };
+            u.onend = drop;
+            u.onerror = drop;
+            window.speechSynthesis.speak(u);
+            return true;
+        } catch (e) { return false; }
+    }
+    /* 音色列表异步到货:到货后手机设置页那个下拉要重画一遍,否则用户看到的是「暂无可用音色」 */
+    function wireVoices() {
+        if (voicesWired || !saySupported()) return;
+        voicesWired = true;
+        try {
+            allVoices();   // 有些浏览器要调过一次才开始加载
+            window.speechSynthesis.onvoiceschanged = function () {
+                try { if (window.PhoneSettingsService) PhoneSettingsService.refreshUI(); } catch (e) {}
+            };
+        } catch (e) {}
+    }
+    /* 手机设置页的下拉用:「暂无」也出一项,免得下拉空着一片白 */
+    function voiceOptions(code) {
+        var list = voicesFor(code);
+        var uniq = [], seen = {}, i, v, key;
+        for (i = 0; i < list.length; i++) {
+            v = list[i];
+            key = String(v.voiceURI || v.name || i);
+            if (seen[key]) continue;
+            seen[key] = 1;
+            uniq.push({
+                uri: key,
+                /* 别用 ♀ 符号:这条 label 是喂给 <option> 的 textContent,塞不了 SVG;
+                   而裸字符伪图标会被 lang_skeleton_test 的「图标必须走 uiIconHtml」扫出来。用中文后缀,和 · 本地/· 在线 同款。 */
+                label: String(v.name || key) + (scoreVoice(v) >= 100 ? " · 女声" : "") + (v.localService ? " · 本地" : " · 在线"),
+                female: scoreVoice(v) >= 100
+            });
+        }
+        uniq.sort(function (a, b) { return (b.female ? 1 : 0) - (a.female ? 1 : 0); });
+        return uniq;
+    }
+    function sayBtnHtml(disp) {
+        if (!saySupported() || !sayPref().on) return "";
+        return '<button type="button" class="lg-pop-say" data-act="say" data-say="' + esc(disp) + '"'
+            + ' aria-label="朗读" title="朗读">' + uiIconHtml("🔊") + "</button>";
+    }
+    window.LangSpeech = {
+        supported: saySupported,
+        say: sayOne,                        // say(词, 语种) → true/false
+        sayCode: sayCode,
+        sample: function (lang) { return SAY_SAMPLE[String(lang || "en").slice(0, 2)] || SAY_SAMPLE.en; },
+        learnCode: curLearnLang,            // 手机设置页按「学习语种」发音(不在会话里时随语言页所选)
+        options: voiceOptions,              // 设置页下拉用
+        voices: voicesFor,
+        pick: pickVoice,
+        pref: sayPref
+    };
+    wireVoices();
+
     window.LangAssist = {
         loadBank: loadLangBank, bankItem: langBankItem, bankStatus: langBankStatus,
         reloadVocab: retryVocab,            // 切语种/重新登录后重拉生词本;走 retryVocab 才能解开上次的失败态

@@ -199,13 +199,13 @@ window.LoveEngine = (() => {
             String(npc.status || "") ? `状态：${esc(String(npc.status))}` : "",
             prof.personality ? `性格：${esc(String(prof.personality))}` : "",
             npc.traits ? `特质：${esc(String(npc.traits))}` : "",
-            isLocked ? "🔒 你们已经走到一起" : ""
+            isLocked ? uiIconHtml("🔒") + " 你们已经走到一起" : ""
         ].filter(Boolean).join("\n");
         const el = document.createElement("div");
         el.id = "lv-pop-el";
         el.className = "lv-pop";
         el.setAttribute("data-npc", String(npc.name || ""));
-        el.innerHTML = `<div class="lvp-head"><div class="lvp-av">${av}</div><div><div class="lvp-t">${nm}${isLocked ? " 🔒" : ""}</div>` +
+        el.innerHTML = `<div class="lvp-head"><div class="lvp-av">${av}</div><div><div class="lvp-t">${nm}${isLocked ? " " + uiIconHtml("🔒") : ""}</div>` +
             `<div class="lvp-s">友善 ${esc(String(npc.favor))} · 爱慕 ${esc(String(npc.affection ?? 0))}（${esc(stageOf(npc.affection))}）</div></div></div>` +
             `<div class="lvp-body">${lines || "尚未了解的TA…"}</div>`;
         document.body.appendChild(el);

@@ -2047,18 +2047,23 @@ export default {
             const MAIL_API = env.MAIL_API || "https://mail.blupure.cn/mail/send"; // 自建代理(47.238.246.167 nginx→9527, 163 双邮箱轮询;2026-09-19 起走 HTTPS,token 与邮件正文不再明文过公网)
             // 必读 env,不写兜底值:仓库是 public,兜底 token 等于公开(2026-09-19 已因此轮换一次)
             const MAIL_TOKEN = env.MAIL_TOKEN || "";
+            // 邮件模板(2026-09-26 E5 纳入设计系统)。与落地页不同的地方:邮件客户端**不认 var()、也不认 :root**,
+            // 所以这里只能是字面值 —— 每个色/字号/圆角/字体栈都必须**逐字等于** app.css 的 token 值,
+            // 由 mail_template_test 现场从 app.css 提取比对。改主站改色,这里立刻判红。
+            // 旧版是改造前的紫渐变(#7c3aed→#4f46e5)+ 18/14/13/32px 裸字号 + #333/#666/#999/#eee 四个游离灰,
+            // 是全站最后一处旧色残留。结构(div 布局)一字未动,只换值。
             const buildMailHtml = (purpose, code) => `
-                <div style="max-width:480px;margin:0 auto;padding:24px;font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;">
-                    <div style="background:linear-gradient(135deg,#7c3aed,#4f46e5);border-radius:12px;padding:20px 24px;color:#fff;">
-                        <div style="font-size:18px;font-weight:700;">云吞吞文游</div>
+                <div style="max-width:480px;margin:0 auto;padding:24px;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;">
+                    <div style="background:linear-gradient(135deg,#9a5b3d,#7d452c);border-radius:12px;padding:20px 24px;color:#fffaf6;">
+                        <div style="font-family:'Songti SC', 'Source Han Serif SC', 'Noto Serif SC', 'SimSun', Georgia, serif;font-size:19px;font-weight:600;">云吞吞文游</div>
                         <div style="font-size:12px;opacity:.85;margin-top:4px;">每一次选择，都将书写独一无二的人生</div>
                     </div>
                     <div style="padding:24px 8px;">
-                        <p style="font-size:14px;color:#333;line-height:1.8;margin:0;">你好！${purpose === "reset" ? "我们收到了你的密码重置请求" : "欢迎来到云吞吞文游"}，你的验证码是：</p>
-                        <div style="font-size:32px;font-weight:800;letter-spacing:8px;color:#4f46e5;margin:16px 0;text-align:center;">${code}</div>
-                        <p style="font-size:13px;color:#666;line-height:1.8;margin:0;">验证码 <b>5 分钟</b>内有效，${purpose === "reset" ? "如非本人操作请忽略此邮件" : "请勿泄露给他人"}。</p>
+                        <p style="font-size:15px;color:#1a1714;line-height:1.75;margin:0;">你好！${purpose === "reset" ? "我们收到了你的密码重置请求" : "欢迎来到云吞吞文游"}，你的验证码是：</p>
+                        <div style="font-size:30px;font-weight:800;letter-spacing:8px;color:#7d452c;margin:16px 0;text-align:center;">${code}</div>
+                        <p style="font-size:12px;color:#6b625a;line-height:1.75;margin:0;">验证码 <b>5 分钟</b>内有效，${purpose === "reset" ? "如非本人操作请忽略此邮件" : "请勿泄露给他人"}。</p>
                     </div>
-                    <div style="border-top:1px solid #eee;padding-top:12px;font-size:12px;color:#999;text-align:center;">云吞吞文游 · bitlife.blupure.cn · 遇见另一个自己</div>
+                    <div style="border-top:1px solid #e6e0d6;padding-top:12px;font-size:12px;color:#6b625a;text-align:center;">云吞吞文游 · bitlife.blupure.cn · 遇见另一个自己</div>
                 </div>`;
 
             if (url.pathname === "/api/auth/send-code" && request.method === "POST") {

@@ -8,3 +8,5 @@ pay/
 .tmp-inline.js
 redo_presets.py
 .vscode/
+# lucide 只在构建期取图标 path（产物是内联 SVG 字面量，运行时不依赖），27MB 不入库
+node_modules/
