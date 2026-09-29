@@ -119,6 +119,9 @@
             --dur-1: 150ms;
             --dur-2: 200ms;
             --dur-3: 280ms;
+            /* 回归式曲线:easeOutBack 标准值(easings.net),过冲约位移的 10%——
+               「弹一下」的场合专用(剧本库卡片依次入场),常规过渡仍用 --ease  */
+            --ease-back: cubic-bezier(.34, 1.56, .64, 1);
         }
 
         body {
@@ -6699,3 +6702,47 @@ body[data-theme="dark"] .hb-tag .hb-lang {
    只给到 .swipe-main：按钮自己有独立的 cursor，不受影响。 */
 #view-inventory .swipe-main { cursor: pointer; }
 #view-inventory .swipe-main:hover { border-color: var(--line-strong); }
+
+/* ==================================================================================
+   13. 剧本库卡片动效（2026-09-29）
+    ① 列表入场：卡片自下而上、带微弱回弹地依次弹入（次序由卡片自己的 --i 决定，封顶 300ms）；
+    ② 卡片 ↔ 详情：共享元素膨胀转场（几何由 JS 的 ModalFlipService 内联，这里只挂 class 契约）。
+   ================================================================================== */
+
+/* ① 错峰入场：间隔 30ms/项、封顶 300ms——一屏 20+ 张时最后一张也不会拖到 1 秒开外。
+   both 双向填充：delay 期间停在第 0 帧（看不见），结束后回到元素自然态；
+   基础规则里**故意不写 opacity:0**——动画被禁/被裁剪时卡片必须照常可见，而不是整列隐形。
+   容器 class(cards-stagger) 在每次渲染时由 JS 显式开关：只有「进页面 / 内容刚到」才播，
+   搜索、筛选、排序这些高频重绘保持静默（每敲一个字重弹一遍列表是跟用户较劲）。 */
+@keyframes cardRiseIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+#scenario-card-list.cards-stagger > .scenario-card,
+#lang-lib-grid.cards-stagger > .scenario-card {
+    /* --i 的默认值就写在这里：它是 JS 逐张 setProperty 进去的运行时下标，
+       不声明的话这一条 delay 只能靠 var() 的兜底生效（token_layer_test 拦的就是这种写法）。 */
+    --i: 0;
+    animation: cardRiseIn var(--dur-3) var(--ease-back) both;
+    animation-delay: min(calc(var(--i) * 30ms), 300ms);
+}
+
+/* ② 膨胀转场：flip-anim 必须压掉 .modal-card 自带的 diCardIn——
+   两条都会写 transform，而运行期的 CSS animation 权重高于内联样式，
+   不压掉的话 JS 写在元素上的起始 transform 根本不会生效。 */
+.modal-card.flip-anim { animation: none; transition: transform var(--dur-3) var(--ease); }
+/* 缩放过程内容滞后显形：卡片与弹层宽高比不同，非等比缩放会明显拉伸文字；
+   让外壳先长（缩）到位、内容再淡入（出），眼睛读到的是「这张卡长成了详情页」
+   而不是一屏字被压扁（iOS zoom 转场的做法）。 */
+.modal-card.flip-anim > * { opacity: 0; transition: opacity var(--dur-2) var(--ease); }
+.modal-card.flip-anim.flip-go > * { opacity: 1; transition-delay: 60ms; }
+.modal-card.flip-anim.flip-out > * { opacity: 0; transition-duration: var(--dur-1); transition-delay: 0ms; }
+
+/* 减少动效：位移与延迟去掉，只留「出现」本身。
+   全站总闸（见 11 节）只压 animation-duration / transition-duration，压不掉 delay ——
+   不补这一条，关掉动效的人反而要等最多 300ms 才看见卡片。 */
+@media (prefers-reduced-motion: reduce) {
+    #scenario-card-list.cards-stagger > .scenario-card,
+    #lang-lib-grid.cards-stagger > .scenario-card { animation-delay: 0s; }
+    .modal-card.flip-anim > *, .modal-card.flip-anim.flip-go > * { transition-delay: 0s; }
+}

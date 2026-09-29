@@ -147,11 +147,17 @@
         } catch (e) { return 0; }
     }
     function viewVisible(vid) { var el = $(vid); return !!(el && el.classList && el.classList.contains("active")); }
+    /* 卡主体点击语义：默认「点卡即玩」；带 data-tap="detail" 的（语言剧本库网格）= 展开详情弹层，
+       与文游首页剧本库对齐，进游戏走卡里的播放按钮（按钮自己 stopPropagation，2026-09-29） */
     function bindCardClicks(root) {
         if (!root) return;
         var els = root.querySelectorAll("[data-cid]"), i;
         for (i = 0; i < els.length; i++) {
-            els[i].addEventListener("click", (function (cid) { return function () { api.enterCard(cid); }; })(els[i].getAttribute("data-cid")));
+            (function (el) {
+                var cid = el.getAttribute("data-cid");
+                var toDetail = el.getAttribute("data-tap") === "detail";
+                el.addEventListener("click", function () { if (toDetail) api.openLangDetail(cid, el); else api.enterCard(cid); });
+            })(els[i]);
         }
     }
     /* M8b:语言首页推荐区 = 文游首页同款 hb-card 大图轮播(4:3 封面 + 档/题材 tag + 轮次 + 详情/播放按钮);卡主体点击进入播放,详情按钮单独弹层 */
@@ -177,16 +183,18 @@
             '<div class="hb-title">' + api.esc(String(c.title_zh || c.title || (api.langName() + "剧本"))) + "</div>" +
             '<div class="hb-sub">' + api.esc(String(c.title || "")) + (has ? " · " + api.langName() + "进度已到第 " + (r || 1) + " 轮" : "") + "</div>" +
             '<div class="hb-foot"><span class="hb-plays">' + LANG_TAG_INFO[langKeyOf(c)][0] + ' 原生 · 词库随你的学习档</span>' +
-            '<button type="button" class="tiny-btn hb-detail" onclick="event.stopPropagation();LangController.openLangDetail(\'' + cardCid(c) + '\')">详情</button>' +
+            '<button type="button" class="tiny-btn hb-detail" onclick="event.stopPropagation();LangController.openLangDetail(\'' + cardCid(c) + '\',this)">详情</button>' +
             '<span class="hb-play-btn mini-btn primary">' + playTxt + "</span></div></div>";
     }
-    /* M8c:剧本库网格卡(文游首页同款 scenario-card:4:3 封面 + 徽标 + 详情/播放按钮);卡主体点击=播放,详情按钮单独弹层 */
+    /* M8c:剧本库网格卡(文游首页同款 scenario-card:4:3 封面 + 徽标 + 详情/播放按钮);
+       卡主体点击=展开详情弹层(data-tap="detail",与文游首页一致),播放按钮单独进游戏。
+       入场错峰的 --i 不进模板串,由 renderLibrary 在写入后用 setProperty 逐张设(与 app.js 同款写法) */
     function langGridCardHtml(c) {
         var icon = themeIcon(c);
         var has = cardSaveOf(c), r = cardRoundOf(c);
         var themeKey = String(c.theme || "").replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase();
         var playTxt = has ? uiIconHtml("▶") + " 继续 · 第 " + (r || 1) + " 轮" : "立即游玩";
-        return '<div data-cid="' + cardCid(c) + '" class="scenario-card"><div class="scenario-card-main">' +
+        return '<div data-cid="' + cardCid(c) + '" data-tap="detail" class="scenario-card"><div class="scenario-card-main">' +
             '<div class="scenario-card-cover theme-' + themeKey + '" id="llc-cover-' + window.CoverService.safeId(c.id) + '">' +
             '<img class="scc-img" alt="' + api.esc(String(c.title_zh || c.title || (api.langName() + "剧本"))) + ' 封面" loading="lazy"><span class="scc-emoji">' + icon + "</span></div>" +
             '<div class="list-title">' + api.esc(String(c.title_zh || c.title || (api.langName() + "剧本"))) + "</div>" +
@@ -199,8 +207,8 @@
             '<span class="scenario-badge">' + api.esc(String(c.category_zh || c.category || "")) + "</span>" +
             "</div>" +
             '<div class="scenario-card-btns">' +
-            '<button class="tiny-btn" onclick="event.stopPropagation();LangController.openLangDetail(\'' + cardCid(c) + '\')">详情</button>' +
-            '<button class="tiny-btn primary' + (has ? " is-resume" : "") + '">' + playTxt + "</button>" +
+            '<button class="tiny-btn" onclick="event.stopPropagation();LangController.openLangDetail(\'' + cardCid(c) + '\',this)">详情</button>' +
+            '<button class="tiny-btn primary' + (has ? " is-resume" : "") + '" onclick="event.stopPropagation();LangController.enterCard(\'' + cardCid(c) + '\')">' + playTxt + "</button>" +
             "</div></div></div>";
     }
     function contRowHtml(c) {
@@ -254,7 +262,7 @@
         /* M6a/M8d:语言页组视图进入钩子(switchView 调用);生词本独立子页进入即加载词表 */
         onShow: function (viewId) {
             api.syncSubNav(viewId);
-            if (viewId === "view-lang") { api.applyLangCopy(); api.renderHome(); return; }
+            if (viewId === "view-lang") { api.applyLangCopy(); api.renderHome(true); return; }   // 进页面：剧本库交错入场
             if (viewId === "view-lang-learn") { api.refresh(); api.renderLearnMeta(); api.renderToday(); api.renderLearnStats(false); return; }
             if (viewId === "view-lang-vocab") { api.renderLearnMeta(); api.refreshVocab(); return; }
             if (viewId === "view-lang-leaderboard") { api.renderLeaderboard(); return; }
@@ -481,8 +489,7 @@
         /* M10(2026-09-13):剧本库不再是独立页面——回语言首页并滚到剧本库区 */
         goLibrary: function () {
             switchView("view-lang");
-            api.renderHome();
-            api.renderLibrary();
+            api.renderHome(true);   // renderHome 内部已渲染剧本库，不再重复渲染一遍（重复会把交错入场当场关掉）
             api.anchor("#lang-home-lib");
         },
         goLearn: function () {
@@ -665,7 +672,7 @@
             });
             return arr;
         },
-        renderHome: function () {
+        renderHome: function (animate) {
             var box = $("lang-home-reco"); if (!box) return;
             var lcs = window.LANG_CARDS_ONLINE || [];
             /* 学习档状态条 */
@@ -710,7 +717,7 @@
             try { api.renderContinue(); } catch (e) {}
             try { api.renderLangHub(); } catch (e) {}
             /* 剧本库平铺在推荐轮播下方(原独立子页已合并) */
-            api.renderLibrary();
+            api.renderLibrary(animate);
         },
         /* ---- P2 学习首页(2026-09-08):今日一句 / 我的进度 3 格 / 会员卡位 ----
            今日一句:内置双语考场景句池按北京日期轮换;译文与原文同在池子里(见 ZH 表上方说明),
@@ -1135,9 +1142,12 @@
             /* 入口横幅/语言首页/学习档/沉浸模式同样随语种(2026-09-22) */
             try { api.applyLangCopy(); } catch (e) {}
         },
-        renderLibrary: function () {
+        renderLibrary: function (animate) {
             var rows = $("lang-lib-grid"); if (!rows) return;
             var cats = $("lang-lib-cats"); if (!cats) return;
+            /* 入场动画开关：只有「进页面 / 内容刚到」的渲染传 true，筛选与局部重绘保持静默。
+               每次都显式覆盖，不是只开不关（与文游首页 renderScenarioCards 同一套） */
+            rows.classList.toggle("cards-stagger", !!animate);
             var lcs = window.LANG_CARDS_ONLINE || [];
             api.renderLibMeta();
             /* 题材 chips(动态取自库) */
@@ -1174,18 +1184,29 @@
             }
             list.sort(function (a, b) { return (a.order || 9) - (b.order || 9); });
             rows.innerHTML = list.map(langGridCardHtml).join("");
+            /* 入场错峰次序：卡片下标写进 --i(CSS 里 min(calc(--i * 30ms), 300ms) 读它) */
+            for (i = 0; i < rows.children.length; i++) rows.children[i].style.setProperty("--i", String(i));
             for (i = 0; i < list.length; i++) window.CoverService.paint("llc-cover-" + window.CoverService.safeId(list[i].id), list[i]);
             bindCardClicks(rows);
             hint(profile.band ? "" : "点卡即玩：" + api.langName() + "原生剧本，词库按你在「学习中心」选的学习档走——建议先选好档，推荐与词汇难度更贴你。", "lang-lib-hint");
         },
         /* M8c:语言卡详情弹层(封面大图 + 中英标题 + 档/题材 + 英文简介 + 主角;播放按钮从弹层进入) */
-        openLangDetail: function (cid) {
+        openLangDetail: function (cid, srcEl) {
             var lcs = window.LANG_CARDS_ONLINE || [], i, c = null;
             for (i = 0; i < lcs.length; i++) if (lcs[i] && String(lcs[i].id) === String(cid)) { c = lcs[i]; break; }
             if (!c) return;
             window._langDetailCid = String(c.id);
             var modal = $("lang-card-modal");
             if (!modal) return;
+            /* 转场起点 = 被点的那张卡(传进来的是按钮时,往上找它所在的卡)。
+               顺序要紧：prepare 必须早于 display——内容得在弹层显示前就压成透明 */
+            try {
+                if (window.ModalFlipService) {
+                    var src = srcEl || null;
+                    if (src && src.closest) src = src.closest(".scenario-card") || src.closest(".hb-card") || src;
+                    window.ModalFlipService.prepare(modal, src);
+                }
+            } catch (e) {}
             modal.style.display = "flex";
             var st = (c.structured && typeof c.structured === "object") ? c.structured : {};
             var w = st.world || {};
@@ -1210,15 +1231,24 @@
             $("lang-gd-content").innerHTML = html;
             $("lang-gd-play-btn").innerHTML = has ? uiIconHtml("▶") + " 继续 · 第 " + (r || 1) + " 轮" : "立即游玩";
             window.CoverService.paint("lgd-cover-" + window.CoverService.safeId(c.id), c);
+            /* 内容就位 → 开始膨胀(见 app.js ModalFlipService) */
+            try { if (window.ModalFlipService) window.ModalFlipService.play(modal); } catch (e) {}
         },
-        closeLangDetail: function () {
+        /* immediate=true:不做收缩动画(切页/立即进游戏时用,半演的转场压在下一页上更难看) */
+        closeLangDetail: function (immediate) {
             var modal = $("lang-card-modal");
-            if (modal) modal.style.display = "none";
+            if (!modal) return;
             window._langDetailCid = null;
+            if (immediate || !window.ModalFlipService) {
+                if (window.ModalFlipService) window.ModalFlipService.cancel(modal);
+                modal.style.display = "none";
+                return;
+            }
+            window.ModalFlipService.close(modal, function () { modal.style.display = "none"; });
         },
         playLangDetail: function () {
             var cid = window._langDetailCid;
-            api.closeLangDetail();
+            api.closeLangDetail(true);
             if (cid) api.enterCard(cid);
         },
         enterCard: function (cid) {
@@ -1237,7 +1267,7 @@
                     window.LANG_CARDS_ONLINE = (d && Array.isArray(d.items)) ? d.items : [];
                     window.__LANG_CARDS_LOADING = false;
                     window.__LANG_CARDS_READY = true;
-                    if (viewVisible("view-lang")) api.renderHome();
+                    if (viewVisible("view-lang")) api.renderHome(true);   // 卡刚到：交错入场
                 })
                 .catch(function () { window.__LANG_CARDS_LOADING = false; });
         },

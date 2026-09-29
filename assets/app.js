@@ -5019,7 +5019,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 const d = await res.json().catch(() => ({}));
                 if (res.ok && Array.isArray(d.items)) {
                     _homeOnlineCards = d.items;
-                    UIRenderer.renderScenarioCards();
+                    UIRenderer.renderScenarioCards(true);   // 社区卡刚到，补一次交错入场
                 }
             } catch (e) {}
         }
@@ -5047,9 +5047,12 @@ function rebuildChoicesBlock(body, labels = []) {
                 TopLoader.hide();
             }
         }
-        function renderScenarioCards() {
+        function renderScenarioCards(animate) {
             const box = document.getElementById("scenario-card-list");
             if (!box) return;
+            // 入场动画开关(2026-09-29):只有「进页面 / 内容刚到」的渲染传 true;
+            // 搜索/筛选/排序等高频重绘保持静默。每次渲染都显式覆盖,不是只开不关。
+            box.classList.toggle("cards-stagger", !!animate);
             const localCards = ScenarioCardService.loadCards().filter((c) => c.status !== "draft");
             // 批9.12:在线社区卡合并渲染（未下载的社区卡也展示在首页剧本库）
             const localIds = new Set(localCards.map((c) => String(c.id || "")));
@@ -5094,11 +5097,12 @@ function rebuildChoicesBlock(body, labels = []) {
                 const a = ScenarioCardService.authorOf(card);
                 return a ? `${MarkdownService.escapeHtml(a)}` : "";
             };
-            const renderRow = (card) => {
+            const renderRow = (card, animIdx) => {
                 const row = document.createElement("div");
                 const themeKey = String(card.theme || "").replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase();
                 row.className = `scenario-card ${card.id === selectedId ? "active" : ""}`;
                 row.dataset.cardId = card.id;
+                row.style.setProperty("--i", String(animIdx || 0));   // 入场错峰次序(见 app.css「剧本库卡片动效」)
                 const lock = ScenarioUnlockService.getLockInfo(card);
                 const tags = ScenarioCardViewService.cardTags(card);
                 const collected = ScenarioCardViewService.isCollected(card.id);
@@ -5132,11 +5136,13 @@ function rebuildChoicesBlock(body, labels = []) {
                     ScenarioCardViewService.toggleCollectLocal(card.id);
                 };
                 ScenarioCardInteractionService.bindSwipeAndSort(row, {
-                    onReorder: (fromId, toId) => Controller.reorderScenarioCards(fromId, toId)
+                    onReorder: (fromId, toId) => Controller.reorderScenarioCards(fromId, toId),
+                    // 点卡片本体 = 展开详情弹层(与详情按钮同路径);播放按钮已 stopPropagation
+                    onCardTap: (r) => Controller.openGameDetail(r.dataset.cardId)
                 });
                 box.appendChild(row);
             };
-            filteredCards.forEach(renderRow);
+            filteredCards.forEach((card, i) => renderRow(card, i));
             // AI 封面懒加载:进入视口才请求(KV 缓存命中秒回,未命中不提前耗额度)
             filteredCards.forEach((card) => {
                 const el = document.getElementById("cc-cover-" + CoverService.safeId(card.id));
@@ -8193,7 +8199,13 @@ function rebuildChoicesBlock(body, labels = []) {
                 if (moved) return;
                 const target = e.target;
                 if (!(target instanceof HTMLElement)) return;
-                if (!target.closest("button")) row.classList.toggle("swiped");
+                if (target.closest("button")) return;
+                // 已经划开删除/收藏面板 → 先收回面板,不再触发点卡片
+                if (row.classList.contains("swiped")) { row.classList.remove("swiped"); return; }
+                // 传了 onCardTap 的列表(主页剧本库)= 点卡片展开详情;
+                // 没传的(背包等)保持原语义:点空白处切换滑出面板
+                if (typeof callbacks?.onCardTap === "function") { callbacks.onCardTap(row); return; }
+                row.classList.toggle("swiped");
             });
 
             row.addEventListener("dragstart", (e) => {
@@ -11218,6 +11230,127 @@ const token = delta.content || "";
         return { saveScenarioCard, createScenarioCard, openScenarioCardSettings, deleteScenarioCard, isEditorDirty, markEditorClean };
     })();
 
+    // ---- 卡片↔详情弹层转场（2026-09-29）：从被点的卡片原地长成弹层，关掉时缩回那张卡 ----
+    // FLIP：先量出「来源卡片」和「弹层最终位置」两个矩形，把弹层用 transform 反推回卡片的位置与尺寸，
+    // 再放开过渡让它自己长到位。只动 transform —— width/height/top/left 会触发整段重排。
+    // 时间线：prepare（记来源 + 内容先压透明）→ play（内容就位，开始长）→ close（缩回来源）。
+    // prepare 就得挂 flip-anim，不能等到 play：内容必须在弹层 display 之前就是透明的，
+    // 否则会先闪一下整屏字再淡入。
+    const ModalFlipService = (() => {
+        let _el = null;      // 来源卡片（关闭时优先现量一张，列表滚动过也能缩回正确位置）
+        let _rect = null;    // 来源矩形快照（卡片被重渲染/移除后的兜底）
+        let _modal = null;   // 正在演的那张弹层；同一个弹层重复打开（点赞/收藏后重渲染）不再演一遍
+        let _timer = null;
+        // 代际（按弹层各记一份）：收缩还没走完又被打开（点了别的卡）时作废上一次收尾，别把新弹层关掉。
+        // 记在弹层自己身上而不是一个全局计数：两张弹层各自的收尾互不作废。
+        const _gen = new WeakMap();
+        const bumpGen = (modal) => { const n = (_gen.get(modal) || 0) + 1; _gen.set(modal, n); return n; };
+        const curGen = (modal) => _gen.get(modal) || 0;
+
+        function cardOf(modal) { return modal ? modal.querySelector(".modal-card") : null; }
+        function rectOf(el) {
+            if (!el || typeof el.getBoundingClientRect !== "function") return null;
+            const r = el.getBoundingClientRect();
+            // jsdom 不排版，尺寸恒为 0；没有真实几何就不做转场，按原样显示/隐藏
+            if (!r || (!r.width && !r.height)) return null;
+            return r;
+        }
+        // 把「位于 a 的矩形」换算成「站在 b 的位置上、看起来仍在 a」的 transform
+        function shift(a, b) {
+            const sx = a.width / b.width;
+            const sy = a.height / b.height;
+            const dx = (a.left + a.width / 2) - (b.left + b.width / 2);
+            const dy = (a.top + a.height / 2) - (b.top + b.height / 2);
+            return "translate(" + dx.toFixed(2) + "px," + dy.toFixed(2) + "px) scale(" + sx.toFixed(4) + "," + sy.toFixed(4) + ")";
+        }
+        // 按 card id 找列表里那张卡（同一张卡可能存在于多个列表，优先取真正可见的）
+        function cardIn(cardId) {
+            const sel = '.scenario-card[data-card-id="' + String(cardId == null ? "" : cardId).replace(/["\\]/g, "\\$&") + '"]';
+            const all = [].slice.call(document.querySelectorAll(sel));
+            for (let i = 0; i < all.length; i++) { try { if (all[i].getClientRects().length) return all[i]; } catch (e) {} }
+            return all[0] || null;
+        }
+        // 打开弹层前调用（必须在 modal.style.display = "flex" 之前）
+        function prepare(modal, cardEl) {
+            clearTimeout(_timer);
+            bumpGen(modal);
+            const repeat = _modal === modal;   // 同一张弹层已经开着（点赞/收藏会 re-open 重渲染）或正在收缩
+            _modal = modal;
+            const card = cardOf(modal);
+            if (!card) { _el = null; _rect = null; return; }
+            if (repeat) {
+                // 不演转场，但必须把上一次收缩的残留清掉：留着 flip-out 会把内容永远按在透明
+                _el = null; _rect = null;
+                card.classList.remove("flip-out");
+                card.classList.add("flip-anim", "flip-go");
+                card.style.transition = ""; card.style.transform = ""; card.style.transformOrigin = "";
+                return;
+            }
+            _el = cardEl || null;
+            _rect = rectOf(cardEl);
+            card.classList.remove("flip-go", "flip-out");
+            // 只有真量到几何才压内容：没几何时不挂类，免得内容永远停在透明
+            card.classList.toggle("flip-anim", !!_rect);
+            card.style.transition = ""; card.style.transform = ""; card.style.transformOrigin = "";
+        }
+        // 内容渲染完调用：反算起点 → 放开过渡长到自然尺寸
+        function play(modal) {
+            const card = cardOf(modal);
+            if (!card || !_rect || _modal !== modal) return;
+            card.classList.add("flip-go");   // 内容延后 60ms 淡入（见 app.css）
+            const to = rectOf(card);
+            if (!to) return;
+            card.style.transition = "none";
+            card.style.transformOrigin = "center center";
+            card.style.transform = shift(_rect, to);
+            void card.offsetWidth;           // 强制一次 reflow 让起点先落地，否则没有起点可过渡
+            card.style.transition = "";
+            card.style.transform = "";
+        }
+        // 关闭：缩回来源卡片，动画收尾后由调用方把弹层隐藏
+        function close(modal, done) {
+            const card = cardOf(modal);
+            const gen = curGen(modal);
+            let settled = false;
+            const onEnd = (e) => { if (!e || e.target === card) finish(); };
+            const finish = () => {
+                if (settled) return;
+                settled = true;
+                if (card) card.removeEventListener("transitionend", onEnd);
+                // 收尾途中又被打开（点了别的卡）：这次收尾整体作废，新弹层的状态一个都不许动
+                if (curGen(modal) !== gen) return;
+                clearTimeout(_timer);
+                if (card) {
+                    card.classList.remove("flip-anim", "flip-go", "flip-out");
+                    card.style.transition = ""; card.style.transform = ""; card.style.transformOrigin = "";
+                }
+                if (_modal === modal) { _el = null; _rect = null; _modal = null; }
+                if (typeof done === "function") done();
+            };
+            const back = rectOf(_el) || _rect;
+            const to = card ? rectOf(card) : null;
+            if (!card || !back || !to) { finish(); return; }   // 没几何：直接收，不演
+            card.classList.remove("flip-go");
+            card.classList.add("flip-anim", "flip-out");
+            card.addEventListener("transitionend", onEnd);
+            _timer = setTimeout(finish, 420);                  // transitionend 偶发不触发（切后台标签页）的兜底，> dur-3
+            card.style.transform = shift(back, to);
+        }
+        // 不做动画直接收尾（页面切换等：弹层马上就要隐藏，演一半的转场必须当场清干净）
+        function cancel(modal) {
+            clearTimeout(_timer);
+            bumpGen(modal);   // 作废可能还在路上的收缩收尾
+            const card = cardOf(modal);
+            if (card) {
+                card.classList.remove("flip-anim", "flip-go", "flip-out");
+                card.style.transition = ""; card.style.transform = ""; card.style.transformOrigin = "";
+            }
+            if (_modal === modal) { _el = null; _rect = null; _modal = null; }
+        }
+        return { prepare, play, close, cancel, cardIn };
+    })();
+    window.ModalFlipService = ModalFlipService;
+
     // ---- 作品详情页：热度/角色榜/打赏榜（官方卡本地热度，社区卡走 API）----
     const GameDetailService = (() => {
         const HOT_KEY = "bitlife_game_hot_v1";
@@ -11270,6 +11403,7 @@ const token = delta.content || "";
             _currentDetailCardId = cardId;
             const modal = document.getElementById("game-detail-modal");
             if (!modal) return;
+            ModalFlipService.prepare(modal, ModalFlipService.cardIn(cardId));   // 顺序要紧：必须早于 display
             modal.style.display = "flex";
             document.getElementById("gd-title").textContent = "作品详情";
             document.getElementById("gd-content").innerHTML = '<span class="list-sub">加载中…</span>';
@@ -11305,13 +11439,14 @@ const token = delta.content || "";
                 if (!AuthService.getToken()) {
                     document.getElementById("gd-content").innerHTML = '<span class="list-sub">登录后可查看社区作品详情。</span>' +
                     '<div class="btn-row mid"><button type="button" class="mini-btn ghost" onclick="AuthService.openLogin()">去登录</button></div>';
+                    ModalFlipService.play(modal);
                     return;
                 }
                 const res = await fetch(`${AppConfig.proxy.baseUrl}/api/game/detail?id=${encodeURIComponent(cardId)}`, {
                     headers: { "X-Auth-Token": "Bearer " + AuthService.getToken() }
                 });
                 const d = await res.json().catch(() => ({}));
-                if (!res.ok) { document.getElementById("gd-content").innerHTML = `<span class="list-sub">${MarkdownService.escapeHtml(d.error || "加载失败")}</span>`; return; }
+                if (!res.ok) { document.getElementById("gd-content").innerHTML = `<span class="list-sub">${MarkdownService.escapeHtml(d.error || "加载失败")}</span>`; ModalFlipService.play(modal); return; }
                 // 未下载的社区卡用接口返回的数据构造临时卡（含 structured 供角色榜渲染）
                 if (!card) {
                     card = { id: d.id, title: d.title || "未命名", category: d.category || "", theme: d.theme || "", sourceType: "community", structured: (d.data && d.data.structured) || null };
@@ -11325,6 +11460,7 @@ const token = delta.content || "";
                 });
             } catch (e) {
                 document.getElementById("gd-content").innerHTML = '<span class="list-sub">加载失败，请稍后重试。</span>';
+                ModalFlipService.play(modal);
             }
         }
         function renderDetail(card, d) {
@@ -11435,9 +11571,14 @@ const token = delta.content || "";
                 </div>`;
             content.innerHTML = html;
             loadReviews(card.id); loadCharFavs();
+            ModalFlipService.play(document.getElementById("game-detail-modal"));   // 内容就位，开始膨胀
         }
-        function closeGameDetail() {
-            document.getElementById("game-detail-modal").style.display = "none";
+        function closeGameDetail(immediate) {
+            const modal = document.getElementById("game-detail-modal");
+            if (!modal) return;
+            // immediate：不做收缩动画（离开页面时用，别让半演的转场留在屏上）
+            if (immediate) { ModalFlipService.cancel(modal); modal.style.display = "none"; return; }
+            ModalFlipService.close(modal, () => { modal.style.display = "none"; });
         }
         async function toggleLike(cardId) {
             // 官方卡/社区卡统一走 API(点赞入库, 全站同步); 未登录提示
@@ -11859,7 +12000,7 @@ const token = delta.content || "";
             if (!Array.isArray(window.SCENARIO_LIBRARY)) {
                 const s = document.getElementById("scenario-lib-script");
                 if (s) s.addEventListener("load", () => {
-                    try { UIRenderer.renderScenarioCards(); } catch (e) { console.error("场景库延迟渲染失败", e); }
+                    try { UIRenderer.renderScenarioCards(true); } catch (e) { console.error("场景库延迟渲染失败", e); }
                     try { DiscoverService.renderHomeDiscovery(); } catch (e) { console.error("发现页延迟渲染失败", e); }
                 });
             } else {
@@ -11922,7 +12063,7 @@ const token = delta.content || "";
                 scenarioChunkLoaded = n;
                 scenarioChunkLoading = false;
                 updateScenarioLoadingUI();
-                try { UIRenderer.renderScenarioCards(); } catch (e) { console.error("场景库分片渲染失败", e); }
+                try { UIRenderer.renderScenarioCards(true); } catch (e) { console.error("场景库分片渲染失败", e); }
                 try { DiscoverService.renderHomeDiscovery(); } catch (e) { console.error("发现页补载重渲失败", e); }
                 scenarioMaybeAutoFill();
             };
@@ -12741,8 +12882,9 @@ ${recent || "（无）"}
             try { if (shown("edit-profile-modal") && window.closeEditProfileModal) window.closeEditProfileModal(); } catch (e) {}
             try { if (shown("map-picker-modal") && window.closeMapPickerModal) window.closeMapPickerModal(); } catch (e) {}
             try { if (shown("avatar-picker-modal") && window.closeAvatarPickerModal) window.closeAvatarPickerModal(); } catch (e) {}
-            try { if (shown("lang-card-modal") && window.LangController && window.LangController.closeLangDetail) window.LangController.closeLangDetail(); } catch (e) {}
-            try { if (shown("game-detail-modal") && typeof GameDetailService !== "undefined") GameDetailService.closeGameDetail(); } catch (e) {}
+            // (true)=跳过收缩动画:切页要瞬时,半演的转场留在屏上比没有转场更难看
+            try { if (shown("lang-card-modal") && window.LangController && window.LangController.closeLangDetail) window.LangController.closeLangDetail(true); } catch (e) {}
+            try { if (shown("game-detail-modal") && typeof GameDetailService !== "undefined") GameDetailService.closeGameDetail(true); } catch (e) {}
             // 会员面板只隐藏不调 closePanel:后者会清掉待支付订单,切页不应打断查单轮询
             try { if (shown("membership-modal")) document.getElementById("membership-modal").style.display = "none"; } catch (e) {}
             // 世界页长按菜单:absolute 定位于手机内屏,不主动收起会跨页残留;走 wxHideCtxMenu 一并清 _wxCtx
@@ -12834,7 +12976,7 @@ ${recent || "（无）"}
             if (viewId === "view-home") {
                 // 从卡片/游玩页回到主页时，强制刷新主页列表，避免看到旧缓存视图
                 if (prevView && prevView !== "view-home") {
-                    UIRenderer.renderScenarioCards();
+                    UIRenderer.renderScenarioCards(true);   // 回到剧本库=进页面，交错入场
                 }
                 const content = document.getElementById("main-content");
                 if (content) content.scrollTop = 0;
@@ -15331,7 +15473,7 @@ function openNpcProfile(npcId) {
             }
         }
         function openGameDetail(cardId) { GameDetailService.openGameDetail(cardId); }
-        function closeGameDetail() { GameDetailService.closeGameDetail(); }
+        function closeGameDetail(immediate) { GameDetailService.closeGameDetail(immediate); }
         function toggleGameLike(cardId) { GameDetailService.toggleLike(cardId); }
         function toggleGameCollect(cardId) { GameDetailService.toggleCollect(cardId); }
         function gameDonate(cardId, amount) { GameDetailService.donate(cardId, amount); }
@@ -16774,6 +16916,16 @@ function openNpcProfile(npcId) {
         if (!b || b.classList.contains("boot-done")) return;
         b.classList.add("boot-done");
         setTimeout(() => b.remove(), 400);
+        // 首屏那份剧本库是在 boot 遮罩底下渲染的——CSS 动画早播完了，人一眼没看见。
+        // 撤遮罩的同时把交错入场重播一次（摘类→强制 reflow→挂回，class 名相同不会自己重播）。
+        try {
+            const box = document.getElementById("scenario-card-list");
+            if (box && box.querySelector(".scenario-card")) {
+                box.classList.remove("cards-stagger");
+                void box.offsetWidth;
+                box.classList.add("cards-stagger");
+            }
+        } catch (e) {}
     }
 
     /* ===== 模式选择(2026-09-22)：首次进站问一次「学语言 / 玩文游」 =====
