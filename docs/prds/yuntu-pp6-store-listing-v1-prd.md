@@ -3,6 +3,7 @@
 > 2026-10-03 深夜 · 自主模式编写（小徐睡前指令，授权自主完成，晨间验收）
 > 产品线主 PRD: `docs/prds/yuntu-pride-prejudice-cet6-prd.md`（v1.1，网盘渠道 ¥9.9）
 > 本 PRD 只覆盖「站内上架」渠道，与网盘渠道并存互不影响。
+> **状态：✅ 已上线（2026-10-04 凌晨）**——站点 commit `1b1d55d`、引擎 commit `70033ef`/`670fadc`、worker 版本 `b057a964-d2f2-4bcb-b5f9-cf7079a646bf`、nginx 加 `location /story/`（备份 `bitlife.conf.bak.20261004`）。线上四项 curl + 临时用户 E2E + 真实下单全部通过（明细见 §7 与 `docs/部署清单-20260826.md`）。
 
 ## 1. 需求原文（小徐 2026-10-03 23:5x）
 
@@ -103,13 +104,14 @@ GET  /api/story/access?product=pp6
 - [ ] 产物启动页书封 = 玫瑰藤蔓边框 + 题字；iPhone 上三处移动端修复仍然生效
 - [ ] 真实支付 ¥5 链路（小徐本人小额实测——我未代付）
 
-## 7. 验证（我已执行，不代替小徐验收）
+## 7. 验证（已全部执行通过 ✅，2026-10-04 凌晨）
 
-- 代码断言探针：worker 接线/产物门注入/引擎 hook/主站卡片（字符串机器断言）
-- 线上 curl：`/story/pp6/` 200、`/api/story/access` 无 token 401、`/api/pay/create` 非法档 400
-- 临时测试用户 E2E：PB 建临时用户 → access=false → PB 写 `store_pp6` unlock → access=true → 清理（用户+记录双删）
-- 生词本 API：临时用户 POST 一词 → 站内可见 → DELETE 清理
-- 回滚路径：worker `wrangler rollback` / nginx conf 还原 + reload / 主站 `git revert` / 产物目录删除
+- 代码断言探针：主站入口 43 断言全过（`tmp/lang-store-probe/test-store-entry.js`，jsdom：网格置顶注入/详情特判/无 token 与 401 登录引导/ok 跳转/need=purchase 弹层/18 岁勾选拦截/桌面 QR/移动跳收银台/paid 清 pending 跳转/resume/过期 pending 忽略）；5 产物断言全过（`assert_products.py`：标题语义/付费门仅上架版且紧贴 body/封面数据 URI/书封艺术层/移动修复三标记/分章 61=61）
+- 线上 curl：`/story/pp6/` 200（12,577,715B，含 ytStoreGate，gzip 后 7.68MB）、`/api/story/access?product=pp6` 无 token 401、未知商品 404、封面 `store_pp6.webp` 200（71,094B）、`assets/lang-play.js?v=20261004a` 200 含 store_pp6
+- 临时测试用户 E2E（PB 建号→跑完→用户+记录双清 204）：未购 `ok:false need:purchase price:"5"` → 写 `store_pp6` unlock（模拟发货记录形）→ `ok:true via:"purchased"` → 置会员 → `ok:true via:"member"`
+- 生词本 API（真实 worker 链路）：POST `obstinate` → GET 回读（status 0）→ PUT status=2 → DELETE → 再 GET 已空
+- 真实下单：`POST /api/pay/create {planId:"pp6",payType:"wxpay"}` → 200 返回 orderNo+jumpUrl+qrUrl（微信侧真实单 `MPMUSNI9E15VEDLC`，未付自然过期）→ `pay/status` pending → 清理订单+用户
+- 回滚路径：worker `wrangler rollback` / nginx `cp bitlife.conf.bak.20261004` + reload / 主站 `git revert 1b1d55d` / 产物目录 `rm -rf /var/www/story/pp6`（未触碰 PB schema——unlocks 为既有集合）
 
 ## 8. 已知边界
 
