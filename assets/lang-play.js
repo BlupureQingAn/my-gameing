@@ -81,6 +81,17 @@
     function hint(t, boxId) { var h = $(boxId || "lang-hint"); if (h) h.textContent = t || ""; }
     /* M6a:剧本库筛选状态与语言页渲染(库=英语原生卡;首页=推荐行+继续行) */
     var libFilter = { cat: "", gender: "" };
+    /* 站内上架内容商品(2026-10-04 《傲慢与偏见(六级版)》):预写分支故事与 lang_cards「AI 每轮填空」
+       范式不兼容,不进 PB lang_cards——由本文件合成官方卡、特判进入(storeProduct → worker STORY_PLANS)。
+       站内只做入口/权限引导/购买弹层;真正的付费门在产物内(/story/pp6/,同一套 access 接口双保险) */
+    var STORE_PRODUCT = {
+        id: "store_pp6", title_zh: "傲慢与偏见（六级版）", title: "Pride and Prejudice · CET-6",
+        category_zh: "学习剧本", theme: "classic", lang: "en", order: -1,
+        cover: "covers/store_pp6.webp", sourceType: "official",
+        storeProduct: "pp6", storePrice: "5"
+    };
+    var STORE_STORY_URL = "https://bitlife.blupure.cn/story/pp6/";
+    var STORE_PENDING_KEY = "yt_store_pp6_site_pending_v1";   // 站内下单跳收银台前置:返回/重载后自动查单
     /* 主题图标复用文游首页同一套 lucide 描边（app.js cardEmoji），不再另维护一张 emoji 表 */
     function themeIcon(c) { return ScenarioCardViewService.cardEmoji(String((c && c.theme) || "")); }
     /* R1 恋爱攻略卡:love 标签/向别偏好(存 localStorage lang_gender_pref_v1,O2 服务端零改动);loveMatch 供推荐排序 */
@@ -191,6 +202,23 @@
        入场错峰的 --i 不进模板串,由 renderLibrary 在写入后用 setProperty 逐张设(与 app.js 同款写法) */
     function langGridCardHtml(c) {
         var icon = themeIcon(c);
+        /* 上架商品卡特判(2026-10-04):无 LangEngine 进度语义,徽标带价,按钮文案「进入阅读」 */
+        if (c && c.storeProduct) {
+            var sTheme = String(c.theme || "").replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase();
+            return '<div data-cid="' + cardCid(c) + '" data-tap="detail" class="scenario-card"><div class="scenario-card-main">' +
+                '<div class="scenario-card-cover theme-' + sTheme + '" id="llc-cover-' + window.CoverService.safeId(c.id) + '">' +
+                '<img class="scc-img" alt="' + api.esc(String(c.title_zh || "")) + ' 封面" loading="lazy"><span class="scc-emoji">' + icon + "</span></div>" +
+                '<div class="list-title">' + api.esc(String(c.title_zh || "")) + "</div>" +
+                '<div class="list-sub list-ellip">' + api.esc(String(c.title || "")) + "</div>" +
+                '<div class="scenario-badges">' +
+                '<span class="scenario-badge">官方出品</span>' + langBadgeOf(c) +
+                '<span class="scenario-badge">¥' + api.esc(String(c.storePrice || "")) + ' · 会员免费</span>' +
+                "</div>" +
+                '<div class="scenario-card-btns">' +
+                '<button class="tiny-btn" onclick="event.stopPropagation();LangController.openLangDetail(\'' + cardCid(c) + '\',this)">详情</button>' +
+                '<button class="tiny-btn primary" onclick="event.stopPropagation();LangController.enterCard(\'' + cardCid(c) + '\')">进入阅读</button>' +
+                "</div></div></div>";
+        }
         var has = cardSaveOf(c), r = cardRoundOf(c);
         var themeKey = String(c.theme || "").replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase();
         var playTxt = has ? uiIconHtml("▶") + " 继续 · 第 " + (r || 1) + " 轮" : "立即游玩";
@@ -240,6 +268,7 @@
             api.loadRemote();
             api.loadLangCards();
             api.renderHome();
+            window.addEventListener("pageshow", function () { api.storeResumePending(); });   // 上架商品:收银台返回后自动查单
         },
         refresh: function () {
             api.renderLangPicker();
@@ -1149,6 +1178,8 @@
                每次都显式覆盖，不是只开不关（与文游首页 renderScenarioCards 同一套） */
             rows.classList.toggle("cards-stagger", !!animate);
             var lcs = window.LANG_CARDS_ONLINE || [];
+            /* 上架商品(2026-10-04):客户端合成卡,英语库置顶(order:-1),PB 分片里没有这张卡 */
+            if (curLang() === "en") lcs = [STORE_PRODUCT].concat(lcs);
             api.renderLibMeta();
             /* 题材 chips(动态取自库) */
             var catSet = [], ci, cc, cat;
@@ -1193,7 +1224,8 @@
         /* M8c:语言卡详情弹层(封面大图 + 中英标题 + 档/题材 + 英文简介 + 主角;播放按钮从弹层进入) */
         openLangDetail: function (cid, srcEl) {
             var lcs = window.LANG_CARDS_ONLINE || [], i, c = null;
-            for (i = 0; i < lcs.length; i++) if (lcs[i] && String(lcs[i].id) === String(cid)) { c = lcs[i]; break; }
+            if (String(STORE_PRODUCT.id) === String(cid)) c = STORE_PRODUCT;
+            if (!c) for (i = 0; i < lcs.length; i++) if (lcs[i] && String(lcs[i].id) === String(cid)) { c = lcs[i]; break; }
             if (!c) return;
             window._langDetailCid = String(c.id);
             var modal = $("lang-card-modal");
@@ -1212,9 +1244,23 @@
             var w = st.world || {};
             var idn = st.identity || {};
             var has = cardSaveOf(c), r = cardRoundOf(c);
+            var html;
+            if (c.storeProduct) {
+                /* 上架商品特判:无 structured,详情=内容简介+定价说明(LangEngine 进度不适用) */
+                html =
+                    '<div class="lgd-cover" id="lgd-cover-' + window.CoverService.safeId(c.id) + '"><img class="scc-img" alt="' + api.esc(String(c.title_zh || "")) + ' 封面" loading="lazy"><span class="scc-emoji">' + themeIcon(c) + "</span></div>" +
+                    '<div class="lgd-title">' + api.esc(String(c.title_zh || "")) + "</div>" +
+                    '<div class="lgd-en">' + api.esc(String(c.title || "")) + " · " + langNameOf(c) + "原生剧本</div>" +
+                    '<div class="lgd-badges">' +
+                    '<span class="scenario-badge">官方出品</span>' + langBadgeOf(c) +
+                    '<span class="scenario-badge">¥' + api.esc(String(c.storePrice || "")) + ' · 会员免费</span>' +
+                    "</div>" +
+                    '<div class="lgd-desc"><b>内容：</b>《傲慢与偏见》完整版——全 61 章分支故事，六级重点词嵌入原文：点句看整句译文、点词看释义，生词一键收进站内「我的生词本」。</div>' +
+                    '<div class="lgd-desc"><b>定价：</b>¥' + api.esc(String(c.storePrice || "")) + ' 买断，永久阅读；云吞吞会员免费玩（会员到期后，已购仍可玩）。</div>';
+            } else {
             var heroTxt = [String(idn.role || ""), String(idn.background || "")].filter(function (x) { return x; }).join("；").slice(0, 160);
             var summary = String(w.summary || "").replace(/\s+/g, " ").trim().slice(0, 340);
-            var html =
+            html =
                 '<div class="lgd-cover" id="lgd-cover-' + window.CoverService.safeId(c.id) + '"><img class="scc-img" alt="' + api.esc(String(c.title_zh || c.title || (api.langName() + "剧本"))) + ' 封面" loading="lazy"><span class="scc-emoji">' + themeIcon(c) + "</span></div>" +
                 '<div class="lgd-title">' + api.esc(String(c.title_zh || c.title || (api.langName() + "剧本"))) + "</div>" +
                 '<div class="lgd-en">' + api.esc(String(c.title || "")) + " · " + langNameOf(c) + "原生剧本</div>" +
@@ -1228,8 +1274,9 @@
                 (heroTxt ? '<div class="lgd-desc"><b>你扮演：</b>' + api.esc(heroTxt) + "</div>" : "") +
                 (summary ? '<div class="lgd-desc"><b>故事预览（English）：</b>' + api.esc(summary) + "</div>" : "") +
                 (has ? '<div class="lgd-desc"><b>进度：</b>已到第 ' + (r || 1) + " 轮——接着上次的英语进度玩，词库按你在「学习中心」选的学习档走。</div>" : "");
+            }
             $("lang-gd-content").innerHTML = html;
-            $("lang-gd-play-btn").innerHTML = has ? uiIconHtml("▶") + " 继续 · 第 " + (r || 1) + " 轮" : "立即游玩";
+            $("lang-gd-play-btn").innerHTML = c.storeProduct ? "进入阅读" : (has ? uiIconHtml("▶") + " 继续 · 第 " + (r || 1) + " 轮" : "立即游玩");
             window.CoverService.paint("lgd-cover-" + window.CoverService.safeId(c.id), c);
             /* 内容就位 → 开始膨胀(见 app.js ModalFlipService) */
             try { if (window.ModalFlipService) window.ModalFlipService.play(modal); } catch (e) {}
@@ -1252,8 +1299,146 @@
             if (cid) api.enterCard(cid);
         },
         enterCard: function (cid) {
+            if (String(STORE_PRODUCT.id) === String(cid)) { api.storeEnter(); return; }
             if (!window.LangEngine) { hint("英语引擎还没就绪，刷新一下再试～", "lang-lib-hint"); return; }
             window.LangEngine.enter(cid).catch(function () { hint("进入失败，请再点一次", "lang-lib-hint"); });
+        },
+        /* ==================== 上架商品入口(2026-10-04《傲慢与偏见(六级版)》) ====================
+           站内只做入场:权限检查 → 已购/会员跳 /story/pp6/(产物内付费门同接口双保险);
+           未登录走站内登录弹层;未购开购买弹层(微信直付,与产物内付费门同一套 pay 接口)。
+           守卫不能写 window.AuthService:它是 app.js 顶层 const,只在内联处理器与全局词法
+           环境里可见(同 renderMemberCta 的注释),用裸标识符 + typeof 包裹 */
+        storeEnter: function () {
+            if (!token()) { api.storeLogin(); return; }
+            api.storeCheckAccess();
+        },
+        storeLogin: function () {
+            var opened = false;
+            try { if (typeof AuthService !== "undefined" && AuthService.openLogin) { AuthService.openLogin(); opened = true; } } catch (e) {}
+            hint(opened ? "登录后回来，再点「进入阅读」" : "登录后再来进入阅读", "lang-lib-hint");
+        },
+        storeCheckAccess: function () {
+            fetch(API_BASE + "/api/story/access?product=" + encodeURIComponent(STORE_PRODUCT.storeProduct), { headers: { "X-Auth-Token": "Bearer " + token() } })
+                .then(function (r) {
+                    if (r.status === 401) { api.storeLogin(); return null; }   // null = 已处理,别再弹支付
+                    return r.ok ? r.json() : null;
+                })
+                .then(function (d) {
+                    if (d === null) return;
+                    if (!d) { hint("网络异常，暂时无法确认权限，稍后再试", "lang-lib-hint"); return; }
+                    if (d.ok) { location.href = STORE_STORY_URL; return; }
+                    api.storeShowPay(d);
+                })
+                .catch(function () { hint("网络异常，暂时无法确认权限，稍后再试", "lang-lib-hint"); });
+        },
+        storePendingOrderNo: function () {
+            try {
+                var p = JSON.parse(localStorage.getItem(STORE_PENDING_KEY) || "null");
+                // 30 分钟前的 pending 视为过期:查单轮询只服务刚下单的这次跳转
+                if (p && p.orderNo && Date.now() - Number(p.ts || 0) < 30 * 60 * 1000) return p.orderNo;
+            } catch (e) {}
+            return "";
+        },
+        storeShowPay: function (d) {
+            api.storeClosePay();   // 重复打开先清旧的(连带停掉旧轮询)
+            var price = api.esc(String((d && d.price) || STORE_PRODUCT.storePrice));
+            var wrap = document.createElement("div");
+            wrap.className = "modal-overlay";
+            wrap.id = "store-pay-modal";
+            wrap.style.display = "flex";
+            wrap.innerHTML = '<div class="modal-card">' +
+                '<div class="modal-title">' + api.esc(STORE_PRODUCT.title_zh) + '</div>' +
+                '<div class="list-sub" style="margin:0 0 10px;">会员免费畅玩；非会员 <b>¥' + price + '</b> 买断，永久有效。</div>' +
+                '<label style="display:flex;gap:8px;align-items:flex-start;font-size:12px;color:var(--sub);margin-bottom:12px;cursor:pointer;">' +
+                '<input id="store-adult-box" type="checkbox" style="margin-top:2px;">我已满 18 周岁，或已获得监护人同意，并知晓虚拟商品一经售出不退不换</label>' +
+                '<div id="store-pay-area" class="list-sub" style="min-height:18px;"></div>' +
+                '<div class="gender-actions">' +
+                '<button class="mini-btn ghost" onclick="LangController.storeMemberCta()">开通会员免费玩</button>' +
+                '<button class="mini-btn primary" id="store-buy-btn" onclick="LangController.storeStartPay()">微信支付 ¥' + price + '</button>' +
+                "</div>" +
+                '<div style="text-align:center;margin-top:10px;"><button class="mini-btn ghost" onclick="LangController.storeClosePay()">关闭</button></div>' +
+                "</div>";
+            document.body.appendChild(wrap);
+            var po = api.storePendingOrderNo();
+            if (po) {
+                var area = $("store-pay-area");
+                if (area) area.textContent = "已提交支付，正在确认到账结果…（未支付可重新发起购买）";
+                api.storePoll(po);
+            }
+        },
+        storeMemberCta: function () {
+            api.storeClosePay();
+            try { if (typeof MembershipService !== "undefined" && MembershipService.openPanel) MembershipService.openPanel(); } catch (e) {}
+        },
+        storeClosePay: function () {
+            api.storeStopPoll();
+            var m = $("store-pay-modal");
+            if (m && m.parentNode) m.parentNode.removeChild(m);
+        },
+        storeStartPay: function () {
+            var box = $("store-adult-box"), area = $("store-pay-area"), btn = $("store-buy-btn");
+            if (!box || !box.checked) { if (area) area.textContent = "请先勾选确认（合规要求）。"; return; }
+            if (!token()) { api.storeClosePay(); api.storeLogin(); return; }
+            if (api._storeCreating) return;   // 创建中,防双击重复下单
+            api._storeCreating = true;
+            if (btn) { btn.disabled = true; btn.style.opacity = ".6"; }
+            if (area) area.textContent = "正在创建订单…";
+            fetch(API_BASE + "/api/pay/create", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token() },
+                body: JSON.stringify({ planId: STORE_PRODUCT.storeProduct, payType: "wxpay" })   // 支付宝未开通,统一微信
+            })
+                .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { s: r.status, j: j }; }); })
+                .then(function (x) {
+                    api._storeCreating = false;
+                    if (btn) { btn.disabled = false; btn.style.opacity = "1"; }
+                    if (x.s === 401) { api.storeClosePay(); api.storeLogin(); return; }
+                    if (x.s !== 200 || (!x.j.jumpUrl && !x.j.qrUrl)) { if (area) area.textContent = (x.j && x.j.error) || "创建订单失败，请重试"; return; }
+                    try { localStorage.setItem(STORE_PENDING_KEY, JSON.stringify({ orderNo: x.j.orderNo, ts: Date.now() })); } catch (e) {}
+                    var isMobile = /Android|iPhone|iPad|iPod|Mobile|Windows Phone/i.test(navigator.userAgent || "");
+                    if (x.j.qrUrl && !isMobile) {
+                        // 桌面:虎皮椒扫码;移动端若显示二维码手机无法扫(与站内充值面板同款设备区分)
+                        if (area) area.innerHTML = '订单创建成功，请使用微信扫码支付<div style="margin:10px 0;"><img src="' + api.esc(x.j.qrUrl) + '" alt="微信支付二维码" style="width:180px;height:180px;display:block;margin:0 auto;border-radius:8px;background:#fff;padding:4px;"></div>支付完成后本页自动进入阅读（请保持本页打开）';
+                        api.storePoll(x.j.orderNo);
+                    } else if (x.j.jumpUrl) {
+                        if (area) area.innerHTML = '订单已创建，正在跳转微信收银台…<br><span style="font-size:12px;color:var(--sub);">支付完成后返回本页，会自动进入阅读。</span>';
+                        api.storePoll(x.j.orderNo);
+                        setTimeout(function () { location.href = x.j.jumpUrl; }, 900);
+                    } else if (area) area.textContent = "下单成功但未取到收银台链接，请重试";
+                })
+                .catch(function () {
+                    api._storeCreating = false;
+                    if (btn) { btn.disabled = false; btn.style.opacity = "1"; }
+                    if (area) area.textContent = "网络异常，请重试";
+                });
+        },
+        storePoll: function (orderNo) {
+            api.storeStopPoll();
+            var n = 0;
+            api._storePoll = setInterval(function () {
+                n++;
+                if (n > 400) { api.storeStopPoll(); return; }   // 20 分钟封顶
+                fetch(API_BASE + "/api/pay/status?out_trade_no=" + encodeURIComponent(orderNo), { headers: { "X-Auth-Token": "Bearer " + token() } })
+                    .then(function (r) { return r.ok ? r.json() : null; })
+                    .then(function (s) {
+                        var st = s && s.status;
+                        if (Array.isArray(st)) st = st[0];   // PB JSON 字段可能是数组(与充值面板同兼容)
+                        if (st === "paid") {
+                            api.storeStopPoll();
+                            try { localStorage.removeItem(STORE_PENDING_KEY); } catch (e) {}
+                            location.href = STORE_STORY_URL;
+                        }
+                    })
+                    .catch(function () {});
+            }, 3000);
+        },
+        storeStopPoll: function () { if (api._storePoll) { clearInterval(api._storePoll); api._storePoll = null; } },
+        /* 支付跳转返回/重载后自动查单(移动端 H5 收银台回来靠它放行进阅读;与产物内付费门同套路) */
+        storeResumePending: function () {
+            var po = api.storePendingOrderNo();
+            if (!po || !token()) return;
+            if (api._storePoll) return;   // 已有轮询在跑(弹层内)
+            api.storePoll(po);
         },
         loadLangCards: function (lang) {
             if (window.__LANG_CARDS_LOADING) return;

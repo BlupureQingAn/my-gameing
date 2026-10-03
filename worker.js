@@ -573,6 +573,11 @@ const PACK_PLANS = {
     rescue1: { id: "rescue1", name: "点译救急包", price: "1", gloss: 10, recap: 0 },
     rescue3: { id: "rescue3", name: "学习救急包", price: "3", gloss: 30, recap: 3 },
 };
+// 站内直付内容商品(2026-10-04 上架《傲慢与偏见（六级版）》):人民币直付买断,发货=unlocks 记录
+// (card_id = "store_" + story,幂等);任意有效会员(月/年/终身)免费;购买永久,会员到期不丢
+const STORY_PLANS = {
+    pp6: { id: "pp6", name: "傲慢与偏见（六级版）", price: "5", story: "pp6" },
+};
 // 免费用户每日 AI 总次数(北京时间 08:00 刷新;2026-09-07 起主聊天/点译/复盘共享此池,三功能用同一 freequota KV;
 // 主聊天额度内仅路由 NVIDIA 全部 + 硅基 sf-glm-4-9b;三功能超限均可转云币计费续用(聊天按 token,点译/复盘按次;
 // 2026-09-08 小徐确认:非会员每用户每天 10 次不耗币的 AI 调用,所有类型共享,按用户独立计;计数口径=成功才计)
@@ -1116,7 +1121,7 @@ async function xunhuPlaceOrder(env, orderNo, title, price, userId) {
 
 // 创建订单：本地落库 pay_orders → 按设备/支付方式选网关 → 返回 { orderNo, jumpUrl, qrUrl? }
 async function createPayOrder(env, userId, planId, payType, isMobile) {
-    const plan = CHARGE_PLANS[planId] || MEMBER_PLANS[planId] || PACK_PLANS[planId] || (planId === "lifetime" ? LIFETIME_PLAN : null);
+    const plan = CHARGE_PLANS[planId] || MEMBER_PLANS[planId] || PACK_PLANS[planId] || STORY_PLANS[planId] || (planId === "lifetime" ? LIFETIME_PLAN : null);
     if (!plan) throw new Error("无效的充值档位");
     // 终身会员按 offer 状态定价(2026-09-12 起两档同值 98)
     let price = plan.price;
@@ -1208,9 +1213,32 @@ async function settlePaidOrder(env, orderNo, tradeNo, amountCents) {
     const isLifetime = order.plan_id === "lifetime";
     const memberPlan = MEMBER_PLANS[order.plan_id];
     const packPlan = PACK_PLANS[order.plan_id];
+    const storyPlan = STORY_PLANS[order.plan_id];
 
-    const plan = isLifetime ? LIFETIME_PLAN : (packPlan || memberPlan || CHARGE_PLANS[order.plan_id]);
+    const plan = isLifetime ? LIFETIME_PLAN : (storyPlan || packPlan || memberPlan || CHARGE_PLANS[order.plan_id]);
     if (!plan) return "fail";
+
+    // 站内直付内容(pp6 等):发货=unlocks 记录(card_id="store_"+story),幂等;购买永久有效,会员到期不丢
+    if (storyPlan) {
+        const storyCardId = "store_" + storyPlan.story;
+        try {
+            const exF = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(order.user_id)}'&&card_id='${escapePocketBaseFilterValue(storyCardId)}'`);
+            const exQ2 = await pbAdminFetch(env, `/api/collections/unlocks/records?perPage=1&skipTotal=true&filter=${exF}`);
+            const exD2 = await exQ2.json().catch(() => ({}));
+            if (!(exD2.items || []).length) {
+                const insRes = await pbAdminFetch(env, `/api/collections/unlocks/records`, {
+                    method: "POST",
+                    body: JSON.stringify({ user_id: order.user_id, card_id: storyCardId, created_at: now })
+                });
+                if (!insRes.ok) return "fail";
+            }
+        } catch (e) { return "fail"; }
+        await pbAdminFetch(env, `/api/collections/pay_orders/records/${order.id}`, {
+            method: "PATCH",
+            body: JSON.stringify({ status: "paid", trade_no: tradeNo || "", paid_at: now })
+        });
+        return "success";
+    }
 
     // 小额直付包(rescue1/rescue3):发货=KV extrapack:{uid} 累加点译/复盘次数,不走云币/会员
     if (packPlan) {
@@ -2488,6 +2516,32 @@ export default {
                 const q = await pbAdminFetch(env, `/api/collections/unlocks/records?perPage=200&skipTotal=true&filter=${filter}&fields=card_id`);
                 const d = await q.json().catch(() => ({}));
                 return new Response(JSON.stringify({ cards: (d.items || []).map(i => i.card_id) }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+
+            // ---- 路由：站内直付内容权限查询（产物付费墙 boot 调用；任意有效会员免费 + 购买永久，幂等只读）----
+            if (url.pathname === "/api/story/access" && request.method === "GET") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const r = auth.record;
+                const product = String(url.searchParams.get("product") || "");
+                const sp = STORY_PLANS[product];
+                if (!sp) return errorResponse("未知商品", 404, null, "INVALID_PRODUCT");
+                if (isMember(r)) {
+                    return new Response(JSON.stringify({ ok: true, via: "member", product, name: sp.name, price: sp.price }), {
+                        headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                    });
+                }
+                const cardId = "store_" + sp.story;
+                const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(r.id)}'&&card_id='${escapePocketBaseFilterValue(cardId)}'`);
+                const q = await pbAdminFetch(env, `/api/collections/unlocks/records?perPage=1&skipTotal=true&filter=${f}`);
+                const d = await q.json().catch(() => ({}));
+                const purchased = (d.items || []).length > 0;
+                return new Response(JSON.stringify({
+                    ok: purchased, via: purchased ? "purchased" : "", product,
+                    name: sp.name, price: sp.price, need: purchased ? "" : "purchase"
+                }), {
                     headers: { ...corsHeaders(), "Content-Type": "application/json" }
                 });
             }
@@ -4324,7 +4378,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 try { body = await request.json(); } catch (e) {}
                 const planId = String(body.planId || "");
                 const payType = ["alipay", "wxpay"].includes(body.payType) ? body.payType : "alipay";
-                if (!CHARGE_PLANS[planId] && !MEMBER_PLANS[planId] && !PACK_PLANS[planId] && planId !== "lifetime") return errorResponse("无效的充值档位", 400, null, "INVALID_PLAN");
+                if (!CHARGE_PLANS[planId] && !MEMBER_PLANS[planId] && !PACK_PLANS[planId] && !STORY_PLANS[planId] && planId !== "lifetime") return errorResponse("无效的充值档位", 400, null, "INVALID_PLAN");
                 const ua = request.headers.get("user-agent") || "";
                 const isMobile = /Android|iPhone|iPad|iPod|Mobile|Windows Phone/i.test(ua);
                 try {
