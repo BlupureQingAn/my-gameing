@@ -4301,7 +4301,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                             structured: r.data.structured || {},
                             play_count: Number(r.play_count || 0),
                             unlock_count: Number(r.unlock_count || 0),
-                            updated: String(r.updated || "")
+                            updated: String(r.updated_at || r.updated || "")
                         }))
                         .filter((c) => c.title && c.text && c.structured && typeof c.structured === "object");
                     langCardsCache[lang] = { t: nowMs, data: items };
