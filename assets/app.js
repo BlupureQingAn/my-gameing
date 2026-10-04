@@ -9604,7 +9604,7 @@ const token = delta.content || "";
         function queueBarHide() {
             if (queueBarEl && queueBarEl.isConnected) queueBarEl.style.display = "none";
         }
-        const QUEUE_MAX_MS = 60000;     // 免费模式排队上限 60s
+        const QUEUE_MAX_MS = 180000;    // 免费模式排队上限 180s(worker 免费预算:流式 17s/非流式 75s;首调冷模型在窗内自动多轮重试焐热,免去手点第二次)
         const QUEUE_INTERVAL_MS = 3000; // 轮询间隔(±400ms 抖动防惊群)
         async function callWithQueueRetry(fetchFn) {
             const start = Date.now();

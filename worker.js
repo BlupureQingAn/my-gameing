@@ -1712,6 +1712,7 @@ export default {
         try {
             // ---- 路由：AI 对话（模型池自动路由 + 每日限额/会员校验）----
             if (url.pathname === "/chat/completions") {
+                const reqStart = Date.now(); // 免费预算计时基准:前端流式连接仅等 20s,预算从分支最早期起算(2026-10-04)
                 // 测试后门：MODEL_URL_OVERRIDE 为 JSON {"模型id":"http://mock"}，仅探针把模型指向本地 mock，生产不配置
                 let modelUrlOverrides = null;
                 try { modelUrlOverrides = env.MODEL_URL_OVERRIDE ? JSON.parse(env.MODEL_URL_OVERRIDE) : null; } catch (e) { modelUrlOverrides = null; }
@@ -1769,12 +1770,16 @@ export default {
                 ];
 
                 // 逐候选转发：非 2xx / 网络异常 → 换下一个（每个候选完整超时,不截断慢模型;
-                // 全挂场景首次判定可能较长,但失败模型即熔断,后续请求 <1s 直接跳过,前端 90s 读超时兜底）
+                // 全挂场景失败模型即熔断,后续请求 <1s 直接跳过;云币/会员模式由前端 90s 读超时兜底）
+                // 免费模式总预算(2026-10-04 首调超时修复):前端流式连接 20s 即断,预算内必须返回;
+                // 全败→429 QUEUE_BUSY 进前端排队窗自动重试,避免"逐候选 15s/60s × N 拖过前端超时→网络错误"
+                const FREE_BUDGET_MS = isStream ? 17000 : 75000;
                 let aiResponse = null;
                 let usedModel = null;
                 let upstreamNonStream = false; // 上游是否已被转为非流式(决定回吐方式)
                 const attempts = []; // 诊断:记录每个候选的尝试结果(模型:状态:耗时ms)
                 for (const target of candidates) {
+                    if (freeMode && Date.now() - reqStart >= FREE_BUDGET_MS) break; // 预算耗尽:不再等长尾候选,直接排队
                     const attemptStart = Date.now();
                     if (await isModelInCooldown(target.id)) { attempts.push(`${target.id}:cooldown`); continue; } // 熔断期内跳过,不重走失败链
                     const apiKey = env[target.apiKeyEnv];
@@ -1791,8 +1796,10 @@ export default {
                         // 流式坏模型两档:STREAM_NO_JSON 剥 format 保持流式(讯飞系实测可行);STREAM_BROKEN 强制非流式(实测零输出)
                         const converted = isStream && STREAM_BROKEN.includes(target.id);
                         for (let retry = 0; retry <= 1; retry++) {
+                            if (freeMode && Date.now() - reqStart >= FREE_BUDGET_MS) break; // 预算耗尽:放弃该候选(外层循环检查后直接排队)
                             const controller = new AbortController();
-                            const timeoutMs = converted ? 120000 : (isStream ? 15000 : 60000); // 流式仅等响应头(15s),body 透传由前端控制;非流式 60s(原 120s,2026-09-12 下调:挂死模型不再白等两分钟,实测非流式调用输出都 <1000 token)
+                            const baseTimeout = converted ? 120000 : (isStream ? 15000 : 60000); // 流式仅等响应头(15s),body 透传由前端控制;非流式 60s(原 120s,2026-09-12 下调:挂死模型不再白等两分钟,实测非流式调用输出都 <1000 token)
+                            const timeoutMs = freeMode ? Math.max(300, Math.min(baseTimeout, FREE_BUDGET_MS - (Date.now() - reqStart))) : baseTimeout; // 免费:候选超时按剩余预算截断
                             const timeout = setTimeout(() => controller.abort(), timeoutMs);
                             try {
                                 const payload = { ...requestJson, model: await modelOf(env, target) };
@@ -1814,7 +1821,7 @@ export default {
                                     const bodyPreview = (await r.text()).slice(0, 60).replace(/\s+/g, " ");
                                     if (retry === 0) {
                                         const ra = parseRetryAfterMs(r);
-                                        if (ra !== null && ra <= 2000) {
+                                        if (ra !== null && ra <= 2000 && (!freeMode || ra + 1000 < FREE_BUDGET_MS - (Date.now() - reqStart))) { // 免费:429 等待不许吃掉预算
                                             attempts.push(`${target.id}:429:${Date.now() - attemptStart}ms [${bodyPreview}] → 等 ${ra}ms 重试`);
                                             await sleep(ra + Math.floor(Math.random() * 100)); // Retry-After + 抖动防惊群
                                             continue;
@@ -1887,15 +1894,16 @@ export default {
                     }
                 }
                 if (!aiResponse) {
-                    // 免费模式并发/限流占满 → 立即返回排队状态(不等满 8s×候选),失败不扣额度,前端 3s 轮询重试;
+                    // 免费模式:预算内(流式 17s/非流式 75s)全候选失败 → 429 QUEUE_BUSY 进前端排队窗自动重试,失败不扣额度;
                     // 云币/会员保持 503,由既有 fetchWithRetry 兜底
                     if (freeMode) {
                         freeQueueSeen.set(userId, Date.now());
                         const queueLen = freeQueueLen();
+                        console.warn(`[free-queue] busy: ${attempts.join("|")} elapsed=${Date.now() - reqStart}ms`); // 诊断:预算耗尽现场
                         const resp = errorResponse("AI 模型当前繁忙，已进入排队，请稍候自动重试", 429, { queueLen }, "QUEUE_BUSY");
                         return new Response(resp.body, {
                             status: 429,
-                            headers: { ...Object.fromEntries(resp.headers.entries()), "X-Queue-Len": String(queueLen), "Retry-After": "3" }
+                            headers: { ...Object.fromEntries(resp.headers.entries()), "X-Queue-Len": String(queueLen), "X-Model-Attempts": attempts.join("|"), "Retry-After": "3" }
                         });
                     }
                     // 携带尝试链:全挂时前端/探针能从 X-Model-Attempts 直接看到每个上游的状态码与耗时(跨实例可观测)
