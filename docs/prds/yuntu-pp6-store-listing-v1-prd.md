@@ -3,7 +3,8 @@
 > 2026-10-03 深夜 · 自主模式编写（小徐睡前指令，授权自主完成，晨间验收）
 > 产品线主 PRD: `docs/prds/yuntu-pride-prejudice-cet6-prd.md`（v1.1，网盘渠道 ¥9.9）
 > 本 PRD 只覆盖「站内上架」渠道，与网盘渠道并存互不影响。
-> **状态：✅ 已上线（2026-10-04 凌晨）**——站点 commit `1b1d55d`、引擎 commit `70033ef`/`670fadc`、worker 版本 `b057a964-d2f2-4bcb-b5f9-cf7079a646bf`、nginx 加 `location /story/`（备份 `bitlife.conf.bak.20261004`）。线上四项 curl + 临时用户 E2E + 真实下单全部通过（明细见 §7 与 `docs/部署清单-20260826.md`）。
+> **状态：✅ 已上线（2026-10-04 凌晨，v1.0 全屏门模型）**——站点 commit `1b1d55d`、引擎 commit `70033ef`/`670fadc`、worker 版本 `b057a964-d2f2-4bcb-b5f9-cf7079a646bf`、nginx 加 `location /story/`（备份 `bitlife.conf.bak.20261004`）。线上四项 curl + 临时用户 E2E + 真实下单全部通过（明细见 §7 与 `docs/部署清单-20260826.md`）。
+> **v1.1 修正（2026-10-04 白天）**：付费门改「试玩门」（第 1 章免费/越章弹层）+ 站内入口直进试玩（购买套件移除）+ 卡封面题字修正——站点 commit `19cf792` / 引擎 commit `88f1db2`，详见 §9。
 
 ## 1. 需求原文（小徐 2026-10-03 23:5x）
 
@@ -119,5 +120,27 @@ GET  /api/story/access?product=pp6
 - 已购用户若退出登录 → 门显示登录状态（token 在 localStorage）
 - 站内「我的剧本」列表不含此商品（未做，未来可加）
 
+## 9. v1.1 修正轮（2026-10-04 白天，小徐晨间验收反馈）
+
+> 状态：✅ 已上线——站点 commit `19cf792` / 引擎 commit `88f1db2`。线上 curl 全部通过（明细见 `docs/部署清单-20260826.md` 同日「修正轮」）。
+
+**变更 1：付费门 → 试玩门**（取代 §4 S2 的全屏 fail-closed 模型）
+- 第 1 章整章免费读；读到章末 / 目录跳转 / 存档恢复进第 2 章起时弹 `#ytTrialModal` 解锁层
+- boot 静默检查权限（无 token 零请求；有 token 单次 access）；已购/会员不弹层
+- 解锁层内置完整购买链（18 岁勾选 → 微信支付 → 桌面二维码 / 移动跳收银台 → 轮询 paid → 解锁+自动续播）；pending 48h 恢复；token 变化重查；关闭=「继续试读第一章」
+- 引擎守卫：`scene-engine.js` `processNode` 头部 `window.__ytTrial.block`（fail-open，非 store 产物自动跳过）
+
+**变更 2：站内入口直进试玩**（取代 §4 S7 后半与 §5.4 的购买套件）
+- `storeEnter` = `location.href = STORE_STORY_URL` 单行；移除站内权限预检 / 购买弹层 / pageshow 查单（共 10 函数 + `STORE_PENDING_KEY`）
+- 未登录也能直接试玩第 1 章；详情定价文案改为「第 1 章免费试读；¥5 买断，永久阅读；云吞吞会员免费玩」
+
+**变更 3：站内卡封面修正**（修正 §4 S6 的误实现）
+- 原合成误用无字原画 `base_C.png` 导致卡面只有藤蔓无题字；改用题字成稿 `cover_C.png` 重新合成（81,470B，md5 `26a9e0f92f3399d6d089ee0911a5d4dc`）
+- 记录：产物内书封仍用无字版 + HTML 题字层（设计如此，勿混）；**站内卡封面必须用 cover_C 题字版**
+
+**验证**：`test-store-trial.js` 52/52、`test-store-entry.js` 36/36、`assert_products.py` 5 产物 ALL PASS；线上 story/pp6 新门标记齐全、封面 md5 `26a9e0f9…`、`?v=20261004b`。
+**§6 验收清单作废两条**：「未授权→全屏购买门」「未登录→引导登录」按新模型改为——未登录可直接试玩第 1 章；读完第 1 章或跳后续章时弹解锁层。
+
 ---
-**Version**: 1.0 · **Created**: 2026-10-04（北京时间凌晨） · **Clarification rounds**: 0（自主模式：沿用睡前指令 + 产品 PRD 既有决策，假设全部记录于 §4） · **Quality score**: 92/100（自主推进）
+
+**Version**: 1.1 · **Created**: 2026-10-04（北京时间凌晨） · **Updated**: 2026-10-04（v1.1 修正轮，§9） · **Clarification rounds**: 0（自主模式：沿用睡前指令 + 产品 PRD 既有决策，假设全部记录于 §4） · **Quality score**: 92/100（自主推进）
