@@ -86,25 +86,21 @@
        站内只做入口(点卡直进 /story/pp6/ 试玩第 1 章);登录与购买全部在产物内解锁弹层完成(2026-10-04 精简) */
     var STORE_PRODUCT = {
         id: "store_pp6", title_zh: "傲慢与偏见（六级版）", title: "Pride and Prejudice · CET-6",
-        category_zh: "学习剧本", theme: "classic", lang: "en", order: -1,
+        category_zh: "学习剧本", sub_zh: "英语名著 · 六级词汇 · 全 61 章", theme: "classic", lang: "en", order: -1,
         cover: "covers/store_pp6.webp", sourceType: "official",
         storeProduct: "pp6", storePrice: "5"
     };
     var STORE_STORY_URL = "https://bitlife.blupure.cn/story/pp6/";
     /* 主题图标复用文游首页同一套 lucide 描边（app.js cardEmoji），不再另维护一张 emoji 表 */
     function themeIcon(c) { return ScenarioCardViewService.cardEmoji(String((c && c.theme) || "")); }
-    /* R1 恋爱攻略卡:love 标签/向别偏好(存 localStorage lang_gender_pref_v1,O2 服务端零改动);loveMatch 供推荐排序 */
+    /* R1 恋爱攻略卡:love 标签/向别筛选(剧本库内 libFilter.gender + loveFilterOk)。
+       2026-10-04:首页轮播改「最近更新的六张」(latestFor),原向别偏好/档距推荐排序(recommendFor/loveMatch)
+       与 localStorage 偏好记忆(lang_gender_pref_v1)随之下线——向别 chips 改为仅本次会话内筛选生效。 */
     function loveTagOf(c) {
         var st = (c && c.structured) || {};
         if (st.love_mode !== true) return "";
         var g = st.gender_target;
         return uiIconHtml(g === "male" ? "♂" : g === "female" ? "♀" : "💗") + " 恋爱" + (g === "male" ? " · 男向" : g === "female" ? " · 女向" : "");
-    }
-    function genderPref() { try { return localStorage.getItem("lang_gender_pref_v1") || ""; } catch (e) { return ""; } }
-    function saveGenderPref(g) { try { if (g) localStorage.setItem("lang_gender_pref_v1", g); else localStorage.removeItem("lang_gender_pref_v1"); } catch (e) {} }
-    function loveMatch(c, pref) {
-        var s = (c && c.structured) || {};
-        return !!pref && s.love_mode === true && String(s.gender_target || "") === String(pref);
     }
     function loveFilterOk(c, g) {
         var st = (c && c.structured) || {};
@@ -181,17 +177,19 @@
        一上来就铺开是「空白羞耻」;要看的自己点开。渲染期只读、点开时改 */
     var heatOpen = false;
     // 排行榜:当前 span/榜别(time 时长|immersive 无阻畅读)/结果缓存(键=board|lang|span,30s)/请求序号(过期响应靠它作废)
+    /* 2026-10-04 副标题中文化:卡面副行统一显示题材中文(缺省回退原语言 category) */
+    function genreCzOf(c) { return String((c && (c.category_zh || c.category)) || "").trim(); }
     function langBannerHtml(c) {
         var icon = themeIcon(c);
         var has = cardSaveOf(c), r = cardRoundOf(c);
         var loveTag = loveTagOf(c);
-        var tagTxt = (loveTag ? '<span class="hb-love">' + loveTag + "</span> " : "") + '<span class="hb-lang">' + langNameOf(c) + "</span>" + (String(c.category_zh || "") ? " · " + api.esc(String(c.category_zh)) : "");
+        var tagTxt = (loveTag ? '<span class="hb-love">' + loveTag + "</span> " : "") + '<span class="hb-lang">' + langNameOf(c) + "</span>";
         var playTxt = has ? uiIconHtml("▶") + " 继续 · 第 " + (r || 1) + " 轮" : "立即游玩";
         return '<div data-cid="' + cardCid(c) + '" class="hb-card">' +
             '<div class="hb-cover" id="lb-cover-' + window.CoverService.safeId(c.id) + '"><img class="scc-img" alt="' + api.esc(String(c.title_zh || c.title || (api.langName() + "剧本"))) + ' 封面" loading="lazy"><span class="scc-emoji">' + icon + "</span></div>" +
             '<div class="hb-tag">' + tagTxt + "</div>" +
             '<div class="hb-title">' + api.esc(String(c.title_zh || c.title || (api.langName() + "剧本"))) + "</div>" +
-            '<div class="hb-sub">' + api.esc(String(c.title || "")) + (has ? " · " + api.langName() + "进度已到第 " + (r || 1) + " 轮" : "") + "</div>" +
+            '<div class="hb-sub">' + api.esc(genreCzOf(c)) + (has ? (genreCzOf(c) ? " · " : "") + api.langName() + "进度已到第 " + (r || 1) + " 轮" : "") + "</div>" +
             '<div class="hb-foot"><span class="hb-plays">' + LANG_TAG_INFO[langKeyOf(c)][0] + ' 原生 · 词库随你的学习档</span>' +
             '<button type="button" class="tiny-btn hb-detail" onclick="event.stopPropagation();LangController.openLangDetail(\'' + cardCid(c) + '\',this)">详情</button>' +
             '<span class="hb-play-btn mini-btn primary">' + playTxt + "</span></div></div>";
@@ -208,7 +206,7 @@
                 '<div class="scenario-card-cover theme-' + sTheme + '" id="llc-cover-' + window.CoverService.safeId(c.id) + '">' +
                 '<img class="scc-img" alt="' + api.esc(String(c.title_zh || "")) + ' 封面" loading="lazy"><span class="scc-emoji">' + icon + "</span></div>" +
                 '<div class="list-title">' + api.esc(String(c.title_zh || "")) + "</div>" +
-                '<div class="list-sub list-ellip">' + api.esc(String(c.title || "")) + "</div>" +
+                '<div class="list-sub list-ellip">' + api.esc(String(c.sub_zh || genreCzOf(c))) + "</div>" +
                 '<div class="scenario-badges">' +
                 '<span class="scenario-badge">官方出品</span>' + langBadgeOf(c) +
                 '<span class="scenario-badge">¥' + api.esc(String(c.storePrice || "")) + ' · 会员免费</span>' +
@@ -225,13 +223,12 @@
             '<div class="scenario-card-cover theme-' + themeKey + '" id="llc-cover-' + window.CoverService.safeId(c.id) + '">' +
             '<img class="scc-img" alt="' + api.esc(String(c.title_zh || c.title || (api.langName() + "剧本"))) + ' 封面" loading="lazy"><span class="scc-emoji">' + icon + "</span></div>" +
             '<div class="list-title">' + api.esc(String(c.title_zh || c.title || (api.langName() + "剧本"))) + "</div>" +
-            // 中文名和英文名是同一条信息的两种写法，标签夹在中间会把阅读顺序切断。
-            // 顺序：标题 → 英文副标题 → 标签 → 按钮。
-            '<div class="list-sub list-ellip">' + api.esc(String(c.title || "")) + "</div>" +
+            // 2026-10-04 副标题=题材中文(category_zh,原为英文名);题材徽标同步删除,避免副行与徽标重复。
+            // 顺序：标题 → 中文副标题 → 标签 → 按钮。
+            '<div class="list-sub list-ellip">' + api.esc(genreCzOf(c)) + "</div>" +
             '<div class="scenario-badges">' +
             (loveTagOf(c) ? '<span class="scenario-badge love">' + loveTagOf(c) + "</span>" : "") +
             langBadgeOf(c) +
-            '<span class="scenario-badge">' + api.esc(String(c.category_zh || c.category || "")) + "</span>" +
             "</div>" +
             '<div class="scenario-card-btns">' +
             '<button class="tiny-btn" onclick="event.stopPropagation();LangController.openLangDetail(\'' + cardCid(c) + '\',this)">详情</button>' +
@@ -242,7 +239,7 @@
         var r = cardRoundOf(c);
         return '<div data-cid="' + cardCid(c) + '" class="l6-row"><div class="l6-row-band lang-' + langKeyOf(c) + '">' + LANG_TAG_INFO[langKeyOf(c)][0] + "</div>" +
             '<div class="l6-row-main"><div class="l6-row-t">' + api.esc(String(c.title_zh || c.title || (api.langName() + "剧本"))) + "</div>" +
-            '<div class="l6-row-sub">' + api.esc(String(c.title || "")) + " · " + api.langName() + "进度已到第 " + (r || 1) + " 轮</div></div>" +
+            '<div class="l6-row-sub">' + (genreCzOf(c) ? api.esc(genreCzOf(c)) + " · " : "") + "进度已到第 " + (r || 1) + " 轮</div></div>" +
             '<span class="lang-badge ' + langKeyOf(c) + ' text">继续</span><span class="l6-row-go">›</span></div>';
     }
     /* ---- 云端档案同步(M2):已登录用户手选档/沉浸模式存 PB lang_profiles,换设备不丢 ---- */
@@ -669,34 +666,14 @@
             if (h < 24) return h + (m % 60 ? " 小时 " + (m % 60) + " 分" : " 小时");
             return Math.floor(h / 24) + " 天 " + (h % 24) + " 小时";
         },
-        setLibFilter: function (k, v) {
-            if (k === "gender") { if (v === "love-f" || v === "love-m") saveGenderPref(v); else saveGenderPref(""); }
-            libFilter[k] = v; api.renderLibrary();
-        },
-        recommendFor: function (lcs) {
+        setLibFilter: function (k, v) { libFilter[k] = v; api.renderLibrary(); },
+        /* 2026-10-04(D4,小徐「语言首页动态展示的卡应当为最新更新的六张」):
+           首页轮播 = 按 PB updated 倒序取最新六张,取代原向别偏好/档距推荐排序。
+           updated 是 PB 的 ISO 时间串(同格式下字典序即时间序);缺 updated 的旧记录排最后。
+           en/ja/ko 三语首页共用 renderHome,排序口径三语统一;中文文游不走这里。 */
+        latestFor: function (lcs) {
             var arr = lcs.slice();
-            /* R1 向别偏好(有档时同样生效):匹配向别的恋爱卡最优先,再按 band 距离/上架序。
-               两个坑一起修(2026-09-26 小徐「语言首页动态展示的剧本应当展示恋爱女性向的卡」):
-               ①存进 localStorage 的是筛选 chip 的取值(love-f/love-m),卡上写的却是 female/male,
-                 旧代码直接拿两边比字符串,**永远不相等**——向别偏好在推荐里从来没生效过,这里翻一次;
-               ②没存过偏好时按女向算。首页轮播是 recommendFor 唯一的调用方,所以这条默认值只落在轮播上;
-                 用户在剧本库点过「恋爱·男向」存下的偏好照样盖过它。 */
-            var gp = genderPref();
-            var pref = gp === "love-m" ? "male" : "female";
-            /* 档距按**当前语种**的档序算:英语五档/日语 N5-N1/韩语初中高三张序表混着算会把档距算成胡说 */
-            var _order = bandOrderOf(curLang());
-            var my = profile.band || "";
-            var mi = my ? _order.indexOf(my) : -1;
-            arr.sort(function (a, b) {
-                var am = loveMatch(a, pref) ? 0 : 1, bm = loveMatch(b, pref) ? 0 : 1;
-                if (am !== bm) return am - bm;
-                if (mi >= 0) {
-                    var ai = _order.indexOf(a.band || ""), bi = _order.indexOf(b.band || "");
-                    var da = ai < 0 ? 99 : Math.abs(ai - mi), db = bi < 0 ? 99 : Math.abs(bi - mi);
-                    if (da !== db) return da - db;
-                }
-                return (a.order || 9) - (b.order || 9);
-            });
+            arr.sort(function (a, b) { return String(b.updated || "").localeCompare(String(a.updated || "")); });
             return arr;
         },
         renderHome: function (animate) {
@@ -713,12 +690,12 @@
                 } else {
                     hb.innerHTML = '<div class="lang-emptytip">' +
                         '<span class="lang-icon">' + uiIconHtml("🎯") + '</span><div class="grow"><div class="lang-tip-t">还没选学习档</div>' +
-                        '<div class="list-sub">挑一个档，推荐与词库会按它匹配；不选也能直接开玩</div></div>' +
+                        '<div class="list-sub">挑一个档，词库会按它匹配；不选也能直接开玩</div></div>' +
                         '<button type="button" class="mini-btn primary" onclick="LangController.goLearn()">去选档</button></div>';
                 }
             }
             var sub = $("lang-home-reco-sub");
-            if (sub) sub.textContent = profile.band ? ("已按你的学习档 " + bandShort(profile.band) + " 匹配推荐，点卡即玩") : "按最新上架推荐；在「学习中心」选好档后推荐按档匹配";
+            if (sub) sub.textContent = "最近更新的六张卡，点卡即玩";
             var wrap = $("lang-reco-wrap");
             api.stopLangBanner();
             api.bindLangBannerSwipe();
@@ -730,7 +707,7 @@
                 if (sub) sub.textContent = api.langName() + "官方剧本持续更新中，新卡上线后会出现在这里～";
             } else {
                 if (wrap) wrap.style.display = "block";
-                var cards = api.recommendFor(lcs).slice(0, 6);
+                var cards = api.latestFor(lcs).slice(0, 6);
                 langBanner.idx = 0;
                 box.innerHTML = cards.map(langBannerHtml).join("");
                 var bi;
@@ -1217,7 +1194,7 @@
             for (i = 0; i < rows.children.length; i++) rows.children[i].style.setProperty("--i", String(i));
             for (i = 0; i < list.length; i++) window.CoverService.paint("llc-cover-" + window.CoverService.safeId(list[i].id), list[i]);
             bindCardClicks(rows);
-            hint(profile.band ? "" : "点卡即玩：" + api.langName() + "原生剧本，词库按你在「学习中心」选的学习档走——建议先选好档，推荐与词汇难度更贴你。", "lang-lib-hint");
+            hint(profile.band ? "" : "点卡即玩：" + api.langName() + "原生剧本，词库按你在「学习中心」选的学习档走——建议先选好档，词汇难度更贴你。", "lang-lib-hint");
         },
         /* M8c:语言卡详情弹层(封面大图 + 中英标题 + 档/题材 + 英文简介 + 主角;播放按钮从弹层进入) */
         openLangDetail: function (cid, srcEl) {
@@ -1248,7 +1225,7 @@
                 html =
                     '<div class="lgd-cover" id="lgd-cover-' + window.CoverService.safeId(c.id) + '"><img class="scc-img" alt="' + api.esc(String(c.title_zh || "")) + ' 封面" loading="lazy"><span class="scc-emoji">' + themeIcon(c) + "</span></div>" +
                     '<div class="lgd-title">' + api.esc(String(c.title_zh || "")) + "</div>" +
-                    '<div class="lgd-en">' + api.esc(String(c.title || "")) + " · " + langNameOf(c) + "原生剧本</div>" +
+                    '<div class="lgd-en">' + api.esc(String(c.sub_zh || genreCzOf(c))) + "</div>" +
                     '<div class="lgd-badges">' +
                     '<span class="scenario-badge">官方出品</span>' + langBadgeOf(c) +
                     '<span class="scenario-badge">¥' + api.esc(String(c.storePrice || "")) + ' · 会员免费</span>' +
@@ -1261,12 +1238,10 @@
             html =
                 '<div class="lgd-cover" id="lgd-cover-' + window.CoverService.safeId(c.id) + '"><img class="scc-img" alt="' + api.esc(String(c.title_zh || c.title || (api.langName() + "剧本"))) + ' 封面" loading="lazy"><span class="scc-emoji">' + themeIcon(c) + "</span></div>" +
                 '<div class="lgd-title">' + api.esc(String(c.title_zh || c.title || (api.langName() + "剧本"))) + "</div>" +
-                '<div class="lgd-en">' + api.esc(String(c.title || "")) + " · " + langNameOf(c) + "原生剧本</div>" +
+                '<div class="lgd-en">' + (genreCzOf(c) ? api.esc(genreCzOf(c)) + " · " : "") + langNameOf(c) + "原生剧本</div>" +
                 '<div class="lgd-badges">' +
                 (loveTagOf(c) ? '<span class="scenario-badge love">' + loveTagOf(c) + "</span>" : "") +
                 langBadgeOf(c) +
-                '<span class="scenario-badge">' + api.esc(String(c.category_zh || c.category || "")) + "</span>" +
-                '<span class="scenario-badge">' + api.esc(String(w.genre || "").slice(0, 20)) + "</span>" +
                 "</div>" +
                 (loveTagOf(c) ? '<div class="lgd-desc"><b>玩法：</b>恋爱攻略——5 个' + (String(c.structured.gender_target || "female") === "male" ? "可攻略女孩" : "可攻略男孩") + '等你相识、心动、走到专属结局；选项带好感影响，爱慕超过 70 会触发锁线，最后走向 HE 或 BE。</div>' : "") +
                 (heroTxt ? '<div class="lgd-desc"><b>你扮演：</b>' + api.esc(heroTxt) + "</div>" : "") +

@@ -1,0 +1,132 @@
+{
+  "title": "The Villainess Writes Her Own Ending",
+  "title_zh": "反派千金改写结局",
+  "lang": "en",
+  "band": "cet4",
+  "category": "power-fantasy",
+  "category_zh": "爽文",
+  "theme": "minimal",
+  "text": "WORLD SETTING\n\nThe opulent halls of Blackwood Castle echo with the refined whispers of the royal court in the fictional kingdom of Arden. A world where class distinction reigns supreme, and the line between friend and foe is often blurred. You, Evelyn, find yourself waking up in a daze, surrounded by the grandeur of this ancient castle that was once your home. The air is thick with the scent of polished wood and the distant clinking of silverware, a stark contrast to the turmoil swirling in your mind. \n\nGenre: A tale of revenge and empowerment, where every twist and turn is a step towards redemption.\n\nSetting: Blackwood Castle, Arden, a world steeped in the traditions of old, where power is the currency of survival.\n\nPremise: As the heiress of Blackwood, you're poised on the brink of disaster, falsely accused of treason and sentenced to death by hanging. But with three months before the fatal date, you've taken a vow to rewrite your fate. The clock is ticking, and every day is a battle for the truth and your freedom.\n\n<<START>>\n\nRules for the narrator:\n1) You will narrate in English, using the second person \"you,\" and the present tense. Your narrative will consist mainly of short sentences, and all vocabulary will be within the CET-4 curriculum. The atmosphere will be conveyed through sensory details.\n\nPlayer identity: Evelyn, 22, the sole daughter of the Duke of Blackwood in the fictional kingdom of Arden—she is the vain and evil heiress destined to die in the novel's 47th chapter. You have retained your identity, aware of the novel's entire plot—three months from now, at the court ball, Rosalind begins her scheme, leading to your false accusation of treason and subsequent hanging.\n\nThe fixed truths (never contradict): This is a reverse book: You remember every crucial plot point from the original novel—the court ball in three months, Rosalind's plot unfolding, and your wrongful treason accusation and execution in Chapter 47. Key events will occur at fixed times, but can be altered. You possess no supernatural abilities, only the power of foresight and acting skills. The ending must be rewritten by you: first survive, then take revenge.\n\nPeople (all fictional): \n· Adrian – Duke of Ravenhall, the protagonist of the novel, initially sees you as your greatest threat but evolves into your strongest ally; \n· Rosalind – Miss Ashford, the supposed gentle heroine of the novel, who is actually the mastermind behind your downfall; \n· Betsy – your loyal and chatty personal maid, with red hair and freckles, your confidant and the source of comic relief; \n· Edgar – your father, the Duke of Blackwood, cold and stern, who handed you over to the trial in the original novel.\n\n<<END>>\n\n5) Scene flow (nine beats across roughly 10-13 exchanges; the order is fixed; tighten when the player moves fast):\nB1 Opening — You wake up in a luxurious room, the scent of lavender filling the air. The clock reads 6:00 AM. You're Evelyn, the infamous villainess from the novel. Your head throbs, but you're alive. \"No,\" you whisper, \"this can't be true.\"\n\nB2 Introduction — Betsy, your lively maid, bursts in, her eyes wide with concern. \"My lady, you're awake! I was so worried.\" She offers you a glass of water. \"It's a new day, and we'll face it together.\"\n\nB3 Strategy — You take a deep breath and stand up, your mind racing. \"Betsy, I need to know everything that's happened since I 'died'.\" She nods, her eyes gleaming with loyalty. \"The court is buzzing with rumors, but no one knows you're alive.\"\n\nB4 Preparation — You decide to start with the most pressing issue: your reputation. \"Betsy, I need to rebuild my image. We'll start by helping the poor in the village. It's time to show a different side of Evelyn.\" She nods eagerly, understanding the importance of this plan.\n\n· B5 Decision — With Betsy by your side, you ponder your next move. \"We must be cautious,\" you say. \"Who can we trust in this court?\" Betsy hesitates, then suggests, \"Perhaps we can seek counsel from Lady Elspeth, the Duchess's sister, who seems to have her own agenda.\"\n\n· B6 Investigation — You agree and head to Lady Elspeth's chamber. She greets you with a frosty smile. \"Evelyn, I've heard rumors of your revival. What brings you here?\" You play your cards close to your chest, \"I seek your help in uncovering who's plotting against me.\"\n\n· B7 Revelation — Lady Elspeth leans in, her eyes narrowing. \"I have my own suspicions,\" she whispers. \"The King's advisor, Lord Harrow, has been acting unusually since your supposed execution.\" You nod, feeling a chill run down your spine.\n\n· B8 Action — You decide it's time to strike. \"We'll confront Lord Harrow,\" you declare. \"Betsy, prepare the carriage.\" You leave the room, determined to unravel the mystery and change your fate. No matter how you choose, one thing is true: you're no longer the villainess who ends up on the gallows. You're Evelyn, and you're ready to rewrite your ending.\n\n<<START>>\n\n· B9 Confrontation — You arrive at Lord Harrow's residence, Betsy close behind. The air is thick with tension as you demand answers. \"I know you're behind this,\" you assert. A look of shock crosses his face, but he quickly recovers. \"You have no proof,\" he sneers.\n\n· HIDDEN STATES — Track silently, never name them, never show numbers: Reputation (Landed Trust) 0-2 / Alliance (Adrian & Edgar) 0-2 / Original Novel Deviation 0-2. (Reputation increases slightly after B9 due to your bold action, Alliance remains unchanged, and Original Novel Deviation increases slightly as you disrupt the plot.)\n\n· Ending resolution (IN B9, AFTER THE PLAYER'S FINAL CHOICE):\n· SUCCESSFUL REVERSAL (<Successfully confront Lord Harrow>) — You expose Lord Harrow's treachery, gaining the trust of the court and allies. The once-doomed Evelyn becomes a beloved figure, rewriting her fate with grace and courage.\n· NEUTRAL OUTCOME (<Confrontation leads to no significant change>) — Lord Harrow's lies are uncovered, but the damage is done. You maintain your position, but your once-secure alliances are weakened.\n· REGRETTABLE CONSEQUENCES (<Confrontation results in your capture>) — Your boldness leads to your capture. You are imprisoned, and the once-loyal Betsy is forced to betray you, leaving you alone and vulnerable.\n\n· ATMOSPHERE — The dimly lit corridors of Lord Harrow's residence echo with the sound of your footsteps, each one a step closer to the truth.\n\n· OPTION STYLE — Confront Lord Harrow? (Yes / No) / Seek alternate evidence? (Yes / No) / Withdraw from the confrontation? (Yes / No) — Your choice will determine your fate and the future of Evelyn's story. Will you take the risk and face the consequences, or will you seek a safer path, even if it means leaving your fate in the hands of others?\n\n<<END>>",
+  "structured": {
+    "band": "cet4",
+    "theme": "minimal",
+    "world": {
+      "era": "阿登王国黑木城堡的古老时代",
+      "genre": "复仇与崛起",
+      "summary": "在一个阶级分明、敌友难辨的虚构王国阿登，黑木城堡的宏伟大厅中，Evelyn从迷茫中醒来，发现自己身处这个曾经的家。这个世界充满了古老的传统和权力斗争。",
+      "rules": [
+        "全员虚构声明（人物机构均虚构）",
+        "cet4 档英文语域与词汇档要求",
+        "这是穿书：你记得原著全部关键情节",
+        "三个月后宫廷舞会起，Rosalind 开始布局",
+        "剧情节点会在固定时间发生，但可以被改变",
+        "你没有任何超能力，武器只有「预知」和演技",
+        "结局必须由你亲手改写：先活下去，再反杀",
+        "隐藏状态（勿明示、不显示数值）：声望（贵族圈信任）0-2 / 盟友度（Adrian 与 Edgar）0-2 / 原著偏离度 0-2",
+        "9 beats 约 10-13 轮，每轮叙事 200-340 词 + 2-3 选项；核心 10 词各循环约 2 次，其余池词 1-2 次",
+        "风格注记：时态（过去时为主，适当插入现在时描述心理活动） / 召唤语（使用较为轻松的称呼，增加亲切感） / 爽文语域（保持剧情紧凑，情感高潮迭起）"
+      ],
+      "atmosphere": "古典奢华与内心挣扎并存",
+      "vocab": [
+        "opulent",
+        "hall",
+        "whisper",
+        "royal",
+        "court",
+        "kingdom",
+        "arden",
+        "class",
+        "distinction",
+        "blurred",
+        "line",
+        "power",
+        "rebellion",
+        "secret",
+        "scheme",
+        "betrayal",
+        "escape",
+        "freedom",
+        "fate",
+        "choice",
+        "destiny",
+        "justice",
+        "revenge",
+        "struggle",
+        "victory",
+        "courage",
+        "deceit",
+        "ambition",
+        "loyalty",
+        "influence",
+        "trust",
+        "resistance"
+      ]
+    },
+    "identity": {
+      "name": "Evelyn",
+      "gender": "女",
+      "age": 22,
+      "role": "阿尔登王国布莱克伍德公爵独女——原著里结局必死的「傲慢恶女」,穿书后知道全部剧情",
+      "background": "The opulent halls of Blackwood Castle echo with the refined whispers of the royal court, where you, Evelyn, the heiress poised on the brink of disaster, must navigate a treacherous path to reclaim your fate."
+    },
+    "npcs": [
+      {
+        "name": "Adrian",
+        "gender": "男",
+        "role": "雷文霍尔公爵",
+        "personality": "冷静果断，习惯用权威的语气",
+        "relationship": "最初视你为最大威胁，随剧情转为最强的盟友"
+      },
+      {
+        "name": "Rosalind",
+        "gender": "女",
+        "role": "阿什福德家小姐",
+        "personality": "表面温柔，实则狡猾，习惯用甜言蜜语",
+        "relationship": "表面温柔白莲花、实为真凶推手"
+      },
+      {
+        "name": "Betsy",
+        "gender": "女",
+        "role": "贴身小侍女",
+        "personality": "忠诚话多，活泼开朗，习惯用幽默的语气",
+        "relationship": "是你的耳朵和喜剧担当"
+      },
+      {
+        "name": "Edgar",
+        "gender": "男",
+        "role": "布莱克伍德公爵",
+        "personality": "冷漠严厉，习惯用严肃的语气",
+        "relationship": "你的父亲，原著里亲手把女儿送上审判席"
+      }
+    ],
+    "timeline": {
+      "start": {
+        "year": 2026,
+        "month": 3,
+        "day": 30
+      },
+      "note": "故事从Evelyn的觉醒开始，她的复仇与崛起之旅即将展开。"
+    },
+    "scene_style": {
+      "env_templates": [
+        "皇权密谋",
+        "女仆的背叛",
+        "王室舞会夜话",
+        "魔法试炼场",
+        "黑暗密室之谜",
+        "荣耀与背叛的抉择",
+        "王座前的誓言"
+      ],
+      "option_style": "选择你的命运，书写逆袭篇章。"
+    },
+    "first_scene": {
+      "story": "The grand chime of the castle bell echoes through the empty corridors of Blackwood Castle, marking the end of a fateful night. As dawn approaches, you stand before the ornate window, watching the first light of day seep through the thick curtains. You are Evelyn, the villainess, but this morning, you feel different. A strange calm has settled over you, as if fate has given you one last chance to change your course.\n\nYour eyes are drawn to the courtyard below, where a group of nobles are preparing for the court ball that begins in an hour. You realize you must act quickly. Your choice looms like a shadow over you, two paths laid out before you.\n\nShould you trust Adrian, the Duke of Ravenhall, who seems to have changed his tune since you \"died\"? He stands at the edge of the crowd, watching the preparations with an intensity that doesn't seem like mere curiosity. Or should you approach Rosalind, Miss Ashford, the gentle heroine of the novel, who could very well be the next to set her trap for you?\n\nYou must decide. The clock ticks. The moment draws near. Your fate hangs in the balance.",
+      "options": [
+        "Approach Adrian discreetly",
+        "Observe Rosalind's actions",
+        "Seek counsel from Lady Elspeth",
+        "Visit the village to help the poor"
+      ]
+    }
+  }
+}

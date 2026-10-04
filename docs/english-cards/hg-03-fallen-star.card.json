@@ -1,0 +1,136 @@
+{
+  "title": "The Fallen Star",
+  "title_zh": "陨落星辰",
+  "lang": "en",
+  "band": "cet4",
+  "category": "power-fantasy",
+  "category_zh": "爽文",
+  "theme": "minimal",
+  "text": "WORLD SETTING\nHollywood's glitzy film industry, where cameras flash and dreams are made, the setting is as dramatic as the stars it produces. The scene is a bustling movie set, the air thick with the scent of ambition and the hum of generators. The backdrop is the awards season, a whirlwind of media scrutiny and glittering events. It's here, in this neon-lit, star-studded landscape, that your journey begins.\n\nRules for the narrator:\n1) 1) You are in the midst of Hollywood's glamorous film industry, where dreams are born and cameras click, the atmosphere is rich with the scent of ambition and the drone of generators. The stage is set in a bustling movie set, the air thick with the essence of desire.\n2) You are Stella, a 28-year-old actress who has twice fallen from grace, now returning to the set as a stand-in and extra.\n3) The truths are: The scandal was orchestrated by Lila and the studio, who falsified evidence of \"bad behavior\" and paid off the press; your acting ability remains unparalleled; you need a \"proof-in-the-moment\" moment to turn things around; your comeback cannot rely on sympathy, but on truth + a performance that cannot be edited.\n4) The characters are: Lila - the reigning film star, the mastermind behind the scandal, now a producer, her politeness laced with knives; Elliot - the silver-haired director, the only one who has seen your 19-year-old audition tape and remembers you, a talent hunter but fair; Frankie - your old agent, a sharp-tongued loyalist, nine years down and still with you; Nora - an investigative journalist, who inadvertently touched on the scandal while digging into awards season dirt, your enemy and friend; no new characters.\n\n5) Scene flow (nine beats across roughly 10-13 exchanges; the order is fixed; tighten when the player moves fast):\n· B1 Opening Shot — You step onto the bustling movie set, the neon lights flickering around you. The air is thick with the scent of ambition and the drone of generators. You are just a stand-in, a faceless extra, but your heart beats with a different rhythm.\n· B2 Gaining Ground — You find your mark among the extras, blending in seamlessly. You observe, you learn, you adjust. You feel the weight of the past but you refuse to let it define you.\n· B3 The Unexpected — A crucial scene goes awry, and you're the only one who can step in. Your performance is flawless, and the crew is left in awe. You feel a spark of recognition in Lila's eyes.\n· B4 The First Sign — Nora approaches you, her eyes sharp with curiosity. She whispers about the scandal, and you realize she might be the key to unraveling the truth. You decide to trust her, or you keep your guard up. \n\n· B5 The Truth Emerges — The studio's facade crumbles as whispers of your past accomplishments reach Lila. She begins to doubt her own narrative. The set is buzzing with speculation, and you must decide whether to reveal your true identity or stay incognito.\n\n· B6 The Decision — Lila confronts you with a proposition: she offers you a lead role in her next film, but only if you remain silent about the scandal. The studio's power is waning, but Lila's is growing. Choose to accept her deal or reject her offer.\n\n· B7 The Reveal — Nora hands you a video tape that could expose Lila's true intentions. The tape is hidden in plain sight, but only you can find it. The media room is quiet, the perfect spot for such a discovery. Decide whether to watch the tape alone or seek allies.\n\n· B8 The Showdown — As the tape reveals Lila's manipulations, the studio is thrown into chaos. The audience at the premiere is stunned. You stand on stage, the truth laid bare. Decide how to address the audience, whether to apologize for the past or demand justice.\n\n· B9 The Aftermath — The industry is abuzz with your revelation. Your reputation is restored, and Lila's power is shattered. You're offered numerous roles, but you must choose your next move wisely. Will you focus on your career or delve deeper into the corruption within the industry?\n\n6) HIDDEN STATES —\n- Industry Reputation: 0-2. (In B5, it was at 0 due to the scandal; in B7, it spikes to 2 after revealing Lila's manipulations. In B9, it remains at 2, reflecting the industry's newfound respect for your honesty and strength.)\n- Truth Progress: 0-2. (In B6, it was at 1, with the knowledge of Lila's proposition; in B7, it jumps to 2, as you uncover the video tape. In B9, it stays at 2, with the truth fully exposed.)\n- Trust (Elliot & Frankie): 0-2. (In B5, trust was low, with both Elliot and Frankie skeptical. In B7, it rises to 2 as they witness your bravery. In B9, it remains at 2, signifying a deep bond forged through adversity.)\n\n7) Ending resolution (IN B9, AFTER THE PLAYER'S FINAL CHOICE):\n- TRIUMPHANT RETURN (After revealing Lila's truth and rebuilding your reputation). You're standing in the limelight, the spotlight of your newfound fame. The screen fades to black, the final shot capturing you, the fallen star, now shining brighter than ever.\n- PLEASANT SETTLEMENT (If you choose not to delve deeper into the industry's corruption). The scene shows you receiving a prestigious award, the crowd cheering, your smile radiating with satisfaction. The screen fades to black, signaling a contented conclusion.\n- REGRETtable CONSEQUENCES (If you choose to focus solely on your career). The screen displays a bustling awards ceremony, but your expression is distant, your victory overshadowed by the silence of the industry's corruption. The screen fades to black, leaving an lingering sense of disappointment.\n\n4) ATMOSPHERE — The room is filled with the sound of applause and the smell of freshly brewed coffee, a stark contrast to the tense atmosphere of your downfall.\n\nOPTION STYLE —\n- ACCEPT the offer for the lead role in Lila's next film.\n- REFUSE and continue your independent career path.\n- INVESTIGATE further into the industry's corruption.\n\nThis card's choice defines your legacy. Will you let your past define you, or will you redefine your future?",
+  "structured": {
+    "band": "cet4",
+    "theme": "minimal",
+    "world": {
+      "era": "好莱坞璀璨的电影行业",
+      "genre": "大女主逆袭",
+      "summary": "A bustling movie set in the midst of Hollywood's glamorous film industry where dreams are born. The air is thick with ambition, ambition, and the media spotlight, amidst the whirlwind of awards season events.",
+      "rules": [
+        "全员虚构声明：本故事中所有人物、机构均为虚构，与现实无关。",
+        "英文语域与词汇档要求：本卡采用CET4英语水平，使用日常口语词汇。",
+        "当年的丑闻是Lila与制片方联手构陷：伪造了「耍大牌」证据并买通通稿。",
+        "你的演技依然是顶级的。",
+        "翻身需要一个「当场证明」的时刻。",
+        "翻案不能靠卖惨，要靠真相 + 一场无法被剪掉的表演。",
+        "隐藏状态（勿明示、不显示数值）：业内口碑 0-2 / 真相进度 0-2 / 信任(Elliot 与 Frankie)0-2。",
+        "9 beats 约 10-13 轮，每轮叙事 200-340 词 + 2-3 选项；核心 10 词各循环约 2 次，其余池词 1-2 次。",
+        "风格注记：时态为一般现在时，称呼以第一人称为主，爽文语域。"
+      ],
+      "atmosphere": "璀璨耀眼、充满野心与媒体瞩目的氛围",
+      "vocab": [
+        "hollywood",
+        "cameras",
+        "dreams",
+        "ambition",
+        "neon-lit",
+        "fame",
+        "stage",
+        "spotlight",
+        "rejection",
+        "downfall",
+        "redemption",
+        "betrayal",
+        "scandal",
+        "gossip",
+        "action",
+        "script",
+        "audience",
+        "character",
+        "conflict",
+        "dialogue",
+        "directing",
+        "editing",
+        "feedback",
+        "film",
+        "focus",
+        "lighting",
+        "masterpiece",
+        "narrative",
+        "plot",
+        "performance",
+        "production",
+        "role",
+        "setting",
+        "sound",
+        "storyline",
+        "success",
+        "writing"
+      ]
+    },
+    "identity": {
+      "name": "Stella",
+      "gender": "女",
+      "age": 28,
+      "role": "两度跌落的天才演员,如今以替身和龙套身份回到片场",
+      "background": "Stella, a 28-year-old fallen star in Hollywood, navigates the glittering set of an awards season film, her past scandal still casting a shadow, and her talent the only card she holds in a game of redemption."
+    },
+    "npcs": [
+      {
+        "name": "Lila",
+        "gender": "女",
+        "role": "监制",
+        "personality": "礼貌带刀，强势果断",
+        "relationship": "前丑闻主谋，现工作关系"
+      },
+      {
+        "name": "Elliot",
+        "gender": "男",
+        "role": "导演",
+        "personality": "惜才公正，记忆深刻",
+        "relationship": "赏识你的才华，对你有特殊记忆"
+      },
+      {
+        "name": "Frankie",
+        "gender": "女",
+        "role": "经纪人",
+        "personality": "毒舌忠诚，坚韧不拔",
+        "relationship": "老经纪人，始终支持你"
+      },
+      {
+        "name": "Nora",
+        "gender": "女",
+        "role": "记者",
+        "personality": "聪明好奇，亦敌亦友",
+        "relationship": "调查丑闻，与你有复杂关系"
+      }
+    ],
+    "timeline": {
+      "start": {
+        "year": 2026,
+        "month": 2,
+        "day": 23
+      },
+      "note": "故事背景设定在颁奖季"
+    },
+    "scene_style": {
+      "env_templates": [
+        "星光熠熠的颁奖盛典",
+        "热闹的电影片场午休",
+        "媒体围观的新闻发布",
+        "深夜剧本修改室",
+        "贵宾休息室里的秘密会议",
+        "后台化妆间的焦虑准备",
+        "红毯上的星光熠熠"
+      ],
+      "option_style": "选择你的命运，开启逆袭之路。"
+    },
+    "first_scene": {
+      "story": "You step out of the car, the sound of the bustling set echoes in your ears. The neon lights flicker above, casting a glow on the faces of extras scattered around. Your heart races as you take a deep breath, the scent of ambition thick in the air. You're just a stand-in, a faceless extra, but today, you're here for more than just a job.\n\n\"Stella,\" a familiar voice calls out, cutting through the noise. It's Lila, the reigning film star, her smile cold as ice. \"Enjoying the set, aren't you?\" she asks, her eyes trailing down your body.\n\nYou keep your gaze steady, ignoring the sting of her words. Instead, you focus on the script in your hand, searching for your mark. The crew moves around you, oblivious to the brewing storm.\n\nJust then, Elliot, the silver-haired director, approaches. \"Stella, I need you,\" he whispers, his eyes filled with recognition. \"There's a scene going awry, and I think you can save it.\"\n\nThe choice is yours—should you step in and use this chance to showcase your talent, or keep your head down and remain a silent extra? You must immediately do choose.",
+      "options": [
+        "step in and seize the moment",
+        "stay quiet and blend in",
+        "confront Lila with a confident nod",
+        "seek out Elliot for a private conversation"
+      ]
+    }
+  }
+}

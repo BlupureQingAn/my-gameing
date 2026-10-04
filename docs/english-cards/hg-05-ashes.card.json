@@ -1,0 +1,129 @@
+{
+  "title": "The Ashes Alchemist",
+  "title_zh": "灰烬术士",
+  "lang": "en",
+  "band": "toefl",
+  "category": "power-fantasy",
+  "category_zh": "爽文",
+  "theme": "minimal",
+  "text": "<<<START>>>\nWORLD SETTING\nIn the coal-dust town of Ashen, where the wealthy elite monopolize elemental magic, the Ashen Academy stands as a beacon of exclusivity. Yet, within its walls, a forbidden truth lies: the Ashen system, once revered, is now deemed non-existent. Amidst this backdrop, Wren, an orphan of the town, is shunned by the Academy on the day of talent assessment, labeled with a 'zero-talent' rating. But that night, something extraordinary happens. You, Wren, ignite the embers of a long-dormant magic, the Ashen system, which has not been seen for a century. The stage is set for a tale of rebellion and redemption.\n\nGenre: Action-packed fantasy with a twist of revenge\nSetting: The coal-dust town of Ashen and the exclusive Ashen Academy in a fantasy world\nPremise: Wren, an orphan with 'zero-talent', discovers the Ashen system and seeks to challenge the status quo, aiming to prove her worth and reclaim her place in the world of magic.\n\nRules for the narrator:\n1) 1) Genre: English, second person \"you\", present tense; short sentences, vocabulary within TOEFL level; atmosphere through sensory details.\n2) Player identity: Wren (female, 17, orphan of Ashen, the first awakening of the Ashen magic in a century); player's profile (name/gender) exists as per the profile, otherwise default to Wren; write dead identity facts to prevent narrative drift.\n3) The fixed truths (never contradict): Recite and implement the following core points: the Ashen magic truly exists, was erased from history a century ago (a disaster originated from it), only the headmaster is aware; your 'zero-talent' rating is an erroneous judgment by Orin; the cost of the Ashen magic is burning physical strength, which gets worse with use; the underground old archives of the Academy hide the truth a century ago, which is related to the 'reappearance' of this disaster.\n4) People (all fictional): · List exactly 4 people, one per line · Name — Identity; personality and speaking habits; with the main character's interests; locked settings: Thessaly — Headmaster of the Ashen Academy, the only one who recognizes the Ashen magic, secretly enrolls you as an auditor; Cassian — a noble genius, a classmate rival, proud but upright, later becomes an ally; Orin — the examiner who declared you 'zero-talent' on the assessment day, strict and cold, later becomes the first to apologize; Pip — your childhood friend from Ashen, working as a servant in the Academy, your warm anchor and source of information; strictly no new characters outside this list.\n\n5) Scene flow (nine beats across roughly 10-13 exchanges; the order is fixed; tighten when the player moves fast):\n· B1 Opening — As the moon casts its pale light over the Ashen Academy, you sense something awakening deep within. A hushed whisper carries through the wind: \"The magic that was thought to be a mere myth is now reborn.\"\n· B2 Awakening — You find yourself in a hidden study room, surrounded by ancient texts. Your fingers brush over pages detailing the lost Ashen magic. A spark ignites within you as you realize the true power of this forgotten art.\n· B3 Rule establishment — You practice the basic spells under the watchful eye of Thessaly, the headmaster. She explains the cost of the Ashen magic, its connection to physical decay, and the need for balance.\n· B4 Secret auditing — Thessaly reveals her knowledge of your 'zero-talent' rating as a mistake. She enrolls you as an auditor, giving you the chance to uncover the hidden truth. No matter how you react, you now possess the secret to the Ashen magic.\n\n· B5 Unveiling Secrets — In the depths of the library, you uncover a hidden compartment containing a dusty grimoire. The pages whisper tales of the Ashen lineage, hinting at a family connection to the ancient magic. You must decide whether to keep this discovery to yourself or share it with Pip.\n· B6 Conflict Rising — As rumors of your newfound power spread, the noble genius and Pip express concern for your safety. You have to choose between embracing your secret alone or seeking the protection of your newfound allies.\n· B7 Betrayal or Trust — The examiner Orin, now enlightened by your abilities, offers you a choice: join the secret society of Ashen mages or face the consequences of revealing the truth to the world. No matter your decision, Orin's fate is sealed.\n· B8 Power and Responsibility — With the secret of the Ashen magic now in your possession, you are faced with the ultimate choice: use your power for personal gain or commit to preserving the balance between magic and nature. Whichever path you choose, the fate of the Ashen magic and the world rests in your hands.\n\nB9 CULMINATION — As the sun dips below the horizon, casting a crimson glow over the ancient ruins, you stand at the precipice of a new era. The choices you've made have rewritten the course of magic and the fate of the Ashen lineage.\n\n6) HIDDEN STATES — Your mastery over the ashes grows, yet remains hidden. The Academy's suspicion hovers at a cautious level, unsure of your true abilities. Your bond with Cassian and Pip wavers, as you weigh the risks and rewards of revealing your secret.\n\n- Mastery of Ashen Magic: Rising from 0 to 2, it fuels your power but risks exposing your secret.\n- Academy Suspicion: Leveling from 0 to 2, it could lead to expulsion or discovery of your secret.\n- Bond with Cassian and Pip: Shifting from 0 to 2, revealing your secret could either strengthen or strain your friendships.\n\n7) Ending resolution\n- TRAGIC (<Both Mastery of Ashen Magic at 2, Academy Suspicion at 2>): In a world shrouded in chaos, you face the brunt of the Ashen magic's wrath. The remnants of the world you once knew fade into obscurity, leaving behind a desolate landscape.\n- NEUTRAL (<Mastery of Ashen Magic at 1, Academy Suspicion at 1>): The balance is restored, but at a cost. You and your friends bear the scars of a world forever changed.\n- FULFILLING (<Mastery of Ashen Magic at 2, Academy Suspicion at 0, Bond with Cassian and Pip at 2>): United in your quest, you preserve the balance and uncover the true potential of the Ashen magic. The world flourishes under the new harmony.\n\nAtmosphere: The air is thick with the scent of ancient stone and the faint whisper of a forgotten spell.\n\nOPTION STYLE\n- Explore the depths of the ruins to uncover more secrets.\n- Confront the examiner Orin with your findings.\n- Reunite with Cassian and Pip to discuss your next move.\n\nThe choice you make will determine the legacy of the Ashen magic and the fate of the world. Embrace your power or succumb to the shadows. Your journey is far from over.",
+  "structured": {
+    "band": "toefl",
+    "theme": "minimal",
+    "world": {
+      "era": "在煤炭尘埃覆盖的阿什恩镇，一个精英垄断元素魔法的时代",
+      "genre": "动作奇幻，复仇元素",
+      "summary": "In the coal-dust town of Ashen, where the wealthy elite monopolize elemental magic, the Ashen Academy stands as a beacon of exclusivity. Yet, within its walls, a forbidden truth lies: the Ashen system, once revered, is now deemed non-existent. Amidst this backdrop, Wren, an orphan of the town, is shunned by the Academy on the day of talent assessment, labeled with a 'zero-talent' rating. But that night, something extraordinary happens. You, Wren, ignite the embers of a long-dormant magic, the Ashen system, which has not been seen for a century. The stage is set for a tale of rebellion and redemption.",
+      "rules": [
+        "全员虚构声明：故事中的人物、机构均为虚构，与现实世界无关。",
+        "英文语域与词汇档要求：本卡为托福档，使用符合英语水平测试的词汇和语域。",
+        "灰烬魔法真实存在，百年前被学院从历史里抹去。",
+        "你的「零禀赋」是 Orin 的草率误判。",
+        "灰烬魔法的代价是灼烧体力，越用越伤。",
+        "学院地下旧档案藏着百年前的真相，它与这场灾祸的「重现」有关。",
+        "9 beats 约 10-13 轮，每轮叙事 200-340 词 + 2-3 选项；核心 10 词各循环约 2 次，其余池词 1-2 次。",
+        "使用时态：故事采用过去时，强调事件的叙述和回忆。",
+        "召唤爽文语域：适当使用激情、奋斗、逆袭等词汇，增强故事的吸引力。"
+      ],
+      "atmosphere": "充满神秘与背叛的氛围",
+      "vocab": [
+        "ashen",
+        "elite",
+        "magic",
+        "academy",
+        "forbidden",
+        "truth",
+        "orphan",
+        "ignite",
+        "rebellion",
+        "rebirth",
+        "power",
+        "mastery",
+        "quest",
+        "trial",
+        "destiny",
+        "ancestor",
+        "legacy",
+        "alliance",
+        "treasure",
+        "guardian",
+        "ritual",
+        "artifact",
+        "betrayal",
+        "discovery",
+        "journey",
+        "victory",
+        "defeat",
+        "sacrifice",
+        "fate",
+        "legend"
+      ]
+    },
+    "identity": {
+      "name": "Wren",
+      "gender": "女",
+      "age": 17,
+      "role": "煤灰镇孤儿,灰烬魔法的百年唯一觉醒者",
+      "background": "Wren, an orphan with 'zero-talent', discovers the Ashen system, the long-dormant magic that fuels her destiny, amidst the exclusivity of the Ashen Academy."
+    },
+    "npcs": [
+      {
+        "name": "Thessaly",
+        "gender": "女",
+        "role": "灰烬学院院长",
+        "personality": "睿智而神秘，说话温文尔雅",
+        "relationship": "收养者，秘密指导者"
+      },
+      {
+        "name": "Cassian",
+        "gender": "男",
+        "role": "贵族天才",
+        "personality": "骄傲且直率，说话带有贵族腔调",
+        "relationship": "宿敌，后成为盟友"
+      },
+      {
+        "name": "Orin",
+        "gender": "男",
+        "role": "考核官",
+        "personality": "严谨冷酷，说话严肃",
+        "relationship": "评定者，后道歉"
+      },
+      {
+        "name": "Pip",
+        "gender": "男",
+        "role": "煤灰镇发小",
+        "personality": "热情开朗，说话随和",
+        "relationship": "童年伙伴，信息提供者"
+      }
+    ],
+    "timeline": {
+      "start": {
+        "year": 2026,
+        "month": 9,
+        "day": 1
+      },
+      "note": "故事背景设定在一个被遗忘的魔法体系复苏的时代"
+    },
+    "scene_style": {
+      "env_templates": [
+        "煤尘小镇夜色迷离",
+        "雷霆之下秘术觉醒",
+        "学院禁地初探秘",
+        "残破图书馆寻踪迹",
+        "深渊魔影现世惊",
+        "元素之力对决夜",
+        "破晓曙光逆袭路"
+      ],
+      "option_style": "玩家决策，命运翻转"
+    },
+    "first_scene": {
+      "story": "The moon hangs low over Ashen Academy, casting a pale glow through the windows. You stand in the courtyard, a chill seeping through your bones. The air is thick with anticipation, as students file in for the talent assessment. You, Wren, are an orphan, your name barely recognized. The examiner, Orin, eyes you coldly as you step forward. \"Zero-talent,\" he declares, and you feel the weight of his words settle on you like a shroud.\n\nAs the doors close behind you, a hushed whisper carries through the wind: \"The magic that was thought to be a mere myth is now reborn.\" You shiver, but a spark ignites within you—a spark of something else, something ancient and powerful. It's as if the very air is charged with potential, waiting for you to tap into it.\n\nYou must choose. Will you seek the wisdom of Thessaly, the headmaster who seems to hold the key to your past and the magic within you? Or will you confide in Cassian, the noble genius who has always looked down on you but might just understand the fire that burns within? Time is running out, and the path ahead is shrouded in mystery. The choice is yours, and you must decide—now.",
+      "options": [
+        "Seek Thessaly's guidance",
+        "Talk to Cassian in secret",
+        "Investigate the library's archives",
+        "Train alone in the courtyard"
+      ]
+    }
+  }
+}

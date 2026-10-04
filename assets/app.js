@@ -14852,6 +14852,14 @@ function openNpcProfile(npcId) {
             const hm = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
             return d.toDateString() === now.toDateString() ? hm : `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${hm}`;
         }
+        // 2026-10-04 历史中文化:旧条目存的是原语言标题,渲染时回查在线卡取中文名(新条目已直接存 title_zh)
+        function historyTitleOf(e) {
+            try {
+                const lcs = window.LANG_CARDS_ONLINE || [];
+                for (const c of lcs) if (c && String(c.id) === String(e.id)) return c.title_zh || c.title || e.title || "未命名";
+            } catch (err) {}
+            return e.title || "未命名";
+        }
         function renderHistoryPanel() {
             const body = document.getElementById("history-panel-body");
             if (!body) return;
@@ -14869,7 +14877,7 @@ function openNpcProfile(npcId) {
                     <div class="hp-main swipe-main">
                         <span class="hp-emoji">${emoji}</span>
                         <div class="hp-main-inner">
-                            <div class="hp-name">${MarkdownService.escapeHtml(e.title || "未命名")}</div>
+                            <div class="hp-name">${MarkdownService.escapeHtml(historyTitleOf(e))}</div>
                             ${e.sub ? `<div class="hp-sub">${MarkdownService.escapeHtml(e.sub)}</div>` : ""}
                         </div>
                         <span class="hp-time">${historyTimeText(e.ts)}</span>
@@ -15239,7 +15247,7 @@ function openNpcProfile(npcId) {
             }
             selectScenarioCard(cardId);
             ScenarioPlayMetaService.touchPlayed(cardId); // 需求A:记录最近游玩,列表置顶排序
-            pushPlayHistory({ type: "game", id: cardId, title: card?.title || "剧本" });
+            pushPlayHistory({ type: "game", id: cardId, title: card?.title_zh || card?.title || "剧本" });
             GameDetailService.bumpPlay(cardId); // 详情页热度:本地兜底计数(未登录时官方卡)
             // 游玩上报: 社区卡计佣/官方卡计数入库(服务端 card_plays); 未登录不发
             const _tok = AuthService.getToken();
@@ -15421,7 +15429,7 @@ function openNpcProfile(npcId) {
                 return;
             }
             try { ScenarioPlayMetaService.setInitialized(metaId, true); } catch (e) {}
-            try { pushPlayHistory({ type: "game", id: cardId, title: (ScenarioCardService.getSelectedCard() || {}).title || "剧本", lang: true }); } catch (e) {}
+            try { const _sc = ScenarioCardService.getSelectedCard() || {}; pushPlayHistory({ type: "game", id: cardId, title: _sc.title_zh || _sc.title || "剧本", lang: true }); } catch (e) {}
             try { StateService.init(); } catch (e) {} // 会话已置位 → 读该卡 -lang 英文档,防内存残留脏档
             try { StateService.resetWithPreset(merged); } catch (e) {}
             try { PlayViewStateService.enterPlay(cardId); } catch (e) {}
@@ -17333,7 +17341,7 @@ function openNpcProfile(npcId) {
                     UIRenderer.renderInventory(st); UIRenderer.renderSocialList(st); UIRenderer.renderSaveSlots(st);
                     if (UIRenderer.setAutoFollowBottom) UIRenderer.setAutoFollowBottom(true);
                 } catch (e) { console.warn("[LangEngine] 续玩渲染:", e); }
-                try { pushPlayHistory({ type: "game", id: id, title: card.title || "剧本", lang: true }); } catch (e) {}
+                try { pushPlayHistory({ type: "game", id: id, title: card.title_zh || card.title || "剧本", lang: true }); } catch (e) {}
                 return { mode: "continue" };
             }
             // 英语开局:本地计划初始化(零 AI)弹角色确认(复用 init-preview-modal),确认后由 Controller.startLangNewGame 落地英文开局
