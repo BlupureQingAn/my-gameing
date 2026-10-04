@@ -69,7 +69,14 @@ const CARDS = [
       prompt: "首尔连南洞午后的小巷咖啡馆,女生系着围裙端着咖啡杯站在木质吧台后,窗外绿植与暖阳斜照,巷弄行人剪影与咖啡蒸汽,慢午后的心动;Seoul Yeonnam-dong alley cafe anime, warm afternoon sunlight through window, wooden counter, plants and coffee steam, cozy urban romance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
     // 2026-09-21 批次 4:choir(秋夜合唱团定期演奏会,女向)
     { id: "24rq4p27r3aaqkv", file: "kr-r1-04-choir.card.json",
-      prompt: "深秋夜晚的大学合唱团练习室,女生抱着乐谱站在钢琴与谱架之间,窗外首尔夜色与落叶,暖黄排练灯与空荡的座椅,演奏会前夜的紧张与心动;university choir rehearsal room anime, late autumn night, piano and music stands, warm rehearsal light, Seoul city glow outside window, tender youthful romance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" }
+      prompt: "深秋夜晚的大学合唱团练习室,女生抱着乐谱站在钢琴与谱架之间,窗外首尔夜色与落叶,暖黄排练灯与空荡的座椅,演奏会前夜的紧张与心动;university choir rehearsal room anime, late autumn night, piano and music stands, warm rehearsal light, Seoul city glow outside window, tender youthful romance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
+    // 2026-10-04 大女主爽文英语卡 hg 批次(全英语单主角逆袭线,不做立绘)
+    { id: "eqbmk4xvz3cm1b8", file: "hg-01-villainess.card.json",
+      prompt: "华丽宫廷舞会大厅,银发红裙的反派千金执扇立于台阶高处回眸,台下宾客愕然跪伏,吊灯烛火与暗红帷幕,改写命运的张扬一刻;otome villainess anime, majestic ballroom, dramatic candlelight, triumphant elegance;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
+    { id: "4bcc4lqc2ytljsv", file: "hg-03-fallen-star.card.json",
+      prompt: "夜晚颁奖礼的聚光灯下,女演员一袭星辉长裙立于光柱中央仰望星空,身后闪烁的闪光灯海与红毯,陨落星辰的归来时刻;cinematic showbiz anime, dramatic spotlight stage, glittering flashbulbs, starry comeback night;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" },
+    { id: "dnchczqkykv2cnb", file: "hg-05-ashes.card.json",
+      prompt: "灰烬与火星飞舞的法师塔废墟,白衣女术士掌心升起金色新生之火,余烬中凤凰虚影盘旋,晨光穿透烟尘,燃烧重生的力量;epic fantasy anime, flying embers, phoenix fire glow, magic rebirth;4:3 横版封面构图;8k, highly detailed, masterpiece, no text, no watermark" }
 ];
 
 async function pbJson(url, opts) {

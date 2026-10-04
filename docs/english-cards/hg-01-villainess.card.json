@@ -126,7 +126,244 @@
         "Observe Rosalind's actions",
         "Seek counsel from Lady Elspeth",
         "Visit the village to help the poor"
-      ]
+      ],
+      "bilingual": {
+        "v": 1,
+        "lines": [
+          {
+            "en": "The grand chime of the castle bell echoes through the empty corridors of Blackwood Castle, marking the end of a fateful night.",
+            "zh": "城堡钟楼的宏伟钟声在布莱克伍德城堡空荡荡的走廊里回响，宣告着一个命运之夜的终结。",
+            "words": [
+              {
+                "w": "grand chime",
+                "zh": "（钟）宏大的轰鸣；气势恢宏的钟声"
+              },
+              {
+                "w": "echoes through",
+                "zh": "在……中回荡；在……中回响"
+              },
+              {
+                "w": "fateful night",
+                "zh": "决定命运的夜晚；影响深远的一夜"
+              }
+            ]
+          },
+          {
+            "en": "As dawn approaches, you stand before the ornate window, watching the first light of day seep through the thick curtains.",
+            "zh": "当黎明临近时，你站在华丽的窗前，看着晨光透过厚帘渗入。",
+            "words": [
+              {
+                "w": "ornate",
+                "zh": "装饰繁复的"
+              },
+              {
+                "w": "seep through",
+                "zh": "渗透；慢慢透入"
+              },
+              {
+                "w": "thick curtains",
+                "zh": "厚窗帘"
+              }
+            ]
+          },
+          {
+            "en": "You are Evelyn, the villainess, but this morning, you feel different.",
+            "zh": "你是伊芙琳，那个反派女角色，但今天早上，你感觉有些不一样。",
+            "words": [
+              {
+                "w": "villainy",
+                "zh": "反派；坏角色"
+              },
+              {
+                "w": "feel different",
+                "zh": "感觉不同"
+              },
+              {
+                "w": "this morning",
+                "zh": "今天早上"
+              }
+            ]
+          },
+          {
+            "en": "A strange calm has settled over you, as if fate has given you one last chance to change your course.",
+            "zh": "一种奇怪的平静笼罩着你，仿佛命运给了你最后一次改变方向的机会。",
+            "words": [
+              {
+                "w": "strange calm",
+                "zh": "异常的平静"
+              },
+              {
+                "w": "settled over",
+                "zh": "笼罩"
+              },
+              {
+                "w": "as if",
+                "zh": "好像"
+              }
+            ]
+          },
+          {
+            "en": "Your eyes are drawn to the courtyard below, where a group of nobles are preparing for the court ball that begins in an hour.",
+            "zh": "你的目光被下方的庭院吸引，一群贵族正为一小时后开始的宫廷舞会做准备。",
+            "words": [
+              {
+                "w": "are drawn to",
+                "zh": "被……吸引"
+              },
+              {
+                "w": "courtyard",
+                "zh": "庭院"
+              },
+              {
+                "w": "prepare for",
+                "zh": "为……做准备"
+              }
+            ]
+          },
+          {
+            "en": "You realize you must act quickly.",
+            "zh": "你意识到必须迅速行动。",
+            "words": [
+              {
+                "w": "realize",
+                "zh": "意识到"
+              },
+              {
+                "w": "act quickly",
+                "zh": "快速行动"
+              }
+            ]
+          },
+          {
+            "en": "Your choice looms like a shadow over you, two paths laid out before you.",
+            "zh": "你的选择像阴影一样笼罩着你，两条路摆在面前。",
+            "words": [
+              {
+                "w": "loom",
+                "zh": "显得巨大而可怕；笼罩"
+              },
+              {
+                "w": "lay out",
+                "zh": "摆放、布置"
+              },
+              {
+                "w": "over you",
+                "zh": "在你上方；影响你"
+              }
+            ]
+          },
+          {
+            "en": "Should you trust Adrian, the Duke of Ravenhall, who seems to have changed his tune since you \"died\"?",
+            "zh": "你该信任雷文霍尔公爵阿德里安吗？自从你“死后”，他的态度似乎变了。",
+            "words": [
+              {
+                "w": "trust",
+                "zh": "相信某人可靠"
+              },
+              {
+                "w": "changed his tune",
+                "zh": "改变态度"
+              },
+              {
+                "w": "since",
+                "zh": "自……以来"
+              }
+            ]
+          },
+          {
+            "en": "He stands at the edge of the crowd, watching the preparations with an intensity that doesn't seem like mere curiosity.",
+            "zh": "他站在人群边缘，带着一种不像只是好奇的专注神情注视着准备工作。",
+            "words": [
+              {
+                "w": "at the edge of",
+                "zh": "在……的边缘"
+              },
+              {
+                "w": "watching",
+                "zh": "观看；注视"
+              },
+              {
+                "w": "intensity",
+                "zh": "强度；专注的神情"
+              }
+            ]
+          },
+          {
+            "en": "Or should you approach Rosalind, Miss Ashford, the gentle heroine of the novel, who could very well be the next to set her trap for you?",
+            "zh": "或者，你要不要去找罗莎琳德——阿什福德小姐，这位小说中温柔的女主角？她很可能就是下一个给你设下陷阱的人。",
+            "words": [
+              {
+                "w": "approach",
+                "zh": "走近；接近（某人）"
+              },
+              {
+                "w": "gentle",
+                "zh": "温和的；温柔的"
+              },
+              {
+                "w": "set her trap",
+                "zh": "设下她的陷阱"
+              }
+            ]
+          },
+          {
+            "en": "You must decide.",
+            "zh": "你必须做出决定。",
+            "words": [
+              {
+                "w": "must decide",
+                "zh": "情态动词+动词：必须做决定；‘decide’=作出选择"
+              },
+              {
+                "w": "You",
+                "zh": "第二人称单数主语代词“你”"
+              }
+            ]
+          },
+          {
+            "en": "The clock ticks.",
+            "zh": "时钟滴答作响。",
+            "words": [
+              {
+                "w": "ticks",
+                "zh": "动词tick的第三人称单数现在时；钟表的滴答声"
+              },
+              {
+                "w": "clock",
+                "zh": "发出滴答声的计时器（钟）"
+              }
+            ]
+          },
+          {
+            "en": "The moment draws near.",
+            "zh": "那一刻临近了。",
+            "words": [
+              {
+                "w": "draws near",
+                "zh": "短语动词：在时间或空间上靠近"
+              },
+              {
+                "w": "moment",
+                "zh": "短暂的一段时间"
+              }
+            ]
+          },
+          {
+            "en": "Your fate hangs in the balance.",
+            "zh": "你的命运悬而未决。",
+            "words": [
+              {
+                "w": "hangs in the balance",
+                "zh": "习语：处于不确定状态；有风险"
+              },
+              {
+                "w": "fate",
+                "zh": "命运；将发生在你身上的事"
+              }
+            ]
+          }
+        ]
+      }
     }
   }
 }

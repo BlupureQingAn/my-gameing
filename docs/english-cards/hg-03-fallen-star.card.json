@@ -130,7 +130,270 @@
         "stay quiet and blend in",
         "confront Lila with a confident nod",
         "seek out Elliot for a private conversation"
-      ]
+      ],
+      "bilingual": {
+        "v": 1,
+        "lines": [
+          {
+            "en": "You step out of the car, the sound of the bustling set echoes in your ears.",
+            "zh": "你从车里走出来，嘈杂的片场声音在你耳边回响。",
+            "words": [
+              {
+                "w": "step out of",
+                "zh": "走出（车）"
+              },
+              {
+                "w": "bustling set",
+                "zh": "热闹的拍摄现场"
+              },
+              {
+                "w": "echoes in your ears",
+                "zh": "在耳边回响"
+              }
+            ]
+          },
+          {
+            "en": "The neon lights flicker above, casting a glow on the faces of extras scattered around.",
+            "zh": "头顶的霓虹灯闪烁着，把光洒在周围散开的群演们的脸上。",
+            "words": [
+              {
+                "w": "flicker",
+                "zh": "（灯光）忽明忽暗；（眼睛或心跳）快速跳动"
+              },
+              {
+                "w": "cast a glow",
+                "zh": "投下光亮；照亮"
+              },
+              {
+                "w": "extras",
+                "zh": "群演；群众演员"
+              }
+            ]
+          },
+          {
+            "en": "Your heart races as you take a deep breath, the scent of ambition thick in the air.",
+            "zh": "你深吸一口气，心跳加速，空气中弥漫着浓烈的雄心气息。",
+            "words": [
+              {
+                "w": "heart races",
+                "zh": "心跳很快"
+              },
+              {
+                "w": "take a deep breath",
+                "zh": "深深吸气"
+              },
+              {
+                "w": "thick in the air",
+                "zh": "在空气中很浓"
+              }
+            ]
+          },
+          {
+            "en": "You're just a stand-in, a faceless extra, but today, you're here for more than just a job.",
+            "zh": "你不过是个替身，一个没有面孔的配角，但今天你来这儿，可不只是为了一份工作。",
+            "words": [
+              {
+                "w": "stand-in",
+                "zh": "临时顶替的人"
+              },
+              {
+                "w": "faceless",
+                "zh": "无名的；无脸的"
+              },
+              {
+                "w": "extra",
+                "zh": "配角（尤指无台词演员）"
+              }
+            ]
+          },
+          {
+            "en": "\"Stella,\" a familiar voice calls out, cutting through the noise.",
+            "zh": "“斯特拉，”一个熟悉的声音喊道，穿透了嘈杂声。",
+            "words": [
+              {
+                "w": "familiar",
+                "zh": "熟悉的"
+              },
+              {
+                "w": "cutting through",
+                "zh": "穿过；穿透"
+              },
+              {
+                "w": "noise",
+                "zh": "噪音"
+              }
+            ]
+          },
+          {
+            "en": "It's Lila, the reigning film star, her smile cold as ice.",
+            "zh": "是莉拉，那位当红影星，她的笑容冷若冰霜。",
+            "words": [
+              {
+                "w": "reigning",
+                "zh": "当前最受欢迎且成功的"
+              },
+              {
+                "w": "cold as ice",
+                "zh": "像冰一样冷；非常不友好"
+              }
+            ]
+          },
+          {
+            "en": "\"Enjoying the set, aren't you?\" she asks, her eyes trailing down your body.",
+            "zh": "喜欢这套吗？她问道，目光顺着你的身体缓缓下移。",
+            "words": [
+              {
+                "w": "enjoy",
+                "zh": "享受；喜欢"
+              },
+              {
+                "w": "set",
+                "zh": "一套（衣服）"
+              },
+              {
+                "w": "trailing down",
+                "zh": "缓缓下移"
+              }
+            ]
+          },
+          {
+            "en": "You keep your gaze steady, ignoring the sting of her words.",
+            "zh": "你目光坚定，无视她话语中的刺痛。",
+            "words": [
+              {
+                "w": "keep your gaze steady",
+                "zh": "保持目光稳定"
+              },
+              {
+                "w": "ignore",
+                "zh": "忽视"
+              },
+              {
+                "w": "the sting of her words",
+                "zh": "她话里的刺痛"
+              }
+            ]
+          },
+          {
+            "en": "Instead, you focus on the script in your hand, searching for your mark.",
+            "zh": "于是，你将注意力集中在手中的剧本上，寻找你的标记。",
+            "words": [
+              {
+                "w": "focus on",
+                "zh": "集中注意力在…"
+              },
+              {
+                "w": "script",
+                "zh": "剧本（戏剧或电影的文字稿）"
+              },
+              {
+                "w": "searching for",
+                "zh": "寻找"
+              }
+            ]
+          },
+          {
+            "en": "The crew moves around you, oblivious to the brewing storm.",
+            "zh": "船员们在你周围活动，对即将到来的风暴毫无察觉。",
+            "words": [
+              {
+                "w": "moves around",
+                "zh": "在某人附近四处走动"
+              },
+              {
+                "w": "oblivious to",
+                "zh": "没意识到；未察觉到"
+              },
+              {
+                "w": "brewing storm",
+                "zh": "正在酝酿中的暴风雨"
+              }
+            ]
+          },
+          {
+            "en": "Just then, Elliot, the silver-haired director, approaches.",
+            "zh": "就在这时，银发导演埃利奥特走了过来。",
+            "words": [
+              {
+                "w": "silver-haired",
+                "zh": "银发的"
+              },
+              {
+                "w": "approaches",
+                "zh": "走近；靠近"
+              },
+              {
+                "w": "director",
+                "zh": "导演"
+              }
+            ]
+          },
+          {
+            "en": "\"Stella, I need you,\" he whispers, his eyes filled with recognition.",
+            "zh": "“斯特拉，我需要你。”他低声说，眼中满是认出她的神情。",
+            "words": [
+              {
+                "w": "whispers",
+                "zh": "低声说"
+              },
+              {
+                "w": "filled with",
+                "zh": "充满"
+              },
+              {
+                "w": "recognition",
+                "zh": "认出；认识"
+              }
+            ]
+          },
+          {
+            "en": "\"There's a scene going awry, and I think you can save it.\"",
+            "zh": "“有个场景出了问题，我觉得你能救回来。”",
+            "words": [
+              {
+                "w": "going awry",
+                "zh": "出问题；出岔子"
+              },
+              {
+                "w": "save it",
+                "zh": "挽救它"
+              }
+            ]
+          },
+          {
+            "en": "The choice is yours—should you step in and use this chance to showcase your talent, or keep your head down and remain a silent extra?",
+            "zh": "选择权在你——你是挺身而出、借此机会展示才华，还是低头不语、继续当个沉默的配角？",
+            "words": [
+              {
+                "w": "step in",
+                "zh": "介入；插手"
+              },
+              {
+                "w": "showcase",
+                "zh": "展示；展现"
+              },
+              {
+                "w": "keep your head down",
+                "zh": "低头不语；不引人注意"
+              }
+            ]
+          },
+          {
+            "en": "You must immediately do choose.",
+            "zh": "你必须立刻做出选择。",
+            "words": [
+              {
+                "w": "immediately",
+                "zh": "立即；马上"
+              },
+              {
+                "w": "do choose",
+                "zh": "务必选择"
+              }
+            ]
+          }
+        ]
+      }
     }
   }
 }

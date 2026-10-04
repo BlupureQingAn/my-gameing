@@ -123,7 +123,252 @@
         "Talk to Cassian in secret",
         "Investigate the library's archives",
         "Train alone in the courtyard"
-      ]
+      ],
+      "bilingual": {
+        "v": 1,
+        "lines": [
+          {
+            "en": "The moon hangs low over Ashen Academy, casting a pale glow through the windows.",
+            "zh": "月亮低悬在灰烬学院上空，把苍白的月光透过窗户洒进来。",
+            "words": [
+              {
+                "w": "hangs low",
+                "zh": "位置很低；挂在低处"
+              },
+              {
+                "w": "casting",
+                "zh": "发出（光）；投射"
+              },
+              {
+                "w": "pale glow",
+                "zh": "微弱的光"
+              }
+            ]
+          },
+          {
+            "en": "You stand in the courtyard, a chill seeping through your bones.",
+            "zh": "你站在庭院里，一股寒意直透骨髓。",
+            "words": [
+              {
+                "w": "chill",
+                "zh": "寒冷；寒气"
+              },
+              {
+                "w": "seeping",
+                "zh": "渗入；渗透"
+              },
+              {
+                "w": "through your bones",
+                "zh": "穿透骨头；深入骨髓"
+              }
+            ]
+          },
+          {
+            "en": "The air is thick with anticipation, as students file in for the talent assessment.",
+            "zh": "空气里满是期待，学生们鱼贯而入参加才能评估。",
+            "words": [
+              {
+                "w": "thick with",
+                "zh": "充满；浓得化不开"
+              },
+              {
+                "w": "anticipation",
+                "zh": "期待；期盼"
+              },
+              {
+                "w": "file in",
+                "zh": "列队进入；依次进入"
+              }
+            ]
+          },
+          {
+            "en": "You, Wren, are an orphan, your name barely recognized.",
+            "zh": "温伦，你是孤儿，名字几乎没人认得。",
+            "words": [
+              {
+                "w": "orphan",
+                "zh": "孤儿"
+              },
+              {
+                "w": "barely",
+                "zh": "几乎不；勉强"
+              },
+              {
+                "w": "recognized",
+                "zh": "认出；认识"
+              }
+            ]
+          },
+          {
+            "en": "The examiner, Orin, eyes you coldly as you step forward.",
+            "zh": "考官奥林冷冷地盯着你，你向前迈了一步。",
+            "words": [
+              {
+                "w": "eyes",
+                "zh": "注视；盯着看"
+              },
+              {
+                "w": "coldly",
+                "zh": "冷淡地；冷漠地"
+              },
+              {
+                "w": "step forward",
+                "zh": "向前走；上前"
+              }
+            ]
+          },
+          {
+            "en": "\"Zero-talent,\" he declares, and you feel the weight of his words settle on you like a shroud.",
+            "zh": "“零天赋。”他宣布道，你感到他的话像裹尸布一样压在你身上。",
+            "words": [
+              {
+                "w": "declare",
+                "zh": "宣布；宣称"
+              },
+              {
+                "w": "weight",
+                "zh": "重量；压力"
+              },
+              {
+                "w": "settle on",
+                "zh": "落在……上；压在……上"
+              }
+            ]
+          },
+          {
+            "en": "As the doors close behind you, a hushed whisper carries through the wind: \"The magic that was thought to be a mere myth is now reborn.\"",
+            "zh": "当门在你身后关上时，一阵低声耳语随风传来：“曾被认为只是传说的魔法如今重生了。”",
+            "words": [
+              {
+                "w": "hushed",
+                "zh": "安静的；悄声的"
+              },
+              {
+                "w": "carry through",
+                "zh": "随……传播；被风传开"
+              },
+              {
+                "w": "mere myth",
+                "zh": "仅仅是传说；虚构的故事"
+              }
+            ]
+          },
+          {
+            "en": "You shiver, but a spark ignites within you—a spark of something else, something ancient and powerful.",
+            "zh": "你打了个哆嗦，但内心燃起一团火花——一种别样的东西，古老而强大的东西。",
+            "words": [
+              {
+                "w": "shiver",
+                "zh": "发抖；打颤"
+              },
+              {
+                "w": "ignite",
+                "zh": "点燃；引发"
+              },
+              {
+                "w": "ancient",
+                "zh": "古老的；远古的"
+              }
+            ]
+          },
+          {
+            "en": "It's as if the very air is charged with potential, waiting for you to tap into it.",
+            "zh": "仿佛空气本身都充满了潜力，等着你去发掘。",
+            "words": [
+              {
+                "w": "charged",
+                "zh": "充满能量的；带电的"
+              },
+              {
+                "w": "potential",
+                "zh": "潜力；可能性"
+              },
+              {
+                "w": "tap into",
+                "zh": "利用；发掘"
+              }
+            ]
+          },
+          {
+            "en": "You must choose.",
+            "zh": "你必须做出选择。",
+            "words": [
+              {
+                "w": "must",
+                "zh": "必须；一定要"
+              },
+              {
+                "w": "choose",
+                "zh": "选择"
+              }
+            ]
+          },
+          {
+            "en": "Will you seek the wisdom of Thessaly, the headmaster who seems to hold the key to your past and the magic within you?",
+            "zh": "你会去寻求塞萨利（Thessaly）的智慧吗？那位校长似乎掌握着通往你过去和体内魔法的关键。",
+            "words": [
+              {
+                "w": "seek the wisdom",
+                "zh": "请教；向智者求教"
+              },
+              {
+                "w": "hold the key",
+                "zh": "掌握关键/钥匙"
+              },
+              {
+                "w": "magic within",
+                "zh": "内在的魔力"
+              }
+            ]
+          },
+          {
+            "en": "Or will you confide in Cassian, the noble genius who has always looked down on you but might just understand the fire that burns within?",
+            "zh": "还是你会向卡西安倾诉？这位高贵的天才一直看不起你，但他或许能理解你内心燃烧的那团火。",
+            "words": [
+              {
+                "w": "confide in",
+                "zh": "向……倾诉"
+              },
+              {
+                "w": "looked down on",
+                "zh": "看不起"
+              },
+              {
+                "w": "fire that burns within",
+                "zh": "内心的火焰"
+              }
+            ]
+          },
+          {
+            "en": "Time is running out, and the path ahead is shrouded in mystery.",
+            "zh": "时间不多了，前方的道路笼罩在神秘之中。",
+            "words": [
+              {
+                "w": "running out",
+                "zh": "快用完了"
+              },
+              {
+                "w": "shrouded in mystery",
+                "zh": "被神秘笼罩"
+              }
+            ]
+          },
+          {
+            "en": "The choice is yours, and you must decide—now.",
+            "zh": "选择权在你手中，你必须现在就做出决定。",
+            "words": [
+              {
+                "w": "the choice is yours",
+                "zh": "由你选择"
+              },
+              {
+                "w": "must decide",
+                "zh": "必须做决定"
+              }
+            ]
+          }
+        ]
+      }
     }
   }
 }
