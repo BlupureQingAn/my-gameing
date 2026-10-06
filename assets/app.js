@@ -15426,6 +15426,8 @@ function openNpcProfile(npcId) {
                 const ln = bi.lines[i] || {};
                 let zh = String(ln.zh || "").trim();
                 if (!zh) continue;
+                /* 跳过 <START>/<END> 标记行(部分产卡 story 首末自带标记;zh 侧为 ＜开始＞/＜结束＞) */
+                if (/^[＜<](?:START|END)[＞>]$/i.test(String(ln.en || "").trim()) || /^[＜<](?:开始|结束)[＞>]$/.test(zh)) continue;
                 if (presetName && stateName && stateName !== presetName) zh = zh.split(presetName).join(stateName);
                 const words = Array.isArray(ln.words) ? ln.words.filter((x) => x && x.w) : [];
                 /* 词的中文义按出现位置排序,依次替换(每次都在当前文本上重找位置,防插入后位移错乱) */
