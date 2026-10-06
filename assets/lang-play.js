@@ -249,9 +249,20 @@
         if (!token()) return;
         fetch(API_BASE + "/api/lang/profile", {
             method: "PUT", headers: { "Content-Type": "application/json", "X-Auth-Token": "Bearer " + token() },
-            body: JSON.stringify({ lang: profile.lang || "en", band: profile.band || "", immersion: profile.immersion || "" })
+            /* imm_v:迁移版本号(worker 存量值域只收 progressive/full,simple/imm_v 会被忽略——不报错;
+               换设备收敛靠本地迁移 + 下方 loadRemote 的版本仲裁) */
+            body: JSON.stringify({ lang: profile.lang || "en", band: profile.band || "", immersion: profile.immersion || "", imm_v: Number(profile.imm_v || 0) })
         }).catch(function () { });
     }
+    /* M10 简单模式一次性迁移(空/progressive→simple,full 保留;imm_v=2 幂等)。
+       放在 saveRemote 定义之后:脚本解析到这一行时 API_BASE/save/saveRemote 都已就绪 */
+    (function () {
+        try {
+            if (!window.LangEngine || !window.LangEngine.migrateImmersion) return;
+            var r = window.LangEngine.migrateImmersion(profile);
+            if (r && r.changed) { profile = r.profile; save(); saveRemote(); }
+        } catch (e) { }
+    })();
     var myStatsCache = null;   // P2:learn-stats 30s 缓存
     var api = {
         init: function () {
@@ -322,7 +333,13 @@
                         api.loadLangCards(p.lang);
                     }
                     if (p && p.band) {
-                        if (p.immersion) profile.immersion = p.immersion;
+                        /* M10 版本仲裁:云端 progressive 只在 imm_v 不落后本地时采纳 —— 防旧缓存客户端
+                           把陈旧 progressive 回灌覆盖迁移后的 simple;full 永远有效(迁移规则保留 full) */
+                        var cloudV = Number(p.imm_v || 0), localV = Number(profile.imm_v || 0);
+                        if (p.immersion && (cloudV >= localV || p.immersion === "full")) {
+                            profile.immersion = p.immersion;
+                            if (cloudV > localV) profile.imm_v = cloudV;
+                        }
                         // 云档 band 只在属于当前语种时才采纳(否则切语种后会被旧语种档位覆盖)
                         if (bandOrderOf(curLang()).indexOf(p.band) >= 0) { profile.band = p.band; rememberBand(curLang(), p.band); }
                         else if (bandOrderOf(curLang()).indexOf(profile.band) < 0) profile.band = bandForLang(curLang()) || bandDefOf(curLang());
@@ -336,7 +353,13 @@
         renderPicker: function () {
             var box = $("lang-immersion-picker"); if (!box) return;
             var btns = box.querySelectorAll(".lang-lang-card");
-            for (var i = 0; i < btns.length; i++) btns[i].classList.toggle("active", btns[i].getAttribute("data-m") === (profile.immersion || "progressive"));
+            var cur = api.effImm();
+            for (var i = 0; i < btns.length; i++) btns[i].classList.toggle("active", btns[i].getAttribute("data-m") === cur);
+        },
+        /* 有效沉浸模式:full→full;progressive(imm_v≥2 显式选的)→progressive;其余(空/未迁移)→simple */
+        effImm: function () {
+            try { if (window.LangEngine && window.LangEngine.effectiveImmersion) return window.LangEngine.effectiveImmersion(profile); } catch (e) { }
+            return profile.immersion || "progressive";
         },
         /* 2026-09-19 三语切换:写档 → 档位若不属于新语种则回落到该语种默认档 → 丢弃旧语种卡库并重拉 → 全量重渲染 */
         selectLang: function (code) {
@@ -449,7 +472,11 @@
             profile.band = k; rememberBand(curLang(), k); save(); saveRemote(); api.showBand();
             hint("学习档已改为 " + BAND_INFO[k][0] + "（" + BAND_INFO[k][1] + "）——接下来玩的卡与词库按此档来。");
         },
-        setImmersion: function (m) { profile.immersion = m; save(); saveRemote(); api.renderPicker(); hint(""); },
+        setImmersion: function (m) {
+            profile.immersion = m;
+            profile.imm_v = (window.LangEngine && window.LangEngine.IMM_VERSION) || 2;   // 迁移后再选(含改回渐进)不再被重置
+            save(); saveRemote(); api.renderPicker(); hint("");
+        },
         goCards: function () { api.goLibrary(); },
         /* M8b:语言首页推荐轮播控制(5s 自动 + dots 手动,点击 dot 后重新计时) */
         startLangBanner: function (n) {

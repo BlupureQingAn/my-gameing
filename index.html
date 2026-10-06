@@ -490,7 +490,8 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
 
                 <div class="list-title list-start" id="lang-learn-imm"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12q2.5 2 5 0t5 0 5 0 5 0"/><path d="M2 19q2.5 2 5 0t5 0 5 0 5 0"/><path d="M2 5q2.5 2 5 0t5 0 5 0 5 0"/></svg> 学习设置 · 沉浸模式 <span class="list-sub">游戏中可随时改</span></div>
                 <div class="lang-picker" id="lang-immersion-picker">
-                    <button type="button" class="lang-lang-card active" data-m="progressive" onclick="LangController.setImmersion('progressive')"><span class="lang-icon"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 9.536V7a4 4 0 0 1 4-4h1.5a.5.5 0 0 1 .5.5V5a4 4 0 0 1-4 4 4 4 0 0 0-4 4c0 2 1 3 1 5a5 5 0 0 1-1 3"/><path d="M4 9a5 5 0 0 1 8 4 5 5 0 0 1-8-4"/><path d="M5 21h14"/></svg></span><span>渐进沉浸 <span class="lang-badge en text">推荐</span></span><span class="list-sub">译文随剧情推进逐渐退场</span></button>
+                    <button type="button" class="lang-lang-card active" data-m="simple" onclick="LangController.setImmersion('simple')"><span class="lang-icon"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 9.536V7a4 4 0 0 1 4-4h1.5a.5.5 0 0 1 .5.5V5a4 4 0 0 1-4 4 4 4 0 0 0-4 4c0 2 1 3 1 5a5 5 0 0 1-1 3"/><path d="M4 9a5 5 0 0 1 8 4 5 5 0 0 1-8-4"/><path d="M5 21h14"/></svg></span><span>简单模式 <span class="lang-badge en text">推荐</span></span><span class="list-sub">中文剧情里自然认识单词，零压力起步</span></button>
+                    <button type="button" class="lang-lang-card" data-m="progressive" onclick="LangController.setImmersion('progressive')"><span class="lang-icon"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 9.536V7a4 4 0 0 1 4-4h1.5a.5.5 0 0 1 .5.5V5a4 4 0 0 1-4 4 4 4 0 0 0-4 4c0 2 1 3 1 5a5 5 0 0 1-1 3"/><path d="M4 9a5 5 0 0 1 8 4 5 5 0 0 1-8-4"/><path d="M5 21h14"/></svg></span><span>渐进沉浸</span><span class="list-sub">译文随剧情推进逐渐退场</span></button>
                     <button type="button" class="lang-lang-card" data-m="full" onclick="LangController.setImmersion('full')"><span class="lang-icon"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12q2.5 2 5 0t5 0 5 0 5 0"/><path d="M2 19q2.5 2 5 0t5 0 5 0 5 0"/><path d="M2 5q2.5 2 5 0t5 0 5 0 5 0"/></svg></span><span>全沉浸</span><span class="list-sub" id="lang-imm-full-desc">纯英语体验，辅助全部手动触发</span></button>
                 </div>
 
@@ -1452,9 +1453,9 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
 <script src="scenarios/scenarios.js?v=20260922a" async id="scenario-lib-script"></script>
 <script src="scenarios/skeletons.js?v=20260926a" async id="skeleton-lib-script"></script>
 <script src="lib/qrcode.min.js" async></script>
-<script src="assets/app.js?v=20261004c"></script>
+<script src="assets/app.js?v=20261006a"></script>
 <script src="assets/love-engine.js?v=20260924a"></script>
-<script src="assets/lang-play.js?v=20261004c"></script>
-<script src="assets/lang-aux.js?v=20260926o"></script>
+<script src="assets/lang-play.js?v=20261006a"></script>
+<script src="assets/lang-aux.js?v=20261006a"></script>
 </body>
 </html>

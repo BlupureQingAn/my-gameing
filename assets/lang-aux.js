@@ -645,7 +645,7 @@
         if (POS_OK_RE.test(s)) return true;
         return !/^[a-z]+\./.test(s);   // ky 等无词性前缀源:非词性标记开头即视为可嵌
     }
-    function drawWords(band) {
+    function drawWords(band, want) {
         var items = langBankCache[band];
         if (!items || !items.length) return [];
         var seen = loadSeen()[band] || {};
@@ -666,7 +666,8 @@
             for (k = 0; k < n && a.length; k++) { r = Math.floor(Math.random() * a.length); out.push(a[r]); a.splice(r, 1); }
             return out;
         }
-        var want = 3, picks = [];
+        want = Math.max(1, Number(want) || 3);
+        var picks = [];
         picks = rndTake(fresh, want);                                   // 本档未 seen 优先
         if (picks.length < want) picks = picks.concat(rndTake(weak, want - picks.length));   // 弱词复习
         if (picks.length < want) picks = picks.concat(rndTake(old, want - picks.length));    // 已 seen 兜底
@@ -783,6 +784,30 @@
         return null;
     }
     function getChapterWords() { var l = ensureChWords(); if (l && l.length) chWords.pushed = true; return l; }   // 注入即推送:prog 迟到不再换词
+    /* M10 简单模式:只读候选抽样(≤12)——与 drawWords 同源优先级(未见过→弱词→复习),不碰 chWords
+       状态、不设 pushed,不影响渐进沉浸的注入链;抽到的词同时入词池:正文嵌入后即可点亮高亮、点击可查 */
+    function getSimpleCandidates(max) {
+        var cap = Math.max(1, Math.min(12, Number(max) || 8));
+        var band = currentLangBand();
+        if (!band || !langBankCache[band]) {
+            if (band && !langBankLoading[band]) loadLangBank(band);
+            return [];
+        }
+        var picks = drawWords(band, cap);
+        if (!picks.length) return [];
+        noteWords(picks.map(function (p) { return { w: String(p.w), zh: String(p.zh || "") }; }), "gloss");
+        return picks.map(function (p) { return String(p.w).toLowerCase(); });
+    }
+    /* 简单模式判定(渲染侧用):经 LangEngine.immStage 单点判定;1s 缓存,防 wrapWords 里逐 token 问价 */
+    var simpleModeCache = { at: 0, v: false };
+    function simpleModeOn() {
+        var now = Date.now();
+        if (now - simpleModeCache.at < 1000) return simpleModeCache.v;
+        var v = false;
+        try { var st = window.LangEngine && window.LangEngine.immStage ? window.LangEngine.immStage(1) : null; v = !!(st && st.mode === "simple"); } catch (e) {}
+        simpleModeCache = { at: now, v: v };
+        return v;
+    }
 
 
     var WORD_TOK = /[A-Za-z][A-Za-z0-9'’-]*/g;
@@ -816,6 +841,9 @@
            虚线是"提醒你注意",已经掌握的词一直提醒只会让提醒贬值(小徐 2026-09-26)。 */
         if (mine) return poolStatusOf(tok) < 2;
         if (!band) return false;
+        /* M10 简单模式 ja:正文是中文,纯汉字 token(学校/先生…)回查 ja 词库会把一大片中文词标上虚线;
+           嵌入词/生词已由词池(mine)命中,这里纯汉字不再回查词库 ——「中文文本不高亮」 */
+        if (cjk && simpleModeOn() && curSessionLang() === "ja" && /^[㐀-䶿一-鿿々]+$/.test(tok)) return false;
         var bit = cjk ? bankLookupCJK(band, tok) : langBankItem(band, tok);
         if (!bit) return false;
         var frq = Number(bit.frq);
@@ -848,6 +876,9 @@
                 // 标点/空白/拉丁人名:不包 span 也不推 pos,交给下一段的 slice 原样输出
                 if (!tok || !toks[ti].word) continue;
                 if (cjk && !CJK_TOKEN_RE[lang].test(tok)) continue;
+                /* M10 ja 简单模式:正文以中文为主,纯汉字 token 默认不包词(不高亮不上虚线、不误点查);
+                   词池命中的(嵌入词/生词本词)照常包 */
+                if (cjk && lang === "ja" && simpleModeOn() && /^[㐀-䶿一-鿿々]+$/.test(tok) && !cjkHit(tok)) continue;
                 if (at > pos) frag.appendChild(document.createTextNode(val.slice(pos, at)));
                 var hit = wordHit(tok, re, cjk, band);
                 var sp = document.createElement("span");
@@ -2775,6 +2806,8 @@
             if (window.LangController && window.LangController.goVocab) window.LangController.goVocab();
         },
         getChapterWords: getChapterWords,   // M6d4:当前章候选词(供 LangEngine 续写注入;内部触发预载/抽词)
+        getSimpleCandidates: getSimpleCandidates,   // M10:简单模式只读候选(不设 pushed;抽中即入词池供高亮)
+        noteWords: noteWords,               // M10:开场本地转换的嵌入词入词池(供高亮/点查)
         /* R1 生词回投取样:续写注入用;优先复习到期→未掌握新学→眼熟补位;只取单词(expression 跳过),≤10;未加载时静默触发拉取 */
         reviewVocabSample: function (max) {
             if (!vocabLoaded) { loadVocab(function () {}); return []; }

@@ -15412,6 +15412,68 @@ function openNpcProfile(npcId) {
             });
         }
         // M9A:语言卡(英语)开局确认后的正式启动——英文会话存储键已由 LangEngine 会话标志接管(StateService.init 读 -lang 档);
+        /* M10 简单模式开场:预烤双语 lines → 中文正文+目标语词嵌入(本地转换,零 AI)。
+           每行取 zh 为正文;words 中「中文义出现在该行」的词在其首现处替换为目标语形;未命中不嵌;
+           ja 词带 reading 时附假名(きっさてん)。返回 {story, words:[{w,zh}]},无预烤数据返回 null */
+        function buildSimpleOpening(scene, presetName, stateName) {
+            const bi = scene && scene.bilingual;
+            if (!bi || !Array.isArray(bi.lines) || !bi.lines.length) return null;
+            let _lang = "en";
+            try { _lang = window.LangEngine.targetLang() || "en"; } catch (e) {}
+            const CJK_CHAR = /[぀-ヿ㐀-䶿一-鿿가-힯]/;
+            const picked = [], _seenW = {}, lines = [];
+            for (let i = 0; i < bi.lines.length; i++) {
+                const ln = bi.lines[i] || {};
+                let zh = String(ln.zh || "").trim();
+                if (!zh) continue;
+                if (presetName && stateName && stateName !== presetName) zh = zh.split(presetName).join(stateName);
+                const words = Array.isArray(ln.words) ? ln.words.filter((x) => x && x.w) : [];
+                /* 词的中文义按出现位置排序,依次替换(每次都在当前文本上重找位置,防插入后位移错乱) */
+                const list = [];
+                for (let j = 0; j < words.length; j++) {
+                    const raw = String(words[j].zh || "").trim().replace(/^[a-z]+\.\s*/i, "");
+                    if (!raw) continue;
+                    const parts = raw.split(/[；;，,、/]/).map((s) => s.trim()).filter(Boolean);
+                    let at = -1, mean = "";
+                    for (let k = 0; k < parts.length; k++) {
+                        const p = zh.indexOf(parts[k]);
+                        if (p >= 0 && (at < 0 || p < at)) { at = p; mean = parts[k]; }
+                    }
+                    if (at < 0) continue;
+                    list.push({ w: String(words[j].w), mean: mean, at: at, reading: String(words[j].reading || "").trim() });
+                }
+                list.sort((a, b) => a.at - b.at);
+                let out = zh;
+                for (let k = 0; k < list.length; k++) {
+                    const it = list[k];
+                    if (_seenW[it.w.toLowerCase()]) continue;   // 同一个词整场只嵌一次
+                    const pos = out.indexOf(it.mean);
+                    if (pos < 0) continue;
+                    let rep = it.w;
+                    if (_lang === "ja" && it.reading) rep = it.w + "（" + it.reading + "）";
+                    const before = out.slice(0, pos), after = out.slice(pos + it.mean.length);
+                    /* 拉丁词紧贴汉字时补空格(「一杯coffee」→「一杯 coffee」) */
+                    const needL = /^[A-Za-z]/.test(rep) && CJK_CHAR.test(before.slice(-1));
+                    const needR = /[A-Za-z]$/.test(rep) && CJK_CHAR.test(after.slice(0, 1));
+                    out = before + (needL ? " " : "") + rep + (needR ? " " : "") + after;
+                    _seenW[it.w.toLowerCase()] = 1;
+                    picked.push({ w: it.w, zh: it.mean });
+                }
+                lines.push(out);
+            }
+            if (!lines.length) return null;
+            /* 段落组装:对话(以引号起)独立成行;叙述句攒到一小段 */
+            const paras = [];
+            let buf = "";
+            const flush = () => { if (buf) { paras.push(buf); buf = ""; } };
+            for (let i = 0; i < lines.length; i++) {
+                const l = lines[i];
+                if (/^[“「『"']/.test(l)) { flush(); paras.push(l); }
+                else { buf = buf ? buf + l : l; if (buf.length >= 60) flush(); }
+            }
+            flush();
+            return { story: paras.join("\n\n"), words: picked };
+        }
         // 首轮沿用英语卡结构化 first_scene 本地渲染(零 AI),无则交模型按 system 指令生成;取消路径不在此处(closeInitPreviewModal 还原)
         async function startLangNewGame(langCtx) {
             const cardId = String(langCtx?.cardId || "");
@@ -15447,6 +15509,35 @@ function openNpcProfile(npcId) {
                 const _st = ScenarioCardService.getSelectedCard()?.structured;
                 if (_st && String(_st.band || "").trim() && _st.first_scene && String(_st.first_scene.story || "").trim()) nativeScene = _st.first_scene;
             } catch (e) {}
+            /* M10 简单模式:有预烤双语 → 本地转「中文正文+目标语词嵌入」(零 AI);无预烤/转换失败 → 首轮交 AI 兜底 */
+            let _simpleOpen = false;
+            try { _simpleOpen = !!(nativeScene && window.LangEngine.effectiveImmersion() === "simple"); } catch (e) {}
+            if (_simpleOpen) {
+                let done = false;
+                try {
+                    const st2 = StateService.get();
+                    const presetName = String(ScenarioCardService.getSelectedCard()?.structured?.identity?.name || "").trim();
+                    const stateName = String(st2?.name || "").trim();
+                    const so = buildSimpleOpening(nativeScene, presetName, stateName);
+                    if (so) {
+                        const w = ScenarioCardService.getSelectedCard()?.structured?.world || {};
+                        try { if (window.LangAssist && window.LangAssist.noteWords) window.LangAssist.noteWords(so.words, "gloss"); } catch (e) {}
+                        const fsHtml = FillProtocolService.fillCardTemplate(FillProtocolService.getCardTheme(), {
+                            story: so.story,
+                            options: (Array.isArray(nativeScene.options) ? nativeScene.options : []).slice(0, 4),
+                            scene: String(w.genre || w.era || "Opening").slice(0, 40)
+                        });
+                        UIRenderer.appendMessage("ai", fsHtml, Utils.nowDateStr(st2), false);
+                        StateService.pushHistory({ role: "ai", date: Utils.nowDateStr(st2), text: fsHtml });
+                        StateService.save();
+                        UIRenderer.renderTop(StateService.get());
+                        done = true;
+                    }
+                } catch (e) { console.warn("[LangEngine] 简单模式开场渲染:", e); done = false; }
+                if (done) return;
+                try { await ChatService.requestAI("Begin the first scene of this story."); } catch (e) { console.warn("[LangEngine] 英语开局请求失败:", e); }
+                return;
+            }
             if (nativeScene) {
                 try {
                     const st2 = StateService.get();
@@ -17088,10 +17179,33 @@ function openNpcProfile(npcId) {
         // M7a 渐进沉浸状态机:scaffold(前 IMM_SCAFFOLD_ROUNDS 轮,生成侧可附〔小译〕+ 辅助侧译卡自动展开)
         //                    → fade(第 3 轮起,纯英语,辅助手动)             [一处定义,生成侧/辅助侧共用;round 由档历史推导,切设备随云档一致]
         const IMM_SCAFFOLD_ROUNDS = 2;
+        /* M10 简单模式(2026-10-06):immersion="simple" —— 中文正文混 3-6 个目标语词,全量用户新默认。
+           imm_v=2 版本化迁移:一次性把(空/progressive)→simple,full 保留;迁移后再选 progressive 保持生效。
+           effectiveImmersion 要求 progressive 必须带 imm_v≥2 才认 —— 挡住「旧缓存客户端把陈旧 progressive
+           回灌云档/本地」把迁移结果顶掉(旧值永远缺 imm_v)。 */
+        const IMM_VERSION = 2;
+        function effectiveImmersion(p) {
+            const pr = p || readProfile();
+            const raw = String(pr.immersion || "");
+            if (raw === "full") return "full";
+            if (raw === "progressive" && Number(pr.imm_v || 0) >= IMM_VERSION) return "progressive";
+            return "simple";
+        }
+        /* 幂等迁移:imm_v 缺失才执行;返回 changed 供调用方决定要不要 saveRemote */
+        function migrateImmersion(p) {
+            const pr = p || readProfile();
+            const changed = Number(pr.imm_v || 0) < IMM_VERSION;
+            if (changed) {
+                if (pr.immersion !== "full") pr.immersion = "simple";
+                pr.imm_v = IMM_VERSION;
+                writeProfile(pr);
+            }
+            return { profile: pr, changed };
+        }
         function immStage(round) {
-            const p = readProfile();
-            const imm = p.immersion === "full" ? "full" : "progressive";
+            const imm = effectiveImmersion();
             if (imm === "full") return { mode: "full" };
+            if (imm === "simple") return { mode: "simple", round };
             if (round <= IMM_SCAFFOLD_ROUNDS) return { mode: "scaffold", round, limit: IMM_SCAFFOLD_ROUNDS };
             return { mode: "fade", round };
         }
@@ -17167,6 +17281,7 @@ function openNpcProfile(npcId) {
         }
         function hasLanguageViolation(raw) {
             try {
+                if (effectiveImmersion() === "simple") return false; // M10 简单模式:中文正文合法,不做语种违规判定(渐进/全沉浸路径零变化)
                 const lang = targetLang();
                 const t = String(raw || "").trim();
                 if (!t) return false;
@@ -17194,6 +17309,72 @@ function openNpcProfile(npcId) {
                 + "- Output the JSON object only — no explanations, no code fences.\n\n"
                 + "Previous answer to rewrite:\n" + prev;
         }
+        /* R1 恋爱攻略:love_mode 卡指令块(选项对象带 love 标签/锁定名单/好感快照/心动字段)。
+           M10:simple=true 时正文是中文,两处嵌语言的地方换中文口径;simple=false 输出与旧版逐字一致 */
+        function loveBlockOf(LG, simple) {
+            try {
+                const _c = ScenarioCardService.getSelectedCard();
+                const _st = _c && _c.structured;
+                if (!(_st && _st.love_mode === true)) return "";
+                const _LE = window.LoveEngine;
+                if (!_LE) return "";
+                const _state = StateService.get();
+                const _ls = _LE.loveStateOf(_state);
+                const _locked = _LE.lockedNpcOf(_state, _ls);
+                const names = ((_state && _state.npcs) || []).map((x) => String(x.name || "")).filter(Boolean);
+                const rel = ((_state && _state.npcs) || []).map((x) => `${x.name}(favor ${x.favor},affection ${x.affection ?? 0})`).join("; ");
+                const lockedLine = _locked
+                    ? "ROMANCE LOCK IS ON with " + _locked.name + ": keep deepening that bond. Every OTHER character must stay friendly background only — no romantic tension, flirting or advances with them from now on."
+                    : "No romance lock yet, so scenes with any candidate are allowed; the system locks automatically once one bond crosses the lock threshold.";
+                const optShape = simple
+                    ? "{\"text\":\"<选项文本（简体中文）>\",\"love\":\"flirt|kind|tease|neutral|awkward|rude|reject\",\"target\":\"<候选角色名；不涉及角色时可省略>\"}"
+                    : "{\"text\":\"<option text in " + LG + ">\",\"love\":\"flirt|kind|tease|neutral|awkward|rude|reject\",\"target\":\"<candidate name from the list; omit only when the option involves no candidate>\"}";
+                const heartbeatSpec = simple
+                    ? "\"heartbeat\":{\"npc\":\"<candidate>\",\"en\":\"<one line copied verbatim from your story (the Chinese line)>\",\"zh\":\"<its short " + LG + " rendering>\"}"
+                    : "\"heartbeat\":{\"npc\":\"<candidate>\",\"en\":\"<one heartfelt line in " + LG + " that appears verbatim in your story>\",\"zh\":\"<natural short Chinese translation>\"}";
+                const tailSpec = simple
+                    ? " 嵌入词与选项措辞尽量贴近难度档词库（见难度基调规则）——词汇过难只在剧情确需时使用。"
+                        + "（本模式选项一律用上面的对象形状，不要用字符串数组形状。）"
+                    : " Dialogue and option wording should stay inside the target band vocabulary (rule 4) — a harder word is acceptable only when the scene truly needs it."
+                        + " (Ignore the string-array options shape shown in rule 7 — in this mode always use the object shape above.)";
+                return "ROMANCE ROUTE MODE — this is a romance game; your romance candidates are: " + (names.join(", ") || "(list from world bible)")
+                    + ". Options MUST be JSON objects in the options array: " + optShape + ". love means: flirt=romantic advance, kind=warm caring, tease=playful banter, neutral=plain, awkward=embarrassing misfire, rude=harsh, reject=pushing away; choose it honestly from what the option says. Give 2-3 options with at least one positive (flirt/kind/tease) aimed at the current scene partner. Never put favor/affection into any state-patch — the engine manages those two values itself. Write natural romance beats that escalate gradually with affection (small tension, eye contact, shared moments); the player's choices decide the pace. Current affection snapshot: " + rel + ". " + lockedLine
+                    + " At a real peak moment (first shared glance, near-confession, decisive touch) you may add the optional JSON field " + heartbeatSpec + " — at most one heartbeat per 3 rounds, never force it."
+                    + tailSpec;
+            } catch (e) { return ""; }
+        }
+        /* M10 简单模式注入块:整块替换 LANGUAGE LOCK(中文正文 + 目标语词嵌入);候选=复习词优先+词库抽样 */
+        function buildSimpleInjection(LG, band, tone) {
+            const _tl = targetLang();
+            let recallWords = [];
+            try { const _la = window.LangAssist; if (_la && _la.reviewVocabSample) recallWords = _la.reviewVocabSample(10) || []; } catch (e) { recallWords = []; }
+            let bankWords = [];
+            try { const _la = window.LangAssist; if (_la && _la.getSimpleCandidates) bankWords = _la.getSimpleCandidates(8) || []; } catch (e) { bankWords = []; }
+            const _seen = {};
+            const pool = [];
+            recallWords.concat(bankWords).forEach((x) => { const k = String(x || "").trim(); if (k && !_seen[k.toLowerCase()]) { _seen[k.toLowerCase()] = 1; pool.push(k); } });
+            const candLine = pool.length
+                ? "候选词（复习词在前，越靠前越优先）：" + pool.join("、") + "。从中挑 3-6 个嵌入 story；挑不满、用不上都没关系，剧情自然永远优先。"
+                : "";
+            const jaRule = _tl === "ja" ? "日语词优先写假名（如 コーヒー）；必须用汉字词时在词后附假名读音，如 喫茶店（きっさてん）。" : "";
+            const koRule = _tl === "ko" ? "韩语词直接以韩文写法嵌入，如 카페。" : "";
+            const loveBlock = loveBlockOf(LG, true);
+            return [
+                "[SIMPLE MODE 简单模式 —— 本模式下语言规则与常规语言卡相反，以下规则优先级最高]",
+                "目标语言：" + LG + "。",
+                "1) \"title\"、\"story\"、\"options\" 一律用自然流畅的简体中文书写。本模式下中文是正文主体语言，是正确输出，绝不是违规。",
+                "2) 卡内【设定文本】可能用 " + LG + " 或中文书写：世界观、人物、规则照旧，续写时一律转成简体中文表达；原文尽量不要整句照抄（嵌入词除外）。",
+                "3) 从候选词里挑 3-6 个 " + LG + " 词自然嵌进 story——像中文里夹用外来词一样（例：「她点了一杯 coffee」）。" + jaRule + koRule + "不要为凑数硬塞。",
+                "4) 嵌入词会高亮显示、读者点击可查词义：让词义能从上下文直接读懂，一句里别堆多个生词。",
+                "5) story ≈150-300 个中文字，分几段写，对话独立成行；开场直接进入场景（in medias res）。",
+                "6) 除嵌入的 " + LG + " 词以外，story 里不出现其他外文；不要输出 bilingual 字段或任何逐句译文。",
+                "7) \"time\" 字段保持引擎中文数值格式，例如 \"5月15日\" 或 \"第3年5月15日\"。",
+                "8) 难度基调：" + band + (tone ? "；" + tone : "") + "。",
+                candLine ? "9) " + candLine : "",
+                "10) 只回固定 JSON：{\"title\":\"<简短中文场景名>\",\"time\":\"...\",\"story\":\"...\",\"options\":[\"<中文选项>\",\"...\"]}，2-3 个中文选项。",
+                loveBlock ? "11) " + loveBlock : ""
+            ].filter(Boolean).join("\n");
+        }
         function buildInjection() {
             if (!session.cardId) return "";
             const LG = LANG_MAP[targetLang()] || "English";
@@ -17212,6 +17393,7 @@ function openNpcProfile(npcId) {
             let isLangCard = false;
             try { isLangCard = !!(ScenarioCardService.getSelectedCard()?.structured?.band); } catch (e) {}
             const stg = immStage(round);
+            if (stg.mode === "simple") return buildSimpleInjection(LG, band, tone); // M10:简单模式整块替换,不进 LANGUAGE LOCK 路径(也不触发 getChapterWords 的 pushed)
             const immText = stg.mode === "full"
                 ? "FULL IMMERSION — " + LG + " only; absolutely no Chinese lines anywhere."
                 : (stg.mode === "scaffold"
@@ -17225,28 +17407,7 @@ function openNpcProfile(npcId) {
                     + " — story and tone come first; tense and word form may change freely, and it is fine to use only one or two, or skip them entirely when the scene does not call for them."
                 : "";
             /* R1 恋爱攻略:love_mode 卡指令块(选项对象带 love 标签/锁定名单/好感快照/心动字段) */
-            const loveBlock = (() => {
-                try {
-                    const _c = ScenarioCardService.getSelectedCard();
-                    const _st = _c && _c.structured;
-                    if (!(_st && _st.love_mode === true)) return "";
-                    const _LE = window.LoveEngine;
-                    if (!_LE) return "";
-                    const _state = StateService.get();
-                    const _ls = _LE.loveStateOf(_state);
-                    const _locked = _LE.lockedNpcOf(_state, _ls);
-                    const names = ((_state && _state.npcs) || []).map((x) => String(x.name || "")).filter(Boolean);
-                    const rel = ((_state && _state.npcs) || []).map((x) => `${x.name}(favor ${x.favor},affection ${x.affection ?? 0})`).join("; ");
-                    const lockedLine = _locked
-                        ? "ROMANCE LOCK IS ON with " + _locked.name + ": keep deepening that bond. Every OTHER character must stay friendly background only — no romantic tension, flirting or advances with them from now on."
-                        : "No romance lock yet, so scenes with any candidate are allowed; the system locks automatically once one bond crosses the lock threshold.";
-                    return "ROMANCE ROUTE MODE — this is a romance game; your romance candidates are: " + (names.join(", ") || "(list from world bible)")
-                        + ". Options MUST be JSON objects in the options array: {\"text\":\"<option text in " + LG + ">\",\"love\":\"flirt|kind|tease|neutral|awkward|rude|reject\",\"target\":\"<candidate name from the list; omit only when the option involves no candidate>\"}. love means: flirt=romantic advance, kind=warm caring, tease=playful banter, neutral=plain, awkward=embarrassing misfire, rude=harsh, reject=pushing away; choose it honestly from what the option says. Give 2-3 options with at least one positive (flirt/kind/tease) aimed at the current scene partner. Never put favor/affection into any state-patch — the engine manages those two values itself. Write natural romance beats that escalate gradually with affection (small tension, eye contact, shared moments); the player's choices decide the pace. Current affection snapshot: " + rel + ". " + lockedLine
-                        + " At a real peak moment (first shared glance, near-confession, decisive touch) you may add the optional JSON field \"heartbeat\":{\"npc\":\"<candidate>\",\"en\":\"<one heartfelt line in " + LG + " that appears verbatim in your story>\",\"zh\":\"<natural short Chinese translation>\"} — at most one heartbeat per 3 rounds, never force it."
-                        + " Dialogue and option wording should stay inside the target band vocabulary (rule 4) — a harder word is acceptable only when the scene truly needs it."
-                        + " (Ignore the string-array options shape shown in rule 7 — in this mode always use the object shape above.)";
-                } catch (e) { return ""; }
-            })();
+            const loveBlock = loveBlockOf(LG, false);
             /* R1 生词回投(所有 lang 卡通用,D5/D18):从用户生词本按复习优先级取样 ≤10,语境自然处重遇;不强用、剧情优先 */
             let recallWords = [];
             try { const _la = window.LangAssist; if (_la && _la.reviewVocabSample) recallWords = _la.reviewVocabSample(10) || []; } catch (e) { recallWords = []; }
@@ -17361,6 +17522,6 @@ function openNpcProfile(npcId) {
             await prepareInitPreview(gender, false, {}, { cardId: id, metaId: metaId });
             return { mode: "confirm" };
         }
-        return { isLangSession, buildInjection, restoreIfNeeded, exitToChinese, enter, langSaveKey, hasLangSave, immStage, targetLang, hasLanguageViolation, buildLanguageFixPrompt };
+        return { isLangSession, buildInjection, restoreIfNeeded, exitToChinese, enter, langSaveKey, hasLangSave, immStage, targetLang, hasLanguageViolation, buildLanguageFixPrompt, effectiveImmersion, migrateImmersion, IMM_VERSION };
     })();
     window.LangEngine = LangEngine;
