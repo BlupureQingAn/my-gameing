@@ -21,6 +21,7 @@ if (!glossEmail || !glossPassword) { console.error("缺少 --gloss-email/--gloss
 const AUTH_URL = (args["pb-auth-url"] || "https://db.blupure.cn").replace(/\/$/, "");
 const GLOSS_URL = (args["gloss-url"] || "https://ai.blupure.cn").replace(/\/$/, "");
 const SLEEP_MS = args["sleep-ms"] !== undefined ? Number(args["sleep-ms"]) : 6500;
+const BATCH = Math.max(1, Math.min(10, Number(args.batch) || 10));   // 批大小(≤10=worker 上限);个别卡的句子组合会触发上游 JSON 坏输出→503,可调小避让
 
 // ---- 切句:复制前端 LangAssist cutSentences + ABBR(须与其保持同步,勿单独演化) ----
 const ABBR = { "mr": 1, "mrs": 1, "ms": 1, "dr": 1, "st": 1, "vs": 1, "etc": 1, "e.g": 1, "i.e": 1, "no": 1, "inc": 1, "ltd": 1, "co": 1, "jr": 1, "sr": 1, "prof": 1, "capt": 1, "jan": 1, "feb": 1, "mar": 1, "apr": 1, "jun": 1, "jul": 1, "aug": 1, "sep": 1, "sept": 1, "oct": 1, "nov": 1, "dec": 1, "mt": 1, "rd": 1, "ave": 1, "approx": 1 };
@@ -143,11 +144,24 @@ async function main() {
         }
         return batch.filter((s) => String(zhBy.get(s)?.zh || "").trim()).length;
     }
-    for (let i = 0; i < sentences.length; i += 10) {
-        const batch = sentences.slice(i, i + 10);
-        const got = await translateBatch(batch);
-        console.log(`  ✓ 批 ${Math.floor(i / 10) + 1}: ${got}/${batch.length} 句`);
-        if (i + 10 < sentences.length) await new Promise((r) => setTimeout(r, SLEEP_MS));
+    /* 批失败(503=上游链全挂/JSON 坏输出)自动对半拆重试;单句仍失败才中止 */
+    async function translateBatchSafe(batch) {
+        try { return await translateBatch(batch); }
+        catch (e) {
+            if (batch.length <= 1) throw e;
+            const mid = Math.ceil(batch.length / 2);
+            console.log(`  ↻ 批失败(${batch.length} 句,${String(e.message).slice(0, 50)}),对半拆重试`);
+            const a = await translateBatchSafe(batch.slice(0, mid));
+            await new Promise((r) => setTimeout(r, SLEEP_MS));
+            const b2 = await translateBatchSafe(batch.slice(mid));
+            return a + b2;
+        }
+    }
+    for (let i = 0; i < sentences.length; i += BATCH) {
+        const batch = sentences.slice(i, i + BATCH);
+        const got = await translateBatchSafe(batch);
+        console.log(`  ✓ 批 ${Math.floor(i / BATCH) + 1}: ${got}/${batch.length} 句`);
+        if (i + BATCH < sentences.length) await new Promise((r) => setTimeout(r, SLEEP_MS));
     }
     // 模型偶发漏句/缺词注:单句聚焦重试 ≤2 轮(单句请求命中率高,连 words 一起补;
     // 群故障日批量 zh 多由有道兜底填充→words 恒空,单句轮可换成完整 AI 词注)
