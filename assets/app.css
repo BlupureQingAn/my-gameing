@@ -4544,7 +4544,23 @@
             opacity: 1 !important;
             filter: none !important;
         }
-        body[data-theme="dark"]
+        /* 剧本卡标题是「卡内标题」，不是区块标题——它只是继承了基类 .list-title 的
+           衬线 + fs-4(19px) + 字重600 + 字距，整屏 18 张卡时每张都顶格大字，标题比内容还抢眼。
+           这里降到卡内层级：无衬线 + fs-3(15px) + 字重500。
+           换 sans 而不是「衬线缩小」，是因为 app.css「列表」一节写明中文衬线低于 16px 在 Windows 上
+           会糊；缩字号又留衬线会掉进这个坑，换无衬线则 15px 依然清晰，且语义上正好和
+           区块标题（衬线大字）拉开层级——同页里「剧本库」是区块标题，卡名是卡内标题，本来就该不同脸。 */
+        #scenario-card-list .list-title,
+        #lang-lib-grid .list-title {
+            font-family: var(--font-sans);
+            font-size: var(--fs-3);
+            font-weight: 500;
+            letter-spacing: 0;
+        }
+        /* 两行截断：原来这组规则挂在 body[data-theme="dark"] 后面却漏了逗号，
+           于是选择器变成「暗色主题下的 #scenario-card-list .list-title」，
+           亮色模式完全没吃到 line-clamp——同一张卡在两个主题下标题高度不一致。
+           截断与主题无关，提到主题选择器外面，两边一致。 */
         #scenario-card-list .list-title,
         #lang-lib-grid .list-title {
             line-height: 1.3;
