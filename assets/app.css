@@ -3462,11 +3462,12 @@
         .hb-plays { font-size: var(--fs-2); color: var(--sub); }
         .hb-play-btn { font-size: var(--fs-2); flex: none; padding: 6px 10px; }
         .hb-detail { font-size: var(--fs-2); flex: none; margin-left: auto; margin-right: 6px; padding: 6px 10px; }
-        /* B1：轮播卡封面区（官方卡静态封面；无封面时渐变+动效占位） */
+        /* B1：轮播卡封面区（官方卡静态封面；无封面时渐变+动效占位）
+           2026-10-18：4/3 → 3/4，与 .scenario-card-cover 同步（同为官方卡封面） */
         .hb-cover {
             position: relative;
             width: 100%;
-            aspect-ratio: 4 / 3;
+            aspect-ratio: 3 / 4;
             border-radius: 10px;
             overflow: hidden;
             display: flex;
@@ -3488,10 +3489,10 @@
         .hb-cover.has-cover .scc-emoji { display: none; }
         .hb-cover.has-cover { box-shadow: none; }
         body[data-theme="dark"]
-        /* B1：推荐榜 top3 小封面 */
+        /* B1：推荐榜 top3 小封面（2026-10-18：4/3 → 3/4，与官方卡封面同步） */
         .rank-cover {
             width: 48px;
-            aspect-ratio: 4 / 3;
+            aspect-ratio: 3 / 4;
             border-radius: 8px;
             flex: none;
             position: relative;
@@ -3743,7 +3744,9 @@
            背景用 background-color（不是 background 简写），因为 JS 会单独设 background-image。 */
         .sf-cover-preview {
             width: 100%;
-            aspect-ratio: 4 / 3;
+            /* 2026-10-18：4/3 → 3/4。官方卡封面统一改竖版后，
+               编辑页预览不同步会把竖版图上下切掉（书名和类别看不到）。 */
+            aspect-ratio: 3 / 4;
             border: 1px solid var(--line);
             border-radius: 10px;
             background-color: var(--card-soft);
@@ -4505,7 +4508,11 @@
         .scenario-card-cover {
             position: relative;
             width: 100%;
-            aspect-ratio: 4 / 3;
+            /* 2026-10-18：4/3 → 3/4。
+               封面已改为实体书风格的竖版图（864×1152），容器必须同步改比例，
+               否则 object-fit:cover 会把竖版图裁掉上下两头（书名和类别都会被切掉）。
+               竖版同时让一屏能扫到的卡片数量更多（轮廓更窄，扫视效率高）。 */
+            aspect-ratio: 3 / 4;
             border-radius: 10px;
             overflow: hidden;
             display: flex;

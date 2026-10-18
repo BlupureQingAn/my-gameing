@@ -10,3 +10,7 @@ redo_presets.py
 .vscode/
 # lucide 只在构建期取图标 path（产物是内联 SVG 字面量，运行时不依赖），27MB 不入库
 node_modules/
+# 封面原图备份（2026-10-18 全量重做封面前留的回滚依据，18MB 二进制不入库）
+# 恢复方法：直接从 git 取旧版本 `git checkout HEAD -- scenarios/covers/`
+backups/covers_backup_*/
+backups/*.bak-*
