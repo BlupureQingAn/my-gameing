@@ -9462,10 +9462,14 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             if (code === "BYO_UPSTREAM_UNREACHABLE") return "连不上你填写的 API 地址，请检查地址或服务状态";
             // 自带 API 透传(2026-10-20):用户端点的错误体形如 {"error":{"message":"..."}},
             // 不带 worker 业务码。不提取的话用户只看到 "HTTP 401",完全无从排查。
+            // ⚠️ 仅 BYO 模式提取——官方池的 error 是 worker 自己的文案,不能标成"自有 API"。
             try {
-                const j = JSON.parse(bodyText);
-                const m = j && j.error && (typeof j.error === "string" ? j.error : j.error.message);
-                if (m) return "自有 API 报错：" + String(m).slice(0, 200);
+                const byo = window.ByoApiService;
+                if (byo && byo.isReady()) {
+                    const j = JSON.parse(bodyText);
+                    const m = j && j.error && (typeof j.error === "string" ? j.error : j.error.message);
+                    if (m) return "自有 API 报错：" + String(m).slice(0, 200);
+                }
             } catch (e) { /* 非 JSON 或没有 error 字段,走默认文案 */ }
             return "";
         }
