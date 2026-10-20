@@ -180,13 +180,22 @@
         function writeJson(key, value) {
             localStorage.setItem(key, JSON.stringify(value));
         }
+        // 2026-10-20 问题五:loadCards 每次渲染都全量写回整个剧本库(搜索框每敲一个键
+        // 就是一次 stringify+setItem,主线程卡顿)。序列化结果与 LS 现值相同就跳过写入。
+        // 首次迁移/补齐仍会写(字符串不同),行为不变。
+        function writeJsonIfChanged(key, value) {
+            const s = JSON.stringify(value);
+            if (localStorage.getItem(key) === s) return false;
+            localStorage.setItem(key, s);
+            return true;
+        }
         function readText(key, fallback = "") {
             return localStorage.getItem(key) || fallback;
         }
         function writeText(key, value) {
             localStorage.setItem(key, value);
         }
-        return { readJson, writeJson, readText, writeText };
+        return { readJson, writeJson, writeJsonIfChanged, readText, writeText };
     })();
 
     const ThemeService = (() => {
@@ -7547,11 +7556,11 @@ function rebuildChoicesBlock(body, labels = []) {
                 const missing = official.filter((c) => !existingIds.has(String(c.id || "")));
                 const merged = [...refreshed, ...Utils.deepClone(missing)];
                 const replenished = normalizeCards(merged);
-                StorageService.writeJson(AppConfig.storageKeys.scenarioCards, replenished);
+                StorageService.writeJsonIfChanged(AppConfig.storageKeys.scenarioCards, replenished);
                 return replenished;
             }
             const normalized = normalizeCards(cards);
-            StorageService.writeJson(AppConfig.storageKeys.scenarioCards, normalized);
+            StorageService.writeJsonIfChanged(AppConfig.storageKeys.scenarioCards, normalized);
             return normalized;
         }
         function saveCards(cards) {
