@@ -1898,6 +1898,42 @@
         /* 「暗夜模式」和「首页模式」两条行标题的长相已合并到「设置页」一节
            （.settings-toggle-l strong, .di-mode-row-l strong），此处不再单独定义。 */
 
+        /* 自带 API（2026-10-20 问题四）：设置页内的配置卡片 */
+        .byo-api-box {
+            margin-top: 10px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: 1px solid var(--line);
+            background: var(--card-soft);
+        }
+        .byo-field {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .byo-field-l {
+            flex: 0 0 88px;
+            font-size: var(--fs-2);
+            color: var(--sub);
+            font-weight: 600;
+        }
+        .byo-field input {
+            flex: 1;
+            min-width: 0;
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+            background: var(--card);
+            color: var(--text);
+            font-size: var(--fs-2);
+        }
+        .byo-field input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        #byo-pay-area .list-sub { margin-top: 6px; }
+
         /* 云卡选择器 */
         .cloud-card-item { cursor: pointer; display: block; }
         /* 旧云卡样式保留占位，避免规则错位 */

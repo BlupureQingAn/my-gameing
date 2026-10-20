@@ -5983,8 +5983,49 @@ function rebuildChoicesBlock(body, labels = []) {
         }
         function getApiConfig() {
             // 心脏锁定(2026-09-06):AI 请求一律经 worker 代跑(登录+Origin 双闸),云端模型池自动路由
-            return { upstreamUrl: AppConfig.proxy.baseUrl, key: "", model: "pool" };
+            const cfg = { upstreamUrl: AppConfig.proxy.baseUrl, key: "", model: "pool" };
+            // 自带 API(2026-10-20):启用后请求体原样透传到用户端点,"pool" 不是合法模型名,
+            // 必须换成用户配置的模型(留空则保持 "pool",由上游报错提示用户补填)
+            try {
+                const byo = window.ByoApiService;
+                if (byo && byo.isReady()) {
+                    const m = (byo.load().model || "").trim();
+                    if (m) cfg.model = m;
+                }
+            } catch (e) { /* 保持官方池 */ }
+            return cfg;
         }
+        // ── 自带 API（2026-10-20 问题四）────────────────────────────
+        // ¥5 一次性解锁后，用户可填自己的 OpenAI 兼容端点。Key 只存本浏览器
+        // localStorage（用户明确要求不落服务端）；请求仍走 worker，由 worker
+        // 透传到用户端点（浏览器直连第三方 API 有 CORS 墙，透传是唯一可行解）。
+        // worker 侧按 unlocks 记录判定解锁，不过池、不计免费额度/云币。
+        const ByoApiService = (() => {
+            const KEY = "bitlife_byo_api_v1";
+            function load() {
+                try {
+                    return JSON.parse(localStorage.getItem(KEY) || "") || {};
+                } catch (e) { return {}; }
+            }
+            function save(cfg) {
+                localStorage.setItem(KEY, JSON.stringify({
+                    enabled: !!cfg.enabled, base: String(cfg.base || "").trim(),
+                    key: String(cfg.key || ""), model: String(cfg.model || "").trim()
+                }));
+            }
+            function isReady() {
+                const c = load();
+                return !!(c.enabled && c.base && c.key);
+            }
+            function headers() {
+                // 已启用且配置齐全才注入；worker 缺一个头都会回退官方池
+                if (!isReady()) return {};
+                const c = load();
+                return { "X-User-Api-Base": c.base, "X-User-Api-Key": c.key };
+            }
+            return { load, save, isReady, headers };
+        })();
+        window.ByoApiService = ByoApiService;
         function getScenarioText() {
             const selected = ScenarioCardService.getSelectedCard();
             return selected?.text || AppConfig.defaultScenario;
@@ -9385,6 +9426,13 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             if (token) {
                 headers["X-Auth-Token"] = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
             }
+            // 自带 API(2026-10-20):用户已解锁且配置了自有端点 → 附带头部,
+            // worker 透传到用户端点;未配置则不带,走官方池
+            // (ByoApiService 定义在 SettingsService 作用域,跨模块走 window 引用)
+            try {
+                const byo = window.ByoApiService;
+                if (byo) Object.assign(headers, byo.headers());
+            } catch (e) { /* 静默回退官方池 */ }
             return headers;
         }
         function parseWorkerCode(bodyText) {
@@ -9408,6 +9456,17 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             if (code === "POOL_UNAVAILABLE") return "AI 服务暂时不可用，请稍后重试";
             if (code === "INSUFFICIENT_COIN") return "云币不足，请充值或开通会员后继续（开通会员可 AI 不限次）";
             if (code === "NOT_LOGGED_IN" || code === "SESSION_EXPIRED") return "登录状态已失效，请重新登录";
+            if (code === "BYO_NOT_UNLOCKED") return "自带 API 未解锁（「我的」页一次性 ¥5 开通）";
+            if (code === "BYO_CONFIG_INCOMPLETE") return "自带 API 配置不完整，请在「我的」页补全接口地址和 Key";
+            if (code === "BYO_BASE_INSECURE") return "自带 API 接口地址必须以 https:// 开头";
+            if (code === "BYO_UPSTREAM_UNREACHABLE") return "连不上你填写的 API 地址，请检查地址或服务状态";
+            // 自带 API 透传(2026-10-20):用户端点的错误体形如 {"error":{"message":"..."}},
+            // 不带 worker 业务码。不提取的话用户只看到 "HTTP 401",完全无从排查。
+            try {
+                const j = JSON.parse(bodyText);
+                const m = j && j.error && (typeof j.error === "string" ? j.error : j.error.message);
+                if (m) return "自有 API 报错：" + String(m).slice(0, 200);
+            } catch (e) { /* 非 JSON 或没有 error 字段,走默认文案 */ }
             return "";
         }
         // 免费额度耗尽提示：后端在本次调用已转云币计费时返回 X-Free-Exhausted 头，每会话仅提示一次
@@ -12999,6 +13058,8 @@ ${recent || "（无）"}
                 renderMyPageLists();
                 // 切入「我的」页重刷账户卡:第三方登录/换设备/后台改资料后首屏即回显最新昵称头像
                 try { if (typeof window.refreshProfileCard === "function") window.refreshProfileCard(); } catch (e) {}
+                // 自带 API(2026-10-20):进「我的」页查解锁状态并回显本地配置
+                try { if (window.ByoApiUI) window.ByoApiUI.init(); } catch (e) {}
             }
             if (viewId === "view-saves" && !silent) {
                 UIRenderer.renderSaveSlots(StateService.get());
@@ -15904,6 +15965,115 @@ function openNpcProfile(npcId) {
     function loadFromCloudSlot(index) { Controller.loadFromCloudSlot(index); }
     function deleteCloudSlot(index) { Controller.deleteCloudSlot(index); }
     function clearLocalCache() { Controller.clearLocalCache(); }
+
+    // ==================== ByoApiUI (自带 API:¥5 一次性解锁 + 本浏览器配置) ====================
+    // 2026-10-20 问题四。与 MembershipService 的充值面板相互独立：
+    // 解锁即 pay_orders 里一条 byo_api 已付订单（worker 按 unlocks 记录判定），
+    // Key/Base/模型名只写 localStorage（ByoApiService），请求头由 buildHeaders 注入。
+    const ByoApiUI = (() => {
+        let _unlocked = false;
+        let _pollTimer = null;
+        const $ = (id) => document.getElementById(id);
+
+        function statusText() {
+            return _unlocked ? "已解锁（一次性购买，永久有效）" : "未解锁";
+        }
+        function render() {
+            const line = $("byo-status-line");
+            if (line) line.textContent = statusText();
+            const btn = $("byo-unlock-btn");
+            if (btn) btn.style.display = _unlocked ? "none" : "";
+            const box = $("byo-config-box");
+            if (box) box.style.display = _unlocked ? "" : "none";
+            const cfg = window.ByoApiService ? window.ByoApiService.load() : {};
+            const en = $("byo-enabled");
+            if (en) en.checked = !!cfg.enabled;
+            if ($("byo-base") && document.activeElement !== $("byo-base")) $("byo-base").value = cfg.base || "";
+            if ($("byo-key") && document.activeElement !== $("byo-key")) $("byo-key").value = cfg.key || "";
+            if ($("byo-model") && document.activeElement !== $("byo-model")) $("byo-model").value = cfg.model || "";
+        }
+        async function refreshStatus() {
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/byo/status`, {
+                    headers: { "X-Auth-Token": AuthService.getToken() }
+                });
+                const d = await res.json().catch(() => ({}));
+                _unlocked = !!d.unlocked;
+            } catch (e) { /* 网络异常保持原状态 */ }
+            render();
+        }
+        function save() {
+            const cfg = {
+                enabled: !!($("byo-enabled") || {}).checked,
+                base: ($("byo-base") || {}).value || "",
+                key: ($("byo-key") || {}).value || "",
+                model: ($("byo-model") || {}).value || ""
+            };
+            if (cfg.enabled && (!cfg.base || !cfg.key || !cfg.model)) {
+                NoticeModalService.showInfo({ title: "配置不完整", descHtml: "启用自带 API 需要填写「接口地址」「Key」「模型名」三项（模型名示例：deepseek-chat）。" });
+                return;
+            }
+            if (cfg.base && !/^https:\/\//i.test(cfg.base.trim())) {
+                NoticeModalService.showInfo({ title: "地址格式不对", descHtml: "接口地址必须以 https:// 开头，例如 https://api.deepseek.com/v1" });
+                return;
+            }
+            window.ByoApiService.save(cfg);
+            NoticeModalService.showInfo({ title: "已保存", descHtml: cfg.enabled ? "已切换为自带 API，后续 AI 请求将走你填写的接口。" : "已保存，当前使用官方模型池。" });
+            render();
+        }
+        function stopPoll() { if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; } }
+        function startPoll(orderNo) {
+            stopPoll();
+            _pollTimer = setInterval(async () => {
+                try {
+                    const res = await fetch(`${AppConfig.proxy.baseUrl}/api/pay/status?out_trade_no=${encodeURIComponent(orderNo)}`, {
+                        headers: { "X-Auth-Token": AuthService.getToken() }
+                    });
+                    const d = await res.json();
+                    const st = Array.isArray(d.status) ? d.status[0] : d.status;
+                    if (st === "paid") {
+                        stopPoll();
+                        NoticeModalService.showInfo({ title: "支付成功", descHtml: "自带 API 已解锁，填写你的接口信息即可使用。" });
+                        await refreshStatus();
+                    }
+                } catch (e) {}
+            }, 3000);
+        }
+        async function unlock() {
+            const user = AuthService.getUserData();
+            if (!user) { NoticeModalService.showInfo({ title: "提示", descHtml: "请先登录" }); return; }
+            const area = $("byo-pay-area");
+            TopLoader.show("创建订单中...");
+            try {
+                const res = await fetch(`${AppConfig.proxy.baseUrl}/api/pay/create`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "X-Auth-Token": AuthService.getToken() },
+                    body: JSON.stringify({ planId: "byo_api", payType: "wxpay" })
+                });
+                const d = await res.json().catch(() => ({}));
+                if (!res.ok || (!d.jumpUrl && !d.qrUrl)) throw new Error(d.error || "创建订单失败");
+                if (area) {
+                    area.innerHTML = d.qrUrl && !d.jumpUrl
+                        ? `<div class="list-sub">订单号：${d.orderNo}</div>
+                           <img src="${d.qrUrl}" alt="微信支付二维码" style="width:180px;height:180px;margin:10px auto;display:block;border-radius:8px;padding:4px;">
+                           <div class="list-sub">二维码 5 分钟内有效，扫码后完成支付</div>`
+                        : `<div class="list-sub">订单号：${d.orderNo}</div>
+                           <a class="mini-btn primary" style="display:inline-block;text-decoration:none;margin-top:8px;" href="${d.jumpUrl}" target="_blank" rel="noopener">前往收银台支付 ¥5</a>
+                           <div class="list-sub" style="margin-top:6px;">支付完成后本页会自动刷新解锁状态</div>`;
+                }
+                startPoll(d.orderNo);
+            } catch (e) {
+                if (area) area.innerHTML = `<div class="list-sub" style="color:var(--danger);">${MarkdownService.escapeHtml(e.message || "创建订单失败")}</div>`;
+            } finally {
+                TopLoader.hide();
+            }
+        }
+        function init() {
+            refreshStatus();
+        }
+        return { init, refreshStatus, save, unlock, render };
+    })();
+    window.ByoApiUI = ByoApiUI;
 
     // ==================== MembershipService (会员开通/续费) ====================
     const MembershipService = (() => {

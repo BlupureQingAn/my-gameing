@@ -146,7 +146,7 @@
         ]
     }
     </script>
-    <link rel="stylesheet" href="assets/app.min.css?v=20261020a">
+    <link rel="stylesheet" href="assets/app.min.css?v=20261020b">
 </head>
 <body>
 
@@ -824,6 +824,38 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                         <button type="button" class="di-seg-btn" id="set-mode-play" onclick="ModeGate.pick('play', true)">玩文游</button>
                     </span>
                 </div>
+                <!-- 自带 API（2026-10-20 问题四）：¥5 一次性解锁，Key 只存本浏览器 -->
+                <div class="byo-api-box">
+                    <div class="list-title"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="m15.5 7.5 2.5 2.5"/><path d="M12.5 5.5 5 13a2.8 2.8 0 0 0 0 4l2 2a2.8 2.8 0 0 0 4 0l7.5-7.5a4.4 4.4 0 0 0 0-6.2l-.8-.8a4.4 4.4 0 0 0-6.2 0Z"/><path d="m8 16 1 1"/></svg> 自带 API Key</div>
+                    <div class="list-sub" style="margin:6px 0;">一次性 ¥5 解锁后，可填写自己的 OpenAI 兼容接口（如 DeepSeek、月之暗面等），AI 请求走你自己的额度。<strong>Key 只保存在本浏览器</strong>，不上传服务器；官方池与自有 API 可随时切换。</div>
+                    <div class="list-sub" style="margin:6px 0;">状态：<span id="byo-status-line" class="profile-em-accent">查询中…</span></div>
+                    <div id="byo-config-box" style="display:none;">
+                        <label class="settings-toggle">
+                            <span class="settings-toggle-l">
+                                <strong>启用自有 API</strong>
+                                <span class="list-sub">关闭后自动回到官方模型池，配置保留不丢。</span>
+                            </span>
+                            <input type="checkbox" id="byo-enabled">
+                        </label>
+                        <div class="byo-field">
+                            <span class="byo-field-l">接口地址</span>
+                            <input id="byo-base" type="text" placeholder="https://api.deepseek.com/v1" autocomplete="off" spellcheck="false">
+                        </div>
+                        <div class="byo-field">
+                            <span class="byo-field-l">API Key</span>
+                            <input id="byo-key" type="password" placeholder="sk-..." autocomplete="off">
+                        </div>
+                        <div class="byo-field">
+                            <span class="byo-field-l">模型名</span>
+                            <input id="byo-model" type="text" placeholder="必填，如 deepseek-chat / gpt-4o-mini" autocomplete="off" spellcheck="false">
+                        </div>
+                        <button class="mini-btn primary" onclick="ByoApiUI.save()">保存配置</button>
+                    </div>
+                    <div id="byo-unlock-btn" style="margin-top:8px;">
+                        <button class="mini-btn primary" onclick="ByoApiUI.unlock()">¥5 一键解锁</button>
+                    </div>
+                    <div id="byo-pay-area"></div>
+                </div>
                 <div class="setting-actions">
                     <button class="mini-btn ghost" onclick="switchView('view-home')"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> 返回首页</button>
                 </div>
@@ -1453,7 +1485,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
 <script src="scenarios/scenarios.js?v=20260922a" async id="scenario-lib-script"></script>
 <script src="scenarios/skeletons.js?v=20260926a" async id="skeleton-lib-script"></script>
 <script src="lib/qrcode.min.js" async></script>
-<script src="assets/app.min.js?v=20261020a"></script>
+<script src="assets/app.min.js?v=20261020b"></script>
 <script src="assets/love-engine.min.js?v=20261020a"></script>
 <script src="assets/lang-play.min.js?v=20261020a"></script>
 <script src="assets/lang-aux.min.js?v=20261020a"></script>
