@@ -5650,10 +5650,19 @@
     .l6-row-go{color:var(--sub);flex-shrink:0}
     /* M8c:剧本库封面网格(文游首页同款 scenario-card 卡) + 语言卡详情弹层 */
     /* 180px 时这一屏要塞 6 列，每张卡内容宽只剩 ~174px，三个徽标一行放不下（就是标签被挤爆的主因）。
-       220px 把同一屏降到 4~5 列，横向有富裕，徽标一行能排下。 */
+       220px 把同一屏降到 4~5 列，横向有富裕，徽标一行能排下。
+       ↑ 这段只适用于宽屏。2026-10-20：≤560px 视口下 2×220+gap=450px 超出手机内容区
+       （约 370px），auto-fill 只能给一列——用户反馈「一行一张太少」。手机端显式两列，
+       徽标/按钮靠既有 flex-wrap + margin-top:auto 机制自行换行、底部对齐，不需要另写窄列版式。 */
     #lang-lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:8px;align-items:stretch}
     #lang-lib-grid .scenario-card{margin-bottom:0}
-    .lgd-cover{width:100%;aspect-ratio:4/3;border-radius:12px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#ffe8c0,#e0c58f 55%,#e2b26b);background-size:cover;background-position:center;box-shadow:inset 0 0 0 1px rgba(255, 255, 255, .35)}
+    @media (max-width:560px){
+        #lang-lib-grid{grid-template-columns:repeat(2,1fr)}
+    }
+    /* 2026-10-20：4/3 → 3/4。封面图 10-18 起改为竖版实体书风格（864×1152，书名在上、类别在下），
+       .scc-img 是 object-fit:cover——容器保持 4/3 会把上下两头裁掉，弹层里看到的是缺书名的残图。
+       与 .scenario-card-cover/.hb-cover 对齐，详情弹层的翻转过渡也和卡片封面同比例，不再形变。 */
+    .lgd-cover{width:100%;aspect-ratio:3/4;border-radius:12px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#ffe8c0,#e0c58f 55%,#e2b26b);background-size:cover;background-position:center;box-shadow:inset 0 0 0 1px rgba(255, 255, 255, .35)}
     body[data-theme="dark"] .lgd-cover{background:linear-gradient(135deg,#2f2a24,#2a241f 55%,#211c18)}
     .lgd-cover .scc-emoji{font-size:var(--fs-7);filter:drop-shadow(0 3px 8px rgba(0,0,0,.18))}
     .lgd-cover.has-cover .scc-emoji{display:none}
