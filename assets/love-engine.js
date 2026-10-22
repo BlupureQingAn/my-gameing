@@ -52,6 +52,9 @@ window.LoveEngine = (() => {
     }
     // R1 立绘:统一走全局 npcImageOf(卡 structured.npcs[].art 立绘原图 → npc.art → 用户手动头像 → 头像池),
     // 与世界页 NPC 卡/档案详情/微信头像同一索引,保证同一 NPC 处处同图
+    // ⚠️ 2026-10-22：显示层仍走 npcImageOf(没立绘的 NPC 至少有张头像池图看)，
+    // 但「点击放大」必须只放真立绘(见 realArtUrlOf)——头像池兜底图是 128×128 方形，
+    // 混进竖版立绘栏点灯箱会比例不一致(用户报的 bug)。
     function artUrlOf(npc) {
         try {
             if (!npc) return "";
@@ -61,6 +64,15 @@ window.LoveEngine = (() => {
                 if (v && (v.startsWith("http") || v.startsWith("data:"))) return v;
             }
             return "";
+        } catch (e) { return ""; }
+    }
+    // 真立绘专用：没有 structured.npcs[].art / npc.art 时返回 ""(不回头像池)。
+    // 灯箱放大、弹层放大只认这个。
+    function realArtUrlOf(npc) {
+        try {
+            if (!npc) return "";
+            if (typeof window.npcArtOf === "function") return String(window.npcArtOf(npc) || "");
+            return String(npc.art || "");
         } catch (e) { return ""; }
     }
     function avHtmlOf(npc, name) {
@@ -164,12 +176,14 @@ window.LoveEngine = (() => {
                     } catch (e) {}
                 });
                 // 头像单独可点:全屏灯箱放大观赏立绘原图(不触发右侧角色卡弹层)
+                // ⚠️ 2026-10-22：只放真立绘。没真立绘的 NPC(如剧情中 AI 新增角色)点头像不弹灯箱，
+                // 避免 128×128 方形头像池图混进竖版立绘栏、比例不一致。
                 const avEl = el.querySelector("[data-lv-art]");
                 if (avEl) {
                     avEl.addEventListener("click", (ev) => {
                         ev.stopPropagation();
                         try {
-                            const u = artUrlOf(npcObj);
+                            const u = realArtUrlOf(npcObj);
                             if (u && window.openImageLightbox) window.openImageLightbox(u, npcObj ? npcObj.name : "");
                         } catch (e) {}
                     });
@@ -217,7 +231,7 @@ window.LoveEngine = (() => {
             avBox.addEventListener("click", (ev) => {
                 ev.stopPropagation();
                 try {
-                    const u = artUrlOf(npc);
+                    const u = realArtUrlOf(npc);
                     if (u && window.openImageLightbox) window.openImageLightbox(u, String(npc.name || ""));
                 } catch (e) {}
             });

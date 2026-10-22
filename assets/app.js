@@ -3718,6 +3718,27 @@ function rebuildChoicesBlock(body, labels = []) {
     }
     window.npcImageOf = npcImageOf;
 
+    // 「真立绘」专用索引(2026-10-22 修「love-bar 最后一个 NPC 点击后比例不一致」bug):
+    // 只走真立绘链——npc.art(显式) → 用户手动换过头像(npc.avatarPinned) → 卡 structured.npcs[].art。
+    // 与 npcImageOf 的区别:**不回头像池兜底**(assignNpcAvatar 出的是 128×128 方形图,
+    // 混进一栏 864×1082 竖版立绘里,点灯箱放大时比例明显不一致)。
+    // 用途:恋爱攻略顶部角色条(love-bar)的头像点击放大——没真立绘的 NPC 显示首字头像、不弹灯箱。
+    function npcArtOf(npc) {
+        try {
+            if (!npc) return "";
+            const pick = (v) => (isAvatarImg(v) ? String(v) : "");
+            const own = pick(npc.art) || (npc.avatarPinned ? pick(npc.avatar) : "");
+            if (own) return own;
+            let card = null;
+            try { card = ScenarioCardService.getSelectedCard(); } catch (e) {}
+            const list = (card && card.structured && Array.isArray(card.structured.npcs)) ? card.structured.npcs : [];
+            const nm = String(npc.name || "").trim().toLowerCase();
+            const met = nm ? list.find((x) => x && String(x.name || "").trim().toLowerCase() === nm) : null;
+            return pick(met && met.art) || "";
+        } catch (e) { return ""; }
+    }
+    window.npcArtOf = npcArtOf;
+
     // 立绘/头像灯箱:点击 NPC 头像 → 全屏看原图;点空白处或 Esc 关闭
     function openImageLightbox(src, caption) {
         try {
@@ -9844,6 +9865,11 @@ const token = delta.content || "";
                     status: String(n.status || "在线").slice(0, 12),
                     mood: String(n.mood || "平静").slice(0, 12),
                     traits: String(n.traits || n.attributes || "").slice(0, 48),
+                    // 2026-10-22：保留立绘/头像字段。此前 sanitizeNpcs 重建对象时丢 art/avatar，
+                    // 导致 NPC 立绘丢失、点击放大 fallback 到 128×128 方形头像池(比例不一致 bug)
+                    art: String(n.art || ""),
+                    avatar: String(n.avatar || ""),
+                    avatarPinned: Boolean(n.avatarPinned),
                     profile: {
                         age: String(n?.profile?.age || "").slice(0, 16),
                         identity: String(n?.profile?.identity || "").slice(0, 40),
