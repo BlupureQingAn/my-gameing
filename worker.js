@@ -578,6 +578,23 @@ const PACK_PLANS = {
 const STORY_PLANS = {
     pp6: { id: "pp6", name: "傲慢与偏见（六级版）", price: "5", story: "pp6" },
 };
+// 自带 API Key 解锁(2026-10-20 问题四):¥5 一次性买断,发货=unlocks 记录(card_id="byo_api"),
+// 永久有效。解锁后前端可传 X-User-Api-Key/X-User-Api-Base,由 worker 透传到用户自有
+// OpenAI 兼容端点——Key 只存用户浏览器 localStorage,服务端不落盘、不过池、不计免费额度/云币。
+const BYO_API_PLAN = { id: "byo_api", name: "自带 API Key 解锁", price: "5" };
+
+// 自带 API 解锁判定（2026-10-20）：unlocks 集合里存在 card_id="byo_api" 记录即已买断。
+// 与 story 解锁同构，零 schema 改动。
+async function hasByoUnlock(env, userId) {
+    try {
+        const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(userId)}'&&card_id='byo_api'`);
+        const q = await pbAdminFetch(env, `/api/collections/unlocks/records?perPage=1&skipTotal=true&filter=${f}`);
+        const d = await q.json().catch(() => ({}));
+        return (d.items || []).length > 0;
+    } catch (e) {
+        return false;
+    }
+}
 // 免费用户每日 AI 总次数(北京时间 08:00 刷新;2026-09-07 起主聊天/点译/复盘共享此池,三功能用同一 freequota KV;
 // 主聊天额度内仅路由 NVIDIA 全部 + 硅基 sf-glm-4-9b;三功能超限均可转云币计费续用(聊天按 token,点译/复盘按次;
 // 2026-09-08 小徐确认:非会员每用户每天 10 次不耗币的 AI 调用,所有类型共享,按用户独立计;计数口径=成功才计)
@@ -634,7 +651,9 @@ function corsHeaders() {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
         // 保留 X-Cloud-Card-Id 兼容旧前端灰度期
-        "Access-Control-Allow-Headers": "Content-Type, X-Auth-Token, X-Cloud-Card-Id",
+        // X-User-Api-Key/X-User-Api-Base(2026-10-20 自带 API):浏览器带自定义头会先发
+        // OPTIONS 预检,不列进 Allow-Headers 预检直接失败
+        "Access-Control-Allow-Headers": "Content-Type, X-Auth-Token, X-Cloud-Card-Id, X-User-Api-Key, X-User-Api-Base",
         "Access-Control-Max-Age": "86400",
     };
 }
@@ -1121,7 +1140,7 @@ async function xunhuPlaceOrder(env, orderNo, title, price, userId) {
 
 // 创建订单：本地落库 pay_orders → 按设备/支付方式选网关 → 返回 { orderNo, jumpUrl, qrUrl? }
 async function createPayOrder(env, userId, planId, payType, isMobile) {
-    const plan = CHARGE_PLANS[planId] || MEMBER_PLANS[planId] || PACK_PLANS[planId] || STORY_PLANS[planId] || (planId === "lifetime" ? LIFETIME_PLAN : null);
+    const plan = CHARGE_PLANS[planId] || MEMBER_PLANS[planId] || PACK_PLANS[planId] || STORY_PLANS[planId] || (planId === "byo_api" ? BYO_API_PLAN : null) || (planId === "lifetime" ? LIFETIME_PLAN : null);
     if (!plan) throw new Error("无效的充值档位");
     // 终身会员按 offer 状态定价(2026-09-12 起两档同值 98)
     let price = plan.price;
@@ -1214,9 +1233,31 @@ async function settlePaidOrder(env, orderNo, tradeNo, amountCents) {
     const memberPlan = MEMBER_PLANS[order.plan_id];
     const packPlan = PACK_PLANS[order.plan_id];
     const storyPlan = STORY_PLANS[order.plan_id];
+    const byoPlan = order.plan_id === "byo_api" ? BYO_API_PLAN : null;
 
-    const plan = isLifetime ? LIFETIME_PLAN : (storyPlan || packPlan || memberPlan || CHARGE_PLANS[order.plan_id]);
+    const plan = isLifetime ? LIFETIME_PLAN : (storyPlan || byoPlan || packPlan || memberPlan || CHARGE_PLANS[order.plan_id]);
     if (!plan) return "fail";
+
+    // 自带 API 解锁(2026-10-20):发货=unlocks 记录(card_id="byo_api"),幂等;一次性买断,永久有效
+    if (byoPlan) {
+        try {
+            const exF = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(order.user_id)}'&&card_id='byo_api'`);
+            const exQ2 = await pbAdminFetch(env, `/api/collections/unlocks/records?perPage=1&skipTotal=true&filter=${exF}`);
+            const exD2 = await exQ2.json().catch(() => ({}));
+            if (!(exD2.items || []).length) {
+                const insRes = await pbAdminFetch(env, `/api/collections/unlocks/records`, {
+                    method: "POST",
+                    body: JSON.stringify({ user_id: order.user_id, card_id: "byo_api", created_at: now })
+                });
+                if (!insRes.ok) return "fail";
+            }
+        } catch (e) { return "fail"; }
+        await pbAdminFetch(env, `/api/collections/pay_orders/records/${order.id}`, {
+            method: "PATCH",
+            body: JSON.stringify({ status: "paid", trade_no: tradeNo || "", paid_at: now })
+        });
+        return "success";
+    }
 
     // 站内直付内容(pp6 等):发货=unlocks 记录(card_id="store_"+story),幂等;购买永久有效,会员到期不丢
     if (storyPlan) {
@@ -1720,6 +1761,48 @@ export default {
                 if (auth.error) return auth.error;
                 const record = auth.record;
                 const userId = record.id;
+
+                // 自带 API 模式(2026-10-20 问题四):前端传 X-User-Api-Key + X-User-Api-Base
+                // (用户自有 OpenAI 兼容端点)→ 校验解锁 → 原样透传。
+                // Key 只存用户浏览器 localStorage,本分支不落盘、不过模型池、不计免费额度/云币。
+                // 两个头都缺失 → 静默回退官方池(下方原逻辑);只传一个 → 配置错误。
+                // 安全面:需登录 + Origin 闸 + ¥5 买断记录,且路径固定为 /chat/completions,
+                // 不会被当成任意 URL 的开放代理。
+                const byoKey = (request.headers.get("X-User-Api-Key") || "").trim();
+                const byoBase = (request.headers.get("X-User-Api-Base") || "").trim().replace(/\/+$/, "");
+                if (byoKey || byoBase) {
+                    if (!byoKey || !byoBase) {
+                        return errorResponse("自带 API 配置不完整（需要同时填写接口地址和 Key）", 400, null, "BYO_CONFIG_INCOMPLETE");
+                    }
+                    if (!/^https:\/\//i.test(byoBase)) {
+                        return errorResponse("自带 API 接口地址必须以 https:// 开头", 400, null, "BYO_BASE_INSECURE");
+                    }
+                    if (!(await hasByoUnlock(env, userId))) {
+                        return errorResponse("自带 API 未解锁（一次性 ¥5 买断，可在「我的」页开通）", 403, null, "BYO_NOT_UNLOCKED");
+                    }
+                    const byoBody = await request.text();
+                    let upstream;
+                    try {
+                        upstream = await fetch(byoBase + "/chat/completions", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": "Bearer " + byoKey
+                            },
+                            body: byoBody
+                        });
+                    } catch (e) {
+                        return errorResponse("无法连接你填写的 API 地址，请检查地址是否正确、服务是否可用", 502, null, "BYO_UPSTREAM_UNREACHABLE");
+                    }
+                    // 透传响应体与状态码(含上游 4xx/5xx),由前端按既有文案呈现
+                    return new Response(upstream.body, {
+                        status: upstream.status,
+                        headers: {
+                            ...corsHeaders(),
+                            "Content-Type": upstream.headers.get("Content-Type") || "application/json"
+                        }
+                    });
+                }
 
                 // 解析请求(body 只能消费一次,提前到免费额度/会员/云币校验之前)
                 const bodyText = await request.text();
@@ -2549,6 +2632,19 @@ export default {
                 return new Response(JSON.stringify({
                     ok: purchased, via: purchased ? "purchased" : "", product,
                     name: sp.name, price: sp.price, need: purchased ? "" : "purchase"
+                }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+
+            // ---- 路由：自带 API 解锁状态查询（2026-10-20 问题四；一次性买断，幂等只读）----
+            if (url.pathname === "/api/byo/status" && request.method === "GET") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const unlocked = await hasByoUnlock(env, auth.record.id);
+                return new Response(JSON.stringify({
+                    unlocked, name: BYO_API_PLAN.name, price: BYO_API_PLAN.price,
+                    need: unlocked ? "" : "purchase"
                 }), {
                     headers: { ...corsHeaders(), "Content-Type": "application/json" }
                 });
@@ -4387,7 +4483,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 try { body = await request.json(); } catch (e) {}
                 const planId = String(body.planId || "");
                 const payType = ["alipay", "wxpay"].includes(body.payType) ? body.payType : "alipay";
-                if (!CHARGE_PLANS[planId] && !MEMBER_PLANS[planId] && !PACK_PLANS[planId] && !STORY_PLANS[planId] && planId !== "lifetime") return errorResponse("无效的充值档位", 400, null, "INVALID_PLAN");
+                if (!CHARGE_PLANS[planId] && !MEMBER_PLANS[planId] && !PACK_PLANS[planId] && !STORY_PLANS[planId] && planId !== "byo_api" && planId !== "lifetime") return errorResponse("无效的充值档位", 400, null, "INVALID_PLAN");
                 const ua = request.headers.get("user-agent") || "";
                 const isMobile = /Android|iPhone|iPad|iPod|Mobile|Windows Phone/i.test(ua);
                 try {
