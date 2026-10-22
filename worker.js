@@ -2439,8 +2439,9 @@ export default {
                 const forceSF = body.provider === "siliconflow";
                 let image = "";
                 let genErr = ""; // 诊断透出(Agnes/SF 原始错误),生产响应多一个字段无副作用
-                // 1) Agnes 免费图像模型优先。2026-10-22 起 agnes-image-2.1-flash 已被服务端停用(调用返回 429 空 body),
-                //    当前可用名为 agnes-image-2.0-flash(用户确认)。默认用 2.0-flash;允许前端经 body.model 覆盖以做 A/B 对比。
+                // 1) Agnes 免费图像模型优先。2026-10-22 实测: agnes-image-2.1-flash 已被服务端停用(调用返回 429 空 body),
+                //    当前可用名为 agnes-image-2.5-flash(官方 wiki 最新一代,参数与 2.1 相同,当前全档位 $0 免费)。
+                //    本地直连实测 25s/张出图,画风为二次元立绘。默认 2.5-flash;允许前端经 body.model 覆盖以做 A/B 对比。
                 //    1K + ratio 3:4 → 864x1152 竖版,正好是立绘目标尺寸,无需 resize。
                 //    实测 b64_json/return_base64 输出路径服务端挂起(>240s 无响应),URL 输出 ~11s 正常 → 出图后下载转 base64(前端 dataURL 永久有效)
                 if (agnesKey && !forceSF) {
@@ -2454,7 +2455,7 @@ export default {
                                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${agnesKey}` },
                                 // 不给 Agnes 传 negative_prompt:实测其对该字段直接 400(negative_prompt is not allowed),
                                 // 反向词只有 Kolors 认;带反向词的请求请走 provider:"siliconflow"
-                                const agnesModel = (typeof body.model === "string" && body.model.startsWith("agnes-image")) ? body.model : "agnes-image-2.0-flash";
+                                const agnesModel = (typeof body.model === "string" && body.model.startsWith("agnes-image")) ? body.model : "agnes-image-2.5-flash";
                                 body: JSON.stringify({ model: agnesModel, prompt, size: "1K", ratio, extra_body: { response_format: "url" } }),
                                 signal: ac.signal
                             });
