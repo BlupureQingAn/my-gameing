@@ -3768,7 +3768,22 @@ function rebuildChoicesBlock(body, labels = []) {
                 const zoomed = img.classList.toggle("ilb-zoom");
                 box.classList.toggle("ilb-zoomed", zoomed);
                 if (hint) hint.textContent = zoomed ? "点图片收回适应屏幕 · 点空白处关闭" : "点图片看原尺寸 · 点空白处关闭";
-                if (zoomed) box.scrollTop = 0;
+                if (zoomed) {
+                    box.scrollTop = 0;
+                    // 放大后保证不小于初始适配态：低分辨率小图(如 128×128 头像/小尺寸立绘)也撑满视口，
+                    // 避免“点开反而比初始缩略还小、与竖版立绘放大效果不一致”(用户报的 bug)
+                    const fitW = window.innerWidth * 0.96, fitH = window.innerHeight * 0.84;
+                    const nw = img.naturalWidth || 0, nh = img.naturalHeight || 0;
+                    if (nw && nh && nw <= fitW && nh <= fitH) {
+                        const scale = Math.min(fitW / nw, fitH / nh);
+                        img.style.maxWidth = "none";
+                        img.style.maxHeight = "none";
+                        img.style.width = Math.round(nw * scale) + "px";
+                        img.style.height = "auto";
+                    }
+                } else {
+                    img.style.maxWidth = ""; img.style.maxHeight = ""; img.style.width = ""; img.style.height = "";
+                }
             });
             box.addEventListener("click", close);
             document.addEventListener("keydown", onKey);
