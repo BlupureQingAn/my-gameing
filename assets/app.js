@@ -798,8 +798,8 @@
             const next = Utils.deepClone(baseState);
             const identity = IdentityService.generateIdentity();
             next.gender = gender || preset.gender || next.gender;
-            next.orientation = String(preset.orientation || "").trim().slice(0, 12);
-            next.role = String(preset.role || "").trim().slice(0, 20);
+            next.orientation = String(preset.orientation || "").trim().slice(0, 40);
+            next.role = String(preset.role || "").trim().slice(0, 120);
             next.name = preset.name || identity.name;
             next.englishName = preset.englishName || identity.englishName;
             next.nationality = preset.nationality || identity.nationality;
@@ -830,10 +830,10 @@
             const _av0 = String(preset.avatar || "");
             // data:/http 图片地址完整保留（截断会破坏 data URL 导致头像显示问号），emoji/文字才限长
             next.avatar = (_av0.startsWith("data:") || _av0.startsWith("http")) ? _av0 : _av0.slice(0, 40);
-            next.appearance = String(preset.appearance || "").trim().slice(0, 60);
-            next.personality = String(preset.personality || "").trim().slice(0, 60);
-            next.family = String(preset.family || "").trim().slice(0, 60);
-            next.genderIdentity = String(preset.genderIdentity || "").trim().slice(0, 20);
+            next.appearance = String(preset.appearance || "").trim().slice(0, 300);
+            next.personality = String(preset.personality || "").trim().slice(0, 300);
+            next.family = String(preset.family || "").trim().slice(0, 300);
+            next.genderIdentity = String(preset.genderIdentity || "").trim().slice(0, 40);
             next.panelStatusTags = normalizeStatusTagList(preset.panelStatusTags);
             next.npcMemoryMap = {};
             next.protagonistProfile = {
@@ -2736,20 +2736,20 @@ function rebuildChoicesBlock(body, labels = []) {
             // 核心属性解锁：relation/gender 允许 AI 按剧情覆盖(非空即写),不再锁定
             ["gender", "relation"].forEach((f) => {
                 const v = String(item[f] ?? "").trim();
-                if (v) npc[f] = v.slice(0, 12);
+                if (v) npc[f] = v.slice(0, f === "relation" ? 60 : 12);
             });
             // 动态属性允许更新
             if (item.name && String(item.name).trim() && item.name !== npc.name) npc.name = String(item.name).slice(0, 20);
             if (item.status !== undefined) {
-                const st = String(item.status).trim().slice(0, 16);
+                const st = String(item.status).trim().slice(0, 40);
                 const deathLike = /死亡|已故|去世|逝世|过世/.test(st);
                 // 已故人物不可复活;死亡类表述统一归一化为"死亡"
                 if (npc.status !== "死亡" || deathLike) {
                     npc.status = deathLike ? "死亡" : st;
                 }
             }
-            if (item.mood !== undefined) npc.mood = String(item.mood).slice(0, 16);
-            if (item.traits !== undefined && String(item.traits).trim()) npc.traits = String(item.traits).slice(0, 48);
+            if (item.mood !== undefined) npc.mood = String(item.mood).slice(0, 40);
+            if (item.traits !== undefined && String(item.traits).trim()) npc.traits = String(item.traits).slice(0, 160);
             if (item.favor !== undefined) npc.favor = Math.max(0, Math.min(100, Number(item.favor) || npc.favor || 60));
             // 双轴好感:爱慕值 affection(-100~100),仅显式 patch 提供时更新(不随 favor 漂移)
             if (item.affection !== undefined && Number.isFinite(Number(item.affection))) {
@@ -2767,14 +2767,14 @@ function rebuildChoicesBlock(body, labels = []) {
             const nextProfile = item.profile && typeof item.profile === "object" ? item.profile : {};
             const baseProfile = npc.profile && typeof npc.profile === "object" ? npc.profile : {};
             npc.profile = {
-                age: String(nextProfile.age ?? baseProfile.age ?? "").slice(0, 16),
-                identity: String(nextProfile.identity ?? baseProfile.identity ?? "").slice(0, 40),
-                residence: String(nextProfile.residence ?? baseProfile.residence ?? "").slice(0, 40),
-                appearance: String(nextProfile.appearance ?? baseProfile.appearance ?? "").slice(0, 80),
-                personality: String(nextProfile.personality ?? baseProfile.personality ?? "").slice(0, 80),
-                goal: String(nextProfile.goal ?? baseProfile.goal ?? "").slice(0, 80),
-                secret: String(nextProfile.secret ?? baseProfile.secret ?? "").slice(0, 80),
-                firstImpression: String(nextProfile.firstImpression ?? baseProfile.firstImpression ?? "").slice(0, 80)
+                age: String(nextProfile.age ?? baseProfile.age ?? "").slice(0, 24),
+                identity: String(nextProfile.identity ?? baseProfile.identity ?? "").slice(0, 200),
+                residence: String(nextProfile.residence ?? baseProfile.residence ?? "").slice(0, 200),
+                appearance: String(nextProfile.appearance ?? baseProfile.appearance ?? "").slice(0, 400),
+                personality: String(nextProfile.personality ?? baseProfile.personality ?? "").slice(0, 400),
+                goal: String(nextProfile.goal ?? baseProfile.goal ?? "").slice(0, 300),
+                secret: String(nextProfile.secret ?? baseProfile.secret ?? "").slice(0, 300),
+                firstImpression: String(nextProfile.firstImpression ?? baseProfile.firstImpression ?? "").slice(0, 300)
             };
 
             // 二次去重：按 id/name 合并，优先保留信息更完整的一条
@@ -4247,7 +4247,7 @@ function rebuildChoicesBlock(body, labels = []) {
                 const favor = Math.max(0, Number(n.favor) || 0);
                 const affection = Number.isFinite(Number(n.affection)) ? Number(n.affection) : 0;
                 const introRaw = (memory[n.id] && memory[n.id].summary) ? stripHtml(memory[n.id].summary) : stripHtml(n.description || "");
-                const intro = introRaw.slice(0, 60);
+                const intro = introRaw;
                 const avUrl = npcImageOf(n);
                 const fallbackChar = MarkdownService.escapeHtml(String(n.name || "?").slice(0, 1));
                 const avHtml = avUrl
@@ -4262,7 +4262,7 @@ function rebuildChoicesBlock(body, labels = []) {
                     <div class="npc-favor"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/></svg> 友善 ${favor} ${heartLadder(favor)}</div>
                     <div class="npc-favor">♥ 爱慕 ${affection > 0 ? "+" : ""}${affection} ${heartLadder(affection, 100, true)}</div>
                     <div class="npc-meta">${MarkdownService.escapeHtml(n.relation || "关系未明")} · 同地点 ${MarkdownService.escapeHtml(state.location || "未知")}${n.status ? ` · ${MarkdownService.escapeHtml(n.status)}` : ""}${n.mood ? ` · ${MarkdownService.escapeHtml(n.mood)}` : ""}</div>
-                    ${intro ? `<div class="npc-intro">${MarkdownService.escapeHtml(intro)}${introRaw.length > 60 ? "…" : ""}</div>` : ""}
+                    ${intro ? `<div class="npc-intro">${MarkdownService.escapeHtml(intro)}</div>` : ""}
                 </div>`;
             };
             const groupHtml = (opened, title, list) => list.length
@@ -9680,7 +9680,9 @@ const token = delta.content || "";
                 + '<span id="queue-bar-tip" style="flex-basis:100%;font-size:var(--fs-2);line-height:1.5;opacity:.9;">💎 排队是因为免费额度在挤有限的免费模型——会员直接走更大更快的模型池，AI 不限次，基本不用排队</span>';
             queueBarEl.querySelector(".q-member").onclick = () => { try { MembershipService.openPanel(); } catch (e) {} };
             queueBarEl.querySelector(".q-close").onclick = () => { queueBarCancelled = true; queueBarHide(); };
-            input.parentNode.insertBefore(queueBarEl, input);
+            // 插到 .composer 之前的 play-toolbar 列里，不要插进 composer 内部（否则排队条会嵌在输入框行里）
+            const row = input.closest(".composer") || input;
+            row.parentNode.insertBefore(queueBarEl, row);
             return queueBarEl;
         }
         const QUEUE_TIP = "💎 排队是因为免费额度在挤有限的免费模型——会员直接走更大更快的模型池，AI 不限次，基本不用排队";
@@ -9874,26 +9876,26 @@ const token = delta.content || "";
                     id: String(n.id || `npc_${idx + 1}`).replace(/[^\w-]/g, "_"),
                     name: String(n.name).slice(0, 20),
                     gender: String(n.gender || "未知").slice(0, 6),
-                    relation: String(n.relation || "熟人").slice(0, 12),
+                    relation: String(n.relation || "熟人").slice(0, 60),
                     favor: Math.max(0, Math.min(100, Number(n.favor) || 65)),
                     affection: Math.max(-100, Math.min(100, Number.isFinite(Number(n.affection)) ? Number(n.affection) : 0)),
-                    status: String(n.status || "在线").slice(0, 12),
-                    mood: String(n.mood || "平静").slice(0, 12),
-                    traits: String(n.traits || n.attributes || "").slice(0, 48),
+                    status: String(n.status || "在线").slice(0, 40),
+                    mood: String(n.mood || "平静").slice(0, 40),
+                    traits: String(n.traits || n.attributes || "").slice(0, 160),
                     // 2026-10-22：保留立绘/头像字段。此前 sanitizeNpcs 重建对象时丢 art/avatar，
                     // 导致 NPC 立绘丢失、点击放大 fallback 到 128×128 方形头像池(比例不一致 bug)
                     art: String(n.art || ""),
                     avatar: String(n.avatar || ""),
                     avatarPinned: Boolean(n.avatarPinned),
                     profile: {
-                        age: String(n?.profile?.age || "").slice(0, 16),
-                        identity: String(n?.profile?.identity || "").slice(0, 40),
-                        residence: String(n?.profile?.residence || "").slice(0, 40),
-                        appearance: String(n?.profile?.appearance || "").slice(0, 80),
-                        personality: String(n?.profile?.personality || "").slice(0, 200),
-                        goal: String(n?.profile?.goal || "").slice(0, 80),
-                        secret: String(n?.profile?.secret || "").slice(0, 80),
-                        firstImpression: String(n?.profile?.firstImpression || "").slice(0, 80)
+                        age: String(n?.profile?.age || "").slice(0, 24),
+                        identity: String(n?.profile?.identity || "").slice(0, 200),
+                        residence: String(n?.profile?.residence || "").slice(0, 200),
+                        appearance: String(n?.profile?.appearance || "").slice(0, 400),
+                        personality: String(n?.profile?.personality || "").slice(0, 600),
+                        goal: String(n?.profile?.goal || "").slice(0, 300),
+                        secret: String(n?.profile?.secret || "").slice(0, 300),
+                        firstImpression: String(n?.profile?.firstImpression || "").slice(0, 300)
                     }
                 }));
         }
@@ -10624,7 +10626,7 @@ const token = delta.content || "";
                 name: String(n.name || `人物${i + 1}`).slice(0, 20),
                 gender: inferNpcGender(n),
                 avatar: String(n.avatar || "").trim() || (typeof window.assignNpcAvatar === "function" ? window.assignNpcAvatar(n.name, inferNpcGender(n)) : ""),
-                relation: String(n.relationship || n.role || "熟人").slice(0, 12),
+                relation: String(n.relationship || n.relation || n.role || "熟人").slice(0, 60),
                 favor: Number.isFinite(Number(n.favor)) ? Math.max(-100, Math.min(100, Number(n.favor))) : 65,
                 affection: Number.isFinite(Number(n.affection)) ? Math.max(-100, Math.min(100, Number(n.affection))) : 0,
                 status: "在线",
@@ -10633,13 +10635,17 @@ const token = delta.content || "";
                    而且心情那一刀会把 "Warm and calculating" 切成 mood="Warm" —— 中文界面里的
                    英文碎词就从这儿来(小徐 2026-09-26 报的截图)。三格各有各的源:
                    心情只认模型显式给的 n.mood,特质只认 n.traits/n.attributes,性格才是 personality 全文。 */
-                mood: String(n.mood || "").trim().slice(0, 12),
-                traits: String(n.traits || n.attributes || "").trim().slice(0, 48),
+                mood: String(n.mood || "").trim().slice(0, 40),
+                traits: String(n.traits || n.attributes || "").trim().slice(0, 160),
                 profile: {
-                    identity: String(n.role || "").slice(0, 40),
-                    personality: String(n.personality || "").slice(0, 200),
-                    relationship: String(n.relationship || "").slice(0, 80),
-                    secret: String(n.secret || "").slice(0, 80)
+                    identity: String(n.role || n.identity || n?.profile?.identity || "").slice(0, 200),
+                    residence: String(n.residence || n?.profile?.residence || "").slice(0, 200),
+                    appearance: String(n.appearance || n?.profile?.appearance || "").slice(0, 400),
+                    personality: String(n.personality || "").slice(0, 600),
+                    relationship: String(n.relationship || n.relation || "").slice(0, 300),
+                    goal: String(n.goal || n?.profile?.goal || "").slice(0, 300),
+                    secret: String(n.secret || "").slice(0, 300),
+                    firstImpression: String(n.firstImpression || n?.profile?.firstImpression || "").slice(0, 300)
                 }
             })).slice(0, 12);
             // 开局地点列表:编辑器设定(map.places)优先;否则按题材确定性生成,不带"主城·"前缀
@@ -10674,14 +10680,14 @@ const token = delta.content || "";
                 name,
                 englishName: String(identity.englishName || fallbackIdentity.englishName || "PendingName").trim().slice(0, 32),
                 forcedGender: String(identity.gender || "").trim() || selectedGender || "女",
-                forcedOrientation: String(identity.orientation || "").trim().slice(0, 12) || "异性恋",
-                forcedRole: String(identity.role || "").trim().slice(0, 12) || roleFromBg(bgText) || ROLE_DICT.find((r) => !ROLE_TITLE_SET.has(r) && bgSelf.includes(r)) || themeRole || "",
+                forcedOrientation: String(identity.orientation || "").trim().slice(0, 40) || "异性恋",
+                forcedRole: String(identity.role || "").trim().slice(0, 120) || roleFromBg(bgText) || ROLE_DICT.find((r) => !ROLE_TITLE_SET.has(r) && bgSelf.includes(r)) || themeRole || "",
                 ageYears: Number.isFinite(ageRaw) && ageRaw >= 0 ? ageRaw : 18,
-                nationality: nationMatch ? nationMatch[1] : (String(identity.nationality || "").trim().slice(0, 12) || (/现代|都市|校园|职场|娱乐圈/.test(era) || /古代|古风|历史|宫斗|武侠/.test(era) ? "中国" : "")),
+                nationality: nationMatch ? nationMatch[1] : (String(identity.nationality || "").trim().slice(0, 40) || (/现代|都市|校园|职场|娱乐圈/.test(era) || /古代|古风|历史|宫斗|武侠/.test(era) ? "中国" : "")),
                 location: locationRaw || (initLocations[0] && initLocations[0].name) || "",
-                appearance: String(identity.appearance || "").trim().slice(0, 40),
-                personality: String(identity.personality || "").trim().slice(0, 40),
-                family: String(identity.family || "").trim().slice(0, 40),
+                appearance: String(identity.appearance || "").trim().slice(0, 300),
+                personality: String(identity.personality || "").trim().slice(0, 300),
+                family: String(identity.family || "").trim().slice(0, 300),
                 locations: initLocations,
                 timeEra: era,
                 currentYear: Number.isFinite(tlYear) ? (tlYear >= 1 && tlYear <= 999 ? Math.floor(tlYear) : 1) : null,
@@ -11624,7 +11630,7 @@ const token = delta.content || "";
                     npcs.forEach((n) => {
                         const npcName = String(n.name || "角色").trim();
                         const npcRole = String(n.role || n.relation || "").trim();
-                        const npcDesc = String(n.personality || "").trim().slice(0, 40);
+                        const npcDesc = String(n.personality || "").trim().slice(0, 300);
                         html += `<div class="gd-setting-npc"><span class="list-sub">人物</span><span><b>${MarkdownService.escapeHtml(npcName)}</b>${npcRole ? "（" + MarkdownService.escapeHtml(npcRole) + "）" : ""}${npcDesc ? "：" + MarkdownService.escapeHtml(npcDesc) : ""}</span></div>`;
                     });
                     if (hasTimeline) {
@@ -11642,7 +11648,7 @@ const token = delta.content || "";
                 npcs.forEach((n) => {
                     const rid = roleIdOf(n);
                     const hotCount = Number(d.roles[rid] || 0);
-                    const desc = String(n.personality || (n.profile && n.profile.personality) || n.relationship || "…").slice(0, 60);
+                    const desc = String(n.personality || (n.profile && n.profile.personality) || n.relationship || "…").slice(0, 400);
                     html += `<div class="gd-role-card">
                         <div class="gd-role-avatar">${(() => { const avU = isAvatarImg(n.avatar) ? n.avatar : (typeof window.assignNpcAvatar === "function" ? window.assignNpcAvatar(n.name, n.gender) : ""); if (avU) return `<img src="${String(avU).replace(/"/g, "%22")}" alt="" loading="lazy" onerror="this.parentElement.textContent='?'" style="width:100%;height:100%;object-fit:cover;border-radius:10px;display:block;">`; if (n.emoji) return MarkdownService.escapeHtml(String(n.emoji).slice(0, 4)); return firstLetterAvatar(n.name, "", "width:100%;height:100%;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;"); })()}</div>
                         <div class="gd-role-main">
@@ -12562,19 +12568,19 @@ const token = delta.content || "";
                             <option value="女">女</option>
                             <option value="未知">未知</option>
                         </select>
-                        <input id="new-npc-occupation" type="text" placeholder="职业身份，如：铁匠" maxlength="10" style="flex:1.5;">
+                        <input id="new-npc-occupation" type="text" placeholder="职业身份，如：铁匠" maxlength="60" style="flex:1.5;">
                     </div>
-                    <input id="new-npc-relation" type="text" placeholder="与主角的关系，如：江湖故友" maxlength="10">
+                    <input id="new-npc-relation" type="text" placeholder="与主角的关系，如：江湖故友" maxlength="60">
                     <div style="display:flex;gap:8px;">
-                        <input id="new-npc-mood" type="text" placeholder="心情初值，如：温和" maxlength="8" style="flex:1;">
-                        <input id="new-npc-traits" type="text" placeholder="特质，如：毒舌" maxlength="10" style="flex:1;">
+                        <input id="new-npc-mood" type="text" placeholder="心情初值，如：温和" maxlength="40" style="flex:1;">
+                        <input id="new-npc-traits" type="text" placeholder="特质，如：毒舌" maxlength="80" style="flex:1;">
                     </div>
-                    <input id="new-npc-personality" type="text" placeholder="性格，如：外冷内热" maxlength="10">
+                    <input id="new-npc-personality" type="text" placeholder="性格，如：外冷内热" maxlength="300">
                     <div style="display:flex;gap:8px;">
                         <input id="new-npc-favor" type="number" min="-100" max="100" placeholder="友善初值（-100~100，默认65）" style="flex:1;">
                         <input id="new-npc-affection" type="number" min="-100" max="100" placeholder="爱慕初值（-100~100，默认0）" style="flex:1;">
                     </div>
-                    <input id="new-npc-desc" type="text" placeholder="说明：外貌与性格简介（一句话）" maxlength="60">
+                    <input id="new-npc-desc" type="text" placeholder="说明：外貌与性格简介（一句话）" maxlength="300">
                     <span class="list-sub" style="margin:0;">状态（在线/离线）为微信侧动态展示，随剧情变化，无需设置</span>
                 </div>`,
                 actionText: "创建",
@@ -12586,16 +12592,16 @@ const token = delta.content || "";
             const name = String(document.getElementById("new-npc-name")?.value || "").trim().slice(0, 12);
             if (!name) return false;
             const gender = String(document.getElementById("new-npc-gender")?.value || "").trim();
-            const relation = String(document.getElementById("new-npc-relation")?.value || "").trim().slice(0, 10);
-            const occupation = String(document.getElementById("new-npc-occupation")?.value || "").trim().slice(0, 10);
-            const mood = String(document.getElementById("new-npc-mood")?.value || "").trim().slice(0, 8);
-            const traits = String(document.getElementById("new-npc-traits")?.value || "").trim().slice(0, 10);
-            const personality = String(document.getElementById("new-npc-personality")?.value || "").trim().slice(0, 10);
+            const relation = String(document.getElementById("new-npc-relation")?.value || "").trim().slice(0, 60);
+            const occupation = String(document.getElementById("new-npc-occupation")?.value || "").trim().slice(0, 60);
+            const mood = String(document.getElementById("new-npc-mood")?.value || "").trim().slice(0, 40);
+            const traits = String(document.getElementById("new-npc-traits")?.value || "").trim().slice(0, 80);
+            const personality = String(document.getElementById("new-npc-personality")?.value || "").trim().slice(0, 300);
             const favorRaw = Number(document.getElementById("new-npc-favor")?.value);
             const favor = Number.isFinite(favorRaw) ? Math.max(-100, Math.min(100, favorRaw)) : 65;
             const affRaw = Number(document.getElementById("new-npc-affection")?.value);
             const affection = Number.isFinite(affRaw) ? Math.max(-100, Math.min(100, affRaw)) : 0;
-            const desc = String(document.getElementById("new-npc-desc")?.value || "").trim().slice(0, 60);
+            const desc = String(document.getElementById("new-npc-desc")?.value || "").trim().slice(0, 300);
             if (!Array.isArray(state.npcs)) state.npcs = [];
             const id = `npc_new_${Date.now()}`;
             const npcGender = gender || "未知";
@@ -13664,7 +13670,7 @@ function openNpcProfile(npcId) {
                 cardId: String(cardId || ""), npcId: String(npcId || ""),
                 npcName: String(npc.name || "角色"),
                 avatar,
-                desc: String(npc.role || npc.relationship || npc.personality || "").slice(0, 60),
+                desc: String(npc.role || npc.relationship || npc.personality || "").slice(0, 300),
                 cardText: String((card && (card.text || (card.structured && JSON.stringify(card.structured)))) || "").slice(0, 3000),
                 messages: msgs
             };
@@ -15846,15 +15852,15 @@ function openNpcProfile(npcId) {
                 if (flags.stats && Array.isArray(gen.stats)) card.structured.stats = gen.stats.map((s) => ({ key: String(s.key || "stat"), label: String(s.label || s.key || "属性"), value: Number(s.value) || 0 })).slice(0, 10);
                 if (flags.identity && gen.identity && typeof gen.identity === "object") {
                     ["name", "gender", "age", "background", "nationality", "role", "appearance", "personality", "family"].forEach((k) => {
-                        card.structured.identity[k] = String(gen.identity[k] || "").trim().slice(0, k === "background" ? 500 : 40);
+                        card.structured.identity[k] = String(gen.identity[k] || "").trim().slice(0, k === "background" ? 500 : 300);
                     });
                 }
                 if (flags.npcs && Array.isArray(gen.npcs)) {
                     card.structured.npcs = gen.npcs.map((n) => ({
                         name: String(n.name || "").trim().slice(0, 20),
-                        role: String(n.role || "").trim().slice(0, 30),
-                        personality: String(n.personality || "").trim().slice(0, 100),
-                        relationship: String(n.relationship || "").trim().slice(0, 100)
+                        role: String(n.role || "").trim().slice(0, 120),
+                        personality: String(n.personality || "").trim().slice(0, 400),
+                        relationship: String(n.relationship || "").trim().slice(0, 300)
                     })).filter((n) => n.name).slice(0, 6);
                 }
                 if (flags.opening && gen.opening && typeof gen.opening === "object") {

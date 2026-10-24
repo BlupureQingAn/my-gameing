@@ -698,10 +698,14 @@
 
         .status-tag {
             display: inline-flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 6px;
+            max-width: 100%;
             padding: 7px 10px;
-            border-radius: 999px;
+            border-radius: 16px;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            line-height: 1.45;
             border: 1px solid color-mix(in srgb, var(--coin) 24%, transparent);
             background: linear-gradient(180deg, var(--card), var(--card-soft));
             color: var(--accent-dark);
@@ -711,11 +715,14 @@
 
         .status-tag strong {
             font-weight: 700;
+            flex-shrink: 0;
         }
 
         .status-tag em {
             font-style: normal;
             color: var(--sub);
+            min-width: 0;
+            overflow-wrap: anywhere;
         }
 
         .status-tag.highlight {
@@ -813,8 +820,10 @@
             background: color-mix(in srgb, var(--accent-2-strong) 12%, transparent);
             border: 1px solid color-mix(in srgb, var(--accent-2-strong) 25%, transparent);
             padding: 1px 8px;
-            border-radius: 999px;
-            white-space: nowrap;
+            border-radius: 10px;
+            max-width: 100%;
+            white-space: normal;
+            overflow-wrap: anywhere;
         }
         .psb-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
         .psb-chip {
@@ -4183,7 +4192,7 @@
         .gd-role-avatar { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: var(--fs-5); background: var(--card); border: 1px solid var(--line); flex-shrink: 0; }
         .gd-role-main { flex: 1; min-width: 0; }
         .gd-role-name { font-weight: 700; font-size: var(--fs-3); }
-        .gd-role-sub { font-size: var(--fs-2); color: var(--sub); overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .gd-role-sub { font-size: var(--fs-2); color: var(--sub); white-space: normal; overflow-wrap: anywhere; line-height: 1.45; }
         .gd-role-hot { font-size: var(--fs-2); color: var(--warm); font-weight: 700; white-space: nowrap; }
         .gd-donor-row { display: flex; align-items: center; gap: 8px; padding: 5px 2px; font-size: var(--fs-2); }
         .gd-donor-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: var(--card); border: 1px solid var(--line); flex-shrink: 0; }
@@ -4871,7 +4880,7 @@
         .wx-list-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 6px; }
         .wx-list-content { flex: 1; min-width: 0; }
         .wx-list-title { font-size: var(--fs-3); font-weight: 700; color: var(--wechat-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .wx-list-desc { font-size: var(--fs-2); color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+        .wx-list-desc { font-size: var(--fs-2); color: var(--text-muted); white-space: normal; overflow-wrap: anywhere; line-height: 1.45; margin-top: 2px; }
         .wx-list-meta { flex-shrink: 0; }
         .wx-list-time { font-size: var(--fs-2); color: var(--text-muted); }
         .wx-badge {
