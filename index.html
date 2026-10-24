@@ -225,7 +225,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                 <img src="icons/android-chrome-192x192.png" alt="云吞吞文游" style="width:52px;height:52px;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,0.12);">
                 <h2 style="font-size:var(--fs-4);font-weight:800;color:var(--accent-dark);margin:0;">云吞吞文游</h2>
             </div>
-            <p id="auth-subtitle" style="margin:6px 0 0;font-size:var(--fs-2);color:var(--sub);">登录以继续</p>
+            <p id="auth-subtitle" style="margin:6px 0 0;font-size:var(--fs-2);color:var(--sub);">登录后同步进度、云存档与会员权益</p>
         </div>
         <div style="display:flex;flex-direction:column;gap:12px;">
             <input id="auth-email" type="text" placeholder="邮箱或用户名" autocomplete="username"
@@ -310,8 +310,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
         <div id="membership-plan-grid"></div>
         <div class="list-title" style="font-size:var(--fs-3);margin-top:10px;">支付方式</div>
         <div class="pay-method-grid">
-            <button class="pay-method-btn active" data-pay="alipay" onclick="MembershipService.selectPayType('alipay')"><img src="icons/alipay.svg" alt="支付宝">支付宝</button>
-            <button class="pay-method-btn" data-pay="wxpay" onclick="MembershipService.selectPayType('wxpay')"><img src="icons/wechat-pay.svg" alt="微信支付">微信支付</button>
+            <button class="pay-method-btn active" data-pay="wxpay" onclick="MembershipService.selectPayType('wxpay')"><img src="icons/wechat-pay.svg" alt="微信支付">微信支付</button>
         </div>
         <div id="membership-pay-area" style="margin-top:10px;text-align:center;"></div>
         <label style="display:flex;align-items:flex-start;gap:6px;margin:10px 2px 0;font-size:var(--fs-2);color:var(--sub);cursor:pointer;text-align:left;">
@@ -334,6 +333,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
             <h1 id="site-title"><img src="icons/android-chrome-192x192.png" alt="云吞吞文游" style="width:1.25em;height:1.25em;vertical-align:-0.22em;margin-right:6px;border-radius:6px;">云吞吞文游</h1>
         </div>
         <div class="top-nav-group top-mini-nav" id="top-nav-primary-row">
+            <button class="top-nav-btn" id="top-login-btn" onclick="AuthService.openLogin()" style="display:inline-flex;" title="登录 / 注册">登录</button>
             <span id="usage-badge" onclick="MembershipService.openPanel()" style="display:none;font-weight:600;color:var(--accent);border-radius:var(--radius-sm);background:color-mix(in srgb, var(--accent) 10%, transparent);border:1px solid color-mix(in srgb, var(--accent) 30%, transparent);cursor:pointer;" title="点击开通/续费会员"></span>
             <!-- 历史:原先埋在「菜单」下拉里,与「返回」同一个道理——它是浮层开关(不是 switchView 那种页面跳转),
                  提到顶栏做成图标按钮,一步直达。图标就是面板标题那枚(项目已有的 lucide scroll-text),
@@ -366,6 +366,11 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
     <main class="content" id="main-content">
         <section id="view-home" class="view-section active">
             <section class="card">
+                <!-- 首屏价值主张：登录墙撤掉后，游客第一眼要能看懂这是什么、能免费玩到什么 -->
+                <div style="padding:4px 2px 12px;">
+                    <div style="font-size:var(--fs-5);font-weight:800;color:var(--accent-dark);line-height:1.35;">每一段人生，都由你选择</div>
+                    <div style="margin-top:6px;font-size:var(--fs-3);color:var(--sub);line-height:1.6;">AI 互动文游：官方剧本免费开局，你的每个选择都会改写结局；英 / 日 / 韩剧本还能边玩边学。</div>
+                </div>
                 <div id="home-motivation-banner" class="home-motivation-banner" onclick="Controller.openCreationWizard()">
                     <span class="hmb-text">产出优质作品，得云币分成！</span>
                     <span class="hmb-cta">去创作 ›</span>
@@ -1485,7 +1490,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
 <script src="scenarios/scenarios.js?v=20260922a" async id="scenario-lib-script"></script>
 <script src="scenarios/skeletons.js?v=20260926a" async id="skeleton-lib-script"></script>
 <script src="lib/qrcode.min.js" async></script>
-<script src="assets/app.min.js?v=20261024a"></script>
+<script src="assets/app.min.js?v=20261025a"></script>
 <script src="assets/love-engine.min.js?v=20261022a"></script>
 <script src="assets/lang-play.min.js?v=20261020a"></script>
 <script src="assets/lang-aux.min.js?v=20261020a"></script>

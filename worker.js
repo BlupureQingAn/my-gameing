@@ -2450,12 +2450,12 @@ export default {
                         const ac = new AbortController();
                         const timer = setTimeout(() => ac.abort("agnes timeout"), 90000);
                         try {
+                            const agnesModel = (typeof body.model === "string" && body.model.startsWith("agnes-image")) ? body.model : "agnes-image-2.5-flash";
                             const r = await fetch("https://apihub.agnes-ai.com/v1/images/generations", {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${agnesKey}` },
                                 // 不给 Agnes 传 negative_prompt:实测其对该字段直接 400(negative_prompt is not allowed),
                                 // 反向词只有 Kolors 认;带反向词的请求请走 provider:"siliconflow"
-                                const agnesModel = (typeof body.model === "string" && body.model.startsWith("agnes-image")) ? body.model : "agnes-image-2.5-flash";
                                 body: JSON.stringify({ model: agnesModel, prompt, size: "1K", ratio, extra_body: { response_format: "url" } }),
                                 signal: ac.signal
                             });
@@ -4486,7 +4486,9 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 let body = {};
                 try { body = await request.json(); } catch (e) {}
                 const planId = String(body.planId || "");
-                const payType = ["alipay", "wxpay"].includes(body.payType) ? body.payType : "alipay";
+                // 支付宝入口已下线(2026-10-25):只接受微信,避免旧客户端创建永远付不掉的 pending 单
+                const payType = String(body.payType || "wxpay");
+                if (payType !== "wxpay") return errorResponse("当前仅支持微信支付", 400, null, "PAY_TYPE_UNSUPPORTED");
                 if (!CHARGE_PLANS[planId] && !MEMBER_PLANS[planId] && !PACK_PLANS[planId] && !STORY_PLANS[planId] && planId !== "byo_api" && planId !== "lifetime") return errorResponse("无效的充值档位", 400, null, "INVALID_PLAN");
                 const ua = request.headers.get("user-agent") || "";
                 const isMobile = /Android|iPhone|iPad|iPod|Mobile|Windows Phone/i.test(ua);

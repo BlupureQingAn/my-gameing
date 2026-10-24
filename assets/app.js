@@ -9491,7 +9491,8 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             if (code === "MEMBERSHIP_EXPIRED") return "会员已到期，已自动切换为免费额度";
             if (code === "POOL_UNAVAILABLE") return "AI 服务暂时不可用，请稍后重试";
             if (code === "INSUFFICIENT_COIN") return "云币不足，请充值或开通会员后继续（开通会员可 AI 不限次）";
-            if (code === "NOT_LOGGED_IN" || code === "SESSION_EXPIRED") return "登录状态已失效，请重新登录";
+            if (code === "NOT_LOGGED_IN") return "登录后即可继续";
+            if (code === "SESSION_EXPIRED") return "登录状态已失效，请重新登录";
             if (code === "BYO_NOT_UNLOCKED") return "自带 API 未解锁（「我的」页一次性 ¥5 开通）";
             if (code === "BYO_CONFIG_INCOMPLETE") return "自带 API 配置不完整，请在「我的」页补全接口地址和 Key";
             if (code === "BYO_BASE_INSECURE") return "自带 API 接口地址必须以 https:// 开头";
@@ -9508,6 +9509,18 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
                 }
             } catch (e) { /* 非 JSON 或没有 error 字段,走默认文案 */ }
             return "";
+        }
+        // 游客/会话失效：AI 请求被 worker 拒绝时把登录面板推到前台。
+        // 首访不再强制登录，但第一次真正需要 AI 时必须给一步到位的入口，而不是只甩一行红字。
+        function promptLoginOnAuthError(workerCode) {
+            if (workerCode !== "NOT_LOGGED_IN" && workerCode !== "SESSION_EXPIRED") return;
+            setTimeout(() => {
+                try {
+                    const el = document.getElementById("auth-overlay");
+                    if (el && el.style.display === "flex") return;
+                    AuthService.openLogin();
+                } catch (e) {}
+            }, 0);
         }
         // 免费额度耗尽提示：后端在本次调用已转云币计费时返回 X-Free-Exhausted 头，每会话仅提示一次
         // 这是免费用户第一次感知到"要花钱了"的时刻,顺手把会员价值讲清楚(弹窗自带「关闭」,不强迫开通)
@@ -9585,6 +9598,7 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             if (!response.ok) {
                 const bodyText = await readResponseSnippet(response);
                 const workerCode = parseWorkerCode(bodyText);
+                promptLoginOnAuthError(workerCode);
                 throw createHttpError(response.status,
                     formatAIErrorText(bodyText) || (workerCode === "QUEUE_BUSY" ? "AI 模型繁忙，正在排队" : `HTTP ${response.status}`), {
                     responseSnippet: bodyText.slice(0, 300),
@@ -9766,6 +9780,7 @@ const token = delta.content || "";
             if (!response.ok) {
                 const bodyText = await readResponseSnippet(response);
                 const workerCode = parseWorkerCode(bodyText);
+                promptLoginOnAuthError(workerCode);
                 throw createHttpError(response.status,
                     formatAIErrorText(bodyText) || (workerCode === "QUEUE_BUSY" ? "AI 模型繁忙，正在排队" : `HTTP ${response.status}`), {
                     responseSnippet: bodyText.slice(0, 300),
@@ -16128,8 +16143,8 @@ function openNpcProfile(npcId) {
 
     // ==================== MembershipService (会员开通/续费) ====================
     const MembershipService = (() => {
-        let selectedPlan = "c1";
-        let selectedPayType = "wxpay"; // 支付宝未开通,统一默认微信
+        let selectedPlan = "monthly"; // 默认选中月度会员,云币档需用户主动改选
+        let selectedPayType = "wxpay"; // 仅支持微信支付,支付宝入口已下线
         let _pollTimer = null;
         let _currentOrder = null;   // 当前进行中的订单:重复点击立即支付时复用,不重复创建
         let _creatingOrder = false; // 创建中锁,防双击产生两个订单
@@ -16343,7 +16358,6 @@ function openNpcProfile(npcId) {
         async function startPay() {
             const user = AuthService.getUserData();
             if (!user) { NoticeModalService.showInfo({ title: "提示", descHtml: "请先登录" }); return; }
-            if (selectedPayType === "alipay") { NoticeModalService.showInfo({ title: "提示", descHtml: "尚未开通支付宝支付，如实在需要支付宝支付，请联系小红书官方账号「云吞吞在努力」" }); return; }
             // 合规确认:每次充值须勾选 18 岁/监护人确认与虚拟商品条款
             const adultBox = document.getElementById("adult-confirm-box");
             if (!adultBox || !adultBox.checked) {
@@ -16727,6 +16741,9 @@ function openNpcProfile(npcId) {
                 usageBadge.textContent = isMember ? memberName : "免费用户";
                 usageBadge.style.display = "inline-flex";
             }
+            // 未登录时顶栏常驻登录入口：首访不再强制弹登录页，用户得有个随时能点的地方
+            const loginBtn = document.getElementById("top-login-btn");
+            if (loginBtn) loginBtn.style.display = u ? "none" : "inline-flex";
         }
 
         async function refreshBalance() {
@@ -17167,6 +17184,8 @@ function openNpcProfile(npcId) {
             if (badgeEl) badgeEl.textContent = "免费用户";
             const usageBadge = document.getElementById("usage-badge");
             if (usageBadge) usageBadge.style.display = "none";
+            const loginBtn = document.getElementById("top-login-btn");
+            if (loginBtn) loginBtn.style.display = "inline-flex";
             const emailEl = document.getElementById("display-user-email");
             if (emailEl) emailEl.textContent = "-";
             // 账户卡展示区同步清空:避免登出后残留上一位用户的昵称/签名/头像
@@ -17225,10 +17244,16 @@ function openNpcProfile(npcId) {
                 }
                 clearSession();
                 clearCachedUser();
-                showOverlay();
+                _userData = null;
+                const lb = document.getElementById("top-login-btn");
+                if (lb) lb.style.display = "inline-flex";
+                const ub = document.getElementById("usage-badge");
+                if (ub) ub.style.display = "none";
+                hideOverlay();
                 return false;
             }
-            showOverlay();
+            // 游客可直接浏览首页/剧本/开局首屏；第一次真正调用 AI 时才由请求层弹出登录
+            hideOverlay();
             return false;
         }
 
@@ -17344,18 +17369,8 @@ function openNpcProfile(npcId) {
     })();
     window.ModeGate = ModeGate;
 
-    // 登录页 z-index 500000 压着弹窗的 450000，所以要等它让开；最多等 16 秒就不再打扰。
-    // 加载页(99998)也压不住它——弹窗一弹就盖在加载页上，等 onload 把加载页收掉、首页在弹窗
-    // 底下渲染出来，看着像「我还没选，页面自己跳过去了」。所以加载页没淡出前一律不弹(2026-09-26 修)；
-    // 等加载页这段不计入 16 秒预算(那个预算只留给「登录层压着」这种真需要等的场面)。
-    (function waitForModePick() {
-        let n = 0;
-        const t = setInterval(() => {
-            const boot = document.getElementById("boot-screen");
-            if (boot && !boot.classList.contains("boot-done")) return;
-            if (ModeGate.maybeShow() || ++n > 40) clearInterval(t);
-        }, 400);
-    })();
+    // 首访不再强制弹模式选择：直接看首页/剧本，想切换时再从菜单里的「选择首页模式」改。
+    // 选过的用户仍由 landOnModeHome 在下次进站时落回自己那一侧。
 
     window.onload = () => {
         // 先渲染本地数据(秒开),登录验证后台进行——慢网下不再白屏等待 auth
