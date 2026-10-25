@@ -14,6 +14,8 @@ let soundOn = true;
 let ambientOn = true;
 let unlocked = false;
 
+const MUSIC_LEVEL = 0.48;
+
 function ensure() {
   if (ctx) return ctx;
   const AC = window.AudioContext || window.webkitAudioContext;
@@ -26,7 +28,7 @@ function ensure() {
   sfxBus.gain.value = soundOn ? 0.7 : 0;
   sfxBus.connect(master);
   musicBus = ctx.createGain();
-  musicBus.gain.value = 0.16;
+  musicBus.gain.value = MUSIC_LEVEL;
   musicBus.connect(master);
   ambientBus = ctx.createGain();
   ambientBus.gain.value = ambientOn ? 0.12 : 0;
@@ -100,7 +102,7 @@ function applyMusic() {
     musicBus.gain.value = 0;
     return;
   }
-  musicBus.gain.value = 0.16;
+  musicBus.gain.value = MUSIC_LEVEL;
   if (!musicTimer) {
     playJazzBar();
     musicTimer = setInterval(playJazzBar, 6400);
