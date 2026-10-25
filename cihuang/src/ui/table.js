@@ -25,9 +25,9 @@ const LAYOUTS = {
     showSelf: true,
     table: { cx: 480, cy: 330, rx: 392, ry: 218 },
     center: { x: 310, y: 262, w: 340, h: 84 },
-    chain: { y: 392 },
+    chain: { y: 386 },
     slots: [
-      { x: 480, y: 448 },
+      { x: 480, y: 444 },
       { x: 220, y: 330 },
       { x: 480, y: 205 },
       { x: 740, y: 330 },
@@ -315,18 +315,19 @@ export class TableView {
     return node;
   }
 
-  makeSquareBack() {
-    const size = 44;
+  makePileBack() {
+    const w = 40;
+    const h = 56;
     const cardback = COSMETIC_INDEX[this.equipped.cardback?.id] || COSMETIC_INDEX.cb_default;
     const node = new Container();
     const g = new Graphics();
-    rounded(g, -size / 2, -size / 2, size, size, 6, 0x120d0b);
-    rounded(g, -size / 2 + 1.5, -size / 2 + 1.5, size - 3, size - 3, 5, cardback.color);
-    g.roundRect(-size / 2 + 6, -size / 2 + 6, size - 12, size - 12, 3)
+    rounded(g, -w / 2, -h / 2, w, h, 5, 0x120d0b);
+    rounded(g, -w / 2 + 1.5, -h / 2 + 1.5, w - 3, h - 3, 4, cardback.color);
+    g.roundRect(-w / 2 + 5, -h / 2 + 5, w - 10, h - 10, 3)
       .stroke({ width: 1, color: cardback.accent, alpha: 0.55 });
-    g.circle(0, 0, 8).stroke({ width: 1.5, color: cardback.accent, alpha: 0.7 });
-    g.moveTo(-13, 0).lineTo(13, 0).stroke({ width: 1.2, color: cardback.accent, alpha: 0.5 });
-    g.moveTo(0, -13).lineTo(0, 13).stroke({ width: 1.2, color: cardback.accent, alpha: 0.5 });
+    g.circle(0, 0, 7).stroke({ width: 1.4, color: cardback.accent, alpha: 0.7 });
+    g.moveTo(-11, 0).lineTo(11, 0).stroke({ width: 1.1, color: cardback.accent, alpha: 0.5 });
+    g.moveTo(0, -11).lineTo(0, 11).stroke({ width: 1.1, color: cardback.accent, alpha: 0.5 });
     node.addChild(g);
     return node;
   }
@@ -343,8 +344,9 @@ export class TableView {
       if (!grouped.has(segment.player)) grouped.set(segment.player, []);
       grouped.get(segment.player).push(segment);
     });
-    const size = 44;
-    const gap = 24;
+    const w = 40;
+    const h = 56;
+    const gap = 20;
     for (const [seat, segments] of grouped) {
       const slot = this.layout.slots[seat];
       if (!slot) continue;
@@ -352,15 +354,15 @@ export class TableView {
       const shown = Math.min(total, 6);
       const startX = slot.x - ((shown - 1) * gap) / 2;
       for (let i = 0; i < shown; i += 1) {
-        const back = this.makeSquareBack();
+        const back = this.makePileBack();
         back.position.set(startX + i * gap, slot.y);
         back.zIndex = i;
         layer.addChild(back);
       }
       if (!skipLast && last.player === seat) {
-        const width = (shown - 1) * gap + size + 12;
+        const width = (shown - 1) * gap + w + 10;
         const halo = new Graphics();
-        halo.roundRect(slot.x - width / 2, slot.y - size / 2 - 4, width, size + 8, 8)
+        halo.roundRect(slot.x - width / 2, slot.y - h / 2 - 3, width, h + 6, 7)
           .stroke({ width: 2, color: PLAYER_COLORS[seat], alpha: 0.85 });
         layer.addChild(halo);
         gsap.to(halo, { alpha: 0.35, duration: 0.75, yoyo: true, repeat: -1, ease: "sine.inOut" });
@@ -688,7 +690,7 @@ export class TableView {
         y: slot.y,
         rotation: (i - (list.length - 1) / 2) * 0.05,
         alpha: 0.9,
-        scale: 0.46,
+        scale: 0.42,
         duration: this.reducedMotion ? 0.01 : 0.42,
         ease: "power2.inOut",
         onComplete: () => {
@@ -717,7 +719,7 @@ export class TableView {
         x: slot.x + (i - (nodes.length - 1) / 2) * 24,
         y: slot.y,
         rotation: (i - (nodes.length - 1) / 2) * 0.05,
-        scale: 0.46,
+        scale: 0.42,
         alpha: 0.95,
         duration: this.reducedMotion ? 0.01 : 0.36,
         ease: "power2.inOut",
