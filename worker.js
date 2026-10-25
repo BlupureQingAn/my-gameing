@@ -1757,9 +1757,10 @@ export default {
                 // 测试后门：MODEL_URL_OVERRIDE 为 JSON {"模型id":"http://mock"}，仅探针把模型指向本地 mock，生产不配置
                 let modelUrlOverrides = null;
                 try { modelUrlOverrides = env.MODEL_URL_OVERRIDE ? JSON.parse(env.MODEL_URL_OVERRIDE) : null; } catch (e) { modelUrlOverrides = null; }
-                // 匿名试玩(2026-10-25):首访不注册也能玩 3 步。前端未登录时带本地生成的
-                // X-Anon-Token;服务端按 token 记成功次数(上限 3/天),再按 IP 限请求量防刷。
-                // 试玩只走免费池,不占免费额度/云币;用完返回 ANON_TRIAL_END 引导注册。
+                // 匿名试玩(2026-10-25,小徐定案只给 1 步):首访不注册也能完成 1 次续写。
+                // 前端未登录时带本地生成的 X-Anon-Token;服务端按 token 记成功次数(上限 1/天),
+                // 再按 IP 限请求量防刷。试玩只走免费池,不占免费额度/云币;
+                // 用完返回 ANON_TRIAL_END 引导注册。
                 const userTokenHeader = request.headers.get("X-Auth-Token");
                 const anonTokenRaw = String(request.headers.get("X-Anon-Token") || "").trim();
                 let anonTrial = false;
@@ -1775,7 +1776,7 @@ export default {
                         const ipKey = anonIp ? `anontrial:ip:${anonIp}:${anonDay}` : "";
                         const aUsed = Number(await env.COVER_CACHE.get(anonQuotaKey) || 0);
                         const ipUsed = ipKey ? Number(await env.COVER_CACHE.get(ipKey) || 0) : 0;
-                        if (aUsed >= 3) return errorResponse("免费试玩 3 步已用完，注册后免费继续", 403, { used: aUsed }, "ANON_TRIAL_END");
+                        if (aUsed >= 1) return errorResponse("免费试玩已用完，注册后免费继续", 403, { used: aUsed }, "ANON_TRIAL_END");
                         if (ipUsed >= 40) return errorResponse("今日试玩请求过多，请注册后继续", 429, null, "ANON_IP_LIMIT");
                         if (ipKey) await env.COVER_CACHE.put(ipKey, String(ipUsed + 1), { expirationTtl: 48 * 3600 });
                         anonTrial = true;

@@ -9462,7 +9462,7 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             if (token) {
                 headers["X-Auth-Token"] = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
             } else {
-                // 匿名试玩(2026-10-25):未登录也生成设备级随机 token,服务端按 token 限 3 步续写
+                // 匿名试玩(2026-10-25,只给 1 步):未登录也生成设备级随机 token,服务端按 token 限续写次数
                 try {
                     const KEY = "bitlife_anon_token_v1";
                     let anon = localStorage.getItem(KEY);
@@ -9513,7 +9513,7 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             if (code === "POOL_UNAVAILABLE") return "AI 服务暂时不可用，请稍后重试";
             if (code === "INSUFFICIENT_COIN") return "云币不足，请充值或开通会员后继续（开通会员可 AI 不限次）";
             if (code === "NOT_LOGGED_IN") return "登录后即可继续";
-            if (code === "ANON_TRIAL_END") return "免费试玩 3 步已用完，注册后免费继续";
+            if (code === "ANON_TRIAL_END") return "免费试玩已用完，注册后免费继续";
             if (code === "ANON_IP_LIMIT") return "今日试玩请求过多，注册后免费继续";
             if (code === "SESSION_EXPIRED") return "登录状态已失效，请重新登录";
             if (code === "BYO_NOT_UNLOCKED") return "自带 API 未解锁（「我的」页一次性 ¥5 开通）";
