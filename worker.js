@@ -1757,10 +1757,36 @@ export default {
                 // 测试后门：MODEL_URL_OVERRIDE 为 JSON {"模型id":"http://mock"}，仅探针把模型指向本地 mock，生产不配置
                 let modelUrlOverrides = null;
                 try { modelUrlOverrides = env.MODEL_URL_OVERRIDE ? JSON.parse(env.MODEL_URL_OVERRIDE) : null; } catch (e) { modelUrlOverrides = null; }
-                const auth = await authenticate(env, request);
-                if (auth.error) return auth.error;
-                const record = auth.record;
-                const userId = record.id;
+                // 匿名试玩(2026-10-25):首访不注册也能玩 3 步。前端未登录时带本地生成的
+                // X-Anon-Token;服务端按 token 记成功次数(上限 3/天),再按 IP 限请求量防刷。
+                // 试玩只走免费池,不占免费额度/云币;用完返回 ANON_TRIAL_END 引导注册。
+                const userTokenHeader = request.headers.get("X-Auth-Token");
+                const anonTokenRaw = String(request.headers.get("X-Anon-Token") || "").trim();
+                let anonTrial = false;
+                let anonQuotaKey = "";
+                if (!userTokenHeader) {
+                    if (!/^[A-Za-z0-9_-]{16,64}$/.test(anonTokenRaw)) {
+                        return errorResponse("请先登录", 401, null, "NOT_LOGGED_IN");
+                    }
+                    const anonDay = getFreeQuotaDateStr();
+                    const anonIp = String(request.headers.get("CF-Connecting-IP") || "").trim();
+                    try {
+                        anonQuotaKey = `anontrial:${anonTokenRaw}:${anonDay}`;
+                        const ipKey = anonIp ? `anontrial:ip:${anonIp}:${anonDay}` : "";
+                        const aUsed = Number(await env.COVER_CACHE.get(anonQuotaKey) || 0);
+                        const ipUsed = ipKey ? Number(await env.COVER_CACHE.get(ipKey) || 0) : 0;
+                        if (aUsed >= 3) return errorResponse("免费试玩 3 步已用完，注册后免费继续", 403, { used: aUsed }, "ANON_TRIAL_END");
+                        if (ipUsed >= 40) return errorResponse("今日试玩请求过多，请注册后继续", 429, null, "ANON_IP_LIMIT");
+                        if (ipKey) await env.COVER_CACHE.put(ipKey, String(ipUsed + 1), { expirationTtl: 48 * 3600 });
+                        anonTrial = true;
+                    } catch (e) {
+                        return errorResponse("试玩服务暂时不可用，请稍后重试或注册", 503, null, "ANON_UNAVAILABLE");
+                    }
+                }
+                const auth = anonTrial ? null : await authenticate(env, request);
+                if (auth && auth.error) return auth.error;
+                const record = anonTrial ? null : auth.record;
+                const userId = record ? record.id : "";
 
                 // 自带 API 模式(2026-10-20 问题四):前端传 X-User-Api-Key + X-User-Api-Base
                 // (用户自有 OpenAI 兼容端点)→ 校验解锁 → 原样透传。
@@ -1809,13 +1835,28 @@ export default {
                 const requestJson = safeJsonParse(bodyText);
 
                 // 会员判定：会员到期自动回退免费用户（免费额度照常；membership_type 保留仅靠 expires_at 判定）
-                const isMemberUser = isMember(record);
+                const isMemberUser = record ? isMember(record) : false;
                 // 三模式：免费模式（今日 FREE_QUOTA_PER_DAY 次共享池内，与点译/复盘同池；仅 NVIDIA 全部 + 硅基 sf-glm-4-9b，不扣币，成功后计数）
                 //          / 云币模式（超限，全池路由，成功后按 token 扣币）/ 会员模式（不限次不扣币）
+                // 匿名试玩:固定走免费池,不读/不写个人免费额度
                 const quotaDate = getFreeQuotaDateStr();
-                const freeUsed = isMemberUser ? FREE_QUOTA_PER_DAY : await readFreeQuota(env, userId, quotaDate);
-                const freeMode = !isMemberUser && freeUsed < FREE_QUOTA_PER_DAY;
+                const freeUsed = isMemberUser ? FREE_QUOTA_PER_DAY : (anonTrial ? 0 : await readFreeQuota(env, userId, quotaDate));
+                const freeMode = !isMemberUser && (anonTrial || freeUsed < FREE_QUOTA_PER_DAY);
                 const freeExhausted = !isMemberUser && !freeMode;
+                // 新手优先(2026-10-25):前端开局前 3 轮带 X-Newbie-Priority 头。免费用户平时只走
+                // freeOk 白名单,开局高峰光排队就超过 20s;前几轮是留人关键窗口,给全池 + 每日封顶。
+                // 头部信号不可信 → 服务端 KV 计数每天最多 6 次,超出静默降级为普通免费请求。
+                let newbiePriority = false;
+                if (freeMode && String(request.headers.get("X-Newbie-Priority") || "") === "1") {
+                    try {
+                        const npKey = `newbiepri:${userId}:${quotaDate}`;
+                        const npUsed = Number(await env.COVER_CACHE.get(npKey) || 0);
+                        if (npUsed < 6) {
+                            newbiePriority = true;
+                            await env.COVER_CACHE.put(npKey, String(npUsed + 1), { expirationTtl: 48 * 3600 });
+                        }
+                    } catch (e) { /* KV 异常降级为普通免费请求 */ }
+                }
                 // 云币计费：成功后按实际 token 结算（输入 4 币/千、输出 12 币/千）；请求开始仅校验最低余额，失败不扣费；会员免扣
                 if (freeExhausted) {
                     const coin = Number(record.coins || 0);
@@ -1830,7 +1871,7 @@ export default {
                 // 模型池路由：免费模式仅 freeOk 白名单(2026-09-12 起=实测健康的 3 NVIDIA Nemotron + 2 硅基,按 tier 即关思考后实测延迟排序),其余模式全池
                 const today = getTodayStr();
                 const usageMap = await readModelUsageMap(env, today);
-                const pool = freeMode ? MODEL_POOL.filter(m => m.enabled && m.freeOk) : MODEL_POOL;
+                const pool = (freeMode && !newbiePriority) ? MODEL_POOL.filter(m => m.enabled && m.freeOk) : MODEL_POOL;
                 // 测试后门：model 传 "pool:<模型id>" 可指定池内模型（仅认证用户可用，探针/兼容性实测用）
                 const forcedModel = requestJson.model && typeof requestJson.model === "string" && requestJson.model.indexOf("pool:") === 0
                     ? MODEL_POOL.find(m => m.id === requestJson.model.slice(5)) : null;
@@ -1980,7 +2021,7 @@ export default {
                     // 免费模式:预算内(流式 17s/非流式 75s)全候选失败 → 429 QUEUE_BUSY 进前端排队窗自动重试,失败不扣额度;
                     // 云币/会员保持 503,由既有 fetchWithRetry 兜底
                     if (freeMode) {
-                        freeQueueSeen.set(userId, Date.now());
+                        freeQueueSeen.set(userId || `anon:${anonTokenRaw}`, Date.now());
                         const queueLen = freeQueueLen();
                         console.warn(`[free-queue] busy: ${attempts.join("|")} elapsed=${Date.now() - reqStart}ms`); // 诊断:预算耗尽现场
                         const resp = errorResponse("AI 模型当前繁忙，已进入排队，请稍候自动重试", 429, { queueLen }, "QUEUE_BUSY");
@@ -1998,7 +2039,12 @@ export default {
                 ctx.waitUntil((async () => {
                     try {
                         if (!isMemberUser) await bumpModelUsage(env, usedModel.id, today);
-                        if (freeMode) await bumpFreeQuota(env, userId, quotaDate);
+                        if (freeMode && !anonTrial) await bumpFreeQuota(env, userId, quotaDate);
+                        // 匿名试玩按“成功完成的续写”计数,排队重试不烧额度
+                        if (anonTrial && anonQuotaKey) {
+                            const cur = Number(await env.COVER_CACHE.get(anonQuotaKey) || 0);
+                            await env.COVER_CACHE.put(anonQuotaKey, String(cur + 1), { expirationTtl: 48 * 3600 });
+                        }
                     } catch (e) {
                         console.error("usage bump failed:", e.message);
                     }

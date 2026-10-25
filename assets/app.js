@@ -9461,6 +9461,17 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             const token = AuthService.getToken();
             if (token) {
                 headers["X-Auth-Token"] = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
+            } else {
+                // 匿名试玩(2026-10-25):未登录也生成设备级随机 token,服务端按 token 限 3 步续写
+                try {
+                    const KEY = "bitlife_anon_token_v1";
+                    let anon = localStorage.getItem(KEY);
+                    if (!/^[A-Za-z0-9_-]{16,64}$/.test(String(anon || ""))) {
+                        anon = (window.crypto && crypto.randomUUID ? crypto.randomUUID().replace(/-/g, "") : Date.now().toString(36) + Math.random().toString(36).slice(2, 12));
+                        localStorage.setItem(KEY, anon);
+                    }
+                    headers["X-Anon-Token"] = anon;
+                } catch (e) { /* localStorage 不可用时退回登录要求 */ }
             }
             // 自带 API(2026-10-20):用户已解锁且配置了自有端点 → 附带头部,
             // worker 透传到用户端点;未配置则不带,走官方池
@@ -9469,6 +9480,16 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
                 const byo = window.ByoApiService;
                 if (byo) Object.assign(headers, byo.headers());
             } catch (e) { /* 静默回退官方池 */ }
+            // 新手优先(2026-10-25):开局前 3 轮给 worker 一个优先信号,免费用户也能走全池,
+            // 避免首屏被免费池排队卡死;服务端按用户每日封顶,前端伪造也拿不到额外额度。
+            try {
+                if (token) {
+                    const _hist = StateService.get()?.history;
+                    let _rounds = 0;
+                    if (Array.isArray(_hist)) for (const _h of _hist) if (_h && _h.role === "user") _rounds++;
+                    if (_rounds <= 3) headers["X-Newbie-Priority"] = "1";
+                }
+            } catch (e) { /* 计数失败按普通请求走 */ }
             return headers;
         }
         function parseWorkerCode(bodyText) {
@@ -9492,6 +9513,8 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
             if (code === "POOL_UNAVAILABLE") return "AI 服务暂时不可用，请稍后重试";
             if (code === "INSUFFICIENT_COIN") return "云币不足，请充值或开通会员后继续（开通会员可 AI 不限次）";
             if (code === "NOT_LOGGED_IN") return "登录后即可继续";
+            if (code === "ANON_TRIAL_END") return "免费试玩 3 步已用完，注册后免费继续";
+            if (code === "ANON_IP_LIMIT") return "今日试玩请求过多，注册后免费继续";
             if (code === "SESSION_EXPIRED") return "登录状态已失效，请重新登录";
             if (code === "BYO_NOT_UNLOCKED") return "自带 API 未解锁（「我的」页一次性 ¥5 开通）";
             if (code === "BYO_CONFIG_INCOMPLETE") return "自带 API 配置不完整，请在「我的」页补全接口地址和 Key";
@@ -9513,7 +9536,7 @@ function buildSkeletonHintFromLocked(lockedSkeleton, state) {
         // 游客/会话失效：AI 请求被 worker 拒绝时把登录面板推到前台。
         // 首访不再强制登录，但第一次真正需要 AI 时必须给一步到位的入口，而不是只甩一行红字。
         function promptLoginOnAuthError(workerCode) {
-            if (workerCode !== "NOT_LOGGED_IN" && workerCode !== "SESSION_EXPIRED") return;
+            if (workerCode !== "NOT_LOGGED_IN" && workerCode !== "SESSION_EXPIRED" && workerCode !== "ANON_TRIAL_END" && workerCode !== "ANON_IP_LIMIT") return;
             setTimeout(() => {
                 try {
                     const el = document.getElementById("auth-overlay");
@@ -15332,7 +15355,16 @@ function openNpcProfile(npcId) {
             document.getElementById("init-preview-age-years").value = String(plan.ageYears ?? 18);
             document.getElementById("init-preview-nationality").value = plan.nationality || "";
             document.getElementById("init-preview-location").value = plan.location || "";
-            setInitAvatar(plan.avatar || "😀");
+            // 2026-10-25 默认头像取头像库:卡内没有图片头像时按性别给女生/男生图,
+            // 避免开局顶着一个 emoji 当脸(小徐要求默认用头像库里的女生头像)
+            const _planAv = String(plan.avatar || "").trim();
+            if (isAvatarImg(_planAv)) {
+                setInitAvatar(_planAv);
+            } else {
+                const _gender = String(plan.forcedGender || plan.selectedGender || "").trim();
+                const _avPool = _gender === "男" ? AVATAR_MALE_URLS : AVATAR_FEMALE_URLS;
+                setInitAvatar(_avPool[0] || AVATAR_ALL_URLS[0] || "😀");
+            }
             const statList = Array.isArray(plan.stats) ? plan.stats : [];
             if (statList.length) {
                 _initStatValues = {};
@@ -16237,7 +16269,14 @@ function openNpcProfile(npcId) {
                     <div class="recharge-price">${p.desc}</div>
                 </div>`
             ).join("");
-            grid.innerHTML = group("开通会员", memberCards) + group("功能救急包", packCards) + group("云币充值", coinCards);
+            // 2026-10-25:首屏只留会员三档。九宫格全平铺会让"充多少"淹没"开不开会员",
+            // 救急包与云币降级为折叠次选,展开后才参与选择。
+            const moreOpen = ["rescue1", "rescue3", "c1", "c6", "c30", "c68"].includes(selectedPlan);
+            grid.innerHTML = group("开通会员", memberCards) +
+                `<details class="recharge-more"${moreOpen ? " open" : ""}>
+                    <summary>更多充值 · 云币 / 救急包</summary>
+                    ${group("功能救急包", packCards)}${group("云币充值", coinCards)}
+                </details>`;
             updateLifetimePriceTexts();
         }
         // 终身会员一次性限时机制:每用户从首次打开充值面板起 24h 优惠(2026-09-12 起终身统一 ¥98,两档同值=限时 UI 不再展示)
@@ -16996,17 +17035,19 @@ function openNpcProfile(npcId) {
                         startCd(Math.max(Number(data?.detail?.retryAfter || 0), 3));
                         showError(data?.error || "发送太频繁，请稍后再试");
                     } else {
-                        showError(data?.error || "发送失败，请稍后再试");
+                        // 2026-10-25 发信失败兜底:给可执行的两条路(换邮箱/稍后重试)+ 垃圾箱提示,
+                        // 避免只甩一句"发送失败"让用户卡死在这一步
+                        showError((data?.error || "发送失败，请稍后再试") + "。可以换用 QQ / 163 / Gmail 邮箱，或稍后重试；若迟迟未收到请检查垃圾邮件箱。");
                         if (btn) { btn.disabled = false; btn.textContent = "发送验证码"; }
                     }
                     return;
                 }
                 showError(""); clearError();
-                showOk("✅ 验证码已发送（5分钟内有效），重新发送后旧验证码自动失效，请使用最新邮件");
+                showOk("✅ 验证码已发送（5分钟内有效），重新发送后旧验证码自动失效，请使用最新邮件；没收到请检查垃圾邮件箱");
                 // 63s = 服务端冷却 60s + 余量,倒计时结束点击必然通过冷却
                 startCd(63);
             } catch (e) {
-                showError("网络异常，请稍后重试");
+                showError("网络异常，请稍后重试；也可以换用 QQ / 163 / Gmail 邮箱再试");
                 if (btn) { btn.disabled = false; btn.textContent = "发送验证码"; }
             }
         }

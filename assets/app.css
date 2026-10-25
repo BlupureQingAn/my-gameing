@@ -2047,6 +2047,34 @@
             background: color-mix(in srgb, var(--accent) 12%, var(--card-soft));
             box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 25%, transparent);
         }
+        /* 2026-10-25 充值首屏只留会员三档,云币/救急包收进折叠区 */
+        .recharge-more {
+            margin-top: 16px;
+            border-top: 1px dashed var(--line);
+            padding-top: 4px;
+        }
+        .recharge-more > summary {
+            list-style: none;
+            cursor: pointer;
+            text-align: center;
+            font-size: var(--fs-3);
+            color: var(--sub);
+            padding: 8px 0 2px;
+            user-select: none;
+        }
+        .recharge-more > summary::-webkit-details-marker {
+            display: none;
+        }
+        .recharge-more > summary::before {
+            content: "＋ ";
+            font-weight: 800;
+        }
+        .recharge-more[open] > summary::before {
+            content: "－ ";
+        }
+        .recharge-more .recharge-group-title:first-of-type {
+            margin-top: 8px;
+        }
         .recharge-coins {
             font-size: var(--fs-3);
             font-weight: 800;
@@ -5325,6 +5353,11 @@
     body[data-skin="snow"]{--bg-main:#f5f7f9;--bg-soft:#fbfcfd;--card:#fff;--line:#d9e2ea;--text:#33414f;--sub:#73828f;--accent:#7ba3c4;--accent-dark:#4f7ea6}
     body[data-theme="dark"][data-skin="snow"]{--bg-main:#151c24;--bg-soft:#1c2631;--card:#24303d;--line:#3a4a5b;--text:#e4edf5;--sub:#93a6b8;--accent:#8fb6d8;--accent-dark:#bcd8f0}
     /* ===== 创建角色:头像三通道 + 属性重掷 ===== */
+    /* 2026-10-25 开局身份表单折叠为高级设置,默认直接确认卡内预设 */
+    .init-advanced{border:1px dashed var(--line);border-radius:10px;padding:6px 10px;margin-top:8px}
+    .init-advanced>summary{list-style:none;cursor:pointer;font-size:var(--fs-3);color:var(--sub);user-select:none}
+    .init-advanced>summary::-webkit-details-marker{display:none}
+    .init-advanced>summary::before{content:"⚙ ";}
     .init-avatar-row{display:flex;align-items:center;gap:10px}
     .init-avatar-preview{width:60px;height:60px;border-radius:10px;background:var(--card-soft);border:2px dashed var(--line);display:flex;align-items:center;justify-content:center;font-size:var(--fs-6);overflow:hidden;flex-shrink:0}
     .init-avatar-preview img{width:100%;height:100%;object-fit:cover}
