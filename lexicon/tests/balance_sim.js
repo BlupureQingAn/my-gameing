@@ -108,12 +108,35 @@ function playBlind(run, stats, rnd) {
   }
 }
 
+const MANUAL_PREF = ["grammar-manual", "ladder-manual", "collocation-manual", "flush-manual"];
+
+function useManuals(run) {
+  for (let guard = 0; guard < 10; guard++) {
+    const idx = run.consumables.findIndex((id) => String(id).endsWith("-manual"));
+    if (idx < 0) return;
+    if (!E.useConsumable(run, idx).ok) return;
+  }
+}
+
 function shopStep(run) {
   if (run.phase !== "shop" || !run.shop) return;
+  useManuals(run);
   for (let i = 0; i < run.shop.offers.length; i++) {
     const o = run.shop.offers[i];
     if (o.type === "relic" && run.relics.length < 5 && run.money >= o.price && run.money - o.price >= 1) {
       E.buy(run, i);
+    }
+  }
+  // 词牌指南：优先语法手册，买到就当场用掉（库存上限 2 不该卡住成长）
+  for (const want of MANUAL_PREF) {
+    for (;;) {
+      const idx = run.shop.offers.findIndex(
+        (o) => o.type === "consumable" && o.id === want && run.money >= o.price && run.money - o.price >= 1
+      );
+      if (idx < 0) break;
+      if (run.consumables.length >= 2) useManuals(run);
+      if (!E.buy(run, idx).ok) break;
+      useManuals(run);
     }
   }
   E.nextBlind(run);
