@@ -1,0 +1,1123 @@
+{
+  "cet4": {
+    "band": "cet4",
+    "generatedAt": "2026-10-25T21:59:56",
+    "items": 4423,
+    "candidates": 420,
+    "acceptedGroups": 90,
+    "rejectedGroups": 349,
+    "topics": 161,
+    "synonymTopics": 90,
+    "definitionTopics": 71,
+    "levels": {
+      "1": 136,
+      "2": 25
+    },
+    "posHistogram": {
+      "adj": 220,
+      "v": 212,
+      "n": 335,
+      "adv": 9
+    },
+    "promptMissing": 19,
+    "distractorShort": [],
+    "rejectedSample": [
+      {
+        "target": "new",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "see",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "even",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "work",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "work",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "way",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "use",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "good",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "make",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "world",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "state",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "part",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "different",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "great",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "number",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "little",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "high",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "case",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "take",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "important",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "place",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "go",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "old",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "example",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "small",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "get",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "come",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "figure",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "university",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "large",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "point",
+        "pos": "n",
+        "reason": "no prompt (synonym-only fallback)"
+      },
+      {
+        "target": "form",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "form",
+        "pos": "v",
+        "reason": "no prompt (synonym-only fallback)"
+      },
+      {
+        "target": "need",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "press",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "order",
+        "pos": "v",
+        "reason": "keep 4"
+      },
+      {
+        "target": "order",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "end",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "process",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "say",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "set",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "think",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "control",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "study",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "chapter",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "present",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "house",
+        "pos": "n",
+        "reason": "keep 4"
+      },
+      {
+        "target": "last",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "last",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "early",
+        "pos": "adj",
+        "reason": "keep 5"
+      }
+    ],
+    "qaErrors": [],
+    "llm": {
+      "model": "glm-4-flash",
+      "cacheHits": 27,
+      "failures": 0
+    }
+  },
+  "cet6": {
+    "band": "cet6",
+    "generatedAt": "2026-10-25T22:07:36",
+    "items": 5600,
+    "candidates": 420,
+    "acceptedGroups": 125,
+    "rejectedGroups": 300,
+    "topics": 245,
+    "synonymTopics": 125,
+    "definitionTopics": 120,
+    "levels": {
+      "1": 245
+    },
+    "posHistogram": {
+      "adj": 313,
+      "v": 380,
+      "n": 557,
+      "adv": 13
+    },
+    "promptMissing": 5,
+    "distractorShort": [],
+    "rejectedSample": [
+      {
+        "target": "see",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "even",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "work",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "work",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "way",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "use",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "use",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "man",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "good",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "make",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "world",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "state",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "where",
+        "pos": "adv",
+        "reason": "keep 5"
+      },
+      {
+        "target": "know",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "part",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "number",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "come",
+        "pos": "v",
+        "reason": "no prompt (synonym-only fallback)"
+      },
+      {
+        "target": "figure",
+        "pos": "v",
+        "reason": "no prompt (synonym-only fallback)"
+      },
+      {
+        "target": "figure",
+        "pos": "n",
+        "reason": "no prompt (synonym-only fallback)"
+      },
+      {
+        "target": "university",
+        "pos": "n",
+        "reason": "no prompt (synonym-only fallback)"
+      },
+      {
+        "target": "large",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "point",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "form",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "form",
+        "pos": "v",
+        "reason": "no prompt (synonym-only fallback)"
+      },
+      {
+        "target": "group",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "need",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "press",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "order",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "order",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "end",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "end",
+        "pos": "v",
+        "reason": "keep 4"
+      },
+      {
+        "target": "process",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "process",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "family",
+        "pos": "n",
+        "reason": "keep 4"
+      },
+      {
+        "target": "say",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "set",
+        "pos": "v",
+        "reason": "keep 3"
+      },
+      {
+        "target": "think",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "control",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "study",
+        "pos": "v",
+        "reason": "keep 4"
+      },
+      {
+        "target": "chapter",
+        "pos": "n",
+        "reason": "keep 1"
+      },
+      {
+        "target": "present",
+        "pos": "v",
+        "reason": "keep 4"
+      },
+      {
+        "target": "present",
+        "pos": "n",
+        "reason": "keep 2"
+      },
+      {
+        "target": "change",
+        "pos": "n",
+        "reason": "keep 1"
+      },
+      {
+        "target": "house",
+        "pos": "n",
+        "reason": "keep 1"
+      },
+      {
+        "target": "last",
+        "pos": "adj",
+        "reason": "keep 2"
+      },
+      {
+        "target": "last",
+        "pos": "v",
+        "reason": "keep 1"
+      },
+      {
+        "target": "early",
+        "pos": "adj",
+        "reason": "keep 1"
+      },
+      {
+        "target": "home",
+        "pos": "n",
+        "reason": "keep 2"
+      },
+      {
+        "target": "national",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "find",
+        "pos": "v",
+        "reason": "keep 4"
+      }
+    ],
+    "qaErrors": [],
+    "llm": {
+      "model": "glm-4-flash",
+      "cacheHits": 40,
+      "failures": 0
+    }
+  },
+  "ky": {
+    "band": "ky",
+    "generatedAt": "2026-10-25T22:21:57",
+    "items": 6135,
+    "candidates": 420,
+    "acceptedGroups": 181,
+    "rejectedGroups": 247,
+    "topics": 354,
+    "synonymTopics": 181,
+    "definitionTopics": 173,
+    "levels": {
+      "1": 354
+    },
+    "posHistogram": {
+      "adj": 379,
+      "n": 1260,
+      "adv": 29,
+      "v": 857
+    },
+    "promptMissing": 8,
+    "distractorShort": [],
+    "rejectedSample": [
+      {
+        "target": "what",
+        "pos": "n",
+        "reason": "keep 4"
+      },
+      {
+        "target": "into",
+        "pos": "n",
+        "reason": "keep 3"
+      },
+      {
+        "target": "see",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "first",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "first",
+        "pos": "adj",
+        "reason": "keep 4"
+      },
+      {
+        "target": "like",
+        "pos": "n",
+        "reason": "keep 4"
+      },
+      {
+        "target": "like",
+        "pos": "adj",
+        "reason": "keep 4"
+      },
+      {
+        "target": "through",
+        "pos": "n",
+        "reason": "keep 4"
+      },
+      {
+        "target": "work",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "however",
+        "pos": "adv",
+        "reason": "keep 5"
+      },
+      {
+        "target": "way",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "use",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "man",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "good",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "make",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "make",
+        "pos": "n",
+        "reason": "keep 4"
+      },
+      {
+        "target": "world",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "state",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "state",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "where",
+        "pos": "adv",
+        "reason": "keep 5"
+      },
+      {
+        "target": "know",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "know",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "part",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "part",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "long",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "long",
+        "pos": "n",
+        "reason": "keep 3"
+      },
+      {
+        "target": "back",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "high",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "high",
+        "pos": "n",
+        "reason": "keep 4"
+      },
+      {
+        "target": "case",
+        "pos": "n",
+        "reason": "keep 4"
+      },
+      {
+        "target": "case",
+        "pos": "v",
+        "reason": "keep 4"
+      },
+      {
+        "target": "general",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "general",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "take",
+        "pos": "v",
+        "reason": "keep 2"
+      },
+      {
+        "target": "take",
+        "pos": "n",
+        "reason": "keep 2"
+      },
+      {
+        "target": "important",
+        "pos": "adj",
+        "reason": "keep 4"
+      },
+      {
+        "target": "place",
+        "pos": "v",
+        "reason": "keep 3"
+      },
+      {
+        "target": "place",
+        "pos": "n",
+        "reason": "keep 3"
+      },
+      {
+        "target": "go",
+        "pos": "v",
+        "reason": "keep 2"
+      },
+      {
+        "target": "go",
+        "pos": "n",
+        "reason": "keep 2"
+      },
+      {
+        "target": "old",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "old",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "example",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "small",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "small",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "get",
+        "pos": "v",
+        "reason": "keep 4"
+      },
+      {
+        "target": "get",
+        "pos": "n",
+        "reason": "keep 4"
+      },
+      {
+        "target": "come",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "come",
+        "pos": "n",
+        "reason": "keep 2"
+      },
+      {
+        "target": "figure",
+        "pos": "v",
+        "reason": "keep 5"
+      }
+    ],
+    "qaErrors": [],
+    "llm": {
+      "model": "glm-4-flash",
+      "cacheHits": 40,
+      "failures": 0
+    }
+  },
+  "toefl": {
+    "band": "toefl",
+    "generatedAt": "2026-10-25T22:39:00",
+    "items": 7948,
+    "candidates": 420,
+    "acceptedGroups": 160,
+    "rejectedGroups": 272,
+    "topics": 308,
+    "synonymTopics": 160,
+    "definitionTopics": 148,
+    "levels": {
+      "1": 308
+    },
+    "posHistogram": {
+      "adj": 461,
+      "n": 1380,
+      "adv": 29,
+      "v": 760
+    },
+    "promptMissing": 12,
+    "distractorShort": [],
+    "rejectedSample": [
+      {
+        "target": "what",
+        "pos": "n",
+        "reason": "keep 4"
+      },
+      {
+        "target": "into",
+        "pos": "n",
+        "reason": "keep 4"
+      },
+      {
+        "target": "first",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "first",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "like",
+        "pos": "n",
+        "reason": "keep 4"
+      },
+      {
+        "target": "like",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "even",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "people",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "through",
+        "pos": "n",
+        "reason": "keep 4"
+      },
+      {
+        "target": "however",
+        "pos": "adv",
+        "reason": "keep 5"
+      },
+      {
+        "target": "way",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "use",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "man",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "make",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "make",
+        "pos": "n",
+        "reason": "keep 4"
+      },
+      {
+        "target": "world",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "state",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "where",
+        "pos": "adv",
+        "reason": "keep 5"
+      },
+      {
+        "target": "back",
+        "pos": "v",
+        "reason": "keep 4"
+      },
+      {
+        "target": "high",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "take",
+        "pos": "v",
+        "reason": "keep 4"
+      },
+      {
+        "target": "take",
+        "pos": "n",
+        "reason": "keep 3"
+      },
+      {
+        "target": "important",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "place",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "place",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "go",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "go",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "old",
+        "pos": "adj",
+        "reason": "keep 5"
+      },
+      {
+        "target": "old",
+        "pos": "n",
+        "reason": "keep 4"
+      },
+      {
+        "target": "example",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "come",
+        "pos": "n",
+        "reason": "keep 3"
+      },
+      {
+        "target": "second",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "form",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "form",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "group",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "need",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "need",
+        "pos": "n",
+        "reason": "keep 2"
+      },
+      {
+        "target": "press",
+        "pos": "n",
+        "reason": "keep 2"
+      },
+      {
+        "target": "press",
+        "pos": "v",
+        "reason": "keep 4"
+      },
+      {
+        "target": "order",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "order",
+        "pos": "n",
+        "reason": "keep 4"
+      },
+      {
+        "target": "public",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "end",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "end",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "process",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "human",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "family",
+        "pos": "n",
+        "reason": "keep 5"
+      },
+      {
+        "target": "say",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "set",
+        "pos": "v",
+        "reason": "keep 5"
+      },
+      {
+        "target": "set",
+        "pos": "n",
+        "reason": "keep 5"
+      }
+    ],
+    "qaErrors": [],
+    "llm": {
+      "model": "glm-4-flash",
+      "cacheHits": 40,
+      "failures": 0
+    }
+  }
+}

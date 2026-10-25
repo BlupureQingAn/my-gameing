@@ -1,4 +1,5 @@
 ﻿import { BANNED_WORDS } from "./banned_words.js";
+import { validateRun } from "./cihuang/server/verify.js";
 
 // 违禁词过滤:命中返回首个命中词,否则 null;纯字母/数字词要求边界(避免误伤 obsessed 等含 sb 的正常词)
 function checkBanned(text) {
@@ -1054,6 +1055,148 @@ function isMemberExpired(record) {
     const t = record.membership_type;
     if (!t || t === "lifetime") return false;
     return !!(record.membership_expires_at && Date.parse(record.membership_expires_at) <= Date.now());
+}
+
+// ==================== 4.5 词谎 / Cihuang ====================
+
+const CIHUANG_BANDS = new Set(["hs", "cet4", "cet6", "ky", "toefl"]);
+const CIHUANG_DIFFICULTIES = new Set(["easy", "normal", "hard"]);
+const CIHUANG_EVENT_NAMES = new Set([
+    "app_open", "tutorial_start", "tutorial_step", "tutorial_complete", "tutorial_skip",
+    "game_start", "round_start", "play", "challenge", "judge_answer", "roulette",
+    "elimination", "game_end", "vocab_add", "vocab_review", "vocab_mastered",
+    "leaderboard_opt_in", "leaderboard_opt_out", "cosmetic_purchase", "share", "error",
+]);
+const CIHUANG_RUN_HOURLY = 20;
+const CIHUANG_EVENT_HOURLY = 300;
+const CIHUANG_MAX_EVENTS = 20;
+
+function cihuangJSON(payload, status = 200) {
+    return new Response(JSON.stringify(payload), {
+        status,
+        headers: { ...corsHeaders(), "Content-Type": "application/json" }
+    });
+}
+
+function cihuangSeed() {
+    const bytes = new Uint8Array(8);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// KV 未绑定或异常时降级放行，避免限流系统故障阻断对局
+async function cihuangRateLimit(env, key, limit, ttlSeconds) {
+    if (!env.RATE_LIMIT) return true;
+    const storeKey = `cihuang:${key}`;
+    try {
+        const current = Number(await env.RATE_LIMIT.get(storeKey) || 0);
+        if (current >= limit) return false;
+        await env.RATE_LIMIT.put(storeKey, String(current + 1), { expirationTtl: ttlSeconds });
+        return true;
+    } catch (e) {
+        return true;
+    }
+}
+
+function cihuangNickname(record) {
+    const raw = String(record?.nickname || record?.name || record?.username || "").trim();
+    if (raw) return raw.slice(0, 20);
+    return `赌客${String(record?.id || "").slice(-4)}`;
+}
+
+function cihuangCleanStrings(value, limit = 100, maxLen = 40) {
+    if (!Array.isArray(value)) return [];
+    return value.filter((item) => typeof item === "string" && item.length <= maxLen).slice(0, limit);
+}
+
+// 只保留一层原始类型，避免客户端塞入超大嵌套结构
+function cihuangCleanFlat(value, maxKeys = 30, maxLen = 100) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+    const out = {};
+    for (const [key, item] of Object.entries(value).slice(0, maxKeys)) {
+        if (typeof key !== "string" || !key || key.length > 40) continue;
+        if (typeof item === "string" && item.length <= maxLen) out[key] = item;
+        else if (typeof item === "number" && Number.isFinite(item)) out[key] = item;
+        else if (typeof item === "boolean") out[key] = item;
+    }
+    return out;
+}
+
+function cihuangVocabOut(rec) {
+    return {
+        id: rec.id,
+        w: rec.word,
+        band: rec.band || "hs",
+        ipa: rec.ipa || "",
+        pos: Array.isArray(rec.pos) ? rec.pos : [],
+        glossZh: rec.gloss_zh || "",
+        glossEn: rec.gloss_en || "",
+        topicType: rec.topic_type || "definition",
+        topicPrompt: rec.topic_prompt || "",
+        streak: Number(rec.streak) || 0,
+        reviews: Number(rec.reviews) || 0,
+        lastResult: rec.last_result === true,
+        source: rec.source || "auto",
+        createdAt: rec.created || "",
+        updatedAt: rec.updated || ""
+    };
+}
+
+async function cihuangFindOne(env, collection, filter) {
+    const f = encodeURIComponent(filter);
+    const q = await pbAdminFetch(env, `/api/collections/${collection}/records?perPage=1&skipTotal=true&filter=${f}`);
+    const d = await q.json().catch(() => ({}));
+    return (d.items || [])[0] || null;
+}
+
+async function cihuangFindScore(env, uid, difficulty) {
+    return cihuangFindOne(env, "cihuang_scores",
+        `user_id='${escapePocketBaseFilterValue(uid)}' && difficulty='${escapePocketBaseFilterValue(difficulty)}'`);
+}
+
+async function cihuangReadOptIn(env, uid) {
+    if (!env.RATE_LIMIT) return false;
+    try {
+        return (await env.RATE_LIMIT.get(`cihuang:optin:${uid}`)) === "1";
+    } catch (e) {
+        return false;
+    }
+}
+
+async function cihuangWriteOptIn(env, uid, optIn) {
+    if (env.RATE_LIMIT) {
+        try {
+            await env.RATE_LIMIT.put(`cihuang:optin:${uid}`, optIn ? "1" : "0");
+        } catch (e) {
+            // KV 故障不阻断排行榜设置，以 PB 行为准
+        }
+    }
+    const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'`);
+    const q = await pbAdminFetch(env, `/api/collections/cihuang_scores/records?perPage=50&skipTotal=true&filter=${f}`);
+    const d = await q.json().catch(() => ({}));
+    await Promise.all((d.items || []).map((rec) => pbAdminFetch(
+        env, `/api/collections/cihuang_scores/records/${rec.id}`,
+        { method: "PATCH", body: JSON.stringify({ opt_in: optIn }) }
+    )));
+}
+
+async function cihuangUpsertScore(env, uid, record, difficulty, score, placement, optIn) {
+    const existing = await cihuangFindScore(env, uid, difficulty);
+    const next = {
+        total_score: (Number(existing?.total_score) || 0) + score,
+        games: (Number(existing?.games) || 0) + 1,
+        wins: (Number(existing?.wins) || 0) + (placement === 1 ? 1 : 0),
+        best_score: Math.max(Number(existing?.best_score) || 0, score),
+        opt_in: optIn,
+        nickname: cihuangNickname(record)
+    };
+    if (existing) {
+        await pbAdminFetch(env, `/api/collections/cihuang_scores/records/${existing.id}`,
+            { method: "PATCH", body: JSON.stringify(next) });
+    } else {
+        await pbAdminFetch(env, "/api/collections/cihuang_scores/records",
+            { method: "POST", body: JSON.stringify({ user_id: uid, difficulty, ...next }) });
+    }
 }
 
 // 按 tier 升序选当日未超限的第一个 enabled 模型；全无返回 null
@@ -4029,6 +4172,323 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 if (!d.id || d.user_id !== uid) return errorResponse("记录不存在", 404, null, "NOT_FOUND");
                 await pbAdminFetch(env, `/api/collections/lang_vocab/records/${vid}`, { method: "DELETE" });
                 return new Response(JSON.stringify({ ok: true, id: vid }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+            }
+            // ---- 词谎 / Cihuang ----
+            if (url.pathname === "/api/cihuang/config" && request.method === "GET") {
+                return cihuangJSON({
+                    ok: true,
+                    bands: Array.from(CIHUANG_BANDS),
+                    difficulties: Array.from(CIHUANG_DIFFICULTIES),
+                    k: 6,
+                    max_play: 3,
+                    answer_ms: 10000,
+                    season: "2026S1",
+                    event_names: Array.from(CIHUANG_EVENT_NAMES)
+                });
+            }
+            // 开局：服务端发种子并落库，防止客户端自选随机序列
+            if (url.pathname === "/api/cihuang/run/start" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const uid = auth.record.id;
+                if (!(await cihuangRateLimit(env, `run:${uid}`, CIHUANG_RUN_HOURLY, 3600))) {
+                    return errorResponse("请求过于频繁", 429, null, "RATE_LIMITED");
+                }
+                const body = await request.json().catch(() => ({}));
+                const band = String(body?.band || "hs");
+                const difficulty = String(body?.difficulty || "normal");
+                if (!CIHUANG_BANDS.has(band)) return errorResponse("词库非法", 400, null, "INVALID_BAND");
+                if (!CIHUANG_DIFFICULTIES.has(difficulty)) return errorResponse("难度非法", 400, null, "INVALID_DIFFICULTY");
+                if (band !== "hs" && !isMember(auth.record)) {
+                    return errorResponse("该词库仅会员可用", 403, null, "MEMBER_ONLY");
+                }
+                const runId = `run_${cihuangSeed()}`;
+                const seed = cihuangSeed();
+                const startedAt = new Date().toISOString();
+                const res = await pbAdminFetch(env, "/api/collections/cihuang_runs/records", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        user_id: uid, run_id: runId, seed, difficulty, band,
+                        started_at: startedAt, valid: false, log: []
+                    })
+                });
+                if (!res.ok) return errorResponse("对局创建失败", 502, null, "PB_ERROR");
+                return cihuangJSON({ ok: true, run_id: runId, seed, server_time: startedAt });
+            }
+            // 结算：时长取服务端差值，日志与积分全量校验，通过后才进排行榜
+            if (url.pathname === "/api/cihuang/run/finish" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const uid = auth.record.id;
+                const body = await request.json().catch(() => null);
+                if (!body || typeof body !== "object") return errorResponse("请求体无效", 400, null, "INVALID_BODY");
+                const runId = String(body.run_id || "");
+                if (!runId || runId.length > 64) return errorResponse("对局 ID 非法", 400, null, "INVALID_RUN");
+                const rec = await cihuangFindOne(env, "cihuang_runs",
+                    `run_id='${escapePocketBaseFilterValue(runId)}' && user_id='${escapePocketBaseFilterValue(uid)}'`);
+                if (!rec) return errorResponse("对局不存在", 404, null, "NOT_FOUND");
+                if (rec.finished_at) return errorResponse("对局已结算", 409, null, "ALREADY_FINISHED");
+                const durationSec = Math.round((Date.now() - Date.parse(rec.started_at || "")) / 1000);
+                const result = validateRun({
+                    log: body.log,
+                    placement: body.placement,
+                    catches: body.catches,
+                    bluffs: body.bluffs,
+                    survived: body.survived,
+                    score: body.score,
+                    durationSec,
+                    seed: rec.seed
+                });
+                let logOut = [];
+                try {
+                    if (JSON.stringify(body.log || []).length <= 70000) logOut = body.log;
+                } catch (e) {
+                    logOut = [];
+                }
+                await pbAdminFetch(env, `/api/collections/cihuang_runs/records/${rec.id}`, {
+                    method: "PATCH",
+                    body: JSON.stringify({
+                        finished_at: new Date().toISOString(),
+                        valid: !!result.ok,
+                        placement: Number.isInteger(body.placement) ? body.placement : 0,
+                        score: Number.isInteger(body.score) ? body.score : 0,
+                        log: logOut
+                    })
+                });
+                if (!result.ok) return cihuangJSON({ ok: false, valid: false, reason: result.reason });
+                const optIn = await cihuangReadOptIn(env, uid);
+                await cihuangUpsertScore(env, uid, auth.record, rec.difficulty, result.score, body.placement, optIn);
+                return cihuangJSON({ ok: true, valid: true, score: result.score, stats: result.stats });
+            }
+            if (url.pathname === "/api/cihuang/leaderboard" && request.method === "GET") {
+                const difficulty = String(url.searchParams.get("difficulty") || "normal");
+                if (!CIHUANG_DIFFICULTIES.has(difficulty)) {
+                    return errorResponse("难度非法", 400, null, "INVALID_DIFFICULTY");
+                }
+                const diffEsc = escapePocketBaseFilterValue(difficulty);
+                const f = encodeURIComponent(`difficulty='${diffEsc}' && opt_in=true`);
+                const q = await pbAdminFetch(env,
+                    `/api/collections/cihuang_scores/records?perPage=100&sort=-total_score,-wins&filter=${f}`);
+                const d = await q.json().catch(() => ({}));
+                const items = (d.items || []).map((rec, i) => ({
+                    rank: i + 1,
+                    nickname: rec.nickname || "",
+                    score: Number(rec.total_score) || 0,
+                    games: Number(rec.games) || 0,
+                    wins: Number(rec.wins) || 0,
+                    best: Number(rec.best_score) || 0
+                }));
+                let me = null;
+                const auth = await authenticate(env, request);
+                if (!auth.error) {
+                    const mine = await cihuangFindScore(env, auth.record.id, difficulty);
+                    if (mine) {
+                        const better = encodeURIComponent(
+                            `difficulty='${diffEsc}' && opt_in=true && total_score > ${Number(mine.total_score) || 0}`
+                        );
+                        const bq = await pbAdminFetch(env,
+                            `/api/collections/cihuang_scores/records?perPage=1&skipTotal=false&filter=${better}`);
+                        const bd = await bq.json().catch(() => ({}));
+                        me = {
+                            rank: (Number(bd.totalItems) || 0) + 1,
+                            optIn: mine.opt_in === true,
+                            score: Number(mine.total_score) || 0,
+                            games: Number(mine.games) || 0,
+                            wins: Number(mine.wins) || 0,
+                            best: Number(mine.best_score) || 0
+                        };
+                        if (!me.optIn) me.rank = null;
+                    }
+                }
+                return cihuangJSON({ ok: true, difficulty, items, me });
+            }
+            if (url.pathname === "/api/cihuang/leaderboard/opt" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const body = await request.json().catch(() => ({}));
+                const optIn = body?.opt_in === true;
+                const uid = auth.record.id;
+                await cihuangWriteOptIn(env, uid, optIn);
+                // 已在本局结束后才开启：把昵称同步到已有成绩行（用户名可能改过）
+                if (optIn) {
+                    const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'`);
+                    const q = await pbAdminFetch(env,
+                        `/api/collections/cihuang_scores/records?perPage=50&skipTotal=true&filter=${f}`);
+                    const d = await q.json().catch(() => ({}));
+                    const nickname = cihuangNickname(auth.record);
+                    await Promise.all((d.items || []).map((rec) => pbAdminFetch(
+                        env, `/api/collections/cihuang_scores/records/${rec.id}`,
+                        { method: "PATCH", body: JSON.stringify({ nickname }) }
+                    )));
+                }
+                return cihuangJSON({ ok: true, opt_in: optIn });
+            }
+            // 档案（水晶/装扮）仅会员云存
+            if (url.pathname === "/api/cihuang/profile" || url.pathname.startsWith("/api/cihuang/profile?")) {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                if (!isMember(auth.record)) return errorResponse("会员专享", 403, null, "MEMBER_ONLY");
+                const uid = auth.record.id;
+                const existing = await cihuangFindOne(env, "cihuang_profiles",
+                    `user_id='${escapePocketBaseFilterValue(uid)}'`);
+                if (request.method === "GET") {
+                    return cihuangJSON({
+                        ok: true,
+                        profile: existing ? {
+                            crystals: Number(existing.crystals) || 0,
+                            cosmetics: Array.isArray(existing.cosmetics) ? existing.cosmetics : [],
+                            equipped: existing.equipped && typeof existing.equipped === "object" ? existing.equipped : {},
+                            settings: existing.settings && typeof existing.settings === "object" ? existing.settings : {},
+                            updatedAt: existing.updated || ""
+                        } : null
+                    });
+                }
+                if (request.method === "PUT") {
+                    const body = await request.json().catch(() => null);
+                    if (!body || typeof body !== "object") return errorResponse("请求体无效", 400, null, "INVALID_BODY");
+                    const payload = {
+                        crystals: Math.min(1000000000, Math.max(0, Math.trunc(Number(body.crystals) || 0))),
+                        cosmetics: cihuangCleanStrings(body.cosmetics, 100, 40),
+                        equipped: cihuangCleanFlat(body.equipped, 20, 40),
+                        settings: cihuangCleanFlat(body.settings, 30, 100)
+                    };
+                    const res = existing
+                        ? await pbAdminFetch(env, `/api/collections/cihuang_profiles/records/${existing.id}`,
+                            { method: "PATCH", body: JSON.stringify(payload) })
+                        : await pbAdminFetch(env, "/api/collections/cihuang_profiles/records",
+                            { method: "POST", body: JSON.stringify({ user_id: uid, ...payload }) });
+                    if (!res.ok) return errorResponse("档案保存失败", 502, null, "PB_ERROR");
+                    return cihuangJSON({ ok: true });
+                }
+                return errorResponse("方法不允许", 405, null, "METHOD_NOT_ALLOWED");
+            }
+            // 生词本仅会员使用；删除为墓碑，便于多端同步
+            if (url.pathname === "/api/cihuang/vocab" && request.method === "GET") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                if (!isMember(auth.record)) return errorResponse("会员专享", 403, null, "MEMBER_ONLY");
+                const uid = auth.record.id;
+                const band = String(url.searchParams.get("band") || "");
+                const page = Math.max(1, Math.min(1000, Math.trunc(Number(url.searchParams.get("page")) || 1)));
+                const perPage = Math.max(1, Math.min(100, Math.trunc(Number(url.searchParams.get("perPage")) || 50)));
+                const includeDeleted = url.searchParams.get("include_deleted") === "1";
+                let filter = `user_id='${escapePocketBaseFilterValue(uid)}'`;
+                if (CIHUANG_BANDS.has(band)) filter += ` && band='${escapePocketBaseFilterValue(band)}'`;
+                if (!includeDeleted) filter += " && deleted!=true";
+                const q = await pbAdminFetch(env,
+                    `/api/collections/cihuang_vocab/records?page=${page}&perPage=${perPage}&sort=-updated&filter=${encodeURIComponent(filter)}`);
+                const d = await q.json().catch(() => ({}));
+                return cihuangJSON({
+                    ok: true,
+                    page,
+                    perPage,
+                    total: Number(d.totalItems) || 0,
+                    items: (d.items || []).map((rec) => ({ ...cihuangVocabOut(rec), deleted: rec.deleted === true }))
+                });
+            }
+            if (url.pathname === "/api/cihuang/vocab" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                if (!isMember(auth.record)) return errorResponse("会员专享", 403, null, "MEMBER_ONLY");
+                const uid = auth.record.id;
+                const body = await request.json().catch(() => ({}));
+                const word = String(body?.w || body?.word || "").trim().slice(0, 64);
+                if (!word) return errorResponse("单词为空", 400, null, "INVALID_WORD");
+                const band = CIHUANG_BANDS.has(body?.band) ? body.band : "hs";
+                const topicType = body?.topicType === "synonym" || body?.topic_type === "synonym" ? "synonym" : "definition";
+                const source = body?.source === "manual" ? "manual" : "auto";
+                const payload = {
+                    user_id: uid,
+                    word,
+                    band,
+                    ipa: String(body?.ipa || "").slice(0, 120),
+                    pos: cihuangCleanStrings(body?.pos, 20, 20),
+                    gloss_zh: String(body?.glossZh || body?.gloss_zh || "").slice(0, 500),
+                    gloss_en: String(body?.glossEn || body?.gloss_en || "").slice(0, 1000),
+                    topic_type: topicType,
+                    topic_prompt: String(body?.topicPrompt || body?.topic_prompt || "").slice(0, 200),
+                    source,
+                    deleted: false
+                };
+                const existing = await cihuangFindOne(env, "cihuang_vocab",
+                    `user_id='${escapePocketBaseFilterValue(uid)}' && word='${escapePocketBaseFilterValue(word)}'`);
+                const res = existing
+                    ? await pbAdminFetch(env, `/api/collections/cihuang_vocab/records/${existing.id}`,
+                        { method: "PATCH", body: JSON.stringify(payload) })
+                    : await pbAdminFetch(env, "/api/collections/cihuang_vocab/records",
+                        { method: "POST", body: JSON.stringify(payload) });
+                if (!res.ok) return errorResponse("生词保存失败", 502, null, "PB_ERROR");
+                const saved = await res.json().catch(() => ({}));
+                return cihuangJSON({ ok: true, item: saved.id ? cihuangVocabOut(saved) : null });
+            }
+            if (url.pathname === "/api/cihuang/vocab" && (request.method === "PATCH" || request.method === "DELETE")) {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                if (!isMember(auth.record)) return errorResponse("会员专享", 403, null, "MEMBER_ONLY");
+                const uid = auth.record.id;
+                const vid = String(url.searchParams.get("id") || "");
+                if (!vid) return errorResponse("缺少记录 id", 400, null, "INVALID_ID");
+                const rec = await (async () => {
+                    const q = await pbAdminFetch(env, `/api/collections/cihuang_vocab/records/${encodeURIComponent(vid)}`);
+                    const d = await q.json().catch(() => ({}));
+                    return d.id && d.user_id === uid ? d : null;
+                })();
+                if (!rec) return errorResponse("记录不存在", 404, null, "NOT_FOUND");
+                if (request.method === "DELETE") {
+                    await pbAdminFetch(env, `/api/collections/cihuang_vocab/records/${rec.id}`, {
+                        method: "PATCH",
+                        body: JSON.stringify({ deleted: true })
+                    });
+                    return cihuangJSON({ ok: true, id: rec.id, deleted: true });
+                }
+                const body = await request.json().catch(() => ({}));
+                const patch = {};
+                if (Number.isFinite(Number(body?.streak))) {
+                    patch.streak = Math.max(0, Math.min(100000, Math.trunc(Number(body.streak))));
+                }
+                if (Number.isFinite(Number(body?.reviews))) {
+                    patch.reviews = Math.max(0, Math.min(100000, Math.trunc(Number(body.reviews))));
+                }
+                if (typeof body?.lastResult === "boolean") patch.last_result = body.lastResult;
+                if (typeof body?.last_result === "boolean") patch.last_result = body.last_result;
+                if (!Object.keys(patch).length) return errorResponse("无可更新字段", 400, null, "EMPTY_PATCH");
+                await pbAdminFetch(env, `/api/collections/cihuang_vocab/records/${rec.id}`,
+                    { method: "PATCH", body: JSON.stringify(patch) });
+                return cihuangJSON({ ok: true, id: rec.id });
+            }
+            // 匿名遥测：白名单事件 + 客户端限流，PB batch 一次写入
+            if (url.pathname === "/api/cihuang/events" && request.method === "POST") {
+                const body = await request.json().catch(() => null);
+                if (!body || typeof body !== "object") return errorResponse("请求体无效", 400, null, "INVALID_BODY");
+                const clientId = String(body.client_id || "").slice(0, 64);
+                if (!clientId) return errorResponse("缺少客户端标识", 400, null, "INVALID_CLIENT");
+                const events = Array.isArray(body.events) ? body.events.slice(0, CIHUANG_MAX_EVENTS) : [];
+                if (!events.length) return cihuangJSON({ ok: true, accepted: 0 });
+                if (!(await cihuangRateLimit(env, `evt:${clientId}`, CIHUANG_EVENT_HOURLY, 3600))) {
+                    return errorResponse("请求过于频繁", 429, null, "RATE_LIMITED");
+                }
+                const requests = [];
+                for (const event of events) {
+                    const name = String(event?.event || event?.name || "");
+                    if (!CIHUANG_EVENT_NAMES.has(name)) continue;
+                    requests.push({
+                        method: "POST",
+                        url: "/api/collections/cihuang_events/records",
+                        body: {
+                            client_id: clientId,
+                            event: name,
+                            props: cihuangCleanFlat(event?.props, 20, 200),
+                            ts: Math.max(0, Math.min(Date.now() + 86400000, Math.trunc(Number(event?.ts) || Date.now())))
+                        }
+                    });
+                }
+                if (!requests.length) return cihuangJSON({ ok: true, accepted: 0 });
+                const res = await pbAdminFetch(env, "/api/batch", {
+                    method: "POST",
+                    body: JSON.stringify({ requests })
+                });
+                if (!res.ok) return errorResponse("遥测写入失败", 502, null, "PB_ERROR");
+                return cihuangJSON({ ok: true, accepted: requests.length });
             }
             // ---- Lexicon Rush 游戏模式：云存档(PB lexicon_saves) / 自定义词库(PB lexicon_vocab_sets) / enrich ----
             // 云存档：登录即可；词库导入与 enrich：仅会员

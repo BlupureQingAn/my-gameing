@@ -1,0 +1,223 @@
+// 与主站共享登录态：pb_auth_token + bitlife_user_cache_v1。
+// 所有网络失败都降级为本地模式，不阻断对局。
+
+const CLIENT_KEY = "cihuang_client_id";
+
+export function authToken() {
+  try {
+    return localStorage.getItem("pb_auth_token") || "";
+  } catch (e) {
+    return "";
+  }
+}
+
+export function currentUser() {
+  try {
+    return JSON.parse(localStorage.getItem("bitlife_user_cache_v1") || "null");
+  } catch (e) {
+    return null;
+  }
+}
+
+export function isLoggedIn() {
+  return !!authToken() && !!currentUser();
+}
+
+export function isMember() {
+  const user = currentUser();
+  if (!user || !user.membership_type) return false;
+  if (user.membership_type === "lifetime") return true;
+  return !!(user.membership_expires_at && Date.parse(user.membership_expires_at) > Date.now());
+}
+
+export function nickname() {
+  const user = currentUser();
+  const raw = String(user?.nickname || user?.name || user?.username || "").trim();
+  return raw ? raw.slice(0, 20) : "";
+}
+
+export function clientId() {
+  try {
+    let id = localStorage.getItem(CLIENT_KEY);
+    if (!id) {
+      id = `c_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+      localStorage.setItem(CLIENT_KEY, id);
+    }
+    return id.slice(0, 64);
+  } catch (e) {
+    return "c_anonymous";
+  }
+}
+
+async function api(path, { method = "GET", body = null, timeout = 12000 } = {}) {
+  const headers = { "Content-Type": "application/json" };
+  const token = authToken();
+  if (token) headers["X-Auth-Token"] = token;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+  try {
+    const res = await fetch(path, {
+      method,
+      headers,
+      body: body == null ? undefined : JSON.stringify(body),
+      signal: controller.signal,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const error = new Error(data.error || `请求失败 ${res.status}`);
+      error.code = data.code || "";
+      error.status = res.status;
+      throw error;
+    }
+    return data;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export async function startRun(band, difficulty) {
+  if (!isLoggedIn()) return null;
+  try {
+    const data = await api("/api/cihuang/run/start", {
+      method: "POST",
+      body: { band, difficulty },
+    });
+    if (!data?.run_id || !data?.seed) return null;
+    return data;
+  } catch (e) {
+    return null;
+  }
+}
+
+export async function finishRun(payload) {
+  if (!isLoggedIn()) return null;
+  try {
+    return await api("/api/cihuang/run/finish", { method: "POST", body: payload, timeout: 15000 });
+  } catch (e) {
+    return { ok: false, error: e.message, code: e.code || "" };
+  }
+}
+
+export async function leaderboard(difficulty) {
+  return api(`/api/cihuang/leaderboard?difficulty=${encodeURIComponent(difficulty)}`);
+}
+
+export async function setLeaderboardOptIn(optIn) {
+  return api("/api/cihuang/leaderboard/opt", { method: "POST", body: { opt_in: !!optIn } });
+}
+
+export async function getProfile() {
+  if (!isMember()) return null;
+  try {
+    const data = await api("/api/cihuang/profile");
+    return data?.profile || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+export async function putProfile(profile) {
+  if (!isMember()) return false;
+  try {
+    await api("/api/cihuang/profile", {
+      method: "PUT",
+      body: {
+        crystals: profile.crystals,
+        cosmetics: profile.cosmetics,
+        equipped: profile.equipped,
+        settings: profile.settings,
+      },
+    });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+export async function listVocab(band = "") {
+  if (!isMember()) return null;
+  try {
+    const query = band ? `?band=${encodeURIComponent(band)}&perPage=100` : "?perPage=100";
+    const data = await api(`/api/cihuang/vocab${query}`);
+    return Array.isArray(data?.items) ? data.items : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+export async function pushVocab(entry) {
+  if (!isMember()) return null;
+  try {
+    const data = await api("/api/cihuang/vocab", {
+      method: "POST",
+      body: {
+        w: entry.w,
+        band: entry.band,
+        ipa: entry.ipa,
+        pos: entry.pos,
+        glossZh: entry.glossZh,
+        glossEn: entry.glossEn,
+        topicType: entry.topicType,
+        topicPrompt: entry.topicPrompt,
+        source: entry.source,
+      },
+    });
+    return data?.item || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+export async function patchVocab(cloudId, entry) {
+  if (!isMember() || !cloudId) return false;
+  try {
+    await api(`/api/cihuang/vocab?id=${encodeURIComponent(cloudId)}`, {
+      method: "PATCH",
+      body: { streak: entry.streak, reviews: entry.reviews, lastResult: entry.lastResult },
+    });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+export async function removeVocab(cloudId) {
+  if (!isMember() || !cloudId) return false;
+  try {
+    await api(`/api/cihuang/vocab?id=${encodeURIComponent(cloudId)}`, { method: "DELETE" });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+const telemetry = [];
+let flushTimer = null;
+
+export function track(event, props = {}) {
+  telemetry.push({ event, props, ts: Date.now() });
+  if (telemetry.length >= 12) flushEvents();
+  else if (!flushTimer) flushTimer = setTimeout(flushEvents, 4000);
+}
+
+export async function flushEvents() {
+  if (flushTimer) {
+    clearTimeout(flushTimer);
+    flushTimer = null;
+  }
+  if (!telemetry.length) return;
+  const batch = telemetry.splice(0, 20);
+  try {
+    await api("/api/cihuang/events", {
+      method: "POST",
+      body: { client_id: clientId(), events: batch },
+      timeout: 6000,
+    });
+  } catch (e) {
+    // 遥测失败直接丢弃，不重试以免放大流量
+  }
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("pagehide", () => { flushEvents(); });
+}

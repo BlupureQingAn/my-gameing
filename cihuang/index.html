@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#070b09" />
+  <title>词谎 · Lexicon Liar</title>
+  <meta name="description" content="词谎 Lexicon Liar：在面具酒馆里用英语单词出牌、撒谎与质疑。猜中谎言，把左轮推向对手。云吞吞文游全新牌桌游戏。" />
+  <link rel="canonical" href="https://bitlife.blupure.cn/cihuang/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="云吞吞文游" />
+  <meta property="og:title" content="词谎 · Lexicon Liar" />
+  <meta property="og:description" content="在面具酒馆里用英语单词出牌、撒谎与质疑。猜中谎言，把左轮推向对手。" />
+  <meta property="og:url" content="https://bitlife.blupure.cn/cihuang/" />
+  <meta property="og:image" content="https://bitlife.blupure.cn/cihuang/assets/art/tavern.webp" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/webp" href="assets/art/icon.webp" />
+  <link rel="stylesheet" href="assets/style.css?v=20261025c" />
+</head>
+<body>
+<div id="app">
+  <section id="screen-menu" class="screen menu">
+    <div class="menu-inner">
+      <header class="hero">
+        <div class="eyebrow">云吞吞文游 · 牌桌模式</div>
+        <h1 class="logo">词<span>谎</span></h1>
+        <div class="tagline">LEXICON LIAR · 桌上没有人说真话</div>
+      </header>
+      <div class="menu-grid">
+        <div class="panel menu-panel">
+          <div id="menu-account" class="account"></div>
+          <div class="field">
+            <div class="field-label">词库</div>
+            <div id="band-pick" class="choices"></div>
+          </div>
+          <div class="field">
+            <div class="field-label">AI 难度</div>
+            <div id="diff-pick" class="choices"></div>
+          </div>
+          <div id="menu-stats" class="menu-stats"></div>
+          <button id="btn-start" class="btn btn-primary btn-big">入 座</button>
+          <div class="menu-links">
+            <button id="btn-tutorial" class="btn btn-ghost">教程</button>
+            <button id="btn-vocab" class="btn btn-ghost">生词本</button>
+            <button id="btn-leaderboard" class="btn btn-ghost">排行榜</button>
+            <button id="btn-cosmetics" class="btn btn-ghost">装扮</button>
+            <button id="btn-settings" class="btn btn-ghost">设置</button>
+          </div>
+        </div>
+        <div class="menu-art">
+          <img src="assets/art/tavern.webp" alt="地下酒馆的牌桌" width="1024" height="768" />
+          <blockquote>
+            “牌桌上只有两种人：<br />说谎的，和准备说谎的。”
+            <cite>—— 酒保</cite>
+          </blockquote>
+        </div>
+      </div>
+      <footer class="footer">
+        <a href="/">云吞吞文游</a>
+        <span>字体：Fusion Pixel（OFL）</span>
+        <span>牌桌规则原型：Liar's Bar</span>
+      </footer>
+      <p class="disclaimer">本作为语言学习娱乐产品，计分与排行不构成学术评价。AI 会依据规则与概率行动，不作弊也不让牌。</p>
+    </div>
+  </section>
+
+  <section id="screen-game" class="screen game hidden">
+    <div id="table-wrap" class="table-wrap"></div>
+    <div class="game-top">
+      <div class="game-meta">
+        <span id="meta-band" class="tag"></span>
+        <span id="meta-diff" class="tag dim"></span>
+        <span id="meta-round" class="tag dim"></span>
+        <span id="meta-run" class="tag online hidden">已接入排行榜校验</span>
+      </div>
+      <div class="game-actions">
+        <button id="btn-sound" class="icon-btn" aria-label="音效">♪</button>
+        <button id="btn-quit" class="icon-btn" aria-label="退出">×</button>
+      </div>
+    </div>
+    <div id="action-bar" class="action-bar">
+      <div id="action-hint" class="action-hint"></div>
+      <button id="btn-play" class="btn btn-primary">出牌</button>
+      <button id="btn-challenge" class="btn btn-danger">质疑</button>
+    </div>
+    <div id="toast" class="toast"></div>
+  </section>
+
+  <div id="modal-root"></div>
+</div>
+<script type="module" src="assets/game.js?v=20261025c"></script>
+</body>
+</html>
