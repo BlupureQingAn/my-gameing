@@ -4,7 +4,7 @@
 处理内容：
   1. hs 档去除 ball1 / bear2 这类为区分同形异义而附加的数字后缀，合并成原形；
   2. 合并同档内重复词（ky / toefl 的 29 个专有名词重复项），释义、别名、词频取并集；
-  3. 用 lexicon/data/banks/{band}.json 的 Datamuse 增强数据补 pos/ipa/syl/affixes/
+  3. 用 cihuang/data/banks/{band}.json 的 Datamuse 增强数据补 pos/ipa/syl/affixes/
      def/en/syn/ant/synGroup/rank/freq。原有字段 w/zh/ph/frq/bnc/al 一律保留，
      只在缺失时补充 ph（取 ipa 去掉定界符）。
   4. 写库前把原始记录备份到 F:\\Claude\\lexicon_build\\backup\\。
@@ -25,7 +25,7 @@ import urllib.request
 PB_BASE = "https://db.blupure.cn"
 CRED_PATH = r"F:\Claude\pb-admin.txt"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BANKS_DIR = os.path.join(ROOT, "lexicon", "data", "banks")
+BANKS_DIR = os.path.join(ROOT, "cihuang", "data", "banks")
 SRC_DIR = r"F:\Claude\lexicon_build\src"
 BACKUP_DIR = r"F:\Claude\lexicon_build\backup"
 BANDS = ["hs", "cet4", "cet6", "ky", "toefl"]
@@ -239,7 +239,7 @@ def main():
     src = load_src_items()
     meta = load_bank_meta()
     if not meta:
-        raise SystemExit("未找到 lexicon/data/banks/*.json，请先运行 scripts/lexicon_build_bank.py")
+        raise SystemExit("未找到 cihuang/data/banks/*.json，请先运行 scripts/lexicon_build_bank.py")
 
     prepared = {}
     report = {}
