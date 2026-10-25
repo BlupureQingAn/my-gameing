@@ -498,6 +498,7 @@ export function publicState(state) {
       id: segment.id,
       player: segment.player,
       claimed: segment.claimed,
+      count: segment.cards.length,
       challenged: segment.challenged,
       resolved: segment.resolved,
     })),
@@ -572,6 +573,7 @@ export function getAIView(state, seat) {
     chain: state.chain.map((segment) => ({
       player: segment.player,
       claimed: segment.claimed,
+      count: segment.cards.length,
       challenged: segment.challenged,
     })),
     ownSegments: currentRoundSegments.map((segment) => ({

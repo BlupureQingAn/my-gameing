@@ -25,8 +25,13 @@ const LAYOUTS = {
     showSelf: true,
     table: { cx: 480, cy: 330, rx: 392, ry: 218 },
     center: { x: 310, y: 262, w: 340, h: 84 },
-    chain: { y: 392, totalY: 430 },
-    playY: 384,
+    chain: { y: 392 },
+    slots: [
+      { x: 480, y: 448 },
+      { x: 220, y: 330 },
+      { x: 480, y: 205 },
+      { x: 740, y: 330 },
+    ],
     hand: { spacing: 104, tight: 88, y: 545 },
   },
   portrait: {
@@ -47,8 +52,13 @@ const LAYOUTS = {
     showSelf: false,
     table: { cx: 240, cy: 430, rx: 228, ry: 262 },
     center: { x: 60, y: 330, w: 360, h: 88 },
-    chain: { y: 520, totalY: 566 },
-    playY: 604,
+    chain: { y: 520 },
+    slots: [
+      { x: 240, y: 620 },
+      { x: 108, y: 250 },
+      { x: 240, y: 235 },
+      { x: 372, y: 250 },
+    ],
     hand: { spacing: 86, tight: 76, y: 812 },
   },
 };
@@ -125,13 +135,14 @@ export class TableView {
     this.app.stage.addChild(this.root);
     this.layers.bg = new Container();
     this.layers.table = new Container();
+    this.layers.piles = new Container();
     this.layers.seats = new Container();
     this.layers.center = new Container();
     this.layers.chain = new Container();
     this.layers.fx = new Container();
     this.layers.hand = new Container();
     this.layers.hand.sortableChildren = true;
-    for (const key of ["bg", "table", "seats", "center", "chain", "fx", "hand"]) {
+    for (const key of ["bg", "table", "piles", "seats", "center", "chain", "fx", "hand"]) {
       this.root.addChild(this.layers[key]);
     }
     this.textures = {};
@@ -304,6 +315,59 @@ export class TableView {
     return node;
   }
 
+  makeSquareBack() {
+    const size = 44;
+    const cardback = COSMETIC_INDEX[this.equipped.cardback?.id] || COSMETIC_INDEX.cb_default;
+    const node = new Container();
+    const g = new Graphics();
+    rounded(g, -size / 2, -size / 2, size, size, 6, 0x120d0b);
+    rounded(g, -size / 2 + 1.5, -size / 2 + 1.5, size - 3, size - 3, 5, cardback.color);
+    g.roundRect(-size / 2 + 6, -size / 2 + 6, size - 12, size - 12, 3)
+      .stroke({ width: 1, color: cardback.accent, alpha: 0.55 });
+    g.circle(0, 0, 8).stroke({ width: 1.5, color: cardback.accent, alpha: 0.7 });
+    g.moveTo(-13, 0).lineTo(13, 0).stroke({ width: 1.2, color: cardback.accent, alpha: 0.5 });
+    g.moveTo(0, -13).lineTo(0, 13).stroke({ width: 1.2, color: cardback.accent, alpha: 0.5 });
+    node.addChild(g);
+    return node;
+  }
+
+  renderPiles(view, { skipLast = false } = {}) {
+    const layer = this.layers.piles;
+    clearLayer(layer);
+    const chain = view.chain || [];
+    if (!chain.length) return;
+    const last = chain[chain.length - 1];
+    const grouped = new Map();
+    chain.forEach((segment, index) => {
+      if (skipLast && index === chain.length - 1) return;
+      if (!grouped.has(segment.player)) grouped.set(segment.player, []);
+      grouped.get(segment.player).push(segment);
+    });
+    const size = 44;
+    const gap = 24;
+    for (const [seat, segments] of grouped) {
+      const slot = this.layout.slots[seat];
+      if (!slot) continue;
+      const total = segments.reduce((sum, segment) => sum + Math.max(1, segment.count || segment.claimed || 1), 0);
+      const shown = Math.min(total, 6);
+      const startX = slot.x - ((shown - 1) * gap) / 2;
+      for (let i = 0; i < shown; i += 1) {
+        const back = this.makeSquareBack();
+        back.position.set(startX + i * gap, slot.y);
+        back.zIndex = i;
+        layer.addChild(back);
+      }
+      if (!skipLast && last.player === seat) {
+        const width = (shown - 1) * gap + size + 12;
+        const halo = new Graphics();
+        halo.roundRect(slot.x - width / 2, slot.y - size / 2 - 4, width, size + 8, 8)
+          .stroke({ width: 2, color: PLAYER_COLORS[seat], alpha: 0.85 });
+        layer.addChild(halo);
+        gsap.to(halo, { alpha: 0.35, duration: 0.75, yoyo: true, repeat: -1, ease: "sine.inOut" });
+      }
+    }
+  }
+
   handTargets(count) {
     const { spacing, tight, y } = this.layout.hand;
     const gap = count <= 5 ? spacing : tight;
@@ -449,6 +513,12 @@ export class TableView {
     ring.circle(0, 0, 32).fill({ color: 0x0b1210, alpha: 0.92 });
     ring.circle(0, 0, 32).stroke({ width: 2, color, alpha: player.alive ? 0.9 : 0.25 });
     group.addChild(ring);
+    if (seat === view.currentPlayer && !view.result) {
+      const pulse = new Graphics();
+      pulse.circle(0, 0, 37).stroke({ width: 2, color, alpha: 0.85 });
+      group.addChild(pulse);
+      gsap.to(pulse, { alpha: 0.2, duration: 0.8, yoyo: true, repeat: -1, ease: "sine.inOut" });
+    }
     if (seat === 0) {
       const you = text("你", 15, color);
       you.anchor.set(0.5);
@@ -554,12 +624,24 @@ export class TableView {
     textX.anchor.set(0.5);
     textX.position.set(cx, c.y + 69);
     layer.addChild(textX);
-    if (view.currentPlayer === 0 && view.phase === "turn" && !view.result) {
-      const hint = text("你的回合", 10, 0x7fd6b2);
+    const nameOf = (id) => (id === 0 ? "你" : `面具${"一二三"[id - 1]}`);
+    const parts = [];
+    const humanTurnNow = view.phase === "turn" && view.currentPlayer === 0 && !view.result;
+    if (view.phase === "turn" && !view.result) {
+      parts.push(humanTurnNow ? "轮到你" : `轮到 ${nameOf(view.currentPlayer)}`);
+    }
+    const lastSeg = view.chain && view.chain.length ? view.chain[view.chain.length - 1] : null;
+    if (lastSeg) {
+      parts.push(`刚才 ${nameOf(lastSeg.player)} 出了 ${lastSeg.count || lastSeg.claimed || 1} 张`);
+    }
+    if (parts.length) {
+      const hint = text(parts.join(" · "), 10, humanTurnNow ? 0x7fd6b2 : 0xdfd7c4);
       hint.anchor.set(0.5);
       hint.position.set(cx, c.y - 16);
       layer.addChild(hint);
-      gsap.to(hint, { alpha: 0.45, duration: 0.9, yoyo: true, repeat: -1, ease: "sine.inOut" });
+      if (humanTurnNow) {
+        gsap.to(hint, { alpha: 0.45, duration: 0.9, yoyo: true, repeat: -1, ease: "sine.inOut" });
+      }
     }
   }
 
@@ -590,25 +672,23 @@ export class TableView {
       if (segment.challenged) label.alpha = 0.4;
       layer.addChild(label);
     });
-    const total = text(`X = ${view.x}`, 11, view.x > 6 ? 0xe08a6a : 0x9fb7a7);
-    total.anchor.set(0.5);
-    total.position.set(this.W / 2, cfg.totalY);
-    layer.addChild(total);
   }
 
   animateAiPlay(playerId, words = []) {
     const from = this.layout.avatars[playerId];
-    words.slice(0, 3).forEach((word, i) => {
+    const slot = this.layout.slots[playerId];
+    const list = words.slice(0, 3);
+    list.forEach((word, i) => {
       const node = this.makeCard({ w: word, truth: false }, false, true);
       node.scale.set(0.5);
       node.position.set(from.x, from.y);
       this.layers.fx.addChild(node);
       gsap.to(node, {
-        x: this.W / 2 + (i - 1) * 12,
-        y: this.layout.playY,
-        rotation: (i - 1) * 0.08,
+        x: slot.x + (i - (list.length - 1) / 2) * 24,
+        y: slot.y,
+        rotation: (i - (list.length - 1) / 2) * 0.05,
         alpha: 0.9,
-        scale: 0.62,
+        scale: 0.46,
         duration: this.reducedMotion ? 0.01 : 0.42,
         ease: "power2.inOut",
         onComplete: () => {
@@ -626,6 +706,7 @@ export class TableView {
   animateHumanPlay(cardIds, captured = null) {
     const nodes = (captured || this.handCards)
       .filter((node) => cardIds.includes((node.cardData || node).id));
+    const slot = this.layout.slots[0];
     nodes.forEach((node, i) => {
       const clone = this.makeCard(node.cardData, true, true);
       clone.position.set(node.x, node.y);
@@ -633,10 +714,10 @@ export class TableView {
       clone.rotation = node.rotation;
       this.layers.hand.addChild(clone);
       gsap.to(clone, {
-        x: this.W / 2 + (i - 1) * 10,
-        y: this.layout.playY,
-        rotation: (i - 1) * 0.1,
-        scale: 0.62,
+        x: slot.x + (i - (nodes.length - 1) / 2) * 24,
+        y: slot.y,
+        rotation: (i - (nodes.length - 1) / 2) * 0.05,
+        scale: 0.46,
         alpha: 0.95,
         duration: this.reducedMotion ? 0.01 : 0.36,
         ease: "power2.inOut",
@@ -685,6 +766,7 @@ export class TableView {
 
   render(view, { deal = false, animatePlay = null, animateChallengeId = null } = {}) {
     this.view = view;
+    this.renderPiles(view, { skipLast: !!animatePlay });
     this.renderSeats(view);
     this.renderCenter(view);
     this.renderChain(view);

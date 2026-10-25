@@ -292,6 +292,7 @@ function updateActionHint() {
 
 function enableHuman(view) {
   const table = state.table;
+  table.render(view);
   table.setHandEnabled(true);
   const last = view.chain[view.chain.length - 1];
   const target = last ? view.players[last.player] : null;
@@ -404,8 +405,10 @@ async function drive() {
 
 async function aiTurn() {
   const session = state.session;
-  const delay = state.profile.settings.reducedMotion ? 120 : 700;
+  state.table.render(session.view());
+  const delay = state.profile.settings.reducedMotion ? 250 : 1500;
   await wait(delay);
+  if (!state.session) return;
   const action = session.aiAct();
   if (!action) return;
   const view = session.view();
@@ -413,13 +416,14 @@ async function aiTurn() {
     sfx.play();
     state.table.render(view, { animatePlay: action });
     track("play", { seat: action.playerId, n: action.cardIds.length });
-    await wait(state.profile.settings.reducedMotion ? 100 : 520);
+    await wait(state.profile.settings.reducedMotion ? 150 : 700);
   } else {
     sfx.challenge();
     state.table.render(view, { animateChallengeId: action.playerId });
     track("challenge", { seat: action.playerId });
-    await wait(state.profile.settings.reducedMotion ? 100 : 640);
+    await wait(state.profile.settings.reducedMotion ? 150 : 800);
   }
+  if (state.session) state.table.render(session.view());
 }
 
 async function humanPlay(cardIds) {
@@ -438,6 +442,7 @@ async function humanPlay(cardIds) {
   state.table.render(view, { animatePlay: { playerId: 0, cardIds } });
   track("play", { seat: 0, n: cardIds.length });
   await wait(state.profile.settings.reducedMotion ? 80 : 420);
+  if (state.session) state.table.render(state.session.view());
   drive();
 }
 
