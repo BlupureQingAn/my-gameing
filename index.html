@@ -31,7 +31,7 @@
     (function () {
         var ua = navigator.userAgent || "";
         var isAndroid = /Android/i.test(ua);
-        var wk = ["MicroMessenger", "wxwork", "QQBrowser", "MQQBrowser", "UCBrowser", "Quark", "MiuiBrowser", "XiaoMi", "HuaweiBrowser", "OppoBrowser", "HeyTapBrowser", "VivoBrowser", "SamsungBrowser", "baiduboxapp", "EdgA", "CriOS", "FxiOS", "DuckDuckGo", "Brave", "Opera", "Vivaldi", "Firefox"];
+        var wk = ["MicroMessenger", "wxwork", "QQBrowser", "MQQBrowser", "V1_AND_SQ", "UCBrowser", "Quark", "MiuiBrowser", "XiaoMi", "HuaweiBrowser", "HonorBrowser", "OppoBrowser", "HeyTapBrowser", "VivoBrowser", "SamsungBrowser", "baiduboxapp", "BaiduBoxApp", "EdgA", "CriOS", "FxiOS", "DuckDuckGo", "Brave", "Opera", "Vivaldi", "Firefox", "aweme", "BytedanceWebview", "ByteLocale", "XHS", "xhs", "xhsdiscover", "com.xingin.xhs", "Weibo", "weibo", "AlipayClient", "DingTalk", "Lark", "Feishu", "Kuaishou", "kwai", "bilibili", "BiliApp"];
         var white = false;
         for (var i = 0; i < wk.length; i++) { if (ua.indexOf(wk[i]) > -1) { white = true; break; } }
         var uaHit = isAndroid && !white && /(wv|WebView|Version\/4\.0|XWebView|TBS|Html5Plus|Cordova|APICloud)/i.test(ua);

@@ -689,9 +689,14 @@ const UA_BROWSER_WHITELIST = [
     "QQBrowser", "MQQBrowser", "V1_AND_SQ",// QQ 浏览器/QQ 内置
     "UCBrowser", "Quark",                  // UC / 夸克
     "MiuiBrowser", "XiaoMi",               // 小米
-    "HuaweiBrowser", "OppoBrowser", "HeyTapBrowser", "VivoBrowser", "SamsungBrowser",
+    "HuaweiBrowser", "HonorBrowser", "OppoBrowser", "HeyTapBrowser", "VivoBrowser", "SamsungBrowser",
     "baiduboxapp", "BaiduBoxApp",           // 百度
     "EdgA", "CriOS", "FxiOS", "DuckDuckGo", "Brave", "Opera", "Vivaldi", "Firefox",
+    "aweme", "BytedanceWebview", "ByteLocale",      // 抖音
+    "XHS", "xhs", "xhsdiscover", "com.xingin.xhs",  // 小红书
+    "Weibo", "weibo",                      // 微博
+    "AlipayClient", "DingTalk", "Lark", "Feishu",   // 支付宝/钉钉/飞书
+    "Kuaishou", "kwai", "bilibili", "BiliApp",      // 快手/B 站
 ];
 const UA_WEBVIEW_HINTS = ["wv", "WebView", "Version/4.0", "XWebView", "TBS", "Html5Plus", "Cordova", "APICloud", "webview"];
 function isWebViewUA(ua) {
@@ -4483,12 +4488,16 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                     });
                 }
                 if (!requests.length) return cihuangJSON({ ok: true, accepted: 0 });
-                const res = await pbAdminFetch(env, "/api/batch", {
-                    method: "POST",
-                    body: JSON.stringify({ requests })
-                });
-                if (!res.ok) return errorResponse("遥测写入失败", 502, null, "PB_ERROR");
-                return cihuangJSON({ ok: true, accepted: requests.length });
+                // PocketBase 已禁用 /api/batch(403 Batch requests are not allowed),逐条写入
+                const results = await Promise.all(requests.map((r) =>
+                    pbAdminFetch(env, "/api/collections/cihuang_events/records", {
+                        method: "POST",
+                        body: JSON.stringify(r.body)
+                    }).then((res) => res.ok).catch(() => false)
+                ));
+                const accepted = results.filter(Boolean).length;
+                if (!accepted) return errorResponse("遥测写入失败", 502, null, "PB_ERROR");
+                return cihuangJSON({ ok: true, accepted });
             }
             // ---- Lexicon Rush 游戏模式：云存档(PB lexicon_saves) / 自定义词库(PB lexicon_vocab_sets) / enrich ----
             // 云存档：登录即可；词库导入与 enrich：仅会员
