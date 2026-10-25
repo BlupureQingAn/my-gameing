@@ -2558,13 +2558,14 @@
     var langBankCache = {};      // band -> items[]
     var langBankMapCache = {};   // band -> {word: item}
     var langBankLoading = {};    // band -> Promise(防并发)
-    function bankCacheKey(band) { return "lang_bank_v4_" + band; }
+    function bankCacheKey(band) { return "lang_bank_v5_" + band; }
     /* v4(2026-09-22):旧版把五档并集整批塞进 localStorage —— 六级起累积(六级5713/考研6277/托福8128),
        五档合计约 265 万字符,浏览器按 UTF-16 算 ≈5MB,正好压满单源配额。setItem 抛 QuotaExceededError
        被下面静默吞掉,于是"缓存"其实从没写进去过,每次进学习中心都要重下 300-780KB(用户反馈的"加载时间过长");
        更糟的是配额被占满后,app 其它模块的 localStorage 写入也会开始静默失败。
        改成预算内缓存:超预算先逐出最久未用的那档,配额仍满则清空词库缓存再试,再失败就只留内存副本。
-       v1/v2/v3 一并清理 —— 旧数据既占地方,又正是压垮配额的那批。 */
+       v1/v2/v3/v4 一并清理 —— 旧数据既占地方,又正是压垮配额的那批。
+       v5(2026-10-25):PB lang_banks 全量重灌(去重合并+补语义),旧缓存作废。 */
     var BANK_CACHE_BUDGET = 1000000;   // 词库缓存总预算(字符数 ≈2MB UTF-16);余量留给存档/会话/生词本
     var BANK_LRU_KEY = "lang_bank_lru";
     (function () {
@@ -2574,6 +2575,7 @@
                 localStorage.removeItem("lang_bank_v1_" + bs[i]);
                 localStorage.removeItem("lang_bank_v2_" + bs[i]);
                 localStorage.removeItem("lang_bank_v3_" + bs[i]);
+                localStorage.removeItem("lang_bank_v4_" + bs[i]);
             }
             localStorage.removeItem(BANK_LRU_KEY);
         } catch (e) {}
@@ -2593,7 +2595,7 @@
         } catch (e) {}
         try {   // 配额被别的模块先占满了:把词库缓存全让出来再试一次
             var all = [], j;
-            for (j = 0; j < localStorage.length; j++) { var k = localStorage.key(j); if (k && k.indexOf("lang_bank_v4_") === 0) all.push(k); }
+            for (j = 0; j < localStorage.length; j++) { var k = localStorage.key(j); if (k && k.indexOf("lang_bank_v5_") === 0) all.push(k); }
             for (j = 0; j < all.length; j++) localStorage.removeItem(all[j]);
             localStorage.removeItem(BANK_LRU_KEY);
             localStorage.setItem(key, s);

@@ -1436,6 +1436,89 @@ async function authenticate(env, request) {
     return { record: authData.record };
 }
 
+// ---- Lexicon Rush 游戏模式：自定义词库 enrich（Datamuse 代理 + KV 缓存）----
+// 每词固定 3 个外部请求(元数据/同义/反义)；Cloudflare 免费套餐单次调用 50 子请求，
+// 故批量上限 15 词(45 请求)；PRD 的 100 词口径由前端分片满足。
+const LEXICON_ENRICH_BATCH = 15;
+const LEXICON_ENRICH_DAILY = 2000;
+const LEXICON_MAX_SET_ITEMS = 5000;
+const LEXICON_MAX_SET_BYTES = 2 * 1024 * 1024;
+const LEXICON_MAX_SETS = 5;
+const LEXICON_POS_SET = new Set(["n", "v", "adj", "adv", "prep", "pron", "conj", "det", "num", "interj", "aux"]);
+const LEXICON_WORD_RE = /^[a-z][a-z'-]{1,30}$/;
+const LEXICON_STOPWORDS = new Set(
+    "a an the of to in on at by for with and or but if is are was were be been being have has had do does did will would can could shall should may might must not no yes i you he she it we they me him her us them my your his its our their this that these those there here as so than then too very just also only up down out off over under again further once all any both each few more most other some such own same s t don now".split(" ")
+);
+const LEXICON_ARPABET = {
+    AA: "ɑ", AE: "æ", AH: "ʌ", AO: "ɔ", AW: "aʊ", AY: "aɪ", B: "b", CH: "tʃ", D: "d", DH: "ð",
+    EH: "ɛ", ER: "ɝ", EY: "eɪ", F: "f", G: "ɡ", HH: "h", IH: "ɪ", IY: "i", JH: "dʒ", K: "k",
+    L: "l", M: "m", N: "n", NG: "ŋ", OW: "oʊ", OY: "ɔɪ", P: "p", R: "ɹ", S: "s", SH: "ʃ",
+    T: "t", TH: "θ", UH: "ʊ", UW: "u", V: "v", W: "w", Y: "j", Z: "z", ZH: "ʒ"
+};
+function lexiconIpa(pron) {
+    const out = [];
+    for (const tok of String(pron || "").trim().split(/\s+/)) {
+        const m = /^([A-Z]+)[0-2]?$/.exec(tok);
+        if (m && LEXICON_ARPABET[m[1]]) out.push(LEXICON_ARPABET[m[1]]);
+    }
+    return out.length ? "/" + out.join("") + "/" : "";
+}
+function lexiconRelWords(arr) {
+    const out = [];
+    for (const it of Array.isArray(arr) ? arr : []) {
+        const w = String((it && it.word) || "").trim().toLowerCase();
+        if (!w || w.length > 24 || LEXICON_STOPWORDS.has(w) || !LEXICON_WORD_RE.test(w)) continue;
+        if (!out.includes(w)) out.push(w);
+        if (out.length >= 12) break;
+    }
+    return out;
+}
+async function enrichLexiconWord(env, w) {
+    const dm = (qs) => fetch("https://api.datamuse.com/words?" + qs, {
+        signal: AbortSignal.timeout(8000),
+        headers: { "User-Agent": "bitlife-lexicon/1.0" }
+    }).then((r) => (r.ok ? r.json() : [])).catch(() => []);
+    const [meta, synArr, antArr] = await Promise.all([
+        dm(`sp=${encodeURIComponent(w)}&md=dpsfr&max=1`),
+        dm(`rel_syn=${encodeURIComponent(w)}&max=12`),
+        dm(`rel_ant=${encodeURIComponent(w)}&max=8`)
+    ]);
+    const best = (Array.isArray(meta) && meta[0]) || null;
+    const tags = (best && best.tags) || [];
+    const pos = [];
+    let pron = "", freq = null;
+    for (const t of tags) {
+        if (t.startsWith("f:")) {
+            const v = parseFloat(t.slice(2));
+            if (Number.isFinite(v)) freq = v;
+        } else if (t.startsWith("pron:") && !pron) {
+            pron = t.slice(5).trim();
+        } else if (!t.includes(":") && LEXICON_POS_SET.has(t) && !pos.includes(t)) {
+            pos.push(t);
+        }
+    }
+    if (!pos.length) return null;
+    let def = ((best && best.defs) || [])[0] || "";
+    if (def.includes("\t")) def = def.split("\t", 2)[1];
+    def = def.replace(/\s+/g, " ").trim().slice(0, 160);
+    return {
+        w, pos,
+        ipa: lexiconIpa(pron),
+        syl: Math.max(1, Math.min(20, Number(best && best.numSyllables) || 1)),
+        affixes: [],
+        zh: "",
+        def,
+        en: def,
+        syn: lexiconRelWords(synArr),
+        ant: lexiconRelWords(antArr),
+        topic: null,
+        synGroup: null,
+        rank: null,
+        freq,
+        forms: []
+    };
+}
+
 // ---- 语言文游 M4 gloss:点句翻译+难词释义合批(直调模型不落库、不进主站计费/配额;独立轻量候选链)----
 const GLOSS_MAX_SENTENCES = 10;   // 前端亦按 ≤10 合批
 const GLOSS_SENTENCE_MAX_CHARS = 500; // 单句上限(前端同值截断,防长台词译文只覆盖前半);旧值 300 对长句会静默丢后半
@@ -3946,6 +4029,215 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 if (!d.id || d.user_id !== uid) return errorResponse("记录不存在", 404, null, "NOT_FOUND");
                 await pbAdminFetch(env, `/api/collections/lang_vocab/records/${vid}`, { method: "DELETE" });
                 return new Response(JSON.stringify({ ok: true, id: vid }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+            }
+            // ---- Lexicon Rush 游戏模式：云存档(PB lexicon_saves) / 自定义词库(PB lexicon_vocab_sets) / enrich ----
+            // 云存档：登录即可；词库导入与 enrich：仅会员
+            if (url.pathname === "/api/lexicon/save" && request.method === "GET") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const uid = auth.record.id;
+                const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'`);
+                const q = await pbAdminFetch(env, `/api/collections/lexicon_saves/records?perPage=1&skipTotal=true&filter=${f}`);
+                const d = await q.json().catch(() => ({}));
+                const rec = (d.items || [])[0];
+                return new Response(JSON.stringify({
+                    save: rec ? { profile: rec.profile || null, run: rec.run || null, band: rec.band || "", client_ts: Number(rec.client_ts || 0), updated_at: rec.updated_at || "" } : null
+                }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+            }
+            if (url.pathname === "/api/lexicon/save" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const uid = auth.record.id;
+                const body = await request.json().catch(() => null);
+                if (!body || typeof body !== "object") return errorResponse("请求体无效", 400, null, "INVALID_BODY");
+                const profile = body.profile && typeof body.profile === "object" ? body.profile : null;
+                const run = body.run && typeof body.run === "object" ? body.run : null;
+                const band = String(body.band || "").slice(0, 60);
+                const clientTs = Math.max(0, Math.min(Date.now() + 86400000, Math.floor(Number(body.client_ts) || 0)));
+                if (JSON.stringify({ profile, run }).length > 512 * 1024) return errorResponse("存档过大", 413, null, "SAVE_TOO_LARGE");
+                const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'`);
+                const q = await pbAdminFetch(env, `/api/collections/lexicon_saves/records?perPage=1&skipTotal=true&filter=${f}`);
+                const d = await q.json().catch(() => ({}));
+                const exist = (d.items || [])[0];
+                const data = { user_id: uid, profile, run, band, client_ts: clientTs };
+                const r = exist
+                    ? await pbAdminFetch(env, `/api/collections/lexicon_saves/records/${exist.id}`, { method: "PATCH", body: JSON.stringify(data) })
+                    : await pbAdminFetch(env, `/api/collections/lexicon_saves/records`, { method: "POST", body: JSON.stringify(data) });
+                const rec = await r.json().catch(() => ({}));
+                if (!rec || !rec.id) return errorResponse("存档写入失败", 500, null, "SAVE_FAILED");
+                return new Response(JSON.stringify({ ok: true, client_ts: clientTs, updated_at: rec.updated_at || "" }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+            if (url.pathname === "/api/lexicon/vocab-sets" && request.method === "GET") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const uid = auth.record.id;
+                const id = String(url.searchParams.get("id") || "");
+                if (id) {
+                    const q = await pbAdminFetch(env, `/api/collections/lexicon_vocab_sets/records/${id}`);
+                    const rec = await q.json().catch(() => ({}));
+                    if (!rec || rec.user_id !== uid) return errorResponse("词库不存在", 404, null, "NOT_FOUND");
+                    return new Response(JSON.stringify({
+                        set: { id: rec.id, name: rec.name || "", count: Number(rec.count || 0), items: rec.items || [], updated_at: rec.updated_at || "" }
+                    }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+                }
+                const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'`);
+                const q = await pbAdminFetch(env, `/api/collections/lexicon_vocab_sets/records?perPage=10&sort=-updated_at&fields=id,name,count,updated_at&filter=${f}`);
+                const d = await q.json().catch(() => ({}));
+                const items = (d.items || []).map((r) => ({ id: r.id, name: r.name || "", count: Number(r.count || 0), updated_at: r.updated_at || "" }));
+                return new Response(JSON.stringify({ items, limit: LEXICON_MAX_SETS }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+            }
+            if (url.pathname === "/api/lexicon/vocab-sets" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                if (!isMember(auth.record)) return errorResponse("自定义词库为会员功能", 403, null, "MEMBER_ONLY");
+                const uid = auth.record.id;
+                const txt = await request.text();
+                if (txt.length > LEXICON_MAX_SET_BYTES + 4096) return errorResponse("词库文件过大（上限 2MB）", 413, null, "SET_TOO_LARGE");
+                let body = null;
+                try { body = JSON.parse(txt); } catch (e) {}
+                if (!body || typeof body !== "object") return errorResponse("请求体无效", 400, null, "INVALID_BODY");
+                const action = body.action === "delete" ? "delete" : "save";
+                if (action === "delete") {
+                    const id = String(body.id || "");
+                    if (!id) return errorResponse("缺少记录 id", 400, null, "INVALID_ID");
+                    const q = await pbAdminFetch(env, `/api/collections/lexicon_vocab_sets/records/${id}`);
+                    const rec = await q.json().catch(() => ({}));
+                    if (!rec || rec.user_id !== uid) return errorResponse("词库不存在", 404, null, "NOT_FOUND");
+                    await pbAdminFetch(env, `/api/collections/lexicon_vocab_sets/records/${id}`, { method: "DELETE" });
+                    return new Response(JSON.stringify({ ok: true, id }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
+                }
+                const name = String(body.name || "").trim().slice(0, 24);
+                if (!name) return errorResponse("词库名称不能为空", 400, null, "INVALID_NAME");
+                const rawItems = Array.isArray(body.items) ? body.items : [];
+                const seen = new Set();
+                const clean = [];
+                const clampNum = (v, lo, hi, dflt) => {
+                    const n = Number(v);
+                    return Number.isFinite(n) ? Math.max(lo, Math.min(hi, Math.floor(n))) : dflt;
+                };
+                const relList = (arr) => (Array.isArray(arr) ? arr : [])
+                    .map((x) => String(x || "").trim().toLowerCase())
+                    .filter((x) => LEXICON_WORD_RE.test(x))
+                    .slice(0, 12);
+                for (const raw of rawItems) {
+                    if (!raw || typeof raw !== "object") continue;
+                    const w = String(raw.w || "").trim().toLowerCase();
+                    if (!LEXICON_WORD_RE.test(w) || LEXICON_STOPWORDS.has(w) || seen.has(w)) continue;
+                    const pos = [];
+                    for (const p of Array.isArray(raw.pos) ? raw.pos : []) {
+                        const k = String(p || "").trim().toLowerCase();
+                        if (LEXICON_POS_SET.has(k) && !pos.includes(k)) pos.push(k);
+                    }
+                    if (!pos.length) continue;
+                    seen.add(w);
+                    clean.push({
+                        w, pos,
+                        ipa: String(raw.ipa || "").slice(0, 40),
+                        syl: clampNum(raw.syl, 1, 20, 1),
+                        affixes: (Array.isArray(raw.affixes) ? raw.affixes : []).map((a) => String(a || "").slice(0, 12)).slice(0, 6),
+                        zh: String(raw.zh || "").slice(0, 200),
+                        def: String(raw.def || raw.en || "").slice(0, 300),
+                        en: String(raw.en || raw.def || "").slice(0, 300),
+                        syn: relList(raw.syn),
+                        ant: relList(raw.ant),
+                        topic: null,
+                        synGroup: raw.synGroup == null ? null : clampNum(raw.synGroup, 0, 999999, 0),
+                        rank: clampNum(raw.rank, 1, 13, 7),
+                        freq: Number.isFinite(Number(raw.freq)) ? Number(raw.freq) : null,
+                        forms: []
+                    });
+                    if (clean.length >= LEXICON_MAX_SET_ITEMS) break;
+                }
+                if (!clean.length) return errorResponse("没有可用的单词（需含有效词性）", 400, null, "EMPTY_SET");
+                if (JSON.stringify(clean).length > LEXICON_MAX_SET_BYTES) return errorResponse("词库序列化后超过 2MB", 413, null, "SET_TOO_LARGE");
+                const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'`);
+                const id = String(body.id || "");
+                if (id) {
+                    const q = await pbAdminFetch(env, `/api/collections/lexicon_vocab_sets/records/${id}`);
+                    const rec = await q.json().catch(() => ({}));
+                    if (!rec || rec.user_id !== uid) return errorResponse("词库不存在", 404, null, "NOT_FOUND");
+                    const r = await pbAdminFetch(env, `/api/collections/lexicon_vocab_sets/records/${id}`, {
+                        method: "PATCH",
+                        body: JSON.stringify({ name, items: clean, count: clean.length })
+                    });
+                    const out = await r.json().catch(() => ({}));
+                    if (!out || !out.id) return errorResponse("词库保存失败", 500, null, "SET_SAVE_FAILED");
+                    return new Response(JSON.stringify({ ok: true, id: out.id, count: clean.length, updated_at: out.updated_at || "" }), {
+                        headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                    });
+                }
+                const cntQ = await pbAdminFetch(env, `/api/collections/lexicon_vocab_sets/records?perPage=1&fields=id&filter=${f}`);
+                const cntD = await cntQ.json().catch(() => ({}));
+                if (Number(cntD.totalItems || 0) >= LEXICON_MAX_SETS) {
+                    return errorResponse(`最多保存 ${LEXICON_MAX_SETS} 套词库，请先删除旧套装`, 409, null, "SET_LIMIT");
+                }
+                const r = await pbAdminFetch(env, `/api/collections/lexicon_vocab_sets/records`, {
+                    method: "POST",
+                    body: JSON.stringify({ user_id: uid, name, items: clean, count: clean.length })
+                });
+                const out = await r.json().catch(() => ({}));
+                if (!out || !out.id) return errorResponse("词库保存失败", 500, null, "SET_SAVE_FAILED");
+                return new Response(JSON.stringify({ ok: true, id: out.id, count: clean.length, updated_at: out.updated_at || "" }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+            if (url.pathname === "/api/lexicon/enrich" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                if (!isMember(auth.record)) return errorResponse("自定义词库为会员功能", 403, null, "MEMBER_ONLY");
+                const uid = auth.record.id;
+                const body = await request.json().catch(() => ({}));
+                const words = [];
+                for (const raw of Array.isArray(body.words) ? body.words : []) {
+                    const w = String(raw || "").trim().toLowerCase();
+                    if (LEXICON_WORD_RE.test(w) && !LEXICON_STOPWORDS.has(w) && !words.includes(w)) words.push(w);
+                    if (words.length >= LEXICON_ENRICH_BATCH) break;
+                }
+                if (!words.length) return errorResponse("缺少有效单词", 400, null, "INVALID_WORDS");
+                const kv = env.COVER_CACHE;
+                const day = getTodayStr();
+                const quotaKey = `lexicon:eq:${uid}:${day}`;
+                const items = [];
+                const todo = [];
+                for (const w of words) {
+                    let hit = null;
+                    if (kv) {
+                        try { hit = await kv.get(`lexicon:e:${w}`); } catch (e) {}
+                    }
+                    if (hit) {
+                        try { items.push(JSON.parse(hit)); continue; } catch (e) {}
+                    }
+                    todo.push(w);
+                }
+                const used = kv ? Number((await kv.get(quotaKey).catch(() => 0)) || 0) : 0;
+                const remaining = Math.max(0, LEXICON_ENRICH_DAILY - used);
+                if (todo.length && remaining <= 0) {
+                    return new Response(JSON.stringify({ items, failed: todo, remaining: 0, code: "QUOTA_EXCEEDED", batch_limit: LEXICON_ENRICH_BATCH }), {
+                        status: 429,
+                        headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                    });
+                }
+                const runWords = todo.slice(0, remaining);
+                const failed = todo.slice(remaining);
+                let newCount = 0;
+                for (let i = 0; i < runWords.length; i += 5) {
+                    const chunk = runWords.slice(i, i + 5);
+                    const got = await Promise.all(chunk.map((w) => enrichLexiconWord(env, w)));
+                    got.forEach((entry, k) => {
+                        if (!entry) { failed.push(chunk[k]); return; }
+                        items.push(entry);
+                        newCount += 1;
+                        if (kv) kv.put(`lexicon:e:${chunk[k]}`, JSON.stringify(entry), { expirationTtl: 30 * 86400 }).catch(() => {});
+                    });
+                }
+                if (kv && newCount > 0) {
+                    await kv.put(quotaKey, String(used + newCount), { expirationTtl: 48 * 3600 }).catch(() => {});
+                }
+                return new Response(JSON.stringify({
+                    items, failed, remaining: Math.max(0, remaining - newCount), batch_limit: LEXICON_ENRICH_BATCH
+                }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
             // ---- 排行榜:学习时长上报(PUT /api/lang/study)----
             // 客户端每 ~60s 上报累计秒;单次 ≤600s;同一北京自然日 cap 14400s(4h)防挂机刷榜

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#070b14" />
+  <title>Lexicon Rush · 词牌破局</title>
+  <meta name="description" content="Lexicon Rush 词牌破局：用英语单词打出牌型，在记忆消退前通关八重词境。云吞吞文游游戏模式首作。" />
+  <link rel="canonical" href="https://bitlife.blupure.cn/lexicon/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="云吞吞文游" />
+  <meta property="og:title" content="Lexicon Rush · 词牌破局" />
+  <meta property="og:description" content="用英语单词打出牌型，在记忆消退前通关八重词境。云吞吞文游游戏模式首作。" />
+  <meta property="og:url" content="https://bitlife.blupure.cn/lexicon/" />
+  <meta property="og:image" content="https://bitlife.blupure.cn/lexicon/assets/art/hero.webp" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" type="image/webp" href="assets/art/icon.webp" />
+  <link rel="stylesheet" href="assets/style.css?v=20261025a" />
+</head>
+<body>
+  <div id="app">
+    <button id="btn-mute" class="sound-toggle" aria-label="音效开关">♪ 开</button>
+
+    <div id="screen-menu">
+      <header>
+        <h1 class="title">LEXICON RUSH</h1>
+        <div class="subtitle">词牌破局 · 用单词出牌，在遗忘前通关八重词境</div>
+      </header>
+
+      <div class="menu-art">
+        <img src="assets/art/hero.webp" alt="霓虹图书馆中的词牌牌桌" width="1152" height="864" />
+      </div>
+
+      <div class="panel">
+        <div id="menu-profile"></div>
+        <div class="tiny dim" style="margin-top:8px">词库（会员可切换五档）</div>
+        <div id="band-pick" class="band-pick"></div>
+        <div id="menu-upgrades" class="small amber"></div>
+        <div id="menu-stats" style="margin-top:6px"></div>
+        <button class="btn btn-big btn-primary" id="btn-start" style="margin-top:12px">开始新局</button>
+        <button class="btn btn-big" id="btn-continue" style="margin-top:8px">继续本局</button>
+        <div class="row" style="margin-top:8px">
+          <button class="btn" id="btn-upgrades">神经结晶成长</button>
+          <button class="btn" id="btn-vocab">我的词库</button>
+          <button class="btn" id="btn-help">玩法速览</button>
+        </div>
+      </div>
+
+      <div class="footer-links">
+        <a href="/">云吞吞文游</a>
+        <span>词库数据：Datamuse</span>
+        <span>字体：Fusion Pixel（OFL）</span>
+      </div>
+      <div class="disclaimer">
+        本作仅用于语言学习娱乐，计分与牌型设定不构成任何学术评价。词库释义来自公开词典数据，可能存在缺漏。
+      </div>
+    </div>
+
+    <div id="top-actions" class="hidden">
+      <div class="row spread">
+        <button class="btn" id="btn-menu">主菜单</button>
+        <span class="tiny dim">进度自动保存</span>
+      </div>
+    </div>
+
+    <div id="screen-game" class="hidden">
+      <div class="panel">
+        <div id="game-head" class="game-head"></div>
+        <div id="boss-banner" class="boss-banner hidden"></div>
+        <div id="relic-row" class="relic-row"></div>
+        <div id="hand" class="hand"></div>
+        <div id="pattern-preview" class="pattern-preview"></div>
+        <div class="declare-row">
+          <label for="declare">宣言</label>
+          <select id="declare">
+            <option value="auto">自动判定</option>
+            <option value="high">散牌</option>
+            <option value="posFlush">词性同花</option>
+            <option value="collocation">搭配葫芦</option>
+            <option value="ladder">语义顺子</option>
+            <option value="grammar">语法同花顺</option>
+          </select>
+          <span class="tiny dim">成功可得额外加成，失败按散牌结算</span>
+        </div>
+        <div id="hint-panel" class="hint-panel hidden"></div>
+        <div class="actions">
+          <button class="btn btn-amber" id="btn-hint">提示</button>
+          <button class="btn btn-primary" id="btn-play">出牌 (0)</button>
+          <button class="btn btn-danger" id="btn-discard">弃牌 (3)</button>
+        </div>
+        <button id="btn-endturn" class="hidden" tabindex="-1" aria-hidden="true"></button>
+      </div>
+    </div>
+
+    <div id="modal-wrap" class="modal-wrap hidden">
+      <div id="modal"></div>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </div>
+
+  <noscript>需要启用 JavaScript 才能游玩 Lexicon Rush。</noscript>
+
+  <script src="core/content.js?v=20261025a"></script>
+  <script src="core/rng.js?v=20261025a"></script>
+  <script src="core/engine.js?v=20261025a"></script>
+  <script src="assets/audio.js?v=20261025a"></script>
+  <script src="assets/game.js?v=20261025a"></script>
+</body>
+</html>
