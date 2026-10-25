@@ -614,6 +614,17 @@ a { color: var(--amber); }
   .footer, .disclaimer { display: none; }
 }
 
+@media (orientation: portrait) {
+  .action-bar {
+    right: 8px;
+    bottom: auto;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 6px;
+  }
+  .action-hint { max-width: 96px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }

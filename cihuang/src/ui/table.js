@@ -2,24 +2,56 @@ import { Application, Assets, Container, Graphics, Sprite, Text, Texture } from 
 import { gsap } from "gsap";
 import { COSMETIC_INDEX } from "../platform/store.js";
 
-const W = 960;
-const H = 640;
 const CARD_W = 96;
 const CARD_H = 136;
 const FONT = "Fusion Pixel, SimSun, monospace";
 
-const SEAT_POS = [
-  { x: 480, y: 545 },
-  { x: 130, y: 300 },
-  { x: 480, y: 110 },
-  { x: 830, y: 300 },
-];
-const AVATAR_POS = [
-  { x: 150, y: 560 },
-  { x: 92, y: 212 },
-  { x: 480, y: 56 },
-  { x: 868, y: 212 },
-];
+const LAYOUTS = {
+  landscape: {
+    W: 960,
+    H: 640,
+    seats: [
+      { x: 480, y: 545 },
+      { x: 130, y: 300 },
+      { x: 480, y: 110 },
+      { x: 830, y: 300 },
+    ],
+    avatars: [
+      { x: 150, y: 560 },
+      { x: 92, y: 212 },
+      { x: 480, y: 56 },
+      { x: 868, y: 212 },
+    ],
+    showSelf: true,
+    table: { cx: 480, cy: 330, rx: 392, ry: 218 },
+    center: { x: 310, y: 262, w: 340, h: 84 },
+    chain: { y: 392, totalY: 430 },
+    playY: 384,
+    hand: { spacing: 104, tight: 88, y: 545 },
+  },
+  portrait: {
+    W: 480,
+    H: 900,
+    seats: [
+      { x: 240, y: 812 },
+      { x: 88, y: 132 },
+      { x: 240, y: 96 },
+      { x: 392, y: 132 },
+    ],
+    avatars: [
+      { x: 240, y: 660 },
+      { x: 88, y: 132 },
+      { x: 240, y: 96 },
+      { x: 392, y: 132 },
+    ],
+    showSelf: false,
+    table: { cx: 240, cy: 430, rx: 228, ry: 262 },
+    center: { x: 60, y: 330, w: 360, h: 88 },
+    chain: { y: 520, totalY: 566 },
+    playY: 604,
+    hand: { spacing: 86, tight: 76, y: 812 },
+  },
+};
 const PLAYER_COLORS = [0x7fd6b2, 0x8fb6e8, 0xe8b26a, 0xe88fa8];
 const MASK_FILES = ["", "mask1.webp", "mask2.webp", "mask3.webp"];
 
@@ -68,13 +100,18 @@ export class TableView {
     this.lastHandKey = "";
     this.view = null;
     this.pendingDrag = null;
+    this.handEnabled = true;
+    this.layout = window.innerHeight > window.innerWidth ? LAYOUTS.portrait : LAYOUTS.landscape;
+    this.W = this.layout.W;
+    this.H = this.layout.H;
+    this.resizeHandler = null;
   }
 
   async init() {
     this.app = new Application();
     await this.app.init({
-      width: W,
-      height: H,
+      width: this.W,
+      height: this.H,
       background: 0x050a09,
       antialias: false,
       autoDensity: true,
@@ -101,6 +138,45 @@ export class TableView {
     await this.loadArt();
     this.buildBackground();
     this.buildTable();
+    this.bindResize();
+  }
+
+  bindResize() {
+    if (!this.resizeHandler) {
+      this.resizeHandler = () => this.handleResize();
+      window.addEventListener("resize", this.resizeHandler);
+      window.addEventListener("orientationchange", this.resizeHandler);
+    }
+    this.fitCanvas();
+  }
+
+  fitCanvas() {
+    const canvas = this.app && this.app.canvas;
+    if (!canvas) return;
+    const rect = this.container.getBoundingClientRect();
+    const vw = rect.width || window.innerWidth;
+    const vh = rect.height || window.innerHeight;
+    const scale = Math.min(1, vw / this.W, vh / this.H);
+    canvas.style.width = `${Math.max(1, Math.round(this.W * scale))}px`;
+    canvas.style.height = `${Math.max(1, Math.round(this.H * scale))}px`;
+  }
+
+  handleResize() {
+    if (!this.app) return;
+    const next = window.innerHeight > window.innerWidth ? LAYOUTS.portrait : LAYOUTS.landscape;
+    if (next !== this.layout) {
+      this.layout = next;
+      this.W = next.W;
+      this.H = next.H;
+      this.app.renderer.resize(next.W, next.H);
+      this.buildBackground();
+      this.buildTable();
+      this.lastHandKey = "";
+      this.selected.clear();
+      this.onSelect([]);
+      if (this.view) this.render(this.view);
+    }
+    this.fitCanvas();
   }
 
   async loadArt() {
@@ -119,26 +195,26 @@ export class TableView {
     const layer = this.layers.bg;
     layer.removeChildren();
     const bg = new Graphics();
-    bg.rect(0, 0, W, H).fill({ color: 0x06100d });
+    bg.rect(0, 0, this.W, this.H).fill({ color: 0x06100d });
     layer.addChild(bg);
     const texture = this.textures["tavern.webp"];
     if (texture) {
       const sprite = new Sprite(texture);
-      const scale = Math.max(W / texture.width, H / texture.height);
+      const scale = Math.max(this.W / texture.width, this.H / texture.height);
       sprite.anchor.set(0.5);
-      sprite.position.set(W / 2, H / 2);
+      sprite.position.set(this.W / 2, this.H / 2);
       sprite.scale.set(scale);
       sprite.alpha = 0.55;
       layer.addChild(sprite);
     }
     const shade = new Graphics();
-    shade.rect(0, 0, W, H).fill({ color: 0x02100c, alpha: 0.35 });
+    shade.rect(0, 0, this.W, this.H).fill({ color: 0x02100c, alpha: 0.35 });
     for (let i = 0; i < 5; i += 1) {
-      shade.rect(0, i * 28, W, 28).fill({ color: 0x000000, alpha: 0.025 });
+      shade.rect(0, i * 28, this.W, 28).fill({ color: 0x000000, alpha: 0.025 });
     }
     layer.addChild(shade);
     const vignette = new Graphics();
-    vignette.ellipse(W / 2, H / 2, W * 0.62, H * 0.65).fill({ color: 0x000000, alpha: 0 });
+    vignette.ellipse(this.W / 2, this.H / 2, this.W * 0.62, this.H * 0.65).fill({ color: 0x000000, alpha: 0 });
     layer.addChild(vignette);
   }
 
@@ -146,21 +222,25 @@ export class TableView {
     const layer = this.layers.table;
     layer.removeChildren();
     const felt = COSMETIC_INDEX[this.equipped.felt?.id] || this.equipped.felt || COSMETIC_INDEX.felt_default;
+    const t = this.layout.table;
     const rim = new Graphics();
-    rim.ellipse(W / 2, 330, 392, 218).fill({ color: 0x2a1810 });
-    rim.ellipse(W / 2, 330, 382, 210).fill({ color: 0x170f0a });
-    rim.ellipse(W / 2, 330, 366, 197).fill({ color: felt.color });
-    rim.ellipse(W / 2, 330, 338, 180).stroke({ width: 3, color: felt.accent, alpha: 0.45 });
-    rim.ellipse(W / 2, 330, 366, 197).stroke({ width: 2, color: 0xd8c690, alpha: 0.25 });
+    rim.ellipse(t.cx, t.cy, t.rx, t.ry).fill({ color: 0x2a1810 });
+    rim.ellipse(t.cx, t.cy, t.rx - 10, t.ry - 8).fill({ color: 0x170f0a });
+    rim.ellipse(t.cx, t.cy, t.rx - 26, t.ry - 21).fill({ color: felt.color });
+    rim.ellipse(t.cx, t.cy, t.rx - 54, t.ry - 38).stroke({ width: 3, color: felt.accent, alpha: 0.45 });
+    rim.ellipse(t.cx, t.cy, t.rx - 26, t.ry - 21).stroke({ width: 2, color: 0xd8c690, alpha: 0.25 });
     layer.addChild(rim);
     const weave = new Graphics();
-    for (let x = 120; x < 850; x += 14) {
-      weave.moveTo(x, 140).lineTo(x + 40, 520).stroke({ width: 1, color: 0x000000, alpha: 0.05 });
+    const left = Math.round(t.cx - t.rx);
+    const right = Math.round(t.cx + t.rx);
+    for (let x = left + 32; x < right - 36; x += 14) {
+      weave.moveTo(x, Math.round(t.cy - t.ry + 20)).lineTo(x + 40, Math.round(t.cy + t.ry - 20))
+        .stroke({ width: 1, color: 0x000000, alpha: 0.05 });
     }
     layer.addChild(weave);
     const crest = text("词 谎", 30, 0xe8dcc0, { letterSpacing: 12 });
     crest.anchor.set(0.5);
-    crest.position.set(W / 2, 336);
+    crest.position.set(t.cx, t.cy + 6);
     crest.alpha = 0.14;
     layer.addChild(crest);
   }
@@ -225,11 +305,12 @@ export class TableView {
   }
 
   handTargets(count) {
-    const spacing = count <= 5 ? 104 : 88;
-    const start = W / 2 - ((count - 1) * spacing) / 2;
+    const { spacing, tight, y } = this.layout.hand;
+    const gap = count <= 5 ? spacing : tight;
+    const start = this.W / 2 - ((count - 1) * gap) / 2;
     return Array.from({ length: count }, (_, i) => ({
-      x: start + i * spacing,
-      y: SEAT_POS[0].y,
+      x: start + i * gap,
+      y,
       rot: (i - (count - 1) / 2) * 0.045,
     }));
   }
@@ -249,10 +330,10 @@ export class TableView {
     cards.forEach((card, i) => {
       const node = this.makeCard(card, true);
       const target = targets[i];
-      node.position.set(deal ? W / 2 : target.x, deal ? 330 : target.y);
+      node.position.set(deal ? this.W / 2 : target.x, deal ? this.layout.table.cy : target.y);
       node.rotation = deal ? 0 : target.rot;
       node.alpha = deal ? 0 : 1;
-      node.eventMode = "static";
+      node.eventMode = this.handEnabled ? "static" : "none";
       node.cursor = "pointer";
       node.cardData = card;
       node.baseX = target.x;
@@ -360,7 +441,7 @@ export class TableView {
 
   makeAvatar(view, seat) {
     const player = view.players[seat];
-    const pos = AVATAR_POS[seat];
+    const pos = this.layout.avatars[seat];
     const group = new Container();
     group.position.set(pos.x, pos.y);
     const color = PLAYER_COLORS[seat];
@@ -426,13 +507,14 @@ export class TableView {
     const layer = this.layers.seats;
     clearLayer(layer);
     for (let seat = 0; seat < 4; seat += 1) {
+      if (seat === 0 && !this.layout.showSelf) continue;
       layer.addChild(this.makeAvatar(view, seat));
     }
     // AI 手牌背面扇形
     for (const seat of [1, 2, 3]) {
       const player = view.players[seat];
       if (!player.alive) continue;
-      const pos = AVATAR_POS[seat];
+      const pos = this.layout.avatars[seat];
       const count = Math.min(player.handCount, 8);
       for (let i = 0; i < count; i += 1) {
         const back = this.makeCard({ w: "", truth: false }, false, true);
@@ -449,31 +531,33 @@ export class TableView {
     const layer = this.layers.center;
     clearLayer(layer);
     if (!view.topic) return;
+    const c = this.layout.center;
+    const cx = c.x + c.w / 2;
     const panel = new Graphics();
-    rounded(panel, W / 2 - 170, 262, 340, 84, 10, 0x0d1512, 0.9);
-    panel.roundRect(W / 2 - 170, 262, 340, 84, 10).stroke({ width: 1, color: 0x6c7f6a, alpha: 0.5 });
+    rounded(panel, c.x, c.y, c.w, c.h, 10, 0x0d1512, 0.9);
+    panel.roundRect(c.x, c.y, c.w, c.h, 10).stroke({ width: 1, color: 0x6c7f6a, alpha: 0.5 });
     layer.addChild(panel);
     const typeLabel = view.topic.type === "synonym" ? "同义词主题" : "释义主题";
     const tag = text(typeLabel, 9, 0x92a891);
     tag.anchor.set(0.5);
-    tag.position.set(W / 2, 273);
+    tag.position.set(cx, c.y + 11);
     layer.addChild(tag);
     const prompt = text(view.topic.prompt || view.topic.promptTokens?.join("；") || "", 15, 0xf2e6c8, {
       wordWrap: true,
-      wordWrapWidth: 300,
+      wordWrapWidth: c.w - 40,
     });
     prompt.anchor.set(0.5);
-    prompt.position.set(W / 2, 303);
+    prompt.position.set(cx, c.y + 41);
     layer.addChild(prompt);
     const x = view.x;
     const textX = text(`声称  ${x} / 6`, 12, x > 6 ? 0xe08a6a : 0xb9c8b4);
     textX.anchor.set(0.5);
-    textX.position.set(W / 2, 331);
+    textX.position.set(cx, c.y + 69);
     layer.addChild(textX);
     if (view.currentPlayer === 0 && view.phase === "turn" && !view.result) {
       const hint = text("你的回合", 10, 0x7fd6b2);
       hint.anchor.set(0.5);
-      hint.position.set(W / 2, 246);
+      hint.position.set(cx, c.y - 16);
       layer.addChild(hint);
       gsap.to(hint, { alpha: 0.45, duration: 0.9, yoyo: true, repeat: -1, ease: "sine.inOut" });
     }
@@ -484,16 +568,21 @@ export class TableView {
     clearLayer(layer);
     const chain = view.chain || [];
     if (!chain.length) return;
-    const startX = W / 2 - ((chain.length - 1) * 78) / 2;
+    const cfg = this.layout.chain;
+    const spacing = chain.length > 1
+      ? Math.min(78, (this.W - 40) / (chain.length - 1))
+      : 78;
+    const chipW = Math.max(44, Math.min(68, spacing - 6));
+    const startX = this.W / 2 - ((chain.length - 1) * spacing) / 2;
     chain.forEach((segment, i) => {
-      const x = startX + i * 78;
-      const y = 392 + (i % 2) * 8;
+      const x = startX + i * spacing;
+      const y = cfg.y + (i % 2) * 8;
       const color = PLAYER_COLORS[segment.player];
       const chip = new Graphics();
-      rounded(chip, x - 34, y - 14, 68, 28, 8, 0x0c1210, 0.92);
-      chip.roundRect(x - 34, y - 14, 68, 28, 8).stroke({ width: 1, color, alpha: segment.challenged ? 0.25 : 0.6 });
+      rounded(chip, x - chipW / 2, y - 14, chipW, 28, 8, 0x0c1210, 0.92);
+      chip.roundRect(x - chipW / 2, y - 14, chipW, 28, 8).stroke({ width: 1, color, alpha: segment.challenged ? 0.25 : 0.6 });
       layer.addChild(chip);
-      const label = text(`${segment.player === 0 ? "你" : `面具${"一二三"[segment.player - 1]}`} +${segment.claimed}`, 10, color, {
+      const label = text(`${segment.player === 0 ? "你" : `面具${"一二三"[segment.player - 1]}`} +${segment.claimed}`, chipW < 58 ? 9 : 10, color, {
         wordWrap: false,
       });
       label.anchor.set(0.5);
@@ -503,20 +592,20 @@ export class TableView {
     });
     const total = text(`X = ${view.x}`, 11, view.x > 6 ? 0xe08a6a : 0x9fb7a7);
     total.anchor.set(0.5);
-    total.position.set(W / 2, 430);
+    total.position.set(this.W / 2, cfg.totalY);
     layer.addChild(total);
   }
 
   animateAiPlay(playerId, words = []) {
-    const from = AVATAR_POS[playerId];
+    const from = this.layout.avatars[playerId];
     words.slice(0, 3).forEach((word, i) => {
       const node = this.makeCard({ w: word, truth: false }, false, true);
       node.scale.set(0.5);
       node.position.set(from.x, from.y);
       this.layers.fx.addChild(node);
       gsap.to(node, {
-        x: W / 2 + (i - 1) * 12,
-        y: 384,
+        x: this.W / 2 + (i - 1) * 12,
+        y: this.layout.playY,
         rotation: (i - 1) * 0.08,
         alpha: 0.9,
         scale: 0.62,
@@ -544,8 +633,8 @@ export class TableView {
       clone.rotation = node.rotation;
       this.layers.hand.addChild(clone);
       gsap.to(clone, {
-        x: W / 2 + (i - 1) * 10,
-        y: 380,
+        x: this.W / 2 + (i - 1) * 10,
+        y: this.layout.playY,
         rotation: (i - 1) * 0.1,
         scale: 0.62,
         alpha: 0.95,
@@ -559,7 +648,7 @@ export class TableView {
   }
 
   animateChallenge(playerId) {
-    const pos = AVATAR_POS[playerId];
+    const pos = this.layout.avatars[playerId];
     const stamp = text("质疑！", 26, 0xd4584a, { fontWeight: "bold", letterSpacing: 4 });
     stamp.anchor.set(0.5);
     stamp.position.set(pos.x, pos.y);
@@ -587,7 +676,7 @@ export class TableView {
   }
 
   flashSeat(playerId) {
-    const pos = AVATAR_POS[playerId];
+    const pos = this.layout.avatars[playerId];
     const flash = new Graphics();
     flash.circle(pos.x, pos.y, 42).fill({ color: 0xd23a3a, alpha: 0.5 });
     this.layers.fx.addChild(flash);
@@ -619,6 +708,7 @@ export class TableView {
   }
 
   setHandEnabled(enabled) {
+    this.handEnabled = enabled;
     for (const node of this.handCards) {
       node.interactive = enabled;
       node.eventMode = enabled ? "static" : "none";
@@ -627,6 +717,11 @@ export class TableView {
   }
 
   destroy() {
+    if (this.resizeHandler) {
+      window.removeEventListener("resize", this.resizeHandler);
+      window.removeEventListener("orientationchange", this.resizeHandler);
+      this.resizeHandler = null;
+    }
     if (this.app) {
       this.app.destroy(true, { children: true, texture: false });
       this.app = null;
