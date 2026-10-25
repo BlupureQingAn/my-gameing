@@ -25,7 +25,6 @@ const LAYOUTS = {
     showSelf: true,
     table: { cx: 480, cy: 330, rx: 392, ry: 218 },
     center: { x: 310, y: 262, w: 340, h: 84 },
-    chain: { y: 386 },
     slots: [
       { x: 480, y: 444 },
       { x: 220, y: 330 },
@@ -52,12 +51,11 @@ const LAYOUTS = {
     showSelf: false,
     table: { cx: 240, cy: 430, rx: 228, ry: 262 },
     center: { x: 60, y: 330, w: 360, h: 88 },
-    chain: { y: 520 },
     slots: [
       { x: 240, y: 620 },
-      { x: 108, y: 250 },
+      { x: 108, y: 258 },
       { x: 240, y: 235 },
-      { x: 372, y: 250 },
+      { x: 372, y: 258 },
     ],
     hand: { spacing: 86, tight: 76, y: 812 },
   },
@@ -138,11 +136,10 @@ export class TableView {
     this.layers.piles = new Container();
     this.layers.seats = new Container();
     this.layers.center = new Container();
-    this.layers.chain = new Container();
     this.layers.fx = new Container();
     this.layers.hand = new Container();
     this.layers.hand.sortableChildren = true;
-    for (const key of ["bg", "table", "piles", "seats", "center", "chain", "fx", "hand"]) {
+    for (const key of ["bg", "table", "piles", "seats", "center", "fx", "hand"]) {
       this.root.addChild(this.layers[key]);
     }
     this.textures = {};
@@ -367,6 +364,11 @@ export class TableView {
         layer.addChild(halo);
         gsap.to(halo, { alpha: 0.35, duration: 0.75, yoyo: true, repeat: -1, ease: "sine.inOut" });
       }
+      const claimed = segments.reduce((sum, segment) => sum + (segment.claimed || 0), 0);
+      const claimTag = text(`声称 ${claimed}`, 9, PLAYER_COLORS[seat]);
+      claimTag.anchor.set(0.5);
+      claimTag.position.set(slot.x, slot.y - h / 2 - 13);
+      layer.addChild(claimTag);
     }
   }
 
@@ -622,7 +624,7 @@ export class TableView {
     prompt.position.set(cx, c.y + 41);
     layer.addChild(prompt);
     const x = view.x;
-    const textX = text(`声称  ${x} / 6`, 12, x > 6 ? 0xe08a6a : 0xb9c8b4);
+    const textX = text(`本轮声称  ${x} / 6`, 12, x > 6 ? 0xe08a6a : 0xb9c8b4);
     textX.anchor.set(0.5);
     textX.position.set(cx, c.y + 69);
     layer.addChild(textX);
@@ -645,35 +647,6 @@ export class TableView {
         gsap.to(hint, { alpha: 0.45, duration: 0.9, yoyo: true, repeat: -1, ease: "sine.inOut" });
       }
     }
-  }
-
-  renderChain(view) {
-    const layer = this.layers.chain;
-    clearLayer(layer);
-    const chain = view.chain || [];
-    if (!chain.length) return;
-    const cfg = this.layout.chain;
-    const spacing = chain.length > 1
-      ? Math.min(78, (this.W - 40) / (chain.length - 1))
-      : 78;
-    const chipW = Math.max(44, Math.min(68, spacing - 6));
-    const startX = this.W / 2 - ((chain.length - 1) * spacing) / 2;
-    chain.forEach((segment, i) => {
-      const x = startX + i * spacing;
-      const y = cfg.y + (i % 2) * 8;
-      const color = PLAYER_COLORS[segment.player];
-      const chip = new Graphics();
-      rounded(chip, x - chipW / 2, y - 14, chipW, 28, 8, 0x0c1210, 0.92);
-      chip.roundRect(x - chipW / 2, y - 14, chipW, 28, 8).stroke({ width: 1, color, alpha: segment.challenged ? 0.25 : 0.6 });
-      layer.addChild(chip);
-      const label = text(`${segment.player === 0 ? "你" : `面具${"一二三"[segment.player - 1]}`} +${segment.claimed}`, chipW < 58 ? 9 : 10, color, {
-        wordWrap: false,
-      });
-      label.anchor.set(0.5);
-      label.position.set(x, y);
-      if (segment.challenged) label.alpha = 0.4;
-      layer.addChild(label);
-    });
   }
 
   animateAiPlay(playerId, words = []) {
@@ -771,7 +744,6 @@ export class TableView {
     this.renderPiles(view, { skipLast: !!animatePlay });
     this.renderSeats(view);
     this.renderCenter(view);
-    this.renderChain(view);
     // 手牌重绘会销毁旧节点，先记下打出的牌的原位置再补动画
     const captured = animatePlay && animatePlay.playerId === 0
       ? this.handCards.map((node) => ({

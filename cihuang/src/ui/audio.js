@@ -43,6 +43,10 @@ export function unlock() {
   applyAmbient();
 }
 
+export function isAudioUnlocked() {
+  return !!ctx && ctx.state === "running";
+}
+
 function env(node, when, attack, peak, decay) {
   node.gain.setValueAtTime(0.0001, when);
   node.gain.exponentialRampToValueAtTime(Math.max(0.0002, peak), when + attack);

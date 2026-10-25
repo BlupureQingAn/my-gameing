@@ -15,7 +15,7 @@
   <meta property="og:image" content="https://bitlife.blupure.cn/cihuang/assets/art/tavern.webp" />
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" type="image/webp" href="assets/art/icon.webp" />
-  <link rel="stylesheet" href="assets/style.css?v=20261025f" />
+  <link rel="stylesheet" href="assets/style.css?v=20261025g" />
 </head>
 <body>
 <div id="app">
@@ -45,7 +45,9 @@
             <button id="btn-leaderboard" class="btn btn-ghost">排行榜</button>
             <button id="btn-cosmetics" class="btn btn-ghost">装扮</button>
             <button id="btn-settings" class="btn btn-ghost">设置</button>
+            <button id="btn-music" class="btn btn-ghost music-on" aria-pressed="true" title="酒馆爵士背景音乐">♪ 爵士 开</button>
           </div>
+          <div id="music-note" class="music-note">♪ 酒馆爵士会在首次点击页面后响起</div>
         </div>
         <div class="menu-art">
           <img src="assets/art/tavern.webp" alt="地下酒馆的牌桌" width="1024" height="768" />
@@ -88,6 +90,12 @@
 
   <div id="modal-root"></div>
 </div>
-<script type="module" src="assets/game.js?v=20261025f"></script>
+<div id="loading" class="loading hidden" role="status" aria-live="polite">
+  <div class="loading-inner">
+    <div class="loading-spinner" aria-hidden="true"></div>
+    <div id="loading-text" class="loading-text">正在发牌…</div>
+  </div>
+</div>
+<script type="module" src="assets/game.js?v=20261025g"></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 import { GameSession } from "../game/session.js";
 import { TableView } from "./table.js";
-import { sfx, setSound, setMusic, setAmbient, unlock } from "./audio.js";
+import { sfx, setSound, setMusic, setAmbient, unlock, isAudioUnlocked } from "./audio.js";
 import {
   COSMETICS,
   COSMETIC_INDEX,
@@ -41,6 +41,8 @@ const $ = (id) => document.getElementById(id);
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const NAMES = ["你", "面具一", "面具二", "面具三"];
 const PREF_KEY = "cihuang_prefs_v1";
+const LANDSCAPE_TIP_KEY = "cihuang_landscape_tip_v1";
+const AUDIO_WAKE_EVENTS = ["pointerdown", "touchend", "keydown"];
 
 function esc(value) {
   return String(value == null ? "" : value)
@@ -137,6 +139,22 @@ function openModal({ title = "", sub = "", body = "", actions = "", wide = false
     if (event.target === root && closable) close();
   });
   return { root, card: root.querySelector(".modal-card"), close };
+}
+
+function setLoadingText(text) {
+  const label = $("loading-text");
+  if (label) label.textContent = text;
+}
+
+function showLoading(text = "正在发牌…") {
+  const node = $("loading");
+  if (!node) return;
+  setLoadingText(text);
+  node.classList.remove("hidden");
+}
+
+function hideLoading() {
+  $("loading")?.classList.add("hidden");
 }
 
 function hideActionBar() {
@@ -315,14 +333,26 @@ async function startGame() {
     return;
   }
   state.starting = true;
+  const startBtn = $("btn-start");
+  const startLabel = startBtn ? startBtn.textContent : "";
+  if (startBtn) {
+    startBtn.disabled = true;
+    startBtn.textContent = "入 座 中…";
+  }
+  showLoading("正在发牌…");
   try {
     unlock();
     if (state.profile.settings.music) setMusic(true);
+    syncMusicButton();
     sfx.click();
     const data = await loadBandData(state.band);
+    setLoadingText("正在摆好面具…");
     await ensureTable();
     let run = null;
-    if (isLoggedIn()) run = await startRun(state.band, state.difficulty);
+    if (isLoggedIn()) {
+      setLoadingText("正在连线上桌…");
+      run = await startRun(state.band, state.difficulty);
+    }
     const seed = run?.seed || `local-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
     const vocab = loadVocab().filter((item) => item.band === state.band && !item.deleted);
     const extraItems = vocab.map((item) => ({
@@ -349,14 +379,31 @@ async function startGame() {
     state.table.setEquipped(profileEquipped(state.profile));
     state.table.render(state.session.view(), { deal: true });
     track("game_start", { band: state.band, difficulty: state.difficulty, online: !!state.runId });
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    hideLoading();
     await wait(state.profile.settings.reducedMotion ? 120 : 650);
     drive();
   } catch (error) {
     console.error(error);
-    toast(`开局失败：${error.message}`);
+    hideLoading();
+    const message = `开局失败：${error.message}`;
+    if ($("screen-menu").classList.contains("hidden")) {
+      toast(message);
+    } else {
+      const modal = openModal({
+        title: "开局失败",
+        sub: message,
+        actions: '<button class="btn btn-primary" id="start-error-ok">知道了</button>',
+      });
+      modal.card.querySelector("#start-error-ok").addEventListener("click", () => modal.close());
+    }
     track("error", { stage: "start", msg: String(error.message).slice(0, 100) });
   } finally {
     state.starting = false;
+    if (startBtn) {
+      startBtn.disabled = false;
+      startBtn.textContent = startLabel;
+    }
   }
 }
 
@@ -1106,9 +1153,48 @@ function showCosmetics() {
 
 function applyAudioSettings() {
   setSound(state.profile.settings.sound);
-  setMusic(state.profile.settings.music && !!document.hasFocus());
+  setMusic(state.profile.settings.music);
   setAmbient(state.profile.settings.ambient !== false);
   $("btn-sound").textContent = state.profile.settings.sound ? "♪" : "×";
+  syncMusicButton();
+}
+
+function syncMusicButton() {
+  const button = $("btn-music");
+  if (!button) return;
+  const on = !!state.profile.settings.music;
+  const unlocked = isAudioUnlocked();
+  button.textContent = on ? (unlocked ? "♪ 爵士 开" : "♪ 爵士 点击开启") : "♪ 爵士 关";
+  button.classList.toggle("music-on", on);
+  button.classList.toggle("music-off", !on);
+  button.setAttribute("aria-pressed", on ? "true" : "false");
+  const note = $("music-note");
+  if (note) note.classList.toggle("hidden", !on || unlocked);
+}
+
+function toggleMenuMusic() {
+  const settings = state.profile.settings;
+  if (settings.music && !isAudioUnlocked()) {
+    removeAudioWakeListeners();
+    unlock();
+    setMusic(true);
+    sfx.click();
+    syncMusicButton();
+    setTimeout(syncMusicButton, 240);
+    return;
+  }
+  settings.music = !settings.music;
+  saveProfile(state.profile);
+  if (isMember()) putProfile(state.profile);
+  if (settings.music) {
+    unlock();
+    setMusic(true);
+  } else {
+    setMusic(false);
+  }
+  sfx.click();
+  syncMusicButton();
+  setTimeout(syncMusicButton, 240);
 }
 
 function showSettings() {
@@ -1344,6 +1430,7 @@ function bindEvents() {
   $("btn-leaderboard").addEventListener("click", () => { sfx.click(); showLeaderboard(); });
   $("btn-cosmetics").addEventListener("click", () => { sfx.click(); showCosmetics(); });
   $("btn-settings").addEventListener("click", () => { sfx.click(); showSettings(); });
+  $("btn-music").addEventListener("click", toggleMenuMusic);
   $("btn-play").addEventListener("click", () => {
     const ids = state.table?.selectedIds() || [];
     if (!ids.length) {
@@ -1371,7 +1458,9 @@ function bindEvents() {
     applyAudioSettings();
     sfx.click();
   });
-  document.addEventListener("pointerdown", onceGesture, { once: true });
+  AUDIO_WAKE_EVENTS.forEach((type) => {
+    window.addEventListener(type, primeAudio, { passive: true });
+  });
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       const modals = document.querySelectorAll(".modal");
@@ -1390,9 +1479,47 @@ function bindEvents() {
   });
 }
 
-function onceGesture() {
+function removeAudioWakeListeners() {
+  AUDIO_WAKE_EVENTS.forEach((type) => {
+    window.removeEventListener(type, primeAudio);
+  });
+}
+
+function primeAudio(event) {
+  if (event?.target instanceof Element && event.target.closest("#btn-music")) return;
+  removeAudioWakeListeners();
   unlock();
   if (state.profile.settings.music) setMusic(true);
+  syncMusicButton();
+  setTimeout(syncMusicButton, 240);
+}
+
+function showLandscapeTipIfNeeded() {
+  if (window.innerHeight <= window.innerWidth) return false;
+  try {
+    if (localStorage.getItem(LANDSCAPE_TIP_KEY) === "1") return false;
+    localStorage.setItem(LANDSCAPE_TIP_KEY, "1");
+  } catch (e) {}
+  showLandscapeTip();
+  return true;
+}
+
+function showLandscapeTip() {
+  const needTutorial = !state.profile.settings.tutorialDone;
+  const modal = openModal({
+    title: "推荐横屏游玩",
+    sub: "牌桌在横屏下更宽敞，手牌、面具和出牌动画都会更清楚。",
+    body: '<p style="font-size:12px;line-height:1.9;color:var(--dim)">↻ 把手机横过来，牌桌会自动铺满屏幕。竖屏也能玩，只是桌面会紧凑一些。</p>',
+    actions: needTutorial
+      ? '<button class="btn" id="landscape-later">稍后</button><button class="btn btn-primary" id="landscape-tut">看教程</button>'
+      : '<button class="btn btn-primary" id="landscape-ok">知道了</button>',
+  });
+  modal.card.querySelector("#landscape-later, #landscape-ok")?.addEventListener("click", () => modal.close());
+  modal.card.querySelector("#landscape-tut")?.addEventListener("click", () => {
+    modal.close();
+    showTutorial();
+  });
+  track("landscape_tip", {});
 }
 
 async function boot() {
@@ -1407,9 +1534,10 @@ async function boot() {
   bindEvents();
   syncCloud();
   track("app_open", {});
-  if (!state.profile.settings.tutorialDone) {
-    setTimeout(() => showTutorial(), 700);
-  }
+  setTimeout(() => {
+    if (showLandscapeTipIfNeeded()) return;
+    if (!state.profile.settings.tutorialDone) showTutorial();
+  }, 700);
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("service-worker.js").catch(() => {});
   }

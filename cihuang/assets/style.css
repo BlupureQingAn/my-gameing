@@ -183,6 +183,15 @@ a { color: var(--amber); }
 .btn-small { padding: 5px 9px; font-size: 11px; }
 
 .menu-links { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px; }
+.btn-ghost.music-on { color: var(--amber); }
+.btn-ghost.music-off { color: var(--dim); opacity: 0.65; }
+.music-note {
+  margin-top: -6px;
+  text-align: center;
+  font-size: 10px;
+  color: var(--dim);
+  letter-spacing: 0.12em;
+}
 
 .menu-art {
   position: relative;
@@ -328,6 +337,35 @@ a { color: var(--amber); }
   transition: opacity 0.2s, top 0.2s;
 }
 .toast.show { opacity: 1; top: 58px; }
+
+/* ---------- 开局加载 ---------- */
+.loading {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(23, 38, 31, 0.97), rgba(7, 11, 9, 0.985));
+  backdrop-filter: blur(3px);
+}
+.loading-inner { text-align: center; }
+.loading-spinner {
+  width: 46px;
+  height: 46px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(226, 196, 119, 0.16);
+  border-top-color: var(--amber);
+  animation: loading-spin 0.9s linear infinite;
+}
+.loading-text {
+  font-size: 12px;
+  letter-spacing: 0.26em;
+  color: var(--amber);
+}
+@keyframes loading-spin { to { transform: rotate(360deg); } }
 
 /* ---------- 弹层 ---------- */
 #modal-root { position: relative; z-index: 40; }
