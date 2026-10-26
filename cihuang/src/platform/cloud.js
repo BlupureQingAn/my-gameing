@@ -3,6 +3,8 @@
 
 const CLIENT_KEY = "cihuang_client_id";
 const LICENSE_KEY = "cihuang_license_v1";
+const EMAIL_KEY = "pb_auth_email";
+const USER_CACHE_KEY = "bitlife_user_cache_v1";
 
 // 词谎买断（¥21）与主站会员完全解耦：只认 /api/cihuang/entitlement 的结果
 let licensed = false;
@@ -25,14 +27,56 @@ export function authToken() {
 
 export function currentUser() {
   try {
-    return JSON.parse(localStorage.getItem("bitlife_user_cache_v1") || "null");
+    return JSON.parse(localStorage.getItem(USER_CACHE_KEY) || "null");
   } catch (e) {
     return null;
   }
 }
 
+export function accountIdentity() {
+  try {
+    return localStorage.getItem(EMAIL_KEY) || "";
+  } catch (e) {
+    return "";
+  }
+}
+
 export function isLoggedIn() {
   return !!authToken() && !!currentUser();
+}
+
+export function storeAuthSession(token, identity, record) {
+  const user = record || {};
+  try {
+    localStorage.setItem("pb_auth_token", token);
+    localStorage.setItem(EMAIL_KEY, String(identity || ""));
+    localStorage.setItem(USER_CACHE_KEY, JSON.stringify({
+      id: user.id || "",
+      email: user.email || identity || "",
+      coins: Number(user.coins ?? 0),
+      membership_type: user.membership_type || "",
+      membership_expires_at: user.membership_expires_at || "",
+      nickname: user.nickname || user.username || "",
+      signature: user.signature || "",
+      faceimg: user.faceimg || "",
+      social: user.social_uid ? 1 : 0,
+      ts: Date.now(),
+    }));
+  } catch (e) {}
+  licensed = false;
+  licensedAt = "";
+  try { localStorage.removeItem(LICENSE_KEY); } catch (e) {}
+}
+
+export function clearAuthSession() {
+  try {
+    localStorage.removeItem("pb_auth_token");
+    localStorage.removeItem(EMAIL_KEY);
+    localStorage.removeItem(USER_CACHE_KEY);
+    localStorage.removeItem(LICENSE_KEY);
+  } catch (e) {}
+  licensed = false;
+  licensedAt = "";
 }
 
 export function hasLicense() {

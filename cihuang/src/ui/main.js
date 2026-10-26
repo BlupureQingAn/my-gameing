@@ -28,6 +28,8 @@ import {
   upsertVocab,
 } from "../platform/store.js";
 import {
+  accountIdentity,
+  clearAuthSession,
   createPayOrder,
   fetchEntitlement,
   finishRun,
@@ -45,9 +47,18 @@ import {
   removeVocab as removeCloudVocab,
   setLeaderboardOptIn,
   startRun,
+  storeAuthSession,
   track,
   flushEvents,
 } from "../platform/cloud.js";
+import {
+  loginWithPassword,
+  normalizeEmail,
+  registerAccount,
+  resetAccountPassword,
+  sendAuthCode,
+  validateAuthValues,
+} from "../platform/auth.js";
 
 const $ = (id) => document.getElementById(id);
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -335,6 +346,337 @@ function autoPlayOnTimeout() {
   humanPlay([card.id]);
 }
 
+/* ---------------- 账号 ---------------- */
+
+const AUTH_MODES = [
+  ["login", "登录"],
+  ["register", "注册"],
+  ["reset", "找回密码"],
+];
+
+let authScreen = null;
+let authMode = "login";
+let authCountdownTimer = null;
+let pendingPurchase = false;
+let pendingLeaderboard = false;
+
+function authNotice(kind, message) {
+  const node = authScreen?.querySelector("#auth-notice");
+  if (!node) return;
+  node.className = `auth-notice ${message ? kind : ""}`;
+  node.textContent = message || "";
+}
+
+function setAuthMode(mode) {
+  authMode = mode;
+  if (!authScreen) return;
+  authScreen.querySelectorAll(".auth-tab").forEach((button) => {
+    button.classList.toggle("active", button.dataset.authMode === mode);
+  });
+  renderAuthForm();
+  authNotice("", "");
+}
+
+function renderAuthForm() {
+  const wrap = authScreen?.querySelector("#auth-form-wrap");
+  if (!wrap) return;
+  clearInterval(authCountdownTimer);
+  authCountdownTimer = null;
+  const identity = esc(accountIdentity());
+  let html = "";
+  if (authMode === "login") {
+    html = `
+      <form class="auth-form" id="auth-form" novalidate>
+        <label class="auth-field"><span>账号</span>
+          <input id="auth-identity" type="text" autocomplete="username" placeholder="邮箱或用户名" value="${identity}" />
+        </label>
+        <label class="auth-field"><span>密码</span>
+          <input id="auth-password" type="password" autocomplete="current-password" placeholder="输入密码" />
+        </label>
+        <button class="btn btn-primary auth-submit" id="auth-submit" type="submit">上 桌</button>
+        <div class="auth-links"><button type="button" class="link-btn" data-auth-mode="reset">忘记密码？</button></div>
+      </form>`;
+  } else if (authMode === "register") {
+    html = `
+      <form class="auth-form" id="auth-form" novalidate>
+        <label class="auth-field"><span>邮箱</span>
+          <input id="auth-email" type="email" autocomplete="email" placeholder="用于接收验证码" />
+        </label>
+        <label class="auth-field"><span>验证码</span>
+          <span class="auth-code-row">
+            <input id="auth-code" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="6 位数字" />
+            <button type="button" class="btn btn-small" id="auth-send">发送验证码</button>
+          </span>
+        </label>
+        <label class="auth-field"><span>昵称（可选）</span>
+          <input id="auth-username" type="text" maxlength="30" autocomplete="nickname" placeholder="3-30 位字母、数字或下划线" />
+        </label>
+        <label class="auth-field"><span>密码</span>
+          <input id="auth-password" type="password" autocomplete="new-password" placeholder="至少 8 位" />
+        </label>
+        <label class="auth-field"><span>确认密码</span>
+          <input id="auth-password2" type="password" autocomplete="new-password" placeholder="再输一次" />
+        </label>
+        <button class="btn btn-primary auth-submit" id="auth-submit" type="submit">创建账号</button>
+        <div class="auth-links"><span>已有账号？</span><button type="button" class="link-btn" data-auth-mode="login">直接登录</button></div>
+      </form>`;
+  } else {
+    html = `
+      <form class="auth-form" id="auth-form" novalidate>
+        <label class="auth-field"><span>邮箱</span>
+          <input id="auth-email" type="email" autocomplete="email" placeholder="注册时使用的邮箱" />
+        </label>
+        <label class="auth-field"><span>验证码</span>
+          <span class="auth-code-row">
+            <input id="auth-code" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="6 位数字" />
+            <button type="button" class="btn btn-small" id="auth-send">发送验证码</button>
+          </span>
+        </label>
+        <label class="auth-field"><span>新密码</span>
+          <input id="auth-password" type="password" autocomplete="new-password" placeholder="至少 8 位" />
+        </label>
+        <label class="auth-field"><span>确认新密码</span>
+          <input id="auth-password2" type="password" autocomplete="new-password" placeholder="再输一次" />
+        </label>
+        <button class="btn btn-primary auth-submit" id="auth-submit" type="submit">重置并登录</button>
+        <div class="auth-links"><span>想起来了？</span><button type="button" class="link-btn" data-auth-mode="login">返回登录</button></div>
+      </form>`;
+  }
+  wrap.innerHTML = html;
+  wrap.querySelectorAll("[data-auth-mode]").forEach((button) => {
+    button.addEventListener("click", () => {
+      sfx.click();
+      setAuthMode(button.dataset.authMode);
+    });
+  });
+  wrap.querySelector("#auth-form").addEventListener("submit", handleAuthSubmit);
+  wrap.querySelector("#auth-send")?.addEventListener("click", handleSendAuthCode);
+}
+
+function showAuthScreen(mode = "login") {
+  if (authScreen) {
+    setAuthMode(mode);
+    return;
+  }
+  const root = document.createElement("div");
+  root.className = "auth-screen";
+  root.innerHTML = `
+    <div class="auth-bg" aria-hidden="true"></div>
+    <div class="auth-frame" role="dialog" aria-modal="true" aria-label="登录云吞吞账号">
+      <aside class="auth-side">
+        <div class="auth-kicker">面具酒馆 · 账房</div>
+        <div class="auth-side-logo">词<span>谎</span></div>
+        <p class="auth-side-line">戴上面具之前，先留下名字。</p>
+        <ul class="auth-perks">
+          <li>登录后成绩可公开上榜</li>
+          <li>解锁完整版后档案与生词本跨设备同步</li>
+          <li>买断 ¥21 一次性解锁五档词库，与文游会员互不影响</li>
+        </ul>
+        <blockquote class="auth-quote">“账房只认密码，不认面具。”<cite>—— 酒保</cite></blockquote>
+      </aside>
+      <section class="auth-card">
+        <button class="auth-close" id="auth-close" aria-label="关闭">×</button>
+        <div class="auth-tabs" role="tablist">
+          ${AUTH_MODES.map(([id, label]) => `<button type="button" class="auth-tab" data-auth-mode="${id}">${label}</button>`).join("")}
+        </div>
+        <div id="auth-notice" class="auth-notice" role="status" aria-live="polite"></div>
+        <div id="auth-form-wrap"></div>
+        <p class="auth-foot">游客也可以关闭本页，直接用高中词库试玩。</p>
+      </section>
+    </div>`;
+  document.getElementById("app").appendChild(root);
+  authScreen = root;
+  root.querySelector("#auth-close").addEventListener("click", () => {
+    sfx.click();
+    closeAuthScreen();
+  });
+  root.addEventListener("click", (event) => {
+    if (!event.target.closest(".auth-frame")) closeAuthScreen();
+  });
+  document.addEventListener("keydown", onAuthKeydown);
+  setAuthMode(mode);
+  requestAnimationFrame(() => root.classList.add("open"));
+}
+
+function onAuthKeydown(event) {
+  if (event.key === "Escape" && authScreen) closeAuthScreen();
+}
+
+function closeAuthScreen(keepPending = false) {
+  if (!authScreen) return;
+  clearInterval(authCountdownTimer);
+  authCountdownTimer = null;
+  if (!keepPending) {
+    pendingPurchase = false;
+    pendingLeaderboard = false;
+  }
+  document.removeEventListener("keydown", onAuthKeydown);
+  const node = authScreen;
+  authScreen = null;
+  node.classList.remove("open");
+  setTimeout(() => node.remove(), 180);
+}
+
+function startAuthCountdown(button, seconds) {
+  clearInterval(authCountdownTimer);
+  let left = Math.max(1, Math.ceil(seconds));
+  button.disabled = true;
+  button.textContent = `重发 ${left}s`;
+  authCountdownTimer = setInterval(() => {
+    left -= 1;
+    if (left <= 0) {
+      clearInterval(authCountdownTimer);
+      authCountdownTimer = null;
+      button.disabled = false;
+      button.textContent = "发送验证码";
+      return;
+    }
+    button.textContent = `重发 ${left}s`;
+  }, 1000);
+}
+
+async function handleSendAuthCode() {
+  const email = normalizeEmail(authScreen?.querySelector("#auth-email")?.value || "");
+  const button = authScreen?.querySelector("#auth-send");
+  if (!button) return;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    authNotice("bad", "请先填写正确的邮箱");
+    return;
+  }
+  button.disabled = true;
+  button.textContent = "发送中…";
+  const purpose = authMode === "reset" ? "reset" : "register";
+  try {
+    await sendAuthCode(email, purpose);
+    authNotice("good", "验证码已发送，5 分钟内有效；没收到请检查垃圾邮件箱");
+    track("auth_send_code", { purpose });
+    startAuthCountdown(button, 63);
+  } catch (error) {
+    authNotice("bad", error.message || "发送失败，请稍后重试");
+    if (error.status === 429) {
+      startAuthCountdown(button, Math.max(3, error.retryAfter || 63));
+    } else {
+      button.disabled = false;
+      button.textContent = "发送验证码";
+    }
+  }
+}
+
+function collectAuthValues() {
+  const value = (id) => authScreen?.querySelector(`#${id}`)?.value || "";
+  if (authMode === "login") {
+    return { identity: value("auth-identity"), password: value("auth-password") };
+  }
+  return {
+    email: value("auth-email"),
+    code: value("auth-code"),
+    username: value("auth-username"),
+    password: value("auth-password"),
+    passwordConfirm: value("auth-password2"),
+  };
+}
+
+async function handleAuthSubmit(event) {
+  event.preventDefault();
+  const check = validateAuthValues(authMode, collectAuthValues());
+  if (!check.ok) {
+    authNotice("bad", check.error);
+    return;
+  }
+  const button = authScreen?.querySelector("#auth-submit");
+  if (!button) return;
+  const label = button.textContent;
+  button.disabled = true;
+  button.textContent = authMode === "login" ? "登录中…" : authMode === "register" ? "创建中…" : "重置中…";
+  try {
+    let token = "";
+    let record = null;
+    let identity = check.values.identity || check.values.email;
+    if (authMode === "login") {
+      const result = await loginWithPassword(check.values.identity, check.values.password);
+      token = result.token;
+      record = result.record;
+    } else if (authMode === "register") {
+      const data = await registerAccount(check.values);
+      token = data.token || "";
+      record = data.record || null;
+      identity = check.values.email;
+    } else {
+      const data = await resetAccountPassword(check.values);
+      token = data.token || "";
+      record = data.record || null;
+      identity = check.values.email;
+    }
+    if (!token) {
+      setAuthMode("login");
+      const input = authScreen?.querySelector("#auth-identity");
+      if (input) input.value = identity;
+      authNotice("good", "账号已就绪，请使用新密码登录");
+      return;
+    }
+    storeAuthSession(token, identity, record);
+    await afterAuthSuccess();
+  } catch (error) {
+    authNotice("bad", error.message || "操作失败，请重试");
+    button.disabled = false;
+    button.textContent = label;
+  }
+}
+
+async function afterAuthSuccess() {
+  closeAuthScreen(true);
+  toast("已登录");
+  track("auth_success", {});
+  await fetchEntitlement();
+  updateAccount();
+  renderChoices();
+  updateMenuStats();
+  await syncCloud();
+  if (pendingPurchase) {
+    pendingPurchase = false;
+    showPurchase();
+  } else if (pendingLeaderboard) {
+    pendingLeaderboard = false;
+    showLeaderboard();
+  }
+}
+
+function showAccountPanel() {
+  const modal = openModal({
+    title: "账号",
+    sub: "云吞吞账号 · 与文游共用登录",
+    body: `
+      <div class="settings-row"><span>昵称</span><b>${esc(nickname() || "已登录赌客")}</b></div>
+      <div class="settings-row"><span>账号</span><b>${esc(accountIdentity() || "—")}</b></div>
+      <div class="settings-row"><span>词谎完整版</span><b>${hasLicense() ? "已解锁" : "未解锁"}</b></div>
+      <div class="settings-row"><span>水晶</span><b>${state.profile.crystals}</b></div>`,
+    actions: '<button class="btn" id="account-close">关闭</button><button class="btn btn-danger" id="account-logout">退出登录</button>',
+  });
+  modal.card.querySelector("#account-close").addEventListener("click", () => modal.close());
+  modal.card.querySelector("#account-logout").addEventListener("click", () => {
+    modal.close();
+    confirmLogout();
+  });
+}
+
+function confirmLogout() {
+  const modal = openModal({
+    title: "退出登录？",
+    sub: "本机存档会保留，云端进度不会被删除。",
+    actions: '<button class="btn" id="logout-cancel">取消</button><button class="btn btn-danger" id="logout-confirm">退出</button>',
+  });
+  modal.card.querySelector("#logout-cancel").addEventListener("click", () => modal.close());
+  modal.card.querySelector("#logout-confirm").addEventListener("click", async () => {
+    modal.close();
+    clearAuthSession();
+    await fetchEntitlement();
+    updateAccount();
+    renderChoices();
+    updateMenuStats();
+    toast("已退出登录");
+  });
+}
+
 /* ---------------- 菜单 ---------------- */
 
 function updateAccount() {
@@ -343,13 +685,21 @@ function updateAccount() {
   if (isLoggedIn()) {
     const name = nickname() || "已登录赌客";
     const badge = hasLicense() ? '<span class="badge">完整版</span>' : '<span class="badge" style="border-color:#3f5c4a;color:#97a79a">免费版</span>';
-    node.innerHTML = `<span><strong>${esc(name)}</strong>${badge}</span><span>水晶 <b style="color:var(--amber)">${state.profile.crystals}</b></span>${hasLicense() ? "" : '<button class="btn btn-small btn-primary" id="account-unlock">解锁完整版</button>'}`;
+    node.innerHTML = `<span><button class="account-name" id="account-name">${esc(name)}</button>${badge}</span><span>水晶 <b style="color:var(--amber)">${state.profile.crystals}</b></span>${hasLicense() ? "" : '<button class="btn btn-small btn-primary" id="account-unlock">解锁完整版</button>'}`;
+    node.querySelector("#account-name").addEventListener("click", () => {
+      sfx.click();
+      showAccountPanel();
+    });
     node.querySelector("#account-unlock")?.addEventListener("click", () => {
       sfx.click();
       showPurchase();
     });
   } else {
-    node.innerHTML = '<span>未登录 · 仅本地存档</span><a href="/">去主站登录 →</a>';
+    node.innerHTML = '<span>游客 · 仅本地存档</span><button class="btn btn-small btn-primary" id="account-login">登录 / 注册</button>';
+    node.querySelector("#account-login").addEventListener("click", () => {
+      sfx.click();
+      showAuthScreen("login");
+    });
   }
 }
 
@@ -459,11 +809,11 @@ function showPurchase() {
     ${isLoggedIn() ? `
       <label class="purchase-check"><input type="checkbox" id="pay-age" /> 我已满 18 周岁，或已获得监护人同意</label>
       <label class="purchase-check"><input type="checkbox" id="pay-norefund" /> 虚拟商品，购买后不支持退款</label>` : `
-      <p class="purchase-login">购买前需要先登录主站账号，登录后回到本页即可支付。</p>`}
+      <p class="purchase-login">购买前需要登录云吞吞账号，登录后会自动回到这里。</p>`}
     <div id="purchase-status" class="purchase-status"></div>`;
   const actions = isLoggedIn()
     ? `<button class="btn" id="purchase-later">先去玩高中词库</button><button class="btn btn-primary" id="purchase-pay">微信支付 ¥${CIHUANG_PRICE}</button>`
-    : '<a class="btn btn-primary" href="/">先去主站登录</a>';
+    : '<button class="btn" id="purchase-later">先去玩高中词库</button><button class="btn btn-primary" id="purchase-login">登录后购买</button>';
   let pollTimer = null;
   const modal = openModal({
     title: "",
@@ -475,6 +825,11 @@ function showPurchase() {
     },
   });
   modal.card.querySelector("#purchase-later")?.addEventListener("click", () => modal.close());
+  modal.card.querySelector("#purchase-login")?.addEventListener("click", () => {
+    pendingPurchase = true;
+    modal.close();
+    showAuthScreen("login");
+  });
   const payBtn = modal.card.querySelector("#purchase-pay");
   if (!payBtn) return;
   payBtn.addEventListener("click", async () => {
@@ -1384,7 +1739,12 @@ function showLeaderboard() {
         ? `<div class="lb-row me"><span class="lb-rank">${data.me.rank}</span><span class="lb-name">你</span><span class="lb-num score">${data.me.score}</span><span class="lb-num">${data.me.wins}</span><span class="lb-num games">${data.me.games}</span></div>`
         : "");
       if (!isLoggedIn()) {
-        optNode.innerHTML = '<span>登录后可开启公开排行</span><a class="btn btn-small" href="/">去登录</a>';
+        optNode.innerHTML = '<span>登录后可开启公开排行</span><button class="btn btn-small" id="lb-login">登录</button>';
+        optNode.querySelector("#lb-login").addEventListener("click", () => {
+          pendingLeaderboard = true;
+          modal.close();
+          showAuthScreen("login");
+        });
       } else {
         const on = !!data.me?.optIn;
         optNode.innerHTML = `<span>${on ? "你的成绩目前公开" : "你的成绩目前仅自己可见"}</span><button class="btn btn-small ${on ? "" : "btn-primary"}" id="lb-opt-btn">${on ? "关闭公开" : "开启公开"}</button>`;
@@ -1741,7 +2101,9 @@ function showSettings() {
       <div class="settings-row"><span>减少动效</span><span class="switch" data-key="reducedMotion">
         <button data-val="1" class="${settings.reducedMotion ? "on" : ""}">开</button><button data-val="0" class="${!settings.reducedMotion ? "on" : ""}">关</button></span></div>
       <div class="settings-row"><span>教程</span><button class="btn btn-small" id="settings-tutorial">重新播放</button></div>
-      <div class="settings-row"><span>账号</span><span style="font-size:11px;color:var(--dim)">${isLoggedIn() ? esc(nickname() || "已登录") : "未登录"}</span></div>
+      <div class="settings-row"><span>账号</span><span class="settings-account">${isLoggedIn()
+        ? `<b>${esc(nickname() || "已登录")}</b><button class="btn btn-small" id="settings-logout">退出</button>`
+        : '<button class="btn btn-small btn-primary" id="settings-login">登录 / 注册</button>'}</span></div>
       <p class="modal-sub" style="margin-top:12px">进度自动保存在本机。解锁完整版后档案与生词本会同步到云端。</p>`;
     const modal = openModal({ title: "设置", body });
     modal.card.querySelectorAll(".switch").forEach((group) => {
@@ -1778,6 +2140,14 @@ function showSettings() {
     modal.card.querySelector("#settings-tutorial").addEventListener("click", () => {
       modal.close();
       showTutorial();
+    });
+    modal.card.querySelector("#settings-login")?.addEventListener("click", () => {
+      modal.close();
+      showAuthScreen("login");
+    });
+    modal.card.querySelector("#settings-logout")?.addEventListener("click", () => {
+      modal.close();
+      confirmLogout();
     });
   };
   render();
