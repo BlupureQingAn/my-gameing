@@ -437,6 +437,30 @@ a { color: var(--amber); }
 .reveal-verdict.good { color: var(--green); }
 .reveal-verdict.bad { color: var(--red); }
 
+.answer-topic {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border: 1px solid rgba(226, 196, 119, 0.45);
+  border-radius: 6px;
+  background: rgba(226, 196, 119, 0.08);
+}
+.answer-topic-label {
+  flex: none;
+  color: var(--amber-deep);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  white-space: nowrap;
+}
+.answer-topic-text {
+  color: var(--amber);
+  font-size: clamp(20px, 3.2vw, 30px);
+  font-weight: 700;
+  line-height: 1.25;
+  word-break: break-word;
+}
 .answer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
 .answer-card {
   border: 1px solid var(--line);

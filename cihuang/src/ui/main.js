@@ -699,7 +699,12 @@ async function humanChallenge() {
 function askAnswers(cards) {
   return new Promise((resolve) => {
     const answers = {};
+    const topicPrompt = state.session.view().topic?.prompt || "";
     const body = `
+      <div class="answer-topic">
+        <span class="answer-topic-label">本轮主题</span>
+        <strong class="answer-topic-text">${esc(topicPrompt)}</strong>
+      </div>
       <p class="modal-sub">其余玩家都已锁定答案。逐张判断这些牌是否符合本轮主题。超时未答按答错处理。</p>
       <div class="answer-grid">
         ${cards.map((card) => `
@@ -716,7 +721,6 @@ function askAnswers(cards) {
       <div class="modal-actions"><button class="btn btn-primary" id="answer-submit">锁定答案</button></div>`;
     const modal = openModal({
       title: "公开作答",
-      sub: `主题：${esc(state.session.view().topic?.prompt || "")}`,
       body,
       wide: true,
       closable: false,
