@@ -75,23 +75,14 @@ export function buildRoundDeck({
     throw new Error(`deck size ${cards.length}`);
   }
 
+  // 每轮最多带一张复习词，且必须是本轮主题的合规词（真话），不占用额外手牌位。
   const wanted = Array.from(new Set(reviewWords))
-    .filter((w) => w && w !== topic.target && w !== "JOKER")
-    .slice(0, MAX_REVIEW_WORDS);
+    .filter((w) => w && w !== topic.target && w !== "JOKER" && compliant.includes(w))
+    .slice(0, 1);
 
   for (const word of wanted) {
     const existing = cards.find((c) => c.w === word);
-    if (existing) {
-      if (!existing.joker) existing.review = true;
-      continue;
-    }
-    const replaceable = cards.filter((c) => !c.joker && !c.review && !c.truth);
-    if (!replaceable.length) break;
-    const victim = rng.pick(replaceable);
-    const item = bankIndex[word];
-    if (!item) continue;
-    const replacement = makeCard(item, false, victim.id, { review: true });
-    cards[cards.indexOf(victim)] = replacement;
+    if (existing) existing.review = true;
   }
 
   const held = rng.sample(

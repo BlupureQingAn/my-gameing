@@ -76,6 +76,17 @@ export class TopicPicker {
     return topic;
   }
 
+  // 复习词优先：挑一个合规词里包含复习词的主题，让复习词真正能用上。
+  pickForReviewWords(reviewWords = []) {
+    const wanted = new Set((reviewWords || []).filter(Boolean));
+    if (!wanted.size) return null;
+    const pool = this.topics.filter((topic) =>
+      topic.compliant.some((word) => wanted.has(word)));
+    if (!pool.length) return null;
+    const fresh = pool.filter((topic) => !this.isRecent(topic));
+    return this.rng.pick(fresh.length ? fresh : pool);
+  }
+
   candidates(count = 3) {
     const ratio = TOPIC_RATIO[this.difficulty] || TOPIC_RATIO.normal;
     const types = typeDistribution(count, ratio);

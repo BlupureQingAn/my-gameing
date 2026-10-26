@@ -321,9 +321,9 @@ test("cannot challenge with an empty chain", () => {
 });
 
 test("public state and AI view hide secrets", () => {
-  const state = newGame({ reviewWords: ["reviewone"] });
-  assert.ok(state.players[0].hand.some((c) => c.w === "reviewone"));
-  assert.deepEqual(state.injectedReviewWords, ["reviewone"]);
+  const state = newGame({ reviewWords: ["bravo"] });
+  assert.ok(state.players[0].hand.some((c) => c.w === "bravo"));
+  assert.deepEqual(state.injectedReviewWords, ["bravo"]);
 
   const pub = publicState(state);
   assert.equal(pub.topic.target, undefined);

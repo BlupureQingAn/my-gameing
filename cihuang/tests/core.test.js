@@ -115,6 +115,23 @@ test("topic picker returns unique candidates and honors recent history", () => {
   assert.ok(chosen);
 });
 
+test("topic picker prefers a topic whose compliant words cover a review word", () => {
+  const topics = makeTopics(12);
+  topics[4].compliant = ["x", "y", "z", "bravo", "e", "f"];
+  const picker = new TopicPicker({
+    topics,
+    difficulty: "normal",
+    rng: createStreams("review-topic").topics,
+  });
+  assert.equal(picker.pickForReviewWords(["bravo"]).id, topics[4].id);
+  assert.equal(picker.pickForReviewWords(["reviewonly"]), null);
+  assert.equal(picker.pickForReviewWords([]), null);
+
+  picker.markUsed(topics[4]);
+  assert.equal(picker.pickForReviewWords(["bravo"]).id, topics[4].id,
+    "falls back to the matching topic when every match is recent");
+});
+
 test("topic picker ignores malformed topics", () => {
   const topics = [
     ...makeTopics(6),

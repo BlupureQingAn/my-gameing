@@ -50,18 +50,22 @@ test("deterministic for the same seed", () => {
   );
 });
 
-test("review words are never buried and go to the human hand first", () => {
-  const words = ["reviewone", "reviewtwo", "reviewthree"];
+test("only one review word per round, never buried, dealt to the human hand", () => {
+  const words = ["bravo", "charlie", "delta"];
   const built = build({ reviewWords: words });
   const reviewCards = built.cards.filter((c) => c.review);
-  assert.equal(reviewCards.length, 3);
-  for (const word of words) {
-    assert.ok(reviewCards.some((c) => c.w === word), `missing review card ${word}`);
-  }
+  assert.equal(reviewCards.length, 1);
+  assert.equal(reviewCards[0].w, "bravo");
+  assert.equal(reviewCards[0].truth, true);
   assert.ok(built.held.every((c) => !c.review));
-  for (const word of words) {
-    assert.ok(built.hands[0].some((c) => c.w === word), `human hand missing ${word}`);
-  }
+  assert.ok(built.hands[0].some((c) => c.w === "bravo"));
+  assert.equal(built.hands[0].filter((c) => c.review).length, 1);
+});
+
+test("review words outside the topic's compliant set are ignored", () => {
+  const built = build({ reviewWords: ["reviewone", "reviewtwo", "d01"] });
+  assert.equal(built.cards.filter((c) => c.review).length, 0);
+  assert.ok(built.cards.find((c) => c.w === "reviewone") === undefined);
 });
 
 test("compliant review words keep truth=true and the topic target stays unreviewed", () => {
@@ -72,10 +76,10 @@ test("compliant review words keep truth=true and the topic target stays unreview
   assert.equal(built.cards.find((c) => c.w === "alpha").review, false);
 });
 
-test("review count is capped at MAX_REVIEW_WORDS", () => {
-  const words = ["alpha", "bravo", "reviewone", "reviewtwo", "reviewthree", "d01", "d02"];
+test("review count is capped at one even with a long review list", () => {
+  const words = ["alpha", "bravo", "charlie", "delta", "echo", "foxtrot", "d01", "d02"];
   const built = build({ reviewWords: words });
-  assert.ok(built.cards.filter((c) => c.review).length <= sizes.MAX_REVIEW_WORDS);
+  assert.equal(built.cards.filter((c) => c.review).length, 1);
 });
 
 test("deck rejects topics without exactly 6 compliant words", () => {

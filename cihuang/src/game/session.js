@@ -46,7 +46,9 @@ export class GameSession {
       difficulty,
       rng: createStreams(this.seed).topics,
     });
-    const topic = this.picker.initial();
+    const reviewTopic = this.picker.pickForReviewWords(reviewWords);
+    const topic = reviewTopic || this.picker.initial();
+    if (reviewTopic) this.picker.markUsed(reviewTopic);
     this.ais = [1, 2, 3].map((seat) => new AIPlayer({
       seat,
       difficulty,
@@ -184,7 +186,8 @@ export class GameSession {
   beginRandomNextRound() {
     const end = this.state.roundEnd;
     if (!end) return null;
-    const topic = this.picker.pickRandom(this.picker.candidates(3));
+    const topic = this.picker.pickForReviewWords(this.reviewWords)
+      || this.picker.pickRandom(this.picker.candidates(3));
     if (!topic) return null;
     this.beginNextRound(topic, end.nextStarter);
     return { topic, starter: end.nextStarter };
