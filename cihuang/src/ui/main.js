@@ -1,6 +1,6 @@
 import { Application, Container, Graphics } from "pixi.js";
 import { gsap } from "gsap";
-import { GameSession } from "../game/session.js";
+import { GameSession, canHumanChallenge } from "../game/session.js";
 import { TableView } from "./table.js";
 import { sfx, setSound, setMusic, setAmbient, setVolume, unlock, isAudioUnlocked } from "./audio.js";
 import { runRoulette } from "./roulette.js";
@@ -497,11 +497,7 @@ function enableHuman(view) {
   const table = state.table;
   table.render(view);
   table.setHandEnabled(true);
-  const last = view.chain[view.chain.length - 1];
-  const target = last ? view.players[last.player] : null;
-  const canChallenge = !!last && last.player !== 0 && target && target.alive
-    && last.claimed > 0;
-  $("btn-challenge").classList.toggle("hidden", !canChallenge);
+  $("btn-challenge").classList.toggle("hidden", !canHumanChallenge(view));
   $("action-bar").classList.add("show");
   updateActionHint();
   toggleHelpSound();

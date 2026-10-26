@@ -61,6 +61,21 @@ test("joker does not count toward K", () => {
   assert.equal(chainTotal(state), 1);
 });
 
+test("a joker-only claim is challengeable and penalizes the challenger", () => {
+  const state = newGame();
+  begin(state, 1);
+  setHand(state, 1, [card("j", { joker: true }), card("spare")]);
+  play(state, 1, ["j"]);
+  assert.equal(state.currentPlayer, 2);
+  const pending = challenge(state, 2);
+  assert.deepEqual(pending.cards.map((c) => c.id), ["j"]);
+  assert.equal(state.pendingChallenge.answerCards.length, 0);
+  const resolved = resolveChallenge(state, {});
+  assert.equal(resolved.isLie, false);
+  assert.equal(resolved.penalized, 2);
+  assert.equal(state.phase, PHASE.ROULETTE);
+});
+
 test("emptying the hand keeps the round going while others hold cards", () => {
   const state = newGame();
   begin(state, 0);

@@ -15,6 +15,14 @@ import { TopicPicker } from "../core/topic.js";
 import { createStreams } from "../core/rng.js";
 import { HUMAN_ID, MAX_PLAY, PHASE } from "../core/constants.js";
 
+// 万能牌单出时 claimed 为 0，但它仍是一段可被质疑的出牌；是否显示质疑只看上家是否可质疑。
+export function canHumanChallenge(view) {
+  const chain = view?.chain || [];
+  const last = chain[chain.length - 1];
+  const target = last ? view.players?.[last.player] : null;
+  return Boolean(last && last.player !== HUMAN_ID && target && target.alive);
+}
+
 export function buildBankIndex(rows, extraItems = []) {
   const index = {};
   for (const row of rows || []) {
