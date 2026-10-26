@@ -53,6 +53,64 @@ function cardBackPattern(g, item, w, h) {
     return;
   }
 
+  if (item.id === "cb_jade") {
+    // 碧玉云纹：玉牌双线 + 如意云头 + 点翠环
+    g.roundRect(-innerW / 2 + 2, -innerH / 2 + 2, innerW - 4, innerH - 4, 10)
+      .fill({ color: accent, alpha: 0.05 });
+    g.roundRect(-innerW / 2 + 2, -innerH / 2 + 2, innerW - 4, innerH - 4, 10)
+      .stroke({ width: 1.2, color: accent, alpha: 0.5 });
+    g.roundRect(-innerW / 2 + 8, -innerH / 2 + 12, innerW - 16, innerH - 24, 8)
+      .stroke({ width: 0.7, color: accent, alpha: 0.25 });
+    for (const [y, s] of [[-30, 1], [26, -1]]) {
+      g.moveTo(-18, y);
+      g.quadraticCurveTo(-10, y - 10 * s, 0, y - 2 * s);
+      g.quadraticCurveTo(10, y - 10 * s, 18, y);
+      g.quadraticCurveTo(8, y + 6 * s, 0, y + 2 * s);
+      g.quadraticCurveTo(-8, y + 6 * s, -18, y);
+      g.stroke({ width: 1.2, color: accent, alpha: 0.45 });
+      g.circle(0, y - 5 * s, 2).fill({ color: accent, alpha: 0.5 });
+    }
+    g.circle(0, -2, 9).stroke({ width: 1, color: accent, alpha: 0.5 });
+    g.circle(0, -2, 3).fill({ color: accent, alpha: 0.55 });
+    for (let i = 0; i < 12; i += 1) {
+      const a = (i / 12) * Math.PI * 2;
+      g.circle(Math.cos(a) * (innerW / 2 - 9), Math.sin(a) * (innerH / 2 - 9), 1.1)
+        .fill({ color: accent, alpha: 0.35 });
+    }
+    return;
+  }
+
+  if (item.id === "cb_ember") {
+    // 余烬蝶纹：灰烬底 + 三只火蝶 + 飘散火星
+    const rnd = rand(6606);
+    for (let i = 0; i < 30; i += 1) {
+      g.circle((rnd() - 0.5) * innerW, (rnd() - 0.5) * innerH, 0.6 + rnd() * 1.6)
+        .fill({ color: accent, alpha: 0.05 + rnd() * 0.12 });
+    }
+    const butterfly = (bx, by, s) => {
+      g.moveTo(bx, by);
+      g.quadraticCurveTo(bx - 12 * s, by - 12 * s, bx - 16 * s, by - 2 * s);
+      g.quadraticCurveTo(bx - 10 * s, by + 6 * s, bx, by + s);
+      g.fill({ color: accent, alpha: 0.45 });
+      g.moveTo(bx, by);
+      g.quadraticCurveTo(bx + 12 * s, by - 12 * s, bx + 16 * s, by - 2 * s);
+      g.quadraticCurveTo(bx + 10 * s, by + 6 * s, bx, by + s);
+      g.fill({ color: accent, alpha: 0.45 });
+      g.moveTo(bx, by - 2 * s).lineTo(bx, by + 9 * s);
+      g.stroke({ width: 1, color: accent, alpha: 0.65 });
+    };
+    butterfly(0, -18, 1);
+    butterfly(-15, 13, 0.62);
+    butterfly(16, 19, 0.5);
+    for (let i = 0; i < 4; i += 1) {
+      const x = -innerW / 2 + 10 + i * 17;
+      g.moveTo(x, innerH / 2 - 8);
+      g.quadraticCurveTo(x + 5, innerH / 2 - 22, x + 2, innerH / 2 - 34);
+      g.stroke({ width: 0.8, color: accent, alpha: 0.25 });
+    }
+    return;
+  }
+
   if (item.id === "cb_gold") {
     // 烫金残页：撕裂纸片 + 金箔碎屑 + 角花
     const rnd = rand(4217);
@@ -216,6 +274,51 @@ export function buildFeltPattern(item, t) {
     return g;
   }
 
+  if (item.id === "felt_moon") {
+    // 月白丝绒：银月 + 星屑 + 双线内框
+    const moonR = Math.min(rx, ry) * 0.28;
+    g.circle(t.cx, t.cy, moonR).fill({ color: accent, alpha: 0.16 });
+    g.circle(t.cx + moonR * 0.55, t.cy - moonR * 0.25, moonR * 0.86)
+      .fill({ color: item.color });
+    g.circle(t.cx, t.cy, moonR * 1.4).stroke({ width: 0.8, color: accent, alpha: 0.16 });
+    const rnd = rand(5150);
+    for (let i = 0; i < 40; i += 1) {
+      const x = t.cx + (rnd() - 0.5) * rx * 1.5;
+      const y = t.cy + (rnd() - 0.5) * ry * 1.5;
+      const dx = (x - t.cx) / rx;
+      const dy = (y - t.cy) / ry;
+      if (dx * dx + dy * dy > 0.72) continue;
+      const s = 0.9 + rnd() * 1.6;
+      g.moveTo(x, y - s).lineTo(x + s * 0.4, y).lineTo(x, y + s).lineTo(x - s * 0.4, y).closePath();
+      g.fill({ color: accent, alpha: 0.2 + rnd() * 0.35 });
+    }
+    g.ellipse(t.cx, t.cy, rx - 8, ry - 6).stroke({ width: 1.2, color: accent, alpha: 0.3 });
+    g.ellipse(t.cx, t.cy, rx - 16, ry - 12).stroke({ width: 0.6, color: accent, alpha: 0.18 });
+    return g;
+  }
+
+  if (item.id === "felt_violet") {
+    // 紫檀夜宴：放射折扇 + 珠链 + 金线内框
+    const rays = 24;
+    for (let i = 0; i < rays; i += 1) {
+      const a = (i / rays) * Math.PI * 2;
+      const r1 = 0.16;
+      const r2 = i % 2 ? 0.5 : 0.85;
+      g.moveTo(t.cx + Math.cos(a) * rx * r1, t.cy + Math.sin(a) * ry * r1);
+      g.lineTo(t.cx + Math.cos(a) * rx * r2, t.cy + Math.sin(a) * ry * r2);
+      g.stroke({ width: i % 2 ? 0.8 : 1.6, color: accent, alpha: i % 2 ? 0.12 : 0.22 });
+    }
+    for (let i = 0; i < 36; i += 1) {
+      const a = (i / 36) * Math.PI * 2;
+      g.circle(t.cx + Math.cos(a) * rx * 0.62, t.cy + Math.sin(a) * ry * 0.62, 1.2)
+        .fill({ color: accent, alpha: 0.3 });
+    }
+    g.circle(t.cx, t.cy, Math.min(rx, ry) * 0.2).stroke({ width: 1, color: accent, alpha: 0.3 });
+    g.ellipse(t.cx, t.cy, rx - 7, ry - 6).stroke({ width: 1.4, color: accent, alpha: 0.32 });
+    g.ellipse(t.cx, t.cy, rx - 15, ry - 12).stroke({ width: 0.6, color: 0xe8c98a, alpha: 0.2 });
+    return g;
+  }
+
   // 旧酒馆绿：斜织纹 + 罗盘水印 + 磨边（全部裁剪在椭圆台面内）
   for (let y = t.cy - ry; y < t.cy + ry; y += 7) {
     const dy = (y - t.cy) / ry;
@@ -325,6 +428,74 @@ export function buildMask(item, size = 56) {
     return root;
   }
 
+  if (item.id === "mask_porcelain") {
+    // 裂纹瓷面：青花釉边 + 冰裂纹 + 朱印
+    g.ellipse(0, 0, 19, 24).fill({ color: item.color });
+    g.ellipse(0, 0, 19, 24).stroke({ width: 1.6, color: item.accent, alpha: 0.65 });
+    g.ellipse(0, -1, 16.5, 21).stroke({ width: 0.6, color: item.accent, alpha: 0.35 });
+    for (const dir of [-1, 1]) {
+      g.moveTo(dir * 2, -17);
+      g.quadraticCurveTo(dir * 9, -20, dir * 12, -14);
+      g.quadraticCurveTo(dir * 7, -11, dir * 2, -13);
+      g.stroke({ width: 1.1, color: item.accent, alpha: 0.6 });
+      g.circle(dir * 12, -14, 1.6).fill({ color: item.accent, alpha: 0.55 });
+    }
+    const cracks = [
+      [[-15, -14], [-9, -7], [-12, 2], [-7, 9], [-9, 17]],
+      [[10, -19], [6, -10], [11, -2], [8, 7]],
+      [[-3, 12], [3, 15], [1, 21]],
+      [[14, 10], [9, 14], [11, 20]],
+    ];
+    for (const line of cracks) {
+      g.moveTo(line[0][0], line[0][1]);
+      for (let i = 1; i < line.length; i += 1) g.lineTo(line[i][0], line[i][1]);
+      g.stroke({ width: 0.7, color: 0x7d94a8, alpha: 0.55 });
+    }
+    for (const dir of [-1, 1]) {
+      g.moveTo(dir * 3.4, -6.5);
+      g.quadraticCurveTo(dir * 8, -9.5, dir * 12.6, -5.4);
+      g.stroke({ width: 1.6, color: 0x2c3a48, alpha: 0.9 });
+      g.circle(dir * 8.4, -6.2, 1.2).fill({ color: 0x1c242c, alpha: 0.85 });
+    }
+    g.rect(-3, 9, 6, 6).stroke({ width: 1, color: 0xb0453e, alpha: 0.7 });
+    g.moveTo(-1.4, 12).lineTo(1.6, 12).stroke({ width: 0.8, color: 0xb0453e, alpha: 0.7 });
+    root.addChild(g);
+    return root;
+  }
+
+  if (item.id === "mask_raven") {
+    // 渡鸦羽面：羽状外缘 + 喙脊 + 紫瞳
+    for (let i = 0; i < 9; i += 1) {
+      const a = -Math.PI * 0.9 + (i / 8) * Math.PI * 1.8;
+      const x = Math.cos(a) * 17;
+      const y = Math.sin(a) * 21;
+      g.moveTo(x, y);
+      g.lineTo(x + Math.cos(a) * 7 - 2, y + Math.sin(a) * 7 + 2);
+      g.lineTo(x + Math.cos(a) * 4 + 3, y + Math.sin(a) * 4 - 3);
+      g.closePath();
+      g.fill({ color: item.accent, alpha: 0.18 + (i % 2) * 0.08 });
+    }
+    g.ellipse(0, -1, 17, 22).fill({ color: item.color });
+    g.ellipse(0, -1, 17, 22).stroke({ width: 1.2, color: item.accent, alpha: 0.5 });
+    g.moveTo(0, -19);
+    g.quadraticCurveTo(4, -4, 0, 16);
+    g.quadraticCurveTo(-4, -4, 0, -19);
+    g.fill({ color: shade(item.color, 1.55), alpha: 0.9 });
+    g.moveTo(0, -17).lineTo(0, 12).stroke({ width: 0.6, color: item.accent, alpha: 0.35 });
+    for (const dir of [-1, 1]) {
+      g.ellipse(dir * 8, -5, 4.6, 2.2).fill({ color: 0x120f1a, alpha: 0.9 });
+      g.ellipse(dir * 8, -5, 2.6, 1.2).fill({ color: item.accent, alpha: 0.85 });
+      g.circle(dir * 6.8, -5.6, 0.7).fill({ color: 0xf3e9ff, alpha: 0.8 });
+    }
+    for (let i = 0; i < 3; i += 1) {
+      g.moveTo(-8 + i * 2, 14 + i * 2);
+      g.quadraticCurveTo(0, 18 + i * 2, 8 - i * 2, 14 + i * 2);
+      g.stroke({ width: 0.8, color: item.accent, alpha: 0.22 });
+    }
+    root.addChild(g);
+    return root;
+  }
+
   // 无名白面：瓷面 + 眼洞 + 鼻梁 + 嘴缝
   g.ellipse(0, 0, 19, 24).fill({ color: item.color });
   g.ellipse(0, 0, 19, 24).stroke({ width: 1.4, color: item.accent, alpha: 0.6 });
@@ -361,7 +532,11 @@ export function buildRevolver(item, scale = 1) {
   body.quadraticCurveTo(-30, 72, -20, 58);
   body.lineTo(-12, 30);
   body.closePath();
-  body.fill({ color: item.id === "rl_obsidian" ? 0x2a1c22 : 0x4a2c1c });
+  const gripColor = item.id === "rl_obsidian" ? 0x2a1c22
+    : item.id === "rl_silver" ? 0x2c3138
+      : item.id === "rl_crimson" ? 0x3a1a16
+        : 0x4a2c1c;
+  body.fill({ color: gripColor });
   body.moveTo(-34, 20);
   for (let i = 0; i < 5; i += 1) {
     body.moveTo(-38 + i * 2, 24 + i * 8).lineTo(-26 + i * 1.4, 28 + i * 8);
@@ -394,6 +569,34 @@ export function buildRevolver(item, scale = 1) {
     }
     body.moveTo(-16, -10).lineTo(28, -10).stroke({ width: 1, color: 0xffffff, alpha: 0.2 });
     body.moveTo(-16, 8).lineTo(28, 8).stroke({ width: 1, color: 0xffffff, alpha: 0.14 });
+  } else if (item.id === "rl_silver") {
+    // 银霜缠枝：枪管藤蔓卷草 + 铆钉霜点
+    for (let i = 0; i < 4; i += 1) {
+      const x0 = 34 + i * 22;
+      body.moveTo(x0, -12);
+      body.quadraticCurveTo(x0 + 8, -20, x0 + 14, -12);
+      body.quadraticCurveTo(x0 + 8, -6, x0 + 2, -12);
+      body.stroke({ width: 0.9, color: item.accent, alpha: 0.5 });
+    }
+    body.moveTo(-24, 4);
+    body.quadraticCurveTo(-10, -10, 6, 2);
+    body.stroke({ width: 1, color: item.accent, alpha: 0.45 });
+    for (let i = 0; i < 10; i += 1) {
+      body.circle(40 + i * 8, -12 + (i % 2) * 4, 0.9)
+        .fill({ color: item.accent, alpha: 0.5 });
+    }
+  } else if (item.id === "rl_crimson") {
+    // 血誓炽纹：箭羽排刻 + 火舌
+    for (let i = 0; i < 5; i += 1) {
+      const x0 = 34 + i * 18;
+      body.moveTo(x0, -14).lineTo(x0 + 8, -6).lineTo(x0, 2);
+      body.stroke({ width: 1, color: item.accent, alpha: 0.5 });
+    }
+    body.moveTo(-18, -4);
+    body.quadraticCurveTo(-8, -14, 0, -4);
+    body.quadraticCurveTo(8, -14, 18, -4);
+    body.stroke({ width: 1.3, color: item.accent, alpha: 0.6 });
+    body.circle(-22, 2, 2.2).fill({ color: item.accent, alpha: 0.7 });
   } else {
     // 黄铜氧化斑
     const rnd = rand(88);

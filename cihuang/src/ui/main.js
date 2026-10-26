@@ -1031,6 +1031,11 @@ function backToMenu() {
   state.runId = null;
   state.settlementShown = false;
   hideActionBar();
+  // 离桌即释放牌桌的 WebGL 上下文，下次入座重建，避免与其他画布争抢上下文。
+  if (state.table) {
+    state.table.destroy();
+    state.table = null;
+  }
   $("screen-game").classList.add("hidden");
   $("screen-menu").classList.remove("hidden");
   updateAccount();
@@ -1375,14 +1380,17 @@ function releaseLiveGunApp() {
   if (!app) return;
   try {
     for (const child of app.stage.removeChildren()) child.destroy({ children: true });
-    app.destroy(true, { children: true, texture: false });
+    app.destroy({ removeView: true }, { children: true, texture: false });
   } catch (error) {}
 }
 
 async function showGunPreview(host, item) {
-  if (!item) return;
+  if (!item || !host.isConnected) return;
   const app = await ensureLiveGunApp();
-  if (!host.isConnected) return;
+  if (!host.isConnected) {
+    if (!liveGunHost) releaseLiveGunApp();
+    return;
+  }
   if (liveGunHost && liveGunHost !== host) {
     const prevImg = liveGunHost.querySelector("img");
     if (prevImg) prevImg.style.visibility = "";
@@ -1418,7 +1426,7 @@ function releasePreviewApp() {
   previewReady = null;
   if (!app) return;
   try {
-    app.destroy(true, { children: true, texture: false });
+    app.destroy({ removeView: true }, { children: true, texture: false });
   } catch (error) {}
 }
 
@@ -1522,19 +1530,26 @@ function applyAudioSettings() {
   setSound(settings.sound);
   setMusic(settings.music);
   setAmbient(settings.ambient !== false);
-  $("btn-sound").textContent = settings.sound ? "♪" : "×";
   syncMusicButton();
 }
 
 function syncMusicButton() {
-  const button = $("btn-music");
-  if (!button) return;
   const on = !!state.profile.settings.music;
   const unlocked = isAudioUnlocked();
-  button.textContent = on ? (unlocked ? "♪ 爵士 开" : "♪ 爵士 点击开启") : "♪ 爵士 关";
-  button.classList.toggle("music-on", on);
-  button.classList.toggle("music-off", !on);
-  button.setAttribute("aria-pressed", on ? "true" : "false");
+  const button = $("btn-music");
+  if (button) {
+    button.textContent = on ? (unlocked ? "♪ 爵士 开" : "♪ 爵士 点击开启") : "♪ 爵士 关";
+    button.classList.toggle("music-on", on);
+    button.classList.toggle("music-off", !on);
+    button.setAttribute("aria-pressed", on ? "true" : "false");
+  }
+  const gameButton = $("btn-sound");
+  if (gameButton) {
+    gameButton.textContent = on ? "♪" : "×";
+    gameButton.setAttribute("aria-pressed", on ? "true" : "false");
+    gameButton.setAttribute("aria-label", on ? "背景音乐 开" : "背景音乐 关");
+    gameButton.title = on ? "背景音乐 开" : "背景音乐 关";
+  }
   const note = $("music-note");
   if (note) note.classList.toggle("hidden", !on || unlocked);
 }
@@ -1692,7 +1707,10 @@ function showTutorial() {
   let picked = new Set();
   const modal = openModal({
     title: "教程",
-    body: '<div id="tutorial-body"></div>',
+    body: `<div class="tutorial-step">
+      <img class="bartender" src="assets/art/bartender.webp" alt="酒保" />
+      <div class="tutorial-text" id="tutorial-text"></div>
+    </div>`,
     wide: true,
     closable: true,
     actions: '<button class="btn" id="tut-skip">跳过</button><button class="btn btn-primary" id="tut-next">下一步</button>',
@@ -1702,22 +1720,18 @@ function showTutorial() {
     },
   });
   track("tutorial_start", {});
-  const bodyNode = modal.card.querySelector("#tutorial-body");
+  // 酒保图是固定的，只换右侧文案，避免每步都重建 <img> 造成重新解码/闪烁。
+  const bodyNode = modal.card.querySelector("#tutorial-text");
   const nextBtn = modal.card.querySelector("#tut-next");
   const skipBtn = modal.card.querySelector("#tut-skip");
 
   const render = () => {
     const data = TUTORIAL_STEPS[step];
     bodyNode.innerHTML = `
-      <div class="tutorial-step">
-        <img class="bartender" src="assets/art/bartender.webp" alt="酒保" />
-        <div class="tutorial-text">
-          <div class="tutorial-progress">第 ${step + 1} / ${TUTORIAL_STEPS.length} 步</div>
-          <h3 style="margin:6px 0 8px;font-weight:normal;color:var(--amber)">${data.title}</h3>
-          <div>${data.text}</div>
-          <div class="tutorial-demo">${data.demo || ""}</div>
-        </div>
-      </div>`;
+      <div class="tutorial-progress">第 ${step + 1} / ${TUTORIAL_STEPS.length} 步</div>
+      <h3 style="margin:6px 0 8px;font-weight:normal;color:var(--amber)">${data.title}</h3>
+      <div>${data.text}</div>
+      <div class="tutorial-demo">${data.demo || ""}</div>`;
     nextBtn.textContent = step === TUTORIAL_STEPS.length - 1 ? "上桌" : "下一步";
     nextBtn.disabled = data.interactive === "pick2" && picked.size < 2;
     if (data.interactive === "pick2") {
@@ -1838,12 +1852,7 @@ function bindEvents() {
       backToMenu();
     });
   });
-  $("btn-sound").addEventListener("click", () => {
-    state.profile.settings.sound = !state.profile.settings.sound;
-    saveProfile(state.profile);
-    applyAudioSettings();
-    sfx.click();
-  });
+  $("btn-sound").addEventListener("click", toggleMenuMusic);
   AUDIO_WAKE_EVENTS.forEach((type) => {
     window.addEventListener(type, primeAudio, { passive: true });
   });
@@ -1872,7 +1881,7 @@ function removeAudioWakeListeners() {
 }
 
 function primeAudio(event) {
-  if (event?.target instanceof Element && event.target.closest("#btn-music")) return;
+  if (event?.target instanceof Element && event.target.closest("#btn-music, #btn-sound")) return;
   removeAudioWakeListeners();
   unlock();
   if (state.profile.settings.music) setMusic(true);

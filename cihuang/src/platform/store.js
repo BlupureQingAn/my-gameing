@@ -10,7 +10,9 @@ export const COSMETICS = {
     items: [
       { id: "cb_default", name: "酒红罗盘", price: 0, tier: "免费", color: 0x5b1f2a, accent: 0xc9a227 },
       { id: "cb_moss", name: "青苔暗纹", price: 400, tier: "普通", color: 0x24402e, accent: 0x8fae7a },
+      { id: "cb_jade", name: "碧玉云纹", price: 600, tier: "稀有", color: 0x183a30, accent: 0x86d6b0 },
       { id: "cb_gold", name: "烫金残页", price: 1000, tier: "传说", color: 0x3b2a12, accent: 0xe6c15c },
+      { id: "cb_ember", name: "余烬蝶纹", price: 1600, tier: "秘藏", color: 0x2b1210, accent: 0xe58a4a },
     ],
   },
   mask: {
@@ -18,7 +20,9 @@ export const COSMETICS = {
     items: [
       { id: "mask_default", name: "无名白面", price: 0, tier: "免费", color: 0xcfc7b4, accent: 0x8a7f6a },
       { id: "mask_fox", name: "裂痕狐面", price: 400, tier: "普通", color: 0xe7ded0, accent: 0xb03a3a },
+      { id: "mask_porcelain", name: "裂纹瓷面", price: 600, tier: "稀有", color: 0xe4ecf2, accent: 0x5f83a8 },
       { id: "mask_plague", name: "疫医鸟喙", price: 1000, tier: "传说", color: 0x2a2724, accent: 0xd6a54a },
+      { id: "mask_raven", name: "渡鸦羽面", price: 1600, tier: "秘藏", color: 0x191a22, accent: 0x8f7fd6 },
     ],
   },
   felt: {
@@ -26,7 +30,9 @@ export const COSMETICS = {
     items: [
       { id: "felt_default", name: "旧酒馆绿", price: 0, tier: "免费", color: 0x1f4a3a, accent: 0x2d6a52 },
       { id: "felt_ink", name: "深海墨蓝", price: 400, tier: "普通", color: 0x173447, accent: 0x2a5c77 },
+      { id: "felt_moon", name: "月白丝绒", price: 600, tier: "稀有", color: 0x232b36, accent: 0xb7c9e8 },
       { id: "felt_oxblood", name: "牛血红绒", price: 1000, tier: "传说", color: 0x4a1e22, accent: 0x7a3038 },
+      { id: "felt_violet", name: "紫檀夜宴", price: 1600, tier: "秘藏", color: 0x2a1b3a, accent: 0xc39ae8 },
     ],
   },
   roulette: {
@@ -34,7 +40,9 @@ export const COSMETICS = {
     items: [
       { id: "rl_brass", name: "黄铜旧铳", price: 0, tier: "免费", color: 0x9a7b3f, accent: 0xe2c477 },
       { id: "rl_steel", name: "冷钢新铳", price: 400, tier: "普通", color: 0x6f7a82, accent: 0xc7d2d9 },
+      { id: "rl_silver", name: "银霜缠枝", price: 600, tier: "稀有", color: 0x939aa4, accent: 0xe6eef7 },
       { id: "rl_obsidian", name: "黑曜刻纹", price: 1000, tier: "传说", color: 0x211f28, accent: 0xb06bc9 },
+      { id: "rl_crimson", name: "赤铜血誓", price: 1600, tier: "秘藏", color: 0x6e2a20, accent: 0xf0a35e },
     ],
   },
 };

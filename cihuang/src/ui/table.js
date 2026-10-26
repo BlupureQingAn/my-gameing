@@ -199,7 +199,7 @@ export class TableView {
       try {
         this.revealFinish?.();
         if (this.root) killTweensDeep(this.root);
-        this.app.destroy(true, { children: true, texture: false });
+        this.app.destroy({ removeView: true }, { children: true, texture: false });
       } catch (error) {}
       this.app = null;
       this.root = null;
@@ -1040,7 +1040,7 @@ export class TableView {
     if (this.app) {
       this.revealFinish?.();
       if (this.root) killTweensDeep(this.root);
-      this.app.destroy(true, { children: true, texture: false });
+      this.app.destroy({ removeView: true }, { children: true, texture: false });
       this.app = null;
     }
   }
