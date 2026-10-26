@@ -8,33 +8,33 @@ export const COSMETICS = {
   cardback: {
     label: "牌背",
     items: [
-      { id: "cb_default", name: "酒红罗盘", price: 0, color: 0x5b1f2a, accent: 0xc9a227 },
-      { id: "cb_moss", name: "青苔暗纹", price: 150, color: 0x24402e, accent: 0x8fae7a },
-      { id: "cb_gold", name: "烫金残页", price: 300, color: 0x3b2a12, accent: 0xe6c15c },
+      { id: "cb_default", name: "酒红罗盘", price: 0, tier: "免费", color: 0x5b1f2a, accent: 0xc9a227 },
+      { id: "cb_moss", name: "青苔暗纹", price: 400, tier: "普通", color: 0x24402e, accent: 0x8fae7a },
+      { id: "cb_gold", name: "烫金残页", price: 1000, tier: "传说", color: 0x3b2a12, accent: 0xe6c15c },
     ],
   },
   mask: {
     label: "面具",
     items: [
-      { id: "mask_default", name: "无名白面", price: 0, color: 0xcfc7b4, accent: 0x8a7f6a },
-      { id: "mask_fox", name: "裂痕狐面", price: 200, color: 0xe7ded0, accent: 0xb03a3a },
-      { id: "mask_plague", name: "疫医鸟喙", price: 350, color: 0x2a2724, accent: 0xd6a54a },
+      { id: "mask_default", name: "无名白面", price: 0, tier: "免费", color: 0xcfc7b4, accent: 0x8a7f6a },
+      { id: "mask_fox", name: "裂痕狐面", price: 400, tier: "普通", color: 0xe7ded0, accent: 0xb03a3a },
+      { id: "mask_plague", name: "疫医鸟喙", price: 1000, tier: "传说", color: 0x2a2724, accent: 0xd6a54a },
     ],
   },
   felt: {
     label: "桌布",
     items: [
-      { id: "felt_default", name: "旧酒馆绿", price: 0, color: 0x1f4a3a, accent: 0x2d6a52 },
-      { id: "felt_ink", name: "深海墨蓝", price: 150, color: 0x173447, accent: 0x2a5c77 },
-      { id: "felt_oxblood", name: "牛血红绒", price: 250, color: 0x4a1e22, accent: 0x7a3038 },
+      { id: "felt_default", name: "旧酒馆绿", price: 0, tier: "免费", color: 0x1f4a3a, accent: 0x2d6a52 },
+      { id: "felt_ink", name: "深海墨蓝", price: 400, tier: "普通", color: 0x173447, accent: 0x2a5c77 },
+      { id: "felt_oxblood", name: "牛血红绒", price: 1000, tier: "传说", color: 0x4a1e22, accent: 0x7a3038 },
     ],
   },
   roulette: {
     label: "轮盘",
     items: [
-      { id: "rl_brass", name: "黄铜旧铳", price: 0, color: 0x9a7b3f, accent: 0xe2c477 },
-      { id: "rl_steel", name: "冷钢新铳", price: 180, color: 0x6f7a82, accent: 0xc7d2d9 },
-      { id: "rl_obsidian", name: "黑曜刻纹", price: 320, color: 0x211f28, accent: 0xb06bc9 },
+      { id: "rl_brass", name: "黄铜旧铳", price: 0, tier: "免费", color: 0x9a7b3f, accent: 0xe2c477 },
+      { id: "rl_steel", name: "冷钢新铳", price: 400, tier: "普通", color: 0x6f7a82, accent: 0xc7d2d9 },
+      { id: "rl_obsidian", name: "黑曜刻纹", price: 1000, tier: "传说", color: 0x211f28, accent: 0xb06bc9 },
     ],
   },
 };
@@ -72,21 +72,43 @@ export function defaultProfile() {
       felt: "felt_default",
       roulette: "rl_brass",
     },
-    settings: { sound: true, music: true, ambient: true, reducedMotion: false, confirmedRules: false },
+    settings: {
+      sound: true,
+      music: true,
+      ambient: true,
+      reducedMotion: false,
+      confirmedRules: false,
+      volume: { music: 85, sfx: 80, ambient: 45 },
+    },
   };
+}
+
+function clampVolume(value, fallback) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return fallback;
+  return Math.max(0, Math.min(100, Math.round(num)));
 }
 
 export function loadProfile() {
   const saved = readJSON(K_PROFILE, null);
   if (!saved || typeof saved !== "object") return defaultProfile();
   const base = defaultProfile();
+  const savedVolume = (saved.settings && saved.settings.volume) || {};
   return {
     crystals: Math.max(0, Math.trunc(Number(saved.crystals) || 0)),
     cosmetics: Array.isArray(saved.cosmetics)
       ? Array.from(new Set([...base.cosmetics, ...saved.cosmetics.filter((id) => COSMETIC_INDEX[id])]))
       : base.cosmetics,
     equipped: { ...base.equipped, ...(saved.equipped || {}) },
-    settings: { ...base.settings, ...(saved.settings || {}) },
+    settings: {
+      ...base.settings,
+      ...(saved.settings || {}),
+      volume: {
+        music: clampVolume(savedVolume.music, base.settings.volume.music),
+        sfx: clampVolume(savedVolume.sfx, base.settings.volume.sfx),
+        ambient: clampVolume(savedVolume.ambient, base.settings.volume.ambient),
+      },
+    },
   };
 }
 

@@ -2,6 +2,18 @@
 // 所有网络失败都降级为本地模式，不阻断对局。
 
 const CLIENT_KEY = "cihuang_client_id";
+const LICENSE_KEY = "cihuang_license_v1";
+
+// 词谎买断（¥21）与主站会员完全解耦：只认 /api/cihuang/entitlement 的结果
+let licensed = false;
+let licensedAt = "";
+try {
+  const cached = JSON.parse(localStorage.getItem(LICENSE_KEY) || "null");
+  if (cached && cached.licensed) {
+    licensed = true;
+    licensedAt = String(cached.purchasedAt || "");
+  }
+} catch (e) {}
 
 export function authToken() {
   try {
@@ -21,6 +33,47 @@ export function currentUser() {
 
 export function isLoggedIn() {
   return !!authToken() && !!currentUser();
+}
+
+export function hasLicense() {
+  return licensed;
+}
+
+export function licensePurchasedAt() {
+  return licensedAt;
+}
+
+export async function fetchEntitlement() {
+  if (!isLoggedIn()) {
+    licensed = false;
+    licensedAt = "";
+    try { localStorage.removeItem(LICENSE_KEY); } catch (e) {}
+    return { licensed: false, purchasedAt: "" };
+  }
+  try {
+    const data = await api("/api/cihuang/entitlement");
+    licensed = data?.licensed === true;
+    licensedAt = String(data?.purchasedAt || "");
+    try {
+      if (licensed) localStorage.setItem(LICENSE_KEY, JSON.stringify({ licensed, purchasedAt: licensedAt }));
+      else localStorage.removeItem(LICENSE_KEY);
+    } catch (e) {}
+    return { licensed, purchasedAt: licensedAt };
+  } catch (e) {
+    return { licensed, purchasedAt: licensedAt };
+  }
+}
+
+export async function createPayOrder(planId = "cihuang_full") {
+  return api("/api/pay/create", {
+    method: "POST",
+    body: { planId, payType: "wxpay" },
+    timeout: 15000,
+  });
+}
+
+export async function payStatus(orderNo) {
+  return api(`/api/pay/status?out_trade_no=${encodeURIComponent(orderNo)}`);
 }
 
 export function isMember() {
@@ -107,7 +160,7 @@ export async function setLeaderboardOptIn(optIn) {
 }
 
 export async function getProfile() {
-  if (!isMember()) return null;
+  if (!hasLicense()) return null;
   try {
     const data = await api("/api/cihuang/profile");
     return data?.profile || null;
@@ -117,7 +170,7 @@ export async function getProfile() {
 }
 
 export async function putProfile(profile) {
-  if (!isMember()) return false;
+  if (!hasLicense()) return false;
   try {
     await api("/api/cihuang/profile", {
       method: "PUT",
@@ -135,7 +188,7 @@ export async function putProfile(profile) {
 }
 
 export async function listVocab(band = "") {
-  if (!isMember()) return null;
+  if (!hasLicense()) return null;
   try {
     const query = band ? `?band=${encodeURIComponent(band)}&perPage=100` : "?perPage=100";
     const data = await api(`/api/cihuang/vocab${query}`);
@@ -146,7 +199,7 @@ export async function listVocab(band = "") {
 }
 
 export async function pushVocab(entry) {
-  if (!isMember()) return null;
+  if (!hasLicense()) return null;
   try {
     const data = await api("/api/cihuang/vocab", {
       method: "POST",
@@ -169,7 +222,7 @@ export async function pushVocab(entry) {
 }
 
 export async function patchVocab(cloudId, entry) {
-  if (!isMember() || !cloudId) return false;
+  if (!hasLicense() || !cloudId) return false;
   try {
     await api(`/api/cihuang/vocab?id=${encodeURIComponent(cloudId)}`, {
       method: "PATCH",
@@ -182,7 +235,7 @@ export async function patchVocab(cloudId, entry) {
 }
 
 export async function removeVocab(cloudId) {
-  if (!isMember() || !cloudId) return false;
+  if (!hasLicense() || !cloudId) return false;
   try {
     await api(`/api/cihuang/vocab?id=${encodeURIComponent(cloudId)}`, { method: "DELETE" });
     return true;

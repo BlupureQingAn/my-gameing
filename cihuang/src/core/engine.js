@@ -125,9 +125,10 @@ export function startRound(state, { topic, starter = null, reviewWords = [] }) {
     player.hand = player.alive ? built.hands[seat].slice() : [];
   });
   const alive = alivePlayers(state).map((p) => p.id);
-  state.currentPlayer = starter !== null && state.players[starter]?.alive
+  state.starter = starter !== null && state.players[starter]?.alive
     ? starter
     : state.rng.setup.pick(alive);
+  state.currentPlayer = state.starter;
   const injected = reviewWords.filter((w) => built.cards.some((c) => c.w === w && c.review));
   state.injectedReviewWords.push(...injected);
   state.log.push({
@@ -469,6 +470,7 @@ export function publicState(state) {
   return {
     phase: state.phase,
     round: state.round,
+    starter: state.starter ?? null,
     seed: state.seed,
     difficulty: state.difficulty,
     band: state.band,

@@ -1,6 +1,8 @@
 import { Application, Assets, Container, Graphics, Sprite, Text, Texture } from "pixi.js";
 import { gsap } from "gsap";
 import { COSMETIC_INDEX } from "../platform/store.js";
+import { buildCardBack, buildFeltPattern, buildMask } from "./cosmetics.js";
+import { sfx } from "./audio.js";
 
 const CARD_W = 96;
 const CARD_H = 136;
@@ -62,6 +64,7 @@ const LAYOUTS = {
 };
 const PLAYER_COLORS = [0x7fd6b2, 0x8fb6e8, 0xe8b26a, 0xe88fa8];
 const MASK_FILES = ["", "mask1.webp", "mask2.webp", "mask3.webp"];
+const MASK_SKINS = ["mask_default", "mask_fox", "mask_plague"];
 
 function text(str, size, color = 0xf1e6c8, extra = {}) {
   return new Text({
@@ -108,6 +111,7 @@ export class TableView {
     this.lastHandKey = "";
     this.view = null;
     this.pendingDrag = null;
+    this.thinkingSeat = null;
     this.handEnabled = true;
     this.layout = window.innerHeight > window.innerWidth ? LAYOUTS.portrait : LAYOUTS.landscape;
     this.W = this.layout.W;
@@ -197,6 +201,15 @@ export class TableView {
         this.textures[file] = null;
       }
     }));
+    // 玩家面具皮肤贴图可选：文件存在时优先于程序化绘制
+    await Promise.all(MASK_SKINS.map(async (id) => {
+      const url = `assets/art/masks/${id}.webp`;
+      try {
+        const head = await fetch(url, { method: "HEAD" });
+        if (!head.ok) return;
+        this.textures[`skin:${id}`] = await Assets.load(url);
+      } catch (e) {}
+    }));
   }
 
   buildBackground() {
@@ -246,6 +259,7 @@ export class TableView {
         .stroke({ width: 1, color: 0x000000, alpha: 0.05 });
     }
     layer.addChild(weave);
+    layer.addChild(buildFeltPattern(felt, t));
     const crest = text("词 谎", 30, 0xe8dcc0, { letterSpacing: 12 });
     crest.anchor.set(0.5);
     crest.position.set(t.cx, t.cy + 6);
@@ -255,14 +269,15 @@ export class TableView {
 
   setEquipped(equipped) {
     this.equipped = equipped;
-    if (this.app) this.buildTable();
+    if (!this.app) return;
+    this.buildTable();
+    if (this.view) this.render(this.view);
   }
 
   makeCard(card, faceUp = true, compact = false) {
     const w = compact ? CARD_W * 0.72 : CARD_W;
     const h = compact ? CARD_H * 0.72 : CARD_H;
     const node = new Container();
-    node.pivot.set(w / 2, h / 2);
     const cardback = COSMETIC_INDEX[this.equipped.cardback?.id] || COSMETIC_INDEX.cb_default;
     const g = new Graphics();
     rounded(g, -w / 2, -h / 2, w, h, 8, 0x120d0b);
@@ -271,14 +286,7 @@ export class TableView {
       .stroke({ width: 1, color: card.joker ? 0xd9b3ff : cardback.accent, alpha: 0.75 });
     node.addChild(g);
     if (!faceUp) {
-      const back = new Graphics();
-      back.roundRect(-w / 2 + 10, -h / 2 + 10, w - 20, h - 20, 4)
-        .fill({ color: cardback.color, alpha: 0.9 })
-        .stroke({ width: 1, color: cardback.accent, alpha: 0.5 });
-      back.circle(0, 0, 14).stroke({ width: 2, color: cardback.accent, alpha: 0.55 });
-      back.moveTo(-12, 0).lineTo(12, 0).stroke({ width: 2, color: cardback.accent, alpha: 0.55 });
-      back.moveTo(0, -12).lineTo(0, 12).stroke({ width: 2, color: cardback.accent, alpha: 0.55 });
-      node.addChild(back);
+      node.addChild(buildCardBack(cardback, w, h));
       return node;
     }
     const word = card.joker ? "JOKER" : card.w;
@@ -313,20 +321,8 @@ export class TableView {
   }
 
   makePileBack() {
-    const w = 40;
-    const h = 56;
     const cardback = COSMETIC_INDEX[this.equipped.cardback?.id] || COSMETIC_INDEX.cb_default;
-    const node = new Container();
-    const g = new Graphics();
-    rounded(g, -w / 2, -h / 2, w, h, 5, 0x120d0b);
-    rounded(g, -w / 2 + 1.5, -h / 2 + 1.5, w - 3, h - 3, 4, cardback.color);
-    g.roundRect(-w / 2 + 5, -h / 2 + 5, w - 10, h - 10, 3)
-      .stroke({ width: 1, color: cardback.accent, alpha: 0.55 });
-    g.circle(0, 0, 7).stroke({ width: 1.4, color: cardback.accent, alpha: 0.7 });
-    g.moveTo(-11, 0).lineTo(11, 0).stroke({ width: 1.1, color: cardback.accent, alpha: 0.5 });
-    g.moveTo(0, -11).lineTo(0, 11).stroke({ width: 1.1, color: cardback.accent, alpha: 0.5 });
-    node.addChild(g);
-    return node;
+    return buildCardBack(cardback, 40, 56);
   }
 
   renderPiles(view, { skipLast = false } = {}) {
@@ -416,8 +412,8 @@ export class TableView {
           y: target.y,
           rotation: target.rot,
           alpha: 1,
-          duration: this.reducedMotion ? 0.01 : 0.35,
-          delay: this.reducedMotion ? 0 : i * 0.08,
+          duration: this.reducedMotion ? 0.01 : 0.6,
+          delay: this.reducedMotion ? 0 : i * 0.12,
           ease: "power2.out",
         });
       }
@@ -448,17 +444,18 @@ export class TableView {
 
   onCardDown(card, node, event) {
     if (!node.interactive) return;
+    const rect = this.app.canvas.getBoundingClientRect();
+    const scale = rect.height / this.H || 1;
     this.pendingDrag = {
       card,
       node,
-      startY: event.global.y,
-      startX: event.global.x,
+      startY: event.clientY,
       moved: false,
       originY: node.y,
     };
     const onMove = (moveEvent) => {
       if (!this.pendingDrag) return;
-      const dy = moveEvent.global.y - this.pendingDrag.startY;
+      const dy = (moveEvent.clientY - this.pendingDrag.startY) / scale;
       if (Math.abs(dy) > 8) this.pendingDrag.moved = true;
       if (dy < -10) {
         node.y = this.pendingDrag.originY + Math.max(-70, dy * 0.6);
@@ -469,9 +466,9 @@ export class TableView {
       window.removeEventListener("pointerup", onUp);
       if (!this.pendingDrag) return;
       const drag = this.pendingDrag;
-      const dy = upEvent.global.y - drag.startY;
+      const dy = (upEvent.clientY - drag.startY) / scale;
       this.pendingDrag = null;
-      if (dy < -90) {
+      if (dy < -70) {
         if (!this.selected.has(card.id)) this.toggleCard(card.id);
         const ids = Array.from(this.selected);
         this.onPlay(ids.length ? ids : [card.id]);
@@ -524,9 +521,28 @@ export class TableView {
       gsap.to(pulse, { alpha: 0.2, duration: 0.8, yoyo: true, repeat: -1, ease: "sine.inOut" });
     }
     if (seat === 0) {
-      const you = text("你", 15, color);
-      you.anchor.set(0.5);
-      group.addChild(you);
+      const def = COSMETIC_INDEX[this.equipped.mask?.id] || COSMETIC_INDEX.mask_default;
+      const own = this.textures[`skin:${def.id}`];
+      if (own) {
+        const sprite = new Sprite(own);
+        const scale = 56 / Math.min(own.width, own.height);
+        sprite.anchor.set(0.5);
+        sprite.scale.set(scale);
+        const clip = new Graphics();
+        clip.circle(0, 0, 28).fill({ color: 0xffffff });
+        group.addChild(clip);
+        sprite.mask = clip;
+        group.addChild(sprite);
+      } else {
+        group.addChild(buildMask(def, 56));
+      }
+      const breathe = new Graphics();
+      breathe.circle(0, 0, 30).stroke({ width: 1, color, alpha: 0.35 });
+      group.addChild(breathe);
+      if (!this.reducedMotion) {
+        gsap.to(breathe, { alpha: 0.12, duration: 2.4, yoyo: true, repeat: -1, ease: "sine.inOut" });
+        gsap.to(breathe.scale, { x: 1.06, y: 1.06, duration: 2.4, yoyo: true, repeat: -1, ease: "sine.inOut" });
+      }
     } else {
       const texture = this.textures[MASK_FILES[seat]];
       if (texture) {
@@ -599,6 +615,171 @@ export class TableView {
         layer.addChild(back);
       }
     }
+    if (this.thinkingSeat && view.players[this.thinkingSeat]?.alive) {
+      const pos = this.layout.avatars[this.thinkingSeat];
+      const hint = text("思考中…", 10, 0xe8d9a8);
+      hint.anchor.set(0.5);
+      hint.position.set(pos.x, pos.y + 90);
+      layer.addChild(hint);
+      if (!this.reducedMotion) {
+        gsap.to(hint, { alpha: 0.35, duration: 0.9, yoyo: true, repeat: -1, ease: "sine.inOut" });
+      }
+    }
+  }
+
+  setThinking(seat, on) {
+    this.thinkingSeat = on ? seat : null;
+    if (this.view) this.renderSeats(this.view);
+  }
+
+  showTopicReveal(view, { first = false } = {}) {
+    return new Promise((resolve) => {
+      const topic = view && view.topic;
+      if (!topic || !this.app) {
+        resolve();
+        return;
+      }
+      const layer = this.layers.fx;
+      layer.zIndex = 60;
+      const root = new Container();
+      root.eventMode = "static";
+      root.cursor = "pointer";
+      layer.addChild(root);
+      const W = this.W;
+      const H = this.H;
+      const cx = W / 2;
+      const cy = H * 0.44;
+      const rm = this.reducedMotion;
+      const cardback = COSMETIC_INDEX[this.equipped.cardback?.id] || COSMETIC_INDEX.cb_default;
+
+      const dim = new Graphics();
+      dim.rect(0, 0, W, H).fill({ color: 0x02060a });
+      dim.alpha = 0;
+      root.addChild(dim);
+
+      const spot = new Graphics();
+      spot.ellipse(cx, cy, 250, 152).fill({ color: 0xffdfa0, alpha: 0.03 });
+      spot.ellipse(cx, cy, 188, 114).fill({ color: 0xffdfa0, alpha: 0.045 });
+      spot.ellipse(cx, cy, 128, 78).fill({ color: 0xfff0c8, alpha: 0.05 });
+      spot.alpha = 0;
+      root.addChild(spot);
+
+      const cardW = 252;
+      const cardH = 164;
+      const card = new Container();
+      card.position.set(cx, cy + 46);
+      card.rotation = -0.08;
+      card.scale.set(0.86);
+      card.alpha = 0;
+      root.addChild(card);
+
+      const back = buildCardBack(cardback, cardW, cardH);
+      card.addChild(back);
+
+      const front = new Container();
+      front.visible = false;
+      const panel = new Graphics();
+      rounded(panel, -cardW / 2, -cardH / 2, cardW, cardH, 9, 0x0b1210, 0.97);
+      panel.roundRect(-cardW / 2, -cardH / 2, cardW, cardH, 9)
+        .stroke({ width: 1.6, color: 0xd8c690, alpha: 0.7 });
+      panel.roundRect(-cardW / 2 + 5, -cardH / 2 + 5, cardW - 10, cardH - 10, 6)
+        .stroke({ width: 0.8, color: cardback.accent, alpha: 0.35 });
+      front.addChild(panel);
+      const typeLabel = topic.type === "synonym" ? "同义词主题" : "释义主题";
+      const tag = text(typeLabel, 10, 0xd9b45f, { letterSpacing: 3 });
+      tag.anchor.set(0.5);
+      tag.position.set(0, -cardH / 2 + 20);
+      front.addChild(tag);
+      const full = topic.prompt || (topic.promptTokens || []).join("；");
+      const promptText = text("", 16, 0xf4ead4, {
+        wordWrap: true,
+        wordWrapWidth: cardW - 40,
+        lineHeight: 24,
+      });
+      promptText.anchor.set(0.5);
+      promptText.position.set(0, -4);
+      front.addChild(promptText);
+      const seatName = (id) => (id === 0 ? "你" : `面具${"一二三"[id - 1]}`);
+      const starter = view.starter == null ? view.currentPlayer : view.starter;
+      const foot = text(
+        `${first ? "开局" : `第 ${view.round} 轮`} · 由 ${seatName(starter)} 选主题`,
+        10,
+        0x9fb0a2,
+      );
+      foot.anchor.set(0.5);
+      foot.position.set(0, cardH / 2 - 20);
+      front.addChild(foot);
+      card.addChild(front);
+
+      let done = false;
+      let tl = null;
+      const cleanup = () => {
+        if (tl) {
+          tl.kill();
+          tl = null;
+        }
+        gsap.killTweensOf([dim, spot, card, card.scale]);
+        clearLayer(root);
+        layer.zIndex = 0;
+      };
+      const finish = () => {
+        if (done) return;
+        done = true;
+        cleanup();
+        resolve();
+      };
+      root.on("pointertap", finish);
+
+      const dimTarget = 0.8;
+      tl = gsap.timeline();
+      tl.to(dim, { alpha: dimTarget, duration: rm ? 0.01 : 0.35 }, 0);
+      tl.to(spot, { alpha: 1, duration: rm ? 0.01 : 0.5 }, 0);
+      tl.to(card, {
+        alpha: 1,
+        y: cy,
+        rotation: 0,
+        scale: 1,
+        duration: rm ? 0.01 : 0.55,
+        ease: "power3.out",
+      }, rm ? 0 : 0.15);
+      tl.call(() => {
+        if (done) return;
+        sfx.card();
+        gsap.to(card.scale, {
+          x: 0,
+          duration: rm ? 0.01 : 0.22,
+          ease: "power2.in",
+          onComplete: () => {
+            if (done) return;
+            back.visible = false;
+            front.visible = true;
+            sfx.tick();
+            gsap.to(card.scale, {
+              x: 1,
+              duration: rm ? 0.01 : 0.24,
+              ease: "power2.out",
+              onComplete: () => {
+                if (done) return;
+                const proxy = { i: 0 };
+                gsap.to(proxy, {
+                  i: full.length,
+                  duration: rm ? 0.01 : Math.min(1.4, full.length * 0.04),
+                  ease: "none",
+                  onUpdate: () => {
+                    if (done || promptText.destroyed) return;
+                    promptText.text = full.slice(0, Math.round(proxy.i));
+                  },
+                });
+              },
+            });
+          },
+        });
+      }, [], rm ? 0.02 : 0.7);
+      const holdAt = rm ? 0.1 : 2.55;
+      tl.to(card, { alpha: 0, y: cy - 26, duration: rm ? 0.02 : 0.3 }, holdAt);
+      tl.to([dim, spot], { alpha: 0, duration: rm ? 0.02 : 0.36 }, holdAt + 0.05);
+      tl.call(finish, [], holdAt + (rm ? 0.05 : 0.42));
+    });
   }
 
   renderCenter(view) {
@@ -664,7 +845,7 @@ export class TableView {
         rotation: (i - (list.length - 1) / 2) * 0.05,
         alpha: 0.9,
         scale: 0.42,
-        duration: this.reducedMotion ? 0.01 : 0.42,
+        duration: this.reducedMotion ? 0.01 : 0.55,
         ease: "power2.inOut",
         onComplete: () => {
           gsap.to(node, {
@@ -694,7 +875,7 @@ export class TableView {
         rotation: (i - (nodes.length - 1) / 2) * 0.05,
         scale: 0.42,
         alpha: 0.95,
-        duration: this.reducedMotion ? 0.01 : 0.36,
+        duration: this.reducedMotion ? 0.01 : 0.55,
         ease: "power2.inOut",
         onComplete: () => {
           gsap.to(clone, { alpha: 0, duration: 0.18, delay: 0.2, onComplete: () => clone.destroy() });
@@ -714,10 +895,10 @@ export class TableView {
     gsap.to(stamp, {
       alpha: 1,
       scale: 1,
-      duration: this.reducedMotion ? 0.01 : 0.18,
+      duration: this.reducedMotion ? 0.01 : 0.28,
       ease: "back.out(2)",
       onComplete: () => {
-        gsap.to(stamp, { alpha: 0, y: pos.y - 30, duration: 0.4, delay: 0.55, onComplete: () => stamp.destroy() });
+        gsap.to(stamp, { alpha: 0, y: pos.y - 34, duration: 0.35, delay: 0.6, onComplete: () => stamp.destroy() });
       },
     });
     this.shake();

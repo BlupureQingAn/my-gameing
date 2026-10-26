@@ -3,6 +3,7 @@
 
 let ctx = null;
 let master = null;
+let compressor = null;
 let sfxBus = null;
 let musicBus = null;
 let ambientBus = null;
@@ -14,26 +15,44 @@ let soundOn = true;
 let ambientOn = true;
 let unlocked = false;
 
-const MUSIC_LEVEL = 0.48;
+// 0-1 的实际增益；默认值对应设置面板 85 / 80 / 45
+const volumes = { music: 0.85, sfx: 0.8, ambient: 0.45 };
 
 function ensure() {
   if (ctx) return ctx;
   const AC = window.AudioContext || window.webkitAudioContext;
   if (!AC) return null;
   ctx = new AC();
+  compressor = ctx.createDynamicsCompressor();
+  compressor.threshold.value = -18;
+  compressor.knee.value = 12;
+  compressor.ratio.value = 4;
+  compressor.attack.value = 0.005;
+  compressor.release.value = 0.25;
   master = ctx.createGain();
   master.gain.value = 0.9;
-  master.connect(ctx.destination);
+  master.connect(compressor);
+  compressor.connect(ctx.destination);
   sfxBus = ctx.createGain();
-  sfxBus.gain.value = soundOn ? 0.7 : 0;
+  sfxBus.gain.value = soundOn ? volumes.sfx : 0;
   sfxBus.connect(master);
   musicBus = ctx.createGain();
-  musicBus.gain.value = MUSIC_LEVEL;
+  musicBus.gain.value = musicOn ? volumes.music : 0;
   musicBus.connect(master);
   ambientBus = ctx.createGain();
-  ambientBus.gain.value = ambientOn ? 0.12 : 0;
+  ambientBus.gain.value = ambientOn ? volumes.ambient : 0;
   ambientBus.connect(master);
   return ctx;
+}
+
+export function setVolume(kind, value) {
+  const key = ["music", "sfx", "ambient"].includes(kind) ? kind : null;
+  if (!key) return;
+  volumes[key] = Math.max(0, Math.min(1, Number(value) || 0));
+  if (!ctx) return;
+  if (key === "music" && musicOn) musicBus.gain.value = volumes.music;
+  if (key === "sfx" && soundOn) sfxBus.gain.value = volumes.sfx;
+  if (key === "ambient" && ambientOn) ambientBus.gain.value = volumes.ambient;
 }
 
 export function unlock() {
@@ -91,7 +110,7 @@ function noise({ dur = 0.3, gain = 0.2, cutoff = 1800, type = "highpass", when =
 
 export function setSound(on) {
   soundOn = !!on;
-  if (sfxBus) sfxBus.gain.value = soundOn ? 0.7 : 0;
+  if (sfxBus) sfxBus.gain.value = soundOn ? volumes.sfx : 0;
 }
 
 function applyMusic() {
@@ -102,7 +121,7 @@ function applyMusic() {
     musicBus.gain.value = 0;
     return;
   }
-  musicBus.gain.value = MUSIC_LEVEL;
+  musicBus.gain.value = volumes.music;
   if (!musicTimer) {
     playJazzBar();
     musicTimer = setInterval(playJazzBar, 6400);
@@ -168,7 +187,7 @@ function applyAmbient() {
     stopAmbient();
     return;
   }
-  ambientBus.gain.value = 0.12;
+  ambientBus.gain.value = volumes.ambient;
   startAmbientNoise();
   if (!ambientTimer) {
     ambientTimer = setInterval(() => {
@@ -212,7 +231,7 @@ function playJazzBar() {
       osc.type = i === 0 ? "triangle" : "sine";
       osc.frequency.value = freq;
       osc.detune.value = (Math.random() * 8 - 4);
-      env(g, start, 0.35, 0.05 / (i + 1), 1.9);
+      env(g, start, 0.35, 0.09 / (i + 1), 1.9);
       osc.connect(filter).connect(g).connect(musicBus);
       osc.start(start);
       osc.stop(start + 2.3);
@@ -227,25 +246,25 @@ function playJazzBar() {
       const g = c.createGain();
       osc.type = "sine";
       osc.frequency.value = freq;
-      env(g, when, 0.02, 0.035, 0.5);
+      env(g, when, 0.02, 0.063, 0.5);
       osc.connect(g).connect(musicBus);
       osc.start(when);
       osc.stop(when + 0.6);
     }
   }
   // 刷子噪声
-  noise({ dur: 0.16, gain: 0.02, cutoff: 5000, type: "bandpass", when: 0, bus: musicBus, gate: false });
-  noise({ dur: 0.12, gain: 0.015, cutoff: 4000, type: "bandpass", when: 2.0, bus: musicBus, gate: false });
+  noise({ dur: 0.16, gain: 0.036, cutoff: 5000, type: "bandpass", when: 0, bus: musicBus, gate: false });
+  noise({ dur: 0.12, gain: 0.027, cutoff: 4000, type: "bandpass", when: 2.0, bus: musicBus, gate: false });
 }
 
 export const sfx = {
   click() { tone({ freq: 520, type: "square", dur: 0.05, gain: 0.08, slide: 80 }); },
   hover() { tone({ freq: 700, type: "sine", dur: 0.03, gain: 0.03 }); },
   card() { noise({ dur: 0.12, gain: 0.12, cutoff: 2600 }); tone({ freq: 220, type: "triangle", dur: 0.09, gain: 0.08, slide: 120 }); },
-  play() { noise({ dur: 0.16, gain: 0.14, cutoff: 1800 }); tone({ freq: 180, type: "triangle", dur: 0.12, gain: 0.1, slide: 90 }); },
+  play() { noise({ dur: 0.16, gain: 0.18, cutoff: 1800 }); tone({ freq: 180, type: "triangle", dur: 0.12, gain: 0.13, slide: 90 }); },
   challenge() {
-    tone({ freq: 330, type: "sawtooth", dur: 0.16, gain: 0.14, slide: -80 });
-    tone({ freq: 220, type: "square", dur: 0.22, gain: 0.1, slide: -60, when: 0.05 });
+    tone({ freq: 330, type: "sawtooth", dur: 0.16, gain: 0.18, slide: -80 });
+    tone({ freq: 220, type: "square", dur: 0.22, gain: 0.13, slide: -60, when: 0.05 });
   },
   correct() { tone({ freq: 660, dur: 0.12, gain: 0.12 }); tone({ freq: 880, dur: 0.16, gain: 0.1, when: 0.08 }); },
   wrong() { tone({ freq: 220, type: "sawtooth", dur: 0.2, gain: 0.1, slide: -60 }); },
@@ -253,8 +272,8 @@ export const sfx = {
   spin() { noise({ dur: 0.5, gain: 0.08, cutoff: 900, type: "bandpass" }); },
   dry() { tone({ freq: 900, type: "square", dur: 0.04, gain: 0.08 }); noise({ dur: 0.05, gain: 0.05, cutoff: 3000 }); },
   shot() {
-    noise({ dur: 0.5, gain: 0.5, cutoff: 1200 });
-    tone({ freq: 90, type: "sine", dur: 0.5, gain: 0.4, slide: -50 });
+    noise({ dur: 0.5, gain: 0.65, cutoff: 1200 });
+    tone({ freq: 90, type: "sine", dur: 0.5, gain: 0.52, slide: -50 });
   },
   win() { [523, 659, 784, 1046].forEach((f, i) => tone({ freq: f, dur: 0.22, gain: 0.1, when: i * 0.12 })); },
   lose() { [392, 330, 262].forEach((f, i) => tone({ freq: f, type: "triangle", dur: 0.3, gain: 0.12, when: i * 0.15 })); },

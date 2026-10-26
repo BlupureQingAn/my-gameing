@@ -1,6 +1,10 @@
+import { Application, Container, Graphics, Rectangle } from "pixi.js";
+import { gsap } from "gsap";
 import { GameSession } from "../game/session.js";
 import { TableView } from "./table.js";
-import { sfx, setSound, setMusic, setAmbient, unlock, isAudioUnlocked } from "./audio.js";
+import { sfx, setSound, setMusic, setAmbient, setVolume, unlock, isAudioUnlocked } from "./audio.js";
+import { runRoulette } from "./roulette.js";
+import { buildCardBack, buildFeltPattern, buildMask, buildRevolver } from "./cosmetics.js";
 import {
   COSMETICS,
   COSMETIC_INDEX,
@@ -20,14 +24,18 @@ import {
   upsertVocab,
 } from "../platform/store.js";
 import {
+  createPayOrder,
+  fetchEntitlement,
   finishRun,
   getProfile,
+  hasLicense,
   isLoggedIn,
-  isMember,
   leaderboard,
+  licensePurchasedAt,
   listVocab,
   nickname,
   patchVocab,
+  payStatus,
   pushVocab,
   putProfile,
   removeVocab as removeCloudVocab,
@@ -168,8 +176,12 @@ function updateAccount() {
   if (!node) return;
   if (isLoggedIn()) {
     const name = nickname() || "已登录赌客";
-    const badge = isMember() ? '<span class="badge">会员</span>' : '<span class="badge" style="border-color:#3f5c4a;color:#97a79a">免费版</span>';
-    node.innerHTML = `<span><strong>${esc(name)}</strong>${badge}</span><span>水晶 <b style="color:var(--amber)">${state.profile.crystals}</b></span>`;
+    const badge = hasLicense() ? '<span class="badge">完整版</span>' : '<span class="badge" style="border-color:#3f5c4a;color:#97a79a">免费版</span>';
+    node.innerHTML = `<span><strong>${esc(name)}</strong>${badge}</span><span>水晶 <b style="color:var(--amber)">${state.profile.crystals}</b></span>${hasLicense() ? "" : '<button class="btn btn-small btn-primary" id="account-unlock">解锁完整版</button>'}`;
+    node.querySelector("#account-unlock")?.addEventListener("click", () => {
+      sfx.click();
+      showPurchase();
+    });
   } else {
     node.innerHTML = '<span>未登录 · 仅本地存档</span><a href="/">去主站登录 →</a>';
   }
@@ -188,10 +200,10 @@ function updateMenuStats() {
 
 const BANDS = [
   { id: "hs", name: "高中", note: "免费" },
-  { id: "cet4", name: "四级", note: "会员" },
-  { id: "cet6", name: "六级", note: "会员" },
-  { id: "ky", name: "考研", note: "会员" },
-  { id: "toefl", name: "托福", note: "会员" },
+  { id: "cet4", name: "四级", note: "完整版" },
+  { id: "cet6", name: "六级", note: "完整版" },
+  { id: "ky", name: "考研", note: "完整版" },
+  { id: "toefl", name: "托福", note: "完整版" },
 ];
 const DIFFS = [
   { id: "easy", name: "简单", note: "AI 55%" },
@@ -202,9 +214,9 @@ const DIFFS = [
 function renderChoices() {
   const bandNode = $("band-pick");
   bandNode.innerHTML = BANDS.map((band) => {
-    const locked = band.id !== "hs" && !isMember();
+    const locked = band.id !== "hs" && !hasLicense();
     return `<button class="choice ${state.band === band.id ? "active" : ""} ${locked ? "locked" : ""}" data-band="${band.id}">
-      ${band.name}<small>${locked && isLoggedIn() ? "会员" : band.note}</small></button>`;
+      ${band.name}<small>${locked && isLoggedIn() ? "完整版" : band.note}</small></button>`;
   }).join("");
   const diffNode = $("diff-pick");
   diffNode.innerHTML = DIFFS.map((diff) => `<button class="choice ${state.difficulty === diff.id ? "active" : ""}" data-diff="${diff.id}">
@@ -213,8 +225,8 @@ function renderChoices() {
     button.addEventListener("click", () => {
       sfx.click();
       const id = button.dataset.band;
-      if (id !== "hs" && !isMember()) {
-        showMemberGate();
+      if (id !== "hs" && !hasLicense()) {
+        showPurchase();
         return;
       }
       state.band = id;
@@ -234,22 +246,152 @@ function renderChoices() {
   });
 }
 
-function showMemberGate() {
-  if (!isLoggedIn()) {
-    openModal({
-      title: "需要登录",
-      sub: "四级、六级、考研、托福词库为会员专属内容。你可以先登录主站，回到这里后用高中词库免费开局。",
-      body: '<p style="font-size:12px;line-height:1.8;color:var(--dim)">高中词库永久免费，包含全部难度与完整游戏流程。会员词库与云存档需要主站账号。</p>',
-      actions: '<a class="btn btn-primary" href="/">去主站登录</a>',
-    });
+const CIHUANG_PLAN_ID = "cihuang_full";
+const CIHUANG_PRICE = 21;
+
+function showPurchase() {
+  if (hasLicense()) {
+    showLicensed();
     return;
   }
+  const body = `
+    <div class="purchase-hero">
+      <div class="purchase-kicker">面具酒馆 · 一次性买断</div>
+      <div class="purchase-title">解锁整座酒馆</div>
+      <div class="purchase-price">
+        <span class="price-now">¥${CIHUANG_PRICE}</span>
+        <span class="price-old">五档词库 + 云档 + 生词本</span>
+      </div>
+      <div class="purchase-note">永久有效 · 与云吞吞文游会员互不影响，买断不会自动开通会员，会员也不会解锁词谎</div>
+    </div>
+    <div class="purchase-grid">
+      <div class="purchase-col">
+        <h4>免费版</h4>
+        <ul>
+          <li class="yes">高中词库</li>
+          <li class="yes">全部难度</li>
+          <li class="yes">本地存档</li>
+          <li class="yes">排行榜</li>
+          <li class="no">四级 / 六级 / 考研 / 托福</li>
+          <li class="no">云存档</li>
+          <li class="no">生词本跨设备同步</li>
+        </ul>
+      </div>
+      <div class="purchase-col full">
+        <h4>完整版</h4>
+        <ul>
+          <li class="yes">高中 + 四级 + 六级 + 考研 + 托福</li>
+          <li class="yes">全部难度</li>
+          <li class="yes">本地存档</li>
+          <li class="yes">排行榜</li>
+          <li class="yes">云存档</li>
+          <li class="yes">生词本跨设备同步</li>
+          <li class="yes">后续新增词库</li>
+        </ul>
+      </div>
+    </div>
+    ${isLoggedIn() ? `
+      <label class="purchase-check"><input type="checkbox" id="pay-age" /> 我已满 18 周岁，或已获得监护人同意</label>
+      <label class="purchase-check"><input type="checkbox" id="pay-norefund" /> 虚拟商品，购买后不支持退款</label>` : `
+      <p class="purchase-login">购买前需要先登录主站账号，登录后回到本页即可支付。</p>`}
+    <div id="purchase-status" class="purchase-status"></div>`;
+  const actions = isLoggedIn()
+    ? `<button class="btn" id="purchase-later">先去玩高中词库</button><button class="btn btn-primary" id="purchase-pay">微信支付 ¥${CIHUANG_PRICE}</button>`
+    : '<a class="btn btn-primary" href="/">先去主站登录</a>';
+  let pollTimer = null;
+  const modal = openModal({
+    title: "",
+    body,
+    actions,
+    wide: true,
+    onClose: () => {
+      if (pollTimer) clearInterval(pollTimer);
+    },
+  });
+  modal.card.querySelector("#purchase-later")?.addEventListener("click", () => modal.close());
+  const payBtn = modal.card.querySelector("#purchase-pay");
+  if (!payBtn) return;
+  payBtn.addEventListener("click", async () => {
+    const age = modal.card.querySelector("#pay-age");
+    const norefund = modal.card.querySelector("#pay-norefund");
+    if (!age?.checked || !norefund?.checked) {
+      toast("请先勾选两项确认");
+      return;
+    }
+    const status = modal.card.querySelector("#purchase-status");
+    payBtn.disabled = true;
+    status.className = "purchase-status";
+    status.textContent = "正在创建订单…";
+    try {
+      const order = await createPayOrder(CIHUANG_PLAN_ID);
+      track("pay_create", { plan: CIHUANG_PLAN_ID });
+      const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+      if (isMobile && order.jumpUrl) {
+        status.innerHTML = '已打开微信收银台。支付完成后回到本页，会自动确认到账。<a href="' + esc(order.jumpUrl) + '" target="_blank" rel="noopener">没跳转？点这里</a>';
+        window.location.href = order.jumpUrl;
+      } else if (order.qrUrl) {
+        status.innerHTML = `<div class="purchase-qr"><img src="${esc(order.qrUrl)}" alt="微信支付二维码" /></div><div>请用微信扫码支付，支付完成后自动确认到账。</div>`;
+      } else if (order.jumpUrl) {
+        status.innerHTML = '已打开微信收银台。支付完成后回到本页，会自动确认到账。<a href="' + esc(order.jumpUrl) + '" target="_blank" rel="noopener">没跳转？点这里</a>';
+        window.location.href = order.jumpUrl;
+      } else {
+        throw new Error("支付网关未返回支付链接");
+      }
+      payBtn.textContent = "等待支付…";
+      pollPayment(order.orderNo, status, () => {
+        if (pollTimer) clearInterval(pollTimer);
+        modal.close();
+        updateAccount();
+        renderChoices();
+        updateMenuStats();
+        toast("完整版已解锁");
+        showLicensed();
+      }, () => {
+        payBtn.disabled = false;
+        payBtn.textContent = `微信支付 ¥${CIHUANG_PRICE}`;
+      });
+    } catch (error) {
+      status.className = "purchase-status bad";
+      status.textContent = `下单失败：${error.message}`;
+      payBtn.disabled = false;
+    }
+  });
+}
+
+function pollPayment(orderNo, statusNode, onPaid, onTimeout) {
+  let tries = 0;
+  const timer = setInterval(async () => {
+    tries += 1;
+    if (tries > 200) {
+      clearInterval(timer);
+      statusNode.textContent = "等待超时。若已付款，请重新打开本页确认。";
+      onTimeout();
+      return;
+    }
+    try {
+      const data = await payStatus(orderNo);
+      const value = Array.isArray(data.status) ? data.status[0] : data.status;
+      if (value === "paid") {
+        clearInterval(timer);
+        await fetchEntitlement();
+        onPaid();
+      }
+    } catch (e) {
+      // 轮询失败静默重试，最多 10 分钟
+    }
+  }, 3000);
+  return timer;
+}
+
+function showLicensed() {
+  const purchasedAt = licensePurchasedAt();
+  const stamp = purchasedAt ? new Date(purchasedAt).toLocaleString("zh-CN", { hour12: false }) : "";
   openModal({
-    title: "会员专属词库",
-    sub: "当前账号是免费版。四级、六级、考研、托福词库以及云存档、跨设备生词本需要会员。",
-    body: '<p style="font-size:12px;line-height:1.8;color:var(--dim)">高中词库与全部玩法对所有人开放，本地存档不受影响。</p>',
-    actions: '<a class="btn btn-primary" href="/">查看会员</a><button class="btn" id="gate-close">先去玩高中词库</button>',
-  }).card.querySelector("#gate-close").addEventListener("click", () => {
+    title: "已解锁",
+    sub: "词谎完整版已在本账号生效，五档词库与云存档全部可用。",
+    body: `<p class="purchase-licensed">${stamp ? `购买时间：${esc(stamp)}` : "永久有效"}</p>`,
+    actions: '<button class="btn btn-primary" id="licensed-ok">回到牌桌</button>',
+  }).card.querySelector("#licensed-ok").addEventListener("click", () => {
     document.querySelectorAll(".modal-close").forEach((node) => node.click());
   });
 }
@@ -328,8 +470,8 @@ function toggleHelpSound() {
 
 async function startGame() {
   if (state.starting) return;
-  if (state.band !== "hs" && !isMember()) {
-    showMemberGate();
+  if (state.band !== "hs" && !hasLicense()) {
+    showPurchase();
     return;
   }
   state.starting = true;
@@ -382,6 +524,7 @@ async function startGame() {
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     hideLoading();
     await wait(state.profile.settings.reducedMotion ? 120 : 650);
+    await state.table.showTopicReveal(state.session.view(), { first: true });
     drive();
   } catch (error) {
     console.error(error);
@@ -452,9 +595,12 @@ async function drive() {
 
 async function aiTurn() {
   const session = state.session;
-  state.table.render(session.view());
-  const delay = state.profile.settings.reducedMotion ? 250 : 1500;
-  await wait(delay);
+  const rm = state.profile.settings.reducedMotion;
+  const before = session.view();
+  state.table.render(before);
+  if (before.currentPlayer !== 0) state.table.setThinking(before.currentPlayer, true);
+  await wait(rm ? 250 : 5000 + Math.random() * 3000);
+  state.table.setThinking(0, false);
   if (!state.session) return;
   const action = session.aiAct();
   if (!action) return;
@@ -463,12 +609,12 @@ async function aiTurn() {
     sfx.play();
     state.table.render(view, { animatePlay: action });
     track("play", { seat: action.playerId, n: action.cardIds.length });
-    await wait(state.profile.settings.reducedMotion ? 150 : 700);
+    await wait(rm ? 150 : 1000);
   } else {
     sfx.challenge();
     state.table.render(view, { animateChallengeId: action.playerId });
     track("challenge", { seat: action.playerId });
-    await wait(state.profile.settings.reducedMotion ? 150 : 800);
+    await wait(rm ? 180 : 1200);
   }
   if (state.session) state.table.render(session.view());
 }
@@ -488,7 +634,7 @@ async function humanPlay(cardIds) {
   const view = state.session.view();
   state.table.render(view, { animatePlay: { playerId: 0, cardIds } });
   track("play", { seat: 0, n: cardIds.length });
-  await wait(state.profile.settings.reducedMotion ? 80 : 420);
+  await wait(state.profile.settings.reducedMotion ? 80 : 550);
   if (state.session) state.table.render(state.session.view());
   drive();
 }
@@ -506,7 +652,7 @@ async function humanChallenge() {
   sfx.challenge();
   state.table.render(state.session.view(), { animateChallengeId: 0 });
   track("challenge", { seat: 0 });
-  await wait(state.profile.settings.reducedMotion ? 100 : 560);
+  await wait(state.profile.settings.reducedMotion ? 100 : 700);
   drive();
 }
 
@@ -654,45 +800,59 @@ function showReveal(outcome) {
   });
 }
 
-function showRoulette(outcome) {
-  return new Promise((resolve) => {
-    const who = NAMES[outcome.playerId];
-    const skin = COSMETIC_INDEX[state.profile.equipped.roulette] || COSMETIC_INDEX.rl_brass;
-    const body = `
-      <div class="roulette-stage">
-        <div class="roulette-who">${esc(who)} 接受轮盘</div>
-        <div class="roulette-odds">第 ${outcome.pulls} / 6 次 · 本次击发概率 ${outcome.pulls}/6</div>
-        <div class="cylinder" id="cylinder" style="--roulette-accent:#${skin.accent.toString(16).padStart(6, "0")};--roulette-body:#${skin.color.toString(16).padStart(6, "0")}">
-          ${Array.from({ length: 6 }, (_, i) => `<div class="chamber" style="transform:rotate(${i * 60}deg) translateY(-46px)"></div>`).join("")}
-        </div>
-        <div class="roulette-result" id="roulette-result">扳机扣下…</div>
-      </div>`;
-    const modal = openModal({
-      title: "左轮",
-      body,
-      closable: false,
-    });
-    sfx.spin();
-    setTimeout(() => {
-      const cylinder = modal.card.querySelector("#cylinder");
-      const resultNode = modal.card.querySelector("#roulette-result");
-      if (outcome.fire) {
-        cylinder.classList.add("fire");
-        resultNode.textContent = "砰！";
-        resultNode.className = "roulette-result bang";
-        sfx.shot();
-      } else {
-        resultNode.textContent = "空膛 · 咔哒";
-        resultNode.className = "roulette-result click";
-        sfx.dry();
-      }
+async function showRoulette(outcome) {
+  const who = NAMES[outcome.playerId];
+  const skin = COSMETIC_INDEX[state.profile.equipped.roulette] || COSMETIC_INDEX.rl_brass;
+  const body = `
+    <div class="roulette-stage">
+      <div class="roulette-who">${esc(who)} 接受轮盘</div>
+      <div class="roulette-odds">第 ${outcome.pulls} / 6 次 · 本次击发概率 ${outcome.pulls}/6</div>
+      <div class="gun-stage" id="gun-stage"></div>
+      <div class="roulette-phase" id="roulette-phase">推近弹巢…</div>
+      <div class="roulette-result" id="roulette-result"></div>
+    </div>`;
+  const modal = openModal({ title: "左轮", body, closable: false });
+  const phaseNode = modal.card.querySelector("#roulette-phase");
+  const resultNode = modal.card.querySelector("#roulette-result");
+  const phaseText = {
+    approach: "推近弹巢…",
+    load: "装填子弹…",
+    spin: "转动弹巢…",
+    silence: "屏住呼吸…",
+    fire: outcome.fire ? "击发！" : "击发…",
+    result: "",
+  };
+  let tracked = false;
+  const onStage = (stage) => {
+    if (phaseText[stage] !== undefined) phaseNode.textContent = phaseText[stage];
+    if (stage !== "result") return;
+    resultNode.textContent = outcome.fire ? "砰！" : "空膛 · 咔哒";
+    resultNode.className = `roulette-result ${outcome.fire ? "bang" : "click"}`;
+    if (!tracked) {
+      tracked = true;
       track("roulette", { seat: outcome.playerId, fire: outcome.fire, pulls: outcome.pulls });
-    }, state.profile.settings.reducedMotion ? 120 : 950);
-    setTimeout(() => {
-      modal.close();
-      resolve();
-    }, state.profile.settings.reducedMotion ? 900 : 2600);
-  });
+    }
+  };
+  try {
+    await runRoulette({
+      host: modal.card.querySelector("#gun-stage"),
+      item: skin,
+      outcome,
+      reducedMotion: state.profile.settings.reducedMotion,
+      onStage,
+    });
+  } catch (error) {
+    console.error(error);
+    resultNode.textContent = outcome.fire ? "砰！" : "空膛 · 咔哒";
+    resultNode.className = `roulette-result ${outcome.fire ? "bang" : "click"}`;
+    if (!tracked) {
+      tracked = true;
+      track("roulette", { seat: outcome.playerId, fire: outcome.fire, pulls: outcome.pulls });
+    }
+    await wait(state.profile.settings.reducedMotion ? 300 : 1400);
+  } finally {
+    modal.close();
+  }
 }
 
 async function handleRoulette() {
@@ -758,6 +918,7 @@ async function handleRoundEnd(view) {
   updateMeta(nextView);
   state.table.render(nextView, { deal: true });
   await wait(state.profile.settings.reducedMotion ? 120 : 550);
+  await state.table.showTopicReveal(nextView, { first: false });
 }
 
 async function settle(result) {
@@ -774,7 +935,7 @@ async function settle(result) {
       placement: result.placement,
       score: result.score,
     });
-    if (isMember()) putProfile(state.profile);
+    if (hasLicense()) putProfile(state.profile);
     updateMenuStats();
   }
   if (result.placement === 1) sfx.win();
@@ -935,7 +1096,7 @@ function vocabStatus(item) {
 }
 
 function syncEntry(entry) {
-  if (!entry || !isMember()) return;
+  if (!entry || !hasLicense()) return;
   (async () => {
     if (entry.cloudId) {
       await patchVocab(entry.cloudId, entry);
@@ -978,7 +1139,7 @@ async function showVocab() {
         <input id="vocab-input" maxlength="64" placeholder="手动添加单词（当前词库）" />
         <button class="btn" id="vocab-add-btn">添加</button>
       </div>
-      <p class="modal-sub">连续两次答对后移出复习池。${isMember() ? "已开启云端同步。" : "登录会员后可跨设备同步。"}</p>
+      <p class="modal-sub">连续两次答对后移出复习池。${hasLicense() ? "已开启云端同步。" : "解锁完整版后可跨设备同步。"}</p>
       <div class="vocab-list">${listHtml}</div>`;
     const modal = openModal({
       title: "生词本",
@@ -1087,31 +1248,179 @@ function showLeaderboard() {
 
 /* ---------------- 装扮 ---------------- */
 
-function showCosmetics() {
+const PREVIEW_CACHE = new Map();
+let previewApp = null;
+
+async function ensurePreviewApp() {
+  if (previewApp) return previewApp;
+  previewApp = new Application();
+  await previewApp.init({
+    width: 280,
+    height: 160,
+    backgroundAlpha: 0,
+    antialias: true,
+    autoDensity: true,
+    resolution: Math.min(2, window.devicePixelRatio || 1),
+    preference: "webgl",
+  });
+  return previewApp;
+}
+
+async function previewFor(kind, item) {
+  const cacheKey = `${kind}:${item.id}`;
+  if (PREVIEW_CACHE.has(cacheKey)) return PREVIEW_CACHE.get(cacheKey);
+  const app = await ensurePreviewApp();
+  const holder = new Container();
+  const board = new Graphics();
+  board.roundRect(0, 0, 280, 160, 10).fill({ color: 0x140f0d });
+  holder.addChild(board);
+  const art = new Container();
+  art.position.set(140, 80);
+  holder.addChild(art);
+  if (kind === "cardback") {
+    [-13, 0, 13].forEach((deg, i) => {
+      const back = buildCardBack(item, 84, 118);
+      back.position.set((i - 1) * 36, i === 1 ? -4 : 2);
+      back.rotation = (deg * Math.PI) / 180;
+      back.scale.set(0.92);
+      art.addChild(back);
+    });
+  } else if (kind === "felt") {
+    const base = new Graphics();
+    base.ellipse(0, 0, 126, 72).fill({ color: item.color });
+    base.ellipse(0, 0, 126, 72).stroke({ width: 1.4, color: item.accent, alpha: 0.4 });
+    art.addChild(base);
+    art.addChild(buildFeltPattern(item, { cx: 0, cy: 0, rx: 160, ry: 98 }));
+  } else if (kind === "mask") {
+    const head = new Graphics();
+    head.circle(0, 8, 46).fill({ color: 0x2a211b });
+    head.circle(0, 8, 46).stroke({ width: 1.5, color: 0xd8c690, alpha: 0.32 });
+    head.ellipse(0, -30, 40, 16).fill({ color: 0x201813, alpha: 0.8 });
+    art.addChild(head);
+    art.addChild(buildMask(item, 104));
+  } else {
+    const gun = buildRevolver(item, 0.78);
+    gun.container.position.set(-16, -4);
+    gun.cylinder.rotation = Math.PI / 6;
+    art.addChild(gun.container);
+  }
+  app.stage.addChild(holder);
+  const canvas = app.renderer.extract.canvas({
+    target: holder,
+    resolution: Math.min(2, window.devicePixelRatio || 1),
+  });
+  app.stage.removeChild(holder);
+  holder.destroy({ children: true });
+  const url = canvas.toDataURL("image/webp", 0.9);
+  PREVIEW_CACHE.set(cacheKey, url);
+  return url;
+}
+
+async function mountGunPreview(host, item) {
+  const width = 264;
+  const height = 116;
+  host.querySelector("img")?.remove();
+  const app = new Application();
+  await app.init({
+    width,
+    height,
+    backgroundAlpha: 0,
+    antialias: true,
+    autoDensity: true,
+    resolution: Math.min(2, window.devicePixelRatio || 1),
+    preference: "webgl",
+  });
+  app.canvas.className = "gun-canvas preview";
+  host.appendChild(app.canvas);
+  const scene = new Container();
+  scene.position.set(118, 50);
+  app.stage.addChild(scene);
+  const gun = buildRevolver(item, 0.68);
+  scene.addChild(gun.container);
+  gun.cylinder.rotation = Math.PI / 6;
+  app.__previewGun = gun;
+  let spinning = false;
+  app.stage.eventMode = "static";
+  app.stage.hitArea = new Rectangle(0, 0, width, height);
+  app.stage.cursor = "pointer";
+  app.stage.on("pointertap", () => {
+    if (spinning) return;
+    spinning = true;
+    sfx.spin();
+    gsap.to(gun.cylinder, {
+      rotation: gun.cylinder.rotation + Math.PI * 4,
+      duration: 1.2,
+      ease: "power3.out",
+      onComplete: () => {
+        spinning = false;
+      },
+    });
+  });
+  return app;
+}
+
+async function showCosmetics() {
+  const names = Object.keys(COSMETICS);
+  const previews = {};
+  try {
+    await Promise.all(names.map(async (key) => {
+      previews[key] = await Promise.all(COSMETICS[key].items.map((item) => previewFor(key, item)));
+    }));
+  } catch (error) {
+    console.error(error);
+  }
+  const liveApps = [];
   const render = () => {
     const groups = Object.entries(COSMETICS).map(([key, group]) => {
-      const items = group.items.map((item) => {
+      const items = group.items.map((item, index) => {
         const owned = state.profile.cosmetics.includes(item.id);
         const equipped = state.profile.equipped[key] === item.id;
+        const preview = previews[key]?.[index];
         const action = equipped
           ? '<button class="btn btn-small" disabled>已装备</button>'
           : owned
             ? `<button class="btn btn-small" data-equip="${key}" data-id="${item.id}">装备</button>`
             : `<button class="btn btn-small btn-primary" data-buy="${item.id}" data-price="${item.price}">${item.price} 水晶</button>`;
+        const frame = key === "roulette"
+          ? `<div class="cosmetic-preview live" data-live-gun="${item.id}">${preview ? `<img alt="${esc(item.name)}" src="${preview}">` : ""}</div>`
+          : `<div class="cosmetic-preview ${key}">${preview ? `<img alt="${esc(item.name)}" src="${preview}">` : ""}</div>`;
         return `<div class="cosmetic-item ${owned ? "owned" : ""} ${equipped ? "equipped" : ""}">
-          <div class="cosmetic-swatch" style="background:linear-gradient(135deg,#${item.color.toString(16).padStart(6, "0")},#${item.accent.toString(16).padStart(6, "0")})"></div>
-          <div class="cosmetic-name">${esc(item.name)}</div>
+          ${frame}
+          <div class="cosmetic-name">${esc(item.name)}<span class="cosmetic-tier">${esc(item.tier)}</span></div>
           <div class="cosmetic-price">${owned ? (item.price ? "已拥有" : "默认") : `${item.price} 水晶`}</div>
           <div class="cosmetic-actions">${action}</div>
         </div>`;
       }).join("");
-      return `<div class="cosmetic-group"><h4>${esc(group.label)}</h4><div class="cosmetic-grid">${items}</div></div>`;
+      const hint = key === "roulette" ? '<span class="cosmetic-hint">点枪体试转</span>' : "";
+      return `<div class="cosmetic-group"><h4>${esc(group.label)}${hint}</h4><div class="cosmetic-grid">${items}</div></div>`;
     }).join("");
     const modal = openModal({
       title: "装扮",
       sub: `水晶余额 ${state.profile.crystals}。装扮只改变外观，不影响胜负。`,
       body: groups,
       wide: true,
+      onClose: () => {
+        liveApps.forEach((app) => {
+          try {
+            if (app.__previewGun) gsap.killTweensOf(app.__previewGun.cylinder);
+            app.destroy(true, { children: true, texture: false });
+          } catch (error) {}
+        });
+        liveApps.length = 0;
+      },
+    });
+    modal.card.querySelectorAll("[data-live-gun]").forEach(async (node) => {
+      try {
+        const app = await mountGunPreview(node, COSMETIC_INDEX[node.dataset.liveGun]);
+        if (!node.isConnected) {
+          gsap.killTweensOf(app.__previewGun?.cylinder);
+          app.destroy(true, { children: true, texture: false });
+          return;
+        }
+        liveApps.push(app);
+      } catch (error) {
+        console.error(error);
+      }
     });
     modal.card.querySelectorAll("[data-buy]").forEach((button) => {
       button.addEventListener("click", () => {
@@ -1124,7 +1433,7 @@ function showCosmetics() {
         state.profile.crystals -= price;
         state.profile.cosmetics = Array.from(new Set([...state.profile.cosmetics, id]));
         saveProfile(state.profile);
-        if (isMember()) putProfile(state.profile);
+        if (hasLicense()) putProfile(state.profile);
         sfx.crystal();
         track("cosmetic_purchase", { id, price });
         updateAccount();
@@ -1138,7 +1447,7 @@ function showCosmetics() {
         const key = button.dataset.equip;
         state.profile.equipped[key] = button.dataset.id;
         saveProfile(state.profile);
-        if (isMember()) putProfile(state.profile);
+        if (hasLicense()) putProfile(state.profile);
         sfx.click();
         if (state.table) state.table.setEquipped(profileEquipped(state.profile));
         modal.close();
@@ -1152,10 +1461,18 @@ function showCosmetics() {
 /* ---------------- 设置 ---------------- */
 
 function applyAudioSettings() {
-  setSound(state.profile.settings.sound);
-  setMusic(state.profile.settings.music);
-  setAmbient(state.profile.settings.ambient !== false);
-  $("btn-sound").textContent = state.profile.settings.sound ? "♪" : "×";
+  const settings = state.profile.settings;
+  const pick = (value, fallback) => {
+    const n = Number(value);
+    return (Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : fallback) / 100;
+  };
+  setVolume("music", pick(settings.volume?.music, 85));
+  setVolume("sfx", pick(settings.volume?.sfx, 80));
+  setVolume("ambient", pick(settings.volume?.ambient, 45));
+  setSound(settings.sound);
+  setMusic(settings.music);
+  setAmbient(settings.ambient !== false);
+  $("btn-sound").textContent = settings.sound ? "♪" : "×";
   syncMusicButton();
 }
 
@@ -1185,7 +1502,7 @@ function toggleMenuMusic() {
   }
   settings.music = !settings.music;
   saveProfile(state.profile);
-  if (isMember()) putProfile(state.profile);
+  if (hasLicense()) putProfile(state.profile);
   if (settings.music) {
     unlock();
     setMusic(true);
@@ -1207,11 +1524,14 @@ function showSettings() {
         <button data-val="1" class="${settings.music ? "on" : ""}">开</button><button data-val="0" class="${!settings.music ? "on" : ""}">关</button></span></div>
       <div class="settings-row"><span>环境声</span><span class="switch" data-key="ambient">
         <button data-val="1" class="${settings.ambient !== false ? "on" : ""}">开</button><button data-val="0" class="${settings.ambient === false ? "on" : ""}">关</button></span></div>
+      <div class="settings-row"><span>音乐音量</span><span class="volume-row"><input type="range" min="0" max="100" step="1" value="${settings.volume.music}" data-volume="music"><b id="vol-music">${settings.volume.music}</b></span></div>
+      <div class="settings-row"><span>音效音量</span><span class="volume-row"><input type="range" min="0" max="100" step="1" value="${settings.volume.sfx}" data-volume="sfx"><b id="vol-sfx">${settings.volume.sfx}</b></span></div>
+      <div class="settings-row"><span>环境音量</span><span class="volume-row"><input type="range" min="0" max="100" step="1" value="${settings.volume.ambient}" data-volume="ambient"><b id="vol-ambient">${settings.volume.ambient}</b></span></div>
       <div class="settings-row"><span>减少动效</span><span class="switch" data-key="reducedMotion">
         <button data-val="1" class="${settings.reducedMotion ? "on" : ""}">开</button><button data-val="0" class="${!settings.reducedMotion ? "on" : ""}">关</button></span></div>
       <div class="settings-row"><span>教程</span><button class="btn btn-small" id="settings-tutorial">重新播放</button></div>
       <div class="settings-row"><span>账号</span><span style="font-size:11px;color:var(--dim)">${isLoggedIn() ? esc(nickname() || "已登录") : "未登录"}</span></div>
-      <p class="modal-sub" style="margin-top:12px">进度自动保存在本机。会员登录后档案与生词本会同步到云端。</p>`;
+      <p class="modal-sub" style="margin-top:12px">进度自动保存在本机。解锁完整版后档案与生词本会同步到云端。</p>`;
     const modal = openModal({ title: "设置", body });
     modal.card.querySelectorAll(".switch").forEach((group) => {
       group.querySelectorAll("button").forEach((button) => {
@@ -1220,13 +1540,28 @@ function showSettings() {
           const value = button.dataset.val === "1";
           state.profile.settings[key] = value;
           saveProfile(state.profile);
-          if (isMember()) putProfile(state.profile);
+          if (hasLicense()) putProfile(state.profile);
           if (state.table) state.table.reducedMotion = !!state.profile.settings.reducedMotion;
           applyAudioSettings();
           sfx.click();
           modal.close();
           render();
         });
+      });
+    });
+    modal.card.querySelectorAll("[data-volume]").forEach((input) => {
+      const kind = input.dataset.volume;
+      const label = modal.card.querySelector(`#vol-${kind}`);
+      input.addEventListener("input", () => {
+        const value = Math.max(0, Math.min(100, Number(input.value) || 0));
+        state.profile.settings.volume[kind] = value;
+        if (label) label.textContent = String(value);
+        setVolume(kind, value / 100);
+      });
+      input.addEventListener("change", () => {
+        saveProfile(state.profile);
+        if (hasLicense()) putProfile(state.profile);
+        if (kind === "sfx") sfx.click();
       });
     });
     modal.card.querySelector("#settings-tutorial").addEventListener("click", () => {
@@ -1397,7 +1732,7 @@ function showHelp() {
 /* ---------------- 启动 ---------------- */
 
 async function syncCloud() {
-  if (!isMember()) return;
+  if (!hasLicense()) return;
   try {
     const cloudProfile = await getProfile();
     if (cloudProfile) {
@@ -1534,6 +1869,12 @@ async function boot() {
   bindEvents();
   syncCloud();
   track("app_open", {});
+  if (isLoggedIn()) {
+    fetchEntitlement().then(() => {
+      updateAccount();
+      renderChoices();
+    }).catch(() => {});
+  }
   setTimeout(() => {
     if (showLandscapeTipIfNeeded()) return;
     if (!state.profile.settings.tutorialDone) showTutorial();

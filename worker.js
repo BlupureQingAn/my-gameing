@@ -583,6 +583,22 @@ const STORY_PLANS = {
 // 永久有效。解锁后前端可传 X-User-Api-Key/X-User-Api-Base,由 worker 透传到用户自有
 // OpenAI 兼容端点——Key 只存用户浏览器 localStorage,服务端不落盘、不过池、不计免费额度/云币。
 const BYO_API_PLAN = { id: "byo_api", name: "自带 API Key 解锁", price: "5" };
+// 《词谎》完整版买断(2026-10-26):¥21 一次性买断全部权益(全词库/云档案/生词本),
+// 与云吞吞文游会员完全解耦,发货=unlocks 记录(card_id="cihuang_full"),永久有效。
+const CIHUANG_PLAN = { id: "cihuang_full", name: "词谎完整版", price: "21" };
+const CIHUANG_CARD_ID = "cihuang_full";
+
+// 词谎买断判定：unlocks 里存在 card_id="cihuang_full" 即已解锁，返回记录（含 created_at）或 null
+async function cihuangLicense(env, userId) {
+    try {
+        const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(userId)}'&&card_id='${CIHUANG_CARD_ID}'`);
+        const q = await pbAdminFetch(env, `/api/collections/unlocks/records?perPage=1&skipTotal=true&filter=${f}`);
+        const d = await q.json().catch(() => ({}));
+        return (d.items || [])[0] || null;
+    } catch (e) {
+        return null;
+    }
+}
 
 // 自带 API 解锁判定（2026-10-20）：unlocks 集合里存在 card_id="byo_api" 记录即已买断。
 // 与 story 解锁同构，零 schema 改动。
@@ -1288,7 +1304,7 @@ async function xunhuPlaceOrder(env, orderNo, title, price, userId) {
 
 // 创建订单：本地落库 pay_orders → 按设备/支付方式选网关 → 返回 { orderNo, jumpUrl, qrUrl? }
 async function createPayOrder(env, userId, planId, payType, isMobile) {
-    const plan = CHARGE_PLANS[planId] || MEMBER_PLANS[planId] || PACK_PLANS[planId] || STORY_PLANS[planId] || (planId === "byo_api" ? BYO_API_PLAN : null) || (planId === "lifetime" ? LIFETIME_PLAN : null);
+    const plan = CHARGE_PLANS[planId] || MEMBER_PLANS[planId] || PACK_PLANS[planId] || STORY_PLANS[planId] || (planId === "byo_api" ? BYO_API_PLAN : null) || (planId === "cihuang_full" ? CIHUANG_PLAN : null) || (planId === "lifetime" ? LIFETIME_PLAN : null);
     if (!plan) throw new Error("无效的充值档位");
     // 终身会员按 offer 状态定价(2026-09-12 起两档同值 98)
     let price = plan.price;
@@ -1382,9 +1398,31 @@ async function settlePaidOrder(env, orderNo, tradeNo, amountCents) {
     const packPlan = PACK_PLANS[order.plan_id];
     const storyPlan = STORY_PLANS[order.plan_id];
     const byoPlan = order.plan_id === "byo_api" ? BYO_API_PLAN : null;
+    const cihuangPlan = order.plan_id === CIHUANG_PLAN.id ? CIHUANG_PLAN : null;
 
-    const plan = isLifetime ? LIFETIME_PLAN : (storyPlan || byoPlan || packPlan || memberPlan || CHARGE_PLANS[order.plan_id]);
+    const plan = isLifetime ? LIFETIME_PLAN : (cihuangPlan || storyPlan || byoPlan || packPlan || memberPlan || CHARGE_PLANS[order.plan_id]);
     if (!plan) return "fail";
+
+    // 词谎完整版买断(2026-10-26):发货=unlocks 记录(card_id="cihuang_full"),幂等;与文游会员完全无关
+    if (cihuangPlan) {
+        try {
+            const exF = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(order.user_id)}'&&card_id='${CIHUANG_CARD_ID}'`);
+            const exQ2 = await pbAdminFetch(env, `/api/collections/unlocks/records?perPage=1&skipTotal=true&filter=${exF}`);
+            const exD2 = await exQ2.json().catch(() => ({}));
+            if (!(exD2.items || []).length) {
+                const insRes = await pbAdminFetch(env, `/api/collections/unlocks/records`, {
+                    method: "POST",
+                    body: JSON.stringify({ user_id: order.user_id, card_id: CIHUANG_CARD_ID, created_at: now })
+                });
+                if (!insRes.ok) return "fail";
+            }
+        } catch (e) { return "fail"; }
+        await pbAdminFetch(env, `/api/collections/pay_orders/records/${order.id}`, {
+            method: "PATCH",
+            body: JSON.stringify({ status: "paid", trade_no: tradeNo || "", paid_at: now })
+        });
+        return "success";
+    }
 
     // 自带 API 解锁(2026-10-20):发货=unlocks 记录(card_id="byo_api"),幂等;一次性买断,永久有效
     if (byoPlan) {
@@ -4191,6 +4229,13 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                     event_names: Array.from(CIHUANG_EVENT_NAMES)
                 });
             }
+            // 权益查询：词谎完整版是否已买断（换设备/清缓存后以服务端为准）
+            if (url.pathname === "/api/cihuang/entitlement" && request.method === "GET") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const rec = await cihuangLicense(env, auth.record.id);
+                return cihuangJSON({ ok: true, licensed: !!rec, purchasedAt: rec?.created_at || "" });
+            }
             // 开局：服务端发种子并落库，防止客户端自选随机序列
             if (url.pathname === "/api/cihuang/run/start" && request.method === "POST") {
                 const auth = await authenticate(env, request);
@@ -4204,8 +4249,8 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const difficulty = String(body?.difficulty || "normal");
                 if (!CIHUANG_BANDS.has(band)) return errorResponse("词库非法", 400, null, "INVALID_BAND");
                 if (!CIHUANG_DIFFICULTIES.has(difficulty)) return errorResponse("难度非法", 400, null, "INVALID_DIFFICULTY");
-                if (band !== "hs" && !isMember(auth.record)) {
-                    return errorResponse("该词库仅会员可用", 403, null, "MEMBER_ONLY");
+                if (band !== "hs" && !(await cihuangLicense(env, uid))) {
+                    return errorResponse("该词库需解锁完整版", 403, null, "LICENSE_REQUIRED");
                 }
                 const runId = `run_${cihuangSeed()}`;
                 const seed = cihuangSeed();
@@ -4328,11 +4373,11 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 }
                 return cihuangJSON({ ok: true, opt_in: optIn });
             }
-            // 档案（水晶/装扮）仅会员云存
+            // 档案（水晶/装扮）仅完整版云存
             if (url.pathname === "/api/cihuang/profile" || url.pathname.startsWith("/api/cihuang/profile?")) {
                 const auth = await authenticate(env, request);
                 if (auth.error) return auth.error;
-                if (!isMember(auth.record)) return errorResponse("会员专享", 403, null, "MEMBER_ONLY");
+                if (!(await cihuangLicense(env, auth.record.id))) return errorResponse("需解锁完整版", 403, null, "LICENSE_REQUIRED");
                 const uid = auth.record.id;
                 const existing = await cihuangFindOne(env, "cihuang_profiles",
                     `user_id='${escapePocketBaseFilterValue(uid)}'`);
@@ -4367,11 +4412,11 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 }
                 return errorResponse("方法不允许", 405, null, "METHOD_NOT_ALLOWED");
             }
-            // 生词本仅会员使用；删除为墓碑，便于多端同步
+            // 生词本仅完整版使用；删除为墓碑，便于多端同步
             if (url.pathname === "/api/cihuang/vocab" && request.method === "GET") {
                 const auth = await authenticate(env, request);
                 if (auth.error) return auth.error;
-                if (!isMember(auth.record)) return errorResponse("会员专享", 403, null, "MEMBER_ONLY");
+                if (!(await cihuangLicense(env, auth.record.id))) return errorResponse("需解锁完整版", 403, null, "LICENSE_REQUIRED");
                 const uid = auth.record.id;
                 const band = String(url.searchParams.get("band") || "");
                 const page = Math.max(1, Math.min(1000, Math.trunc(Number(url.searchParams.get("page")) || 1)));
@@ -4394,7 +4439,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
             if (url.pathname === "/api/cihuang/vocab" && request.method === "POST") {
                 const auth = await authenticate(env, request);
                 if (auth.error) return auth.error;
-                if (!isMember(auth.record)) return errorResponse("会员专享", 403, null, "MEMBER_ONLY");
+                if (!(await cihuangLicense(env, auth.record.id))) return errorResponse("需解锁完整版", 403, null, "LICENSE_REQUIRED");
                 const uid = auth.record.id;
                 const body = await request.json().catch(() => ({}));
                 const word = String(body?.w || body?.word || "").trim().slice(0, 64);
@@ -4429,7 +4474,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
             if (url.pathname === "/api/cihuang/vocab" && (request.method === "PATCH" || request.method === "DELETE")) {
                 const auth = await authenticate(env, request);
                 if (auth.error) return auth.error;
-                if (!isMember(auth.record)) return errorResponse("会员专享", 403, null, "MEMBER_ONLY");
+                if (!(await cihuangLicense(env, auth.record.id))) return errorResponse("需解锁完整版", 403, null, "LICENSE_REQUIRED");
                 const uid = auth.record.id;
                 const vid = String(url.searchParams.get("id") || "");
                 if (!vid) return errorResponse("缺少记录 id", 400, null, "INVALID_ID");
@@ -4498,215 +4543,6 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 const accepted = results.filter(Boolean).length;
                 if (!accepted) return errorResponse("遥测写入失败", 502, null, "PB_ERROR");
                 return cihuangJSON({ ok: true, accepted });
-            }
-            // ---- Lexicon Rush 游戏模式：云存档(PB lexicon_saves) / 自定义词库(PB lexicon_vocab_sets) / enrich ----
-            // 云存档：登录即可；词库导入与 enrich：仅会员
-            if (url.pathname === "/api/lexicon/save" && request.method === "GET") {
-                const auth = await authenticate(env, request);
-                if (auth.error) return auth.error;
-                const uid = auth.record.id;
-                const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'`);
-                const q = await pbAdminFetch(env, `/api/collections/lexicon_saves/records?perPage=1&skipTotal=true&filter=${f}`);
-                const d = await q.json().catch(() => ({}));
-                const rec = (d.items || [])[0];
-                return new Response(JSON.stringify({
-                    save: rec ? { profile: rec.profile || null, run: rec.run || null, band: rec.band || "", client_ts: Number(rec.client_ts || 0), updated_at: rec.updated_at || "" } : null
-                }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
-            }
-            if (url.pathname === "/api/lexicon/save" && request.method === "POST") {
-                const auth = await authenticate(env, request);
-                if (auth.error) return auth.error;
-                const uid = auth.record.id;
-                const body = await request.json().catch(() => null);
-                if (!body || typeof body !== "object") return errorResponse("请求体无效", 400, null, "INVALID_BODY");
-                const profile = body.profile && typeof body.profile === "object" ? body.profile : null;
-                const run = body.run && typeof body.run === "object" ? body.run : null;
-                const band = String(body.band || "").slice(0, 60);
-                const clientTs = Math.max(0, Math.min(Date.now() + 86400000, Math.floor(Number(body.client_ts) || 0)));
-                if (JSON.stringify({ profile, run }).length > 512 * 1024) return errorResponse("存档过大", 413, null, "SAVE_TOO_LARGE");
-                const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'`);
-                const q = await pbAdminFetch(env, `/api/collections/lexicon_saves/records?perPage=1&skipTotal=true&filter=${f}`);
-                const d = await q.json().catch(() => ({}));
-                const exist = (d.items || [])[0];
-                const data = { user_id: uid, profile, run, band, client_ts: clientTs };
-                const r = exist
-                    ? await pbAdminFetch(env, `/api/collections/lexicon_saves/records/${exist.id}`, { method: "PATCH", body: JSON.stringify(data) })
-                    : await pbAdminFetch(env, `/api/collections/lexicon_saves/records`, { method: "POST", body: JSON.stringify(data) });
-                const rec = await r.json().catch(() => ({}));
-                if (!rec || !rec.id) return errorResponse("存档写入失败", 500, null, "SAVE_FAILED");
-                return new Response(JSON.stringify({ ok: true, client_ts: clientTs, updated_at: rec.updated_at || "" }), {
-                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
-                });
-            }
-            if (url.pathname === "/api/lexicon/vocab-sets" && request.method === "GET") {
-                const auth = await authenticate(env, request);
-                if (auth.error) return auth.error;
-                const uid = auth.record.id;
-                const id = String(url.searchParams.get("id") || "");
-                if (id) {
-                    const q = await pbAdminFetch(env, `/api/collections/lexicon_vocab_sets/records/${id}`);
-                    const rec = await q.json().catch(() => ({}));
-                    if (!rec || rec.user_id !== uid) return errorResponse("词库不存在", 404, null, "NOT_FOUND");
-                    return new Response(JSON.stringify({
-                        set: { id: rec.id, name: rec.name || "", count: Number(rec.count || 0), items: rec.items || [], updated_at: rec.updated_at || "" }
-                    }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
-                }
-                const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'`);
-                const q = await pbAdminFetch(env, `/api/collections/lexicon_vocab_sets/records?perPage=10&sort=-updated_at&fields=id,name,count,updated_at&filter=${f}`);
-                const d = await q.json().catch(() => ({}));
-                const items = (d.items || []).map((r) => ({ id: r.id, name: r.name || "", count: Number(r.count || 0), updated_at: r.updated_at || "" }));
-                return new Response(JSON.stringify({ items, limit: LEXICON_MAX_SETS }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
-            }
-            if (url.pathname === "/api/lexicon/vocab-sets" && request.method === "POST") {
-                const auth = await authenticate(env, request);
-                if (auth.error) return auth.error;
-                if (!isMember(auth.record)) return errorResponse("自定义词库为会员功能", 403, null, "MEMBER_ONLY");
-                const uid = auth.record.id;
-                const txt = await request.text();
-                if (txt.length > LEXICON_MAX_SET_BYTES + 4096) return errorResponse("词库文件过大（上限 2MB）", 413, null, "SET_TOO_LARGE");
-                let body = null;
-                try { body = JSON.parse(txt); } catch (e) {}
-                if (!body || typeof body !== "object") return errorResponse("请求体无效", 400, null, "INVALID_BODY");
-                const action = body.action === "delete" ? "delete" : "save";
-                if (action === "delete") {
-                    const id = String(body.id || "");
-                    if (!id) return errorResponse("缺少记录 id", 400, null, "INVALID_ID");
-                    const q = await pbAdminFetch(env, `/api/collections/lexicon_vocab_sets/records/${id}`);
-                    const rec = await q.json().catch(() => ({}));
-                    if (!rec || rec.user_id !== uid) return errorResponse("词库不存在", 404, null, "NOT_FOUND");
-                    await pbAdminFetch(env, `/api/collections/lexicon_vocab_sets/records/${id}`, { method: "DELETE" });
-                    return new Response(JSON.stringify({ ok: true, id }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
-                }
-                const name = String(body.name || "").trim().slice(0, 24);
-                if (!name) return errorResponse("词库名称不能为空", 400, null, "INVALID_NAME");
-                const rawItems = Array.isArray(body.items) ? body.items : [];
-                const seen = new Set();
-                const clean = [];
-                const clampNum = (v, lo, hi, dflt) => {
-                    const n = Number(v);
-                    return Number.isFinite(n) ? Math.max(lo, Math.min(hi, Math.floor(n))) : dflt;
-                };
-                const relList = (arr) => (Array.isArray(arr) ? arr : [])
-                    .map((x) => String(x || "").trim().toLowerCase())
-                    .filter((x) => LEXICON_WORD_RE.test(x))
-                    .slice(0, 12);
-                for (const raw of rawItems) {
-                    if (!raw || typeof raw !== "object") continue;
-                    const w = String(raw.w || "").trim().toLowerCase();
-                    if (!LEXICON_WORD_RE.test(w) || LEXICON_STOPWORDS.has(w) || seen.has(w)) continue;
-                    const pos = [];
-                    for (const p of Array.isArray(raw.pos) ? raw.pos : []) {
-                        const k = String(p || "").trim().toLowerCase();
-                        if (LEXICON_POS_SET.has(k) && !pos.includes(k)) pos.push(k);
-                    }
-                    if (!pos.length) continue;
-                    seen.add(w);
-                    clean.push({
-                        w, pos,
-                        ipa: String(raw.ipa || "").slice(0, 40),
-                        syl: clampNum(raw.syl, 1, 20, 1),
-                        affixes: (Array.isArray(raw.affixes) ? raw.affixes : []).map((a) => String(a || "").slice(0, 12)).slice(0, 6),
-                        zh: String(raw.zh || "").slice(0, 200),
-                        def: String(raw.def || raw.en || "").slice(0, 300),
-                        en: String(raw.en || raw.def || "").slice(0, 300),
-                        syn: relList(raw.syn),
-                        ant: relList(raw.ant),
-                        topic: null,
-                        synGroup: raw.synGroup == null ? null : clampNum(raw.synGroup, 0, 999999, 0),
-                        rank: clampNum(raw.rank, 1, 13, 7),
-                        freq: Number.isFinite(Number(raw.freq)) ? Number(raw.freq) : null,
-                        forms: []
-                    });
-                    if (clean.length >= LEXICON_MAX_SET_ITEMS) break;
-                }
-                if (!clean.length) return errorResponse("没有可用的单词（需含有效词性）", 400, null, "EMPTY_SET");
-                if (JSON.stringify(clean).length > LEXICON_MAX_SET_BYTES) return errorResponse("词库序列化后超过 2MB", 413, null, "SET_TOO_LARGE");
-                const f = encodeURIComponent(`user_id='${escapePocketBaseFilterValue(uid)}'`);
-                const id = String(body.id || "");
-                if (id) {
-                    const q = await pbAdminFetch(env, `/api/collections/lexicon_vocab_sets/records/${id}`);
-                    const rec = await q.json().catch(() => ({}));
-                    if (!rec || rec.user_id !== uid) return errorResponse("词库不存在", 404, null, "NOT_FOUND");
-                    const r = await pbAdminFetch(env, `/api/collections/lexicon_vocab_sets/records/${id}`, {
-                        method: "PATCH",
-                        body: JSON.stringify({ name, items: clean, count: clean.length })
-                    });
-                    const out = await r.json().catch(() => ({}));
-                    if (!out || !out.id) return errorResponse("词库保存失败", 500, null, "SET_SAVE_FAILED");
-                    return new Response(JSON.stringify({ ok: true, id: out.id, count: clean.length, updated_at: out.updated_at || "" }), {
-                        headers: { ...corsHeaders(), "Content-Type": "application/json" }
-                    });
-                }
-                const cntQ = await pbAdminFetch(env, `/api/collections/lexicon_vocab_sets/records?perPage=1&fields=id&filter=${f}`);
-                const cntD = await cntQ.json().catch(() => ({}));
-                if (Number(cntD.totalItems || 0) >= LEXICON_MAX_SETS) {
-                    return errorResponse(`最多保存 ${LEXICON_MAX_SETS} 套词库，请先删除旧套装`, 409, null, "SET_LIMIT");
-                }
-                const r = await pbAdminFetch(env, `/api/collections/lexicon_vocab_sets/records`, {
-                    method: "POST",
-                    body: JSON.stringify({ user_id: uid, name, items: clean, count: clean.length })
-                });
-                const out = await r.json().catch(() => ({}));
-                if (!out || !out.id) return errorResponse("词库保存失败", 500, null, "SET_SAVE_FAILED");
-                return new Response(JSON.stringify({ ok: true, id: out.id, count: clean.length, updated_at: out.updated_at || "" }), {
-                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
-                });
-            }
-            if (url.pathname === "/api/lexicon/enrich" && request.method === "POST") {
-                const auth = await authenticate(env, request);
-                if (auth.error) return auth.error;
-                if (!isMember(auth.record)) return errorResponse("自定义词库为会员功能", 403, null, "MEMBER_ONLY");
-                const uid = auth.record.id;
-                const body = await request.json().catch(() => ({}));
-                const words = [];
-                for (const raw of Array.isArray(body.words) ? body.words : []) {
-                    const w = String(raw || "").trim().toLowerCase();
-                    if (LEXICON_WORD_RE.test(w) && !LEXICON_STOPWORDS.has(w) && !words.includes(w)) words.push(w);
-                    if (words.length >= LEXICON_ENRICH_BATCH) break;
-                }
-                if (!words.length) return errorResponse("缺少有效单词", 400, null, "INVALID_WORDS");
-                const kv = env.COVER_CACHE;
-                const day = getTodayStr();
-                const quotaKey = `lexicon:eq:${uid}:${day}`;
-                const items = [];
-                const todo = [];
-                for (const w of words) {
-                    let hit = null;
-                    if (kv) {
-                        try { hit = await kv.get(`lexicon:e:${w}`); } catch (e) {}
-                    }
-                    if (hit) {
-                        try { items.push(JSON.parse(hit)); continue; } catch (e) {}
-                    }
-                    todo.push(w);
-                }
-                const used = kv ? Number((await kv.get(quotaKey).catch(() => 0)) || 0) : 0;
-                const remaining = Math.max(0, LEXICON_ENRICH_DAILY - used);
-                if (todo.length && remaining <= 0) {
-                    return new Response(JSON.stringify({ items, failed: todo, remaining: 0, code: "QUOTA_EXCEEDED", batch_limit: LEXICON_ENRICH_BATCH }), {
-                        status: 429,
-                        headers: { ...corsHeaders(), "Content-Type": "application/json" }
-                    });
-                }
-                const runWords = todo.slice(0, remaining);
-                const failed = todo.slice(remaining);
-                let newCount = 0;
-                for (let i = 0; i < runWords.length; i += 5) {
-                    const chunk = runWords.slice(i, i + 5);
-                    const got = await Promise.all(chunk.map((w) => enrichLexiconWord(env, w)));
-                    got.forEach((entry, k) => {
-                        if (!entry) { failed.push(chunk[k]); return; }
-                        items.push(entry);
-                        newCount += 1;
-                        if (kv) kv.put(`lexicon:e:${chunk[k]}`, JSON.stringify(entry), { expirationTtl: 30 * 86400 }).catch(() => {});
-                    });
-                }
-                if (kv && newCount > 0) {
-                    await kv.put(quotaKey, String(used + newCount), { expirationTtl: 48 * 3600 }).catch(() => {});
-                }
-                return new Response(JSON.stringify({
-                    items, failed, remaining: Math.max(0, remaining - newCount), batch_limit: LEXICON_ENRICH_BATCH
-                }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
             // ---- 排行榜:学习时长上报(PUT /api/lang/study)----
             // 客户端每 ~60s 上报累计秒;单次 ≤600s;同一北京自然日 cap 14400s(4h)防挂机刷榜
@@ -5297,7 +5133,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 // 支付宝入口已下线(2026-10-25):只接受微信,避免旧客户端创建永远付不掉的 pending 单
                 const payType = String(body.payType || "wxpay");
                 if (payType !== "wxpay") return errorResponse("当前仅支持微信支付", 400, null, "PAY_TYPE_UNSUPPORTED");
-                if (!CHARGE_PLANS[planId] && !MEMBER_PLANS[planId] && !PACK_PLANS[planId] && !STORY_PLANS[planId] && planId !== "byo_api" && planId !== "lifetime") return errorResponse("无效的充值档位", 400, null, "INVALID_PLAN");
+                if (!CHARGE_PLANS[planId] && !MEMBER_PLANS[planId] && !PACK_PLANS[planId] && !STORY_PLANS[planId] && planId !== "byo_api" && planId !== "cihuang_full" && planId !== "lifetime") return errorResponse("无效的充值档位", 400, null, "INVALID_PLAN");
                 const ua = request.headers.get("user-agent") || "";
                 const isMobile = /Android|iPhone|iPad|iPod|Mobile|Windows Phone/i.test(ua);
                 try {

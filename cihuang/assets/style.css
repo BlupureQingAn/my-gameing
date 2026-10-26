@@ -666,3 +666,89 @@ a { color: var(--amber); }
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
+
+/* ---- 2026-10-26 体验改版：买断页 / 左轮演出 / 装扮预览 / 音量滑块 ---- */
+.purchase-hero { text-align: center; padding: 6px 0 14px; border-bottom: 1px dashed var(--line); margin-bottom: 14px; }
+.purchase-kicker { font-size: 10px; letter-spacing: 0.3em; color: var(--dim); }
+.purchase-title { font-size: 26px; letter-spacing: 0.14em; margin: 8px 0 6px; color: var(--amber); }
+.purchase-price { display: flex; align-items: baseline; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.purchase-price .price-now { font-size: 34px; color: var(--text); }
+.purchase-price .price-old { font-size: 11px; color: var(--dim); }
+.purchase-note { margin-top: 10px; font-size: 10px; color: var(--dim); line-height: 1.7; }
+.purchase-grid { display: grid; grid-template-columns: 1fr 1.25fr; gap: 10px; }
+.purchase-col { border: 1px solid var(--line); border-radius: 6px; padding: 12px; background: rgba(9, 15, 12, 0.6); }
+.purchase-col.full { border-color: var(--amber-deep); background: rgba(226, 196, 119, 0.06); }
+.purchase-col h4 { margin: 0 0 8px; font-size: 12px; font-weight: normal; letter-spacing: 0.16em; color: var(--dim); }
+.purchase-col.full h4 { color: var(--amber); }
+.purchase-col ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; font-size: 11px; }
+.purchase-col li::before { content: "· "; color: var(--dim); }
+.purchase-col li.yes::before { content: "✓ "; color: var(--green); }
+.purchase-col li.no { color: var(--dim); }
+.purchase-col li.no::before { content: "× "; color: var(--red); }
+.purchase-check { display: flex; align-items: center; gap: 7px; margin-top: 10px; font-size: 10px; color: var(--dim); }
+.purchase-login { margin-top: 10px; font-size: 11px; color: var(--dim); }
+.purchase-status { margin-top: 12px; text-align: center; font-size: 11px; color: var(--dim); line-height: 1.8; min-height: 18px; }
+.purchase-status.bad { color: var(--red); }
+.purchase-qr { display: flex; justify-content: center; margin-bottom: 8px; }
+.purchase-qr img { width: 180px; height: 180px; border-radius: 6px; background: #fff; padding: 6px; }
+.purchase-licensed { text-align: center; font-size: 12px; color: var(--dim); }
+
+.gun-stage {
+  position: relative;
+  width: min(320px, 100%);
+  margin: 4px auto 10px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: radial-gradient(circle at 50% 50%, #191210, #0a0807);
+}
+.gun-stage .gun-canvas { display: block; width: 100%; height: auto; }
+.roulette-phase { min-height: 17px; font-size: 11px; letter-spacing: 0.28em; color: var(--dim); margin-bottom: 6px; }
+
+.cosmetic-hint { margin-left: 8px; font-size: 9px; color: var(--dim); letter-spacing: 0.08em; }
+.cosmetic-preview {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #140f0d;
+  overflow: hidden;
+  aspect-ratio: 280 / 160;
+}
+.cosmetic-preview img,
+.cosmetic-preview canvas { display: block; width: 100%; height: 100%; object-fit: contain; }
+.cosmetic-preview.live { cursor: pointer; }
+.cosmetic-preview.live::after {
+  content: "点击试转";
+  position: absolute;
+  right: 6px;
+  bottom: 5px;
+  font-size: 9px;
+  color: rgba(226, 196, 119, 0.75);
+  background: rgba(8, 6, 5, 0.65);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+.cosmetic-preview.mask img { animation: maskPulse 3.2s ease-in-out infinite; }
+@keyframes maskPulse {
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(226, 196, 119, 0)); }
+  50% { filter: drop-shadow(0 0 6px rgba(226, 196, 119, 0.35)); }
+}
+.cosmetic-name { display: flex; align-items: center; }
+.cosmetic-tier {
+  margin-left: 6px;
+  font-size: 9px;
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  color: var(--dim);
+}
+.cosmetic-item.equipped .cosmetic-tier { border-color: var(--amber-deep); color: var(--amber); }
+
+.volume-row { display: inline-flex; align-items: center; gap: 8px; }
+.volume-row input[type="range"] { width: 140px; accent-color: var(--amber); }
+.volume-row b { min-width: 22px; text-align: right; font-weight: normal; color: var(--amber); font-size: 11px; }
+
+@media (max-width: 560px) {
+  .purchase-grid { grid-template-columns: 1fr; }
+  .volume-row input[type="range"] { width: 96px; }
+}
