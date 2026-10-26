@@ -117,6 +117,8 @@ export class TableView {
     this.W = this.layout.W;
     this.H = this.layout.H;
     this.resizeHandler = null;
+    this.recovering = false;
+    this.contextTimer = null;
   }
 
   async init() {
@@ -151,6 +153,44 @@ export class TableView {
     this.buildBackground();
     this.buildTable();
     this.bindResize();
+    this.bindContextRecovery();
+  }
+
+  // 手机上 WebGL 上下文可能被浏览器回收（画面全黑）。监听丢失事件并重建渲染器。
+  bindContextRecovery() {
+    const canvas = this.app?.canvas;
+    if (!canvas) return;
+    canvas.addEventListener("webglcontextlost", (event) => {
+      event.preventDefault();
+      clearTimeout(this.contextTimer);
+      this.contextTimer = setTimeout(() => this.recoverRenderer(), 1500);
+    });
+    canvas.addEventListener("webglcontextrestored", () => {
+      clearTimeout(this.contextTimer);
+      this.recoverRenderer();
+    });
+  }
+
+  async recoverRenderer() {
+    if (this.recovering || !this.app) return;
+    this.recovering = true;
+    try {
+      const view = this.view;
+      try {
+        this.app.destroy(true, { children: true, texture: false });
+      } catch (error) {}
+      this.app = null;
+      this.root = null;
+      this.layers = {};
+      this.handCards = [];
+      this.textures = {};
+      await this.init();
+      if (view) this.render(view);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      this.recovering = false;
+    }
   }
 
   bindResize() {
@@ -959,6 +999,7 @@ export class TableView {
       window.removeEventListener("orientationchange", this.resizeHandler);
       this.resizeHandler = null;
     }
+    clearTimeout(this.contextTimer);
     if (this.app) {
       this.app.destroy(true, { children: true, texture: false });
       this.app = null;

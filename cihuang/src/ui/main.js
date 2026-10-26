@@ -1,4 +1,4 @@
-import { Application, Container, Graphics, Rectangle } from "pixi.js";
+import { Application, Container, Graphics } from "pixi.js";
 import { gsap } from "gsap";
 import { GameSession } from "../game/session.js";
 import { TableView } from "./table.js";
@@ -166,7 +166,50 @@ function hideLoading() {
 }
 
 function hideActionBar() {
+  clearTurnTimer();
   $("action-bar").classList.remove("show");
+}
+
+const TURN_LIMIT = 15;
+let turnTimer = null;
+
+function clearTurnTimer() {
+  if (turnTimer) {
+    clearInterval(turnTimer);
+    turnTimer = null;
+  }
+  $("turn-timer")?.classList.add("hidden");
+}
+
+function startTurnTimer() {
+  clearTurnTimer();
+  const wrap = $("turn-timer");
+  const fill = $("turn-fill");
+  const count = $("turn-count");
+  if (!wrap || !fill || !count) return;
+  wrap.classList.remove("hidden", "urgent");
+  const started = performance.now();
+  fill.style.width = "100%";
+  count.textContent = `${TURN_LIMIT}s`;
+  turnTimer = setInterval(() => {
+    const left = Math.max(0, TURN_LIMIT - (performance.now() - started) / 1000);
+    fill.style.width = `${(left / TURN_LIMIT) * 100}%`;
+    count.textContent = `${Math.ceil(left)}s`;
+    wrap.classList.toggle("urgent", left <= 5);
+    if (left <= 0) {
+      clearTurnTimer();
+      autoPlayOnTimeout();
+    }
+  }, 100);
+}
+
+function autoPlayOnTimeout() {
+  if (!state.session || !state.session.humanTurn()) return;
+  const cards = state.session.humanCards();
+  if (!cards.length) return;
+  const card = cards[Math.floor(Math.random() * cards.length)];
+  toast("出牌超时，自动打出一张", 1600);
+  humanPlay([card.id]);
 }
 
 /* ---------------- 菜单 ---------------- */
@@ -462,6 +505,7 @@ function enableHuman(view) {
   $("action-bar").classList.add("show");
   updateActionHint();
   toggleHelpSound();
+  startTurnTimer();
 }
 
 function toggleHelpSound() {
@@ -1250,20 +1294,23 @@ function showLeaderboard() {
 
 const PREVIEW_CACHE = new Map();
 let previewApp = null;
+let previewReady = null;
 
 async function ensurePreviewApp() {
-  if (previewApp) return previewApp;
-  previewApp = new Application();
-  await previewApp.init({
-    width: 280,
-    height: 160,
-    backgroundAlpha: 0,
-    antialias: true,
-    autoDensity: true,
-    resolution: Math.min(2, window.devicePixelRatio || 1),
-    preference: "webgl",
-  });
-  return previewApp;
+  if (!previewReady) {
+    const app = new Application();
+    previewApp = app;
+    previewReady = app.init({
+      width: 280,
+      height: 160,
+      backgroundAlpha: 0,
+      antialias: true,
+      autoDensity: true,
+      resolution: Math.min(2, window.devicePixelRatio || 1),
+      preference: "webgl",
+    }).then(() => app);
+  }
+  return previewReady;
 }
 
 async function previewFor(kind, item) {
@@ -1316,47 +1363,97 @@ async function previewFor(kind, item) {
   return url;
 }
 
-async function mountGunPreview(host, item) {
-  const width = 264;
-  const height = 116;
-  host.querySelector("img")?.remove();
-  const app = new Application();
-  await app.init({
-    width,
-    height,
-    backgroundAlpha: 0,
-    antialias: true,
-    autoDensity: true,
-    resolution: Math.min(2, window.devicePixelRatio || 1),
-    preference: "webgl",
-  });
-  app.canvas.className = "gun-canvas preview";
-  host.appendChild(app.canvas);
-  const scene = new Container();
-  scene.position.set(118, 50);
-  app.stage.addChild(scene);
-  const gun = buildRevolver(item, 0.68);
-  scene.addChild(gun.container);
-  gun.cylinder.rotation = Math.PI / 6;
-  app.__previewGun = gun;
-  let spinning = false;
-  app.stage.eventMode = "static";
-  app.stage.hitArea = new Rectangle(0, 0, width, height);
-  app.stage.cursor = "pointer";
-  app.stage.on("pointertap", () => {
-    if (spinning) return;
-    spinning = true;
-    sfx.spin();
-    gsap.to(gun.cylinder, {
-      rotation: gun.cylinder.rotation + Math.PI * 4,
-      duration: 1.2,
-      ease: "power3.out",
-      onComplete: () => {
-        spinning = false;
-      },
+// 装扮页只允许一个实时 WebGL 画布，在卡片之间移动复用；关闭时销毁。
+let liveGunApp = null;
+let liveGunHost = null;
+let liveGunReady = null;
+let liveGunCylinder = null;
+
+function stopLiveGunSpin() {
+  if (!liveGunCylinder) return;
+  try { gsap.killTweensOf(liveGunCylinder); } catch (error) {}
+  liveGunCylinder = null;
+}
+
+async function ensureLiveGunApp() {
+  if (!liveGunReady) {
+    const app = new Application();
+    liveGunApp = app;
+    liveGunReady = app.init({
+      width: 280,
+      height: 160,
+      backgroundAlpha: 0,
+      antialias: true,
+      autoDensity: true,
+      resolution: Math.min(2, window.devicePixelRatio || 1),
+      preference: "webgl",
+    }).then(() => {
+      app.canvas.className = "gun-canvas";
+      app.canvas.addEventListener("webglcontextlost", (event) => event.preventDefault());
+      return app;
     });
+  }
+  return liveGunReady;
+}
+
+function releaseLiveGunApp() {
+  stopLiveGunSpin();
+  if (liveGunHost) {
+    const img = liveGunHost.querySelector("img");
+    if (img) img.style.visibility = "";
+    liveGunHost = null;
+  }
+  const app = liveGunApp;
+  liveGunApp = null;
+  liveGunReady = null;
+  if (!app) return;
+  try {
+    for (const child of app.stage.removeChildren()) child.destroy({ children: true });
+    app.destroy(true, { children: true, texture: false });
+  } catch (error) {}
+}
+
+async function showGunPreview(host, item) {
+  if (!item) return;
+  const app = await ensureLiveGunApp();
+  if (!host.isConnected) return;
+  if (liveGunHost && liveGunHost !== host) {
+    const prevImg = liveGunHost.querySelector("img");
+    if (prevImg) prevImg.style.visibility = "";
+  }
+  stopLiveGunSpin();
+  for (const child of app.stage.removeChildren()) child.destroy({ children: true });
+  const rect = host.getBoundingClientRect();
+  const width = Math.max(160, Math.round(rect.width || 280));
+  const height = Math.max(90, Math.round(rect.height || 160));
+  app.renderer.resize(width, height);
+  const gun = buildRevolver(item, Math.min(1.05, width / 340));
+  gun.container.position.set(width / 2, height * 0.55);
+  gun.cylinder.rotation = Math.PI / 6;
+  app.stage.addChild(gun.container);
+  app.canvas.style.width = "100%";
+  app.canvas.style.height = "100%";
+  host.appendChild(app.canvas);
+  const img = host.querySelector("img");
+  if (img) img.style.visibility = "hidden";
+  liveGunHost = host;
+  liveGunCylinder = gun.cylinder;
+  sfx.spin();
+  gsap.to(gun.cylinder, {
+    rotation: gun.cylinder.rotation + Math.PI * 4,
+    duration: state.profile.settings.reducedMotion ? 0.3 : 1.2,
+    ease: "power3.out",
   });
-  return app;
+}
+
+function releasePreviewApp() {
+  const app = previewApp;
+  previewApp = null;
+  previewReady = null;
+  if (!app) return;
+  try {
+    app.destroy(true, { children: true, texture: false });
+  } catch (error) {}
 }
 
 async function showCosmetics() {
@@ -1369,7 +1466,7 @@ async function showCosmetics() {
   } catch (error) {
     console.error(error);
   }
-  const liveApps = [];
+  releasePreviewApp();
   const render = () => {
     const groups = Object.entries(COSMETICS).map(([key, group]) => {
       const items = group.items.map((item, index) => {
@@ -1400,27 +1497,14 @@ async function showCosmetics() {
       body: groups,
       wide: true,
       onClose: () => {
-        liveApps.forEach((app) => {
-          try {
-            if (app.__previewGun) gsap.killTweensOf(app.__previewGun.cylinder);
-            app.destroy(true, { children: true, texture: false });
-          } catch (error) {}
-        });
-        liveApps.length = 0;
+        releaseLiveGunApp();
+        releasePreviewApp();
       },
     });
-    modal.card.querySelectorAll("[data-live-gun]").forEach(async (node) => {
-      try {
-        const app = await mountGunPreview(node, COSMETIC_INDEX[node.dataset.liveGun]);
-        if (!node.isConnected) {
-          gsap.killTweensOf(app.__previewGun?.cylinder);
-          app.destroy(true, { children: true, texture: false });
-          return;
-        }
-        liveApps.push(app);
-      } catch (error) {
-        console.error(error);
-      }
+    modal.card.querySelectorAll("[data-live-gun]").forEach((node) => {
+      node.addEventListener("click", () => {
+        showGunPreview(node, COSMETIC_INDEX[node.dataset.liveGun]).catch((error) => console.error(error));
+      });
     });
     modal.card.querySelectorAll("[data-buy]").forEach((button) => {
       button.addEventListener("click", () => {

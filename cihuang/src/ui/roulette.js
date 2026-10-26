@@ -10,6 +10,34 @@ const W = 320;
 const H = 200;
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// 全局复用一个 WebGL 渲染器：每局新建/销毁 Application 会在手机上累积 WebGL
+// 上下文，超过浏览器上限时牌桌画布会被顶掉而黑屏。
+let sharedApp = null;
+let sharedReady = null;
+
+async function acquireApp() {
+  if (!sharedReady) {
+    const app = new Application();
+    sharedApp = app;
+    sharedReady = app.init({
+      width: W,
+      height: H,
+      backgroundAlpha: 0,
+      antialias: true,
+      autoDensity: true,
+      resolution: Math.min(2, window.devicePixelRatio || 1),
+      preference: "webgl",
+    }).then(() => {
+      app.canvas.className = "gun-canvas";
+      app.canvas.addEventListener("webglcontextlost", (event) => event.preventDefault());
+      return app;
+    });
+  }
+  const app = await sharedReady;
+  app.start();
+  return app;
+}
+
 function buildFlash() {
   const flash = new Graphics();
   flash.circle(0, 0, 13).fill({ color: 0xfff4cf });
@@ -29,18 +57,24 @@ function buildFlash() {
 export async function runRoulette({ host, item, outcome, reducedMotion, onStage = () => {} }) {
   const rm = !!reducedMotion;
   const dur = (v) => (rm ? Math.max(0.02, v * 0.17) : v);
+  // 每个补间都登记，收尾时逐个 kill()。用 killTweensOf([多个目标]) 时，
+  // 尚未初始化过的补间只会被摘掉属性、不会移出时间线；留在时间线里的补间
+  // 随后去读写已销毁的 Pixi 对象会每帧抛错，卡死之后所有 GSAP 动画。
+  const tweens = [];
+  const play = (target, vars) => {
+    const tween = gsap.to(target, vars);
+    tweens.push(tween);
+    return tween;
+  };
+  const playFrom = (target, fromVars, toVars) => {
+    const tween = gsap.fromTo(target, fromVars, toVars);
+    tweens.push(tween);
+    return tween;
+  };
 
-  const app = new Application();
-  await app.init({
-    width: W,
-    height: H,
-    backgroundAlpha: 0,
-    antialias: true,
-    autoDensity: true,
-    resolution: Math.min(2, window.devicePixelRatio || 1),
-    preference: "webgl",
-  });
-  app.canvas.className = "gun-canvas";
+  const app = await acquireApp();
+  for (const child of app.stage.removeChildren()) child.destroy({ children: true });
+  host.querySelectorAll("canvas").forEach((canvas) => canvas.remove());
   host.appendChild(app.canvas);
 
   const root = new Container();
@@ -71,16 +105,19 @@ export async function runRoulette({ host, item, outcome, reducedMotion, onStage 
   root.addChild(shade);
 
   const cleanup = () => {
-    gsap.killTweensOf([scene, scene.scale, vignette, gun.cylinder, flash, flash.scale, shade, root, ...gun.chambers.map((c) => c.glow)]);
+    for (const tween of tweens.splice(0)) {
+      try { tween.kill(); } catch (e) {}
+    }
     try {
-      app.destroy(true, { children: true, texture: false });
+      for (const child of app.stage.removeChildren()) child.destroy({ children: true });
+      app.stop();
     } catch (e) {}
   };
 
   try {
     // 1. 弹巢推近特写 + 呼吸暗角
     onStage("approach");
-    gsap.to(vignette, {
+    play(vignette, {
       alpha: 0.88,
       duration: dur(0.8),
       ease: "sine.inOut",
@@ -88,7 +125,13 @@ export async function runRoulette({ host, item, outcome, reducedMotion, onStage 
       repeat: rm ? 0 : 1,
     });
     await new Promise((resolve) => {
-      gsap.to(scene.scale, { x: 1.04, y: 1.04, duration: dur(0.8), ease: "power2.out", onComplete: resolve });
+      play(scene.scale, {
+        x: 1.04,
+        y: 1.04,
+        duration: dur(0.8),
+        ease: "power2.out",
+        onComplete: resolve,
+      });
     });
 
     // 2. 装填：六格依次亮起
@@ -96,11 +139,11 @@ export async function runRoulette({ host, item, outcome, reducedMotion, onStage 
     for (let i = 0; i < gun.chambers.length; i += 1) {
       const chamber = gun.chambers[i];
       sfx.tick();
-      gsap.to(chamber.glow, {
+      play(chamber.glow, {
         alpha: 0.55,
         duration: dur(0.14),
         ease: "power2.out",
-        onComplete: () => gsap.to(chamber.glow, { alpha: 0.16, duration: dur(0.5) }),
+        onComplete: () => play(chamber.glow, { alpha: 0.16, duration: dur(0.5) }),
       });
       await wait(dur(0.18));
     }
@@ -113,7 +156,7 @@ export async function runRoulette({ host, item, outcome, reducedMotion, onStage 
     const stopAngle = Math.PI / 2 - (chamberIndex * Math.PI) / 3;
     gsap.set(gun.cylinder, { rotation: Math.PI * 2 });
     await new Promise((resolve) => {
-      gsap.to(gun.cylinder, {
+      play(gun.cylinder, {
         rotation: Math.PI * 2 * 4 + stopAngle,
         duration: dur(1.8),
         ease: "power3.out",
@@ -121,14 +164,14 @@ export async function runRoulette({ host, item, outcome, reducedMotion, onStage 
       });
     });
     for (let i = 0; i < 6; i += 1) {
-      gsap.to(gun.chambers[i].glow, { alpha: 0.05, duration: dur(0.3) });
+      play(gun.chambers[i].glow, { alpha: 0.05, duration: dur(0.3) });
     }
 
     // 4. 静默：心跳与手指抖动
     onStage("silence");
     if (!rm) {
-      gsap.to(scene, { y: 104, duration: 0.34, ease: "sine.inOut", yoyo: true, repeat: 2 });
-      gsap.to(vignette, { alpha: 0.7, duration: 0.4, ease: "sine.inOut", yoyo: true, repeat: 2 });
+      play(scene, { y: 104, duration: 0.34, ease: "sine.inOut", yoyo: true, repeat: 2 });
+      play(vignette, { alpha: 0.7, duration: 0.4, ease: "sine.inOut", yoyo: true, repeat: 2 });
     }
     await wait(dur(1.0));
 
@@ -139,17 +182,17 @@ export async function runRoulette({ host, item, outcome, reducedMotion, onStage 
       flash.alpha = 1;
       flash.rotation = Math.random() * Math.PI;
       flash.scale.set(0.4);
-      gsap.to(flash, { scale: 1.25, alpha: 0, duration: dur(0.45), ease: "power2.out" });
+      play(flash, { scale: 1.25, alpha: 0, duration: dur(0.45), ease: "power2.out" });
       shade.alpha = 0.65;
-      gsap.to(shade, { alpha: 0, duration: dur(0.35) });
+      play(shade, { alpha: 0, duration: dur(0.35) });
       if (!rm) {
-        gsap.fromTo(root, { x: -9, y: 4 }, { x: 0, y: 0, duration: 0.42, ease: "elastic.out(1.1, 0.28)" });
-        gsap.to(scene, { x: 90, duration: 0.08, yoyo: true, repeat: 1 });
+        playFrom(root, { x: -9, y: 4 }, { x: 0, y: 0, duration: 0.42, ease: "elastic.out(1.1, 0.28)" });
+        play(scene, { x: 90, duration: 0.08, yoyo: true, repeat: 1 });
       }
     } else {
       sfx.dry();
-      gsap.fromTo(scene, { x: 84 }, { x: 82, duration: dur(0.07), yoyo: true, repeat: 2 });
-      gsap.to(gun.cylinder, { rotation: `+=${0.18}`, duration: dur(0.2), ease: "power1.out" });
+      playFrom(scene, { x: 84 }, { x: 82, duration: dur(0.07), yoyo: true, repeat: 2 });
+      play(gun.cylinder, { rotation: `+=${0.18}`, duration: dur(0.2), ease: "power1.out" });
       vignette.alpha = 0.95;
     }
     await wait(dur(0.6));
