@@ -42,3 +42,9 @@ test("reset follows the same email, code and password rules", () => {
   assert.equal(validateAuthValues("reset", { ...base, code: "" }).ok, false);
   assert.equal(validateAuthValues("reset", { ...base, passwordConfirm: "other" }).ok, false);
 });
+
+test("auth screen header tabs are wired to mode switching", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const source = await readFile(new URL("../src/ui/main.js", import.meta.url), "utf8");
+  assert.match(source, /querySelectorAll\("\.auth-tab"\)[\s\S]{0,240}?addEventListener\("click"/);
+});

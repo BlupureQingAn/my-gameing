@@ -491,6 +491,12 @@ function showAuthScreen(mode = "login") {
     sfx.click();
     closeAuthScreen();
   });
+  root.querySelectorAll(".auth-tab").forEach((button) => {
+    button.addEventListener("click", () => {
+      sfx.click();
+      setAuthMode(button.dataset.authMode);
+    });
+  });
   root.addEventListener("click", (event) => {
     if (!event.target.closest(".auth-frame")) closeAuthScreen();
   });
