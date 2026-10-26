@@ -2,6 +2,7 @@ import { Application, Container, Graphics } from "pixi.js";
 import { gsap } from "gsap";
 import { GameSession, canHumanChallenge } from "../game/session.js";
 import { LOOKUP_COST, MAX_REVIEW_WORDS } from "../core/constants.js";
+import { matchedSenseIndices, splitSenses } from "../core/senses.js";
 import { mergeReviewWords } from "../core/vocab.js";
 import { TableView } from "./table.js";
 import { sfx, setSound, setMusic, setAmbient, setVolume, unlock, isAudioUnlocked } from "./audio.js";
@@ -1293,10 +1294,15 @@ function showReveal(outcome) {
   return new Promise((resolve) => {
     const view = state.session.view();
     const pending = view.pendingChallenge;
+    const topic = view.topic;
     const humanRows = outcome.results[0]?.rows || [];
     const targetName = NAMES[pending?.targetId ?? 0];
     const challengerName = NAMES[pending?.challengerId ?? 0];
-    const rows = outcome.cards.map((card) => {
+    const reduced = state.profile.settings.reducedMotion;
+    const flipMs = reduced ? 0 : 1100;
+    const stagger = reduced ? 0 : 380;
+    const prompt = topic?.prompt || topic?.targetZh || "";
+    const cardsHtml = outcome.cards.map((card) => {
       const row = humanRows.find((entry) => entry.cardId === card.id);
       let verdict = "";
       if (row) {
@@ -1308,10 +1314,29 @@ function showReveal(outcome) {
         : card.truth
           ? '<span class="reveal-verdict good">合规</span>'
           : '<span class="reveal-verdict bad">不合规</span>';
-      return `<div class="reveal-row ${card.joker || card.truth ? "truth" : "lie"}">
-        <div><div class="reveal-word" data-speak="${esc(card.w)}" title="点击朗读">${esc(card.w)}</div>
-        <div class="reveal-gloss">${esc(card.zh || card.def || "")}</div></div>
-        <div style="text-align:right">${truthTag}${verdict ? `<div style="margin-top:4px">${verdict}</div>` : ""}</div>
+      const hot = card.joker ? [] : matchedSenseIndices(topic, card.w);
+      const sensesHtml = card.joker
+        ? '<span class="reveal-sense hot">无论本轮主题为何，万能牌始终视为合规</span>'
+        : splitSenses(card.zh || "")
+          .map((sense, index) => `<span class="reveal-sense${hot.includes(index) ? " hot" : ""}">${esc(sense)}</span>`)
+          .join("");
+      const note = !card.joker && card.truth && !hot.length && card.zh
+        ? '<div class="reveal-note">释义中没有直接对应义项，按近义关系判定合规</div>'
+        : "";
+      const headWord = card.joker ? "万能牌" : card.w;
+      return `<div class="reveal-flip ${card.joker || card.truth ? "truth" : "lie"}">
+        <div class="reveal-flip-inner">
+          <div class="reveal-face reveal-back"><span class="reveal-back-mark">词谎</span></div>
+          <div class="reveal-face reveal-front">
+            <div class="reveal-head">
+              <span class="reveal-word"${card.joker ? "" : ` data-speak="${esc(card.w)}" title="点击朗读"`}>${esc(headWord)}</span>
+              <span class="reveal-ipa">${esc(card.ipa || "")}</span>
+            </div>
+            <div class="reveal-senses">${sensesHtml}</div>
+            ${note}
+            <div class="reveal-foot">${truthTag}${verdict}</div>
+          </div>
+        </div>
       </div>`;
     }).join("");
     const summary = outcome.isLie
@@ -1320,12 +1345,33 @@ function showReveal(outcome) {
     const modal = openModal({
       title: "翻开牌面",
       sub: summary,
-      body: rows,
       wide: true,
       closable: false,
-      actions: '<button class="btn btn-primary" id="reveal-next">继续</button>',
+      body: `
+        <div class="reveal-topic">
+          <span class="answer-topic-label">本轮主题</span>
+          <strong class="reveal-topic-text">${esc(prompt)}</strong>
+        </div>
+        <p class="modal-sub">翻开后显示词条释义，琥珀色义项对应本轮主题。</p>
+        <div class="reveal-stage${reduced ? " instant" : ""}">${cardsHtml}</div>`,
+      actions: '<button class="btn btn-primary" id="reveal-next" disabled>翻开中…</button>',
     });
     bindSpeak(modal.card);
+    const flips = Array.from(modal.card.querySelectorAll(".reveal-flip"));
+    const button = modal.card.querySelector("#reveal-next");
+    flips.forEach((node, index) => {
+      setTimeout(() => {
+        if (!node.isConnected) return;
+        node.classList.add("flipped");
+        if (!reduced || index === 0) sfx.card();
+      }, reduced ? 0 : 140 + index * stagger);
+    });
+    const readyMs = reduced ? 80 : 140 + flipMs + stagger * Math.max(0, flips.length - 1) + 140;
+    setTimeout(() => {
+      if (!button.isConnected) return;
+      button.disabled = false;
+      button.textContent = "继续";
+    }, readyMs);
     let done = false;
     const next = () => {
       if (done) return;
@@ -1333,7 +1379,7 @@ function showReveal(outcome) {
       modal.close();
       resolve();
     };
-    modal.card.querySelector("#reveal-next").addEventListener("click", next);
+    button.addEventListener("click", next);
     setTimeout(next, 20000);
   });
 }

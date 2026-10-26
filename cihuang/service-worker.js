@@ -2,12 +2,12 @@
  * 只缓存静态外壳与词包；/api/ 永不缓存，排行榜与校验始终走网络。
  */
 
-const VERSION = "cihuang-v1-20261026l";
+const VERSION = "cihuang-v1-20261026m";
 const SHELL = [
   "./",
   "./index.html",
-  "./assets/style.css?v=20261026l",
-  "./assets/game.js?v=20261026l",
+  "./assets/style.css?v=20261026m",
+  "./assets/game.js?v=20261026m",
   "./assets/art/tavern.webp",
   "./assets/art/mask1.webp",
   "./assets/art/mask2.webp",

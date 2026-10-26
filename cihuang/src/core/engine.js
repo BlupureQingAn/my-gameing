@@ -504,6 +504,7 @@ export function publicState(state) {
         prompt: state.topic.prompt,
         promptTokens: state.topic.promptTokens || [],
         level: state.topic.level,
+        senseMatch: state.topic.senseMatch || {},
         k: K,
       }
       : null,
