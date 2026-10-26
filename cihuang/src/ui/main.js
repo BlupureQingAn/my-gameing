@@ -1,6 +1,8 @@
 import { Application, Container, Graphics } from "pixi.js";
 import { gsap } from "gsap";
 import { GameSession, canHumanChallenge } from "../game/session.js";
+import { LOOKUP_COST, MAX_REVIEW_WORDS } from "../core/constants.js";
+import { mergeReviewWords } from "../core/vocab.js";
 import { TableView } from "./table.js";
 import { sfx, setSound, setMusic, setAmbient, setVolume, unlock, isAudioUnlocked } from "./audio.js";
 import { runRoulette } from "./roulette.js";
@@ -12,7 +14,9 @@ import {
   defaultProfile,
   deleteWord,
   dueReviewWords,
+  findVocabEntry,
   loadProfile,
+  manualReviewWords,
   loadStats,
   loadVocab,
   markAnswer,
@@ -90,6 +94,8 @@ const state = {
   dataCache: new Map(),
   toastTimer: null,
   shake: null,
+  manualReview: [],
+  longPressHintShown: false,
 };
 
 /* ---------------- 基础 UI ---------------- */
@@ -149,6 +155,99 @@ function openModal({ title = "", sub = "", body = "", actions = "", wide = false
   return { root, card: root.querySelector(".modal-card"), close };
 }
 
+let lookupOpen = false;
+let lookupWaiters = [];
+let activeLookupModal = null;
+
+function waitLookupClosed() {
+  if (!lookupOpen) return Promise.resolve();
+  return new Promise((resolve) => lookupWaiters.push(resolve));
+}
+
+function releaseLookup() {
+  activeLookupModal = null;
+  if (!lookupOpen) return;
+  lookupOpen = false;
+  resumeTurnTimer();
+  const waiters = lookupWaiters;
+  lookupWaiters = [];
+  for (const resolve of waiters) resolve();
+}
+
+function definitionFor(entry, card) {
+  return {
+    w: entry.w,
+    ipa: entry.ipa || card.ipa || "",
+    pos: Array.isArray(entry.pos) && entry.pos.length ? entry.pos : (card.pos || []),
+    glossZh: entry.glossZh || card.zh || "",
+    glossEn: entry.glossEn || card.def || "",
+  };
+}
+
+function openWordDefinition(entry, { already = false } = {}) {
+  const pos = Array.isArray(entry.pos) ? entry.pos.filter(Boolean).join(" · ") : String(entry.pos || "");
+  const body = `
+    <div class="lookup-head">
+      <strong class="lookup-word">${esc(entry.w)}</strong>
+      <button class="btn btn-small" data-speak="${esc(entry.w)}">朗读</button>
+    </div>
+    ${entry.ipa ? `<p class="lookup-ipa">${esc(entry.ipa)}</p>` : ""}
+    ${pos ? `<p class="lookup-pos">${esc(pos)}</p>` : ""}
+    ${entry.glossZh ? `<p class="lookup-zh">${esc(entry.glossZh)}</p>` : ""}
+    ${entry.glossEn ? `<p class="lookup-en">${esc(entry.glossEn)}</p>` : ""}
+    <p class="lookup-note">${already
+      ? "已在生词本，本次查看不消耗水晶，复习进度不变。"
+      : `已自动收进生词本，下一局起作为复习词出现。本次消耗 ${LOOKUP_COST} 水晶。`}</p>`;
+  lookupOpen = true;
+  pauseTurnTimer();
+  const modal = openModal({
+    title: "词义",
+    sub: already ? "已在生词本 · 本次查看免费" : `已收进生词本 · 花费 ${LOOKUP_COST} 水晶`,
+    body,
+    actions: '<button class="btn btn-primary" id="lookup-ok">关闭</button>',
+    closable: true,
+    onClose: releaseLookup,
+  });
+  activeLookupModal = modal;
+  bindSpeak(modal.root);
+  modal.card.querySelector("#lookup-ok")?.addEventListener("click", () => {
+    sfx.click();
+    modal.close();
+  });
+}
+
+function handleCollectCard(card) {
+  if (!card || !state.session || state.session.over) return;
+  if (lookupOpen || document.querySelector("#modal-root .modal")) return;
+  if (card.joker) {
+    toast("万能牌不能收进生词本");
+    return;
+  }
+  const existing = findVocabEntry(card.w);
+  if (existing) {
+    track("vocab_lookup", { band: state.band, cost: 0, existing: true });
+    toast(`已在生词本：${card.w}`);
+    openWordDefinition(definitionFor(existing, card), { already: true });
+    return;
+  }
+  if ((state.profile.crystals || 0) < LOOKUP_COST) {
+    toast(`水晶不足，长按查词需要 ${LOOKUP_COST} 水晶`);
+    return;
+  }
+  const topic = state.session.view().topic;
+  state.profile.crystals -= LOOKUP_COST;
+  saveProfile(state.profile);
+  if (hasLicense()) putProfile(state.profile);
+  const entry = addWordFromCard(card, { band: state.band, topic, source: "manual" });
+  syncEntry(entry);
+  track("vocab_lookup", { band: state.band, cost: LOOKUP_COST, existing: false });
+  sfx.correct();
+  updateAccount();
+  updateMenuStats();
+  toast(`已收进生词本：${card.w}（-${LOOKUP_COST} 水晶）`);
+  openWordDefinition(definitionFor(entry, card), { already: false });
+}
+
 function setLoadingText(text) {
   const label = $("loading-text");
   if (label) label.textContent = text;
@@ -172,35 +271,59 @@ function hideActionBar() {
 
 const TURN_LIMIT = 15;
 let turnTimer = null;
+let turnDeadline = 0;
+let turnRemaining = 0;
+let turnPaused = false;
 
 function clearTurnTimer() {
   if (turnTimer) {
     clearInterval(turnTimer);
     turnTimer = null;
   }
+  turnPaused = false;
+  turnRemaining = 0;
   $("turn-timer")?.classList.add("hidden");
+}
+
+function renderTurnTimer() {
+  const wrap = $("turn-timer");
+  const fill = $("turn-fill");
+  const count = $("turn-count");
+  if (!wrap || !fill || !count) return;
+  const left = Math.max(0, (turnDeadline - performance.now()) / 1000);
+  fill.style.width = `${(left / TURN_LIMIT) * 100}%`;
+  count.textContent = `${Math.ceil(left)}s`;
+  wrap.classList.toggle("urgent", left <= 5);
+  if (left <= 0) {
+    clearTurnTimer();
+    autoPlayOnTimeout();
+  }
 }
 
 function startTurnTimer() {
   clearTurnTimer();
   const wrap = $("turn-timer");
-  const fill = $("turn-fill");
-  const count = $("turn-count");
-  if (!wrap || !fill || !count) return;
+  if (!wrap) return;
   wrap.classList.remove("hidden", "urgent");
-  const started = performance.now();
-  fill.style.width = "100%";
-  count.textContent = `${TURN_LIMIT}s`;
+  turnRemaining = TURN_LIMIT * 1000;
+  turnDeadline = performance.now() + turnRemaining;
+  renderTurnTimer();
   turnTimer = setInterval(() => {
-    const left = Math.max(0, TURN_LIMIT - (performance.now() - started) / 1000);
-    fill.style.width = `${(left / TURN_LIMIT) * 100}%`;
-    count.textContent = `${Math.ceil(left)}s`;
-    wrap.classList.toggle("urgent", left <= 5);
-    if (left <= 0) {
-      clearTurnTimer();
-      autoPlayOnTimeout();
-    }
+    if (!turnPaused) renderTurnTimer();
   }, 100);
+}
+
+function pauseTurnTimer() {
+  if (!turnTimer || turnPaused) return;
+  turnRemaining = Math.max(0, turnDeadline - performance.now());
+  turnPaused = true;
+}
+
+function resumeTurnTimer() {
+  if (!turnTimer || !turnPaused) return;
+  turnDeadline = performance.now() + turnRemaining;
+  turnPaused = false;
+  renderTurnTimer();
 }
 
 function autoPlayOnTimeout() {
@@ -471,6 +594,7 @@ async function ensureTable() {
     reducedMotion: state.profile.settings.reducedMotion,
     onSelect: () => updateActionHint(),
     onPlay: (ids) => humanPlay(ids),
+    onCollect: (card) => handleCollectCard(card),
   });
   await state.table.init();
 }
@@ -500,12 +624,20 @@ function enableHuman(view) {
   $("btn-challenge").classList.toggle("hidden", !canHumanChallenge(view));
   $("action-bar").classList.add("show");
   updateActionHint();
+  if (!state.longPressHintShown) {
+    state.longPressHintShown = true;
+    toast(`长按手牌可花 ${LOOKUP_COST} 水晶查词并收藏`, 2600);
+  }
   toggleHelpSound();
   startTurnTimer();
 }
 
 function toggleHelpSound() {
   $("btn-play").textContent = "出牌";
+}
+
+function reviewWordsForGame() {
+  return mergeReviewWords(state.manualReview, dueReviewWords(state.band, MAX_REVIEW_WORDS), MAX_REVIEW_WORDS);
 }
 
 async function startGame() {
@@ -536,6 +668,8 @@ async function startGame() {
       run = await startRun(state.band, state.difficulty);
     }
     const seed = run?.seed || `local-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    state.manualReview = manualReviewWords(state.band, MAX_REVIEW_WORDS);
+    state.longPressHintShown = false;
     const vocab = loadVocab().filter((item) => item.band === state.band && !item.deleted);
     const extraItems = vocab.map((item) => ({
       w: item.w,
@@ -550,13 +684,14 @@ async function startGame() {
       band: state.band,
       difficulty: state.difficulty,
       seed,
-      reviewWords: dueReviewWords(state.band, 5),
+      reviewWords: reviewWordsForGame(),
       extraItems,
     });
     state.runId = run?.run_id || null;
     state.settlementShown = false;
     $("screen-menu").classList.add("hidden");
     $("screen-game").classList.remove("hidden");
+    state.table.setCollectEnabled(true);
     updateMeta(state.session.view());
     state.table.setEquipped(profileEquipped(state.profile));
     state.table.render(state.session.view(), { deal: true });
@@ -595,6 +730,8 @@ async function drive() {
   state.driving = true;
   try {
     while (state.session) {
+      if (lookupOpen) await waitLookupClosed();
+      if (!state.session) return;
       const session = state.session;
       const view = session.view();
       updateMeta(view);
@@ -640,8 +777,9 @@ async function aiTurn() {
   state.table.render(before);
   if (before.currentPlayer !== 0) state.table.setThinking(before.currentPlayer, true);
   await wait(rm ? 250 : 3000 + Math.random() * 2000);
+  await waitLookupClosed();
+  if (!state.session || state.session !== session || !state.table) return;
   state.table.setThinking(0, false);
-  if (!state.session) return;
   const action = session.aiAct();
   if (!action) return;
   const view = session.view();
@@ -696,7 +834,8 @@ async function humanChallenge() {
   drive();
 }
 
-function askAnswers(cards) {
+async function askAnswers(cards) {
+  await waitLookupClosed();
   return new Promise((resolve) => {
     const answers = {};
     const topicPrompt = state.session.view().topic?.prompt || "";
@@ -920,8 +1059,9 @@ async function handleRoundEnd(view) {
   const isRoulette = end?.reason === "roulette";
   toast(roundEndText(end), isRoulette ? 2600 : 1800);
   await wait(state.profile.settings.reducedMotion ? 700 : isRoulette ? 2400 : 1400);
+  await waitLookupClosed();
   if (!state.session || state.session.over) return;
-  state.session.reviewWords = dueReviewWords(state.band, 5);
+  state.session.reviewWords = reviewWordsForGame();
   const next = state.session.beginRandomNextRound();
   if (!next) return;
   const nextView = state.session.view();
@@ -934,8 +1074,12 @@ async function handleRoundEnd(view) {
 async function settle(result) {
   if (state.settlementShown) return;
   state.settlementShown = true;
+  activeLookupModal?.close();
   hideActionBar();
-  if (state.table) state.table.setHandEnabled(false);
+  if (state.table) {
+    state.table.setHandEnabled(false);
+    state.table.setCollectEnabled(false);
+  }
   const isQuit = result.reason === "quit";
   if (!isQuit && result.placement) {
     state.profile.crystals += Number(result.crystals) || 0;
@@ -1027,9 +1171,11 @@ function backToMenu() {
   if (state.session && !state.session.over) {
     state.session.quit();
   }
+  activeLookupModal?.close();
   state.session = null;
   state.runId = null;
   state.settlementShown = false;
+  state.manualReview = [];
   hideActionBar();
   // 离桌即释放牌桌的 WebGL 上下文，下次入座重建，避免与其他画布争抢上下文。
   if (state.table) {
@@ -1148,7 +1294,7 @@ async function showVocab() {
           ${vocabStatus(item)}
           <button class="btn btn-small" data-del="${esc(item.w)}">删除</button>
         </div>
-      </div>`).join("") : '<div class="empty-note">生词本还是空的。答错的词会自动收进来。</div>';
+      </div>`).join("") : '<div class="empty-note">生词本还是空的。答错或长按手牌收藏的词会收进来。</div>';
     const body = `
       <div class="vocab-add">
         <input id="vocab-input" maxlength="64" placeholder="手动添加单词（当前词库）" />
@@ -1692,8 +1838,8 @@ const TUTORIAL_STEPS = [
   },
   {
     title: "生词本与积分",
-    text: "答错的词自动收进生词本；连续两次答对后移出复习池。复习词会优先进入牌堆，帮你把背过的词再撞见一次。",
-    demo: '<div class="demo-note">名次分 1000 / 600 / 300 / 100，外加抓包、骗过、存活分。每局按名次发水晶。</div>',
+    text: `答错的词自动收进生词本；对局中长按任意非万能手牌 0.5 秒，花 ${LOOKUP_COST} 水晶查看释义并收进生词本。连续两次答对后移出复习池，复习词会优先进入牌堆。`,
+    demo: '<div class="demo-note">名次分 1000 / 600 / 300 / 100，外加抓包、骗过、存活分。每局按名次发水晶，水晶也用于长按查词。</div>',
   },
   {
     title: "上桌",
@@ -1785,6 +1931,7 @@ function showHelp() {
         <li>每轮公布主题与 K=6。轮到你时出 <b>1-3 张</b>牌，声称全部合规；累计声称 X 公开。</li>
         <li>你也可以质疑上家刚打出的那一段，即使对方已经出完手牌。手牌空的存活玩家本轮观战，下家仍要决定是否质疑。</li>
         <li>被质疑的牌逐张公开，除出牌者外所有活人 <b>10 秒</b>内判断合规与否。答错会记入生词本。</li>
+        <li>对局中长按任意非万能手牌 <b>0.5 秒</b>，花 ${LOOKUP_COST} 水晶查看释义并收进生词本；已收藏的词再次长按免费查看。释义弹窗打开时倒计时与 AI 行动暂停。</li>
         <li>有一张不合规即为谎言，出牌者受罚；全部合规则质疑者受罚。</li>
         <li>受罚者转左轮，每人独立 1/6 起步，每次 +1/6，整局不重置。中弹即出局，最后剩一人赢下整局。</li>
         <li>本轮在轮盘触发或所有人手牌出完时结束，随即重新随机主题、重新发牌；上一轮受罚者若存活则下一轮先手，若已出局则由质疑对局另一方先手。</li>

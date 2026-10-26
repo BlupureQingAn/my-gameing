@@ -110,12 +110,13 @@ function clearLayer(container) {
 }
 
 export class TableView {
-  constructor({ container, equipped, reducedMotion = false, onSelect, onPlay }) {
+  constructor({ container, equipped, reducedMotion = false, onSelect, onPlay, onCollect }) {
     this.container = container;
     this.equipped = equipped;
     this.reducedMotion = reducedMotion;
     this.onSelect = onSelect || (() => {});
     this.onPlay = onPlay || (() => {});
+    this.onCollect = onCollect || (() => {});
     this.app = null;
     this.stage = null;
     this.layers = {};
@@ -127,6 +128,7 @@ export class TableView {
     this.pendingDrag = null;
     this.thinkingSeat = null;
     this.handEnabled = true;
+    this.collectEnabled = false;
     this.layout = window.innerHeight > window.innerWidth ? LAYOUTS.portrait : LAYOUTS.landscape;
     this.W = this.layout.W;
     this.H = this.layout.H;
@@ -450,6 +452,7 @@ export class TableView {
     }
     this.lastHandKey = key;
     this.selected.clear();
+    this.clearPress();
     clearLayer(this.layers.hand);
     this.handCards = [];
     const targets = this.handTargets(cards.length);
@@ -459,7 +462,8 @@ export class TableView {
       node.position.set(deal ? this.W / 2 : target.x, deal ? this.layout.table.cy : target.y);
       node.rotation = deal ? 0 : target.rot;
       node.alpha = deal ? 0 : 1;
-      node.eventMode = this.handEnabled ? "static" : "none";
+      node.eventMode = "static";
+      node.interactive = true;
       node.cursor = "pointer";
       node.cardData = card;
       node.baseX = target.x;
@@ -504,32 +508,68 @@ export class TableView {
     });
   }
 
+  clearPressTimer(drag = this.pendingDrag) {
+    if (drag?.pressTimer) {
+      clearTimeout(drag.pressTimer);
+      drag.pressTimer = null;
+    }
+  }
+
+  clearPress() {
+    this.clearPressTimer(this.pendingDrag);
+    this.pendingDrag = null;
+  }
+
   onCardDown(card, node, event) {
     if (!node.interactive) return;
+    if (event.button != null && event.button !== 0) return;
+    if (!this.handEnabled && !this.collectEnabled) return;
+    this.clearPress();
     const rect = this.app.canvas.getBoundingClientRect();
     const scale = rect.height / this.H || 1;
-    this.pendingDrag = {
+    const drag = {
       card,
       node,
+      startX: event.clientX,
       startY: event.clientY,
       moved: false,
+      longPressFired: false,
       originY: node.y,
     };
+    this.pendingDrag = drag;
+    if (this.collectEnabled) {
+      drag.pressTimer = setTimeout(() => {
+        if (this.pendingDrag !== drag || drag.moved || drag.longPressFired) return;
+        drag.longPressFired = true;
+        drag.moved = true;
+        node.y = drag.originY;
+        this.onCollect(card);
+      }, 500);
+    }
     const onMove = (moveEvent) => {
-      if (!this.pendingDrag) return;
-      const dy = (moveEvent.clientY - this.pendingDrag.startY) / scale;
-      if (Math.abs(dy) > 8) this.pendingDrag.moved = true;
-      if (dy < -10) {
-        node.y = this.pendingDrag.originY + Math.max(-70, dy * 0.6);
+      if (this.pendingDrag !== drag) return;
+      const dx = (moveEvent.clientX - drag.startX) / scale;
+      const dy = (moveEvent.clientY - drag.startY) / scale;
+      if (Math.hypot(dx, dy) > 8) {
+        drag.moved = true;
+        this.clearPressTimer(drag);
+      }
+      if (this.handEnabled && dy < -10) {
+        node.y = drag.originY + Math.max(-70, dy * 0.6);
       }
     };
-    const onUp = (upEvent) => {
+    const finish = (upEvent) => {
       window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      if (!this.pendingDrag) return;
-      const drag = this.pendingDrag;
-      const dy = (upEvent.clientY - drag.startY) / scale;
+      window.removeEventListener("pointerup", finish);
+      window.removeEventListener("pointercancel", finish);
+      this.clearPressTimer(drag);
+      if (this.pendingDrag !== drag) return;
       this.pendingDrag = null;
+      if (upEvent.type === "pointercancel" || drag.longPressFired || !this.handEnabled) {
+        this.layoutHand();
+        return;
+      }
+      const dy = (Number(upEvent.clientY) - drag.startY) / scale;
       if (dy < -70) {
         if (!this.selected.has(card.id)) this.toggleCard(card.id);
         const ids = Array.from(this.selected);
@@ -540,7 +580,8 @@ export class TableView {
       this.layoutHand();
     };
     window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp, { once: true });
+    window.addEventListener("pointerup", finish, { once: true });
+    window.addEventListener("pointercancel", finish, { once: true });
   }
 
   toggleCard(id) {
@@ -1024,13 +1065,17 @@ export class TableView {
   setHandEnabled(enabled) {
     this.handEnabled = enabled;
     for (const node of this.handCards) {
-      node.interactive = enabled;
-      node.eventMode = enabled ? "static" : "none";
       node.alpha = enabled ? 1 : 0.72;
     }
   }
 
+  setCollectEnabled(enabled) {
+    this.collectEnabled = enabled;
+    if (!enabled) this.clearPress();
+  }
+
   destroy() {
+    this.clearPress();
     if (this.resizeHandler) {
       window.removeEventListener("resize", this.resizeHandler);
       window.removeEventListener("orientationchange", this.resizeHandler);

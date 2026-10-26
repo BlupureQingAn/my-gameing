@@ -1,5 +1,8 @@
 // 本地存档：档案、生词本、设置、装扮。会员登录后由 main.js 负责与云端合并。
 
+import { MAX_REVIEW_WORDS } from "../core/constants.js";
+import { pickManualReviewWords } from "../core/vocab.js";
+
 const K_PROFILE = "cihuang_profile_v1";
 const K_VOCAB = "cihuang_vocab_v1";
 const K_STATS = "cihuang_stats_v1";
@@ -239,6 +242,17 @@ export function dueReviewWords(band, limit = 5) {
     .sort((a, b) => Number(a.lastResult) - Number(b.lastResult) || b.reviews - a.reviews)
     .slice(0, limit)
     .map((item) => item.w);
+}
+
+export function findVocabEntry(word, band = null) {
+  const key = vocabKey(word);
+  return loadVocab().find((item) => (
+    !item.deleted && vocabKey(item.w) === key && (!band || item.band === band)
+  )) || null;
+}
+
+export function manualReviewWords(band, limit = MAX_REVIEW_WORDS) {
+  return pickManualReviewWords(loadVocab(), band, limit);
 }
 
 export function deleteWord(word) {

@@ -461,6 +461,14 @@ a { color: var(--amber); }
   line-height: 1.25;
   word-break: break-word;
 }
+
+.lookup-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+.lookup-word { color: var(--amber); font-size: 30px; line-height: 1.15; letter-spacing: 0.04em; word-break: break-word; }
+.lookup-ipa { margin: 0 0 8px; color: var(--dim); font-size: 13px; }
+.lookup-pos { margin: 0 0 10px; color: var(--green); font-size: 11px; letter-spacing: 0.1em; }
+.lookup-zh { margin: 0 0 10px; color: var(--text); font-size: 17px; line-height: 1.7; }
+.lookup-en { margin: 0 0 14px; color: var(--dim); font-size: 12px; line-height: 1.7; }
+.lookup-note { margin: 0; padding-top: 12px; border-top: 1px solid var(--line); color: var(--amber-deep); font-size: 11px; line-height: 1.8; }
 .answer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
 .answer-card {
   border: 1px solid var(--line);

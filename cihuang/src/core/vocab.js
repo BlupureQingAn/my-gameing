@@ -77,6 +77,27 @@ export function pickReviewWords(book, max = MAX_REVIEW_WORDS, exclude = new Set(
     .map((entry) => entry.w);
 }
 
+export function pickManualReviewWords(entries, band, max = MAX_REVIEW_WORDS) {
+  const limit = Math.min(max, MAX_REVIEW_WORDS);
+  return entries
+    .filter((entry) => !entry.deleted && entry.band === band && entry.source === "manual" && Number(entry.streak) < 2)
+    .sort((a, b) => (Date.parse(b.updatedAt || 0) || 0) - (Date.parse(a.updatedAt || 0) || 0))
+    .slice(0, limit)
+    .map((entry) => entry.w);
+}
+
+export function mergeReviewWords(manual = [], due = [], max = MAX_REVIEW_WORDS) {
+  const limit = Math.min(max, MAX_REVIEW_WORDS);
+  const words = [];
+  for (const raw of [...manual, ...due]) {
+    const word = String(raw || "").trim();
+    if (!word || words.includes(word)) continue;
+    words.push(word);
+    if (words.length >= limit) break;
+  }
+  return words;
+}
+
 export function vocabStats(book) {
   const entries = Object.values(book);
   return {

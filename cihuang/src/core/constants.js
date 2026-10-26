@@ -15,6 +15,7 @@ export const PLAYER_IDS = [0, 1, 2, 3];
 
 export const PLACEMENT_POINTS = { 1: 1000, 2: 600, 3: 300, 4: 100 };
 export const PLACEMENT_CRYSTALS = { 1: 100, 2: 60, 3: 40, 4: 20 };
+export const LOOKUP_COST = 10;
 export const SCORE_CATCH = 50;
 export const SCORE_BLUFF = 50;
 export const SCORE_SURVIVE = 10;
