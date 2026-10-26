@@ -404,7 +404,6 @@ export function resolveRoulette(state) {
 
 export function endRound(state, {
   reason,
-  winner = null,
   eliminated = null,
   nextStarter = null,
   roulette = null,
@@ -417,14 +416,13 @@ export function endRound(state, {
   if (state.players[HUMAN_ID].alive) state.human.survived += 1;
   state.roundEnd = {
     reason,
-    winner,
     eliminated,
     nextStarter,
     roulette,
     round: state.round,
   };
   state.phase = PHASE.ROUND_END;
-  state.log.push({ t: "round_end", r: state.round, reason, winner, eliminated });
+  state.log.push({ t: "round_end", r: state.round, reason, eliminated });
   return state.roundEnd;
 }
 
