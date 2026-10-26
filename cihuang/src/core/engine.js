@@ -33,6 +33,16 @@ function nextAlive(state, fromId) {
   return null;
 }
 
+// 手牌出完的存活玩家本轮观战：轮转时跳过；若只剩自己还有牌，则由自己继续出。
+function nextWithCards(state, fromId) {
+  for (let step = 1; step <= PLAYER_IDS.length; step += 1) {
+    const id = (fromId + step) % PLAYER_IDS.length;
+    const player = state.players[id];
+    if (player.alive && player.hand.length > 0) return id;
+  }
+  return null;
+}
+
 function createPlayers() {
   return PLAYER_IDS.map((id) => ({
     id,
@@ -175,14 +185,21 @@ export function play(state, playerId, cardIds) {
     x: chainTotal(state),
   });
 
-  if (player.hand.length === 0) {
-    endRound(state, { reason: "empty", winner: playerId });
-    return { type: "play", segment, emptied: true, roundEnd: state.roundEnd };
+  const next = nextWithCards(state, playerId);
+  if (next === null) {
+    // 所有存活玩家都没有手牌了，本轮在没有轮盘的情况下收尾。
+    endRound(state, { reason: "empty", nextStarter: playerId });
+    return {
+      type: "play",
+      segment,
+      emptied: player.hand.length === 0,
+      roundEnd: state.roundEnd,
+    };
   }
 
-  state.currentPlayer = nextAlive(state, playerId);
+  state.currentPlayer = next;
   state.phase = PHASE.TURN;
-  return { type: "play", segment, emptied: false };
+  return { type: "play", segment, emptied: player.hand.length === 0 };
 }
 
 export function challenge(state, playerId) {
@@ -193,8 +210,6 @@ export function challenge(state, playerId) {
   assert(segment.player !== playerId, "cannot challenge yourself");
   const target = state.players[segment.player];
   assert(target.alive, "target is not alive");
-  assert(target.hand.length > 0 || segment.cards.length === 0,
-    "cannot challenge a player who emptied their hand");
 
   segment.challenged = true;
   const answerCards = segment.cards.filter((card) => !card.joker);
@@ -332,16 +347,18 @@ export function resolveRoulette(state) {
   };
   state.log.push({ t: "roulette", p: playerId, fire, pulls: player.pulls });
   state.pendingRoulette = result;
+  const pending = state.pendingChallenge;
 
+  // 无论空枪还是中弹，轮盘结束即收尾本轮，下一轮重新选主题、重新发牌。
   if (!fire) {
-    const challengerId = state.pendingChallenge.challengerId;
     state.pendingChallenge = null;
     state.pendingPenalty = null;
     state.chain = [];
-    state.currentPlayer = state.players[challengerId]?.alive
-      ? challengerId
-      : nextAlive(state, playerId);
-    state.phase = PHASE.TURN;
+    endRound(state, {
+      reason: "roulette",
+      nextStarter: playerId,
+      roulette: result,
+    });
     return result;
   }
 
@@ -363,15 +380,15 @@ export function resolveRoulette(state) {
     return result;
   }
 
-  const pending = state.pendingChallenge;
-  let chooser = null;
+  // 受罚者出局时，由质疑对局中的另一方先手；否则顺延到下一名存活者。
+  let starter = null;
   if (pending) {
-    chooser = pending.penalized === pending.challengerId
+    starter = pending.penalized === pending.challengerId
       ? pending.targetId
       : pending.challengerId;
   }
-  if (chooser === null || !state.players[chooser]?.alive) {
-    chooser = nextAlive(state, playerId);
+  if (starter === null || starter === playerId || !state.players[starter]?.alive) {
+    starter = nextAlive(state, playerId);
   }
   state.pendingChallenge = null;
   state.pendingPenalty = null;
@@ -379,12 +396,19 @@ export function resolveRoulette(state) {
   endRound(state, {
     reason: "elimination",
     eliminated: playerId,
-    nextChooser: chooser,
+    nextStarter: starter,
+    roulette: result,
   });
   return result;
 }
 
-export function endRound(state, { reason, winner = null, eliminated = null, nextChooser = null }) {
+export function endRound(state, {
+  reason,
+  winner = null,
+  eliminated = null,
+  nextStarter = null,
+  roulette = null,
+}) {
   if (state.roundEnd) return state.roundEnd;
   for (const segment of state.roundSegments) {
     if (segment.challenged) continue;
@@ -395,7 +419,8 @@ export function endRound(state, { reason, winner = null, eliminated = null, next
     reason,
     winner,
     eliminated,
-    nextChooser: nextChooser ?? winner,
+    nextStarter,
+    roulette,
     round: state.round,
   };
   state.phase = PHASE.ROUND_END;

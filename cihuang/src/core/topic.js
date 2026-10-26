@@ -99,6 +99,10 @@ export class TopicPicker {
     return out.slice(0, count);
   }
 
+  pickRandom(candidates) {
+    return candidates.length ? this.rng.pick(candidates) : null;
+  }
+
   pickForAI(candidates, scoreFn) {
     let best = null;
     let bestScore = -Infinity;

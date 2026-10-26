@@ -500,7 +500,7 @@ function enableHuman(view) {
   const last = view.chain[view.chain.length - 1];
   const target = last ? view.players[last.player] : null;
   const canChallenge = !!last && last.player !== 0 && target && target.alive
-    && target.handCount > 0 && last.claimed > 0;
+    && last.claimed > 0;
   $("btn-challenge").classList.toggle("hidden", !canChallenge);
   $("action-bar").classList.add("show");
   updateActionHint();
@@ -643,7 +643,7 @@ async function aiTurn() {
   const before = session.view();
   state.table.render(before);
   if (before.currentPlayer !== 0) state.table.setThinking(before.currentPlayer, true);
-  await wait(rm ? 250 : 5000 + Math.random() * 3000);
+  await wait(rm ? 250 : 3000 + Math.random() * 2000);
   state.table.setThinking(0, false);
   if (!state.session) return;
   const action = session.aiAct();
@@ -872,6 +872,9 @@ async function showRoulette(outcome) {
     if (stage !== "result") return;
     resultNode.textContent = outcome.fire ? "砰！" : "空膛 · 咔哒";
     resultNode.className = `roulette-result ${outcome.fire ? "bang" : "click"}`;
+    phaseNode.textContent = outcome.fire
+      ? `${who} 中弹`
+      : `${who} 逃过一劫 · 本轮结束`;
     if (!tracked) {
       tracked = true;
       track("roulette", { seat: outcome.playerId, fire: outcome.fire, pulls: outcome.pulls });
@@ -907,57 +910,20 @@ async function handleRoulette() {
 function roundEndText(end) {
   if (!end) return "本轮结束";
   if (end.reason === "elimination") return `${NAMES[end.eliminated]} 中弹出局`;
-  if (end.reason === "empty") return `${NAMES[end.winner]} 出完手牌，赢下本轮`;
+  if (end.reason === "roulette") return `${NAMES[end.roulette?.playerId ?? 0]} 空枪，逃过一劫`;
+  if (end.reason === "empty") return "所有人手牌出完，本轮结束";
   return "本轮结束";
-}
-
-function chooseTopic(candidates) {
-  return new Promise((resolve) => {
-    const body = `<p class="modal-sub">你赢下这一轮。选择下一轮主题并先手。</p>
-      <div class="topic-grid">
-        ${candidates.map((topic, index) => `
-          <button class="topic-card" data-index="${index}">
-            <div class="topic-type">${topic.type === "synonym" ? "同义词主题" : "释义主题"}</div>
-            <div class="topic-prompt">${esc(topic.prompt || (topic.promptTokens || []).join("；"))}</div>
-            <div class="topic-meta">目标词 ${esc(topic.target)} · 难度 ${topic.level || 1}</div>
-          </button>`).join("")}
-      </div>`;
-    let settled = false;
-    const modal = openModal({
-      title: "下一轮主题",
-      body,
-      wide: true,
-      closable: true,
-      onClose: () => {
-        if (!settled) {
-          settled = true;
-          resolve(null);
-        }
-      },
-    });
-    modal.card.querySelectorAll("[data-index]").forEach((button) => {
-      button.addEventListener("click", () => {
-        sfx.card();
-        settled = true;
-        modal.close();
-        resolve(candidates[Number(button.dataset.index)]);
-      });
-    });
-  });
 }
 
 async function handleRoundEnd(view) {
   const end = view.roundEnd;
-  toast(roundEndText(end), 1800);
-  await wait(state.profile.settings.reducedMotion ? 600 : 1300);
+  const isRoulette = end?.reason === "roulette";
+  toast(roundEndText(end), isRoulette ? 2600 : 1800);
+  await wait(state.profile.settings.reducedMotion ? 700 : isRoulette ? 2400 : 1400);
   if (!state.session || state.session.over) return;
   state.session.reviewWords = dueReviewWords(state.band, 5);
-  const choice = state.session.autoChooseTopic();
-  if (!choice) return;
-  if (choice.needHuman) {
-    const topic = await chooseTopic(choice.candidates);
-    state.session.beginNextRound(topic || choice.candidates[0], 0);
-  }
+  const next = state.session.beginRandomNextRound();
+  if (!next) return;
   const nextView = state.session.view();
   updateMeta(nextView);
   state.table.render(nextView, { deal: true });
@@ -1691,8 +1657,8 @@ const TUTORIAL_STEPS = [
   },
   {
     title: "质疑",
-    text: "如果上家刚出过牌，你可以不跟牌，直接 <b>质疑</b> 他这一段。质疑会翻开他刚打出的全部牌。注意：如果他是诚实的，你要受罚。",
-    demo: '<div class="demo-note">上家出完手牌时不能质疑——他直接赢下本轮。</div>',
+    text: "如果上家刚出过牌，你可以不跟牌，直接 <b>质疑</b> 他这一段。质疑会翻开他刚打出的全部牌。注意：如果他是诚实的，你要受罚。即使对方已经出完手牌，你也可以质疑他刚打出的那一段。",
+    demo: '<div class="demo-note">出完手牌不会直接获胜；手牌空的玩家本轮观战，下家仍要决定是否质疑。</div>',
   },
   {
     title: "全体作答",
@@ -1701,13 +1667,13 @@ const TUTORIAL_STEPS = [
   },
   {
     title: "判定与惩罚",
-    text: "只要这一段里有一张不合规，整段就算谎言：出牌者受罚。全部合规：质疑者受罚。判定后质疑者先手，开新链。",
+    text: "只要这一段里有一张不合规，整段就算谎言：出牌者受罚。全部合规：质疑者受罚。受罚者转左轮，本轮随即结束。",
     demo: '<div class="demo-note">抓包成功 +50 分；成功骗过不被质疑 +50 分。</div>',
   },
   {
     title: "左轮",
     text: "受罚者转动左轮。每个人有自己的六个弹巢，开局 1/6 概率击发，之后每次 +1/6，整局不重置。你中弹，牌局立即结束。",
-    demo: '<div class="demo-note">AI 中弹会被淘汰；成功质疑者（或诚实被质疑者）选下一轮主题并先手。</div>',
+    demo: '<div class="demo-note">任意一次轮盘后都会重新选主题、重新发牌；受罚者若活下来，下一轮由他先手。最后只剩一人时赢下整局。</div>',
   },
   {
     title: "生词本与积分",
@@ -1803,10 +1769,11 @@ function showHelp() {
       <ol>
         <li>四人一桌，每人 5 张手牌。牌堆 24 张：<b>6 张合规</b>、1 张万能、17 张干扰。</li>
         <li>每轮公布主题与 K=6。轮到你时出 <b>1-3 张</b>牌，声称全部合规；累计声称 X 公开。</li>
-        <li>你也可以质疑上家刚打出的那一段。出完手牌的人不能被质疑，直接赢下本轮。</li>
+        <li>你也可以质疑上家刚打出的那一段，即使对方已经出完手牌。手牌空的存活玩家本轮观战，下家仍要决定是否质疑。</li>
         <li>被质疑的牌逐张公开，除出牌者外所有活人 <b>10 秒</b>内判断合规与否。答错会记入生词本。</li>
         <li>有一张不合规即为谎言，出牌者受罚；全部合规则质疑者受罚。</li>
-        <li>受罚者转左轮，每人独立 1/6 起步，每次 +1/6，整局不重置。你中弹即出局。</li>
+        <li>受罚者转左轮，每人独立 1/6 起步，每次 +1/6，整局不重置。中弹即出局，最后剩一人赢下整局。</li>
+        <li>本轮在轮盘触发或所有人手牌出完时结束，随即重新随机主题、重新发牌；上一轮受罚者若存活则下一轮先手，若已出局则由质疑对局另一方先手。</li>
       </ol>
       <p>计分：名次 1000/600/300/100 + 抓包 50 + 骗过 50 + 存活 10。</p>
     </div>`,

@@ -79,7 +79,7 @@ test("forced lie uses only cards from hand", () => {
   assert.ok(action.cardIds.every((id) => hand.some((c) => c.id === id)));
 });
 
-test("challenge refuses empty chains, joker-only claims, and free wins", () => {
+test("challenge refuses empty chains, joker-only claims, and short hands", () => {
   const ai = makeAI();
   assert.equal(ai.chooseChallenge(viewOf({ hand: handOf(["d01", "d02", "d03", "d04", "d05"]) })), false);
   const chain = [{ player: 0, claimed: 2, challenged: false }];
@@ -89,12 +89,31 @@ test("challenge refuses empty chains, joker-only claims, and free wins", () => {
     chain: jokerOnly,
     x: 0,
   })), false);
-  const freeWin = ai.chooseChallenge(viewOf({
+  const shortHand = ai.chooseChallenge(viewOf({
     hand: handOf(["d01", "d02", "d03"]),
     chain,
     x: 2,
   }));
-  assert.equal(freeWin, false);
+  assert.equal(shortHand, false, "with <= MAX_PLAY cards the AI plays out instead");
+});
+
+test("AI can challenge a target that has already emptied their hand", () => {
+  const ai = makeAI();
+  ai.estimateLie = () => 0.95;
+  const chain = [{ player: 2, claimed: 2, challenged: false }];
+  const players = [
+    { id: 0, alive: true, handCount: 5, pulls: 0 },
+    { id: 1, alive: true, handCount: 5, pulls: 0 },
+    { id: 2, alive: true, handCount: 0, pulls: 0 },
+    { id: 3, alive: true, handCount: 5, pulls: 0 },
+  ];
+  const view = viewOf({
+    hand: handOf(["d01", "d02", "d03", "d04", "d05"]),
+    chain,
+    x: 4,
+    players,
+  });
+  assert.equal(ai.chooseChallenge(view), true);
 });
 
 test("normal AI challenges a very likely lie", () => {

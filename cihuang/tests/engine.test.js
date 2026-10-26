@@ -61,19 +61,57 @@ test("joker does not count toward K", () => {
   assert.equal(chainTotal(state), 1);
 });
 
-test("emptying the hand ends the round and wins", () => {
+test("emptying the hand keeps the round going while others hold cards", () => {
   const state = newGame();
   begin(state, 0);
   setHand(state, 0, [card("a")]);
   const result = play(state, 0, ["a"]);
   assert.equal(result.emptied, true);
+  assert.equal(state.phase, PHASE.TURN);
+  assert.equal(state.currentPlayer, 1, "turn passes to the next player with cards");
+  assert.equal(state.roundEnd, null);
+});
+
+test("only players with cards act; the last holder plays out alone", () => {
+  const state = newGame();
+  for (const seat of [0, 2, 3]) setHand(state, seat, []);
+  begin(state, 1);
+  setHand(state, 1, [card("a"), card("b")]);
+  play(state, 1, ["a"]);
+  assert.equal(state.currentPlayer, 1, "the only player with cards keeps the turn");
+  const result = play(state, 1, ["b"]);
+  assert.equal(result.emptied, true);
   assert.equal(state.phase, PHASE.ROUND_END);
   assert.equal(state.roundEnd.reason, "empty");
-  assert.equal(state.roundEnd.winner, 0);
+  assert.equal(state.roundEnd.nextStarter, 1);
+});
+
+test("all hands empty ends the round after the final play", () => {
+  const state = newGame();
+  for (const seat of [0, 1, 2, 3]) setHand(state, seat, []);
+  begin(state, 2);
+  setHand(state, 2, [card("a")]);
+  const result = play(state, 2, ["a"]);
+  assert.equal(result.emptied, true);
+  assert.equal(state.phase, PHASE.ROUND_END);
+  assert.equal(state.roundEnd.reason, "empty");
+  assert.equal(state.roundEnd.nextStarter, 2);
   assert.equal(state.human.survived, 1);
 });
 
-test("lying target is penalized, challenger starts after a survived shot", () => {
+test("an emptied player can still be challenged", () => {
+  const state = newGame();
+  begin(state, 1);
+  setHand(state, 1, [card("lie", { truth: false })]);
+  const result = play(state, 1, ["lie"]);
+  assert.equal(result.emptied, true);
+  assert.equal(state.currentPlayer, 2);
+  const pending = challenge(state, 2);
+  assert.equal(pending.targetId, 1);
+  assert.deepEqual(pending.answerers, [0, 2, 3]);
+});
+
+test("lying target is penalized and starts the next round after a survived shot", () => {
   const state = newGame();
   begin(state, 1);
   setHand(state, 1, [card("lie", { truth: false }), card("spare")]);
@@ -98,8 +136,9 @@ test("lying target is penalized, challenger starts after a survived shot", () =>
   assert.equal(shot.fire, false);
   assert.equal(shot.probability, "1/6");
   assert.equal(state.players[1].pulls, 1);
-  assert.equal(state.phase, PHASE.TURN);
-  assert.equal(state.currentPlayer, 2);
+  assert.equal(state.phase, PHASE.ROUND_END);
+  assert.equal(state.roundEnd.reason, "roulette");
+  assert.equal(state.roundEnd.nextStarter, 1, "the penalized player starts the next round");
   assert.equal(state.chain.length, 0);
   assert.equal(state.pendingChallenge, null);
   assert.equal(state.revealed.length, 1);
@@ -119,7 +158,9 @@ test("honest play still penalizes the challenger", () => {
   stubRoulette(state, [5]);
   resolveRoulette(state);
   assert.equal(state.players[2].pulls, 1);
-  assert.equal(state.currentPlayer, 2, "challenger starts even when penalized");
+  assert.equal(state.phase, PHASE.ROUND_END);
+  assert.equal(state.roundEnd.reason, "roulette");
+  assert.equal(state.roundEnd.nextStarter, 2, "penalized challenger starts the next round");
 });
 
 test("timeout counts as wrong answers and adds review words", () => {
@@ -186,10 +227,10 @@ test("AI elimination aborts the round; successful challenger goes next", () => {
   assert.equal(state.phase, PHASE.ROUND_END);
   assert.equal(state.roundEnd.reason, "elimination");
   assert.equal(state.roundEnd.eliminated, 1);
-  assert.equal(state.roundEnd.nextChooser, 2);
+  assert.equal(state.roundEnd.nextStarter, 2);
   const built = startNextRound(state, {
     topic: makeTopic("topic-2"),
-    starter: state.roundEnd.nextChooser,
+    starter: state.roundEnd.nextStarter,
   });
   assert.equal(state.round, 2);
   assert.equal(state.phase, PHASE.TURN);
@@ -210,7 +251,7 @@ test("challenger death hands the next round to the honest target", () => {
   resolveRoulette(state);
   assert.equal(state.players[2].alive, false);
   assert.equal(state.roundEnd.eliminated, 2);
-  assert.equal(state.roundEnd.nextChooser, 1);
+  assert.equal(state.roundEnd.nextStarter, 1);
 });
 
 test("last surviving human wins placement 1", () => {
@@ -244,8 +285,10 @@ test("roulette probability escalates per player", () => {
   assert.equal(first.probability, "1/6");
   assert.equal(first.fire, false);
   assert.equal(state.players[1].pulls, 1);
+  assert.equal(state.phase, PHASE.ROUND_END);
+  assert.equal(state.roundEnd.reason, "roulette");
 
-  begin(state, 1);
+  startNextRound(state, { topic: makeTopic("topic-2"), starter: 1 });
   setHand(state, 1, [card("lie2", { truth: false }), card("spare2")]);
   play(state, 1, ["lie2"]);
   challenge(state, 2);

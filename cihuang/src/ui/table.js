@@ -631,7 +631,12 @@ export class TableView {
     name.anchor.set(0.5);
     name.position.set(0, 46);
     group.addChild(name);
-    const count = text(player.alive ? `${player.handCount} 张` : "出局", 9, player.alive ? 0xa9b7a9 : 0x8a4a4a);
+    const spectating = player.alive && player.handCount === 0;
+    const count = text(
+      player.alive ? (spectating ? "观战" : `${player.handCount} 张`) : "出局",
+      9,
+      player.alive ? (spectating ? 0x8fa3a0 : 0xa9b7a9) : 0x8a4a4a,
+    );
     count.anchor.set(0.5);
     count.position.set(0, 60);
     group.addChild(count);

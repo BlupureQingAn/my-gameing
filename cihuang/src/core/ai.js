@@ -157,7 +157,7 @@ export class AIPlayer {
     if (!last.claimed) return false;
     if (view.self.hand.length <= MAX_PLAY) return false;
     const target = view.players[last.player];
-    if (!target || !target.alive || target.handCount === 0) return false;
+    if (!target || !target.alive) return false;
 
     if (this.difficultyKey === "easy") {
       if (view.x >= K) return this.rng.next() < 0.85;

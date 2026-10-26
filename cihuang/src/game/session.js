@@ -55,7 +55,6 @@ export class GameSession {
       reviewWords,
     });
     this.reviewWords = reviewWords;
-    this.topicCandidates = null;
   }
 
   view() {
@@ -104,7 +103,7 @@ export class GameSession {
     const last = chain[chain.length - 1];
     if (last.player === HUMAN_ID) throw new Error("不能质疑自己");
     const target = view.players[last.player];
-    if (target && target.handCount === 0) throw new Error("对方已出完手牌");
+    if (!target || !target.alive) throw new Error("对方已出局");
     return challenge(this.state, HUMAN_ID);
   }
 
@@ -173,21 +172,14 @@ export class GameSession {
     return resolveRoulette(this.state);
   }
 
-  roundCandidates() {
-    this.topicCandidates = this.picker.candidates(3);
-    return this.topicCandidates;
-  }
-
-  // 由当前 roundEnd.nextChooser 选主题；AI 选则直接进入下一轮
-  autoChooseTopic() {
+  // 新一轮：系统随机主题，上一轮受罚者先手（受罚者出局时由质疑对局另一方先手）。
+  beginRandomNextRound() {
     const end = this.state.roundEnd;
     if (!end) return null;
-    const chooser = end.nextChooser ?? end.winner;
-    if (chooser === HUMAN_ID) return { chooser, needHuman: true, candidates: this.roundCandidates() };
-    const candidates = this.roundCandidates();
-    const topic = this.ais[chooser - 1].chooseTopic(candidates);
-    this.beginNextRound(topic, chooser);
-    return { chooser, needHuman: false, topic };
+    const topic = this.picker.pickRandom(this.picker.candidates(3));
+    if (!topic) return null;
+    this.beginNextRound(topic, end.nextStarter);
+    return { topic, starter: end.nextStarter };
   }
 
   beginNextRound(topic, starter) {

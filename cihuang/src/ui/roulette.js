@@ -197,9 +197,9 @@ export async function runRoulette({ host, item, outcome, reducedMotion, onStage 
     }
     await wait(dur(0.6));
 
-    // 6. 结果
+    // 6. 结果：空枪也要留足反馈时间，降低动态偏好时同样至少停留 1.5 秒
     onStage("result", outcome);
-    await wait(dur(1.8));
+    await wait(rm ? 1500 : 2600);
   } finally {
     cleanup();
   }

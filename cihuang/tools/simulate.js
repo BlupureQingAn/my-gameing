@@ -100,12 +100,11 @@ export function simulateGame({ seed, difficulty, bankIndex, topics, maxSteps = 2
       const shot = resolveRoulette(state);
       if (shot.fire) fires += 1;
     } else if (state.phase === "round_end") {
-      const chooser = state.roundEnd.nextChooser ?? state.roundEnd.winner;
-      const candidates = picker.candidates(3);
-      const chosen = ais[chooser].chooseTopic(candidates);
+      const starter = state.roundEnd.nextStarter ?? Math.max(0, PLAYER_IDS.length - 1);
+      const chosen = picker.pickRandom(picker.candidates(3));
       picker.markUsed(chosen);
       for (const ai of ais) ai.setTopic(chosen);
-      startNextRound(state, { topic: chosen, starter: chooser });
+      startNextRound(state, { topic: chosen, starter });
     } else {
       throw new Error(`unexpected phase ${state.phase}`);
     }
