@@ -85,12 +85,26 @@ function rounded(g, x, y, w, h, r, color, alpha = 1) {
   return g;
 }
 
+const TRANSFORM_POINTS = ["position", "scale", "pivot", "skew", "anchor", "origin"];
+
+// 销毁前必须把补间清干净：留在时间线里的补间会继续读写已销毁的 Pixi 对象，
+// 每帧抛错并卡住之后所有 GSAP 动画。killTweensOf 传单目标时才能完整移除补间
+// （多目标数组对未初始化的补间只会摘属性），所以逐节点、逐变换点地杀。
+function killTweensDeep(node) {
+  if (!node || node.destroyed) return;
+  gsap.killTweensOf(node);
+  for (const key of TRANSFORM_POINTS) {
+    const point = node[key];
+    if (point) gsap.killTweensOf(point);
+  }
+  for (const child of node.children || []) killTweensDeep(child);
+}
+
 function clearLayer(container) {
   const removed = container.removeChildren();
   for (const child of removed) {
     if (!child || child.destroyed) continue;
-    gsap.killTweensOf(child);
-    for (const grandchild of child.children || []) gsap.killTweensOf(grandchild);
+    killTweensDeep(child);
     child.destroy({ children: true });
   }
 }
@@ -160,13 +174,17 @@ export class TableView {
   bindContextRecovery() {
     const canvas = this.app?.canvas;
     if (!canvas) return;
+    // 重建后旧画布仍挂着监听，迟到的 restored 不能再触发一次重建。
     canvas.addEventListener("webglcontextlost", (event) => {
+      if (!this.app || canvas !== this.app.canvas) return;
       event.preventDefault();
       clearTimeout(this.contextTimer);
       this.contextTimer = setTimeout(() => this.recoverRenderer(), 1500);
     });
     canvas.addEventListener("webglcontextrestored", () => {
+      if (!this.app || canvas !== this.app.canvas) return;
       clearTimeout(this.contextTimer);
+      this.contextTimer = null;
       this.recoverRenderer();
     });
   }
@@ -174,9 +192,13 @@ export class TableView {
   async recoverRenderer() {
     if (this.recovering || !this.app) return;
     this.recovering = true;
+    clearTimeout(this.contextTimer);
+    this.contextTimer = null;
     try {
       const view = this.view;
       try {
+        this.revealFinish?.();
+        if (this.root) killTweensDeep(this.root);
         this.app.destroy(true, { children: true, texture: false });
       } catch (error) {}
       this.app = null;
@@ -254,7 +276,7 @@ export class TableView {
 
   buildBackground() {
     const layer = this.layers.bg;
-    layer.removeChildren();
+    clearLayer(layer);
     const bg = new Graphics();
     bg.rect(0, 0, this.W, this.H).fill({ color: 0x06100d });
     layer.addChild(bg);
@@ -281,7 +303,7 @@ export class TableView {
 
   buildTable() {
     const layer = this.layers.table;
-    layer.removeChildren();
+    clearLayer(layer);
     const felt = COSMETIC_INDEX[this.equipped.felt?.id] || this.equipped.felt || COSMETIC_INDEX.felt_default;
     const t = this.layout.table;
     const rim = new Graphics();
@@ -753,21 +775,31 @@ export class TableView {
 
       let done = false;
       let tl = null;
+      const loose = [];
+      const play = (target, vars) => {
+        const tween = gsap.to(target, vars);
+        loose.push(tween);
+        return tween;
+      };
       const cleanup = () => {
         if (tl) {
           tl.kill();
           tl = null;
         }
-        gsap.killTweensOf([dim, spot, card, card.scale]);
+        for (const tween of loose.splice(0)) {
+          try { tween.kill(); } catch (error) {}
+        }
         clearLayer(root);
         layer.zIndex = 0;
       };
       const finish = () => {
         if (done) return;
         done = true;
+        if (this.revealFinish === finish) this.revealFinish = null;
         cleanup();
         resolve();
       };
+      this.revealFinish = finish;
       root.on("pointertap", finish);
 
       const dimTarget = 0.8;
@@ -785,7 +817,7 @@ export class TableView {
       tl.call(() => {
         if (done) return;
         sfx.card();
-        gsap.to(card.scale, {
+        play(card.scale, {
           x: 0,
           duration: rm ? 0.01 : 0.22,
           ease: "power2.in",
@@ -794,14 +826,14 @@ export class TableView {
             back.visible = false;
             front.visible = true;
             sfx.tick();
-            gsap.to(card.scale, {
+            play(card.scale, {
               x: 1,
               duration: rm ? 0.01 : 0.24,
               ease: "power2.out",
               onComplete: () => {
                 if (done) return;
                 const proxy = { i: 0 };
-                gsap.to(proxy, {
+                play(proxy, {
                   i: full.length,
                   duration: rm ? 0.01 : Math.min(1.4, full.length * 0.04),
                   ease: "none",
@@ -1001,6 +1033,8 @@ export class TableView {
     }
     clearTimeout(this.contextTimer);
     if (this.app) {
+      this.revealFinish?.();
+      if (this.root) killTweensDeep(this.root);
       this.app.destroy(true, { children: true, texture: false });
       this.app = null;
     }
