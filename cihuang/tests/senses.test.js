@@ -6,6 +6,8 @@ import {
   matchedSenseIndices,
   nearMissExplainFor,
   splitSenses,
+  topicDisplay,
+  topicFullText,
   topicSensesText,
 } from "../src/core/senses.js";
 
@@ -99,4 +101,17 @@ test("topicSensesText joins and truncates sense labels", () => {
   assert.equal(topicSensesText({ topicSenses: [] }), "");
   assert.equal(topicSensesText(null), "");
   assert.equal(topicSensesText({ topicSenses: ["一二三四五六七八九十"] }, 6), "一二三四五六…");
+});
+
+test("topicFullText prefers the richer title for definition topics", () => {
+  assert.equal(topicFullText({ targetZh: "n. 班; 年级; 课", prompt: "班级（学校里）" }), "n. 班; 年级; 课");
+  assert.equal(topicFullText({ type: "definition", targetZh: "班级", prompt: "班级（学校里）" }), "班级（学校里）");
+  assert.equal(topicFullText({ targetZh: "", prompt: "general" }), "general");
+  assert.equal(topicFullText(null), "");
+});
+
+test("topicDisplay shows the summarized label and falls back to the full text", () => {
+  assert.equal(topicDisplay({ topicLabel: "普遍的；广泛的", targetZh: "adj. 普通的" }), "普遍的；广泛的");
+  assert.equal(topicDisplay({ topicLabel: "  ", targetZh: "adj. 普通的" }), "adj. 普通的");
+  assert.equal(topicDisplay(null), "");
 });

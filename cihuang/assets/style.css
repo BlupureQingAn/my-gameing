@@ -569,6 +569,10 @@ a { color: var(--amber); }
 
 .lookup-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
 .lookup-word { color: var(--amber); font-size: 32px; line-height: 1.15; letter-spacing: 0.04em; word-break: break-word; }
+.lookup-status { display: inline-block; margin: 2px 0 10px; padding: 2px 9px; border-radius: 4px; font-size: 13px; }
+.lookup-status.good { color: var(--green); background: rgba(120, 190, 140, 0.12); }
+.lookup-status.bad { color: var(--red); background: rgba(205, 110, 95, 0.12); }
+.lookup-status.miss { color: #a9c0cf; background: rgba(130, 170, 196, 0.12); }
 .lookup-ipa { margin: 0 0 8px; color: var(--dim); font-size: 15px; }
 .lookup-pos { margin: 0 0 10px; color: var(--green); font-size: 13px; letter-spacing: 0.1em; }
 .lookup-zh { margin: 0 0 10px; color: var(--text); font-size: 20px; line-height: 1.7; }

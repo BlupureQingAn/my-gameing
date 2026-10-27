@@ -8,7 +8,7 @@ import {
   matchedSenseIndices,
   nearMissExplainFor,
   splitSenses,
-  topicSensesText,
+  topicDisplay,
 } from "../core/senses.js";
 import { mergeReviewWords } from "../core/vocab.js";
 import { TableView } from "./table.js";
@@ -203,13 +203,22 @@ function definitionFor(entry, card) {
   };
 }
 
-function openWordDefinition(entry, { already = false } = {}) {
+function wordCompliance(card, topic) {
+  if (!topic || !card) return null;
+  if (card.joker) return { text: "万能牌 · 始终合规", cls: "good" };
+  if ((topic.compliant || []).includes(card.w)) return { text: "与本轮主题合规", cls: "good" };
+  if (isNearMiss(topic, card.w)) return { text: "语义相邻 · 不合规", cls: "miss" };
+  return { text: "与本轮主题不合规", cls: "bad" };
+}
+
+function openWordDefinition(entry, { already = false, status = null } = {}) {
   const pos = Array.isArray(entry.pos) ? entry.pos.filter(Boolean).join(" · ") : String(entry.pos || "");
   const body = `
     <div class="lookup-head">
       <strong class="lookup-word">${esc(entry.w)}</strong>
       <button class="btn btn-small" data-speak="${esc(entry.w)}">朗读</button>
     </div>
+    ${status ? `<p class="lookup-status ${status.cls}">${esc(status.text)}</p>` : ""}
     ${entry.ipa ? `<p class="lookup-ipa">${esc(entry.ipa)}</p>` : ""}
     ${pos ? `<p class="lookup-pos">${esc(pos)}</p>` : ""}
     ${entry.glossZh ? `<p class="lookup-zh">${esc(entry.glossZh)}</p>` : ""}
@@ -242,18 +251,19 @@ function handleCollectCard(card) {
     toast("万能牌不能收进生词本");
     return;
   }
+  const topic = state.session.view().topic;
+  const status = wordCompliance(card, topic);
   const existing = findVocabEntry(card.w);
   if (existing) {
     track("vocab_lookup", { band: state.band, cost: 0, existing: true });
     toast(`已在生词本：${card.w}`);
-    openWordDefinition(definitionFor(existing, card), { already: true });
+    openWordDefinition(definitionFor(existing, card), { already: true, status });
     return;
   }
   if ((state.profile.crystals || 0) < LOOKUP_COST) {
     toast(`水晶不足，长按查词需要 ${LOOKUP_COST} 水晶`);
     return;
   }
-  const topic = state.session.view().topic;
   state.profile.crystals -= LOOKUP_COST;
   saveProfile(state.profile);
   if (hasLicense()) putProfile(state.profile);
@@ -264,7 +274,7 @@ function handleCollectCard(card) {
   updateAccount();
   updateMenuStats();
   toast(`已收进生词本：${card.w}（-${LOOKUP_COST} 水晶）`);
-  openWordDefinition(definitionFor(entry, card), { already: false });
+  openWordDefinition(definitionFor(entry, card), { already: false, status });
 }
 
 function setLoadingText(text) {
@@ -1215,13 +1225,11 @@ async function askAnswers(cards) {
   return new Promise((resolve) => {
     const answers = {};
     const topic = state.session.view().topic;
-    const topicPrompt = topic?.prompt || "";
-    const senses = topicSensesText(topic);
+    const topicPrompt = topicDefinition(topic);
     const body = `
       <div class="answer-topic">
         <span class="answer-topic-label">本轮主题</span>
         <strong class="answer-topic-text">${esc(topicPrompt)}</strong>
-        ${senses ? `<span class="answer-senses">${esc(senses)}</span>` : ""}
       </div>
       <p class="modal-sub">其余玩家都已锁定答案。逐张判断这些牌是否符合本轮主题。超时未答按答错处理。</p>
       <div class="answer-grid">
@@ -1313,18 +1321,28 @@ function applyLearning(outcome) {
   if (wrongCount) toast(`答错 ${wrongCount} 个词，已收进生词本`);
 }
 
-// 结算翻牌统一用「主题义项 ↔ 该词义项」对照，合规牌与近邻牌共用同一格式。
-function sensePairHtml(entry, word, miss) {
-  const topicSense = String(entry.topicSense || "").trim();
-  const wordSense = String(entry.wordSense || "").trim();
-  const same = entry.kind === "same" && topicSense && wordSense && topicSense === wordSense;
-  const tag = miss ? "语义相邻 · 不合规" : same ? "义项相同" : "义项相邻";
+const NOTE_WORD_RE = /与\s*([A-Za-z][A-Za-z-]*)\s*的/;
+
+function noteTalksAbout(note, word) {
+  const match = NOTE_WORD_RE.exec(String(note || ""));
+  return !match || match[1].toLowerCase() === String(word || "").toLowerCase();
+}
+
+const topicDefinition = topicDisplay;
+
+// 结算翻牌统一展示完整释义对照，不再只截取判定用的单个义项。
+function sensePairHtml(entry, word, miss, topic) {
+  const trusted = entry && noteTalksAbout(entry.note, word) ? entry : null;
+  const topicSense = topicDefinition(topic);
+  const wordSense = String(trusted?.wordSense || "").trim();
+  const same = trusted?.kind === "same";
+  const tag = miss ? "语义相邻 · 不合规" : same ? "义项相同" : trusted ? "义项相邻" : "合规";
   const cls = `${same ? "same" : "adjacent"}${miss ? " miss" : ""}`;
   const pairLine = topicSense && wordSense
     ? `<div class="pair-line">主题「${esc(topicSense)}」<i>↔</i>${esc(word)}「${esc(wordSense)}」</div>`
     : "";
-  const note = entry.note ? `<div class="pair-note">${esc(entry.note)}</div>` : "";
-  const extra = entry.source === "external" ? '<div class="pair-note">词库释义未单列，按外部词典义项判定</div>' : "";
+  const note = trusted?.note ? `<div class="pair-note">${esc(trusted.note)}</div>` : "";
+  const extra = trusted?.source === "external" ? '<div class="pair-note">词库释义未单列，按外部词典义项判定</div>' : "";
   return `<div class="reveal-explain ${cls}"><span class="pair-tag">${tag}</span>${pairLine}${note}${extra}</div>`;
 }
 
@@ -1339,7 +1357,7 @@ function showReveal(outcome) {
     const reduced = state.profile.settings.reducedMotion;
     const flipMs = reduced ? 0 : 1100;
     const stagger = reduced ? 0 : 380;
-    const prompt = topic?.prompt || topic?.targetZh || "";
+    const prompt = topicDefinition(topic);
     const cardsHtml = outcome.cards.map((card) => {
       const row = humanRows.find((entry) => entry.cardId === card.id);
       let verdict = "";
@@ -1360,10 +1378,10 @@ function showReveal(outcome) {
           .join("");
       const nearEntry = card.joker || card.truth ? null : nearMissExplainFor(topic, card.w);
       const entry = nearEntry || (card.joker ? null : explainFor(topic, card.w));
-      let relationHtml = entry ? sensePairHtml(entry, card.w, Boolean(nearEntry)) : "";
-      if (!relationHtml && !card.joker && !card.truth && isNearMiss(topic, card.w)) {
-        relationHtml = `<div class="reveal-explain adjacent miss"><div class="pair-line">${esc(card.w)} 与「${esc(prompt)}」的义项语义相邻，但不属于本局合规集合</div></div>`;
-      }
+      const isMiss = !card.joker && !card.truth && (Boolean(nearEntry) || isNearMiss(topic, card.w));
+      const relationHtml = !card.joker && (entry || card.truth || isMiss)
+        ? sensePairHtml(entry, card.w, isMiss, topic)
+        : "";
       const headWord = card.joker ? "万能牌" : card.w;
       return `<div class="reveal-flip ${card.joker || card.truth ? "truth" : "lie"}">
         <div class="reveal-flip-inner">

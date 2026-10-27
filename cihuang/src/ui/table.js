@@ -2,7 +2,7 @@ import { Application, Assets, Container, Graphics, Sprite, Text, Texture } from 
 import { gsap } from "gsap";
 import { COSMETIC_INDEX } from "../platform/store.js";
 import { fitWorld } from "../core/layout.js";
-import { topicSensesText } from "../core/senses.js";
+import { topicDisplay } from "../core/senses.js";
 import { buildCardBack, buildFeltPattern, buildMask } from "./cosmetics.js";
 import { sfx } from "./audio.js";
 
@@ -828,17 +828,18 @@ export class TableView {
       promptText.anchor.set(0.5);
       promptText.position.set(0, -4);
       front.addChild(promptText);
-      const senseText = topicSensesText(topic, 18);
+      const senseText = topicDisplay(topic);
       let senseLine = null;
       if (senseText) {
-        senseLine = text(senseText, 11, 0xa8b8a6, {
-          letterSpacing: 0.5,
+        senseLine = text(senseText, 10, 0xa8b8a6, {
+          letterSpacing: 0.3,
           wordWrap: true,
-          wordWrapWidth: cardW - 28,
+          wordWrapWidth: cardW - 16,
           align: "center",
+          lineHeight: 12,
         });
         senseLine.anchor.set(0.5);
-        senseLine.position.set(0, 56);
+        senseLine.position.set(0, 52);
         senseLine.alpha = 0;
         front.addChild(senseLine);
       }
@@ -959,11 +960,16 @@ export class TableView {
     prompt.anchor.set(0.5);
     prompt.position.set(cx, c.y + 32);
     layer.addChild(prompt);
-    const senses = topicSensesText(view.topic, 18);
+    const senses = topicDisplay(view.topic);
     if (senses) {
-      const senseRow = text(senses, 11, 0x9fb0a2);
-      senseRow.anchor.set(0.5);
-      senseRow.position.set(cx, c.y + 52);
+      const senseRow = text(senses, 9, 0x9fb0a2, {
+        wordWrap: true,
+        wordWrapWidth: c.w - 30,
+        align: "center",
+        lineHeight: 10,
+      });
+      senseRow.anchor.set(0.5, 0);
+      senseRow.position.set(cx, c.y + 50);
       layer.addChild(senseRow);
     }
     const x = view.x;

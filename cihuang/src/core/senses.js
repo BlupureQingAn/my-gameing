@@ -46,3 +46,18 @@ export function topicSensesText(topic, limit = 20) {
   const text = list.join(" / ");
   return text.length > limit ? `${text.slice(0, limit)}…` : text;
 }
+
+export function topicDisplay(topic) {
+  const label = String(topic?.topicLabel || "").trim();
+  return label || topicFullText(topic);
+}
+
+export function topicFullText(topic) {
+  const zh = String(topic?.targetZh || "").trim();
+  const def = String(topic?.prompt || "").trim();
+  const isEnglish = /^[A-Za-z][A-Za-z\s'.-]*$/.test(def);
+  if (!def || isEnglish) return zh || def;
+  // 释义主题的 prompt 与 targetZh 常互为重复，取信息量更大的那条，避免同一义项出现两遍。
+  if (topic?.type === "definition") return def.length > zh.length ? def : zh || def;
+  return zh || def;
+}
