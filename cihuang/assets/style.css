@@ -497,6 +497,21 @@ a { color: var(--amber); }
   color: var(--amber);
   box-shadow: 0 0 10px rgba(226, 196, 119, 0.18);
 }
+.reveal-explain {
+  margin-top: 8px;
+  padding: 5px 8px;
+  border-left: 2px solid rgba(226, 196, 119, 0.55);
+  border-radius: 4px;
+  background: rgba(226, 196, 119, 0.08);
+  color: var(--amber);
+  font-size: 10px;
+  line-height: 1.5;
+}
+.reveal-explain.adjacent {
+  border-left-color: rgba(130, 170, 196, 0.5);
+  background: rgba(130, 170, 196, 0.08);
+  color: #a9c0cf;
+}
 .reveal-note { margin-top: auto; padding-top: 8px; color: var(--dim); font-size: 9px; line-height: 1.5; }
 .reveal-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 8px; flex-wrap: wrap; }
 .reveal-note + .reveal-foot { margin-top: 8px; }
@@ -507,12 +522,20 @@ a { color: var(--amber); }
 .answer-topic {
   display: flex;
   align-items: baseline;
+  flex-wrap: wrap;
   gap: 10px;
   margin: 0 0 14px;
   padding: 10px 14px;
   border: 1px solid rgba(226, 196, 119, 0.45);
   border-radius: 6px;
   background: rgba(226, 196, 119, 0.08);
+}
+.answer-senses {
+  flex-basis: 100%;
+  color: var(--dim);
+  font-size: 12px;
+  line-height: 1.4;
+  word-break: break-word;
 }
 .answer-topic-label {
   flex: none;

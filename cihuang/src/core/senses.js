@@ -23,3 +23,19 @@ export function matchedSenseIndices(topic, word) {
   const list = topic?.senseMatch?.[word];
   return Array.isArray(list) ? list : [];
 }
+
+export function explainFor(topic, word) {
+  const entry = topic?.explain?.[word];
+  if (!entry || !entry.note || entry.kind === "none") return null;
+  return entry;
+}
+
+export function isNearMiss(topic, word) {
+  return Array.isArray(topic?.nearMiss) && topic.nearMiss.includes(word);
+}
+
+export function topicSensesText(topic, limit = 20) {
+  const list = Array.isArray(topic?.topicSenses) ? topic.topicSenses.filter(Boolean) : [];
+  const text = list.join(" / ");
+  return text.length > limit ? `${text.slice(0, limit)}…` : text;
+}

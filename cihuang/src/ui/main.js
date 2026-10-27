@@ -2,7 +2,13 @@ import { Application, Container, Graphics } from "pixi.js";
 import { gsap } from "gsap";
 import { GameSession, canHumanChallenge } from "../game/session.js";
 import { LOOKUP_COST, MAX_REVIEW_WORDS } from "../core/constants.js";
-import { matchedSenseIndices, splitSenses } from "../core/senses.js";
+import {
+  explainFor,
+  isNearMiss,
+  matchedSenseIndices,
+  splitSenses,
+  topicSensesText,
+} from "../core/senses.js";
 import { mergeReviewWords } from "../core/vocab.js";
 import { TableView } from "./table.js";
 import { sfx, setSound, setMusic, setAmbient, setVolume, unlock, isAudioUnlocked } from "./audio.js";
@@ -1200,11 +1206,14 @@ async function askAnswers(cards) {
   await waitLookupClosed();
   return new Promise((resolve) => {
     const answers = {};
-    const topicPrompt = state.session.view().topic?.prompt || "";
+    const topic = state.session.view().topic;
+    const topicPrompt = topic?.prompt || "";
+    const senses = topicSensesText(topic);
     const body = `
       <div class="answer-topic">
         <span class="answer-topic-label">本轮主题</span>
         <strong class="answer-topic-text">${esc(topicPrompt)}</strong>
+        ${senses ? `<span class="answer-senses">${esc(senses)}</span>` : ""}
       </div>
       <p class="modal-sub">其余玩家都已锁定答案。逐张判断这些牌是否符合本轮主题。超时未答按答错处理。</p>
       <div class="answer-grid">
@@ -1326,7 +1335,14 @@ function showReveal(outcome) {
         : splitSenses(card.zh || "")
           .map((sense, index) => `<span class="reveal-sense${hot.includes(index) ? " hot" : ""}">${esc(sense)}</span>`)
           .join("");
-      const note = !card.joker && card.truth && !hot.length && card.zh
+      const entry = card.joker ? null : explainFor(topic, card.w);
+      const explainHtml = entry
+        ? `<div class="reveal-explain ${entry.kind}">${esc(entry.note)}${entry.source === "external" ? "（词库释义未单列）" : ""}</div>`
+        : "";
+      const missHtml = !card.joker && !card.truth && isNearMiss(topic, card.w)
+        ? `<div class="reveal-explain adjacent">${esc(card.w)} 与「${esc(prompt)}」的义项语义相邻，但不属于本局合规集合</div>`
+        : "";
+      const note = !card.joker && card.truth && !hot.length && card.zh && !entry
         ? '<div class="reveal-note">释义中没有直接对应义项，按近义关系判定合规</div>'
         : "";
       const headWord = card.joker ? "万能牌" : card.w;
@@ -1339,7 +1355,7 @@ function showReveal(outcome) {
               <span class="reveal-ipa">${esc(card.ipa || "")}</span>
             </div>
             <div class="reveal-senses">${sensesHtml}</div>
-            ${note}
+            ${explainHtml}${missHtml}${note}
             <div class="reveal-foot">${truthTag}${verdict}</div>
           </div>
         </div>
@@ -1358,7 +1374,7 @@ function showReveal(outcome) {
           <span class="answer-topic-label">本轮主题</span>
           <strong class="reveal-topic-text">${esc(prompt)}</strong>
         </div>
-        <p class="modal-sub">翻开后显示词条释义，琥珀色义项对应本轮主题。</p>
+        <p class="modal-sub">翻开后显示词条释义，琥珀色义项对应本轮主题；解说行说明判定依据。</p>
         <div class="reveal-stage${reduced ? " instant" : ""}">${cardsHtml}</div>`,
       actions: '<button class="btn btn-primary" id="reveal-next" disabled>翻开中…</button>',
     });
@@ -2245,7 +2261,7 @@ const TUTORIAL_STEPS = [
   },
   {
     title: "全体作答",
-    text: "被质疑的牌会逐张公开。除被质疑者外，所有活着的人都要在 <b>10 秒</b>内判断每张牌合规还是不合规。你答错一个，这个词就会被收进生词本。",
+    text: "被质疑的牌会逐张公开。除被质疑者外，所有活着的人都要在 <b>10 秒</b>内判断每张牌合规还是不合规。你答错一个，这个词就会被收进生词本。合不合规由本局主题标注决定；翻牌时会说明双方共享或相邻的具体义项。",
     demo: '<div class="demo-note">AI 也会答错。它们在按自己的知识水平猜，不会偷看你的牌。</div>',
   },
   {
@@ -2350,9 +2366,10 @@ function showHelp() {
     body: `<div class="rules">
       <ol>
         <li>四人一桌，每人 5 张手牌。牌堆 24 张：<b>6 张合规</b>、1 张万能、17 张干扰。</li>
-        <li>每轮公布主题与 K=6。轮到你时出 <b>1-3 张</b>牌，声称全部合规；累计声称 X 公开。</li>
+        <li>每轮公布主题、本轮涉及的义项与 K=6。轮到你时出 <b>1-3 张</b>牌，声称全部合规；累计声称 X 公开。</li>
         <li>你也可以质疑上家刚打出的那一段，即使对方已经出完手牌。手牌空的存活玩家本轮观战，下家仍要决定是否质疑。</li>
         <li>被质疑的牌逐张公开，除出牌者外所有活人 <b>10 秒</b>内判断合规与否。答错会记入生词本。</li>
+        <li>合不合规由本局主题的明细标注决定；翻牌时会说明双方共享或语义相邻的具体义项。语义相邻本身不等于合规，判定仍以主题标注为准。</li>
         <li>对局中长按任意非万能手牌 <b>0.5 秒</b>，花 ${LOOKUP_COST} 水晶查看释义并收进生词本；已收藏的词再次长按免费查看。释义弹窗打开时倒计时与 AI 行动暂停。</li>
         <li>有一张不合规即为谎言，出牌者受罚；全部合规则质疑者受罚。</li>
         <li>受罚者转左轮，每人独立 1/6 起步，每次 +1/6，整局不重置。中弹即出局，最后剩一人赢下整局。</li>

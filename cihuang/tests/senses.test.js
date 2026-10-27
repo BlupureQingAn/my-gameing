@@ -1,6 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { matchedSenseIndices, splitSenses } from "../src/core/senses.js";
+import {
+  explainFor,
+  isNearMiss,
+  matchedSenseIndices,
+  splitSenses,
+  topicSensesText,
+} from "../src/core/senses.js";
 
 test("splitSenses keeps semicolon-delimited senses", () => {
   assert.deepEqual(splitSenses("adj. 强(壮)的; 坚固的; 强烈的; 坚强的"), [
@@ -45,4 +51,35 @@ test("matchedSenseIndices reads topic labels safely", () => {
   assert.deepEqual(matchedSenseIndices({ senseMatch: { fresh: [] } }, "fresh"), []);
   assert.deepEqual(matchedSenseIndices({ senseMatch: {} }, "fresh"), []);
   assert.deepEqual(matchedSenseIndices(null, "fresh"), []);
+});
+
+test("explainFor returns a usable explanation and skips empty or none entries", () => {
+  const topic = {
+    explain: {
+      year: { kind: "same", note: "class 的「年级」义与 year 的「年级」义相同", source: "external" },
+      college: { kind: "none", note: "" },
+      sort: { kind: "adjacent", note: "class 的「类别」义与 sort 的「种类」义语义相邻", source: "lexicon" },
+    },
+  };
+  assert.equal(explainFor(topic, "year").kind, "same");
+  assert.equal(explainFor(topic, "sort").kind, "adjacent");
+  assert.equal(explainFor(topic, "college"), null);
+  assert.equal(explainFor(topic, "missing"), null);
+  assert.equal(explainFor(null, "year"), null);
+});
+
+test("isNearMiss reads the near-miss list safely", () => {
+  const topic = { nearMiss: ["college", "grade"] };
+  assert.equal(isNearMiss(topic, "college"), true);
+  assert.equal(isNearMiss(topic, "year"), false);
+  assert.equal(isNearMiss({}, "college"), false);
+  assert.equal(isNearMiss(null, "college"), false);
+});
+
+test("topicSensesText joins and truncates sense labels", () => {
+  assert.equal(topicSensesText({ topicSenses: ["班级", "年级"] }), "班级 / 年级");
+  assert.equal(topicSensesText({ topicSenses: ["班级", "", "年级"] }), "班级 / 年级");
+  assert.equal(topicSensesText({ topicSenses: [] }), "");
+  assert.equal(topicSensesText(null), "");
+  assert.equal(topicSensesText({ topicSenses: ["一二三四五六七八九十"] }, 6), "一二三四五六…");
 });
