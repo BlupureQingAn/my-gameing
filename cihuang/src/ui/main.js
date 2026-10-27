@@ -1349,9 +1349,6 @@ function showReveal(outcome) {
       const missHtml = !card.joker && !card.truth && isNearMiss(topic, card.w)
         ? `<div class="reveal-explain adjacent">${esc(card.w)} 与「${esc(prompt)}」的义项语义相邻，但不属于本局合规集合</div>`
         : "";
-      const note = !card.joker && card.truth && !hot.length && card.zh && !entry
-        ? '<div class="reveal-note">释义中没有直接对应义项，按近义关系判定合规</div>'
-        : "";
       const headWord = card.joker ? "万能牌" : card.w;
       return `<div class="reveal-flip ${card.joker || card.truth ? "truth" : "lie"}">
         <div class="reveal-flip-inner">
@@ -1362,7 +1359,7 @@ function showReveal(outcome) {
               <span class="reveal-ipa">${esc(card.ipa || "")}</span>
             </div>
             <div class="reveal-senses">${sensesHtml}</div>
-            ${explainHtml}${missHtml}${note}
+            ${explainHtml}${missHtml}
             <div class="reveal-foot">${truthTag}${verdict}</div>
           </div>
         </div>
