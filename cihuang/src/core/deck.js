@@ -53,10 +53,10 @@ export function buildRoundDeck({
     throw new Error(`topic ${topic.id} has only ${distractors.length} distractors`);
   }
 
-  const pickItem = (word, fallbackTruth) => {
-    const item = bankIndex[word];
-    if (!item) throw new Error(`bank missing word: ${word}`);
-    return item;
+  // 主题库可能引用词表外的词（主题单独重新生成时不保证与词表同步），
+  // 这里补一个只含词形的占位条目，宁可释义为空也不让整局开不起来。
+  const pickItem = (word) => bankIndex[word] || {
+    w: word, ipa: "", pos: [], zh: "", def: "", freq: 0,
   };
 
   let seq = 0;

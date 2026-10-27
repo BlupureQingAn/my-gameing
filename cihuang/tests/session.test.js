@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { canHumanChallenge } from "../src/game/session.js";
+import { GameSession, canHumanChallenge } from "../src/game/session.js";
+import { makeBank, makeTopic } from "./fixture.js";
 
 function makeView({ chain = [], players = [{ id: 0, alive: true }, { id: 1, alive: true }] } = {}) {
   return { chain, players };
@@ -26,4 +27,19 @@ test("challenge is hidden when the last player is out", () => {
     players: [{ id: 0, alive: true }, { id: 1, alive: false }],
   });
   assert.equal(canHumanChallenge(view), false);
+});
+
+test("session skips topics whose words are missing from the bank", () => {
+  const good = makeTopic("good");
+  const bad = makeTopic("bad");
+  bad.distractors.push("ghostword");
+  const bank = makeBank();
+  const data = {
+    words: Object.values(bank).map((item) => [item.w, item.ipa, "n", item.zh, item.def, 1]),
+    topics: [bad, good],
+  };
+  for (let i = 0; i < 20; i += 1) {
+    const session = new GameSession({ data, band: "hs", difficulty: "normal", seed: `filter-${i}` });
+    assert.equal(session.state.topic.id, "good");
+  }
 });

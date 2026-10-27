@@ -91,3 +91,20 @@ test("deck rejects topics without exactly 6 compliant words", () => {
     rng: createStreams("x").deck,
   }), /exactly 6 compliant/);
 });
+
+test("topic referencing a word outside the bank still builds a full deck", () => {
+  const topic = makeTopic();
+  const bank = makeBank();
+  delete bank[topic.compliant[0]];
+  const built = buildRoundDeck({
+    topic,
+    bankIndex: bank,
+    rng: createStreams("missing-word").deck,
+    reviewWords: [],
+    round: 1,
+  });
+  assert.equal(built.cards.length, sizes.DECK_SIZE);
+  const orphan = built.cards.find((card) => card.w === topic.compliant[0]);
+  assert.equal(orphan.truth, true);
+  assert.equal(orphan.zh, "");
+});

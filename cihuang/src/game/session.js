@@ -41,8 +41,19 @@ export class GameSession {
     this.difficulty = difficulty;
     this.seed = String(seed || `local-${Date.now()}`);
     this.bankIndex = buildBankIndex(data.words, extraItems);
+    // 主题库与词表可能不同步（主题会单独重新生成），
+    // 只保留所有合规词/干扰词都在词表里的主题，避免抽到缺词主题。
+    const known = new Set(Object.keys(this.bankIndex));
+    const usable = (data.topics || []).filter((topic) => {
+      if (!topic || !Array.isArray(topic.compliant) || topic.compliant.length !== 6) return false;
+      const extra = (topic.distractors || []).filter(
+        (word) => !topic.compliant.includes(word) && word !== topic.target,
+      );
+      return extra.length >= 17
+        && topic.compliant.concat(extra).every((word) => known.has(word));
+    });
     this.picker = new TopicPicker({
-      topics: data.topics,
+      topics: usable.length ? usable : data.topics,
       difficulty,
       rng: createStreams(this.seed).topics,
     });
