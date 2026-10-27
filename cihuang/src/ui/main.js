@@ -1167,11 +1167,18 @@ async function aiTurn() {
 
 async function humanPlay(cardIds) {
   if (!state.session || !state.session.humanTurn()) return;
+  const playedReview = state.session.humanCards()
+    .filter((card) => cardIds.includes(card.id) && card.review && !card.joker)
+    .map((card) => card.w);
   try {
     state.session.playHuman(cardIds);
   } catch (error) {
     toast(error.message);
     return;
+  }
+  for (const word of playedReview) {
+    const entry = markAnswer(word, true);
+    if (entry) syncEntry(entry);
   }
   hideActionBar();
   state.table.setHandEnabled(false);

@@ -186,8 +186,7 @@ export class GameSession {
   beginRandomNextRound() {
     const end = this.state.roundEnd;
     if (!end) return null;
-    const topic = this.picker.pickForReviewWords(this.reviewWords)
-      || this.picker.pickRandom(this.picker.candidates(3));
+    const topic = this.picker.pickRandom(this.picker.candidates(3));
     if (!topic) return null;
     this.beginNextRound(topic, end.nextStarter);
     return { topic, starter: end.nextStarter };
