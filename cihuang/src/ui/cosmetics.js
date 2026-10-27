@@ -206,8 +206,14 @@ export function buildCardBack(item, w = 96, h = 136) {
     .stroke({ width: 1.2, color: item.accent, alpha: 0.55 });
   body.roundRect(-w / 2 + 9, -h / 2 + 9, w - 18, h - 18, 3)
     .stroke({ width: 0.7, color: item.accent, alpha: 0.28 });
-  cardBackPattern(body, item, w, h);
   root.addChild(body);
+  // 纹样按 96×136 参考画布绘制后等比缩放，任何卡面尺寸观感一致
+  const pattern = new Graphics();
+  cardBackPattern(pattern, item, 96, 136);
+  const s = Math.min((w - 20) / 76, (h - 20) / 116);
+  pattern.scale.set(s);
+  pattern.position.set(0, 0);
+  root.addChild(pattern);
   return root;
 }
 

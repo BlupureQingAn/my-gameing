@@ -375,7 +375,7 @@ export class TableView {
       return node;
     }
     const word = card.joker ? "JOKER" : card.w;
-    const label = text(word, word.length > 10 ? 11 : word.length > 7 ? 13 : 16, card.joker ? 0xf0d6ff : 0xf4ead4, {
+    const label = text(word, word.length > 10 ? 12 : word.length > 7 ? 14 : 17, card.joker ? 0xf0d6ff : 0xf4ead4, {
       fontWeight: "bold",
       wordWrap: true,
       wordWrapWidth: w - 12,
@@ -385,19 +385,19 @@ export class TableView {
     label.position.set(0, -h / 2 + 34);
     node.addChild(label);
     if (card.ipa) {
-      const ipa = text(card.ipa, 8, 0x9fb7a7, { wordWrap: true, wordWrapWidth: w - 14, breakWords: true });
+      const ipa = text(card.ipa, 9, 0x9fb7a7, { wordWrap: true, wordWrapWidth: w - 14, breakWords: true });
       ipa.anchor.set(0.5);
       ipa.position.set(0, -h / 2 + 66);
       node.addChild(ipa);
     }
     if (Array.isArray(card.pos) && card.pos.length) {
-      const pos = text(card.pos.slice(0, 2).join("/"), 8, 0x8b9a8e);
+      const pos = text(card.pos.slice(0, 2).join("/"), 9, 0x8b9a8e);
       pos.anchor.set(0.5);
       pos.position.set(0, h / 2 - 34);
       node.addChild(pos);
     }
     if (card.review) {
-      const tag = text("复习", 8, 0xcfe3a8);
+      const tag = text("复习", 9, 0xcfe3a8);
       tag.anchor.set(0.5);
       tag.position.set(0, h / 2 - 16);
       node.addChild(tag);
@@ -446,7 +446,7 @@ export class TableView {
         gsap.to(halo, { alpha: 0.35, duration: 0.75, yoyo: true, repeat: -1, ease: "sine.inOut" });
       }
       const claimed = segments.reduce((sum, segment) => sum + (segment.claimed || 0), 0);
-      const claimTag = text(`声称 ${claimed}`, 9, PLAYER_COLORS[seat]);
+      const claimTag = text(`声称 ${claimed}`, 10, PLAYER_COLORS[seat]);
       claimTag.anchor.set(0.5);
       claimTag.position.set(slot.x, slot.y - h / 2 - 13);
       layer.addChild(claimTag);
@@ -688,14 +688,14 @@ export class TableView {
         group.addChild(face);
       }
     }
-    const name = text(seat === 0 ? "你" : `面具${"一二三"[seat - 1]}`, 11, player.alive ? 0xdfd7c4 : 0x6b665c);
+    const name = text(seat === 0 ? "你" : `面具${"一二三"[seat - 1]}`, 12, player.alive ? 0xdfd7c4 : 0x6b665c);
     name.anchor.set(0.5);
     name.position.set(0, 46);
     group.addChild(name);
     const spectating = player.alive && player.handCount === 0;
     const count = text(
       player.alive ? (spectating ? "观战" : `${player.handCount} 张`) : "出局",
-      9,
+      10,
       player.alive ? (spectating ? 0x8fa3a0 : 0xa9b7a9) : 0x8a4a4a,
     );
     count.anchor.set(0.5);
@@ -745,7 +745,7 @@ export class TableView {
     }
     if (this.thinkingSeat && view.players[this.thinkingSeat]?.alive) {
       const pos = this.layout.avatars[this.thinkingSeat];
-      const hint = text("思考中…", 10, 0xe8d9a8);
+      const hint = text("思考中…", 11, 0xe8d9a8);
       hint.anchor.set(0.5);
       hint.position.set(pos.x, pos.y + 90);
       layer.addChild(hint);
@@ -786,14 +786,14 @@ export class TableView {
       root.addChild(dim);
 
       const spot = new Graphics();
-      spot.ellipse(cx, cy, 250, 152).fill({ color: 0xffdfa0, alpha: 0.03 });
-      spot.ellipse(cx, cy, 188, 114).fill({ color: 0xffdfa0, alpha: 0.045 });
-      spot.ellipse(cx, cy, 128, 78).fill({ color: 0xfff0c8, alpha: 0.05 });
+      spot.ellipse(cx, cy, 184, 252).fill({ color: 0xffdfa0, alpha: 0.03 });
+      spot.ellipse(cx, cy, 142, 196).fill({ color: 0xffdfa0, alpha: 0.045 });
+      spot.ellipse(cx, cy, 96, 136).fill({ color: 0xfff0c8, alpha: 0.05 });
       spot.alpha = 0;
       root.addChild(spot);
 
-      const cardW = 252;
-      const cardH = 164;
+      const cardW = 176;
+      const cardH = 250;
       const card = new Container();
       card.position.set(cx, cy + 46);
       card.rotation = -0.08;
@@ -814,15 +814,16 @@ export class TableView {
         .stroke({ width: 0.8, color: cardback.accent, alpha: 0.35 });
       front.addChild(panel);
       const typeLabel = topic.type === "synonym" ? "同义词主题" : "释义主题";
-      const tag = text(typeLabel, 10, 0xd9b45f, { letterSpacing: 3 });
+      const tag = text(typeLabel, 11, 0xd9b45f, { letterSpacing: 3 });
       tag.anchor.set(0.5);
-      tag.position.set(0, -cardH / 2 + 20);
+      tag.position.set(0, -cardH / 2 + 22);
       front.addChild(tag);
       const full = topic.prompt || (topic.promptTokens || []).join("；");
-      const promptText = text("", 16, 0xf4ead4, {
+      const promptText = text("", 17, 0xf4ead4, {
         wordWrap: true,
-        wordWrapWidth: cardW - 40,
-        lineHeight: 24,
+        wordWrapWidth: cardW - 36,
+        lineHeight: 26,
+        align: "center",
       });
       promptText.anchor.set(0.5);
       promptText.position.set(0, -4);
@@ -830,21 +831,24 @@ export class TableView {
       const senseText = topicSensesText(topic, 18);
       let senseLine = null;
       if (senseText) {
-        senseLine = text(senseText, 10, 0xa8b8a6, { letterSpacing: 1 });
+        senseLine = text(senseText, 11, 0xa8b8a6, {
+          letterSpacing: 0.5,
+          wordWrap: true,
+          wordWrapWidth: cardW - 28,
+          align: "center",
+        });
         senseLine.anchor.set(0.5);
-        senseLine.position.set(0, 34);
+        senseLine.position.set(0, 56);
         senseLine.alpha = 0;
         front.addChild(senseLine);
       }
-      const seatName = (id) => (id === 0 ? "你" : `面具${"一二三"[id - 1]}`);
-      const starter = view.starter == null ? view.currentPlayer : view.starter;
       const foot = text(
-        `${first ? "开局" : `第 ${view.round} 轮`} · 由 ${seatName(starter)} 选主题`,
-        10,
+        `${first ? "开局" : `第 ${view.round} 轮`} · 系统随机主题`,
+        11,
         0x9fb0a2,
       );
       foot.anchor.set(0.5);
-      foot.position.set(0, cardH / 2 - 20);
+      foot.position.set(0, cardH / 2 - 22);
       front.addChild(foot);
       card.addChild(front);
 
@@ -944,11 +948,11 @@ export class TableView {
     panel.roundRect(c.x, c.y, c.w, c.h, 10).stroke({ width: 1, color: 0x6c7f6a, alpha: 0.5 });
     layer.addChild(panel);
     const typeLabel = view.topic.type === "synonym" ? "同义词主题" : "释义主题";
-    const tag = text(typeLabel, 9, 0x92a891);
+    const tag = text(typeLabel, 10, 0x92a891);
     tag.anchor.set(0.5);
     tag.position.set(cx, c.y + 11);
     layer.addChild(tag);
-    const prompt = text(view.topic.prompt || view.topic.promptTokens?.join("；") || "", 15, 0xf2e6c8, {
+    const prompt = text(view.topic.prompt || view.topic.promptTokens?.join("；") || "", 16, 0xf2e6c8, {
       wordWrap: true,
       wordWrapWidth: c.w - 40,
     });
@@ -957,13 +961,13 @@ export class TableView {
     layer.addChild(prompt);
     const senses = topicSensesText(view.topic, 18);
     if (senses) {
-      const senseRow = text(senses, 10, 0x9fb0a2);
+      const senseRow = text(senses, 11, 0x9fb0a2);
       senseRow.anchor.set(0.5);
       senseRow.position.set(cx, c.y + 52);
       layer.addChild(senseRow);
     }
     const x = view.x;
-    const textX = text(`本轮声称  ${x} / 6`, 12, x > 6 ? 0xe08a6a : 0xb9c8b4);
+    const textX = text(`本轮声称  ${x} / 6`, 13, x > 6 ? 0xe08a6a : 0xb9c8b4);
     textX.anchor.set(0.5);
     textX.position.set(cx, c.y + 71);
     layer.addChild(textX);
@@ -978,7 +982,7 @@ export class TableView {
       parts.push(`刚才 ${nameOf(lastSeg.player)} 出了 ${lastSeg.count || lastSeg.claimed || 1} 张`);
     }
     if (parts.length) {
-      const hint = text(parts.join(" · "), 10, humanTurnNow ? 0x7fd6b2 : 0xdfd7c4);
+      const hint = text(parts.join(" · "), 11, humanTurnNow ? 0x7fd6b2 : 0xdfd7c4);
       hint.anchor.set(0.5);
       hint.position.set(cx, c.y - 16);
       layer.addChild(hint);
