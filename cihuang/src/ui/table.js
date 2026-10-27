@@ -1,6 +1,7 @@
 import { Application, Assets, Container, Graphics, Sprite, Text, Texture } from "pixi.js";
 import { gsap } from "gsap";
 import { COSMETIC_INDEX } from "../platform/store.js";
+import { fitWorld } from "../core/layout.js";
 import { topicSensesText } from "../core/senses.js";
 import { buildCardBack, buildFeltPattern, buildMask } from "./cosmetics.js";
 import { sfx } from "./audio.js";
@@ -139,10 +140,13 @@ export class TableView {
   }
 
   async init() {
+    const rect = this.container.getBoundingClientRect();
+    this.viewW = Math.max(1, Math.round(rect.width || window.innerWidth));
+    this.viewH = Math.max(1, Math.round(rect.height || window.innerHeight));
     this.app = new Application();
     await this.app.init({
-      width: this.W,
-      height: this.H,
+      width: this.viewW,
+      height: this.viewH,
       background: 0x050a09,
       antialias: false,
       autoDensity: true,
@@ -151,6 +155,8 @@ export class TableView {
     });
     this.app.canvas.className = "table-canvas";
     this.container.appendChild(this.app.canvas);
+    this.screen = new Container();
+    this.app.stage.addChild(this.screen);
     this.root = new Container();
     this.root.sortableChildren = true;
     this.app.stage.addChild(this.root);
@@ -162,7 +168,8 @@ export class TableView {
     this.layers.fx = new Container();
     this.layers.hand = new Container();
     this.layers.hand.sortableChildren = true;
-    for (const key of ["bg", "table", "piles", "seats", "center", "fx", "hand"]) {
+    this.screen.addChild(this.layers.bg);
+    for (const key of ["table", "piles", "seats", "center", "fx", "hand"]) {
       this.root.addChild(this.layers[key]);
     }
     this.textures = {};
@@ -231,29 +238,39 @@ export class TableView {
     const canvas = this.app && this.app.canvas;
     if (!canvas) return;
     const rect = this.container.getBoundingClientRect();
-    const vw = rect.width || window.innerWidth;
-    const vh = rect.height || window.innerHeight;
-    const scale = Math.min(1, vw / this.W, vh / this.H);
-    canvas.style.width = `${Math.max(1, Math.round(this.W * scale))}px`;
-    canvas.style.height = `${Math.max(1, Math.round(this.H * scale))}px`;
+    const vw = Math.max(1, Math.round(rect.width || window.innerWidth));
+    const vh = Math.max(1, Math.round(rect.height || window.innerHeight));
+    if (vw !== this.viewW || vh !== this.viewH) {
+      this.viewW = vw;
+      this.viewH = vh;
+      this.app.renderer.resize(vw, vh);
+    }
+    const fit = fitWorld(vw, vh, this.W, this.H);
+    this.worldScale = fit.scale;
+    this.root.scale.set(fit.scale);
+    this.root.position.set(fit.x, fit.y);
+    canvas.style.width = `${vw}px`;
+    canvas.style.height = `${vh}px`;
   }
 
   handleResize() {
     if (!this.app) return;
     const next = window.innerHeight > window.innerWidth ? LAYOUTS.portrait : LAYOUTS.landscape;
-    if (next !== this.layout) {
+    const changed = next !== this.layout;
+    if (changed) {
       this.layout = next;
       this.W = next.W;
       this.H = next.H;
-      this.app.renderer.resize(next.W, next.H);
-      this.buildBackground();
-      this.buildTable();
       this.lastHandKey = "";
       this.selected.clear();
       this.onSelect([]);
-      if (this.view) this.render(this.view);
     }
     this.fitCanvas();
+    this.buildBackground();
+    if (changed) {
+      this.buildTable();
+      if (this.view) this.render(this.view);
+    }
   }
 
   async loadArt() {
@@ -279,28 +296,31 @@ export class TableView {
 
   buildBackground() {
     const layer = this.layers.bg;
+    if (!layer) return;
     clearLayer(layer);
+    const w = this.viewW || this.W;
+    const h = this.viewH || this.H;
     const bg = new Graphics();
-    bg.rect(0, 0, this.W, this.H).fill({ color: 0x06100d });
+    bg.rect(0, 0, w, h).fill({ color: 0x06100d });
     layer.addChild(bg);
     const texture = this.textures["tavern.webp"];
     if (texture) {
       const sprite = new Sprite(texture);
-      const scale = Math.max(this.W / texture.width, this.H / texture.height);
+      const scale = Math.max(w / texture.width, h / texture.height);
       sprite.anchor.set(0.5);
-      sprite.position.set(this.W / 2, this.H / 2);
+      sprite.position.set(w / 2, h / 2);
       sprite.scale.set(scale);
       sprite.alpha = 0.55;
       layer.addChild(sprite);
     }
     const shade = new Graphics();
-    shade.rect(0, 0, this.W, this.H).fill({ color: 0x02100c, alpha: 0.35 });
+    shade.rect(0, 0, w, h).fill({ color: 0x02100c, alpha: 0.35 });
     for (let i = 0; i < 5; i += 1) {
-      shade.rect(0, i * 28, this.W, 28).fill({ color: 0x000000, alpha: 0.025 });
+      shade.rect(0, i * 28, w, 28).fill({ color: 0x000000, alpha: 0.025 });
     }
     layer.addChild(shade);
     const vignette = new Graphics();
-    vignette.ellipse(this.W / 2, this.H / 2, this.W * 0.62, this.H * 0.65).fill({ color: 0x000000, alpha: 0 });
+    vignette.ellipse(w / 2, h / 2, w * 0.62, h * 0.65).fill({ color: 0x000000, alpha: 0 });
     layer.addChild(vignette);
   }
 
@@ -526,8 +546,7 @@ export class TableView {
     if (event.button != null && event.button !== 0) return;
     if (!this.handEnabled && !this.collectEnabled) return;
     this.clearPress();
-    const rect = this.app.canvas.getBoundingClientRect();
-    const scale = rect.height / this.H || 1;
+    const scale = this.worldScale || 1;
     const drag = {
       card,
       node,
