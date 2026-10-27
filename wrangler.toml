@@ -8,6 +8,7 @@
 #   H5_APP_ID / H5_APP_SECRET / PAY_NOTIFY_URL
 #   MAPAY_API_URL / MAPAY_APPID / MAPAY_APPKEY
 #   XUNHU_APP_ID=201906186933 / XUNHU_APP_SECRET(签约后发) / XUNHU_NOTIFY_URL=https://ai.blupure.cn/api/xunhu/notify
+#   WX_MINIGAME_APPID / WX_MINIGAME_SECRET（微信小游戏《词谎》登录；AppID 有代码内默认值，Secret 必填，缺失时接口返回 503）
 #   MAIL_TOKEN（自建发信代理 token,2026-09-19 轮换;worker 侧不得写兜底值——兜底值会随公开仓库一起泄露）
 name = "my-openai-proxy"
 main = "worker.js"

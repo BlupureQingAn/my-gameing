@@ -4216,6 +4216,95 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                 await pbAdminFetch(env, `/api/collections/lang_vocab/records/${vid}`, { method: "DELETE" });
                 return new Response(JSON.stringify({ ok: true, id: vid }), { headers: { ...corsHeaders(), "Content-Type": "application/json" } });
             }
+            // ---- 微信小游戏《词谎》：wx.login code 换 openid，自动建号并签发 PB token ----
+            // AppSecret 只走 Secrets（WX_MINIGAME_SECRET），未配置时返回 503，小游戏降级本地模式。
+            if (url.pathname === "/api/minigame/login" && request.method === "POST") {
+                const appid = env.WX_MINIGAME_APPID || "wx50c82eee37dee33d";
+                const secret = env.WX_MINIGAME_SECRET || "";
+                if (!secret) return errorResponse("小游戏登录暂未开通", 503, null, "MINIGAME_NOT_CONFIGURED");
+                let body = {};
+                try { body = await request.json(); } catch (e) {}
+                const code = String(body.code || "").trim();
+                if (!code) return errorResponse("缺少登录凭证", 400, null, "INVALID_WX_CODE");
+                let wxData = null;
+                try {
+                    const q = new URLSearchParams({ appid, secret, js_code: code, grant_type: "authorization_code" });
+                    const wxRes = await fetch(`https://api.weixin.qq.com/sns/jscode2session?${q}`);
+                    wxData = await wxRes.json().catch(() => null);
+                } catch (e) {
+                    return errorResponse("微信服务连接失败", 502, null, "WX_SESSION_FAILED");
+                }
+                if (!wxData || !wxData.openid) {
+                    return errorResponse(wxData?.errmsg || "微信登录失败", 502, null, "WX_SESSION_FAILED");
+                }
+                const openid = String(wxData.openid);
+                const uid = `wxmg_${openid}`;
+                const clean = openid.toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 24) || Math.random().toString(36).slice(2, 10);
+                const nickname = String(body.nickname || "").trim().slice(0, 20);
+                // 与网页版聚合登录同构：social_uid 关联、social_pwd 存随机密码用于后续签发 token
+                const filter = encodeURIComponent(`social_uid='${escapePocketBaseFilterValue(uid)}'`);
+                const q2 = await pbAdminFetch(env, `/api/collections/users/records?perPage=1&skipTotal=true&filter=${filter}`);
+                const d2 = await q2.json().catch(() => ({}));
+                let user = (d2.items || [])[0];
+                let password = "";
+                if (!user) {
+                    password = "";
+                    for (let i = 0; i < 20; i++) password += "abcdefghijklmnopqrstuvwxyz0123456789"[Math.floor(Math.random() * 36)];
+                    const createRes = await pbAdminFetch(env, `/api/collections/users/records`, {
+                        method: "POST",
+                        body: JSON.stringify({
+                            email: `wxmg_${clean}@wxminigame.local`,
+                            username: `wxmg_${clean}`,
+                            password, passwordConfirm: password, emailVisibility: false,
+                            social_uid: uid, social_pwd: password,
+                            nickname: nickname || "微信玩家",
+                        })
+                    });
+                    if (!createRes.ok) {
+                        const detail = await createRes.json().catch(() => ({}));
+                        return errorResponse("账号创建失败，请重试", 500, detail, "MINIGAME_CREATE_FAILED");
+                    }
+                    user = await createRes.json().catch(() => ({}));
+                } else {
+                    password = String(user.social_pwd || "");
+                    const patch = {};
+                    if (!user.username) patch.username = `wxmg_${clean}`;
+                    if (nickname && nickname !== user.nickname) patch.nickname = nickname;
+                    if (Object.keys(patch).length) {
+                        await pbAdminFetch(env, `/api/collections/users/records/${user.id}`, {
+                            method: "PATCH", body: JSON.stringify(patch)
+                        }).catch(() => {});
+                    }
+                }
+                if (!password) return errorResponse("账号异常，请联系管理员", 500, null, "MINIGAME_ACCOUNT_BROKEN");
+                const pbUrl = (env.PB_URL || "").replace(/\/$/, "");
+                const loginRes = await fetch(`${pbUrl}/api/collections/users/auth-with-password`, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ identity: user.email, password })
+                });
+                const loginData = await loginRes.json().catch(() => ({}));
+                if (!loginRes.ok || !loginData.token) return errorResponse("登录失败，请重试", 502, null, "MINIGAME_TOKEN_FAILED");
+                return new Response(JSON.stringify({ token: loginData.token, record: loginData.record }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+
+            // ---- 微信小游戏：修改昵称 ----
+            if (url.pathname === "/api/minigame/nickname" && request.method === "POST") {
+                const auth = await authenticate(env, request);
+                if (auth.error) return auth.error;
+                const body = await request.json().catch(() => ({}));
+                const nickname = String(body.nickname || "").trim().slice(0, 20);
+                if (!nickname) return errorResponse("昵称不能为空", 400, null, "INVALID_NICKNAME");
+                const res = await pbAdminFetch(env, `/api/collections/users/records/${auth.record.id}`, {
+                    method: "PATCH", body: JSON.stringify({ nickname })
+                });
+                if (!res.ok) return errorResponse("昵称保存失败", 500, null, "NICKNAME_SAVE_FAILED");
+                return new Response(JSON.stringify({ ok: true, nickname }), {
+                    headers: { ...corsHeaders(), "Content-Type": "application/json" }
+                });
+            }
+
             // ---- 词谎 / Cihuang ----
             if (url.pathname === "/api/cihuang/config" && request.method === "GET") {
                 return cihuangJSON({
