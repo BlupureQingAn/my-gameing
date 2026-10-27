@@ -44,6 +44,7 @@ import {
   getProfile,
   hasLicense,
   isLoggedIn,
+  isOffline,
   leaderboard,
   licensePurchasedAt,
   listVocab,
@@ -706,6 +707,10 @@ function confirmLogout() {
 function updateAccount() {
   const node = $("menu-account");
   if (!node) return;
+  if (isOffline()) {
+    node.innerHTML = `<span>离线完整版 · 全词库</span><span>水晶 <b style="color:var(--amber)">${state.profile.crystals}</b></span>`;
+    return;
+  }
   if (isLoggedIn()) {
     const name = nickname() || "已登录赌客";
     const badge = hasLicense() ? '<span class="badge">完整版</span>' : '<span class="badge" style="border-color:#3f5c4a;color:#97a79a">免费版</span>';
@@ -754,9 +759,9 @@ const DIFFS = [
 function renderChoices() {
   const bandNode = $("band-pick");
   bandNode.innerHTML = BANDS.map((band) => {
-    const locked = band.id !== "hs" && !hasLicense();
+    const locked = !isOffline() && band.id !== "hs" && !hasLicense();
     return `<button class="choice ${state.band === band.id ? "active" : ""} ${locked ? "locked" : ""}" data-band="${band.id}">
-      ${band.name}<small>${locked && isLoggedIn() ? "完整版" : band.note}</small></button>`;
+      ${band.name}<small>${isOffline() ? "已包含" : locked && isLoggedIn() ? "完整版" : band.note}</small></button>`;
   }).join("");
   const diffNode = $("diff-pick");
   diffNode.innerHTML = DIFFS.map((diff) => `<button class="choice ${state.difficulty === diff.id ? "active" : ""}" data-diff="${diff.id}">
@@ -765,7 +770,7 @@ function renderChoices() {
     button.addEventListener("click", () => {
       sfx.click();
       const id = button.dataset.band;
-      if (id !== "hs" && !hasLicense()) {
+      if (!isOffline() && id !== "hs" && !hasLicense()) {
         showPurchase();
         return;
       }
@@ -1760,7 +1765,7 @@ async function showVocab() {
         <input id="vocab-input" maxlength="64" placeholder="手动添加单词（当前词库）" />
         <button class="btn" id="vocab-add-btn">添加</button>
       </div>
-      <p class="modal-sub">连续两次答对后移出复习池。${hasLicense() ? "已开启云端同步。" : "解锁完整版后可跨设备同步。"}</p>
+      <p class="modal-sub">连续两次答对后移出复习池。${isOffline() ? "离线版存档保存在本机。" : hasLicense() ? "已开启云端同步。" : "解锁完整版后可跨设备同步。"}</p>
       <div class="vocab-list">${listHtml}</div>`;
     const modal = openModal({
       title: "生词本",
@@ -2562,7 +2567,9 @@ async function boot() {
     if (showLandscapeTipIfNeeded()) return;
     if (!state.profile.settings.tutorialDone) showTutorial();
   }, 700);
-  if ("serviceWorker" in navigator) {
+  if (isOffline()) {
+    $("btn-leaderboard")?.classList.add("hidden");
+  } else if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("service-worker.js").catch(() => {});
   }
 }

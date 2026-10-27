@@ -14,3 +14,5 @@ node_modules/
 # 恢复方法：直接从 git 取旧版本 `git checkout HEAD -- scenarios/covers/`
 backups/covers_backup_*/
 backups/*.bak-*
+# 打包工程与产物（含签名密钥、node_modules、构建缓存），仅保留在本地
+cihuang/packaging/

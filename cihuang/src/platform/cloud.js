@@ -6,6 +6,13 @@ const LICENSE_KEY = "cihuang_license_v1";
 const EMAIL_KEY = "pb_auth_email";
 const USER_CACHE_KEY = "bitlife_user_cache_v1";
 
+// 打包版（APK / 桌面 / Steam）通过 index.html 注入该全局开关：买断离线，无登录、无云同步。
+const OFFLINE = typeof window !== "undefined" && window.__CIHUANG_OFFLINE__ === true;
+
+export function isOffline() {
+  return OFFLINE;
+}
+
 // 词谎买断（¥21）与主站会员完全解耦：只认 /api/cihuang/entitlement 的结果
 let licensed = false;
 let licensedAt = "";
@@ -80,7 +87,7 @@ export function clearAuthSession() {
 }
 
 export function hasLicense() {
-  return licensed;
+  return OFFLINE || licensed;
 }
 
 export function licensePurchasedAt() {
@@ -88,6 +95,7 @@ export function licensePurchasedAt() {
 }
 
 export async function fetchEntitlement() {
+  if (OFFLINE) return { licensed: true, purchasedAt: "" };
   if (!isLoggedIn()) {
     licensed = false;
     licensedAt = "";
@@ -147,6 +155,7 @@ export function clientId() {
 }
 
 async function api(path, { method = "GET", body = null, timeout = 12000 } = {}) {
+  if (OFFLINE) throw new Error("离线版不联网");
   const headers = { "Content-Type": "application/json" };
   const token = authToken();
   if (token) headers["X-Auth-Token"] = token;
