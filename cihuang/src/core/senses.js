@@ -34,6 +34,13 @@ export function isNearMiss(topic, word) {
   return Array.isArray(topic?.nearMiss) && topic.nearMiss.includes(word);
 }
 
+export function nearMissExplainFor(topic, word) {
+  if (!isNearMiss(topic, word)) return null;
+  const entry = topic?.nearMissExplain?.[word];
+  if (!entry || !entry.note || entry.kind === "none") return null;
+  return entry;
+}
+
 export function topicSensesText(topic, limit = 20) {
   const list = Array.isArray(topic?.topicSenses) ? topic.topicSenses.filter(Boolean) : [];
   const text = list.join(" / ");

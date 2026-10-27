@@ -6,6 +6,7 @@ import {
   explainFor,
   isNearMiss,
   matchedSenseIndices,
+  nearMissExplainFor,
   splitSenses,
   topicSensesText,
 } from "../core/senses.js";
@@ -1312,6 +1313,21 @@ function applyLearning(outcome) {
   if (wrongCount) toast(`答错 ${wrongCount} 个词，已收进生词本`);
 }
 
+// 结算翻牌统一用「主题义项 ↔ 该词义项」对照，合规牌与近邻牌共用同一格式。
+function sensePairHtml(entry, word, miss) {
+  const topicSense = String(entry.topicSense || "").trim();
+  const wordSense = String(entry.wordSense || "").trim();
+  const same = entry.kind === "same" && topicSense && wordSense && topicSense === wordSense;
+  const tag = miss ? "语义相邻 · 不合规" : same ? "义项相同" : "义项相邻";
+  const cls = `${same ? "same" : "adjacent"}${miss ? " miss" : ""}`;
+  const pairLine = topicSense && wordSense
+    ? `<div class="pair-line">主题「${esc(topicSense)}」<i>↔</i>${esc(word)}「${esc(wordSense)}」</div>`
+    : "";
+  const note = entry.note ? `<div class="pair-note">${esc(entry.note)}</div>` : "";
+  const extra = entry.source === "external" ? '<div class="pair-note">词库释义未单列，按外部词典义项判定</div>' : "";
+  return `<div class="reveal-explain ${cls}"><span class="pair-tag">${tag}</span>${pairLine}${note}${extra}</div>`;
+}
+
 function showReveal(outcome) {
   return new Promise((resolve) => {
     const view = state.session.view();
@@ -1342,13 +1358,12 @@ function showReveal(outcome) {
         : splitSenses(card.zh || "")
           .map((sense, index) => `<span class="reveal-sense${hot.includes(index) ? " hot" : ""}">${esc(sense)}</span>`)
           .join("");
-      const entry = card.joker ? null : explainFor(topic, card.w);
-      const explainHtml = entry
-        ? `<div class="reveal-explain ${entry.kind}">${esc(entry.note)}${entry.source === "external" ? "（词库释义未单列）" : ""}</div>`
-        : "";
-      const missHtml = !card.joker && !card.truth && isNearMiss(topic, card.w)
-        ? `<div class="reveal-explain adjacent">${esc(card.w)} 与「${esc(prompt)}」的义项语义相邻，但不属于本局合规集合</div>`
-        : "";
+      const nearEntry = card.joker || card.truth ? null : nearMissExplainFor(topic, card.w);
+      const entry = nearEntry || (card.joker ? null : explainFor(topic, card.w));
+      let relationHtml = entry ? sensePairHtml(entry, card.w, Boolean(nearEntry)) : "";
+      if (!relationHtml && !card.joker && !card.truth && isNearMiss(topic, card.w)) {
+        relationHtml = `<div class="reveal-explain adjacent miss"><div class="pair-line">${esc(card.w)} 与「${esc(prompt)}」的义项语义相邻，但不属于本局合规集合</div></div>`;
+      }
       const headWord = card.joker ? "万能牌" : card.w;
       return `<div class="reveal-flip ${card.joker || card.truth ? "truth" : "lie"}">
         <div class="reveal-flip-inner">
@@ -1359,7 +1374,7 @@ function showReveal(outcome) {
               <span class="reveal-ipa">${esc(card.ipa || "")}</span>
             </div>
             <div class="reveal-senses">${sensesHtml}</div>
-            ${explainHtml}${missHtml}
+            ${relationHtml}
             <div class="reveal-foot">${truthTag}${verdict}</div>
           </div>
         </div>

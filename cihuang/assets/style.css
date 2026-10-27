@@ -512,6 +512,21 @@ a { color: var(--amber); }
   background: rgba(130, 170, 196, 0.08);
   color: #a9c0cf;
 }
+.reveal-explain .pair-tag {
+  display: inline-block;
+  margin-bottom: 4px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: rgba(226, 196, 119, 0.18);
+  color: var(--amber);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+.reveal-explain .pair-line { color: var(--text); font-size: 13px; line-height: 1.6; }
+.reveal-explain .pair-line b { color: inherit; font-weight: 400; }
+.reveal-explain .pair-line i { margin: 0 5px; color: var(--dim); font-style: normal; }
+.reveal-explain .pair-note { margin-top: 4px; color: var(--dim); font-size: 11px; line-height: 1.5; }
+.reveal-explain.miss .pair-tag { background: rgba(130, 170, 196, 0.18); color: #a9c0cf; }
 .reveal-note { margin-top: auto; padding-top: 8px; color: var(--dim); font-size: 12px; line-height: 1.5; }
 .reveal-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 8px; flex-wrap: wrap; }
 .reveal-note + .reveal-foot { margin-top: 8px; }

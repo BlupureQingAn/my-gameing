@@ -4,6 +4,7 @@ import {
   explainFor,
   isNearMiss,
   matchedSenseIndices,
+  nearMissExplainFor,
   splitSenses,
   topicSensesText,
 } from "../src/core/senses.js";
@@ -74,6 +75,22 @@ test("isNearMiss reads the near-miss list safely", () => {
   assert.equal(isNearMiss(topic, "year"), false);
   assert.equal(isNearMiss({}, "college"), false);
   assert.equal(isNearMiss(null, "college"), false);
+});
+
+test("nearMissExplainFor only serves words that are actually near-miss", () => {
+  const topic = {
+    nearMiss: ["wealthy"],
+    nearMissExplain: {
+      wealthy: { kind: "adjacent", topicSense: "充足的", wordSense: "富裕的", note: "…语义相邻" },
+      rich: { kind: "same", topicSense: "丰富的", wordSense: "富裕的", note: "…相同" },
+      spare: { kind: "none", topicSense: "多余的", wordSense: "", note: "" },
+    },
+  };
+  assert.equal(nearMissExplainFor(topic, "wealthy").kind, "adjacent");
+  assert.equal(nearMissExplainFor(topic, "rich"), null);
+  assert.equal(nearMissExplainFor(topic, "spare"), null);
+  assert.equal(nearMissExplainFor({ nearMiss: ["wealthy"] }, "wealthy"), null);
+  assert.equal(nearMissExplainFor(null, "wealthy"), null);
 });
 
 test("topicSensesText joins and truncates sense labels", () => {
