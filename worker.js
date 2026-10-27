@@ -600,6 +600,23 @@ async function cihuangLicense(env, userId) {
     }
 }
 
+// 微信小游戏账号（social_uid=wxmg_*）无内购渠道：首次触达权益时幂等补发完整版
+async function ensureMinigameLicense(env, record) {
+    const socialUid = String(record?.social_uid || "");
+    if (!record?.id || !socialUid.startsWith("wxmg_")) return false;
+    if (await cihuangLicense(env, record.id)) return false;
+    try {
+        await pbAdminFetch(env, `/api/collections/unlocks/records`, {
+            method: "POST",
+            body: JSON.stringify({
+                user_id: record.id, card_id: CIHUANG_CARD_ID,
+                created_at: new Date().toISOString()
+            })
+        });
+    } catch (e) {}
+    return true;
+}
+
 // 自带 API 解锁判定（2026-10-20）：unlocks 集合里存在 card_id="byo_api" 记录即已买断。
 // 与 story 解锁同构，零 schema 改动。
 async function hasByoUnlock(env, userId) {
@@ -4277,6 +4294,7 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
                     }
                 }
                 if (!password) return errorResponse("账号异常，请联系管理员", 500, null, "MINIGAME_ACCOUNT_BROKEN");
+                try { await ensureMinigameLicense(env, { id: user.id, social_uid: uid }); } catch (e) {}
                 const pbUrl = (env.PB_URL || "").replace(/\/$/, "");
                 const loginRes = await fetch(`${pbUrl}/api/collections/users/auth-with-password`, {
                     method: "POST", headers: { "Content-Type": "application/json" },
@@ -4322,7 +4340,11 @@ const CAT_OF = {"la_01":"恋爱","la_02":"恋爱","la_03":"恋爱","la_04":"恋�
             if (url.pathname === "/api/cihuang/entitlement" && request.method === "GET") {
                 const auth = await authenticate(env, request);
                 if (auth.error) return auth.error;
-                const rec = await cihuangLicense(env, auth.record.id);
+                let rec = await cihuangLicense(env, auth.record.id);
+                // 小游戏账号已登录但缺权益（含升级前建号的存量账号）→ 补发
+                if (!rec && await ensureMinigameLicense(env, auth.record)) {
+                    rec = await cihuangLicense(env, auth.record.id);
+                }
                 return cihuangJSON({ ok: true, licensed: !!rec, purchasedAt: rec?.created_at || "" });
             }
             // 开局：服务端发种子并落库，防止客户端自选随机序列
