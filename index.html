@@ -606,9 +606,14 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
                     <div class="sf-label">标题（≤20 字）</div>
                     <input id="wizard-title-input" type="text" maxlength="20" placeholder="给你的文游起个名字" oninput="Controller.wizardTitleCount()">
                     <div class="list-sub wz-count" id="wizard-title-count">0/20</div>
-                    <div class="sf-label">指令描述（≤5000 字）</div>
-                    <textarea id="wizard-prompt-input" class="scenario-editor" maxlength="5000" placeholder="描述世界观 / 玩法 / 登场角色，越具体 AI 生成越贴合你的想法" oninput="Controller.wizardPromptCount()"></textarea>
-                    <div class="list-sub wz-count" id="wizard-prompt-count">0/5000</div>
+                    <div class="sf-label">指令描述（≤20000 字，可直接上传 txt）</div>
+                    <textarea id="wizard-prompt-input" class="scenario-editor" maxlength="20000" placeholder="描述世界观 / 玩法 / 登场角色，越具体 AI 生成越贴合你的想法" oninput="Controller.wizardPromptCount()"></textarea>
+                    <div class="list-sub wz-count" id="wizard-prompt-count">0/20000</div>
+                    <div style="display:flex;align-items:center;gap:10px;margin:6px 0 2px;">
+                        <button type="button" class="mini-btn ghost" onclick="Controller.wizardPickPromptFile()">上传 txt 文件</button>
+                        <span class="list-sub" id="wizard-prompt-file-name">支持 UTF-8 / GBK 编码</span>
+                    </div>
+                    <input type="file" id="wizard-prompt-file" accept=".txt,text/plain" style="display:none" onchange="Controller.wizardPromptFilePicked(this)">
                     <label class="wz-check">
                         <input type="checkbox" id="wizard-polish"> 允许 AI 润色（语言更文学化、氛围感更强）
                     </label>
@@ -1503,7 +1508,7 @@ setTimeout(function(){var b=document.getElementById("boot-screen");if(b&&!b.clas
 <script src="scenarios/scenarios.js?v=20260922a" async id="scenario-lib-script"></script>
 <script src="scenarios/skeletons.js?v=20260926a" async id="skeleton-lib-script"></script>
 <script src="lib/qrcode.min.js" async></script>
-<script src="assets/app.min.js?v=20261025c"></script>
+<script src="assets/app.min.js?v=20261105a"></script>
 <script src="assets/love-engine.min.js?v=20261022a"></script>
 <script src="assets/lang-play.min.js?v=20261020a"></script>
 <script src="assets/lang-aux.min.js?v=20261025b"></script>

@@ -15837,16 +15837,53 @@ function openNpcProfile(npcId) {
             const c = document.getElementById("wizard-title-count");
             if (el && c) c.textContent = `${el.value.length}/20`;
         }
+        const WIZARD_PROMPT_LIMIT = 20000;
         function wizardPromptCount() {
             const el = document.getElementById("wizard-prompt-input");
             const c = document.getElementById("wizard-prompt-count");
-            if (el && c) c.textContent = `${el.value.length}/5000`;
+            if (el && c) c.textContent = `${el.value.length}/${WIZARD_PROMPT_LIMIT}`;
+        }
+        function wizardPickPromptFile() {
+            const input = document.getElementById("wizard-prompt-file");
+            if (input) input.click();
+        }
+        // 世界观文案常从 Word/记事本导出，UTF-8 和 GBK 都要能读；
+        // 超长按上限截断并明确告知，避免用户以为全文已载入。
+        function wizardPromptFilePicked(input) {
+            const file = input && input.files && input.files[0];
+            if (!file) return;
+            input.value = "";
+            const nameEl = document.getElementById("wizard-prompt-file-name");
+            const note = (msg) => { if (nameEl) nameEl.textContent = msg; };
+            if (file.size > 2 * 1024 * 1024) {
+                note("文件超过 2MB，请精简后再试");
+                return;
+            }
+            const reader = new FileReader();
+            reader.onerror = () => note("文件读取失败，请重试");
+            reader.onload = () => {
+                let text = "";
+                try {
+                    text = new TextDecoder("utf-8", { fatal: true }).decode(reader.result);
+                } catch (e) {
+                    try { text = new TextDecoder("gbk").decode(reader.result); }
+                    catch (e2) { text = new TextDecoder("utf-8").decode(reader.result); }
+                }
+                text = String(text || "").replace(/^﻿/, "").replace(/\r\n/g, "\n").trim();
+                if (!text) { note("文件内容为空"); return; }
+                const clipped = text.length > WIZARD_PROMPT_LIMIT;
+                const textarea = document.getElementById("wizard-prompt-input");
+                if (textarea) textarea.value = clipped ? text.slice(0, WIZARD_PROMPT_LIMIT) : text;
+                wizardPromptCount();
+                note(`${file.name} · ${Math.min(text.length, WIZARD_PROMPT_LIMIT)} 字${clipped ? "（超出上限已截断）" : ""}`);
+            };
+            reader.readAsArrayBuffer(file);
         }
         function wizardNext() { if (wizardStep < 3) { wizardStep++; renderWizardStep(); } }
         function wizardPrev() { if (wizardStep > 1) { wizardStep--; renderWizardStep(); } }
         async function wizardConfirm() {
             const title = String(document.getElementById("wizard-title-input")?.value || "").trim().slice(0, 20);
-            const prompt = String(document.getElementById("wizard-prompt-input")?.value || "").trim().slice(0, 5000);
+            const prompt = String(document.getElementById("wizard-prompt-input")?.value || "").trim().slice(0, WIZARD_PROMPT_LIMIT);
             const polish = !!document.getElementById("wizard-polish")?.checked;
             const flags = {
                 summary: !!document.getElementById("wz-gen-summary")?.checked,
@@ -15933,7 +15970,7 @@ function openNpcProfile(npcId) {
             switchView("view-scenario-editor");
             ScenarioEditorService.focusEditor();
         }
-        return { init, onSendClick, sendUserText, rerunEvent, getEndingDefs, buildEndingChecks, refreshEndingBadge, fallbackEnding, requestEnding, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, goBackView, openCardSettings, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, autoDownloadAndPlay, openInitPreviewModal, closeInitPreviewModal, toggleHistoryPanel, closeHistoryPanel, renderPostRefPicker, clearPostRef, openPersonCardChat, prepareInitPreview, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, toggleAvatarLibraryPanel, avatarPickLib, avatarPick, avatarUpload, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, openWechatApp, closeWechatApp, switchWechatTab, openWechatChat, backToWechatList, appendEmojiToInput, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, unlockCloudSlot, saveToCloudSlot, loadFromCloudSlot, deleteCloudSlot, clearLocalCache, openInfoModal, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, closeFullMap, placeClick, placeGo, advanceStory, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate, reloadTemplateMarket, clearTemplateSearch, renderHomeDiscovery, switchSortMode, openCreationWizard, wizardPickStyle, wizardTitleCount, wizardPromptCount, wizardNext, wizardPrev, wizardGoStep, wizardConfirm, closeUploadPriceModal, confirmUploadWithPrice };
+        return { init, onSendClick, sendUserText, rerunEvent, getEndingDefs, buildEndingChecks, refreshEndingBadge, fallbackEnding, requestEnding, endStory, closeEndingModal, restartLife, togglePlayDockNav, switchView, goBackView, openCardSettings, saveSettings, saveUserApiSettings, saveScenarioCard, createScenarioCard, selectScenarioCard, playScenarioCard, openScenarioCardSettings, deleteScenarioCard, toggleScenarioCardPin, reorderScenarioCards, startFromPlay, importScenarioTxt, uploadScenarioCard, loadMyCommunityCards, switchCommunityTab, openPostModal, closePostModal, submitPost, handlePostImage, clearPostImage, togglePostLike, openPostComments, closeCommentsModal, sendPostComment, toggleFollow, openFeedCard, loadCommunityCardsBrowse, useCommunityCard, autoDownloadAndPlay, openInitPreviewModal, closeInitPreviewModal, toggleHistoryPanel, closeHistoryPanel, renderPostRefPicker, clearPostRef, openPersonCardChat, prepareInitPreview, bindInitPreviewForm, collectInitPreviewForm, toggleCustomField, applyInitPreviewAndStart, rollStats, statAdjust, toggleAvatarEmojiPanel, toggleAvatarLibraryPanel, avatarPickLib, avatarPick, avatarUpload, setInitAvatar, openItemModal, useItem, openNpcProfile, openNpcChat, backToSocialList, openWechatApp, closeWechatApp, switchWechatTab, openWechatChat, backToWechatList, appendEmojiToInput, sendNpcMessage, deleteNpc, reorderNpcs, deleteInventoryItem, reorderInventoryItems, saveToSlot, loadFromSlot, deleteSlot, unlockCloudSlot, saveToCloudSlot, loadFromCloudSlot, deleteCloudSlot, clearLocalCache, openInfoModal, closeInfoModal, showEventDetail, editEvent, enterEvent, moveToLocation, showFullMap, closeFullMap, placeClick, placeGo, advanceStory, phoneAppTap, openNpcImport, importNpcFromCollection, openNewNpcModal, createNewNpc, openGameDetail, closeGameDetail, toggleGameLike, toggleGameCollect, gameDonate, gameRoleHot, toggleRoleFavorite, postGameReview, replyGameReview, toggleCharacterFav, renderTemplateMarket, useSkeletonTemplate, reloadTemplateMarket, clearTemplateSearch, renderHomeDiscovery, switchSortMode, openCreationWizard, wizardPickStyle, wizardTitleCount, wizardPromptCount, wizardPickPromptFile, wizardPromptFilePicked, wizardNext, wizardPrev, wizardGoStep, wizardConfirm, closeUploadPriceModal, confirmUploadWithPrice };
     })();
 
     function onSendClick() { Controller.onSendClick(); }
