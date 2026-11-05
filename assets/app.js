@@ -15817,6 +15817,8 @@ function openNpcProfile(npcId) {
             const promptInput = document.getElementById("wizard-prompt-input");
             if (titleInput) { titleInput.value = ""; wizardTitleCount(); }
             if (promptInput) { promptInput.value = ""; wizardPromptCount(); }
+            const promptFileNote = document.getElementById("wizard-prompt-file-name");
+            if (promptFileNote) promptFileNote.textContent = "支持 UTF-8 / GBK 编码";
             const polishEl = document.getElementById("wizard-polish");
             if (polishEl) polishEl.checked = false;
             ["summary", "rules", "stats", "identity", "npcs", "opening"].forEach((k) => {
