@@ -28,6 +28,50 @@ function collectCommunityReviewText(title, data) {
     return parts.join("\n").slice(0, 30000);
 }
 
+// 卡片审核用的两字硬核词。评论词库里的两字词大量是日常词汇
+// (冲突/废物/公寓/报警/微信…),直接子串匹配会把正常剧情全枪毙;
+// 两字只认这批,三字及以上仍走全量词库。
+const CARD_HARD_2CHAR = new Set([
+    "性交", "性爱", "做爱", "作爱", "口交", "肛交", "乳交", "乱交", "乱伦",
+    "兽交", "鸡奸", "轮奸", "群交", "群奸", "迷奸", "诱奸", "强奸", "强暴",
+    "奸淫", "奸尸", "恋尸", "幼交", "幼女", "幼齿", "嫖娼", "招妓", "卖淫",
+    "卖春", "援交", "情妇", "淫乱", "淫兽", "淫女", "淫妇", "淫荡", "淫秽",
+    "淫穴", "淫水", "淫汁", "淫靡", "淫欲", "淫邪", "骚穴", "骚货", "骚逼",
+    "骚妇", "骚妹", "嫩穴", "蜜穴", "肉穴", "美穴", "浪穴", "肥穴", "小穴",
+    "肉棒", "肉棍", "阳具", "阴茎", "阴道", "阴唇", "阴户", "阴蒂", "阴部",
+    "肛门", "龟头", "睾丸", "精子", "精液", "射精", "吞精", "吃精", "浓精",
+    "爱液", "潮吹", "内射", "颜射", "自慰", "手淫", "裸聊", "换妻", "推油",
+    "深喉", "约炮", "打炮", "开苞", "破处", "春药", "催情", "跳蛋", "喷精",
+    "六四", "台独", "藏独", "疆独", "东突", "达赖", "学潮", "民运", "共匪",
+    "反共", "反华", "支那", "法轮", "法輪", "轮功", "冰毒", "麻古",
+    "吗啡", "古柯", "大麻", "枪支", "买枪", "假币", "假钞", "假证", "赌博"
+]);
+
+// 三字及以上只收硬核违规词与敏感政治词/毒品名。评论词库里还有大量
+// 广告和正常短语(游戏管理员/一站到底/一塌糊涂),不能直接搬到剧情文本上。
+const CARD_HARD_LONG = [
+    "海洛因", "可卡因", "摇头丸", "甲基苯丙胺", "性虐待", "性交易", "儿童色情",
+    "恋童", "淫秽物品", "黄色网站", "色情网站", "卖淫嫖娼", "拐卖妇女", "器官买卖",
+    "枪支弹药", "爆炸物", "恐怖袭击", "制造炸弹", "代开发票", "六合彩", "时时彩",
+    "网赌", "赌博网站", "法轮功", "达赖喇嘛", "东突厥"
+];
+
+// 卡片审核:只走硬核词表,避免把正常剧情词(冲突/废物/公寓/游戏管理员)判违规
+function checkBannedForCard(text) {
+    if (!text) return null;
+    for (const w of [...CARD_HARD_2CHAR, ...CARD_HARD_LONG]) {
+        const idx = text.indexOf(w);
+        if (idx === -1) continue;
+        if (/^[A-Za-z0-9]+$/.test(w)) {
+            const before = idx > 0 ? text[idx - 1] : "";
+            const after = text[idx + w.length] || "";
+            if (/[A-Za-z0-9]/.test(before) || /[A-Za-z0-9]/.test(after)) continue;
+        }
+        return w;
+    }
+    return null;
+}
+
 // 违禁词过滤:命中返回首个命中词,否则 null;纯字母/数字词要求边界(避免误伤 obsessed 等含 sb 的正常词)
 function checkBanned(text) {
     if (!text) return null;
@@ -3340,7 +3384,7 @@ export default {
                 const data = body.data;
                 if (!title || !data || typeof data !== "object") return errorResponse("缺少标题或卡数据", 400, null, "INVALID_COMMUNITY_CARD");
                 // 只扫叙事文本，不扫图片/头像等大字段，避免把 base64 当正文比对
-                const reviewHit = checkBanned(collectCommunityReviewText(title, data));
+                const reviewHit = checkBannedForCard(collectCommunityReviewText(title, data));
                 const review = reviewHit
                     ? { verdict: "rejected", reason: `内容包含违禁词「${reviewHit}」`, at: new Date().toISOString() }
                     : null;
