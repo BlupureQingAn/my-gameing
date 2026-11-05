@@ -14326,7 +14326,14 @@ function openNpcProfile(npcId) {
                 });
                 const d = await res.json().catch(() => ({}));
                 if (!res.ok) throw new Error(d.error || `HTTP ${res.status}`);
-                // 上传成功：草稿转正（status 置空），出现在首页剧本库
+                const reviewStatus = String(d.status || "");
+                const cardTitle = MarkdownService.escapeHtml(String(payload.title || "未命名剧本"));
+                if (reviewStatus === "rejected") {
+                    // 机器审核不通过：保留本地草稿,作者改完可重新上传
+                    NoticeModalService.showInfo({ title: "未通过审核", descHtml: `《${cardTitle}》未通过机器审核：${MarkdownService.escapeHtml(String(d.reason || "内容不符合发布规则"))}。修改后可重新提交。` });
+                    return;
+                }
+                // 通过审核：草稿转正（status 置空），出现在首页剧本库
                 try {
                     const cid = _pendingUploadData && _pendingUploadData.data ? String(_pendingUploadData.data.id || "") : "";
                     if (cid) {
@@ -14340,7 +14347,7 @@ function openNpcProfile(npcId) {
                         }
                     }
                 } catch (e) { /* 静默 */ }
-                NoticeModalService.showInfo({ title: "已提交审核", descHtml: `《${MarkdownService.escapeHtml(String(payload.title || "未命名剧本"))}》已上传${price > 0 ? `，解锁定价 ${price} 云币` : "（免费）"}。审核通过后他人可游玩。` });
+                NoticeModalService.showInfo({ title: "已发布", descHtml: `《${cardTitle}》已通过机器审核并上架${price > 0 ? `，解锁定价 ${price} 云币` : "（免费）"}，现在他人就能游玩了。` });
             } catch (e) {
                 NoticeModalService.showInfo({ title: "上传失败", descHtml: MarkdownService.escapeHtml(humanErrorMessage(e, "上传失败，请稍后重试").slice(0, 100)) });
             } finally {
@@ -14374,10 +14381,14 @@ function openNpcProfile(npcId) {
                     const unlockReward = Number(c.unlock_price || 0) > 0 ? Math.max(1, Math.floor(Number(c.unlock_price) / 2)) : 0;
                     const reward = Number(c.earned_plays || 0) * 30 + Number(c.unlock_count || 0) * unlockReward;
                     const status = c.status === "approved" ? '<span style="color:var(--ok);">已上架</span>' : (c.status === "pending" ? '<span style="color:var(--warn);">审核中</span>' : '<span style="color:var(--danger);">未通过</span>');
+                    const reviewReason = c.status === "rejected" && c.review_reason
+                        ? `<div class="list-sub" style="margin-top:2px;color:var(--danger);">${MarkdownService.escapeHtml(String(c.review_reason))}</div>`
+                        : "";
                     return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin-top:6px;background:var(--card-soft);">
                         <div style="min-width:0;">
                             <div style="font-weight:700;font-size:var(--fs-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${MarkdownService.escapeHtml(c.title || "未命名")}</div>
                             <div class="list-sub" style="margin-top:2px;">播放 ${Number(c.play_count || 0)} 次｜${status}</div>
+                            ${reviewReason}
                         </div>
                         <div style="text-align:right;margin-left:8px;">
                             <div style="font-weight:800;color:var(--accent-dark);"><svg class="wx-ui-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17"/><path d="m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9"/><path d="m2 16 6 6"/><circle cx="16" cy="9" r="2.9"/><circle cx="6" cy="5" r="3"/></svg> ${reward} 币</div>

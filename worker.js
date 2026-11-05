@@ -1,6 +1,33 @@
 ﻿import { BANNED_WORDS } from "./banned_words.js";
 import { validateRun } from "./cihuang/server/verify.js";
 
+// 社区卡机器审核只扫叙事文本:图片/头像等 base64 大字段不参与,避免拖慢 Worker
+function collectCommunityReviewText(title, data) {
+    const parts = [String(title || "")];
+    const push = (v) => {
+        if (typeof v === "string" && v.trim()) parts.push(v);
+    };
+    const pushList = (arr, fields) => {
+        (Array.isArray(arr) ? arr : []).forEach((item) => {
+            if (item && typeof item === "object") fields.forEach((k) => push(item[k]));
+            else push(item);
+        });
+    };
+    push(data.text);
+    const st = data.structured && typeof data.structured === "object" ? data.structured : {};
+    const world = st.world || {};
+    push(world.summary);
+    push(world.atmosphere);
+    pushList(world.rules, []);
+    const identity = st.identity || {};
+    ["name", "background", "appearance", "personality", "family", "role"].forEach((k) => push(identity[k]));
+    pushList(st.npcs, ["name", "role", "personality", "relationship"]);
+    const scene = st.first_scene || {};
+    push(scene.story);
+    pushList(scene.options, ["text", "content"]);
+    return parts.join("\n").slice(0, 30000);
+}
+
 // 违禁词过滤:命中返回首个命中词,否则 null;纯字母/数字词要求边界(避免误伤 obsessed 等含 sb 的正常词)
 function checkBanned(text) {
     if (!text) return null;
@@ -3303,7 +3330,7 @@ export default {
                 });
             }
 
-            // ---- 路由：社区卡上传（status=pending 待审核）----
+            // ---- 路由：社区卡上传（机器审核：违禁词命中即拒，否则直接上架）----
             if (url.pathname === "/api/cards/community" && request.method === "POST") {
                 const auth = await authenticate(env, request);
                 if (auth.error) return auth.error;
@@ -3312,13 +3339,18 @@ export default {
                 const title = String(body.title || "").trim();
                 const data = body.data;
                 if (!title || !data || typeof data !== "object") return errorResponse("缺少标题或卡数据", 400, null, "INVALID_COMMUNITY_CARD");
+                // 只扫叙事文本，不扫图片/头像等大字段，避免把 base64 当正文比对
+                const reviewHit = checkBanned(collectCommunityReviewText(title, data));
+                const review = reviewHit
+                    ? { verdict: "rejected", reason: `内容包含违禁词「${reviewHit}」`, at: new Date().toISOString() }
+                    : null;
                 const record = {
                     title: title.slice(0, 60),
                     category: String(body.category || "").slice(0, 20),
                     theme: String(body.theme || "").slice(0, 20),
-                    data,
+                    data: review ? { ...data, review } : data,
                     author_id: auth.record.id,
-                    status: "pending",
+                    status: review ? "rejected" : "approved",
                     unlock_price: Math.max(0, Math.min(500, Number(body.unlock_price) || 0)),
                     play_count: 0,
                     earned_plays: 0,
@@ -3331,7 +3363,11 @@ export default {
                 });
                 if (!createRes.ok) return errorResponse("上传失败", 500, null, "COMMUNITY_UPLOAD_FAILED");
                 const created = await createRes.json().catch(() => ({}));
-                return new Response(JSON.stringify({ id: created.id, status: "pending" }), {
+                return new Response(JSON.stringify({
+                    id: created.id,
+                    status: record.status,
+                    reason: review ? review.reason : ""
+                }), {
                     headers: { ...corsHeaders(), "Content-Type": "application/json" }
                 });
             }
@@ -3381,6 +3417,7 @@ export default {
                     return {
                         id: c.id, title: c.title, category: c.category, theme: c.theme,
                         author_id: c.author_id, status,
+                        review_reason: (c.data && c.data.review && c.data.review.reason) || "",
                         unlock_price: Number(c.unlock_price || 0),
                         halfOff: c.id === halfOffId,
                         play_count: Number(c.play_count || 0),
